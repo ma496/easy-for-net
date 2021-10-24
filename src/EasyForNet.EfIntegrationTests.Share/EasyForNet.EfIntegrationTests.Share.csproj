@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net5.0</TargetFramework>
+        <IsPackable>true</IsPackable>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <Version>1.0.0</Version>
+        <PackageId>EasyForNet.EfIntegrationTests.Share</PackageId>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <Authors>Muhammad Ali</Authors>
+        <Description>Common things for dot net ef integration tests</Description>
+        <PackageTags>c#</PackageTags>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\EasyForNet.EntityFramework\EasyForNet.EntityFramework.csproj" />
+      <ProjectReference Include="..\EasyForNet.Tests.Share\EasyForNet.Tests.Share.csproj" />
+      <ProjectReference Include="..\EasyForNet\EasyForNet.csproj" />
+    </ItemGroup>
+
+</Project>
