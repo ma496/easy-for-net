@@ -23,7 +23,6 @@ namespace EasyForNet.EntityFramework.Tests
                     .Options;
                 var currentUser = sp.GetRequiredService<ICurrentUser>();
                 var db = new EasyForNetEntityFrameworkTestsDb(options, currentUser);
-                db.ChangeTracker.AutoDetectChangesEnabled = false;
                 return db;
             });
         }
