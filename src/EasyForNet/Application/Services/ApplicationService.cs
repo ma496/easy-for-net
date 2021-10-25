@@ -9,7 +9,7 @@ namespace EasyForNet.Application.Services
         protected IServiceProvider ServiceProvider { get; }
         protected IMapper Mapper { get; }
         protected ICurrentUser CurrentUser { get; }
-        
+
         protected ApplicationService(IServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;

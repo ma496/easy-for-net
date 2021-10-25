@@ -40,7 +40,8 @@ namespace EasyForNet.Modules
             }
         }
 
-        public static void InitMappings<TModule>(IMapperConfigurationExpression mapperConfiguration, IConfiguration configuration)
+        public static void InitMappings<TModule>(IMapperConfigurationExpression mapperConfiguration,
+            IConfiguration configuration)
             where TModule : ModuleBase
         {
             Guard.Against.Null(mapperConfiguration, nameof(mapperConfiguration));
@@ -67,7 +68,7 @@ namespace EasyForNet.Modules
         private static void CheckModuleType(Type type)
         {
             Guard.Against.Null(type, nameof(type));
-            
+
             if (!typeof(ModuleBase).IsAssignableFrom(type))
                 throw new Exception($"{type.FullName} must be inherit from {nameof(ModuleBase)} class");
             if (!type.IsConcreteClass())
@@ -94,7 +95,8 @@ namespace EasyForNet.Modules
         {
             var uniqueAndOrderModulesInfo = new List<ModuleInfo>();
             foreach (var module in modulesInfo.OrderByDescending(m => m.Level))
-                if (!uniqueAndOrderModulesInfo.Exists(m => m.Module.GetType().FullName == module.Module.GetType().FullName))
+                if (!uniqueAndOrderModulesInfo.Exists(m =>
+                    m.Module.GetType().FullName == module.Module.GetType().FullName))
                     uniqueAndOrderModulesInfo.Add(module);
 
             return uniqueAndOrderModulesInfo;
@@ -105,7 +107,7 @@ namespace EasyForNet.Modules
             var types = module.GetType().Assembly.GetConcreteTypes()
                 .Where(t =>
                     typeof(IScopedDependency).IsAssignableFrom(t) || typeof(ITransientDependency).IsAssignableFrom(t)
-                                                                 || typeof(ISingletonDependency).IsAssignableFrom(t))
+                                                                  || typeof(ISingletonDependency).IsAssignableFrom(t))
                 .ToList();
             foreach (var type in types)
                 if (typeof(IScopedDependency).IsAssignableFrom(type))
@@ -131,7 +133,8 @@ namespace EasyForNet.Modules
         private static List<Type> GetServiceInterfaces(Type type)
         {
             return type.GetInterfaces()
-                .Where(t => t != typeof(IScopedDependency) && t != typeof(ITransientDependency) && t != typeof(ISingletonDependency))
+                .Where(t => t != typeof(IScopedDependency) && t != typeof(ITransientDependency) &&
+                            t != typeof(ISingletonDependency))
                 .ToList();
         }
     }

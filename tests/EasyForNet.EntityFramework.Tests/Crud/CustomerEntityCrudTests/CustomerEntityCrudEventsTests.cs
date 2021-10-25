@@ -12,12 +12,12 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
         public CustomerEntityCrudEventsTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
         }
-        
+
         [Fact]
         public async Task CreateTest()
         {
             var crudActions = Services.GetRequiredService<CustomerCrudActions>();
-            
+
             var dto = CustomerEntityCrudTestsHelper.NewCustomer();
             await crudActions.CreateAsync(dto);
 
@@ -36,9 +36,9 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
             crudActions = NewScopeService<CustomerCrudActions>();
 
             var createdDto = await crudActions.GetAsync(dto.Id);
-            
+
             CompareAssert(dto, createdDto);
-            
+
             await crudActions.UpdateAsync(dto.Id, createdDto);
 
             Assert.True(crudActions.IsBeforeUpdate);
@@ -56,7 +56,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
             crudActions = NewScopeService<CustomerCrudActions>();
 
             var createdDto = await crudActions.GetAsync(dto.Id);
-            
+
             CompareAssert(dto, createdDto);
 
             await crudActions.DeleteAsync(dto.Id);
@@ -64,7 +64,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
             Assert.True(crudActions.IsBeforeDelete);
             Assert.True(crudActions.IsAfterDelete);
         }
-        
+
         [Fact]
         public async Task UndoDeleteTest()
         {
@@ -76,7 +76,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
             crudActions = NewScopeService<CustomerCrudActions>();
 
             var createdDto = await crudActions.GetAsync(dto.Id);
-            
+
             CompareAssert(dto, createdDto);
 
             await crudActions.DeleteAsync(dto.Id);
@@ -84,11 +84,11 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
             crudActions = NewScopeService<CustomerCrudActions>();
 
             var deletedDto = await crudActions.GetAsync(dto.Id);
-            
+
             Assert.Null(deletedDto);
 
             await crudActions.UndoDeleteAsync(dto.Id);
-            
+
             Assert.True(crudActions.IsBeforeUndoDelete);
             Assert.True(crudActions.IsAfterUndoDelete);
         }
@@ -106,7 +106,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
             var createdDtos = (await crudActions.ListAsync())
                 .Where(o => dtos.Select(d => d.Id).Contains(o.Id))
                 .ToList();
-            
+
             CompareAssert(dtos, createdDtos);
 
             Assert.True(crudActions.IsBeforeList);
@@ -123,7 +123,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
             crudActions = NewScopeService<CustomerCrudActions>();
 
             var createdDto = await crudActions.GetAsync(dto.Id);
-            
+
             CompareAssert(dto, createdDto);
 
             Assert.True(crudActions.IsBeforeGet);

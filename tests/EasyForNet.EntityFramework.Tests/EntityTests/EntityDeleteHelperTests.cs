@@ -23,12 +23,13 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
             var generator = NewScopeService<CustomerGenerator>();
 
             var customerEntity = await generator.GenerateAndSaveAsync();
-            EntityDeleteHelper.Delete<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext, customerEntity);
+            EntityDeleteHelper
+                .Delete<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext, customerEntity);
 
             await dbContext.SaveChangesAsync();
 
             dbContext = NewScopeService<EasyForNetEntityFrameworkTestsDb>();
-            
+
             var savedCustomer = await dbContext.Customers.FindAsync(customerEntity.Id);
 
             Assert.Null(savedCustomer);
@@ -49,7 +50,7 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
             await dbContext.SaveChangesAsync();
 
             dbContext = NewScopeService<EasyForNetEntityFrameworkTestsDb>();
-            
+
             var savedTagEntity = await dbContext.Tags.FindAsync(tagEntity.Id);
 
             Assert.Null(savedTagEntity);

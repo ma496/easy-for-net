@@ -27,7 +27,7 @@ namespace EasyForNet.EntityFramework.Helpers
                 auditDto.UpdatedBy = auditEntity.UpdatedBy;
             }
         }*/
-        
+
         public static void Map(object entity, object dto)
         {
             Guard.Against.Null(entity, nameof(entity));
@@ -35,7 +35,7 @@ namespace EasyForNet.EntityFramework.Helpers
 
             if (entity.GetType().HasProperty("Id") && dto.GetType().HasProperty("Id"))
                 dto.SetPropertyValue("Id", entity.GetPropertyValue("Id"));
-            
+
             if (entity is IAuditEntity auditEntity && dto is IAuditDto auditDto)
             {
                 auditDto.CreatedAt = auditEntity.CreatedAt;

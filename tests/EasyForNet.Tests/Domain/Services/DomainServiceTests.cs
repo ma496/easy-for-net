@@ -12,16 +12,16 @@ namespace EasyForNet.Tests.Domain.Services
         public DomainServiceTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
         }
-        
+
         [Fact]
         public void TestOne()
         {
             var domainService = Services.GetRequiredService<DomainServiceDemo>();
-            
+
             Assert.NotNull(domainService);
         }
     }
-    
+
     public class DomainServiceDemo : DomainService
     {
         public DomainServiceDemo(IServiceProvider serviceProvider) : base(serviceProvider)

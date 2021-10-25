@@ -23,7 +23,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
         {
             await InternalCreateTestAsync();
         }
-        
+
         [Fact]
         public async Task Create_WithDuplicateTest()
         {
@@ -64,7 +64,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
         {
             await InternalDeleteTestAsync();
         }
-        
+
         [Fact]
         public async Task UndoDeleteTest()
         {

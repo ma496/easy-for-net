@@ -8,7 +8,7 @@ namespace EasyForNet
 
         string Username { get; }
     }
-    
+
     internal class CurrentUser : ICurrentUser
     {
         public long UserId => 0;

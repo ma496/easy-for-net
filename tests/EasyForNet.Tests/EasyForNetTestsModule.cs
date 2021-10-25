@@ -7,6 +7,5 @@ namespace EasyForNet.Tests
     [DependOn(typeof(EasyForNetTestsShareModule))]
     public class EasyForNetTestsModule : ModuleBase
     {
-        
     }
 }

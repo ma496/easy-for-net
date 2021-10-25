@@ -4,6 +4,5 @@ namespace EasyForNet
 {
     public class EasyForNetModule : ModuleBase
     {
-        
     }
 }

@@ -9,7 +9,6 @@ namespace EasyForNet.Tests.Base
     {
         protected TestsBase(ITestOutputHelper outputHelper) : base(outputHelper)
         {
-            
         }
     }
 }

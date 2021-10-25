@@ -27,19 +27,21 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
         {
             var dbContext = Services.GetRequiredService<EasyForNetEntityFrameworkTestsDb>();
             var customerGenerator = NewScopeService<CustomerGenerator>();
-            
+
             var newCustomer = await customerGenerator.GenerateAndSaveAsync();
             var customerDto = Mapper.Map<CustomerDto>(newCustomer);
             customerDto.Name = "Thomson";
 
-            var customerForUpdate = await QueryHelper.GetEntityAsync<CustomerEntity, long>(dbContext.Customers, customerDto.Id);
+            var customerForUpdate =
+                await QueryHelper.GetEntityAsync<CustomerEntity, long>(dbContext.Customers, customerDto.Id);
             Mapper.Map(customerDto, customerForUpdate);
 
-            await EntityUpdateHelper.UpdateAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext, customerForUpdate, c => c.IdCard);
+            await EntityUpdateHelper.UpdateAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext,
+                customerForUpdate, c => c.IdCard);
             await dbContext.SaveChangesAsync();
 
             dbContext = NewScopeService<EasyForNetEntityFrameworkTestsDb>();
-            
+
             var updatedCustomer = await dbContext.Customers.FindAsync(customerForUpdate.Id);
 
             Assert.NotNull(updatedCustomer);
@@ -57,14 +59,16 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
             customerDto.IdCard = $"{IncrementalId.Id}432-5678-8589-7548";
             customerDto.Name = "Jhon";
 
-            var customerForUpdate = await QueryHelper.GetEntityAsync<CustomerEntity, long>(dbContext.Customers, customerDto.Id);
+            var customerForUpdate =
+                await QueryHelper.GetEntityAsync<CustomerEntity, long>(dbContext.Customers, customerDto.Id);
             Mapper.Map(customerDto, customerForUpdate);
 
-            await EntityUpdateHelper.UpdateAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext, customerForUpdate, c => c.IdCard);
+            await EntityUpdateHelper.UpdateAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext,
+                customerForUpdate, c => c.IdCard);
             await dbContext.SaveChangesAsync();
 
             dbContext = NewScopeService<EasyForNetEntityFrameworkTestsDb>();
-            
+
             var updatedCustomer = await dbContext.Customers.FindAsync(customerForUpdate.Id);
 
             Assert.NotNull(updatedCustomer);
@@ -83,12 +87,14 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
                 var customerDto = Mapper.Map<CustomerDto>(newCustomers[1]);
                 customerDto.IdCard = newCustomers[0].IdCard;
 
-                var customerForUpdate = await QueryHelper.GetEntityAsync<CustomerEntity, long>(dbContext.Customers, customerDto.Id);
+                var customerForUpdate =
+                    await QueryHelper.GetEntityAsync<CustomerEntity, long>(dbContext.Customers, customerDto.Id);
                 Mapper.Map(customerDto, customerForUpdate);
 
                 dbContext = NewScopeService<EasyForNetEntityFrameworkTestsDb>();
-                
-                await EntityUpdateHelper.UpdateAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext, customerForUpdate, c => c.IdCard);
+
+                await EntityUpdateHelper.UpdateAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext,
+                    customerForUpdate, c => c.IdCard);
                 await dbContext.SaveChangesAsync();
             });
         }
@@ -115,7 +121,8 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
 
             await Assert.ThrowsAsync<UniquePropertyDeletedException>(async () =>
             {
-                await EntityUpdateHelper.UpdateAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext, customerEntity, c => c.IdCard);
+                await EntityUpdateHelper.UpdateAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(
+                    dbContext, customerEntity, c => c.IdCard);
             });
         }
 

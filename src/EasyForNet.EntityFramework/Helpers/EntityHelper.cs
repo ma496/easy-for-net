@@ -30,7 +30,7 @@ namespace EasyForNet.EntityFramework.Helpers
                 return await Task.Run(() => Convert.ToInt32(value));
             return await Task.Run(() => value);
         }
-        
+
         public static async Task RemoveRowsAsync<TEntity, T>(DbSet<TEntity> dbSet,
             [NotNull] List<TEntity> oldRows, List<T> newRows, [NotNull] Func<TEntity, T, bool> match,
             [NotNull] Func<T, TEntity> create)
@@ -48,7 +48,7 @@ namespace EasyForNet.EntityFramework.Helpers
             foreach (var or in oldRows)
                 if (!newRows.Exists(nr => match(or, nr)))
                     removeEntities.Add(or);
-            
+
             if (removeEntities.Count > 0)
                 dbSet.RemoveRange(removeEntities);
 

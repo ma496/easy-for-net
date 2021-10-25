@@ -13,7 +13,7 @@ namespace EasyForNet.EntityFramework.Configuration
         {
             _tableName = tableName;
         }
-        
+
         public void Configure(EntityTypeBuilder<TEntity> builder)
         {
             builder.ToTable(_tableName);

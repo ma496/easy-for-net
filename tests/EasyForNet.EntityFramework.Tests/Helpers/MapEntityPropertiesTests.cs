@@ -45,7 +45,7 @@ namespace EasyForNet.EntityFramework.Tests.Helpers
                 }
             };
             var productEntity = Mapper.Map<ProductEntity>(productDto);
-            
+
             // Set entity id and audit properties
             productEntity.Id = 1;
             SetAuditProperties(productEntity);
@@ -56,10 +56,10 @@ namespace EasyForNet.EntityFramework.Tests.Helpers
                 itemEntity.Id = IncrementalId.Id;
                 SetAuditProperties(itemEntity);
             }
-            
+
             // Map entity id and audit properties to dto
             MapEntityProperties.Map(productEntity, productDto);
-            
+
             CompareAssert(productEntity, productDto);
         }
 
@@ -84,13 +84,13 @@ namespace EasyForNet.EntityFramework.Tests.Helpers
 
             public IList<ProductItemEntity> Items { get; set; }
         }
-        
+
         [AutoMap(typeof(ProductItemDto))]
         private class ProductItemEntity : AuditEntity<long>
         {
             public string SerialNo { get; set; }
         }
-        
+
         [AutoMap(typeof(CategoryDto))]
         private class CategoryEntity : AuditEntity<long>
         {

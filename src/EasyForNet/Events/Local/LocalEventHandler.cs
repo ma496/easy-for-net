@@ -11,14 +11,14 @@ namespace EasyForNet.Events.Local
         protected IServiceProvider ServiceProvider { get; }
         protected IMapper Mapper { get; }
         protected ICurrentUser CurrentUser { get; }
-        
+
         protected LocalEventHandler(IServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
             Mapper = serviceProvider.GetRequiredService<IMapper>();
             CurrentUser = serviceProvider.GetRequiredService<ICurrentUser>();
         }
-        
+
         public abstract Task HandleAsync(TEvent @event);
     }
 }

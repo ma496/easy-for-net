@@ -31,7 +31,7 @@ namespace EasyForNet.Extensions
         {
             Guard.Against.Null(type, nameof(type));
             Guard.Against.Null(propertyName, nameof(propertyName));
-            
+
             var property = type.GetProperty(propertyName);
             return property != null;
         }

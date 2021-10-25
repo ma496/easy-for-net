@@ -21,13 +21,13 @@ namespace EasyForNet.EntityFramework.Tests.Crud
         public ProductEntityCrudTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
         }
-        
+
         [Fact]
         public async Task CreateTest()
         {
             await InternalCreateTestAsync(null, (_, createdDto) => Assert.Equal(10, createdDto.Items.Count));
         }
-        
+
         [Fact]
         public async Task UpdateTest()
         {
@@ -38,7 +38,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud
                 dto.Items[0].SerialNo = $"serial no: {IncrementalId.Id}";
             }, (_, updatedDto) => Assert.Equal(11, updatedDto.Items.Count));
         }
-        
+
         [Fact]
         public async Task DeleteTest()
         {
@@ -54,7 +54,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud
                 Items = NewProductItems(10)
             };
         }
-        
+
         private List<ProductItemDto> NewProductItems(int itemCount)
         {
             return Enumerable.Range(0, itemCount)
@@ -65,10 +65,12 @@ namespace EasyForNet.EntityFramework.Tests.Crud
         }
     }
 
-    public class ProductEntityCrudActions : CrudActions<EasyForNetEntityFrameworkTestsDb, ProductEntity, long, ProductDto>,
+    public class ProductEntityCrudActions :
+        CrudActions<EasyForNetEntityFrameworkTestsDb, ProductEntity, long, ProductDto>,
         IScopedDependency
     {
-        public ProductEntityCrudActions(EasyForNetEntityFrameworkTestsDb dbContext, IMapper mapper) : base(dbContext, mapper, true)
+        public ProductEntityCrudActions(EasyForNetEntityFrameworkTestsDb dbContext, IMapper mapper) : base(dbContext,
+            mapper, true)
         {
         }
 
@@ -84,14 +86,14 @@ namespace EasyForNet.EntityFramework.Tests.Crud
 
         protected override async Task BeforeDeleteAsync(long id)
         {
-            var productItems =await DbContext.ProductItems
+            var productItems = await DbContext.ProductItems
                 .Where(pi => pi.ProductId == id)
                 .Select(pi => new ProductItemEntity
                 {
                     Id = pi.Id
                 })
                 .ToListAsync();
-            
+
             DbContext.ProductItems.RemoveRange(productItems);
         }
 

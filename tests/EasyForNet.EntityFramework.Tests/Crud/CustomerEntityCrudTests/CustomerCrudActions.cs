@@ -25,7 +25,8 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
         public bool IsBeforeList { get; private set; }
         public bool IsBeforeGet { get; private set; }
 
-        public CustomerCrudActions(EasyForNetEntityFrameworkTestsDb dbContext, IMapper mapper) : base(dbContext, mapper, true)
+        public CustomerCrudActions(EasyForNetEntityFrameworkTestsDb dbContext, IMapper mapper) : base(dbContext, mapper,
+            true)
         {
         }
 

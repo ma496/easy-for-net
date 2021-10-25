@@ -12,16 +12,16 @@ namespace EasyForNet.Tests.Application.Services
         public ApplicationServiceTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
         }
-        
+
         [Fact]
         public void TestOne()
         {
             var service = Services.GetRequiredService<ApplicationServiceDemo>();
-            
+
             Assert.NotNull(service);
         }
     }
-    
+
     public class ApplicationServiceDemo : ApplicationService
     {
         public ApplicationServiceDemo(IServiceProvider serviceProvider) : base(serviceProvider)

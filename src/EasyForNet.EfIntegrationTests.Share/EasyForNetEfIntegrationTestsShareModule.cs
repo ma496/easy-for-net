@@ -9,6 +9,5 @@ namespace EasyForNet.EfIntegrationTests.Share
     [DependOn(typeof(EasyForNetTestsShareModule))]
     public class EasyForNetEfIntegrationTestsShareModule : ModuleBase
     {
-        
     }
 }

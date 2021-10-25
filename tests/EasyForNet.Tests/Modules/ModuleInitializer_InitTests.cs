@@ -23,10 +23,11 @@ namespace EasyForNet.Tests.Modules
                 ModuleInitializer.InitServices<TempModule>(new ServiceCollection(), null);
                 ModuleInitializer.InitServices<TempModule>(new ServiceCollection(), null);
             });
-            
-            Assert.Equal($"Services has already initialized for {typeof(TempModule).FullName} module", exception.Message);
+
+            Assert.Equal($"Services has already initialized for {typeof(TempModule).FullName} module",
+                exception.Message);
         }
-        
+
         [Fact]
         public void InitMappings_AgainstMoreThenOne()
         {
@@ -35,8 +36,9 @@ namespace EasyForNet.Tests.Modules
                 ModuleInitializer.InitMappings<TempModule>(new MapperConfigurationExpression(), null);
                 ModuleInitializer.InitMappings<TempModule>(new MapperConfigurationExpression(), null);
             });
-            
-            Assert.Equal($"Mapping has already initialized for {typeof(TempModule).FullName} module", exception.Message);
+
+            Assert.Equal($"Mapping has already initialized for {typeof(TempModule).FullName} module",
+                exception.Message);
         }
 
         // ReSharper disable once InconsistentNaming

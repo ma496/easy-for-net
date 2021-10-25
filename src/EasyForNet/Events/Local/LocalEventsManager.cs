@@ -12,7 +12,7 @@ namespace EasyForNet.Events.Local
         {
             _serviceProvider = serviceProvider;
         }
-        
+
         public async Task RaiseAsync<TEvent>(TEvent @event)
             where TEvent : class
         {

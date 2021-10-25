@@ -7,7 +7,8 @@ using Xunit.Abstractions;
 
 namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
 {
-    public class CustomerEntityCrudValidationTests : CrudTestsBase<CustomerCrudActions, CustomerEntity, long, CustomerDto,
+    public class CustomerEntityCrudValidationTests : CrudTestsBase<CustomerCrudActions, CustomerEntity, long,
+        CustomerDto,
         CustomerDto, CustomerDto, CustomerDto>
     {
         public CustomerEntityCrudValidationTests(ITestOutputHelper outputHelper) : base(outputHelper)
@@ -69,7 +70,8 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
 
             Assert.Single(exception.ValidationErrors);
             Assert.Equal(nameof(CustomerDto.Name), exception.ValidationErrors[0].PropertyName);
-            Assert.Equal($"The {nameof(CustomerDto.Name)} field is required.", exception.ValidationErrors[0].ErrorMessage);
+            Assert.Equal($"The {nameof(CustomerDto.Name)} field is required.",
+                exception.ValidationErrors[0].ErrorMessage);
         }
 
         [Fact]
@@ -84,7 +86,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
             Assert.Equal(nameof(CustomerDto.IdCard), exception.ValidationErrors[0].PropertyName);
             Assert.Equal("'Id Card' must not be empty.", exception.ValidationErrors[0].ErrorMessage);
         }
-        
+
         [Fact]
         public async Task Update_EmptyCellNoTest()
         {

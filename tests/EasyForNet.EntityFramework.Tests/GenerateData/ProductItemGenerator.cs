@@ -6,7 +6,8 @@ using EasyForNet.EntityFramework.Tests.Data.Entities;
 
 namespace EasyForNet.EntityFramework.Tests.GenerateData
 {
-    public class ProductItemGenerator : DataGenerator<EasyForNetEntityFrameworkTestsDb, ProductItemEntity>, IScopedDependency
+    public class ProductItemGenerator : DataGenerator<EasyForNetEntityFrameworkTestsDb, ProductItemEntity>,
+        IScopedDependency
     {
         public ProductItemGenerator(EasyForNetEntityFrameworkTestsDb dbContext) : base(dbContext)
         {

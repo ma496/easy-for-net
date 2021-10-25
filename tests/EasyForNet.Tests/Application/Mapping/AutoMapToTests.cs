@@ -42,8 +42,7 @@ namespace EasyForNet.Tests.Application.Mapping
             public string PropOne { get; set; }
             public string PropTwo { get; set; }
             public string PropThree { get; set; }
-            [Ignore]
-            public string PropFour { get; set; }
+            [Ignore] public string PropFour { get; set; }
         }
     }
 }

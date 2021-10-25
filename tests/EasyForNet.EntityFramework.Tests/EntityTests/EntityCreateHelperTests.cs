@@ -36,12 +36,13 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
 
             var customerEntity = mapper.Map<CustomerEntity>(customerDto);
 
-            await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext, customerEntity, e => e.Code);
+            await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext,
+                customerEntity, e => e.Code);
 
             await dbContext.SaveChangesAsync();
 
             dbContext = NewScopeService<EasyForNetEntityFrameworkTestsDb>();
-            
+
             var savedCustomerEntity = await dbContext.Customers.FindAsync(customerEntity.Id);
 
             Assert.NotNull(savedCustomerEntity);
@@ -66,7 +67,8 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
 
                 var customerEntity = mapper.Map<CustomerEntity>(customerDto);
 
-                await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext, customerEntity, e => e.Code, e => e.IdCard);
+                await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext,
+                    customerEntity, e => e.Code, e => e.IdCard);
 
                 await dbContext.SaveChangesAsync();
 
@@ -75,7 +77,8 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
 
                 dbContext = NewScopeService<EasyForNetEntityFrameworkTestsDb>();
 
-                await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext, customerEntity, e => e.Code, e => e.IdCard);
+                await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext,
+                    customerEntity, e => e.Code, e => e.IdCard);
 
                 await dbContext.SaveChangesAsync();
             });
@@ -101,7 +104,8 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
 
                 var customerEntity = mapper.Map<CustomerEntity>(customerDto);
 
-                await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext, customerEntity, e => e.Code, e => e.IdCard);
+                await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext,
+                    customerEntity, e => e.Code, e => e.IdCard);
 
                 await dbContext.SaveChangesAsync();
 
@@ -110,7 +114,8 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
 
                 dbContext = NewScopeService<EasyForNetEntityFrameworkTestsDb>();
 
-                await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext, customerEntity, e => e.Code, e => e.IdCard);
+                await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext,
+                    customerEntity, e => e.Code, e => e.IdCard);
 
                 await dbContext.SaveChangesAsync();
             });
@@ -134,7 +139,8 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
 
             var customerEntity = mapper.Map<CustomerEntity>(customerDto);
 
-            await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext, customerEntity, e => e.Code, e => e.IdCard);
+            await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext,
+                customerEntity, e => e.Code, e => e.IdCard);
 
             await dbContext.SaveChangesAsync();
 
@@ -142,7 +148,7 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
             customerEntity.IsDeleted = true;
 
             dbContext = NewScopeService<EasyForNetEntityFrameworkTestsDb>();
-            
+
             dbContext.Customers.Update(customerEntity);
 
             await dbContext.SaveChangesAsync();
@@ -153,7 +159,8 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
 
             await Assert.ThrowsAsync<UniquePropertyDeletedException>(async () =>
             {
-                await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext, newCustomerEntity, e => e.Code, e => e.IdCard);
+                await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long>(dbContext,
+                    newCustomerEntity, e => e.Code, e => e.IdCard);
             });
         }
 

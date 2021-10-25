@@ -8,7 +8,6 @@ namespace EasyForNet.EntityFramework.Tests.Data.Configuration
     {
         public SpecificHolidayEntityTypeConfiguration() : base("SpecificHolidays")
         {
-            
         }
 
         protected override void ConfigureEntity(EntityTypeBuilder<SpecificHolidayEntity> builder)

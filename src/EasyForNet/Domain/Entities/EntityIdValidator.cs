@@ -10,7 +10,7 @@ namespace EasyForNet.Domain.Entities
         {
             if ((id.CompareTo(default(TKey)) == 0 || id.CompareTo(default(TKey)) < 0) && isAppError)
                 throw new AppException("Id must be greater than zero");
-            if ((id.CompareTo(default(TKey)) == 0 || id.CompareTo(default(TKey)) < 0)  && !isAppError)
+            if ((id.CompareTo(default(TKey)) == 0 || id.CompareTo(default(TKey)) < 0) && !isAppError)
                 throw new Exception("Id must be greater than zero");
         }
     }

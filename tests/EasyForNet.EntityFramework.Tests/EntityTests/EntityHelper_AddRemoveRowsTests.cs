@@ -30,7 +30,8 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
             var product = productGenerator.Generate();
             product.Items = productItemGenerator.Generate(10);
 
-            await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, ProductEntity, long>(dbContext, product, p => p.Model);
+            await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, ProductEntity, long>(dbContext, product,
+                p => p.Model);
 
             await dbContext.SaveChangesAsync();
 

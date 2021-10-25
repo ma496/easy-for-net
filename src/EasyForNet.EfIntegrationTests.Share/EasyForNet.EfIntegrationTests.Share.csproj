@@ -16,9 +16,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\EasyForNet.EntityFramework\EasyForNet.EntityFramework.csproj" />
-      <ProjectReference Include="..\EasyForNet.Tests.Share\EasyForNet.Tests.Share.csproj" />
-      <ProjectReference Include="..\EasyForNet\EasyForNet.csproj" />
+        <ProjectReference Include="..\EasyForNet.EntityFramework\EasyForNet.EntityFramework.csproj"/>
+        <ProjectReference Include="..\EasyForNet.Tests.Share\EasyForNet.Tests.Share.csproj"/>
+        <ProjectReference Include="..\EasyForNet\EasyForNet.csproj"/>
     </ItemGroup>
 
 </Project>

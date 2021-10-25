@@ -27,7 +27,8 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
                 Date = DateTime.Now
             };
 
-            await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, SpecificHolidayEntity, long>(dbContext, entity, e => e.Date);
+            await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, SpecificHolidayEntity, long>(dbContext,
+                entity, e => e.Date);
 
             await dbContext.SaveChangesAsync();
 
@@ -48,7 +49,8 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
             {
                 Date = DateTime.Now.Date
             };
-            await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, SpecificHolidayEntity, long>(dbContext, entity, e => e.Date);
+            await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, SpecificHolidayEntity, long>(dbContext,
+                entity, e => e.Date);
 
             await dbContext.SaveChangesAsync();
 
@@ -60,7 +62,8 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
             };
 
             var exception = await Assert.ThrowsAsync<UniquePropertyException>(async () =>
-                await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, SpecificHolidayEntity, long>(dbContext, entityTwo, e => e.Date));
+                await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, SpecificHolidayEntity, long>(
+                    dbContext, entityTwo, e => e.Date));
 
             Assert.Contains("Duplicate of Date not allowed", exception.Message);
         }

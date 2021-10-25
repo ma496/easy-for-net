@@ -24,7 +24,7 @@ namespace EasyForNet.EntityFramework.Helpers
 
             await UpdateAsync<TDbContext, TEntity, TKey>(dbContext, entity, ups);
         }
-        
+
         public static async Task UpdateAsync<TDbContext, TEntity, TKey>(TDbContext dbContext, TEntity entity,
             params (Expression<Func<TEntity, object>> propertyExp, bool isAllowDefaultValue)[] uniqueProperties)
             where TDbContext : DbContext
@@ -51,9 +51,9 @@ namespace EasyForNet.EntityFramework.Helpers
         }
 
         private static async Task CheckUniqueProperties<TEntity, TKey>(DbSet<TEntity> collection, TEntity entity,
-            List<UniqueProperty> uniqueProperties) 
-                where TEntity : class, IEntity<TKey>
-                where TKey : IComparable
+            List<UniqueProperty> uniqueProperties)
+            where TEntity : class, IEntity<TKey>
+            where TKey : IComparable
         {
             foreach (var up in uniqueProperties)
             {
@@ -67,7 +67,7 @@ namespace EasyForNet.EntityFramework.Helpers
             where TKey : IComparable
         {
             var value = await EntityHelper.PropertyValue(entity, up.Name, up.IsAllowDefaultValue);
-            
+
             // value = value is string || value is DateTime ? $"\"{value}\"" : value;
 
             var query = collection.IgnoreQueryFilters().Where($"{nameof(entity.Id)} != @0", entity.Id);
@@ -79,9 +79,9 @@ namespace EasyForNet.EntityFramework.Helpers
                     .Select($"new({nameof(ISoftDeleteEntity.IsDeleted)})")
                     .SingleOrDefaultAsync();
 
-                if(e == null)
+                if (e == null)
                     return;
-                
+
                 if (e.IsDeleted)
                     throw new UniquePropertyDeletedException(up.Name);
                 throw new UniquePropertyException(up.Name);

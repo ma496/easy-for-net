@@ -10,7 +10,7 @@ namespace EasyForNet.EntityFramework.Tests.Data.Configuration
         public ProductEntityTypeConfiguration() : base("Products")
         {
         }
-        
+
         protected override void ConfigureEntity(EntityTypeBuilder<ProductEntity> builder)
         {
             builder.HasIndex(p => p.Model)

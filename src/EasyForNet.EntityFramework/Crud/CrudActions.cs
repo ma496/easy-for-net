@@ -80,7 +80,7 @@ namespace EasyForNet.EntityFramework.Crud
         protected bool IsValidateUsingAttributes { get; }
 
         protected DbSet<TEntity> Items { get; }
-        
+
         protected CrudActions(TDbContext dbContext, IMapper mapper, bool isValidate = false,
             bool isValidateUsingAttributes = true)
         {
@@ -90,7 +90,7 @@ namespace EasyForNet.EntityFramework.Crud
             IsValidateUsingAttributes = isValidateUsingAttributes;
             Items = DbContext.Set<TEntity>();
         }
-        
+
         public async Task<IQueryable<TListDto>> ListAsync()
         {
             return (await BeforeListAsync(Items))
@@ -123,7 +123,7 @@ namespace EasyForNet.EntityFramework.Crud
 
             return dto;
         }
-        
+
         public async Task<TUpdateDto> UpdateAsync(TKey id, TUpdateDto dto)
         {
             await QueryHelper.ExistAndThrowAsync(Items, id);
@@ -163,7 +163,7 @@ namespace EasyForNet.EntityFramework.Crud
             await QueryHelper.ExistAndThrowAsync(Items, id);
 
             await BeforeDeleteAsync(id);
-            
+
             var entity = typeof(ISoftDeleteEntity).IsAssignableFrom(typeof(TEntity))
                 ? await Items.Where($"{nameof(IEntity<TKey>.Id)} = @0", id).SingleAsync()
                 : new TEntity {Id = id};
