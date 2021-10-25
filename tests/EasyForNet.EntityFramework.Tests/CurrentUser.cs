@@ -1,8 +1,6 @@
-﻿using EasyForNet.Application.Dependencies;
-
-namespace EasyForNet.EntityFramework.Tests
+﻿namespace EasyForNet.EntityFramework.Tests
 {
-    public class CurrentUser : ICurrentUser, IScopedDependency
+    public class CurrentUser : ICurrentUser
     {
         public long UserId => 453453;
 
