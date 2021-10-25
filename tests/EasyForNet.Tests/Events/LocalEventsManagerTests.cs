@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using EasyForNet.Events.Local;
 using EasyForNet.Tests.Base;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,22 +25,30 @@ namespace EasyForNet.Tests.Events
             Assert.True(ProductOneLocalEventHandler.IsOccur);
         }
         
-        public class ProductLocalEventHandler : ILocalEventHandler<ProductEvent>
+        public class ProductLocalEventHandler : LocalEventHandler<ProductEvent>
         {
             public static bool IsOccur;
             
-            public async Task HandleAsync(ProductEvent @event)
+            public ProductLocalEventHandler(IServiceProvider serviceProvider) : base(serviceProvider)
+            {
+            }
+
+            public override async Task HandleAsync(ProductEvent @event)
             {
                 IsOccur = true;
                 await Task.CompletedTask;
             }
         }
         
-        public class ProductOneLocalEventHandler : ILocalEventHandler<ProductEvent>
+        public class ProductOneLocalEventHandler : LocalEventHandler<ProductEvent>
         {
             public static bool IsOccur;
             
-            public async Task HandleAsync(ProductEvent @event)
+            public ProductOneLocalEventHandler(IServiceProvider serviceProvider) : base(serviceProvider)
+            {
+            }
+            
+            public override async Task HandleAsync(ProductEvent @event)
             {
                 IsOccur = true;
                 await Task.CompletedTask;
