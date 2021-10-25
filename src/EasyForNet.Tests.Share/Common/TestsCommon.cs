@@ -20,6 +20,8 @@ namespace EasyForNet.Tests.Share.Common
         protected IServiceProvider Services { get; }
         
         protected IMapper Mapper { get; }
+        
+        protected ICurrentUser CurrentUser { get; }
 
         protected TestsCommon(ITestOutputHelper outputHelper)
         {
@@ -29,6 +31,7 @@ namespace EasyForNet.Tests.Share.Common
             CompareObject = new CompareLogic {Config = {MaxDifferences = 30, IgnoreObjectTypes = true, MaxMillisecondsDateDifference = 3000}};
             Services = _serviceScope.ServiceProvider;
             Mapper = Services.GetRequiredService<IMapper>();
+            CurrentUser = Services.GetRequiredService<ICurrentUser>();
         }
 
         protected T NewScopeService<T>()
