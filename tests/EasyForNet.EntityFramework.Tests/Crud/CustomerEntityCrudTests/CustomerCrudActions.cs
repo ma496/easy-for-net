@@ -11,7 +11,8 @@ using FluentValidation;
 
 namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
 {
-    public class CustomerCrudActions : CrudActions<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long, CustomerDto>,
+    public class CustomerCrudActions : CrudActions<EasyForNetEntityFrameworkTestsDb, CustomerEntity, long, CustomerDto,
+        CustomerDto, CustomerDto, CustomerDto, CustomerDto, CustomerDto>,
         IScopedDependency
     {
         public bool IsBeforeCreate { get; private set; }

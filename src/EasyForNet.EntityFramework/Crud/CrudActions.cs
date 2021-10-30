@@ -5,6 +5,7 @@ using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using EasyForNet.Application.Dto;
 using EasyForNet.Application.Helpers;
 using EasyForNet.Crud;
 using EasyForNet.Domain.Entities;
@@ -16,60 +17,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EasyForNet.EntityFramework.Crud
 {
-    public abstract class CrudActions<TDbContext, TEntity, TKey, TLisDto> :
-        CrudActions<TDbContext, TEntity, TKey, TLisDto, TLisDto, TLisDto, TLisDto>
+    public abstract class CrudActions<TDbContext, TEntity, TKey, TListDto, TCreateDto, TCreateResponseDto, TUpdateDto, TUpdateResponseDto, TGetDto>
+        : ICrudActions<TKey, TListDto, TCreateDto, TCreateResponseDto, TUpdateDto, TUpdateResponseDto, TGetDto>
         where TDbContext : DbContextBase
         where TEntity : class, IEntity<TKey>, new()
         where TKey : IComparable
-        where TLisDto : class
-    {
-        protected CrudActions(TDbContext dbContext, IMapper mapper, bool isValidate = false,
-            bool isValidateUsingAttributes = true)
-            : base(dbContext, mapper, isValidate, isValidateUsingAttributes)
-        {
-        }
-    }
-
-    public abstract class CrudActions<TDbContext, TEntity, TKey, TListDto, TCreateDto> :
-        CrudActions<TDbContext, TEntity, TKey, TListDto, TCreateDto, TCreateDto, TListDto>
-        where TDbContext : DbContextBase
-        where TEntity : class, IEntity<TKey>, new()
-        where TKey : IComparable
-        where TListDto : class
+        where TListDto : class, IDto<TKey>
         where TCreateDto : class
-    {
-        protected CrudActions(TDbContext dbContext, IMapper mapper, bool isValidate = false,
-            bool isValidateUsingAttributes = true)
-            : base(dbContext, mapper, isValidate, isValidateUsingAttributes)
-        {
-        }
-    }
-
-    public abstract class CrudActions<TDbContext, TEntity, TKey, TListDto, TCreateDto, TUpdateDto> :
-        CrudActions<TDbContext, TEntity, TKey, TListDto, TCreateDto, TUpdateDto, TListDto>
-        where TDbContext : DbContextBase
-        where TEntity : class, IEntity<TKey>, new()
-        where TKey : IComparable
-        where TListDto : class
-        where TCreateDto : class
+        where TCreateResponseDto: class, IDto<TKey>, TCreateDto
         where TUpdateDto : class
-    {
-        protected CrudActions(TDbContext dbContext, IMapper mapper, bool isValidate = false,
-            bool isValidateUsingAttributes = true)
-            : base(dbContext, mapper, isValidate, isValidateUsingAttributes)
-        {
-        }
-    }
-
-    public abstract class CrudActions<TDbContext, TEntity, TKey, TListDto, TCreateDto, TUpdateDto, TGetDto>
-        : ICrudActions<TKey, TListDto, TCreateDto, TUpdateDto, TGetDto>
-        where TDbContext : DbContextBase
-        where TEntity : class, IEntity<TKey>, new()
-        where TKey : IComparable
-        where TListDto : class
-        where TCreateDto : class
-        where TUpdateDto : class
-        where TGetDto : class
+        where TUpdateResponseDto : class, IDto<TKey>, TUpdateDto
+        where TGetDto : class, IDto<TKey>
     {
         protected TDbContext DbContext { get; }
 
@@ -97,7 +55,7 @@ namespace EasyForNet.EntityFramework.Crud
                 .ProjectTo<TListDto>(Mapper.ConfigurationProvider);
         }
 
-        public async Task<TCreateDto> CreateAsync(TCreateDto dto)
+        public async Task<TCreateResponseDto> CreateAsync(TCreateDto dto)
         {
             var entity = Mapper.Map<TEntity>(dto);
 
@@ -117,14 +75,16 @@ namespace EasyForNet.EntityFramework.Crud
 
             await DbContext.SaveChangesAsync();
 
-            MapEntityProperties.Map(entity, dto);
+            var responseDto = (TCreateResponseDto) dto;
+            
+            MapEntityProperties.Map(entity, responseDto);
 
-            await AfterCreateAsync(dto, entity);
+            await AfterCreateAsync(responseDto, entity);
 
-            return dto;
+            return responseDto;
         }
 
-        public async Task<TUpdateDto> UpdateAsync(TKey id, TUpdateDto dto)
+        public async Task<TUpdateResponseDto> UpdateAsync(TKey id, TUpdateDto dto)
         {
             await QueryHelper.ExistAndThrowAsync(Items, id);
 
@@ -149,11 +109,23 @@ namespace EasyForNet.EntityFramework.Crud
 
             await DbContext.SaveChangesAsync();
 
-            MapEntityProperties.Map(entity, dto);
+            var responseDto = (TUpdateResponseDto) dto;
+            
+            MapEntityProperties.Map(entity, responseDto);
 
-            await AfterUpdateAsync(dto, entity);
+            await AfterUpdateAsync(responseDto, entity);
 
-            return dto;
+            return responseDto;
+        }
+
+        public async Task<TUpdateDto> ForUpdateAsync(TKey id)
+        {
+            EntityIdValidator.Validate(id);
+            
+            return await (await BeforeForUpdateAsync(Items.AsNoTracking()))
+                .Where($"{nameof(IEntity<TKey>.Id)} = @0", id)
+                .ProjectTo<TUpdateDto>(Mapper.ConfigurationProvider)
+                .SingleOrDefaultAsync();
         }
 
         public async Task DeleteAsync(TKey id)
@@ -231,7 +203,7 @@ namespace EasyForNet.EntityFramework.Crud
             await Task.CompletedTask;
         }
 
-        protected virtual async Task AfterCreateAsync(TCreateDto dto, TEntity entity)
+        protected virtual async Task AfterCreateAsync(TCreateResponseDto dto, TEntity entity)
         {
             await Task.CompletedTask;
         }
@@ -241,9 +213,14 @@ namespace EasyForNet.EntityFramework.Crud
             await Task.CompletedTask;
         }
 
-        protected virtual async Task AfterUpdateAsync(TUpdateDto dto, TEntity entity)
+        protected virtual async Task AfterUpdateAsync(TUpdateResponseDto dto, TEntity entity)
         {
             await Task.CompletedTask;
+        }
+        
+        protected virtual async Task<IQueryable<TEntity>> BeforeForUpdateAsync(IQueryable<TEntity> query)
+        {
+            return await Task.FromResult(query);
         }
 
         protected virtual async Task BeforeDeleteAsync(TKey id)

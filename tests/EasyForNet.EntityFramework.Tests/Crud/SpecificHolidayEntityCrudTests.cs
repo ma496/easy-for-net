@@ -15,7 +15,8 @@ using Xunit.Abstractions;
 namespace EasyForNet.EntityFramework.Tests.Crud
 {
     public class SpecificHolidayEntityCrudTests : CrudTestsBase<SpecificHolidayCrudActions, SpecificHolidayEntity,
-        long, SpecificHolidayListDto, SpecificHolidayCreateDto, SpecificHolidayUpdateDto, SpecificHolidayGetDto>
+        long, SpecificHolidayListDto, SpecificHolidayCreateDto, SpecificHolidayCreateDto, SpecificHolidayUpdateDto,
+        SpecificHolidayUpdateDto, SpecificHolidayGetDto>
     {
         public SpecificHolidayEntityCrudTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
@@ -36,7 +37,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud
         [Fact]
         public async Task CreateDuplicateTest()
         {
-            await InternalCreateDuplicateTest(1, 1, null, null, _ => nameof(SpecificHolidayCreateDto.Date));
+            await InternalCreateDuplicateTest(1, 1, _ => nameof(SpecificHolidayCreateDto.Date));
         }
 
         [Fact]
@@ -48,7 +49,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud
         [Fact]
         public async Task UpdateDuplicateTest()
         {
-            await InternalUpdateDuplicateTest(2, 1, null, null, (dto, dtos) =>
+            await InternalUpdateDuplicateTest(2, 1, (dto, dtos) =>
             {
                 dto.Date = dtos[1].Date;
                 return nameof(SpecificHolidayUpdateDto.Date);
@@ -103,6 +104,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud
             CreateMap<SpecificHolidayEntity, SpecificHolidayListDto>();
             CreateMap<SpecificHolidayCreateDto, SpecificHolidayEntity>(MemberList.Source);
             CreateMap<SpecificHolidayUpdateDto, SpecificHolidayEntity>(MemberList.Source);
+            CreateMap<SpecificHolidayEntity, SpecificHolidayUpdateDto>();
             CreateMap<SpecificHolidayEntity, SpecificHolidayGetDto>();
 
             // Mapping for tests
@@ -112,7 +114,8 @@ namespace EasyForNet.EntityFramework.Tests.Crud
     }
 
     public class SpecificHolidayCrudActions : CrudActions<EasyForNetEntityFrameworkTestsDb, SpecificHolidayEntity, long,
-            SpecificHolidayListDto, SpecificHolidayCreateDto, SpecificHolidayUpdateDto, SpecificHolidayGetDto>,
+            SpecificHolidayListDto, SpecificHolidayCreateDto, SpecificHolidayCreateDto, SpecificHolidayUpdateDto,
+            SpecificHolidayUpdateDto, SpecificHolidayGetDto>,
         IScopedDependency
     {
         public SpecificHolidayCrudActions(EasyForNetEntityFrameworkTestsDb dbContext, IMapper mapper) : base(dbContext,

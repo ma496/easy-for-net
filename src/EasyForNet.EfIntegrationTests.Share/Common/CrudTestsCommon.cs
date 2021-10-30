@@ -16,13 +16,17 @@ using Xunit.Abstractions;
 namespace EasyForNet.EfIntegrationTests.Share.Common
 {
     public abstract class
-        CrudTestsCommon<TCrudActions, TEntity, TKey, TListDto, TCreateDto, TUpdateDto, TGetDto> : TestsCommon
-        where TCrudActions : ICrudActions<TKey, TListDto, TCreateDto, TUpdateDto, TGetDto>
-        where TEntity : IEntity<TKey>
+        CrudTestsCommon<TCrudActions, TEntity, TKey, TListDto, TCreateDto, TCreateResponseDto, TUpdateDto,
+            TUpdateResponseDto, TGetDto> : TestsCommon
+        where TCrudActions : ICrudActions<TKey, TListDto, TCreateDto, TCreateResponseDto, TUpdateDto, TUpdateResponseDto
+            , TGetDto>
+        where TEntity : class, IEntity<TKey>, new()
         where TKey : IComparable
         where TListDto : class, IDto<TKey>
-        where TCreateDto : class, IDto<TKey>
+        where TCreateDto : class
+        where TCreateResponseDto : class, IDto<TKey>, TCreateDto
         where TUpdateDto : class
+        where TUpdateResponseDto : class, IDto<TKey>, TUpdateDto
         where TGetDto : class, IDto<TKey>
     {
         protected CrudTestsCommon(ITestOutputHelper outputHelper) : base(outputHelper)
@@ -67,7 +71,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
 
         protected delegate void BeforeCreateDelegate(TCreateDto dto);
 
-        protected delegate void AfterCreateDelegate(TCreateDto dto, TGetDto createdDto);
+        protected delegate void AfterCreateDelegate(TCreateResponseDto dto);
 
         protected virtual async Task InternalCreateTestAsync(BeforeCreateDelegate beforeCreate = null,
             AfterCreateDelegate afterCreate = null)
@@ -78,31 +82,25 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
 
             beforeCreate?.Invoke(dto);
 
-            dto = await crudActions.CreateAsync(dto);
+            var responseDto = await crudActions.CreateAsync(dto);
 
             crudActions = NewScopeService<TCrudActions>();
 
-            var createdDto = await crudActions.GetAsync(dto.Id);
+            var createdDto = await crudActions.GetAsync(responseDto.Id);
 
-            CompareAssert(dto, createdDto);
+            CompareAssert(responseDto, createdDto);
 
-            afterCreate?.Invoke(dto, createdDto);
+            afterCreate?.Invoke(responseDto);
         }
 
         #endregion
 
         #region Internal Create Duplicate Test
 
-        protected delegate void BeforeCreateDuplicateDelegate(List<TCreateDto> dtos);
-
-        protected delegate void AfterCreateDuplicateDelegate(List<TListDto> dtos);
-
         protected delegate string
             PrepareForCreateUniqueProperty(TCreateDto dto); // Modify dto and return unique property name
 
         protected virtual async Task InternalCreateDuplicateTest(int count, int uniquePropertiesCount,
-            BeforeCreateDuplicateDelegate
-                beforeCreateDuplicate = null, AfterCreateDuplicateDelegate afterCreateDuplicate = null,
             params PrepareForCreateUniqueProperty[] prepareForUniqueProperties)
         {
             Guard.Against.NegativeOrZero(count, nameof(count));
@@ -118,33 +116,29 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
 
             var dtos = NewDtosWrapper(count);
 
-            beforeCreateDuplicate?.Invoke(dtos);
-
-            dtos = dtos.Select(d => crudActions.CreateAsync(d).Result).ToList();
+            var responseDtos = dtos.Select(d => crudActions.CreateAsync(d).Result).ToList();
 
             crudActions = NewScopeService<TCrudActions>();
 
             var createdDtos = (await crudActions.ListAsync())
-                .Where(e => dtos.Select(d => d.Id).Contains(e.Id))
+                .Where(e => responseDtos.Select(d => d.Id).Contains(e.Id))
                 .ToList();
 
-            CompareAssert(dtos, createdDtos);
-
-            afterCreateDuplicate?.Invoke(createdDtos);
+            CompareAssert(responseDtos, createdDtos);
 
             crudActions = NewScopeService<TCrudActions>();
 
             for (var i = 0; i < uniquePropertiesCount; i++)
             {
-                var dto = dtos[i].Clone();
-                dto.Id = default;
+                var responseDto = responseDtos[i].Clone();
+                responseDto.Id = default;
 
-                var uniquePropertyName = prepareForUniqueProperties[i](dto);
+                var uniquePropertyName = prepareForUniqueProperties[i](responseDto);
 
                 crudActions = NewScopeService<TCrudActions>();
 
                 var exception = await Assert.ThrowsAsync<UniquePropertyException>(async () =>
-                    await crudActions.CreateAsync(dto));
+                    await crudActions.CreateAsync(responseDto));
 
                 Assert.Equal($"Duplicate of {uniquePropertyName} not allowed", exception.Message);
 
@@ -158,7 +152,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
 
         protected delegate void BeforeUpdateDelegate(TUpdateDto dto);
 
-        protected delegate void AfterUpdateDelegate(TUpdateDto dto, TGetDto updatedDto);
+        protected delegate void AfterUpdateDelegate(TUpdateResponseDto dto);
 
         protected virtual async Task InternalUpdateTestAsync(BeforeUpdateDelegate beforeUpdate = null,
             AfterUpdateDelegate afterUpdate = null)
@@ -167,50 +161,39 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
 
             var dto = NewDtoWrapper();
 
-            dto = await crudActions.CreateAsync(dto);
+            var responseDto = await crudActions.CreateAsync(dto);
 
             crudActions = NewScopeService<TCrudActions>();
 
-            var createdDto = await crudActions.GetAsync(dto.Id);
+            var createdDto = await crudActions.GetAsync(responseDto.Id);
 
-            CompareAssert(dto, createdDto);
+            CompareAssert(responseDto, createdDto);
 
-            TUpdateDto forUpdateDto;
-            if (typeof(TUpdateDto) != typeof(TGetDto))
-            {
-                forUpdateDto = Mapper.Map<TUpdateDto>(await crudActions.GetAsync(dto.Id));
-            }
-            else
-                forUpdateDto = await crudActions.GetAsync(dto.Id) as TUpdateDto;
+            var forUpdateDto = await crudActions.ForUpdateAsync(responseDto.Id);
 
             beforeUpdate?.Invoke(forUpdateDto);
 
-            forUpdateDto = await crudActions.UpdateAsync(dto.Id, forUpdateDto);
+            var updateResponseDto = await crudActions.UpdateAsync(responseDto.Id, forUpdateDto);
 
             crudActions = NewScopeService<TCrudActions>();
 
-            var updatedDto = await crudActions.GetAsync(dto.Id);
+            var updatedDto = await crudActions.GetAsync(responseDto.Id);
 
-            CompareAssert(forUpdateDto, updatedDto);
+            CompareAssert(updateResponseDto, updatedDto);
 
-            afterUpdate?.Invoke(forUpdateDto, updatedDto);
+            afterUpdate?.Invoke(updateResponseDto);
         }
 
         #endregion
 
         #region Internal Update Duplicate Test
 
-        protected delegate void BeforeUpdateDuplicateDelegate(List<TCreateDto> dtos);
-
-        protected delegate void AfterUpdateDuplicateDelegate(List<TListDto> dtos);
-
         protected delegate string
-            PrepareForUpdateUniqueProperty(TCreateDto dto,
+            PrepareForUpdateUniqueProperty(TUpdateDto dto,
                 List<TCreateDto> dtos); // Modify dto and return unique property name
 
         protected virtual async Task InternalUpdateDuplicateTest(int count, int uniquePropertiesCount,
-            BeforeUpdateDuplicateDelegate beforeUpdateDuplicate = null, AfterUpdateDuplicateDelegate
-                afterUpdateDuplicate = null, params PrepareForUpdateUniqueProperty[] prepareForUniqueProperties)
+            params PrepareForUpdateUniqueProperty[] prepareForUniqueProperties)
         {
             Guard.Against.NegativeOrZero(count, nameof(count));
             Guard.Against.NegativeOrZero(uniquePropertiesCount, nameof(uniquePropertiesCount));
@@ -224,38 +207,30 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
 
             var dtos = NewDtosWrapper(count);
 
-            beforeUpdateDuplicate?.Invoke(dtos);
-
-            dtos = dtos.Select(d => crudActions.CreateAsync(d).Result).ToList();
+            var responseDtos = dtos.Select(d => crudActions.CreateAsync(d).Result).ToList();
 
             crudActions = NewScopeService<TCrudActions>();
 
             var createdDtos = (await crudActions.ListAsync())
-                .Where(e => dtos.Select(d => d.Id).Contains(e.Id))
+                .Where(e => responseDtos.Select(d => d.Id).Contains(e.Id))
                 .ToList();
 
-            CompareAssert(dtos, createdDtos);
-
-            afterUpdateDuplicate?.Invoke(createdDtos);
+            CompareAssert(responseDtos, createdDtos);
 
             crudActions = NewScopeService<TCrudActions>();
 
             for (var i = 0; i < uniquePropertiesCount; i++)
             {
-                var dto = dtos[i].Clone();
-
-                var uniquePropertyName = prepareForUniqueProperties[i](dto, dtos);
+                var responseDto = responseDtos[i].Clone();
 
                 crudActions = NewScopeService<TCrudActions>();
 
-                TUpdateDto forUpdateDto;
-                if (typeof(TUpdateDto) == dto.GetType())
-                    forUpdateDto = dto as TUpdateDto;
-                else
-                    forUpdateDto = Mapper.Map<TUpdateDto>(dto);
+                var forUpdateDto = await crudActions.ForUpdateAsync(responseDto.Id);
+                
+                var uniquePropertyName = prepareForUniqueProperties[i](forUpdateDto, dtos);
 
                 var exception = await Assert.ThrowsAsync<UniquePropertyException>(async () =>
-                    await crudActions.UpdateAsync(dto.Id, forUpdateDto));
+                    await crudActions.UpdateAsync(responseDto.Id, forUpdateDto));
 
                 Assert.Equal($"Duplicate of {uniquePropertyName} not allowed", exception.Message);
 
@@ -278,25 +253,25 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
 
             var dto = NewDtoWrapper();
 
-            dto = await crudActions.CreateAsync(dto);
+            var responseDto = await crudActions.CreateAsync(dto);
 
             crudActions = NewScopeService<TCrudActions>();
 
-            var createdDto = await crudActions.GetAsync(dto.Id);
+            var createdDto = await crudActions.GetAsync(responseDto.Id);
 
-            CompareAssert(dto, createdDto);
+            CompareAssert(responseDto, createdDto);
 
-            beforeDelete?.Invoke(dto.Id);
+            beforeDelete?.Invoke(responseDto.Id);
 
             crudActions = NewScopeService<TCrudActions>();
 
-            await crudActions.DeleteAsync(dto.Id);
+            await crudActions.DeleteAsync(responseDto.Id);
 
-            var deletedDto = await crudActions.GetAsync(dto.Id);
+            var deletedDto = await crudActions.GetAsync(responseDto.Id);
 
             Assert.Null(deletedDto);
 
-            afterDelete?.Invoke(dto.Id);
+            afterDelete?.Invoke(responseDto.Id);
         }
 
         #endregion
@@ -316,34 +291,34 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
             var crudActions = Services.GetRequiredService<TCrudActions>();
 
             var dto = NewDtoWrapper();
-            dto = await crudActions.CreateAsync(dto);
+            var responseDto = await crudActions.CreateAsync(dto);
 
             crudActions = NewScopeService<TCrudActions>();
 
-            var createdDto = await crudActions.GetAsync(dto.Id);
+            var createdDto = await crudActions.GetAsync(responseDto.Id);
 
-            CompareAssert(dto, createdDto);
+            CompareAssert(responseDto, createdDto);
 
-            await crudActions.DeleteAsync(dto.Id);
+            await crudActions.DeleteAsync(responseDto.Id);
 
             crudActions = NewScopeService<TCrudActions>();
 
-            var deletedDto = await crudActions.GetAsync(dto.Id);
+            var deletedDto = await crudActions.GetAsync(responseDto.Id);
 
             Assert.Null(deletedDto);
 
-            beforeUndoDelete?.Invoke(dto.Id);
+            beforeUndoDelete?.Invoke(responseDto.Id);
 
-            await crudActions.UndoDeleteAsync(dto.Id);
+            await crudActions.UndoDeleteAsync(responseDto.Id);
 
             crudActions = NewScopeService<TCrudActions>();
 
-            var undoDto = await crudActions.GetAsync(dto.Id);
+            var undoDto = await crudActions.GetAsync(responseDto.Id);
 
             Assert.NotNull(undoDto);
             CompareAssert(createdDto, undoDto);
 
-            afterUndoDelete?.Invoke(dto.Id);
+            afterUndoDelete?.Invoke(responseDto.Id);
         }
 
         #endregion
@@ -363,15 +338,15 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
 
             beforeList?.Invoke(dtos);
 
-            dtos = dtos.Select(d => crudActions.CreateAsync(d).Result).ToList();
+            var responseDtos = dtos.Select(d => crudActions.CreateAsync(d).Result).ToList();
 
             crudActions = NewScopeService<TCrudActions>();
 
             var createdDtos = (await crudActions.ListAsync())
-                .Where(o => dtos.Select(d => d.Id).Contains(o.Id))
+                .Where(o => responseDtos.Select(d => d.Id).Contains(o.Id))
                 .ToList();
 
-            CompareAssert(dtos, createdDtos);
+            CompareAssert(responseDtos, createdDtos);
 
             afterList?.Invoke(createdDtos);
         }
@@ -393,13 +368,13 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
 
             beforeGet?.Invoke(dto);
 
-            dto = await crudActions.CreateAsync(dto);
+            var responseDto = await crudActions.CreateAsync(dto);
 
             crudActions = NewScopeService<TCrudActions>();
 
-            var createdDto = await crudActions.GetAsync(dto.Id);
+            var createdDto = await crudActions.GetAsync(responseDto.Id);
 
-            CompareAssert(dto, createdDto);
+            CompareAssert(responseDto, createdDto);
 
             afterGet?.Invoke(createdDto);
         }

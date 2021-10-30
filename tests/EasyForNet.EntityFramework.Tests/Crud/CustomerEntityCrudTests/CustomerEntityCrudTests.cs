@@ -7,7 +7,7 @@ using Xunit.Abstractions;
 namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
 {
     public class CustomerEntityCrudTests : CrudTestsBase<CustomerCrudActions, CustomerEntity, long, CustomerDto,
-        CustomerDto, CustomerDto, CustomerDto>
+        CustomerDto, CustomerDto, CustomerDto, CustomerDto, CustomerDto>
     {
         public CustomerEntityCrudTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
@@ -27,7 +27,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
         [Fact]
         public async Task Create_WithDuplicateTest()
         {
-            await InternalCreateDuplicateTest(2, 2, null, null, _ => nameof(CustomerDto.Code),
+            await InternalCreateDuplicateTest(2, 2, _ => nameof(CustomerDto.Code),
                 dto =>
                 {
                     dto.Code = IncrementalId.Id;
@@ -48,7 +48,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
         [Fact]
         public async Task Update_WithDuplicateTest()
         {
-            await InternalUpdateDuplicateTest(2, 2, null, null, (dto, dtos) =>
+            await InternalUpdateDuplicateTest(2, 2, (dto, dtos) =>
             {
                 dto.Code = dtos[1].Code;
                 return nameof(CustomerDto.Code);

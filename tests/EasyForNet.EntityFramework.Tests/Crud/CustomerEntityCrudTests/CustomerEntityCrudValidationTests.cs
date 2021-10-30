@@ -8,8 +8,7 @@ using Xunit.Abstractions;
 namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
 {
     public class CustomerEntityCrudValidationTests : CrudTestsBase<CustomerCrudActions, CustomerEntity, long,
-        CustomerDto,
-        CustomerDto, CustomerDto, CustomerDto>
+        CustomerDto, CustomerDto, CustomerDto, CustomerDto, CustomerDto, CustomerDto>
     {
         public CustomerEntityCrudValidationTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {

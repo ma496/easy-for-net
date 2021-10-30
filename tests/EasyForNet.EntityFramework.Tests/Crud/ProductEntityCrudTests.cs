@@ -16,7 +16,7 @@ using Xunit.Abstractions;
 namespace EasyForNet.EntityFramework.Tests.Crud
 {
     public class ProductEntityCrudTests : CrudTestsBase<ProductEntityCrudActions, ProductEntity, long, ProductDto,
-        ProductDto, ProductDto, ProductDto>
+        ProductDto, ProductDto, ProductDto, ProductDto, ProductDto>
     {
         public ProductEntityCrudTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
@@ -25,7 +25,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud
         [Fact]
         public async Task CreateTest()
         {
-            await InternalCreateTestAsync(null, (_, createdDto) => Assert.Equal(10, createdDto.Items.Count));
+            await InternalCreateTestAsync(null, dto => Assert.Equal(10, dto.Items.Count));
         }
 
         [Fact]
@@ -36,7 +36,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud
                 dto.Model = $"model : {IncrementalId.Id}";
                 dto.Items = dto.Items.Take(6).Concat(NewProductItems(5)).ToList();
                 dto.Items[0].SerialNo = $"serial no: {IncrementalId.Id}";
-            }, (_, updatedDto) => Assert.Equal(11, updatedDto.Items.Count));
+            }, updatedDto => Assert.Equal(11, updatedDto.Items.Count));
         }
 
         [Fact]
@@ -66,7 +66,8 @@ namespace EasyForNet.EntityFramework.Tests.Crud
     }
 
     public class ProductEntityCrudActions :
-        CrudActions<EasyForNetEntityFrameworkTestsDb, ProductEntity, long, ProductDto>,
+        CrudActions<EasyForNetEntityFrameworkTestsDb, ProductEntity, long, ProductDto, ProductDto, ProductDto,
+        ProductDto, ProductDto, ProductDto>,
         IScopedDependency
     {
         public ProductEntityCrudActions(EasyForNetEntityFrameworkTestsDb dbContext, IMapper mapper) : base(dbContext,
