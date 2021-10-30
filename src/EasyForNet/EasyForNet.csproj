@@ -16,17 +16,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Ardalis.GuardClauses" Version="3.2.0"/>
-        <PackageReference Include="AutoMapper" Version="10.1.1"/>
-        <PackageReference Include="Bogus" Version="33.1.1"/>
-        <PackageReference Include="FluentValidation" Version="10.3.3"/>
-        <PackageReference Include="JetBrains.Annotations" Version="2021.2.0"/>
-        <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0"/>
-        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0"/>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2"/>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.1"/>
+        <PackageReference Include="Ardalis.GuardClauses" Version="3.3.0" />
+        <PackageReference Include="AutoMapper" Version="10.1.1" />
+        <PackageReference Include="Bogus" Version="33.1.1" />
+        <PackageReference Include="FluentValidation" Version="10.3.4" />
+        <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 
-        <PackageReference Include="CompareNETObjects" Version="4.74.0"/>
+        <PackageReference Include="CompareNETObjects" Version="4.74.0" />
 
     </ItemGroup>
 

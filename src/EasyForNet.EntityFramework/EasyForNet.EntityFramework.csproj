@@ -16,13 +16,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.10"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.DynamicLinq" Version="5.2.12"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="5.0.10"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.11" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.DynamicLinq" Version="5.2.13" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="5.0.11" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\EasyForNet\EasyForNet.csproj"/>
+        <ProjectReference Include="..\EasyForNet\EasyForNet.csproj" />
     </ItemGroup>
 
 </Project>
