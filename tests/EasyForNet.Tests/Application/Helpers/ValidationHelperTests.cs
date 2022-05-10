@@ -6,7 +6,7 @@ using EasyForNet.Tests.Base;
 using FluentValidation;
 using Xunit;
 using Xunit.Abstractions;
-using ValidationException = EasyForNet.Exceptions.ValidationException;
+using ValidationException = EasyForNet.Exceptions.UserFriendly.ValidationException;
 
 namespace EasyForNet.Tests.Application.Helpers
 {

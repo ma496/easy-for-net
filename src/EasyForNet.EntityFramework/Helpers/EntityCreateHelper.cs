@@ -5,7 +5,7 @@ using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using EasyForNet.Domain.Entities;
-using EasyForNet.Exceptions;
+using EasyForNet.Exceptions.UserFriendly;
 using EasyForNet.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.DynamicLinq;
@@ -65,7 +65,7 @@ namespace EasyForNet.EntityFramework.Helpers
             where TEntity : class, IEntity<TKey>
             where TKey : IComparable
         {
-            var value = await EntityHelper.PropertyValue(entity, up.Name, up.IsAllowDefaultValue);
+            var value = EntityHelper.PropertyValue(entity, up.Name, up.IsAllowDefaultValue);
 
             // value = value is string || value is DateTime ? $"\"{value}\"" : value;
 

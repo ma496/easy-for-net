@@ -9,12 +9,13 @@ namespace EasyForNet.EntityFramework.Helpers
 {
     public static class EntityHelper
     {
-        public static string EntityName(Type type)
+        public static string EntityName<TEntity>()
+            where TEntity : class
         {
-            return type.Name.Replace("Entity", "").ToLower();
+            return typeof(TEntity).Name.Replace("Entity", "").ToLower();
         }
 
-        public static async Task<object> PropertyValue(object obj, string propertyName, bool isAllowDefaultValue)
+        public static object PropertyValue(object obj, string propertyName, bool isAllowDefaultValue)
         {
             var property = obj.GetType().GetProperty(propertyName);
             if (property == null)
@@ -27,8 +28,8 @@ namespace EasyForNet.EntityFramework.Helpers
             }
 
             if (property.PropertyType.IsEnum)
-                return await Task.Run(() => Convert.ToInt32(value));
-            return await Task.Run(() => value);
+                return Convert.ToInt32(value);
+            return value;
         }
 
         public static async Task RemoveRowsAsync<TEntity, T>(DbSet<TEntity> dbSet,

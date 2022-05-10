@@ -12,6 +12,7 @@ using EasyForNet.Domain.Entities;
 using EasyForNet.EntityFramework.Data;
 using EasyForNet.EntityFramework.Helpers;
 using EasyForNet.Exceptions;
+using EasyForNet.Exceptions.UserFriendly;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
@@ -160,7 +161,7 @@ namespace EasyForNet.EntityFramework.Crud
                 .SingleOrDefaultAsync();
 
             if (entity == null)
-                throw new AppException($"No {EntityHelper.EntityName(typeof(TEntity))} found with id = {id}");
+                throw new UserFriendlyException($"No {EntityHelper.EntityName<TEntity>()} found with id = {id}");
 
             entity.IsDeleted = false;
 

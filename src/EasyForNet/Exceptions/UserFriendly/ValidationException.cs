@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 
-namespace EasyForNet.Exceptions
+namespace EasyForNet.Exceptions.UserFriendly
 {
-    public class ValidationException : AppException
+    public class ValidationException : UserFriendlyException
     {
         public List<ValidationError> ValidationErrors { get; }
 

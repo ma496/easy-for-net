@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using EasyForNet.Domain.Entities;
-using EasyForNet.Exceptions;
+using EasyForNet.Exceptions.UserFriendly;
 using Microsoft.EntityFrameworkCore;
 
 namespace EasyForNet.EntityFramework.Helpers
@@ -19,7 +19,7 @@ namespace EasyForNet.EntityFramework.Helpers
             var entity = await collection.FindAsync(id);
 
             if (entity == null)
-                throw new NoContentException($"No {EntityHelper.EntityName(typeof(TEntity))} found with id = {id}");
+                throw new NoEntityException(EntityHelper.EntityName<TEntity>(), id);
 
             return entity;
         }
@@ -36,7 +36,7 @@ namespace EasyForNet.EntityFramework.Helpers
                 .SingleOrDefaultAsync();
 
             if (obj == null)
-                throw new NoContentException($"No {EntityHelper.EntityName(typeof(TEntity))} found with id = {id}");
+                throw new NoEntityException(EntityHelper.EntityName<TEntity>(), id);
 
             return obj;
         }
@@ -51,7 +51,7 @@ namespace EasyForNet.EntityFramework.Helpers
                 .SingleOrDefaultAsync();
 
             if (entity == null)
-                throw new NoContentException($"No {EntityHelper.EntityName(typeof(TEntity))} found with id = {id}");
+                throw new NoEntityException(EntityHelper.EntityName<TEntity>(), id);
         }
     }
 }

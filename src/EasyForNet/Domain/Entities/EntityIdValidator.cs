@@ -1,5 +1,5 @@
-﻿using System;
-using EasyForNet.Exceptions;
+﻿using EasyForNet.Exceptions.UserFriendly;
+using System;
 
 namespace EasyForNet.Domain.Entities
 {
@@ -8,10 +8,14 @@ namespace EasyForNet.Domain.Entities
         public static void Validate<TKey>(TKey id, bool isAppError = true)
             where TKey : IComparable
         {
-            if ((id.CompareTo(default(TKey)) == 0 || id.CompareTo(default(TKey)) < 0) && isAppError)
-                throw new AppException("Id must be greater than zero");
-            if ((id.CompareTo(default(TKey)) == 0 || id.CompareTo(default(TKey)) < 0) && !isAppError)
-                throw new Exception("Id must be greater than zero");
+            // if id have default value or minus value
+            if (id.CompareTo(default(TKey)) == 0 || id.CompareTo(default(TKey)) < 0)
+            {
+                var errorMsg = "Id must be greater than zero";
+                if (isAppError)
+                    throw new UserFriendlyException(errorMsg);
+                throw new Exception(errorMsg);
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace EasyForNet.Exceptions
+﻿namespace EasyForNet.Exceptions.UserFriendly
 {
     public class UniquePropertyDeletedException : UniquePropertyException
     {

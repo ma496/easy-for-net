@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using EasyForNet.EntityFramework.Tests.Base;
 using EasyForNet.EntityFramework.Tests.Data.Entities;
-using EasyForNet.Exceptions;
+using EasyForNet.Exceptions.UserFriendly;
 using Xunit;
 using Xunit.Abstractions;
 

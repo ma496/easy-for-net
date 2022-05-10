@@ -1,6 +1,6 @@
-﻿namespace EasyForNet.Exceptions
+﻿namespace EasyForNet.Exceptions.UserFriendly
 {
-    public class UniquePropertyException : AppException
+    public class UniquePropertyException : UserFriendlyException
     {
         public string PropertyName { get; }
 

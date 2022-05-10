@@ -4,7 +4,7 @@ using EasyForNet.EntityFramework.Helpers;
 using EasyForNet.EntityFramework.Tests.Base;
 using EasyForNet.EntityFramework.Tests.Data;
 using EasyForNet.EntityFramework.Tests.Data.Entities;
-using EasyForNet.Exceptions;
+using EasyForNet.Exceptions.UserFriendly;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;

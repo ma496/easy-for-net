@@ -2,9 +2,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using Ardalis.GuardClauses;
-using EasyForNet.Exceptions;
+using EasyForNet.Exceptions.UserFriendly;
 using FluentValidation;
-using ValidationException = EasyForNet.Exceptions.ValidationException;
+using ValidationException = EasyForNet.Exceptions.UserFriendly.ValidationException;
 
 namespace EasyForNet.Application.Helpers
 {

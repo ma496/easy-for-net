@@ -6,7 +6,7 @@ using Ardalis.GuardClauses;
 using EasyForNet.Application.Dto;
 using EasyForNet.Crud;
 using EasyForNet.Domain.Entities;
-using EasyForNet.Exceptions;
+using EasyForNet.Exceptions.UserFriendly;
 using EasyForNet.Extensions;
 using EasyForNet.Tests.Share.Common;
 using FluentAssertions;

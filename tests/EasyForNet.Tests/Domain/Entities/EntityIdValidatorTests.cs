@@ -1,6 +1,6 @@
 ﻿using System;
 using EasyForNet.Domain.Entities;
-using EasyForNet.Exceptions;
+using EasyForNet.Exceptions.UserFriendly;
 using EasyForNet.Tests.Base;
 using Xunit;
 using Xunit.Abstractions;
@@ -36,7 +36,7 @@ namespace EasyForNet.Tests.Domain.Entities
         [InlineData(-2344)]
         public void Validate_ExceptAppException(long id)
         {
-            Assert.Throws<AppException>(() => EntityIdValidator.Validate(id));
+            Assert.Throws<UserFriendlyException>(() => EntityIdValidator.Validate(id));
         }
     }
 }
