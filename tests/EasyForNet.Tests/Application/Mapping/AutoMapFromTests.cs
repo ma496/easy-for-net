@@ -4,6 +4,7 @@ using EasyForNet.Tests.Base;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
+using FluentAssertions;
 
 namespace EasyForNet.Tests.Application.Mapping
 {
@@ -26,7 +27,7 @@ namespace EasyForNet.Tests.Application.Mapping
             };
             var classOne = mapper.Map<ClassOne>(classTwo);
 
-            CompareAssert(classTwo, classOne);
+            classTwo.Should().BeEquivalentTo(classOne, opt => opt.Excluding(x => x.PropFour));
         }
 
         [AutoMap(typeof(ClassTwo))]

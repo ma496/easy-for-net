@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using EasyForNet.Application.Dependencies;
@@ -70,6 +71,8 @@ namespace EasyForNet.EntityFramework.Tests.Crud
 
         protected override SpecificHolidayCreateDto NewDto()
         {
+            Thread.Sleep(10);
+
             return new()
             {
                 Date = DateTime.Now

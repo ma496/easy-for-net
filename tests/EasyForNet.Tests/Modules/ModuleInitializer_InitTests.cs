@@ -1,5 +1,5 @@
 ﻿using System;
-using AutoMapper.Configuration;
+using AutoMapper;
 using EasyForNet.Modules;
 using EasyForNet.Tests.Base;
 using Microsoft.Extensions.DependencyInjection;

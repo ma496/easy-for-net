@@ -9,6 +9,7 @@ using EasyForNet.Domain.Entities;
 using EasyForNet.Exceptions;
 using EasyForNet.Extensions;
 using EasyForNet.Tests.Share.Common;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
@@ -88,7 +89,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
 
             var createdDto = await crudActions.GetAsync(responseDto.Id);
 
-            CompareAssert(responseDto, createdDto);
+            responseDto.Should().BeEquivalentTo(createdDto);
 
             afterCreate?.Invoke(responseDto);
         }
@@ -124,7 +125,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
                 .Where(e => responseDtos.Select(d => d.Id).Contains(e.Id))
                 .ToList();
 
-            CompareAssert(responseDtos, createdDtos);
+            responseDtos.Should().BeEquivalentTo(createdDtos);
 
             crudActions = NewScopeService<TCrudActions>();
 
@@ -167,7 +168,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
 
             var createdDto = await crudActions.GetAsync(responseDto.Id);
 
-            CompareAssert(responseDto, createdDto);
+            responseDto.Should().BeEquivalentTo(createdDto);
 
             var forUpdateDto = await crudActions.ForUpdateAsync(responseDto.Id);
 
@@ -179,7 +180,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
 
             var updatedDto = await crudActions.GetAsync(responseDto.Id);
 
-            CompareAssert(updateResponseDto, updatedDto);
+            updateResponseDto.Should().BeEquivalentTo(updatedDto);
 
             afterUpdate?.Invoke(updateResponseDto);
         }
@@ -215,7 +216,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
                 .Where(e => responseDtos.Select(d => d.Id).Contains(e.Id))
                 .ToList();
 
-            CompareAssert(responseDtos, createdDtos);
+            responseDtos.Should().BeEquivalentTo(createdDtos);
 
             crudActions = NewScopeService<TCrudActions>();
 
@@ -259,7 +260,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
 
             var createdDto = await crudActions.GetAsync(responseDto.Id);
 
-            CompareAssert(responseDto, createdDto);
+            responseDto.Should().BeEquivalentTo(createdDto);
 
             beforeDelete?.Invoke(responseDto.Id);
 
@@ -297,7 +298,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
 
             var createdDto = await crudActions.GetAsync(responseDto.Id);
 
-            CompareAssert(responseDto, createdDto);
+            responseDto.Should().BeEquivalentTo(createdDto, opt => opt.BeCloseToDateTime(TimeSpan.FromSeconds(1)));
 
             await crudActions.DeleteAsync(responseDto.Id);
 
@@ -316,7 +317,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
             var undoDto = await crudActions.GetAsync(responseDto.Id);
 
             Assert.NotNull(undoDto);
-            CompareAssert(createdDto, undoDto);
+            createdDto.Should().BeEquivalentTo(undoDto, opt => opt.BeCloseToDateTime(TimeSpan.FromSeconds(1)));
 
             afterUndoDelete?.Invoke(responseDto.Id);
         }
@@ -346,7 +347,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
                 .Where(o => responseDtos.Select(d => d.Id).Contains(o.Id))
                 .ToList();
 
-            CompareAssert(responseDtos, createdDtos);
+            responseDtos.Should().BeEquivalentTo(createdDtos);
 
             afterList?.Invoke(createdDtos);
         }
@@ -374,7 +375,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
 
             var createdDto = await crudActions.GetAsync(responseDto.Id);
 
-            CompareAssert(responseDto, createdDto);
+            responseDto.Should().BeEquivalentTo(createdDto);
 
             afterGet?.Invoke(createdDto);
         }

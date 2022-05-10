@@ -5,6 +5,7 @@ using EasyForNet.EntityFramework.Tests.Base;
 using EasyForNet.EntityFramework.Tests.Data;
 using EasyForNet.EntityFramework.Tests.Data.Entities;
 using EasyForNet.Exceptions;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
@@ -37,7 +38,7 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
             var savedEntity = await dbContext.SpecificHolidays.FindAsync(entity.Id);
 
             Assert.NotNull(savedEntity);
-            CompareAssert(entity, savedEntity);
+            entity.Should().BeEquivalentTo(savedEntity);
         }
 
         [Fact]

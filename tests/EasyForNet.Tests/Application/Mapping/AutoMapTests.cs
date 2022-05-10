@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using EasyForNet.Tests.Base;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
@@ -26,7 +27,7 @@ namespace EasyForNet.Tests.Application.Mapping
             var classTwo = mapper.Map<ClassTwo>(classOne);
             classOne = mapper.Map<ClassOne>(classTwo);
 
-            CompareAssert(classOne, classTwo);
+            classOne.Should().BeEquivalentTo(classTwo);
         }
 
         [AutoMap(typeof(ClassTwo), ReverseMap = true)]

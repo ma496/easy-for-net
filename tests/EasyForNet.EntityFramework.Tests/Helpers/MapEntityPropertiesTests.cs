@@ -5,6 +5,7 @@ using EasyForNet.Application.Dto.Audit;
 using EasyForNet.Domain.Entities.Audit;
 using EasyForNet.EntityFramework.Helpers;
 using EasyForNet.EntityFramework.Tests.Base;
+using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -60,7 +61,7 @@ namespace EasyForNet.EntityFramework.Tests.Helpers
             // Map entity id and audit properties to dto
             MapEntityProperties.Map(productEntity, productDto);
 
-            CompareAssert(productEntity, productDto);
+            productEntity.Should().BeEquivalentTo(productDto);
         }
 
         private void SetAuditProperties(IAuditEntity entity)

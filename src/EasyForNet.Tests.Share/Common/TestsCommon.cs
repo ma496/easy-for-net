@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using AutoMapper;
-using KellermanSoftware.CompareNetObjects;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
@@ -15,8 +14,6 @@ namespace EasyForNet.Tests.Share.Common
 
         protected ITestOutputHelper OutputHelper { get; }
 
-        protected CompareLogic CompareObject { get; }
-
         protected IServiceProvider Services { get; }
 
         protected IMapper Mapper { get; }
@@ -28,8 +25,6 @@ namespace EasyForNet.Tests.Share.Common
             _serviceScope = GlobalObjects.ServiceProvider.CreateScope();
             _serviceScopes = new List<IServiceScope>();
             OutputHelper = outputHelper;
-            CompareObject = new CompareLogic
-                {Config = {MaxDifferences = 30, IgnoreObjectTypes = true, MaxMillisecondsDateDifference = 3000}};
             Services = _serviceScope.ServiceProvider;
             Mapper = Services.GetRequiredService<IMapper>();
             CurrentUser = Services.GetRequiredService<ICurrentUser>();
@@ -113,13 +108,6 @@ namespace EasyForNet.Tests.Share.Common
                 serviceProvider.GetRequiredService<T5>(), serviceProvider.GetRequiredService<T6>(),
                 serviceProvider.GetRequiredService<T7>(), serviceProvider.GetRequiredService<T8>(),
                 serviceProvider.GetRequiredService<T9>(), serviceProvider.GetRequiredService<T10>());
-        }
-
-        protected void CompareAssert(object expected, object actual)
-        {
-            var result = CompareObject.Compare(expected, actual);
-
-            Assert.True(result.AreEqual, result.DifferencesString);
         }
 
         private IServiceScope CreateScope()

@@ -8,6 +8,7 @@ using EasyForNet.EntityFramework.Tests.Data;
 using EasyForNet.EntityFramework.Tests.Data.Entities;
 using EasyForNet.EntityFramework.Tests.GenerateData;
 using EasyForNet.Exceptions;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
@@ -45,7 +46,7 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
             var updatedCustomer = await dbContext.Customers.FindAsync(customerForUpdate.Id);
 
             Assert.NotNull(updatedCustomer);
-            CompareAssert(customerForUpdate, updatedCustomer);
+            customerForUpdate.Should().BeEquivalentTo(updatedCustomer);
         }
 
         [Fact]
@@ -72,7 +73,7 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
             var updatedCustomer = await dbContext.Customers.FindAsync(customerForUpdate.Id);
 
             Assert.NotNull(updatedCustomer);
-            CompareAssert(customerForUpdate, updatedCustomer);
+            customerForUpdate.Should().BeEquivalentTo(updatedCustomer);
         }
 
         [Fact]

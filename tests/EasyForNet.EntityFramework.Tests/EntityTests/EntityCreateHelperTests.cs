@@ -7,6 +7,7 @@ using EasyForNet.EntityFramework.Tests.Data;
 using EasyForNet.EntityFramework.Tests.Data.Entities;
 using EasyForNet.Exceptions;
 using EasyForNet.Extensions;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
@@ -46,7 +47,7 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
             var savedCustomerEntity = await dbContext.Customers.FindAsync(customerEntity.Id);
 
             Assert.NotNull(savedCustomerEntity);
-            CompareAssert(customerEntity, savedCustomerEntity);
+            customerEntity.Should().BeEquivalentTo(savedCustomerEntity);
         }
 
         [Fact]

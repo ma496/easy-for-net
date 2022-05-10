@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using EasyForNet.EntityFramework.Tests.Base;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
@@ -37,7 +38,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
 
             var createdDto = await crudActions.GetAsync(dto.Id);
 
-            CompareAssert(dto, createdDto);
+            dto.Should().BeEquivalentTo(createdDto);
 
             await crudActions.UpdateAsync(dto.Id, createdDto);
 
@@ -57,7 +58,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
 
             var createdDto = await crudActions.GetAsync(dto.Id);
 
-            CompareAssert(dto, createdDto);
+            dto.Should().BeEquivalentTo(createdDto);
 
             await crudActions.DeleteAsync(dto.Id);
 
@@ -77,7 +78,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
 
             var createdDto = await crudActions.GetAsync(dto.Id);
 
-            CompareAssert(dto, createdDto);
+            dto.Should().BeEquivalentTo(createdDto);
 
             await crudActions.DeleteAsync(dto.Id);
 
@@ -107,7 +108,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
                 .Where(o => dtos.Select(d => d.Id).Contains(o.Id))
                 .ToList();
 
-            CompareAssert(dtos, createdDtos);
+            dtos.Should().BeEquivalentTo(createdDtos);
 
             Assert.True(crudActions.IsBeforeList);
         }
@@ -124,7 +125,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
 
             var createdDto = await crudActions.GetAsync(dto.Id);
 
-            CompareAssert(dto, createdDto);
+            dto.Should().BeEquivalentTo(createdDto);
 
             Assert.True(crudActions.IsBeforeGet);
         }
