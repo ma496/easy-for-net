@@ -5,6 +5,7 @@ using Newtonsoft.Json.Serialization;
 
 namespace EasyForNet.Extensions
 {
+    // TODO Do ObjectExtension methods test
     public static class ObjectExtension
     {
         public static string ToJson(this object obj)

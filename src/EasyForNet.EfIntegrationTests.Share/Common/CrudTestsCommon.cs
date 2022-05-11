@@ -9,6 +9,7 @@ using EasyForNet.Domain.Entities;
 using EasyForNet.Exceptions.UserFriendly;
 using EasyForNet.Extensions;
 using EasyForNet.Tests.Share.Common;
+using EasyForNet.Tests.Share.Extensions;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;

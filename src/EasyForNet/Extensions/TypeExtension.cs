@@ -7,6 +7,7 @@ using Ardalis.GuardClauses;
 
 namespace EasyForNet.Extensions
 {
+    // TODO Do TypeExtension methods test
     public static class TypeExtension
     {
         public static bool IsConcreteClass(this Type type)

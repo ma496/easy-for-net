@@ -1,12 +1,8 @@
 ﻿using FluentAssertions;
 using FluentAssertions.Equivalency;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace EasyForNet.Extensions
+namespace EasyForNet.Tests.Share.Extensions
 {
     public static class EquivalencyAssertionOptionsExtension
     {
