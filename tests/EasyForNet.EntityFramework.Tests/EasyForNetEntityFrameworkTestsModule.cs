@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace EasyForNet.EntityFramework.Tests
 {
     [DependOn(typeof(EasyForNetModule))]
-    [DependOn(typeof(EasyForNetFrameworkModule))]
+    [DependOn(typeof(EasyForNetEntityFrameworkModule))]
     [DependOn(typeof(EasyForNetTestsShareModule))]
     public class EasyForNetEntityFrameworkTestsModule : ModuleBase
     {

@@ -3,7 +3,7 @@
 namespace EasyForNet.EntityFramework
 {
     [DependOn(typeof(EasyForNetModule))]
-    public class EasyForNetFrameworkModule : ModuleBase
+    public class EasyForNetEntityFrameworkModule : ModuleBase
     {
     }
 }

@@ -5,7 +5,7 @@ using EasyForNet.Tests.Share;
 namespace EasyForNet.EfIntegrationTests.Share
 {
     [DependOn(typeof(EasyForNetModule))]
-    [DependOn(typeof(EasyForNetFrameworkModule))]
+    [DependOn(typeof(EasyForNetEntityFrameworkModule))]
     [DependOn(typeof(EasyForNetTestsShareModule))]
     public class EasyForNetEfIntegrationTestsShareModule : ModuleBase
     {
