@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using AutoMapper;
 using EasyForNet.Modules;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,16 +18,7 @@ namespace EasyForNet.Tests.Share.Common
 
             var services = new ServiceCollection();
 
-            ModuleInitializer.InitServices<TModule>(services, configuration);
-
-            var mapperConfiguration =
-                new MapperConfiguration(mc => ModuleInitializer.InitMappings<TModule>(mc, configuration));
-            mapperConfiguration.AssertConfigurationIsValid();
-            var mapper = mapperConfiguration.CreateMapper();
-            services.AddSingleton(mapper);
-
-            var serviceProvider = services.BuildServiceProvider();
-            GlobalObjects.ServiceProvider = serviceProvider;
+            GlobalObjects.ServiceProvider = AppInitializer.Init<TModule>(configuration);
         }
     }
 }

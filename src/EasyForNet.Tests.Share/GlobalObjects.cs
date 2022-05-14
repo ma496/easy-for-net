@@ -1,13 +1,12 @@
 ﻿using System;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace EasyForNet.Tests.Share
 {
     public static class GlobalObjects
     {
-        private static ServiceProvider _serviceProvider;
+        private static IServiceProvider _serviceProvider;
 
-        public static ServiceProvider ServiceProvider
+        public static IServiceProvider ServiceProvider
         {
             set
             {
@@ -20,8 +19,7 @@ namespace EasyForNet.Tests.Share
             get
             {
                 if (_serviceProvider == null)
-                    throw new Exception(
-                        $"Set {nameof(GlobalObjects)}.{nameof(ServiceProvider)} before start tests.");
+                    throw new NullReferenceException($"{nameof(ServiceProvider)} not set");
 
                 return _serviceProvider;
             }

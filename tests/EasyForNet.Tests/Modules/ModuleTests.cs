@@ -9,9 +9,9 @@ using Xunit.Abstractions;
 namespace EasyForNet.Tests.Modules
 {
     [SuppressMessage("ReSharper", "CoVariantArrayConversion")]
-    public class ModuleInitializerTests : TestsBase
+    public class ModuleTests : TestsBase
     {
-        public ModuleInitializerTests(ITestOutputHelper outputHelper) : base(outputHelper)
+        public ModuleTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
         }
 
@@ -61,7 +61,7 @@ namespace EasyForNet.Tests.Modules
 
         private static List<ModuleInfo> GetModulesInfo()
         {
-            var type = typeof(ModuleInitializer);
+            var type = typeof(AppInitializer);
 
             var getModulesFunc = type.GetMethod("GetModulesInfo", BindingFlags.Static | BindingFlags.NonPublic);
             Assert.NotNull(getModulesFunc);
@@ -73,7 +73,7 @@ namespace EasyForNet.Tests.Modules
         private static List<ModuleInfo> GetUniqueAndOrderModulesInfo()
         {
             var modules = GetModulesInfo();
-            var type = typeof(ModuleInitializer);
+            var type = typeof(AppInitializer);
 
             var getUniqueAndOrderModulesFunc = type.GetMethod("GetUniqueAndOrderModulesInfo",
                 BindingFlags.Static | BindingFlags.NonPublic);

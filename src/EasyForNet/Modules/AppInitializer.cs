@@ -11,58 +11,45 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace EasyForNet.Modules
 {
-    public static class ModuleInitializer
+    public static class AppInitializer
     {
-        private static readonly List<string> ServiceInitModules = new();
-        private static readonly List<string> MappingInitModules = new();
+        private static readonly List<string> InitModules = new();
 
-        public static void InitServices<TModule>(IServiceCollection services, IConfiguration configuration)
+        public static IServiceProvider Init<TModule>(IConfiguration configuration = null, bool isValidateMapper = true)
             where TModule : ModuleBase
         {
-            Guard.Against.Null(services, nameof(services));
+            var services = new ServiceCollection();
 
             var moduleName = typeof(TModule).FullName;
 
-            if (ServiceInitModules.SingleOrDefault(m => m == moduleName) == null)
+            var mapperConfigurationExpression = new MapperConfigurationExpression();
+
+            if (InitModules.SingleOrDefault(m => m == moduleName) == null)
             {
                 var modulesInfo = GetUniqueAndOrderModulesInfo(GetModulesInfo(typeof(TModule), 0));
                 foreach (var moduleInfo in modulesInfo)
                 {
                     DependencyThroughInterfaces(moduleInfo.Module, services);
                     moduleInfo.Module.Dependencies(services, configuration);
+
+                    mapperConfigurationExpression.AddMaps(moduleInfo.Module.GetType().Assembly);
+                    moduleInfo.Module.Mapping(mapperConfigurationExpression, configuration);
                 }
 
-                ServiceInitModules.Add(moduleName);
+                var mapperConfiguration = new MapperConfiguration(mapperConfigurationExpression);
+                if (isValidateMapper)
+                    mapperConfiguration.AssertConfigurationIsValid();
+                var mapper = mapperConfiguration.CreateMapper();
+                services.AddSingleton(mapper);
+
+                InitModules.Add(moduleName);
             }
             else
             {
-                throw new Exception($"Services has already initialized for {moduleName} module");
+                throw new Exception($"{moduleName} module already initialized");
             }
-        }
-
-        public static void InitMappings<TModule>(IMapperConfigurationExpression mapperConfiguration,
-            IConfiguration configuration)
-            where TModule : ModuleBase
-        {
-            Guard.Against.Null(mapperConfiguration, nameof(mapperConfiguration));
-
-            var moduleName = typeof(TModule).FullName;
-
-            if (MappingInitModules.SingleOrDefault(m => m == moduleName) == null)
-            {
-                var modulesInfo = GetUniqueAndOrderModulesInfo(GetModulesInfo(typeof(TModule), 0));
-                foreach (var moduleInfo in modulesInfo)
-                {
-                    mapperConfiguration.AddMaps(moduleInfo.Module.GetType().Assembly);
-                    moduleInfo.Module.Mapping(mapperConfiguration, configuration);
-                }
-
-                MappingInitModules.Add(moduleName);
-            }
-            else
-            {
-                throw new Exception($"Mapping has already initialized for {moduleName} module");
-            }
+            
+            return services.BuildServiceProvider();
         }
 
         private static void CheckModuleType(Type type)
