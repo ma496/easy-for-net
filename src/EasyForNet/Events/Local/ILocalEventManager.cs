@@ -3,7 +3,7 @@ using EasyForNet.Application.Dependencies;
 
 namespace EasyForNet.Events.Local
 {
-    public interface ILocalEventsManager : ITransientDependency
+    public interface ILocalEventManager : ITransientDependency
     {
         Task RaiseAsync<TEvent>(TEvent @event)
             where TEvent : class;

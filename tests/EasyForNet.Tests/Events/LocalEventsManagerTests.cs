@@ -17,9 +17,9 @@ namespace EasyForNet.Tests.Events
         [Fact]
         public async Task LocalEventsTest()
         {
-            var eventsManager = Services.GetRequiredService<ILocalEventsManager>();
+            var eventManager = Services.GetRequiredService<ILocalEventManager>();
 
-            await eventsManager.RaiseAsync(new ProductEvent());
+            await eventManager.RaiseAsync(new ProductEvent());
 
             Assert.True(ProductLocalEventHandler.IsOccur);
             Assert.True(ProductOneLocalEventHandler.IsOccur);

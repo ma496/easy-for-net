@@ -4,11 +4,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace EasyForNet.Events.Local
 {
-    public class LocalEventsManager : ILocalEventsManager
+    public class LocalEventManager : ILocalEventManager
     {
         private readonly IServiceProvider _serviceProvider;
 
-        public LocalEventsManager(IServiceProvider serviceProvider)
+        public LocalEventManager(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
         }
