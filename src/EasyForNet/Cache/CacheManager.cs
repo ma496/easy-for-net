@@ -10,6 +10,8 @@ namespace EasyForNet.Cache
 {
     public interface ICacheManager
     {
+        string Get(string key);
+        Task<string> GetAsync(string key, CancellationToken token = default(CancellationToken));
         TValue Get<TValue>(string key);
         Task<TValue> GetAsync<TValue>(string key, CancellationToken token = default(CancellationToken));
         void Set<TValue>(string key, TValue value, DistributedCacheEntryOptions options);
@@ -27,6 +29,16 @@ namespace EasyForNet.Cache
         public CacheManager(IDistributedCache distributedCache)
         {
             _distributedCache = distributedCache;
+        }
+
+        public string Get(string key)
+        {
+            return Get<string>(key);
+        }
+
+        public async Task<string> GetAsync(string key, CancellationToken token = default(CancellationToken))
+        {
+            return await GetAsync<string>(key, token);
         }
 
         public TValue Get<TValue>(string key)

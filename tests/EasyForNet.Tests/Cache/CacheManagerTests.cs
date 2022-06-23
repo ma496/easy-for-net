@@ -29,13 +29,13 @@ namespace EasyForNet.Tests.Cache
                 SlidingExpiration = TimeSpan.FromMinutes(100)
             });
 
-            var cacheName = cacheManager.Get<string>(key);
+            var cacheName = cacheManager.Get(key);
 
             cacheName.Should().Be(name);
 
             cacheManager.Remove(key);
 
-            cacheName = cacheManager.Get<string>(key);
+            cacheName = cacheManager.Get(key);
 
             cacheName.Should().BeNullOrEmpty();
         }
@@ -52,13 +52,13 @@ namespace EasyForNet.Tests.Cache
                 SlidingExpiration = TimeSpan.FromMinutes(100)
             });
 
-            var cacheName = await cacheManager.GetAsync<string>(key);
+            var cacheName = await cacheManager.GetAsync(key);
 
             cacheName.Should().Be(name);
 
             await cacheManager.RemoveAsync(key);
 
-            cacheName = await cacheManager.GetAsync<string>(key);
+            cacheName = await cacheManager.GetAsync(key);
 
             cacheName.Should().BeNullOrEmpty();
         }
@@ -137,7 +137,7 @@ namespace EasyForNet.Tests.Cache
 
             Thread.Sleep(400);
 
-            var cacheName = cacheManager.Get<string>(key);
+            var cacheName = cacheManager.Get(key);
 
             cacheName.Should().BeNullOrEmpty();
         }
@@ -160,7 +160,7 @@ namespace EasyForNet.Tests.Cache
 
             Thread.Sleep(350);
 
-            var cacheName = cacheManager.Get<string>(key);
+            var cacheName = cacheManager.Get(key);
 
             cacheName.Should().BeNullOrEmpty();
         }
@@ -183,7 +183,7 @@ namespace EasyForNet.Tests.Cache
 
             Thread.Sleep(350);
 
-            var cacheName = await cacheManager.GetAsync<string>(key);
+            var cacheName = await cacheManager.GetAsync(key);
 
             cacheName.Should().BeNullOrEmpty();
         }
