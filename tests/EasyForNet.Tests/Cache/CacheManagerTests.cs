@@ -29,13 +29,13 @@ namespace EasyForNet.Tests.Cache
                 SlidingExpiration = TimeSpan.FromMinutes(100)
             });
 
-            var cacheName = cacheManager.Get(key);
+            var cacheName = cacheManager.Get<string>(key);
 
             cacheName.Should().Be(name);
 
             cacheManager.Remove(key);
 
-            cacheName = cacheManager.Get(key);
+            cacheName = cacheManager.Get<string>(key);
 
             cacheName.Should().BeNullOrEmpty();
         }
@@ -52,13 +52,13 @@ namespace EasyForNet.Tests.Cache
                 SlidingExpiration = TimeSpan.FromMinutes(100)
             });
 
-            var cacheName = await cacheManager.GetAsync(key);
+            var cacheName = await cacheManager.GetAsync<string>(key);
 
             cacheName.Should().Be(name);
 
             await cacheManager.RemoveAsync(key);
 
-            cacheName = await cacheManager.GetAsync(key);
+            cacheName = await cacheManager.GetAsync<string>(key);
 
             cacheName.Should().BeNullOrEmpty();
         }
@@ -137,7 +137,7 @@ namespace EasyForNet.Tests.Cache
 
             Thread.Sleep(400);
 
-            var cacheName = cacheManager.Get(key);
+            var cacheName = cacheManager.Get<string>(key);
 
             cacheName.Should().BeNullOrEmpty();
         }
@@ -160,7 +160,7 @@ namespace EasyForNet.Tests.Cache
 
             Thread.Sleep(350);
 
-            var cacheName = cacheManager.Get(key);
+            var cacheName = cacheManager.Get<string>(key);
 
             cacheName.Should().BeNullOrEmpty();
         }
@@ -183,9 +183,37 @@ namespace EasyForNet.Tests.Cache
 
             Thread.Sleep(350);
 
-            var cacheName = await cacheManager.GetAsync(key);
+            var cacheName = await cacheManager.GetAsync<string>(key);
 
             cacheName.Should().BeNullOrEmpty();
+        }
+
+        [Fact]
+        public async Task KeyValidationTest()
+        {
+            var cacheManager = Services.GetRequiredService<ICacheManager>();
+            string nullKey = null;
+            var emptyKey = " ";
+
+            Assert.Throws<ArgumentNullException>(() => cacheManager.Get<string>(nullKey));
+            Assert.Throws<ArgumentException>(() => cacheManager.Get<string>(emptyKey));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await cacheManager.GetAsync<string>(nullKey));
+            await Assert.ThrowsAsync<ArgumentException>(async () => await cacheManager.GetAsync<string>(emptyKey));
+
+            Assert.Throws<ArgumentNullException>(() => cacheManager.Set(nullKey, "", new DistributedCacheEntryOptions()));
+            Assert.Throws<ArgumentException>(() => cacheManager.Set(emptyKey, "", new DistributedCacheEntryOptions()));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await cacheManager.SetAsync(nullKey, "", new DistributedCacheEntryOptions()));
+            await Assert.ThrowsAsync<ArgumentException>(async () => await cacheManager.SetAsync(emptyKey, "", new DistributedCacheEntryOptions()));
+
+            Assert.Throws<ArgumentNullException>(() => cacheManager.Refresh(nullKey));
+            Assert.Throws<ArgumentException>(() => cacheManager.Refresh(emptyKey));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await cacheManager.RefreshAsync(nullKey));
+            await Assert.ThrowsAsync<ArgumentException>(async () => await cacheManager.RefreshAsync(emptyKey));
+
+            Assert.Throws<ArgumentNullException>(() => cacheManager.Remove(nullKey));
+            Assert.Throws<ArgumentException>(() => cacheManager.Remove(emptyKey));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await cacheManager.RemoveAsync(nullKey));
+            await Assert.ThrowsAsync<ArgumentException>(async () => await cacheManager.RemoveAsync(emptyKey));
         }
 
         #region Classes
