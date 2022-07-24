@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace EasyForNet.Setting
 {
@@ -8,5 +9,7 @@ namespace EasyForNet.Setting
         Task<TValue> GetAsync<TValue>(string key);
         void Set<TValue>(string key, TValue value);
         Task SetAsync<TValue>(string key, TValue value);
+        Dictionary<string, string> GetAll();
+        Task<Dictionary<string, string>> GetAllAsync();
     }
 }

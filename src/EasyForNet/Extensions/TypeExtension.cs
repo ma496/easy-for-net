@@ -10,6 +10,11 @@ namespace EasyForNet.Extensions
     // TODO Do TypeExtension methods test
     public static class TypeExtension
     {
+        public static bool IsPrimitiveOrString(this Type type)
+        {
+            return type.IsPrimitive || type == typeof(string);
+        }
+
         public static bool IsConcreteClass(this Type type)
         {
             return type.IsClass && !type.IsAbstract;

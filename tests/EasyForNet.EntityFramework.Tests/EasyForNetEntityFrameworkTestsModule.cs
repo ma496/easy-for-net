@@ -1,5 +1,8 @@
-﻿using EasyForNet.EntityFramework.Tests.Data;
+﻿using EasyForNet.EntityFramework.Data.Entities;
+using EasyForNet.EntityFramework.Setting;
+using EasyForNet.EntityFramework.Tests.Data;
 using EasyForNet.Modules;
+using EasyForNet.Setting;
 using EasyForNet.Tests.Share;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +17,8 @@ namespace EasyForNet.EntityFramework.Tests
     {
         public override void Dependencies(IServiceCollection services, IConfiguration configuration)
         {
+            services.AddDistributedMemoryCache();
+
             services.AddScoped(sp =>
             {
                 var options = new DbContextOptionsBuilder()
@@ -25,6 +30,8 @@ namespace EasyForNet.EntityFramework.Tests
                 var db = new EasyForNetEntityFrameworkTestsDb(options, currentUser);
                 return db;
             });
+
+            services.AddScoped<ISettingStore, SettingStore<EasyForNetEntityFrameworkTestsDb, EfnSettingEntity>>();
         }
     }
 }

@@ -22,8 +22,6 @@ namespace EasyForNet.Tests.Bogus.Extensions
         {
             var user = new UserGenerator().Generate();
 
-            OutputHelper.WriteLine(user.ToJson());
-
             Assert.NotNull(user);
             Assert.NotEmpty(user.IdCard);
 

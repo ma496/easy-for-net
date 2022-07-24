@@ -1,12 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using EasyForNet.EntityFramework.Data;
+using EasyForNet.EntityFramework.Data.Context;
 using EasyForNet.EntityFramework.Tests.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace EasyForNet.EntityFramework.Tests.Data
 {
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
-    public class EasyForNetEntityFrameworkTestsDb : DbContextBase
+    public class EasyForNetEntityFrameworkTestsDb : DbContextBase, ISettingDbContext
     {
         public EasyForNetEntityFrameworkTestsDb(DbContextOptions dbContextOptions, ICurrentUser currentUser) : base(
             dbContextOptions, currentUser)
@@ -25,6 +25,9 @@ namespace EasyForNet.EntityFramework.Tests.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            ISettingDbContext setting = this;
+            setting.ConfigureSetting(modelBuilder);
+
             modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
         }
     }

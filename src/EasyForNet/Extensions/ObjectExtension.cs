@@ -1,22 +1,14 @@
 ﻿using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Ardalis.GuardClauses;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using EasyForNet.Helpers;
 
 namespace EasyForNet.Extensions
 {
     // TODO Do ObjectExtension methods test
     public static class ObjectExtension
     {
-        public static string ToJson(this object obj)
-        {
-            var json = JsonConvert.SerializeObject(obj, new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            });
-            return json;
-        }
-
         public static T Clone<T>(this T source)
         {
             // Don't serialize a null object, simply return the default for that object
@@ -25,12 +17,16 @@ namespace EasyForNet.Extensions
                 return default;
             }
 
-            var serializeSettings = new JsonSerializerSettings {ReferenceLoopHandling = ReferenceLoopHandling.Ignore};
-            var json = JsonConvert.SerializeObject(source, serializeSettings);
+            var serializerOptions = new JsonSerializerOptions 
+            {
+                PropertyNameCaseInsensitive = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                ReferenceHandler = ReferenceHandler.IgnoreCycles,
+            };
 
-            var deserializeSettings = new JsonSerializerSettings
-                {ObjectCreationHandling = ObjectCreationHandling.Replace};
-            return JsonConvert.DeserializeObject<T>(json, deserializeSettings);
+            var json = JsonHelper.ToJson(source, serializerOptions);
+
+            return JsonHelper.Deserialize<T>(json, serializerOptions);
         }
 
         public static void SetPropertyValue(this object obj, string propertyName, object value)

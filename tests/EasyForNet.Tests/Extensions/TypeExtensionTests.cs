@@ -13,6 +13,16 @@ namespace EasyForNet.Tests.Extensions
         }
 
         [Fact]
+        public void IsPrimitiveOrString()
+        {
+            var strType = typeof(string);
+            var intType = typeof(int);
+
+            Assert.True(strType.IsPrimitiveOrString());
+            Assert.True(intType.IsPrimitiveOrString());
+        }
+
+        [Fact]
         public void IsConcreteTest()
         {
             var customerType = typeof(Customer);

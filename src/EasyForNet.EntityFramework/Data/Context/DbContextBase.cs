@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using EasyForNet.Domain.Entities.Audit;
 using Microsoft.EntityFrameworkCore;
 
-namespace EasyForNet.EntityFramework.Data
+namespace EasyForNet.EntityFramework.Data.Context
 {
     public abstract class DbContextBase : DbContext
     {
@@ -35,6 +35,10 @@ namespace EasyForNet.EntityFramework.Data
 
             return base.SaveChangesAsync(cancellationToken);
         }
+
+        #endregion
+
+        #region Helpers
 
         private void OnBeforeSaving()
         {

@@ -9,7 +9,7 @@ using EasyForNet.Application.Dto;
 using EasyForNet.Application.Helpers;
 using EasyForNet.Crud;
 using EasyForNet.Domain.Entities;
-using EasyForNet.EntityFramework.Data;
+using EasyForNet.EntityFramework.Data.Context;
 using EasyForNet.EntityFramework.Helpers;
 using EasyForNet.Exceptions;
 using EasyForNet.Exceptions.UserFriendly;
