@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EasyForNet.EntityFramework.Data.Context
 {
-    public interface ISettingDbContext
+    public static class DbContextExtension
     {
-        public void ConfigureSetting(ModelBuilder modelBuilder)
+        public static void ConfigureSetting(this ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new SettingEntityTypeConfiguration("Settings"));
         }

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace EasyForNet.EntityFramework.Tests.Data
 {
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
-    public class EasyForNetEntityFrameworkTestsDb : DbContextBase, ISettingDbContext
+    public class EasyForNetEntityFrameworkTestsDb : DbContextBase
     {
         public EasyForNetEntityFrameworkTestsDb(DbContextOptions dbContextOptions, ICurrentUser currentUser) : base(
             dbContextOptions, currentUser)
@@ -25,8 +25,7 @@ namespace EasyForNet.EntityFramework.Tests.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            ISettingDbContext setting = this;
-            setting.ConfigureSetting(modelBuilder);
+            modelBuilder.ConfigureSetting();
 
             modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
         }
