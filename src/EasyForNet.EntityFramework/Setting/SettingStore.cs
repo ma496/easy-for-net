@@ -56,6 +56,7 @@ namespace EasyForNet.EntityFramework.Setting
         public void Set<TValue>(string key, TValue value)
         {
             Guard.Against.NullOrWhiteSpace(key, nameof(key));
+            Guard.Against.Null(value, nameof(value));
 
             var globalKey = _keyManager.GlobalKey(key);
             var jsonValue = JsonHelper.ToJson(value);
@@ -75,6 +76,7 @@ namespace EasyForNet.EntityFramework.Setting
         public async Task SetAsync<TValue>(string key, TValue value)
         {
             Guard.Against.NullOrWhiteSpace(key, nameof(key));
+            Guard.Against.Null(value, nameof(value));
 
             var globalKey = _keyManager.GlobalKey(key);
             var jsonValue = JsonHelper.ToJson(value);

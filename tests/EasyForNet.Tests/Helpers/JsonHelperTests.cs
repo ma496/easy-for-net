@@ -192,6 +192,18 @@ namespace EasyForNet.Tests.Helpers
         }
 
         [Fact]
+        public void NullToJsonTest()
+        {
+            Assert.Throws<ArgumentNullException>(() => JsonHelper.ToJson<object>(null));
+        }
+
+        [Fact]
+        public void NullToBytesTest()
+        {
+            Assert.Throws<ArgumentNullException>(() => JsonHelper.ToBytes<object>(null));
+        }
+
+        [Fact]
         public void JsonStringToBytesToNumberTest()
         {
             var json = "123";

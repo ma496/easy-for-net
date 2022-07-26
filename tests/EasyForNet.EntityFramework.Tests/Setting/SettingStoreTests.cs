@@ -127,6 +127,39 @@ namespace EasyForNet.EntityFramework.Tests.Setting
             all.Count.Should().BeGreaterThanOrEqualTo(10);
         }
 
+        [Fact]
+        public async Task KeyValidationTest()
+        {
+            string nullKey = null;
+            var emptyKey = " ";
+
+            Assert.Throws<ArgumentNullException>(() => _settingStore.Get<string>(nullKey));
+            Assert.Throws<ArgumentException>(() => _settingStore.Get<string>(emptyKey));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await _settingStore.GetAsync<string>(nullKey));
+            await Assert.ThrowsAsync<ArgumentException>(async () => await _settingStore.GetAsync<string>(emptyKey));
+
+            Assert.Throws<ArgumentNullException>(() => _settingStore.Set(nullKey, ""));
+            Assert.Throws<ArgumentException>(() => _settingStore.Set(emptyKey, ""));
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await _settingStore.SetAsync(nullKey, ""));
+            await Assert.ThrowsAsync<ArgumentException>(async () => await _settingStore.SetAsync(emptyKey, ""));
+        }
+
+        [Fact]
+        public void KeyWithNullTest()
+        {
+            var key = $"key-{IncrementalId.Id}";
+
+            Assert.Throws<ArgumentNullException>(() => _settingStore.Set<object>(key, null));
+        }
+
+        [Fact]
+        public async Task KeyWithNullAsyncTest()
+        {
+            var key = $"key-{IncrementalId.Id}";
+
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await _settingStore.SetAsync<object>(key, null));
+        }
+
         #region Methods
 
         private CarModel CreateObject()

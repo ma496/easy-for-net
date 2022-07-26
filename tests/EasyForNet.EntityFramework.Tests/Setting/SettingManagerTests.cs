@@ -104,6 +104,38 @@ namespace EasyForNet.EntityFramework.Tests.Setting
         }
 
         [Fact]
+        public void GetUnknownKeyTest()
+        {
+            var key = $"key-{IncrementalId.Id}";
+
+            var value = _settingManager.Get<object>(key);
+
+            value.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task GetUnknownKeyAsyncTest()
+        {
+            var key = $"key-{IncrementalId.Id}";
+
+            var value = await _settingManager.GetAsync<object>(key);
+
+            value.Should().BeNull();
+        }
+
+        [Fact]
+        public void KeyWithEmptyTest()
+        {
+            var key = $"key-{IncrementalId.Id}";
+
+            _settingManager.Set<object>(key, string.Empty);
+
+            var value = _settingManager.Get<string>(key);
+
+            value.Should().BeEmpty();
+        }
+
+        [Fact]
         public void InitTest()
         {
             var oldSettingCount = _settingStore.GetAll().Count;

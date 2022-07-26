@@ -216,6 +216,26 @@ namespace EasyForNet.Tests.Cache
             await Assert.ThrowsAsync<ArgumentException>(async () => await cacheManager.RemoveAsync(emptyKey));
         }
 
+        [Fact]
+        public void NullValueTest()
+        {
+            var cacheManager = Services.GetRequiredService<ICacheManager>();
+
+            var key = $"key-{IncrementalId.Id}";
+
+            Assert.Throws<ArgumentNullException>(() => cacheManager.Set<object>(key, null, new DistributedCacheEntryOptions()));
+        }
+
+        [Fact]
+        public async Task NullValueAsyncTest()
+        {
+            var cacheManager = Services.GetRequiredService<ICacheManager>();
+
+            var key = $"key-{IncrementalId.Id}";
+
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await cacheManager.SetAsync<object>(key, null, new DistributedCacheEntryOptions()));
+        }
+
         #region Classes
 
         [Serializable]

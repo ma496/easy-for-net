@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using EasyForNet.EntityFramework.Data.Context;
+using EasyForNet.EntityFramework.Data.Entities;
 using EasyForNet.EntityFramework.Tests.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,7 +26,7 @@ namespace EasyForNet.EntityFramework.Tests.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.ConfigureSetting();
+            modelBuilder.ConfigureSetting<EfnSettingEntity>();
 
             modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
         }

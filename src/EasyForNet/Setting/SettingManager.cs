@@ -34,10 +34,10 @@ namespace EasyForNet.Setting
             Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
             var value = _cacheManager.Get<TValue>(key);
-            if (value.Equals(default(TValue)))
+            if (value == null || value.Equals(default(TValue)))
             {
                 value = _settingStore.Get<TValue>(key);
-                if (!value.Equals(default(TValue)))
+                if (value != null && !value.Equals(default(TValue)))
                     SetInternalCache(key, value);
             }
             return value;
@@ -48,10 +48,10 @@ namespace EasyForNet.Setting
             Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
             var value = await _cacheManager.GetAsync<TValue>(key);
-            if (value.Equals(default(TValue)))
+            if (value == null || value.Equals(default(TValue)))
             {
                 value = await _settingStore.GetAsync<TValue>(key);
-                if (!value.Equals(default(TValue)))
+                if (value != null && !value.Equals(default(TValue)))
                     await SetInternalCacheAsync(key, value);
             }
             return value;

@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using Ardalis.GuardClauses;
+using System.Text.Json;
 
 namespace EasyForNet.Helpers
 {
@@ -6,6 +7,8 @@ namespace EasyForNet.Helpers
     {
         public static string ToJson<T>(T value, JsonSerializerOptions options = null)
         {
+            Guard.Against.Null(value, nameof(value));
+
             if (options == null)
                 options = GetOptions();
 
@@ -15,6 +18,8 @@ namespace EasyForNet.Helpers
 
         public static byte[] ToBytes<T>(T value, JsonSerializerOptions options = null)
         {
+            Guard.Against.Null(value, nameof(value));
+
             if (options == null)
                 options = GetOptions();
 

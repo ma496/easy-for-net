@@ -52,6 +52,7 @@ namespace EasyForNet.Cache
         public virtual void Set<TValue>(string key, TValue value, DistributedCacheEntryOptions options)
         {
             Guard.Against.NullOrWhiteSpace(key, nameof(key));
+            Guard.Against.Null(value, nameof(value));
 
             var bytes = JsonHelper.ToBytes(value);
             _distributedCache.Set(_keyManager.GlobalKey(key), bytes, options);
@@ -60,6 +61,7 @@ namespace EasyForNet.Cache
         public virtual async Task SetAsync<TValue>(string key, TValue value, DistributedCacheEntryOptions options, CancellationToken token = default)
         {
             Guard.Against.NullOrWhiteSpace(key, nameof(key));
+            Guard.Against.Null(value, nameof(value));
 
             var bytes = JsonHelper.ToBytes(value);
             await _distributedCache.SetAsync(_keyManager.GlobalKey(key), bytes, options, token);
