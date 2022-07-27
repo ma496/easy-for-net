@@ -69,7 +69,7 @@ namespace EasyForNet.EntityFramework.Setting
                 setting.Value = jsonValue;
             }
 
-            SaveChanges();
+            _dbContext.SaveChanges();
         }
 
         public async Task SetAsync<TValue>(string key, TValue value)
@@ -89,22 +89,12 @@ namespace EasyForNet.EntityFramework.Setting
                 setting.Value = jsonValue;
             }
 
-            await SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
         }
 
         public IQueryable<TEntity> GetAll()
         {
             return DbSet;
-        }
-
-        protected void SaveChanges()
-        {
-            _dbContext.SaveChanges();
-        }
-
-        protected async Task SaveChangesAsync()
-        {
-            await _dbContext.SaveChangesAsync();
         }
     }
 }
