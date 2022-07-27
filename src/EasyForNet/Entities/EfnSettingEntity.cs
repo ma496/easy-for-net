@@ -1,6 +1,6 @@
 ﻿using EasyForNet.Domain.Entities;
 
-namespace EasyForNet.EntityFramework.Data.Entities
+namespace EasyForNet.Entities
 {
     public class EfnSettingEntity : Entity<long>
     {

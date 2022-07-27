@@ -1,17 +1,16 @@
 ﻿using Ardalis.GuardClauses;
+using EasyForNet.Entities;
 using EasyForNet.EntityFramework.Data.Context;
-using EasyForNet.EntityFramework.Data.Entities;
 using EasyForNet.Helpers;
 using EasyForNet.Key;
 using EasyForNet.Setting;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace EasyForNet.EntityFramework.Setting
 {
-    public class SettingStore<TDbContext, TEntity> : ISettingStore
+    public class SettingStore<TDbContext, TEntity> : ISettingStore<TEntity>
         where TDbContext : DbContextBase
         where TEntity : EfnSettingEntity
     {
@@ -93,14 +92,9 @@ namespace EasyForNet.EntityFramework.Setting
             await SaveChangesAsync();
         }
 
-        public Dictionary<string, string> GetAll()
+        public IQueryable<TEntity> GetAll()
         {
-            return DbSet.ToDictionary(e => e.Key, e => e.Value);
-        }
-
-        public async Task<Dictionary<string, string>> GetAllAsync()
-        {
-            return await DbSet.ToDictionaryAsync(e => e.Key, e => e.Value);
+            return DbSet;
         }
 
         protected void SaveChanges()

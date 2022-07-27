@@ -1,9 +1,11 @@
-﻿using EasyForNet.EntityFramework.Tests.Base;
+﻿using EasyForNet.Entities;
+using EasyForNet.EntityFramework.Tests.Base;
 using EasyForNet.Setting;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -12,11 +14,11 @@ namespace EasyForNet.EntityFramework.Tests.Setting
 {
     public class SettingStoreTests : TestsBase
     {
-        private readonly ISettingStore _settingStore;
+        private readonly ISettingStore<EfnSettingEntity> _settingStore;
 
         public SettingStoreTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
-            _settingStore = Services.GetRequiredService<ISettingStore>();
+            _settingStore = Services.GetRequiredService<ISettingStore<EfnSettingEntity>>();
         }
 
         [Fact]
@@ -106,23 +108,7 @@ namespace EasyForNet.EntityFramework.Tests.Setting
                 _settingStore.Set(key, obj);
             }
 
-            var all = _settingStore.GetAll();
-
-            all.Count.Should().BeGreaterThanOrEqualTo(10);
-        }
-
-        [Fact]
-        public async Task GetAllAsyncTest()
-        {
-            for (var i = 0; i < 10; i++)
-            {
-                var key = $"key-{IncrementalId.Id}";
-
-                var obj = CreateObject();
-                await _settingStore.SetAsync(key, obj);
-            }
-
-            var all = await _settingStore.GetAllAsync();
+            var all = _settingStore.GetAll().ToList();
 
             all.Count.Should().BeGreaterThanOrEqualTo(10);
         }

@@ -1,7 +1,7 @@
 ﻿using Ardalis.GuardClauses;
 using EasyForNet.Application.Dependencies;
 using EasyForNet.Cache;
-using EasyForNet.Helpers;
+using EasyForNet.Entities;
 using Microsoft.Extensions.Caching.Distributed;
 using System;
 using System.Threading.Tasks;
@@ -14,16 +14,14 @@ namespace EasyForNet.Setting
         Task<TValue> GetAsync<TValue>(string key);
         void Set<TValue>(string key, TValue value);
         Task SetAsync<TValue>(string key, TValue value);
-        void Init();
-        Task InitAsync();
     }
 
     public class SettingManager : ISettingManager, ITransientDependency
     {
-        private readonly ISettingStore _settingStore;
+        private readonly ISettingStore<EfnSettingEntity> _settingStore;
         private readonly ICacheManager _cacheManager;
 
-        public SettingManager(ISettingStore settingStore, ICacheManager cacheManager)
+        public SettingManager(ISettingStore<EfnSettingEntity> settingStore, ICacheManager cacheManager)
         {
             _settingStore = settingStore;
             _cacheManager = cacheManager;
@@ -34,10 +32,10 @@ namespace EasyForNet.Setting
             Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
             var value = _cacheManager.Get<TValue>(key);
-            if (value == null || value.Equals(default(TValue)))
+            if (value == null)
             {
                 value = _settingStore.Get<TValue>(key);
-                if (value != null && !value.Equals(default(TValue)))
+                if (value != null)
                     SetInternalCache(key, value);
             }
             return value;
@@ -48,10 +46,10 @@ namespace EasyForNet.Setting
             Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
             var value = await _cacheManager.GetAsync<TValue>(key);
-            if (value == null || value.Equals(default(TValue)))
+            if (value == null)
             {
                 value = await _settingStore.GetAsync<TValue>(key);
-                if (value != null && !value.Equals(default(TValue)))
+                if (value != null)
                     await SetInternalCacheAsync(key, value);
             }
             return value;
@@ -60,6 +58,7 @@ namespace EasyForNet.Setting
         public void Set<TValue>(string key, TValue value)
         {
             Guard.Against.NullOrWhiteSpace(key, nameof(key));
+            Guard.Against.Null(value, nameof(value));
 
             SetInternal(key, value);
         }
@@ -67,28 +66,9 @@ namespace EasyForNet.Setting
         public async Task SetAsync<TValue>(string key, TValue value)
         {
             Guard.Against.NullOrWhiteSpace(key, nameof(key));
+            Guard.Against.Null(value, nameof(value));
 
             await SetInternalAsync(key, value);
-        }
-
-        public void Init()
-        {
-            var settings = _settingStore.GetAll();
-            foreach (var s in settings)
-            {
-                var value = JsonHelper.Deserialize<object>(s.Value);
-                SetInternalCache(s.Key, value);
-            }
-        }
-
-        public async Task InitAsync()
-        {
-            var settings = await _settingStore.GetAllAsync();
-            foreach (var s in settings)
-            {
-                var value = JsonHelper.Deserialize<object>(s.Value);
-                await SetInternalCacheAsync(s.Key, value);
-            }
         }
 
         #region Helpers

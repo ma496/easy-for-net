@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using EasyForNet.Entities;
 using EasyForNet.EntityFramework.Data.Context;
-using EasyForNet.EntityFramework.Data.Entities;
 using EasyForNet.EntityFramework.Tests.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 

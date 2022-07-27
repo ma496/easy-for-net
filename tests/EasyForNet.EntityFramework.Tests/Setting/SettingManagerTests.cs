@@ -1,4 +1,5 @@
 ﻿using EasyForNet.Cache;
+using EasyForNet.Entities;
 using EasyForNet.EntityFramework.Tests.Base;
 using EasyForNet.Key;
 using EasyForNet.Setting;
@@ -15,14 +16,14 @@ namespace EasyForNet.EntityFramework.Tests.Setting
     public class SettingManagerTests : TestsBase
     {
         private readonly ISettingManager _settingManager;
-        private readonly ISettingStore _settingStore;
+        private readonly ISettingStore<EfnSettingEntity> _settingStore;
         private readonly ICacheManager _cacheManager;
         private readonly IKeyManager _keyManager;
 
         public SettingManagerTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
             _settingManager = Services.GetRequiredService<ISettingManager>();
-            _settingStore = Services.GetRequiredService<ISettingStore>();
+            _settingStore = Services.GetRequiredService<ISettingStore<EfnSettingEntity>>();
             _cacheManager = Services.GetRequiredService<ICacheManager>();
             _keyManager = Services.GetRequiredService<IKeyManager>();
         }
@@ -136,61 +137,19 @@ namespace EasyForNet.EntityFramework.Tests.Setting
         }
 
         [Fact]
-        public void InitTest()
+        public void KeyWithNullTest()
         {
-            var oldSettingCount = _settingStore.GetAll().Count;
+            var key = $"key-{IncrementalId.Id}";
 
-            var objects = new Dictionary<string, CarModel>();
-            for (var i = 0; i < 10; i++)
-            {
-                var key = $"key-{IncrementalId.Id}";
-
-                var obj = CreateObject();
-                _settingStore.Set(key, obj);
-                objects.Add(key, obj);
-            }
-
-            _settingManager.Init();
-
-            var allSettingCount = _settingStore.GetAll().Count;
-
-            (allSettingCount - oldSettingCount).Should().BeGreaterThanOrEqualTo(10);
-
-            foreach (var o in objects)
-            {
-                var cacheObj = _cacheManager.Get<CarModel>(o.Key);
-
-                cacheObj.Should().BeEquivalentTo(o.Value);
-            }
+            Assert.Throws<ArgumentNullException>(() => _settingManager.Set<object>(key, null));
         }
 
         [Fact]
-        public async Task InitAsyncTest()
+        public async Task KeyWithNullAsyncTest()
         {
-            var oldSettingCount = (await _settingStore.GetAllAsync()).Count;
+            var key = $"key-{IncrementalId.Id}";
 
-            var objects = new Dictionary<string, CarModel>();
-            for (var i = 0; i < 10; i++)
-            {
-                var key = $"key-{IncrementalId.Id}";
-
-                var obj = CreateObject();
-                await _settingStore.SetAsync(key, obj);
-                objects.Add(key, obj);
-            }
-
-            await _settingManager.InitAsync();
-
-            var allSettingCount = (await _settingStore.GetAllAsync()).Count;
-
-            (allSettingCount - oldSettingCount).Should().BeGreaterThanOrEqualTo(10);
-
-            foreach (var o in objects)
-            {
-                var cacheObj = _cacheManager.Get<CarModel>(o.Key);
-
-                cacheObj.Should().BeEquivalentTo(o.Value);
-            }
+            await Assert.ThrowsAsync<ArgumentNullException>(async () => await _settingManager.SetAsync<object>(key, null));
         }
 
         #region Methods

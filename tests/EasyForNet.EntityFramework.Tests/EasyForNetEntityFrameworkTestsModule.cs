@@ -1,4 +1,4 @@
-﻿using EasyForNet.EntityFramework.Data.Entities;
+﻿using EasyForNet.Entities;
 using EasyForNet.EntityFramework.Setting;
 using EasyForNet.EntityFramework.Tests.Data;
 using EasyForNet.Modules;
@@ -31,7 +31,7 @@ namespace EasyForNet.EntityFramework.Tests
                 return db;
             });
 
-            services.AddScoped<ISettingStore, SettingStore<EasyForNetEntityFrameworkTestsDb, EfnSettingEntity>>();
+            services.AddScoped<ISettingStore<EfnSettingEntity>, SettingStore<EasyForNetEntityFrameworkTestsDb, EfnSettingEntity>>();
         }
     }
 }

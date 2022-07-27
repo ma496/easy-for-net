@@ -1,4 +1,4 @@
-﻿using EasyForNet.EntityFramework.Data.Entities;
+﻿using EasyForNet.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace EasyForNet.EntityFramework.Data.Context
