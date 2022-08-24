@@ -128,7 +128,7 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
         }
 
         [AutoMap(typeof(CustomerEntity), ReverseMap = true)]
-        public class CustomerDto : Dto<long>
+        public class CustomerDto : EntityDto<long>
         {
             public string IdCard { get; set; }
 

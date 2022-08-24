@@ -17,12 +17,12 @@ namespace EasyForNet.EntityFramework.Tests.Base
             , TGetDto>
         where TEntity : class, IEntity<TKey>, new()
         where TKey : IComparable
-        where TListDto : class, IDto<TKey>
+        where TListDto : class, IEntityDto<TKey>
         where TCreateDto : class
-        where TCreateResponseDto : class, IDto<TKey>, TCreateDto
+        where TCreateResponseDto : class, IEntityDto<TKey>, TCreateDto
         where TUpdateDto : class
-        where TUpdateResponseDto : class, IDto<TKey>, TUpdateDto
-        where TGetDto : class, IDto<TKey>
+        where TUpdateResponseDto : class, IEntityDto<TKey>, TUpdateDto
+        where TGetDto : class, IEntityDto<TKey>
     {
         protected CrudTestsBase(ITestOutputHelper outputHelper) : base(outputHelper)
         {

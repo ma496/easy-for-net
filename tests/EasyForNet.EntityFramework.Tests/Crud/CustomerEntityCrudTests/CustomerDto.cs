@@ -3,7 +3,7 @@ using EasyForNet.Application.Dto.Audit;
 
 namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
 {
-    public class CustomerDto : SoftDeleteAuditDto<long>
+    public class CustomerDto : SoftDeleteAuditEntityDto<long>
     {
         public long Code { get; set; }
 

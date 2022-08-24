@@ -102,7 +102,7 @@ namespace EasyForNet.EntityFramework.Tests.Helpers
 
         #region Dtos
 
-        private class ProductDto : AuditDto<long>
+        private class ProductDto : AuditEntityDto<long>
         {
             public string Model { get; set; }
 
@@ -111,12 +111,12 @@ namespace EasyForNet.EntityFramework.Tests.Helpers
             public IList<ProductItemDto> Items { get; set; }
         }
 
-        private class ProductItemDto : AuditDto<long>
+        private class ProductItemDto : AuditEntityDto<long>
         {
             public string SerialNo { get; set; }
         }
 
-        private class CategoryDto : AuditDto<long>
+        private class CategoryDto : AuditEntityDto<long>
         {
             public string Name { get; set; }
         }

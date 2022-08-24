@@ -2,7 +2,7 @@
 
 namespace EasyForNet.Application.Dto
 {
-    public interface IDto<TKey>
+    public interface IEntityDto<TKey>
         where TKey : IComparable
     {
         TKey Id { get; set; }

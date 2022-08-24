@@ -7,12 +7,12 @@ namespace EasyForNet.Crud
 {
     public interface ICrudActions<in TKey, TListDto, in TCreateDto, TCreateResponseDto, TUpdateDto, TUpdateResponseDto, TGetDto>
         where TKey : IComparable
-        where TListDto : class, IDto<TKey>
+        where TListDto : class, IEntityDto<TKey>
         where TCreateDto : class
-        where TCreateResponseDto : class, IDto<TKey>, TCreateDto 
+        where TCreateResponseDto : class, IEntityDto<TKey>, TCreateDto 
         where TUpdateDto : class
-        where TUpdateResponseDto : class, IDto<TKey>, TUpdateDto
-        where TGetDto : class, IDto<TKey>
+        where TUpdateResponseDto : class, IEntityDto<TKey>, TUpdateDto
+        where TGetDto : class, IEntityDto<TKey>
     {
         Task<IQueryable<TListDto>> ListAsync();
         Task<TCreateResponseDto> CreateAsync(TCreateDto dto);

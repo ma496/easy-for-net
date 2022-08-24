@@ -1,6 +1,6 @@
 ﻿namespace EasyForNet.Application.Dto
 {
-    public interface ISoftDeleteDto
+    public interface ISoftDeleteEntityDto
     {
         bool IsDeleted { get; set; }
     }

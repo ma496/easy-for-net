@@ -36,7 +36,7 @@ namespace EasyForNet.EntityFramework.Helpers
             if (entity.GetType().HasProperty("Id") && dto.GetType().HasProperty("Id"))
                 dto.SetPropertyValue("Id", entity.GetPropertyValue("Id"));
 
-            if (entity is IAuditEntity auditEntity && dto is IAuditDto auditDto)
+            if (entity is IAuditEntity auditEntity && dto is IAuditEntityDto auditDto)
             {
                 auditDto.CreatedAt = auditEntity.CreatedAt;
                 auditDto.CreatedBy = auditEntity.CreatedBy;

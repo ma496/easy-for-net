@@ -80,22 +80,22 @@ namespace EasyForNet.EntityFramework.Tests.Crud
         }
     }
 
-    public class SpecificHolidayListDto : Dto<long>
+    public class SpecificHolidayListDto : EntityDto<long>
     {
         public DateTime Date { get; set; }
     }
 
-    public class SpecificHolidayCreateDto : Dto<long>
+    public class SpecificHolidayCreateDto : EntityDto<long>
     {
         public DateTime Date { get; set; }
     }
 
-    public class SpecificHolidayUpdateDto : Dto<long>
+    public class SpecificHolidayUpdateDto : EntityDto<long>
     {
         public DateTime Date { get; set; }
     }
 
-    public class SpecificHolidayGetDto : Dto<long>
+    public class SpecificHolidayGetDto : EntityDto<long>
     {
         public DateTime Date { get; set; }
     }

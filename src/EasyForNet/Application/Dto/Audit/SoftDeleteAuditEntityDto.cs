@@ -2,7 +2,7 @@
 
 namespace EasyForNet.Application.Dto.Audit
 {
-    public class SoftDeleteAuditDto<TKey> : AuditDto<TKey>, ISoftDeleteDto
+    public class SoftDeleteAuditEntityDto<TKey> : AuditEntityDto<TKey>, ISoftDeleteEntityDto
         where TKey : IComparable
     {
         public bool IsDeleted { get; set; }

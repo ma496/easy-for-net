@@ -107,7 +107,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud
         }
     }
 
-    public class ProductDto : AuditDto<long>
+    public class ProductDto : AuditEntityDto<long>
     {
         public string Model { get; set; }
 
@@ -116,7 +116,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud
         public List<ProductItemDto> Items { get; set; }
     }
 
-    public class ProductItemDto : AuditDto<long>
+    public class ProductItemDto : AuditEntityDto<long>
     {
         public string SerialNo { get; set; }
     }

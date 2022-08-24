@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace EasyForNet.Application.Dto.Audit
 {
-    public abstract class AuditDto<TKey> : Dto<TKey>, IAuditDto
+    public abstract class AuditEntityDto<TKey> : EntityDto<TKey>, IAuditEntityDto
         where TKey : IComparable
     {
         [ScaffoldColumn(false)] public virtual DateTime CreatedAt { get; set; }

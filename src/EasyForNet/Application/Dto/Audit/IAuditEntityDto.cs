@@ -2,7 +2,7 @@
 
 namespace EasyForNet.Application.Dto.Audit
 {
-    public interface IAuditDto
+    public interface IAuditEntityDto
     {
         DateTime CreatedAt { get; set; }
 
