@@ -19,7 +19,7 @@
         <PackageReference Include="Ardalis.GuardClauses" Version="4.0.1" />
         <PackageReference Include="AutoMapper" Version="11.0.1" />
         <PackageReference Include="Bogus" Version="34.0.2" />
-        <PackageReference Include="FluentValidation" Version="11.0.1" />
+        <PackageReference Include="FluentValidation" Version="11.2.0" />
         <PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
         <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="6.0.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.1" />
