@@ -1,8 +1,8 @@
 ﻿using System;
 using EasyForNet.Application.Dto;
-using EasyForNet.Crud;
 using EasyForNet.Domain.Entities;
 using EasyForNet.EfIntegrationTests.Share.Common;
+using EasyForNet.EntityFramework.Crud;
 using Xunit;
 using Xunit.Abstractions;
 
