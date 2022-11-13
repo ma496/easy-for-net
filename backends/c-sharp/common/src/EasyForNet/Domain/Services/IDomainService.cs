@@ -1,8 +1,6 @@
-﻿using EasyForNet.Application.Dependencies;
-
-namespace EasyForNet.Domain.Services
+﻿namespace EasyForNet.Domain.Services
 {
-    public interface IDomainService : ITransientDependency
+    public interface IDomainService
     {
     }
 }

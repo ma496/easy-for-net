@@ -1,10 +1,10 @@
-﻿using AutoMapper;
+﻿using EasyForNet.Application.Dependencies;
+using EasyForNet.Common;
 
 namespace EasyForNet.Application.Services
 {
-    public abstract class ApplicationService : IApplicationService
+    public abstract class ApplicationService : CommonThings, IApplicationService, ITransientDependency
     {
-        protected IMapper Mapper { get; set; }
-        protected ICurrentUser CurrentUser { get; set; }
+        
     }
 }
