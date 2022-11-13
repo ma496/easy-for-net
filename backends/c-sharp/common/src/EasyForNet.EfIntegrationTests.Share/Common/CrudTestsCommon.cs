@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Ardalis.GuardClauses;
+using Autofac;
 using EasyForNet.Application.Dto;
 using EasyForNet.Domain.Entities;
 using EasyForNet.EntityFramework.Crud;
@@ -78,7 +79,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
         protected virtual async Task InternalCreateTestAsync(BeforeCreateDelegate beforeCreate = null,
             AfterCreateDelegate afterCreate = null)
         {
-            var crudActions = Services.GetRequiredService<TCrudActions>();
+            var crudActions = Scope.Resolve<TCrudActions>();
 
             var dto = NewDtoWrapper();
 
@@ -114,7 +115,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
                 v => v == uniquePropertiesCount,
                 $"Length of {nameof(prepareForUniqueProperties)} must be equal to {nameof(uniquePropertiesCount)}");
 
-            var crudActions = Services.GetRequiredService<TCrudActions>();
+            var crudActions = Scope.Resolve<TCrudActions>();
 
             var dtos = NewDtosWrapper(count);
 
@@ -159,7 +160,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
         protected virtual async Task InternalUpdateTestAsync(BeforeUpdateDelegate beforeUpdate = null,
             AfterUpdateDelegate afterUpdate = null)
         {
-            var crudActions = Services.GetRequiredService<TCrudActions>();
+            var crudActions = Scope.Resolve<TCrudActions>();
 
             var dto = NewDtoWrapper();
 
@@ -205,7 +206,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
             Guard.Against.InvalidInput(prepareForUniqueProperties.Length, nameof(prepareForUniqueProperties),
                 v => v == uniquePropertiesCount,
                 $"Length of {nameof(prepareForUniqueProperties)} must be equal to {nameof(uniquePropertiesCount)}");
-            var crudActions = Services.GetRequiredService<TCrudActions>();
+            var crudActions = Scope.Resolve<TCrudActions>();
 
             var dtos = NewDtosWrapper(count);
 
@@ -251,7 +252,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
         protected virtual async Task InternalDeleteTestAsync(BeforeDeleteDelegate beforeDelete = null,
             AfterDeleteDelegate afterDelete = null)
         {
-            var crudActions = Services.GetRequiredService<TCrudActions>();
+            var crudActions = Scope.Resolve<TCrudActions>();
 
             var dto = NewDtoWrapper();
 
@@ -290,7 +291,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
             if (!typeof(ISoftDeleteEntity).IsAssignableFrom(typeof(TEntity)))
                 throw new Exception($"{typeof(TEntity).FullName} class not implement {nameof(ISoftDeleteEntity)}");
 
-            var crudActions = Services.GetRequiredService<TCrudActions>();
+            var crudActions = Scope.Resolve<TCrudActions>();
 
             var dto = NewDtoWrapper();
             var responseDto = await crudActions.CreateAsync(dto);
@@ -334,7 +335,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
         protected virtual async Task InternalListTestAsync(BeforeListDelegate beforeList = null,
             AfterListDelegate afterList = null)
         {
-            var crudActions = Services.GetRequiredService<TCrudActions>();
+            var crudActions = Scope.Resolve<TCrudActions>();
 
             var dtos = NewDtosWrapper(10);
 
@@ -364,7 +365,7 @@ namespace EasyForNet.EfIntegrationTests.Share.Common
         protected virtual async Task InternalGetTestAsync(BeforeGetDelegate beforeGet = null,
             AfterGetDelegate afterGet = null)
         {
-            var crudActions = Services.GetRequiredService<TCrudActions>();
+            var crudActions = Scope.Resolve<TCrudActions>();
 
             var dto = NewDtoWrapper();
 

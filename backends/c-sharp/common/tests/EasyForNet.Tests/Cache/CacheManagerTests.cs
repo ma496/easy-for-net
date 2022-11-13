@@ -1,4 +1,5 @@
-﻿using EasyForNet.Cache;
+﻿using Autofac;
+using EasyForNet.Cache;
 using EasyForNet.Tests.Base;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Distributed;
@@ -22,7 +23,7 @@ namespace EasyForNet.Tests.Cache
         {
             var key = $"name-{IncrementalId.Id}";
             var name = "Elon Musk";
-            var cacheManager = Services.GetRequiredService<ICacheManager>();
+            var cacheManager = Scope.Resolve<ICacheManager>();
 
             cacheManager.Set(key, name, new DistributedCacheEntryOptions
             {
@@ -45,7 +46,7 @@ namespace EasyForNet.Tests.Cache
         {
             var key = $"name-{IncrementalId.Id}";
             var name = "Elon Musk";
-            var cacheManager = Services.GetRequiredService<ICacheManager>();
+            var cacheManager = Scope.Resolve<ICacheManager>();
 
             await cacheManager.SetAsync(key, name, new DistributedCacheEntryOptions
             {
@@ -75,7 +76,7 @@ namespace EasyForNet.Tests.Cache
                 RunKilometer = 2000.96f,
                 Year = 2022
             };
-            var cacheManager = Services.GetRequiredService<ICacheManager>();
+            var cacheManager = Scope.Resolve<ICacheManager>();
 
             cacheManager.Set(key, obj, new DistributedCacheEntryOptions
             {
@@ -105,7 +106,7 @@ namespace EasyForNet.Tests.Cache
                 RunKilometer = 2000.96f,
                 Year = 2022
             };
-            var cacheManager = Services.GetRequiredService<ICacheManager>();
+            var cacheManager = Scope.Resolve<ICacheManager>();
 
             await cacheManager.SetAsync(key, obj, new DistributedCacheEntryOptions
             {
@@ -128,7 +129,7 @@ namespace EasyForNet.Tests.Cache
         {
             var key = $"name-{IncrementalId.Id}";
             var name = "Elon Musk";
-            var cacheManager = Services.GetRequiredService<ICacheManager>();
+            var cacheManager = Scope.Resolve<ICacheManager>();
 
             cacheManager.Set(key, name, new DistributedCacheEntryOptions
             {
@@ -147,7 +148,7 @@ namespace EasyForNet.Tests.Cache
         {
             var key = $"name-{IncrementalId.Id}";
             var name = "Elon Musk";
-            var cacheManager = Services.GetRequiredService<ICacheManager>();
+            var cacheManager = Scope.Resolve<ICacheManager>();
 
             cacheManager.Set(key, name, new DistributedCacheEntryOptions
             {
@@ -170,7 +171,7 @@ namespace EasyForNet.Tests.Cache
         {
             var key = $"name-{IncrementalId.Id}";
             var name = "Elon Musk";
-            var cacheManager = Services.GetRequiredService<ICacheManager>();
+            var cacheManager = Scope.Resolve<ICacheManager>();
 
             await cacheManager.SetAsync(key, name, new DistributedCacheEntryOptions
             {
@@ -191,7 +192,7 @@ namespace EasyForNet.Tests.Cache
         [Fact]
         public async Task KeyValidationTest()
         {
-            var cacheManager = Services.GetRequiredService<ICacheManager>();
+            var cacheManager = Scope.Resolve<ICacheManager>();
             string nullKey = null;
             var emptyKey = " ";
 
@@ -219,7 +220,7 @@ namespace EasyForNet.Tests.Cache
         [Fact]
         public void NullValueTest()
         {
-            var cacheManager = Services.GetRequiredService<ICacheManager>();
+            var cacheManager = Scope.Resolve<ICacheManager>();
 
             var key = $"key-{IncrementalId.Id}";
 
@@ -229,7 +230,7 @@ namespace EasyForNet.Tests.Cache
         [Fact]
         public async Task NullValueAsyncTest()
         {
-            var cacheManager = Services.GetRequiredService<ICacheManager>();
+            var cacheManager = Scope.Resolve<ICacheManager>();
 
             var key = $"key-{IncrementalId.Id}";
 

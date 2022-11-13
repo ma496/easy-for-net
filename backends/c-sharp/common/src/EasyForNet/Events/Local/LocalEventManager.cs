@@ -6,17 +6,12 @@ namespace EasyForNet.Events.Local
 {
     public class LocalEventManager : ILocalEventManager
     {
-        private readonly IServiceProvider _serviceProvider;
-
-        public LocalEventManager(IServiceProvider serviceProvider)
-        {
-            _serviceProvider = serviceProvider;
-        }
+        public IServiceProvider ServiceProvider { get; set; }
 
         public async Task RaiseAsync<TEvent>(TEvent @event)
             where TEvent : class
         {
-            var eventHandlers = _serviceProvider.GetServices<ILocalEventHandler<TEvent>>();
+            var eventHandlers = ServiceProvider.GetServices<ILocalEventHandler<TEvent>>();
             foreach (var eventHandler in eventHandlers)
             {
                 await eventHandler.HandleAsync(@event);

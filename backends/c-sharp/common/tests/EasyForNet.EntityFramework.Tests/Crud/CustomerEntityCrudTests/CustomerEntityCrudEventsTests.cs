@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using Autofac;
 using EasyForNet.EntityFramework.Tests.Base;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +18,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
         [Fact]
         public async Task CreateTest()
         {
-            var crudActions = Services.GetRequiredService<CustomerCrudActions>();
+            var crudActions = Scope.Resolve<CustomerCrudActions>();
 
             var dto = CustomerEntityCrudTestsHelper.NewCustomer();
             await crudActions.CreateAsync(dto);
@@ -29,7 +30,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
         [Fact]
         public async Task UpdateTest()
         {
-            var crudActions = Services.GetRequiredService<CustomerCrudActions>();
+            var crudActions = Scope.Resolve<CustomerCrudActions>();
 
             var dto = CustomerEntityCrudTestsHelper.NewCustomer();
             dto = await crudActions.CreateAsync(dto);
@@ -49,7 +50,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
         [Fact]
         public async Task DeleteTest()
         {
-            var crudActions = Services.GetRequiredService<CustomerCrudActions>();
+            var crudActions = Scope.Resolve<CustomerCrudActions>();
 
             var dto = CustomerEntityCrudTestsHelper.NewCustomer();
             dto = await crudActions.CreateAsync(dto);
@@ -69,7 +70,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
         [Fact]
         public async Task UndoDeleteTest()
         {
-            var crudActions = Services.GetRequiredService<CustomerCrudActions>();
+            var crudActions = Scope.Resolve<CustomerCrudActions>();
 
             var dto = CustomerEntityCrudTestsHelper.NewCustomer();
             dto = await crudActions.CreateAsync(dto);
@@ -97,7 +98,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
         [Fact]
         public async Task ListTest()
         {
-            var crudActions = Services.GetRequiredService<CustomerCrudActions>();
+            var crudActions = Scope.Resolve<CustomerCrudActions>();
 
             var dtos = CustomerEntityCrudTestsHelper.NewCustomers(10);
             dtos = dtos.Select(d => crudActions.CreateAsync(d).Result).ToList();
@@ -116,7 +117,7 @@ namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
         [Fact]
         public async Task GetTest()
         {
-            var crudActions = Services.GetRequiredService<CustomerCrudActions>();
+            var crudActions = Scope.Resolve<CustomerCrudActions>();
 
             var dto = CustomerEntityCrudTestsHelper.NewCustomer();
             dto = await crudActions.CreateAsync(dto);

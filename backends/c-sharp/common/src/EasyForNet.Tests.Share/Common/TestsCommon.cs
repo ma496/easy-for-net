@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using Autofac;
 using AutoMapper;
-using Microsoft.Extensions.DependencyInjection;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace EasyForNet.Tests.Share.Common
 {
     public abstract class TestsCommon : IDisposable
     {
-        private readonly IServiceScope _serviceScope;
-        private readonly IList<IServiceScope> _serviceScopes;
+        private readonly ILifetimeScope _currentScope;
+        private readonly IList<ILifetimeScope> _scopes;
 
         protected ITestOutputHelper OutputHelper { get; }
 
-        protected IServiceProvider Services { get; }
+        protected ILifetimeScope Scope { get => _currentScope; }
 
         protected IMapper Mapper { get; }
 
@@ -22,105 +21,104 @@ namespace EasyForNet.Tests.Share.Common
 
         protected TestsCommon(ITestOutputHelper outputHelper)
         {
-            _serviceScope = GlobalObjects.ServiceProvider.CreateScope();
-            _serviceScopes = new List<IServiceScope>();
+            _currentScope = GlobalObjects.Container.BeginLifetimeScope();
+            _scopes = new List<ILifetimeScope>();
             OutputHelper = outputHelper;
-            Services = _serviceScope.ServiceProvider;
-            Mapper = Services.GetRequiredService<IMapper>();
-            CurrentUser = Services.GetRequiredService<ICurrentUser>();
+            Mapper = Scope.Resolve<IMapper>();
+            CurrentUser = Scope.Resolve<ICurrentUser>();
         }
 
         protected T NewScopeService<T>()
         {
-            var serviceProvider = CreateScope().ServiceProvider;
-            return serviceProvider.GetRequiredService<T>();
+            var scope = CreateScope();
+            return scope.Resolve<T>();
         }
 
         protected (T1, T2) NewScopeService<T1, T2>()
         {
-            var serviceProvider = CreateScope().ServiceProvider;
-            return (serviceProvider.GetRequiredService<T1>(), serviceProvider.GetRequiredService<T2>());
+            var scope = CreateScope();
+            return (scope.Resolve<T1>(), scope.Resolve<T2>());
         }
 
         protected (T1, T2, T3) NewScopeService<T1, T2, T3>()
         {
-            var serviceProvider = CreateScope().ServiceProvider;
-            return (serviceProvider.GetRequiredService<T1>(), serviceProvider.GetRequiredService<T2>(),
-                serviceProvider.GetRequiredService<T3>());
+            var scope = CreateScope();
+            return (scope.Resolve<T1>(), scope.Resolve<T2>(),
+                scope.Resolve<T3>());
         }
 
         protected (T1, T2, T3, T4) NewScopeService<T1, T2, T3, T4>()
         {
-            var serviceProvider = CreateScope().ServiceProvider;
-            return (serviceProvider.GetRequiredService<T1>(), serviceProvider.GetRequiredService<T2>(),
-                serviceProvider.GetRequiredService<T3>(), serviceProvider.GetRequiredService<T4>());
+            var scope = CreateScope();
+            return (scope.Resolve<T1>(), scope.Resolve<T2>(),
+                scope.Resolve<T3>(), scope.Resolve<T4>());
         }
 
         protected (T1, T2, T3, T4, T5) NewScopeService<T1, T2, T3, T4, T5>()
         {
-            var serviceProvider = CreateScope().ServiceProvider;
-            return (serviceProvider.GetRequiredService<T1>(), serviceProvider.GetRequiredService<T2>(),
-                serviceProvider.GetRequiredService<T3>(), serviceProvider.GetRequiredService<T4>(),
-                serviceProvider.GetRequiredService<T5>());
+            var scope = CreateScope();
+            return (scope.Resolve<T1>(), scope.Resolve<T2>(),
+                scope.Resolve<T3>(), scope.Resolve<T4>(),
+                scope.Resolve<T5>());
         }
 
         protected (T1, T2, T3, T4, T5, T6) NewScopeService<T1, T2, T3, T4, T5, T6>()
         {
-            var serviceProvider = CreateScope().ServiceProvider;
-            return (serviceProvider.GetRequiredService<T1>(), serviceProvider.GetRequiredService<T2>(),
-                serviceProvider.GetRequiredService<T3>(), serviceProvider.GetRequiredService<T4>(),
-                serviceProvider.GetRequiredService<T5>(), serviceProvider.GetRequiredService<T6>());
+            var scope = CreateScope();
+            return (scope.Resolve<T1>(), scope.Resolve<T2>(),
+                scope.Resolve<T3>(), scope.Resolve<T4>(),
+                scope.Resolve<T5>(), scope.Resolve<T6>());
         }
 
         protected (T1, T2, T3, T4, T5, T6, T7) NewScopeService<T1, T2, T3, T4, T5, T6, T7>()
         {
-            var serviceProvider = CreateScope().ServiceProvider;
-            return (serviceProvider.GetRequiredService<T1>(), serviceProvider.GetRequiredService<T2>(),
-                serviceProvider.GetRequiredService<T3>(), serviceProvider.GetRequiredService<T4>(),
-                serviceProvider.GetRequiredService<T5>(), serviceProvider.GetRequiredService<T6>(),
-                serviceProvider.GetRequiredService<T7>());
+            var scope = CreateScope();
+            return (scope.Resolve<T1>(), scope.Resolve<T2>(),
+                scope.Resolve<T3>(), scope.Resolve<T4>(),
+                scope.Resolve<T5>(), scope.Resolve<T6>(),
+                scope.Resolve<T7>());
         }
 
         protected (T1, T2, T3, T4, T5, T6, T7, T8) NewScopeService<T1, T2, T3, T4, T5, T6, T7, T8>()
         {
-            var serviceProvider = CreateScope().ServiceProvider;
-            return (serviceProvider.GetRequiredService<T1>(), serviceProvider.GetRequiredService<T2>(),
-                serviceProvider.GetRequiredService<T3>(), serviceProvider.GetRequiredService<T4>(),
-                serviceProvider.GetRequiredService<T5>(), serviceProvider.GetRequiredService<T6>(),
-                serviceProvider.GetRequiredService<T7>(), serviceProvider.GetRequiredService<T8>());
+            var scope = CreateScope();
+            return (scope.Resolve<T1>(), scope.Resolve<T2>(),
+                scope.Resolve<T3>(), scope.Resolve<T4>(),
+                scope.Resolve<T5>(), scope.Resolve<T6>(),
+                scope.Resolve<T7>(), scope.Resolve<T8>());
         }
 
         protected (T1, T2, T3, T4, T5, T6, T7, T8, T9) NewScopeService<T1, T2, T3, T4, T5, T6, T7, T8, T9>()
         {
-            var serviceProvider = CreateScope().ServiceProvider;
-            return (serviceProvider.GetRequiredService<T1>(), serviceProvider.GetRequiredService<T2>(),
-                serviceProvider.GetRequiredService<T3>(), serviceProvider.GetRequiredService<T4>(),
-                serviceProvider.GetRequiredService<T5>(), serviceProvider.GetRequiredService<T6>(),
-                serviceProvider.GetRequiredService<T7>(), serviceProvider.GetRequiredService<T8>(),
-                serviceProvider.GetRequiredService<T9>());
+            var scope = CreateScope();
+            return (scope.Resolve<T1>(), scope.Resolve<T2>(),
+                scope.Resolve<T3>(), scope.Resolve<T4>(),
+                scope.Resolve<T5>(), scope.Resolve<T6>(),
+                scope.Resolve<T7>(), scope.Resolve<T8>(),
+                scope.Resolve<T9>());
         }
 
         protected (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10) NewScopeService<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>()
         {
-            var serviceProvider = CreateScope().ServiceProvider;
-            return (serviceProvider.GetRequiredService<T1>(), serviceProvider.GetRequiredService<T2>(),
-                serviceProvider.GetRequiredService<T3>(), serviceProvider.GetRequiredService<T4>(),
-                serviceProvider.GetRequiredService<T5>(), serviceProvider.GetRequiredService<T6>(),
-                serviceProvider.GetRequiredService<T7>(), serviceProvider.GetRequiredService<T8>(),
-                serviceProvider.GetRequiredService<T9>(), serviceProvider.GetRequiredService<T10>());
+            var scope = CreateScope();
+            return (scope.Resolve<T1>(), scope.Resolve<T2>(),
+                scope.Resolve<T3>(), scope.Resolve<T4>(),
+                scope.Resolve<T5>(), scope.Resolve<T6>(),
+                scope.Resolve<T7>(), scope.Resolve<T8>(),
+                scope.Resolve<T9>(), scope.Resolve<T10>());
         }
 
-        private IServiceScope CreateScope()
+        private ILifetimeScope CreateScope()
         {
-            var serviceScope = GlobalObjects.ServiceProvider.CreateScope();
-            _serviceScopes.Add(serviceScope);
-            return serviceScope;
+            var scope = GlobalObjects.Container.BeginLifetimeScope();
+            _scopes.Add(scope);
+            return scope;
         }
 
         public void Dispose()
         {
-            _serviceScope?.Dispose();
-            foreach (var serviceScope in _serviceScopes)
+            _currentScope?.Dispose();
+            foreach (var serviceScope in _scopes)
             {
                 serviceScope.Dispose();
             }

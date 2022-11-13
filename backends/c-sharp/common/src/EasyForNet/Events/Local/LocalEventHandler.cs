@@ -1,23 +1,13 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using AutoMapper;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace EasyForNet.Events.Local
 {
     public abstract class LocalEventHandler<TEvent> : ILocalEventHandler<TEvent>
         where TEvent : class
     {
-        protected IServiceProvider ServiceProvider { get; }
-        protected IMapper Mapper { get; }
-        protected ICurrentUser CurrentUser { get; }
-
-        protected LocalEventHandler(IServiceProvider serviceProvider)
-        {
-            ServiceProvider = serviceProvider;
-            Mapper = serviceProvider.GetRequiredService<IMapper>();
-            CurrentUser = serviceProvider.GetRequiredService<ICurrentUser>();
-        }
+        protected IMapper Mapper { get; set; }
+        protected ICurrentUser CurrentUser { get; set; }
 
         public abstract Task HandleAsync(TEvent @event);
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using Autofac;
 using EasyForNet.Domain.Services;
 using EasyForNet.Tests.Base;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +17,7 @@ namespace EasyForNet.Tests.Domain.Services
         [Fact]
         public void TestOne()
         {
-            var domainService = Services.GetRequiredService<DomainServiceDemo>();
+            var domainService = Scope.Resolve<DomainServiceDemo>();
 
             Assert.NotNull(domainService);
         }
@@ -24,8 +25,5 @@ namespace EasyForNet.Tests.Domain.Services
 
     public class DomainServiceDemo : DomainService
     {
-        public DomainServiceDemo(IServiceProvider serviceProvider) : base(serviceProvider)
-        {
-        }
     }
 }

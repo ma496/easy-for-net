@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
+using Autofac;
 using AutoMapper;
 using EasyForNet.EntityFramework.Helpers;
 using EasyForNet.EntityFramework.Tests.Base;
@@ -24,8 +25,8 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
         [Fact]
         public async Task CreateTest()
         {
-            var dbContext = Services.GetRequiredService<EasyForNetEntityFrameworkTestsDb>();
-            var mapper = Services.GetRequiredService<IMapper>();
+            var dbContext = Scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
+            var mapper = Scope.Resolve<IMapper>();
 
             var customerDto = new CustomerDto
             {
@@ -55,8 +56,8 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
         {
             var exception = await Assert.ThrowsAsync<UniquePropertyException>(async () =>
             {
-                var dbContext = Services.GetRequiredService<EasyForNetEntityFrameworkTestsDb>();
-                var mapper = Services.GetRequiredService<IMapper>();
+                var dbContext = Scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
+                var mapper = Scope.Resolve<IMapper>();
 
                 var customerDto = new CustomerDto
                 {
@@ -92,8 +93,8 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
         {
             var exception = await Assert.ThrowsAsync<UniquePropertyException>(async () =>
             {
-                var dbContext = Services.GetRequiredService<EasyForNetEntityFrameworkTestsDb>();
-                var mapper = Services.GetRequiredService<IMapper>();
+                var dbContext = Scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
+                var mapper = Scope.Resolve<IMapper>();
 
                 var customerDto = new CustomerDto
                 {
@@ -127,8 +128,8 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
         [Fact]
         public async Task Create_SoftDelete_UniqueTest()
         {
-            var dbContext = Services.GetRequiredService<EasyForNetEntityFrameworkTestsDb>();
-            var mapper = Services.GetRequiredService<IMapper>();
+            var dbContext = Scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
+            var mapper = Scope.Resolve<IMapper>();
 
             var customerDto = new CustomerDto
             {

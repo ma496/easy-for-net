@@ -1,4 +1,5 @@
-﻿using EasyForNet.Entities;
+﻿using Autofac;
+using EasyForNet.Entities;
 using EasyForNet.EntityFramework.Setting;
 using EasyForNet.EntityFramework.Tests.Data;
 using EasyForNet.Modules;
@@ -6,7 +7,6 @@ using EasyForNet.Setting;
 using EasyForNet.Tests.Share;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace EasyForNet.EntityFramework.Tests
 {
@@ -15,23 +15,23 @@ namespace EasyForNet.EntityFramework.Tests
     [DependOn(typeof(EasyForNetTestsShareModule))]
     public class EasyForNetEntityFrameworkTestsModule : ModuleBase
     {
-        public override void Dependencies(IServiceCollection services, IConfiguration configuration)
+        public override void Dependencies(ContainerBuilder builder, IConfiguration configuration)
         {
-            services.AddDistributedMemoryCache();
-
-            services.AddScoped(sp =>
+            builder.Register(sp =>
             {
                 var options = new DbContextOptionsBuilder()
                     .UseSqlite("Data Source = EasyForNetEntityFrameworkTests.db")
                     .EnableSensitiveDataLogging()
                     .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                     .Options;
-                var currentUser = sp.GetRequiredService<ICurrentUser>();
+                var currentUser = sp.Resolve<ICurrentUser>();
                 var db = new EasyForNetEntityFrameworkTestsDb(options, currentUser);
                 return db;
-            });
+            }).InstancePerLifetimeScope();
 
-            services.AddScoped<ISettingStore<EfnSettingEntity>, SettingStore<EasyForNetEntityFrameworkTestsDb, EfnSettingEntity>>();
+            builder.RegisterType<SettingStore<EasyForNetEntityFrameworkTestsDb, EfnSettingEntity>>()
+                .As<ISettingStore<EfnSettingEntity>>()
+                .InstancePerLifetimeScope();
         }
     }
 }

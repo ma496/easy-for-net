@@ -1,4 +1,5 @@
-﻿using EasyForNet.Application.Dependencies;
+﻿using Autofac;
+using EasyForNet.Application.Dependencies;
 using EasyForNet.Tests.Base;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -15,15 +16,15 @@ namespace EasyForNet.Tests.Application.Dependencies
         [Fact]
         public void ClassTest()
         {
-            var classOne = Services.GetService<ClassOne>();
+            var classOne = Scope.Resolve<ClassOne>();
 
             Assert.NotNull(classOne);
             Assert.Equal(1, ClassOne.InstanceCount);
 
-            Services.GetService<ClassOne>();
+            Scope.Resolve<ClassOne>();
             Assert.Equal(2, ClassOne.InstanceCount);
 
-            var classOneInterface = Services.GetService<IClassOne>();
+            var classOneInterface = Scope.Resolve<IClassOne>();
 
             Assert.NotNull(classOneInterface);
         }

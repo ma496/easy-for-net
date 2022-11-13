@@ -1,4 +1,5 @@
-﻿using EasyForNet.Entities;
+﻿using Autofac;
+using EasyForNet.Entities;
 using EasyForNet.EntityFramework.Tests.Base;
 using EasyForNet.Setting;
 using FluentAssertions;
@@ -18,7 +19,7 @@ namespace EasyForNet.EntityFramework.Tests.Setting
 
         public SettingStoreTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
-            _settingStore = Services.GetRequiredService<ISettingStore<EfnSettingEntity>>();
+            _settingStore = Scope.Resolve<ISettingStore<EfnSettingEntity>>();
         }
 
         [Fact]

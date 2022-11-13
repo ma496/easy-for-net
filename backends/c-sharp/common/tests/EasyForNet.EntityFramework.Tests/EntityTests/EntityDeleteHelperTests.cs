@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Autofac;
 using EasyForNet.EntityFramework.Helpers;
 using EasyForNet.EntityFramework.Tests.Base;
 using EasyForNet.EntityFramework.Tests.Data;
@@ -19,7 +20,7 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
         [Fact]
         public async Task SoftDeleteTest()
         {
-            var dbContext = Services.GetRequiredService<EasyForNetEntityFrameworkTestsDb>();
+            var dbContext = Scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
             var generator = NewScopeService<CustomerGenerator>();
 
             var customerEntity = await generator.GenerateAndSaveAsync();
@@ -38,7 +39,7 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
         [Fact]
         public async Task DeleteTest()
         {
-            var dbContext = Services.GetRequiredService<EasyForNetEntityFrameworkTestsDb>();
+            var dbContext = Scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
             var tagEntity = new TagEntity {Name = $"{IncrementalId.Id}_mobile"};
 
             await dbContext.Tags.AddAsync(tagEntity);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Autofac;
 using EasyForNet.EntityFramework.Helpers;
 using EasyForNet.EntityFramework.Tests.Base;
 using EasyForNet.EntityFramework.Tests.Data;
@@ -21,7 +22,7 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
         [Fact]
         public async Task Create()
         {
-            var dbContext = Services.GetRequiredService<EasyForNetEntityFrameworkTestsDb>();
+            var dbContext = Scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
 
             var entity = new SpecificHolidayEntity
             {
@@ -44,7 +45,7 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
         [Fact]
         public async Task Create_Duplicate()
         {
-            var dbContext = Services.GetRequiredService<EasyForNetEntityFrameworkTestsDb>();
+            var dbContext = Scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
 
             var entity = new SpecificHolidayEntity
             {

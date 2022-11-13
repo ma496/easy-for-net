@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
 using FluentAssertions;
+using Autofac;
 
 namespace EasyForNet.Tests.Application.Mapping
 {
@@ -17,7 +18,7 @@ namespace EasyForNet.Tests.Application.Mapping
         [Fact]
         public void TestOne()
         {
-            var mapper = Services.GetRequiredService<IMapper>();
+            var mapper = Scope.Resolve<IMapper>();
 
             var classTwo = new ClassTwo
             {

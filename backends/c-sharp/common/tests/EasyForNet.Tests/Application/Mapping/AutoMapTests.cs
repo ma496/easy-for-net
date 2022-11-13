@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using Autofac;
+using AutoMapper;
 using EasyForNet.Tests.Base;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +17,7 @@ namespace EasyForNet.Tests.Application.Mapping
         [Fact]
         public void TestOne()
         {
-            var mapper = Services.GetRequiredService<IMapper>();
+            var mapper = Scope.Resolve<IMapper>();
 
             var classOne = new ClassOne
             {

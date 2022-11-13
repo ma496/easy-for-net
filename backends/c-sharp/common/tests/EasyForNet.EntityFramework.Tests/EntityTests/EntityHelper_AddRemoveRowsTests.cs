@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
+using Autofac;
 using EasyForNet.EntityFramework.Helpers;
 using EasyForNet.EntityFramework.Tests.Base;
 using EasyForNet.EntityFramework.Tests.Data;
@@ -23,9 +24,9 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
         [Fact]
         public async Task AddRemoveRowsTest()
         {
-            var dbContext = Services.GetRequiredService<EasyForNetEntityFrameworkTestsDb>();
-            var productGenerator = Services.GetRequiredService<ProductGenerator>();
-            var productItemGenerator = Services.GetRequiredService<ProductItemGenerator>();
+            var dbContext = Scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
+            var productGenerator = Scope.Resolve<ProductGenerator>();
+            var productItemGenerator = Scope.Resolve<ProductItemGenerator>();
 
             var product = productGenerator.Generate();
             product.Items = productItemGenerator.Generate(10);

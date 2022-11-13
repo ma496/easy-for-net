@@ -1,4 +1,5 @@
 ﻿using System;
+using Autofac;
 using EasyForNet.Application.Services;
 using EasyForNet.Tests.Base;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +17,7 @@ namespace EasyForNet.Tests.Application.Services
         [Fact]
         public void TestOne()
         {
-            var service = Services.GetRequiredService<ApplicationServiceDemo>();
+            var service = Scope.Resolve<ApplicationServiceDemo>();
 
             Assert.NotNull(service);
         }
@@ -24,8 +25,5 @@ namespace EasyForNet.Tests.Application.Services
 
     public class ApplicationServiceDemo : ApplicationService
     {
-        public ApplicationServiceDemo(IServiceProvider serviceProvider) : base(serviceProvider)
-        {
-        }
     }
 }

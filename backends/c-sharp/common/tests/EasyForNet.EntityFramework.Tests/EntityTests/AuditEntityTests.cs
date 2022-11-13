@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
 using EasyForNet.Extensions;
+using Autofac;
 
 namespace EasyForNet.EntityFramework.Tests.EntityTests
 {
@@ -21,7 +22,7 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
         [Fact]
         public async Task AuditEntityTest()
         {
-            var dbContext = Services.GetRequiredService<EasyForNetEntityFrameworkTestsDb>();
+            var dbContext = Scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
 
             var customer = await NewScopeService<CustomerGenerator>().GenerateAndSaveAsync();
 
@@ -30,7 +31,7 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
             Assert.NotNull(savedCustomer);
             customer.Should().BeEquivalentTo(savedCustomer);
 
-            var user = Services.GetRequiredService<ICurrentUser>();
+            var user = Scope.Resolve<ICurrentUser>();
 
             Assert.Equal(user.Username, savedCustomer.CreatedBy);
             Assert.Equal(user.Username, savedCustomer.UpdatedBy);

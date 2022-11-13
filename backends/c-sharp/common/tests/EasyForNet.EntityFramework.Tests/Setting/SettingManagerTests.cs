@@ -1,10 +1,7 @@
-﻿using EasyForNet.Cache;
-using EasyForNet.Entities;
+﻿using Autofac;
 using EasyForNet.EntityFramework.Tests.Base;
-using EasyForNet.Key;
 using EasyForNet.Setting;
 using FluentAssertions;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -16,16 +13,10 @@ namespace EasyForNet.EntityFramework.Tests.Setting
     public class SettingManagerTests : TestsBase
     {
         private readonly ISettingManager _settingManager;
-        private readonly ISettingStore<EfnSettingEntity> _settingStore;
-        private readonly ICacheManager _cacheManager;
-        private readonly IKeyManager _keyManager;
 
         public SettingManagerTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
-            _settingManager = Services.GetRequiredService<ISettingManager>();
-            _settingStore = Services.GetRequiredService<ISettingStore<EfnSettingEntity>>();
-            _cacheManager = Services.GetRequiredService<ICacheManager>();
-            _keyManager = Services.GetRequiredService<IKeyManager>();
+            _settingManager = Scope.Resolve<ISettingManager>();
         }
 
         [Fact]

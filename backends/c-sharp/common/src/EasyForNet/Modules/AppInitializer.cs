@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Ardalis.GuardClauses;
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using AutoMapper;
 using EasyForNet.Application.Dependencies;
 using EasyForNet.Extensions;
@@ -15,11 +17,13 @@ namespace EasyForNet.Modules
     {
         private static readonly List<string> InitModules = new();
 
-        public static IServiceProvider Init<TModule>(IConfiguration configuration = null, bool isValidateMapper = true)
+        public static IContainer Init<TModule>(IServiceCollection services, IConfiguration configuration = null, bool isValidateMapper = true)
             where TModule : ModuleBase
         {
-            var services = new ServiceCollection();
-
+            var builder = new ContainerBuilder();
+            if (services != null)
+                builder.Populate(services);
+           
             var moduleName = typeof(TModule).FullName;
 
             var mapperConfigurationExpression = new MapperConfigurationExpression();
@@ -29,8 +33,8 @@ namespace EasyForNet.Modules
                 var modulesInfo = GetUniqueAndOrderModulesInfo(GetModulesInfo(typeof(TModule), 0));
                 foreach (var moduleInfo in modulesInfo)
                 {
-                    DependencyThroughInterfaces(moduleInfo.Module, services);
-                    moduleInfo.Module.Dependencies(services, configuration);
+                    DependencyThroughInterfaces(moduleInfo.Module, builder);
+                    moduleInfo.Module.Dependencies(builder, configuration);
 
                     mapperConfigurationExpression.AddMaps(moduleInfo.Module.GetType().Assembly);
                     moduleInfo.Module.Mapping(mapperConfigurationExpression, configuration);
@@ -40,7 +44,7 @@ namespace EasyForNet.Modules
                 if (isValidateMapper)
                     mapperConfiguration.AssertConfigurationIsValid();
                 var mapper = mapperConfiguration.CreateMapper();
-                services.AddSingleton(mapper);
+                builder.RegisterInstance(mapper).As<IMapper>();
 
                 InitModules.Add(moduleName);
             }
@@ -49,7 +53,7 @@ namespace EasyForNet.Modules
                 throw new Exception($"{moduleName} module already initialized");
             }
             
-            return services.BuildServiceProvider();
+            return builder.Build();
         }
 
         private static void CheckModuleType(Type type)
@@ -89,7 +93,7 @@ namespace EasyForNet.Modules
             return uniqueAndOrderModulesInfo;
         }
 
-        private static void DependencyThroughInterfaces(ModuleBase module, IServiceCollection services)
+        private static void DependencyThroughInterfaces(ModuleBase module, ContainerBuilder builder)
         {
             var types = module.GetType().Assembly.GetConcreteTypes()
                 .Where(t =>
@@ -99,30 +103,28 @@ namespace EasyForNet.Modules
             foreach (var type in types)
                 if (typeof(IScopedDependency).IsAssignableFrom(type))
                 {
-                    services.AddScoped(type);
-                    var serviceInterfaces = GetServiceInterfaces(type);
-                    foreach (var serviceInterface in serviceInterfaces) services.AddScoped(serviceInterface, type);
+                    builder.RegisterType(type)
+                        .InstancePerLifetimeScope()
+                        .AsSelf()
+                        .AsImplementedInterfaces()
+                        .PropertiesAutowired();
                 }
                 else if (typeof(ITransientDependency).IsAssignableFrom(type))
                 {
-                    services.AddTransient(type);
-                    var serviceInterfaces = GetServiceInterfaces(type);
-                    foreach (var serviceInterface in serviceInterfaces) services.AddTransient(serviceInterface, type);
+                    builder.RegisterType(type)
+                        .InstancePerDependency()
+                        .AsSelf()
+                        .AsImplementedInterfaces()
+                        .PropertiesAutowired();
                 }
                 else if (typeof(ISingletonDependency).IsAssignableFrom(type))
                 {
-                    services.AddSingleton(type);
-                    var serviceInterfaces = GetServiceInterfaces(type);
-                    foreach (var serviceInterface in serviceInterfaces) services.AddSingleton(serviceInterface, type);
+                    builder.RegisterType(type)
+                        .SingleInstance()
+                        .AsSelf()
+                        .AsImplementedInterfaces()
+                        .PropertiesAutowired();
                 }
-        }
-
-        private static List<Type> GetServiceInterfaces(Type type)
-        {
-            return type.GetInterfaces()
-                .Where(t => t != typeof(IScopedDependency) && t != typeof(ITransientDependency) &&
-                            t != typeof(ISingletonDependency))
-                .ToList();
         }
     }
 }

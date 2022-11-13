@@ -10,15 +10,18 @@ namespace EasyForNet.Tests.Share.Common
     {
         protected TestsFixtureCommon()
         {
+            var services = new ServiceCollection();
+
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", true, true);
 
             var configuration = builder.Build();
 
-            var services = new ServiceCollection();
-
-            GlobalObjects.ServiceProvider = AppInitializer.Init<TModule>(configuration);
+            AddServices(services);
+            GlobalObjects.Container = AppInitializer.Init<TModule>(services, configuration);
         }
+
+        protected virtual void AddServices(IServiceCollection services) { }
     }
 }

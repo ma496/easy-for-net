@@ -18,8 +18,8 @@ namespace EasyForNet.Tests.Modules
         {
             var exception = Assert.Throws<Exception>(() =>
             {
-                AppInitializer.Init<TempModule>();
-                AppInitializer.Init<TempModule>();
+                AppInitializer.Init<TempModule>(null);
+                AppInitializer.Init<TempModule>(null);
             });
 
             Assert.Equal($"{typeof(TempModule).FullName} module already initialized",

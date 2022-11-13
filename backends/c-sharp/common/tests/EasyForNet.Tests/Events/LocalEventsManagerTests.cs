@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Autofac;
 using EasyForNet.Events.Local;
 using EasyForNet.Tests.Base;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +18,7 @@ namespace EasyForNet.Tests.Events
         [Fact]
         public async Task LocalEventsTest()
         {
-            var eventManager = Services.GetRequiredService<ILocalEventManager>();
+            var eventManager = Scope.Resolve<ILocalEventManager>();
 
             await eventManager.RaiseAsync(new ProductEvent());
 
@@ -29,10 +30,6 @@ namespace EasyForNet.Tests.Events
         {
             public static bool IsOccur;
 
-            public ProductLocalEventHandler(IServiceProvider serviceProvider) : base(serviceProvider)
-            {
-            }
-
             public override async Task HandleAsync(ProductEvent @event)
             {
                 IsOccur = true;
@@ -43,10 +40,6 @@ namespace EasyForNet.Tests.Events
         public class ProductOneLocalEventHandler : LocalEventHandler<ProductEvent>
         {
             public static bool IsOccur;
-
-            public ProductOneLocalEventHandler(IServiceProvider serviceProvider) : base(serviceProvider)
-            {
-            }
 
             public override async Task HandleAsync(ProductEvent @event)
             {

@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
+using Autofac;
 using AutoMapper;
 using EasyForNet.Application.Dto;
 using EasyForNet.EntityFramework.Helpers;
@@ -26,7 +27,7 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
         [Fact]
         public async Task Update_WithSameIdCardTest()
         {
-            var dbContext = Services.GetRequiredService<EasyForNetEntityFrameworkTestsDb>();
+            var dbContext = Scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
             var customerGenerator = NewScopeService<CustomerGenerator>();
 
             var newCustomer = await customerGenerator.GenerateAndSaveAsync();
@@ -52,7 +53,7 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
         [Fact]
         public async Task Update_WithDifferentIdCardTest()
         {
-            var dbContext = Services.GetRequiredService<EasyForNetEntityFrameworkTestsDb>();
+            var dbContext = Scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
             var customerGenerator = NewScopeService<CustomerGenerator>();
 
             var newCustomer = await customerGenerator.GenerateAndSaveAsync();
@@ -81,7 +82,7 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
         {
             await Assert.ThrowsAsync<UniquePropertyException>(async () =>
             {
-                var dbContext = Services.GetRequiredService<EasyForNetEntityFrameworkTestsDb>();
+                var dbContext = Scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
                 var customerGenerator = NewScopeService<CustomerGenerator>();
 
                 var newCustomers = await customerGenerator.GenerateAndSaveAsync(2);
@@ -103,7 +104,7 @@ namespace EasyForNet.EntityFramework.Tests.EntityTests
         [Fact]
         public async Task Update_SoftDelete_UniqueTest()
         {
-            var dbContext = Services.GetRequiredService<EasyForNetEntityFrameworkTestsDb>();
+            var dbContext = Scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
             var customerGenerator = NewScopeService<CustomerGenerator>();
 
             var newCustomers = await customerGenerator.GenerateAndSaveAsync(2);
