@@ -5,10 +5,8 @@ using EasyForNet.EntityFramework.Tests.Data;
 using EasyForNet.EntityFramework.Tests.GenerateData;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
-using EasyForNet.Extensions;
 using Autofac;
 
 namespace EasyForNet.EntityFramework.Tests.EntityTests

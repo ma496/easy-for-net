@@ -1,8 +1,11 @@
 ﻿using Autofac;
 using EasyForNet.Entities;
+using EasyForNet.EntityFramework.Repository;
 using EasyForNet.EntityFramework.Setting;
 using EasyForNet.EntityFramework.Tests.Data;
+using EasyForNet.EntityFramework.Tests.Repository;
 using EasyForNet.Modules;
+using EasyForNet.Repository;
 using EasyForNet.Setting;
 using EasyForNet.Tests.Share;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +34,10 @@ namespace EasyForNet.EntityFramework.Tests
 
             builder.RegisterType<SettingStore<EasyForNetEntityFrameworkTestsDb, EfnSettingEntity>>()
                 .As<ISettingStore<EfnSettingEntity>>()
+                .InstancePerLifetimeScope();
+
+            builder.RegisterGeneric(typeof(EasyForNetRepository<,>))
+                .As(typeof(IRepository<,>))
                 .InstancePerLifetimeScope();
         }
     }
