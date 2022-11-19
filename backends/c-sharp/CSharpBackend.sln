@@ -10,23 +10,23 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{CDB6B31D-D290-495A-B029-CB17D4E22A80}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lib", "Lib", "{CDB6B31D-D290-495A-B029-CB17D4E22A80}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{DE3784C1-9D8B-43ED-9BD7-CCF2F3689DE2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{331B6BD2-EA7E-4A90-9C5A-2F0233AD4269}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyForNet", "common\src\EasyForNet\EasyForNet.csproj", "{9ACD26AE-B2CF-4D1C-B7C9-BCD6659B0495}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyForNet", "lib\src\EasyForNet\EasyForNet.csproj", "{9ACD26AE-B2CF-4D1C-B7C9-BCD6659B0495}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyForNet.Tests.Share", "common\src\EasyForNet.Tests.Share\EasyForNet.Tests.Share.csproj", "{658ACAB8-5CBA-4587-A158-35BEACF9491E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyForNet.Tests.Share", "lib\src\EasyForNet.Tests.Share\EasyForNet.Tests.Share.csproj", "{658ACAB8-5CBA-4587-A158-35BEACF9491E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyForNet.EntityFramework", "common\src\EasyForNet.EntityFramework\EasyForNet.EntityFramework.csproj", "{63A16B49-DCE0-4A6E-84E8-0AE0EE7FB98E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyForNet.EntityFramework", "lib\src\EasyForNet.EntityFramework\EasyForNet.EntityFramework.csproj", "{63A16B49-DCE0-4A6E-84E8-0AE0EE7FB98E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyForNet.EfIntegrationTests.Share", "common\src\EasyForNet.EfIntegrationTests.Share\EasyForNet.EfIntegrationTests.Share.csproj", "{BFC2285A-67C9-413B-BFC0-94CE31B0866D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyForNet.EfIntegrationTests.Share", "lib\src\EasyForNet.EfIntegrationTests.Share\EasyForNet.EfIntegrationTests.Share.csproj", "{BFC2285A-67C9-413B-BFC0-94CE31B0866D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyForNet.Tests", "common\tests\EasyForNet.Tests\EasyForNet.Tests.csproj", "{1DC1FCEA-2808-4901-AF29-91275B0406A3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyForNet.Tests", "lib\tests\EasyForNet.Tests\EasyForNet.Tests.csproj", "{1DC1FCEA-2808-4901-AF29-91275B0406A3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyForNet.EntityFramework.Tests", "common\tests\EasyForNet.EntityFramework.Tests\EasyForNet.EntityFramework.Tests.csproj", "{72BC040E-D0E5-46EF-ABCF-698A63C90F0E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyForNet.EntityFramework.Tests", "lib\tests\EasyForNet.EntityFramework.Tests\EasyForNet.EntityFramework.Tests.csproj", "{72BC040E-D0E5-46EF-ABCF-698A63C90F0E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -209,6 +209,19 @@ namespace EasyForNet.EntityFramework.Tests.Repository
         }
 
         [Fact]
+        public void Delete_NoEntityTest()
+        {
+            var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
+
+            var exception = Assert.Throws<DbUpdateConcurrencyException>(() =>
+            {
+                repository.Delete(5634346343, true);
+            });
+
+            exception.Message.Should().Contain("The database operation was expected to affect 1 row(s), but actually affected 0 row(s); data may have been modified or deleted since entities were loaded.");
+        }
+
+        [Fact]
         public async Task DeleteAsyncTest()
         {
             var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
@@ -221,6 +234,19 @@ namespace EasyForNet.EntityFramework.Tests.Repository
             var savedCustomer = await repository.FindAsync(customer.Id);
 
             savedCustomer.Should().BeNull();
+        }
+
+        [Fact]
+        public async Task DeleteAsync_NoEntityTest()
+        {
+            var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
+
+            var exception = await Assert.ThrowsAsync<DbUpdateConcurrencyException>(async () =>
+            {
+                await repository.DeleteAsync(5634346343, true);
+            });
+
+            exception.Message.Should().Contain("The database operation was expected to affect 1 row(s), but actually affected 0 row(s); data may have been modified or deleted since entities were loaded.");
         }
 
         [Fact]
