@@ -10,13 +10,21 @@ namespace EasyForNet.Repository
         where TEntity : class, IEntity<TKey>
         where TKey : IComparable
     {
-        TEntity GetById(TKey id, bool isTracking = false);
+        TEntity Find(TKey key, bool isTracking = false);
 
-        Task<TEntity> GetByIdAsync(TKey id, bool isTracking = false);
+        Task<TEntity> FindAsync(TKey key, bool isTracking = false);
 
-        void Delete(TKey id, bool isAutoSave = false);
+        TEntity GetById(TKey key, bool isTracking = false);
 
-        Task DeleteAsync(TKey id, bool isAutoSave = false);
+        Task<TEntity> GetByIdAsync(TKey key, bool isTracking = false);
+
+        void Delete(TKey key, bool isAutoSave = false);
+
+        Task DeleteAsync(TKey key, bool isAutoSave = false);
+
+        void DeleteRange(IEnumerable<TKey> keys, bool isAutoSave = false);
+
+        Task DeleteRangeAsync(IEnumerable<TKey> keys, bool isAutoSave = false);
     }
 
     public interface IRepository<TEntity>

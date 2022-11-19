@@ -6,7 +6,7 @@ using System;
 namespace EasyForNet.EntityFramework.Tests.Repository
 {
     public class EasyForNetRepository<TEntity, TKey> : EfRepository<EasyForNetEntityFrameworkTestsDb, TEntity, TKey>
-        where TEntity : class, IEntity<TKey>
+        where TEntity : class, IEntity<TKey>, new()
         where TKey : IComparable
     {
         public EasyForNetRepository(EasyForNetEntityFrameworkTestsDb dbContext) : base(dbContext)

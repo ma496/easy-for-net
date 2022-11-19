@@ -19,7 +19,7 @@ namespace EasyForNet.EntityFramework.Helpers
             var entity = await collection.FindAsync(id);
 
             if (entity == null)
-                throw new NoEntityException(EntityHelper.EntityName<TEntity>(), id);
+                throw new EntityNotFoundException(EntityHelper.EntityName<TEntity>(), id);
 
             return entity;
         }
@@ -36,7 +36,7 @@ namespace EasyForNet.EntityFramework.Helpers
                 .SingleOrDefaultAsync();
 
             if (obj == null)
-                throw new NoEntityException(EntityHelper.EntityName<TEntity>(), id);
+                throw new EntityNotFoundException(EntityHelper.EntityName<TEntity>(), id);
 
             return obj;
         }
@@ -51,7 +51,7 @@ namespace EasyForNet.EntityFramework.Helpers
                 .SingleOrDefaultAsync();
 
             if (entity == null)
-                throw new NoEntityException(EntityHelper.EntityName<TEntity>(), id);
+                throw new EntityNotFoundException(EntityHelper.EntityName<TEntity>(), id);
         }
     }
 }

@@ -2,11 +2,11 @@
 using EasyForNet.EntityFramework.Tests.Base;
 using EasyForNet.EntityFramework.Tests.Data.Entities;
 using EasyForNet.EntityFramework.Tests.GenerateData;
+using EasyForNet.Exceptions.UserFriendly;
 using EasyForNet.Extensions;
 using EasyForNet.Repository;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -30,7 +30,7 @@ namespace EasyForNet.EntityFramework.Tests.Repository
             var customer = _customerGenerator.Generate();
             repository.Create(customer, true);
 
-            var savedCustomer = repository.GetById(customer.Id);
+            var savedCustomer = repository.Find(customer.Id);
 
             savedCustomer.Should().NotBeNull();
             savedCustomer.Name.Should().Be(customer.Name);
@@ -43,7 +43,7 @@ namespace EasyForNet.EntityFramework.Tests.Repository
             var customer = _customerGenerator.Generate();
             await repository.CreateAsync(customer, true);
 
-            var savedCustomer = await repository.GetByIdAsync(customer.Id);
+            var savedCustomer = await repository.FindAsync(customer.Id);
 
             savedCustomer.Should().NotBeNull();
             savedCustomer.Name.Should().Be(customer.Name);
@@ -96,7 +96,7 @@ namespace EasyForNet.EntityFramework.Tests.Repository
             var customer = _customerGenerator.Generate();
             repository.Create(customer, true);
 
-            var savedCustomer = repository.GetById(customer.Id);
+            var savedCustomer = repository.Find(customer.Id);
 
             savedCustomer.Should().NotBeNull();
             savedCustomer.Name.Should().Be(customer.Name);
@@ -105,7 +105,7 @@ namespace EasyForNet.EntityFramework.Tests.Repository
             savedCustomer.Name = $"Name_{IncrementalId.Id}";
             repository.Update(savedCustomer, true);
 
-            var updatedCustomer = repository.GetById(customer.Id);
+            var updatedCustomer = repository.Find(customer.Id);
 
             updatedCustomer.Should().NotBeNull();
             updatedCustomer.Name.Should().Be(savedCustomer.Name);
@@ -118,7 +118,7 @@ namespace EasyForNet.EntityFramework.Tests.Repository
             var customer = _customerGenerator.Generate();
             await repository.CreateAsync(customer, true);
 
-            var savedCustomer = await repository.GetByIdAsync(customer.Id);
+            var savedCustomer = await repository.FindAsync(customer.Id);
 
             savedCustomer.Should().NotBeNull();
             savedCustomer.Name.Should().Be(customer.Name);
@@ -127,7 +127,7 @@ namespace EasyForNet.EntityFramework.Tests.Repository
             savedCustomer.Name = $"Name_{IncrementalId.Id}";
             await repository.UpdateAsync(savedCustomer, true);
 
-            var updatedCustomer = await repository.GetByIdAsync(customer.Id);
+            var updatedCustomer = await repository.FindAsync(customer.Id);
 
             updatedCustomer.Should().NotBeNull();
             updatedCustomer.Name.Should().Be(savedCustomer.Name);
@@ -203,7 +203,7 @@ namespace EasyForNet.EntityFramework.Tests.Repository
             repository = NewScopeService<IRepository<CustomerEntity, long>>();
             repository.Delete(customer.Id, true);
 
-            var savedCustomer = repository.GetById(customer.Id);
+            var savedCustomer = repository.Find(customer.Id);
 
             savedCustomer.Should().BeNull();
         }
@@ -218,9 +218,79 @@ namespace EasyForNet.EntityFramework.Tests.Repository
             repository = NewScopeService<IRepository<CustomerEntity, long>>();
             await repository.DeleteAsync(customer.Id, true);
 
-            var savedCustomer = await repository.GetByIdAsync(customer.Id);
+            var savedCustomer = await repository.FindAsync(customer.Id);
 
             savedCustomer.Should().BeNull();
+        }
+
+        [Fact]
+        public void DeleteRangeTest()
+        {
+            var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
+            var customers = _customerGenerator.Generate(10);
+            repository.CreateRange(customers, true);
+
+            var keys = customers.Select(c => c.Id);
+            repository = NewScopeService<IRepository<CustomerEntity, long>>();
+
+            repository.DeleteRange(keys, true);
+
+            var savedCustomers = repository.GetAll().Where(e => keys.Contains(e.Id));
+
+            savedCustomers.Should().BeNullOrEmpty();
+        }
+
+        [Fact]
+        public async Task DeleteRangeAsyncTest()
+        {
+            var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
+            var customers = _customerGenerator.Generate(10);
+            await repository.CreateRangeAsync(customers, true);
+
+            var keys = customers.Select(c => c.Id);
+            repository = NewScopeService<IRepository<CustomerEntity, long>>();
+
+            await repository.DeleteRangeAsync(keys, true);
+
+            var savedCustomers = repository.GetAll().Where(e => keys.Contains(e.Id));
+
+            savedCustomers.Should().BeNullOrEmpty();
+        }
+
+        [Fact]
+        public void GetByIdTest()
+        {
+            var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
+            var customer = _customerGenerator.Generate();
+            repository.Create(customer, true);
+
+            var savedCustomer = repository.GetById(customer.Id);
+
+            savedCustomer.Should().NotBeNull();
+            savedCustomer.Name.Should().Be(customer.Name);
+
+            repository = NewScopeService<IRepository<CustomerEntity, long>>();
+            repository.Delete(savedCustomer.Id, true);
+
+            Assert.Throws<EntityNotFoundException>(() => repository.GetById(savedCustomer.Id));
+        }
+
+        [Fact]
+        public async Task GetByIdAsyncTest()
+        {
+            var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
+            var customer = _customerGenerator.Generate();
+            await repository.CreateAsync(customer, true);
+
+            var savedCustomer = await repository.GetByIdAsync(customer.Id);
+
+            savedCustomer.Should().NotBeNull();
+            savedCustomer.Name.Should().Be(customer.Name);
+
+            repository = NewScopeService<IRepository<CustomerEntity, long>>();
+            await repository.DeleteAsync(savedCustomer.Id, true);
+
+            await Assert.ThrowsAsync<EntityNotFoundException>(async () => await repository.GetByIdAsync(savedCustomer.Id));
         }
 
         [Fact]
@@ -230,13 +300,13 @@ namespace EasyForNet.EntityFramework.Tests.Repository
             var customer = _customerGenerator.Generate();
             repository.Create(customer);
 
-            var savedCustomer = repository.GetById(customer.Id);
+            var savedCustomer = repository.Find(customer.Id);
 
             savedCustomer.Should().BeNull();
 
             repository.SaveChanges();
 
-            savedCustomer = repository.GetById(customer.Id);
+            savedCustomer = repository.Find(customer.Id);
 
             savedCustomer.Should().NotBeNull();
         }
@@ -248,13 +318,13 @@ namespace EasyForNet.EntityFramework.Tests.Repository
             var customer = _customerGenerator.Generate();
             await repository.CreateAsync(customer);
 
-            var savedCustomer = await repository.GetByIdAsync(customer.Id);
+            var savedCustomer = await repository.FindAsync(customer.Id);
 
             savedCustomer.Should().BeNull();
 
             await repository.SaveChangesAsync();
 
-            savedCustomer = await repository.GetByIdAsync(customer.Id);
+            savedCustomer = await repository.FindAsync(customer.Id);
 
             savedCustomer.Should().NotBeNull();
         }
