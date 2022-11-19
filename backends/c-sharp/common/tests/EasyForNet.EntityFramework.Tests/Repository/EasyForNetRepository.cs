@@ -13,4 +13,12 @@ namespace EasyForNet.EntityFramework.Tests.Repository
         {
         }
     }
+
+    public class EasyForNetRepository<TEntity> : EfRepository<EasyForNetEntityFrameworkTestsDb, TEntity>
+        where TEntity : class
+    {
+        public EasyForNetRepository(EasyForNetEntityFrameworkTestsDb dbContext) : base(dbContext)
+        {
+        }
+    }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Autofac;
 using Bogus;
 using EasyForNet.Bogus;
 using EasyForNet.Bogus.Extensions;
@@ -20,7 +21,8 @@ namespace EasyForNet.Tests.Bogus.Extensions
         [Fact]
         public void IdCard()
         {
-            var user = new UserGenerator().Generate();
+            var userGenerator = Scope.Resolve<UserGenerator>();
+            var user = userGenerator.Generate();
 
             Assert.NotNull(user);
             Assert.NotEmpty(user.IdCard);

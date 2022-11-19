@@ -6,12 +6,8 @@ using EasyForNet.EntityFramework.Tests.Data.Entities;
 
 namespace EasyForNet.EntityFramework.Tests.GenerateData
 {
-    public class CustomerGenerator : DataGenerator<EasyForNetEntityFrameworkTestsDb, CustomerEntity>, IScopedDependency
+    public class CustomerGenerator : EfDataGenerator<CustomerEntity>
     {
-        public CustomerGenerator(EasyForNetEntityFrameworkTestsDb dbContext) : base(dbContext)
-        {
-        }
-
         protected override Faker<CustomerEntity> Faker()
         {
             return new Faker<CustomerEntity>()

@@ -1,17 +1,14 @@
 ﻿using Bogus;
-using EasyForNet.Application.Dependencies;
 using EasyForNet.EntityFramework.Bogus;
-using EasyForNet.EntityFramework.Tests.Data;
 using EasyForNet.EntityFramework.Tests.Data.Entities;
 
 namespace EasyForNet.EntityFramework.Tests.GenerateData
 {
-    public class ProductGenerator : DataGenerator<EasyForNetEntityFrameworkTestsDb, ProductEntity>, IScopedDependency
+    public class ProductGenerator : EfDataGenerator<ProductEntity>
     {
         private readonly ProductItemGenerator _productItemGenerator;
 
-        public ProductGenerator(EasyForNetEntityFrameworkTestsDb dbContext, ProductItemGenerator productItemGenerator)
-            : base(dbContext)
+        public ProductGenerator(ProductItemGenerator productItemGenerator)
         {
             _productItemGenerator = productItemGenerator;
         }

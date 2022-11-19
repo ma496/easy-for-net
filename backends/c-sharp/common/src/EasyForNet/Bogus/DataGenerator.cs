@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using Bogus;
+using EasyForNet.Application.Dependencies;
 
 namespace EasyForNet.Bogus
 {
-    public abstract class DataGenerator<T>
+    public abstract class DataGenerator<T> : ITransientDependency
         where T : class
     {
         protected abstract Faker<T> Faker();

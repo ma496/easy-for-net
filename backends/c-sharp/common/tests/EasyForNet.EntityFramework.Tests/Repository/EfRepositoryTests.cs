@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using EasyForNet.EntityFramework.Tests.Base;
 using EasyForNet.EntityFramework.Tests.Data.Entities;
+using EasyForNet.EntityFramework.Tests.GenerateData;
 using EasyForNet.Extensions;
 using EasyForNet.Repository;
 using FluentAssertions;
@@ -15,15 +16,18 @@ namespace EasyForNet.EntityFramework.Tests.Repository
 {
     public class EfRepositoryTests : TestsBase
     {
+        private CustomerGenerator _customerGenerator;
+
         public EfRepositoryTests(ITestOutputHelper outputHelper) : base(outputHelper)
         {
+            _customerGenerator = Scope.Resolve<CustomerGenerator>();
         }
 
         [Fact]
         public void CreateTest()
         {
             var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
-            var customer = NewCustomer();
+            var customer = _customerGenerator.Generate();
             repository.Create(customer, true);
 
             var savedCustomer = repository.GetById(customer.Id);
@@ -36,7 +40,7 @@ namespace EasyForNet.EntityFramework.Tests.Repository
         public async Task CreateAsyncTest()
         {
             var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
-            var customer = NewCustomer();
+            var customer = _customerGenerator.Generate();
             await repository.CreateAsync(customer, true);
 
             var savedCustomer = await repository.GetByIdAsync(customer.Id);
@@ -49,7 +53,7 @@ namespace EasyForNet.EntityFramework.Tests.Repository
         public void CreateRangeTest()
         {
             var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
-            var customers = NewCustomers(10);
+            var customers = _customerGenerator.Generate(10);
             repository.CreateRange(customers, true);
 
             var ids = customers.Select(x => x.Id).ToList();
@@ -69,7 +73,7 @@ namespace EasyForNet.EntityFramework.Tests.Repository
         public async Task CreateRangeAsyncTest()
         {
             var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
-            var customers = NewCustomers(10);
+            var customers = _customerGenerator.Generate(10);
             await repository.CreateRangeAsync(customers, true);
 
             var ids = customers.Select(x => x.Id).ToList();
@@ -89,7 +93,7 @@ namespace EasyForNet.EntityFramework.Tests.Repository
         public void UpdateTest()
         {
             var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
-            var customer = NewCustomer();
+            var customer = _customerGenerator.Generate();
             repository.Create(customer, true);
 
             var savedCustomer = repository.GetById(customer.Id);
@@ -111,7 +115,7 @@ namespace EasyForNet.EntityFramework.Tests.Repository
         public async Task UpdateAsyncTest()
         {
             var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
-            var customer = NewCustomer();
+            var customer = _customerGenerator.Generate();
             await repository.CreateAsync(customer, true);
 
             var savedCustomer = await repository.GetByIdAsync(customer.Id);
@@ -133,7 +137,7 @@ namespace EasyForNet.EntityFramework.Tests.Repository
         public void UpdateRangeTest()
         {
             var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
-            var customers = NewCustomers(10);
+            var customers = _customerGenerator.Generate(10);
             repository.CreateRange(customers, true);
 
             var customersForUpdate = customers.Clone();
@@ -163,7 +167,7 @@ namespace EasyForNet.EntityFramework.Tests.Repository
         public async Task UpdateRangeAsyncTest()
         {
             var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
-            var customers = NewCustomers(10);
+            var customers = _customerGenerator.Generate(10);
             await repository.CreateRangeAsync(customers, true);
 
             var customersForUpdate = customers.Clone();
@@ -193,7 +197,7 @@ namespace EasyForNet.EntityFramework.Tests.Repository
         public void DeleteTest()
         {
             var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
-            var customer = NewCustomer();
+            var customer = _customerGenerator.Generate();
             repository.Create(customer, true);
 
             repository = NewScopeService<IRepository<CustomerEntity, long>>();
@@ -208,7 +212,7 @@ namespace EasyForNet.EntityFramework.Tests.Repository
         public async Task DeleteAsyncTest()
         {
             var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
-            var customer = NewCustomer();
+            var customer = _customerGenerator.Generate();
             await repository.CreateAsync(customer, true);
 
             repository = NewScopeService<IRepository<CustomerEntity, long>>();
@@ -223,7 +227,7 @@ namespace EasyForNet.EntityFramework.Tests.Repository
         public void SaveChangesTest()
         {
             var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
-            var customer = NewCustomer();
+            var customer = _customerGenerator.Generate();
             repository.Create(customer);
 
             var savedCustomer = repository.GetById(customer.Id);
@@ -241,7 +245,7 @@ namespace EasyForNet.EntityFramework.Tests.Repository
         public async Task SaveChangesAsyncTest()
         {
             var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
-            var customer = NewCustomer();
+            var customer = _customerGenerator.Generate();
             await repository.CreateAsync(customer);
 
             var savedCustomer = await repository.GetByIdAsync(customer.Id);
@@ -254,26 +258,5 @@ namespace EasyForNet.EntityFramework.Tests.Repository
 
             savedCustomer.Should().NotBeNull();
         }
-
-        #region Helpers
-
-        private List<CustomerEntity> NewCustomers(int count)
-        {
-            return Enumerable.Range(0, count)
-                .Select(_ => NewCustomer()).ToList();
-        }
-
-        private CustomerEntity NewCustomer()
-        {
-            return new CustomerEntity
-            {
-                Name = $"Test_{IncrementalId.Id}",
-                CellNo = $"34234_{IncrementalId.Id}",
-                Code = 3243 + IncrementalId.Id,
-                IdCard = $"fdafs32343423_{IncrementalId.Id}"
-            };
-        }
-
-        #endregion
     }
 }

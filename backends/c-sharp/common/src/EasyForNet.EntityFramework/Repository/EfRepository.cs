@@ -11,10 +11,63 @@ using System.Linq.Dynamic.Core;
 
 namespace EasyForNet.EntityFramework.Repository
 {
-    public class EfRepository<TDbContext, TEntity, TKey> : IRepository<TEntity, TKey>
+    public class EfRepository<TDbContext, TEntity, TKey> : EfRepository<TDbContext, TEntity>, IRepository<TEntity, TKey>
         where TDbContext : DbContextBase
         where TEntity : class, IEntity<TKey>
         where TKey : IComparable
+    {
+        private readonly TDbContext _dbContext;
+
+        public EfRepository(TDbContext dbContext) : base(dbContext)
+        {
+            _dbContext = dbContext;
+        }
+
+        public TEntity GetById(TKey id, bool isTracking = false)
+        {
+            return GetQuery(isTracking).FirstOrDefault(IdCompareExpression(id));
+        }
+
+        public async Task<TEntity> GetByIdAsync(TKey id, bool isTracking = false)
+        {
+            return await GetQuery(isTracking).FirstOrDefaultAsync(IdCompareExpression(id));
+        }
+
+        public void Delete(TKey id, bool isAutoSave = false)
+        {
+            var entity = GetById(id);
+            _dbContext.Set<TEntity>().Remove(entity);
+            if (isAutoSave)
+                SaveChanges();
+        }
+
+        public async Task DeleteAsync(TKey id, bool isAutoSave = false)
+        {
+            var entity = await GetByIdAsync(id);
+            _dbContext.Set<TEntity>().Remove(entity);
+            if (isAutoSave)
+                await SaveChangesAsync();
+        }
+
+        #region Helpers
+
+        protected static Expression<Func<TEntity, bool>> IdCompareExpression(TKey id)
+        {
+            var primaryKeyName = nameof(IEntity<TKey>.Id);
+            ParameterExpression pe = Expression.Parameter(typeof(TEntity), "entity");
+            MemberExpression me = Expression.Property(pe, primaryKeyName);
+            ConstantExpression constant = Expression.Constant(id, id.GetType());
+            BinaryExpression body = Expression.Equal(me, constant);
+            Expression<Func<TEntity, bool>> expressionTree = Expression.Lambda<Func<TEntity, bool>>(body, new[] { pe });
+            return expressionTree;
+        }
+
+        #endregion
+    }
+
+    public class EfRepository<TDbContext, TEntity> : IRepository<TEntity>
+        where TDbContext : DbContextBase
+        where TEntity : class
     {
         private readonly TDbContext _dbContext;
 
@@ -28,20 +81,10 @@ namespace EasyForNet.EntityFramework.Repository
             return GetQuery(isTracking);
         }
 
-        public TEntity GetById(TKey id, bool isTracking = false)
-        {
-            return GetQuery(isTracking).FirstOrDefault(IdCompareExpression(id));
-        }
-
-        public async Task<TEntity> GetByIdAsync(TKey id, bool isTracking = false)
-        {
-            return await GetQuery(isTracking).FirstOrDefaultAsync(IdCompareExpression(id));
-        }
-
         public void Create(TEntity entity, bool isAutoSave = false)
         {
             _dbContext.Set<TEntity>().Add(entity);
-            if (isAutoSave) 
+            if (isAutoSave)
                 SaveChanges();
         }
 
@@ -90,22 +133,6 @@ namespace EasyForNet.EntityFramework.Repository
             if (isAutoSave) await SaveChangesAsync();
         }
 
-        public void Delete(TKey id, bool isAutoSave = false)
-        {
-            var entity = GetById(id);
-            _dbContext.Set<TEntity>().Remove(entity);
-            if (isAutoSave)
-                SaveChanges();
-        }
-
-        public async Task DeleteAsync(TKey id, bool isAutoSave = false)
-        {
-            var entity = await GetByIdAsync(id);
-            _dbContext.Set<TEntity>().Remove(entity);
-            if (isAutoSave)
-                await SaveChangesAsync();
-        }
-
         public int SaveChanges()
         {
             return _dbContext.SaveChanges();
@@ -118,21 +145,10 @@ namespace EasyForNet.EntityFramework.Repository
 
         #region Helpers
 
-        private IQueryable<TEntity> GetQuery(bool isTracking)
+        protected IQueryable<TEntity> GetQuery(bool isTracking)
         {
             var query = _dbContext.Set<TEntity>();
             return isTracking ? query.AsTracking() : query.AsNoTracking();
-        }
-
-        private static Expression<Func<TEntity, bool>> IdCompareExpression(TKey id)
-        {
-            var primaryKeyName = nameof(IEntity<TKey>.Id);
-            ParameterExpression pe = Expression.Parameter(typeof(TEntity), "entity");
-            MemberExpression me = Expression.Property(pe, primaryKeyName);
-            ConstantExpression constant = Expression.Constant(id, id.GetType());
-            BinaryExpression body = Expression.Equal(me, constant);
-            Expression<Func<TEntity, bool>> expressionTree = Expression.Lambda<Func<TEntity, bool>>(body, new[] { pe });
-            return expressionTree;
         }
 
         #endregion
