@@ -23,7 +23,7 @@ namespace EasyForNet.Tests.Application.Services
         }
     }
 
-    public class ApplicationServiceDemo : ApplicationService
+    public class ApplicationServiceDemo : AppService
     {
     }
 }

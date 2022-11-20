@@ -1,6 +1,6 @@
 ﻿namespace EasyForNet.Application.Services
 {
-    public interface IApplicationService
+    public interface IAppService
     {
     }
 }
