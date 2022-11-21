@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations;
 namespace EasyForNet.Domain.Entities.Audit
 {
     public abstract class AuditEntity<TKey> : Entity<TKey>, IAuditEntity
-        where TKey : IComparable
     {
         [ScaffoldColumn(false)] public virtual DateTime CreatedAt { get; set; }
 

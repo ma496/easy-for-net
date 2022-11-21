@@ -1,22 +1,19 @@
-﻿using EasyForNet.Domain.Entities;
-using EasyForNet.EntityFramework.Data.Context;
+﻿using EasyForNet.EntityFramework.Data.Context;
 using EasyForNet.Repository;
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 using System.Linq.Dynamic.Core;
 using EasyForNet.Exceptions.UserFriendly;
 using EasyForNet.EntityFramework.Helpers;
+using EasyForNet.Domain.Entities;
 
 namespace EasyForNet.EntityFramework.Repository
 {
     public class EfRepository<TDbContext, TEntity, TKey> : EfRepository<TDbContext, TEntity>, IRepository<TEntity, TKey>
         where TDbContext : DbContextBase
         where TEntity : class, IEntity<TKey>, new()
-        where TKey : IComparable
     {
         private readonly TDbContext _dbContext;
 
@@ -27,12 +24,12 @@ namespace EasyForNet.EntityFramework.Repository
 
         public TEntity Find(TKey key, bool isTracking = false)
         {
-            return GetQuery(isTracking).FirstOrDefault(IdCompareExpression(key));
+            return GetQuery(isTracking).FirstOrDefault(e => e.Id.Equals(key));
         }
 
         public async Task<TEntity> FindAsync(TKey key, bool isTracking = false)
         {
-            return await GetQuery(isTracking).FirstOrDefaultAsync(IdCompareExpression(key));
+            return await GetQuery(isTracking).FirstOrDefaultAsync(e => e.Id.Equals(key));
         }
 
         public TEntity GetById(TKey key, bool isTracking = false)
@@ -85,16 +82,16 @@ namespace EasyForNet.EntityFramework.Repository
 
         #region Helpers
 
-        protected static Expression<Func<TEntity, bool>> IdCompareExpression(TKey id)
-        {
-            var primaryKeyName = nameof(IEntity<TKey>.Id);
-            ParameterExpression pe = Expression.Parameter(typeof(TEntity), "entity");
-            MemberExpression me = Expression.Property(pe, primaryKeyName);
-            ConstantExpression constant = Expression.Constant(id, id.GetType());
-            BinaryExpression body = Expression.Equal(me, constant);
-            Expression<Func<TEntity, bool>> expressionTree = Expression.Lambda<Func<TEntity, bool>>(body, new[] { pe });
-            return expressionTree;
-        }
+        //protected static Expression<Func<TEntity, bool>> IdCompareExpression(TKey id)
+        //{
+        //    var primaryKeyName = nameof(IEntity<TKey>.Id);
+        //    ParameterExpression pe = Expression.Parameter(typeof(TEntity), "entity");
+        //    MemberExpression me = Expression.Property(pe, primaryKeyName);
+        //    ConstantExpression constant = Expression.Constant(id, id.GetType());
+        //    BinaryExpression body = Expression.Equal(me, constant);
+        //    Expression<Func<TEntity, bool>> expressionTree = Expression.Lambda<Func<TEntity, bool>>(body, new[] { pe });
+        //    return expressionTree;
+        //}
 
         #endregion
     }

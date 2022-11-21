@@ -1,5 +1,4 @@
 ﻿using EasyForNet.Domain.Entities;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,7 +7,6 @@ namespace EasyForNet.Repository
 {
     public interface IRepository<TEntity, TKey> : IRepository<TEntity>
         where TEntity : class, IEntity<TKey>
-        where TKey : IComparable
     {
         TEntity Find(TKey key, bool isTracking = false);
 

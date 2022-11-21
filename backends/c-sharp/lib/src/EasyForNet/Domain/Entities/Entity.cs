@@ -1,15 +1,12 @@
-﻿using System;
-
-namespace EasyForNet.Domain.Entities
+﻿namespace EasyForNet.Domain.Entities
 {
     public abstract class Entity<TKey> : IEntity<TKey>
-        where TKey : IComparable
     {
         public virtual TKey Id { get; set; }
 
         public virtual bool IsTransient()
         {
-            return Id.CompareTo(default(TKey)) == 0;
+            return Id.Equals(default(TKey));
         }
 
         public static bool operator ==(Entity<TKey> left, Entity<TKey> right)
