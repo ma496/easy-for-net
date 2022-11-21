@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
-using System.Linq.Dynamic.Core;
 using EasyForNet.Exceptions.UserFriendly;
 using EasyForNet.EntityFramework.Helpers;
 using EasyForNet.Domain.Entities;
@@ -22,59 +21,59 @@ namespace EasyForNet.EntityFramework.Repository
             _dbContext = dbContext;
         }
 
-        public TEntity Find(TKey key, bool isTracking = false)
+        public TEntity Find(TKey id, bool isTracking = false)
         {
-            return GetQuery(isTracking).FirstOrDefault(e => e.Id.Equals(key));
+            return GetQuery(isTracking).FirstOrDefault(e => e.Id.Equals(id));
         }
 
-        public async Task<TEntity> FindAsync(TKey key, bool isTracking = false)
+        public async Task<TEntity> FindAsync(TKey id, bool isTracking = false)
         {
-            return await GetQuery(isTracking).FirstOrDefaultAsync(e => e.Id.Equals(key));
+            return await GetQuery(isTracking).FirstOrDefaultAsync(e => e.Id.Equals(id));
         }
 
-        public TEntity GetById(TKey key, bool isTracking = false)
+        public TEntity GetById(TKey id, bool isTracking = false)
         {
-            var entity = Find(key, isTracking);
+            var entity = Find(id, isTracking);
             if (entity == null)
-                throw new EntityNotFoundException(EntityHelper.EntityName<TEntity>(), key);
+                throw new EntityNotFoundException(EntityHelper.EntityName<TEntity>(), id);
             return entity;
         }
 
-        public async Task<TEntity> GetByIdAsync(TKey key, bool isTracking = false)
+        public async Task<TEntity> GetByIdAsync(TKey id, bool isTracking = false)
         {
-            var entity = await FindAsync(key, isTracking);
+            var entity = await FindAsync(id, isTracking);
             if (entity == null)
-                throw new EntityNotFoundException(EntityHelper.EntityName<TEntity>(), key);
+                throw new EntityNotFoundException(EntityHelper.EntityName<TEntity>(), id);
             return entity;
         }
 
-        public void Delete(TKey key, bool isAutoSave = false)
+        public void Delete(TKey id, bool isAutoSave = false)
         {
-            var entity = new TEntity { Id = key };
+            var entity = new TEntity { Id = id };
             _dbContext.Set<TEntity>().Remove(entity);
             if (isAutoSave)
                 SaveChanges();
         }
 
-        public async Task DeleteAsync(TKey key, bool isAutoSave = false)
+        public async Task DeleteAsync(TKey id, bool isAutoSave = false)
         {
-            var entity = new TEntity { Id = key };
+            var entity = new TEntity { Id = id };
             _dbContext.Set<TEntity>().Remove(entity);
             if (isAutoSave)
                 await SaveChangesAsync();
         }
 
-        public void DeleteRange(IEnumerable<TKey> keys, bool isAutoSave = false)
+        public void DeleteRange(IEnumerable<TKey> ids, bool isAutoSave = false)
         {
-            var entities = keys.Select(k => new TEntity { Id = k });
+            var entities = ids.Select(k => new TEntity { Id = k });
             _dbContext.Set<TEntity>().RemoveRange(entities);
             if (isAutoSave)
                 SaveChanges();
         }
 
-        public async Task DeleteRangeAsync(IEnumerable<TKey> keys, bool isAutoSave = false)
+        public async Task DeleteRangeAsync(IEnumerable<TKey> ids, bool isAutoSave = false)
         {
-            var entities = keys.Select(k => new TEntity { Id = k });
+            var entities = ids.Select(k => new TEntity { Id = k });
             _dbContext.Set<TEntity>().RemoveRange(entities);
             if (isAutoSave)
                 await SaveChangesAsync();

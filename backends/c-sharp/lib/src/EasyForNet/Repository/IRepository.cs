@@ -5,24 +5,24 @@ using System.Threading.Tasks;
 
 namespace EasyForNet.Repository
 {
-    public interface IRepository<TEntity, TKey> : IRepository<TEntity>
+    public interface IRepository<TEntity, in TKey> : IRepository<TEntity>
         where TEntity : class, IEntity<TKey>
     {
-        TEntity Find(TKey key, bool isTracking = false);
+        TEntity Find(TKey id, bool isTracking = false);
 
-        Task<TEntity> FindAsync(TKey key, bool isTracking = false);
+        Task<TEntity> FindAsync(TKey id, bool isTracking = false);
 
-        TEntity GetById(TKey key, bool isTracking = false);
+        TEntity GetById(TKey id, bool isTracking = false);
 
-        Task<TEntity> GetByIdAsync(TKey key, bool isTracking = false);
+        Task<TEntity> GetByIdAsync(TKey id, bool isTracking = false);
 
-        void Delete(TKey key, bool isAutoSave = false);
+        void Delete(TKey id, bool isAutoSave = false);
 
-        Task DeleteAsync(TKey key, bool isAutoSave = false);
+        Task DeleteAsync(TKey id, bool isAutoSave = false);
 
-        void DeleteRange(IEnumerable<TKey> keys, bool isAutoSave = false);
+        void DeleteRange(IEnumerable<TKey> ids, bool isAutoSave = false);
 
-        Task DeleteRangeAsync(IEnumerable<TKey> keys, bool isAutoSave = false);
+        Task DeleteRangeAsync(IEnumerable<TKey> ids, bool isAutoSave = false);
     }
 
     public interface IRepository<TEntity>
