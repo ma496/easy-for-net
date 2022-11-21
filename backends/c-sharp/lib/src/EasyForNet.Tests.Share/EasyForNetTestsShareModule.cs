@@ -1,9 +1,8 @@
 ﻿using EasyForNet.Modules;
 
-namespace EasyForNet.Tests.Share
+namespace EasyForNet.Tests.Share;
+
+[DependOn(typeof(EasyForNetModule))]
+public class EasyForNetTestsShareModule : ModuleBase
 {
-    [DependOn(typeof(EasyForNetModule))]
-    public class EasyForNetTestsShareModule : ModuleBase
-    {
-    }
 }

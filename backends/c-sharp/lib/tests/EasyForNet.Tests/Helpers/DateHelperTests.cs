@@ -5,20 +5,19 @@ using EasyForNet.Tests.Base;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace EasyForNet.Tests.Helpers
+namespace EasyForNet.Tests.Helpers;
+
+public class DateHelperTests : TestsBase
 {
-    public class DateHelperTests : TestsBase
+    public DateHelperTests(ITestOutputHelper outputHelper) : base(outputHelper)
     {
-        public DateHelperTests(ITestOutputHelper outputHelper) : base(outputHelper)
-        {
-        }
+    }
 
-        [Fact]
-        public void EachDateTest()
-        {
-            var dates = DateHelper.EachDate(new DateTime(2020, 2, 10), new DateTime(2020, 2, 23)).ToList();
+    [Fact]
+    public void EachDateTest()
+    {
+        var dates = DateHelper.EachDate(new DateTime(2020, 2, 10), new DateTime(2020, 2, 23)).ToList();
 
-            Assert.Equal(14, dates.Count);
-        }
+        Assert.Equal(14, dates.Count);
     }
 }

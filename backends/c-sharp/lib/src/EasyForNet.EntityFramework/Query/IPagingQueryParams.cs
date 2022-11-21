@@ -1,8 +1,7 @@
-﻿namespace EasyForNet.EntityFramework.Query
+﻿namespace EasyForNet.EntityFramework.Query;
+
+public interface IPagingQueryParams
 {
-    public interface IPagingQueryParams
-    {
-        int Page { get; }
-        int PageSize { get; }
-    }
+    int Page { get; }
+    int PageSize { get; }
 }

@@ -1,9 +1,8 @@
-﻿namespace EasyForNet.Exceptions.UserFriendly
+﻿namespace EasyForNet.Exceptions.UserFriendly;
+
+public class UniquePropertyDeletedException : UniquePropertyException
 {
-    public class UniquePropertyDeletedException : UniquePropertyException
+    public UniquePropertyDeletedException(string propertyName, string message = null) : base(propertyName, message)
     {
-        public UniquePropertyDeletedException(string propertyName, string message = null) : base(propertyName, message)
-        {
-        }
     }
 }

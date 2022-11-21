@@ -9,33 +9,32 @@ using Xunit;
 using Xunit.Abstractions;
 using Autofac;
 
-namespace EasyForNet.EntityFramework.Tests.EntityTests
+namespace EasyForNet.EntityFramework.Tests.EntityTests;
+
+public class AuditEntityTests : TestsBase
 {
-    public class AuditEntityTests : TestsBase
+    public AuditEntityTests(ITestOutputHelper outputHelper) : base(outputHelper)
     {
-        public AuditEntityTests(ITestOutputHelper outputHelper) : base(outputHelper)
-        {
-        }
+    }
 
-        [Fact]
-        public async Task AuditEntityTest()
-        {
-            var dbContext = Scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
+    [Fact]
+    public async Task AuditEntityTest()
+    {
+        var dbContext = Scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
 
-            var customer = await NewScopeService<CustomerGenerator>().GenerateAndSaveAsync();
+        var customer = await NewScopeService<CustomerGenerator>().GenerateAndSaveAsync();
 
-            var savedCustomer = await dbContext.Customers.SingleOrDefaultAsync(c => c.Id == customer.Id);
+        var savedCustomer = await dbContext.Customers.SingleOrDefaultAsync(c => c.Id == customer.Id);
 
-            Assert.NotNull(savedCustomer);
-            customer.Should().BeEquivalentTo(savedCustomer);
+        Assert.NotNull(savedCustomer);
+        customer.Should().BeEquivalentTo(savedCustomer);
 
-            var user = Scope.Resolve<ICurrentUser>();
+        var user = Scope.Resolve<ICurrentUser>();
 
-            Assert.Equal(user.Username, savedCustomer.CreatedBy);
-            Assert.Equal(user.Username, savedCustomer.UpdatedBy);
+        Assert.Equal(user.Username, savedCustomer.CreatedBy);
+        Assert.Equal(user.Username, savedCustomer.UpdatedBy);
 
-            savedCustomer.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(3));
-            savedCustomer.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(3));
-        }
+        savedCustomer.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(3));
+        savedCustomer.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(3));
     }
 }

@@ -2,18 +2,17 @@
 using EasyForNet.EntityFramework.Tests.Data.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace EasyForNet.EntityFramework.Tests.Data.Configuration
-{
-    public class TagEntityTypeConfiguration : EntityTypeConfiguration<TagEntity>
-    {
-        public TagEntityTypeConfiguration() : base("Tags")
-        {
-        }
+namespace EasyForNet.EntityFramework.Tests.Data.Configuration;
 
-        protected override void ConfigureEntity(EntityTypeBuilder<TagEntity> builder)
-        {
-            builder.HasIndex(t => t.Name)
-                .IsUnique();
-        }
+public class TagEntityTypeConfiguration : EntityTypeConfiguration<TagEntity>
+{
+    public TagEntityTypeConfiguration() : base("Tags")
+    {
+    }
+
+    protected override void ConfigureEntity(EntityTypeBuilder<TagEntity> builder)
+    {
+        builder.HasIndex(t => t.Name)
+            .IsUnique();
     }
 }

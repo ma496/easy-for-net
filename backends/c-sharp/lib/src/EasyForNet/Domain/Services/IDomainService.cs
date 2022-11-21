@@ -1,6 +1,5 @@
-﻿namespace EasyForNet.Domain.Services
+﻿namespace EasyForNet.Domain.Services;
+
+public interface IDomainService
 {
-    public interface IDomainService
-    {
-    }
 }

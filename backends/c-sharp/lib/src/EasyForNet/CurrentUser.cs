@@ -1,17 +1,16 @@
 ﻿using EasyForNet.Application.Dependencies;
 
-namespace EasyForNet
+namespace EasyForNet;
+
+public interface ICurrentUser
 {
-    public interface ICurrentUser
-    {
-        long UserId { get; }
+    long UserId { get; }
 
-        string Username { get; }
-    }
+    string Username { get; }
+}
 
-    internal class CurrentUser : ICurrentUser, ITransientDependency
-    {
-        public long UserId => 0;
-        public string Username => "Anonymous";
-    }
+internal class CurrentUser : ICurrentUser, ITransientDependency
+{
+    public long UserId => 0;
+    public string Username => "Anonymous";
 }

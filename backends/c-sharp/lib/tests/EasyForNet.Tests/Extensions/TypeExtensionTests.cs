@@ -4,60 +4,59 @@ using EasyForNet.Tests.Base;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace EasyForNet.Tests.Extensions
+namespace EasyForNet.Tests.Extensions;
+
+public class TypeExtensionTests : TestsBase
 {
-    public class TypeExtensionTests : TestsBase
+    public TypeExtensionTests(ITestOutputHelper outputHelper) : base(outputHelper)
     {
-        public TypeExtensionTests(ITestOutputHelper outputHelper) : base(outputHelper)
-        {
-        }
+    }
 
-        [Fact]
-        public void IsPrimitiveOrString()
-        {
-            var strType = typeof(string);
-            var intType = typeof(int);
+    [Fact]
+    public void IsPrimitiveOrString()
+    {
+        var strType = typeof(string);
+        var intType = typeof(int);
 
-            Assert.True(strType.IsPrimitiveOrString());
-            Assert.True(intType.IsPrimitiveOrString());
-        }
+        Assert.True(strType.IsPrimitiveOrString());
+        Assert.True(intType.IsPrimitiveOrString());
+    }
 
-        [Fact]
-        public void IsConcreteTest()
-        {
-            var customerType = typeof(Customer);
+    [Fact]
+    public void IsConcreteTest()
+    {
+        var customerType = typeof(Customer);
 
-            Assert.True(customerType.IsConcreteClass());
+        Assert.True(customerType.IsConcreteClass());
 
-            var customerBaseType = typeof(CustomerBase);
+        var customerBaseType = typeof(CustomerBase);
 
-            Assert.False(customerBaseType.IsConcreteClass());
-        }
+        Assert.False(customerBaseType.IsConcreteClass());
+    }
 
-        [Fact]
-        public void GetConstantTest()
-        {
-            var constants = typeof(LuckyNumbers).GetConstants();
+    [Fact]
+    public void GetConstantTest()
+    {
+        var constants = typeof(LuckyNumbers).GetConstants();
 
-            Assert.Equal(3, constants.Count);
-        }
+        Assert.Equal(3, constants.Count);
+    }
 
-        private class Customer
-        {
-        }
+    private class Customer
+    {
+    }
 
-        private abstract class CustomerBase
-        {
-        }
+    private abstract class CustomerBase
+    {
+    }
 
-        [SuppressMessage("ReSharper", "UnusedMember.Local")]
-        private class LuckyNumbers
-        {
-            public const int One = 34;
+    [SuppressMessage("ReSharper", "UnusedMember.Local")]
+    private class LuckyNumbers
+    {
+        public const int One = 34;
 
-            public const int Two = 32;
+        public const int Two = 32;
 
-            public const int Three = 5;
-        }
+        public const int Three = 5;
     }
 }

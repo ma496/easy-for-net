@@ -1,8 +1,7 @@
 using EasyForNet.Modules;
 
-namespace EasyForNet
+namespace EasyForNet;
+
+public class EasyForNetModule : ModuleBase
 {
-    public class EasyForNetModule : ModuleBase
-    {
-    }
 }

@@ -3,29 +3,28 @@ using System.Threading.Tasks;
 using EasyForNet.Bogus;
 using EasyForNet.Repository;
 
-namespace EasyForNet.EntityFramework.Bogus
+namespace EasyForNet.EntityFramework.Bogus;
+
+public abstract class EfDataGenerator<TEntity> : DataGenerator<TEntity>
+    where TEntity : class
 {
-    public abstract class EfDataGenerator<TEntity> : DataGenerator<TEntity>
-        where TEntity : class
+    public IRepository<TEntity> Repository { get; set; }
+
+    public async Task<TEntity> GenerateAndSaveAsync()
     {
-        public IRepository<TEntity> Repository { get; set; }
+        var entity = Faker().Generate();
 
-        public async Task<TEntity> GenerateAndSaveAsync()
-        {
-            var entity = Faker().Generate();
+        await Repository.CreateAsync(entity, true);
 
-            await Repository.CreateAsync(entity, true);
+        return entity;
+    }
 
-            return entity;
-        }
+    public async Task<List<TEntity>> GenerateAndSaveAsync(int count)
+    {
+        var entities = Faker().Generate(count);
 
-        public async Task<List<TEntity>> GenerateAndSaveAsync(int count)
-        {
-            var entities = Faker().Generate(count);
+        await Repository.CreateRangeAsync(entities, true);
 
-            await Repository.CreateRangeAsync(entities, true);
-
-            return entities;
-        }
+        return entities;
     }
 }

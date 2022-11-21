@@ -1,10 +1,9 @@
 ﻿using System;
 using EasyForNet.Domain.Entities;
 
-namespace EasyForNet.EntityFramework.Tests.Data.Entities
+namespace EasyForNet.EntityFramework.Tests.Data.Entities;
+
+public class SpecificHolidayEntity : Entity<long>
 {
-    public class SpecificHolidayEntity : Entity<long>
-    {
-        public DateTime Date { get; set; }
-    }
+    public DateTime Date { get; set; }
 }

@@ -1,7 +1,6 @@
-﻿namespace EasyForNet.Application.Dto
+﻿namespace EasyForNet.Application.Dto;
+
+public abstract class EntityDto<TKey> : IEntityDto<TKey>
 {
-    public abstract class EntityDto<TKey> : IEntityDto<TKey>
-    {
-        public virtual TKey Id { get; set; }
-    }
+    public virtual TKey Id { get; set; }
 }

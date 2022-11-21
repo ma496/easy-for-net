@@ -1,14 +1,13 @@
 ﻿using AutoMapper;
 using EasyForNet.EntityFramework.Tests.Data.Entities;
 
-namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
+namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests;
+
+public class CustomerEntityCrudTestsProfile : Profile
 {
-    public class CustomerEntityCrudTestsProfile : Profile
+    public CustomerEntityCrudTestsProfile()
     {
-        public CustomerEntityCrudTestsProfile()
-        {
-            CreateMap<CustomerDto, CustomerEntity>(MemberList.Source);
-            CreateMap<CustomerEntity, CustomerDto>();
-        }
+        CreateMap<CustomerDto, CustomerEntity>(MemberList.Source);
+        CreateMap<CustomerEntity, CustomerDto>();
     }
 }

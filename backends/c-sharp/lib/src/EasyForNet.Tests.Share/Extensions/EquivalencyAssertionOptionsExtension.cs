@@ -2,14 +2,13 @@
 using FluentAssertions.Equivalency;
 using System;
 
-namespace EasyForNet.Tests.Share.Extensions
+namespace EasyForNet.Tests.Share.Extensions;
+
+public static class EquivalencyAssertionOptionsExtension
 {
-    public static class EquivalencyAssertionOptionsExtension
+    public static EquivalencyAssertionOptions<T> BeCloseToDateTime<T>(this EquivalencyAssertionOptions<T> options, TimeSpan timeSpan)
+        where T : class
     {
-        public static EquivalencyAssertionOptions<T> BeCloseToDateTime<T>(this EquivalencyAssertionOptions<T> options, TimeSpan timeSpan)
-            where T : class
-        {
-            return options.Using<DateTime>(ctx => ctx.Subject.Should().BeCloseTo(ctx.Expectation, timeSpan)).WhenTypeIs<DateTime>();
-        }
+        return options.Using<DateTime>(ctx => ctx.Subject.Should().BeCloseTo(ctx.Expectation, timeSpan)).WhenTypeIs<DateTime>();
     }
 }

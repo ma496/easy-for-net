@@ -11,120 +11,119 @@ using EasyForNet.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace EasyForNet.Modules
+namespace EasyForNet.Modules;
+
+public static class AppInitializer
 {
-    public static class AppInitializer
+    private static readonly List<string> InitModules = new();
+
+    public static IContainer Init<TModule>(IServiceCollection services, IConfiguration configuration = null, bool isValidateMapper = true)
+        where TModule : ModuleBase
     {
-        private static readonly List<string> InitModules = new();
-
-        public static IContainer Init<TModule>(IServiceCollection services, IConfiguration configuration = null, bool isValidateMapper = true)
-            where TModule : ModuleBase
-        {
-            var builder = new ContainerBuilder();
-            if (services != null)
-                builder.Populate(services);
+        var builder = new ContainerBuilder();
+        if (services != null)
+            builder.Populate(services);
            
-            var moduleName = typeof(TModule).FullName;
+        var moduleName = typeof(TModule).FullName;
 
-            var mapperConfigurationExpression = new MapperConfigurationExpression();
+        var mapperConfigurationExpression = new MapperConfigurationExpression();
 
-            if (InitModules.SingleOrDefault(m => m == moduleName) == null)
+        if (InitModules.SingleOrDefault(m => m == moduleName) == null)
+        {
+            var modulesInfo = GetUniqueAndOrderModulesInfo(GetModulesInfo(typeof(TModule), 0));
+            foreach (var moduleInfo in modulesInfo)
             {
-                var modulesInfo = GetUniqueAndOrderModulesInfo(GetModulesInfo(typeof(TModule), 0));
-                foreach (var moduleInfo in modulesInfo)
-                {
-                    DependencyThroughInterfaces(moduleInfo.Module, builder);
-                    moduleInfo.Module.Dependencies(builder, configuration);
+                DependencyThroughInterfaces(moduleInfo.Module, builder);
+                moduleInfo.Module.Dependencies(builder, configuration);
 
-                    mapperConfigurationExpression.AddMaps(moduleInfo.Module.GetType().Assembly);
-                    moduleInfo.Module.Mapping(mapperConfigurationExpression, configuration);
-                }
-
-                var mapperConfiguration = new MapperConfiguration(mapperConfigurationExpression);
-                if (isValidateMapper)
-                    mapperConfiguration.AssertConfigurationIsValid();
-                var mapper = mapperConfiguration.CreateMapper();
-                builder.RegisterInstance(mapper).As<IMapper>();
-
-                InitModules.Add(moduleName);
+                mapperConfigurationExpression.AddMaps(moduleInfo.Module.GetType().Assembly);
+                moduleInfo.Module.Mapping(mapperConfigurationExpression, configuration);
             }
-            else
-            {
-                throw new Exception($"{moduleName} module already initialized");
-            }
+
+            var mapperConfiguration = new MapperConfiguration(mapperConfigurationExpression);
+            if (isValidateMapper)
+                mapperConfiguration.AssertConfigurationIsValid();
+            var mapper = mapperConfiguration.CreateMapper();
+            builder.RegisterInstance(mapper).As<IMapper>();
+
+            InitModules.Add(moduleName);
+        }
+        else
+        {
+            throw new Exception($"{moduleName} module already initialized");
+        }
             
-            return builder.Build();
-        }
+        return builder.Build();
+    }
 
-        private static void CheckModuleType(Type type)
-        {
-            Guard.Against.Null(type, nameof(type));
+    private static void CheckModuleType(Type type)
+    {
+        Guard.Against.Null(type, nameof(type));
 
-            if (!typeof(ModuleBase).IsAssignableFrom(type))
-                throw new Exception($"{type.FullName} must be inherit from {nameof(ModuleBase)} class");
-            if (!type.IsConcreteClass())
-                throw new Exception($"{type.FullName} must be concrete class");
-            if (!type.IsDefaultConstructor())
-                throw new Exception($"{type.FullName} must have default constructor");
-        }
+        if (!typeof(ModuleBase).IsAssignableFrom(type))
+            throw new Exception($"{type.FullName} must be inherit from {nameof(ModuleBase)} class");
+        if (!type.IsConcreteClass())
+            throw new Exception($"{type.FullName} must be concrete class");
+        if (!type.IsDefaultConstructor())
+            throw new Exception($"{type.FullName} must have default constructor");
+    }
 
-        private static List<ModuleInfo> GetModulesInfo(Type type, int level)
-        {
-            var modulesInfo = new List<ModuleInfo>();
+    private static List<ModuleInfo> GetModulesInfo(Type type, int level)
+    {
+        var modulesInfo = new List<ModuleInfo>();
 
-            CheckModuleType(type);
-            modulesInfo.Add(new ModuleInfo(level, (ModuleBase) Activator.CreateInstance(type)));
+        CheckModuleType(type);
+        modulesInfo.Add(new ModuleInfo(level, (ModuleBase) Activator.CreateInstance(type)));
 
-            var dependOnAttributes = type.GetCustomAttributes<DependOnAttribute>();
-            foreach (var dependOnAttribute in dependOnAttributes)
-                modulesInfo.AddRange(GetModulesInfo(dependOnAttribute.ModuleType, level + 1));
+        var dependOnAttributes = type.GetCustomAttributes<DependOnAttribute>();
+        foreach (var dependOnAttribute in dependOnAttributes)
+            modulesInfo.AddRange(GetModulesInfo(dependOnAttribute.ModuleType, level + 1));
 
-            return modulesInfo;
-        }
+        return modulesInfo;
+    }
 
-        private static List<ModuleInfo> GetUniqueAndOrderModulesInfo(List<ModuleInfo> modulesInfo)
-        {
-            var uniqueAndOrderModulesInfo = new List<ModuleInfo>();
-            foreach (var module in modulesInfo.OrderByDescending(m => m.Level))
-                if (!uniqueAndOrderModulesInfo.Exists(m =>
+    private static List<ModuleInfo> GetUniqueAndOrderModulesInfo(List<ModuleInfo> modulesInfo)
+    {
+        var uniqueAndOrderModulesInfo = new List<ModuleInfo>();
+        foreach (var module in modulesInfo.OrderByDescending(m => m.Level))
+            if (!uniqueAndOrderModulesInfo.Exists(m =>
                     m.Module.GetType().FullName == module.Module.GetType().FullName))
-                    uniqueAndOrderModulesInfo.Add(module);
+                uniqueAndOrderModulesInfo.Add(module);
 
-            return uniqueAndOrderModulesInfo;
-        }
+        return uniqueAndOrderModulesInfo;
+    }
 
-        private static void DependencyThroughInterfaces(ModuleBase module, ContainerBuilder builder)
-        {
-            var types = module.GetType().Assembly.GetConcreteTypes()
-                .Where(t =>
-                    typeof(IScopedDependency).IsAssignableFrom(t) || typeof(ITransientDependency).IsAssignableFrom(t)
-                                                                  || typeof(ISingletonDependency).IsAssignableFrom(t))
-                .ToList();
-            foreach (var type in types)
-                if (typeof(IScopedDependency).IsAssignableFrom(type))
-                {
-                    builder.RegisterType(type)
-                        .InstancePerLifetimeScope()
-                        .AsSelf()
-                        .AsImplementedInterfaces()
-                        .PropertiesAutowired();
-                }
-                else if (typeof(ITransientDependency).IsAssignableFrom(type))
-                {
-                    builder.RegisterType(type)
-                        .InstancePerDependency()
-                        .AsSelf()
-                        .AsImplementedInterfaces()
-                        .PropertiesAutowired();
-                }
-                else if (typeof(ISingletonDependency).IsAssignableFrom(type))
-                {
-                    builder.RegisterType(type)
-                        .SingleInstance()
-                        .AsSelf()
-                        .AsImplementedInterfaces()
-                        .PropertiesAutowired();
-                }
-        }
+    private static void DependencyThroughInterfaces(ModuleBase module, ContainerBuilder builder)
+    {
+        var types = module.GetType().Assembly.GetConcreteTypes()
+            .Where(t =>
+                typeof(IScopedDependency).IsAssignableFrom(t) || typeof(ITransientDependency).IsAssignableFrom(t)
+                                                              || typeof(ISingletonDependency).IsAssignableFrom(t))
+            .ToList();
+        foreach (var type in types)
+            if (typeof(IScopedDependency).IsAssignableFrom(type))
+            {
+                builder.RegisterType(type)
+                    .InstancePerLifetimeScope()
+                    .AsSelf()
+                    .AsImplementedInterfaces()
+                    .PropertiesAutowired();
+            }
+            else if (typeof(ITransientDependency).IsAssignableFrom(type))
+            {
+                builder.RegisterType(type)
+                    .InstancePerDependency()
+                    .AsSelf()
+                    .AsImplementedInterfaces()
+                    .PropertiesAutowired();
+            }
+            else if (typeof(ISingletonDependency).IsAssignableFrom(type))
+            {
+                builder.RegisterType(type)
+                    .SingleInstance()
+                    .AsSelf()
+                    .AsImplementedInterfaces()
+                    .PropertiesAutowired();
+            }
     }
 }

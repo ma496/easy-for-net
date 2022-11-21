@@ -10,38 +10,37 @@ using EasyForNet.Tests.Share;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
-namespace EasyForNet.EntityFramework.Tests
+namespace EasyForNet.EntityFramework.Tests;
+
+[DependOn(typeof(EasyForNetModule))]
+[DependOn(typeof(EasyForNetEntityFrameworkModule))]
+[DependOn(typeof(EasyForNetTestsShareModule))]
+public class EasyForNetEntityFrameworkTestsModule : ModuleBase
 {
-    [DependOn(typeof(EasyForNetModule))]
-    [DependOn(typeof(EasyForNetEntityFrameworkModule))]
-    [DependOn(typeof(EasyForNetTestsShareModule))]
-    public class EasyForNetEntityFrameworkTestsModule : ModuleBase
+    public override void Dependencies(ContainerBuilder builder, IConfiguration configuration)
     {
-        public override void Dependencies(ContainerBuilder builder, IConfiguration configuration)
+        builder.Register(sp =>
         {
-            builder.Register(sp =>
-            {
-                var options = new DbContextOptionsBuilder()
-                    .UseSqlite("Data Source = EasyForNetEntityFrameworkTests.db")
-                    .EnableSensitiveDataLogging()
-                    .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
-                    .Options;
-                var currentUser = sp.Resolve<ICurrentUser>();
-                var db = new EasyForNetEntityFrameworkTestsDb(options, currentUser);
-                return db;
-            }).InstancePerLifetimeScope();
+            var options = new DbContextOptionsBuilder()
+                .UseSqlite("Data Source = EasyForNetEntityFrameworkTests.db")
+                .EnableSensitiveDataLogging()
+                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+                .Options;
+            var currentUser = sp.Resolve<ICurrentUser>();
+            var db = new EasyForNetEntityFrameworkTestsDb(options, currentUser);
+            return db;
+        }).InstancePerLifetimeScope();
 
-            builder.RegisterType<SettingStore<EasyForNetEntityFrameworkTestsDb, EfnSettingEntity>>()
-                .As<ISettingStore<EfnSettingEntity>>()
-                .InstancePerDependency();
+        builder.RegisterType<SettingStore<EasyForNetEntityFrameworkTestsDb, EfnSettingEntity>>()
+            .As<ISettingStore<EfnSettingEntity>>()
+            .InstancePerDependency();
 
-            builder.RegisterGeneric(typeof(EasyForNetRepository<,>))
-                .As(typeof(IRepository<,>))
-                .InstancePerDependency();
+        builder.RegisterGeneric(typeof(EasyForNetRepository<,>))
+            .As(typeof(IRepository<,>))
+            .InstancePerDependency();
 
-            builder.RegisterGeneric(typeof(EasyForNetRepository<>))
-                .As(typeof(IRepository<>))
-                .InstancePerDependency();
-        }
+        builder.RegisterGeneric(typeof(EasyForNetRepository<>))
+            .As(typeof(IRepository<>))
+            .InstancePerDependency();
     }
 }

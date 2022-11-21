@@ -12,52 +12,51 @@ using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace EasyForNet.EntityFramework.Tests.EntityTests
+namespace EasyForNet.EntityFramework.Tests.EntityTests;
+
+[SuppressMessage("ReSharper", "InconsistentNaming")]
+public class EntityHelper_AddRemoveRowsTests : TestsBase
 {
-    [SuppressMessage("ReSharper", "InconsistentNaming")]
-    public class EntityHelper_AddRemoveRowsTests : TestsBase
+    public EntityHelper_AddRemoveRowsTests(ITestOutputHelper outputHelper) : base(outputHelper)
     {
-        public EntityHelper_AddRemoveRowsTests(ITestOutputHelper outputHelper) : base(outputHelper)
+    }
+
+    [Fact]
+    public async Task AddRemoveRowsTest()
+    {
+        var dbContext = Scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
+        var productGenerator = Scope.Resolve<ProductGenerator>();
+        var productItemGenerator = Scope.Resolve<ProductItemGenerator>();
+
+        var product = productGenerator.Generate();
+        product.Items = productItemGenerator.Generate(10);
+
+        await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, ProductEntity, long>(dbContext, product,
+            p => p.Model);
+
+        await dbContext.SaveChangesAsync();
+
+        dbContext = NewScopeService<EasyForNetEntityFrameworkTestsDb>();
+
+        var savedProduct =
+            await dbContext.Products.Include(p => p.Items).SingleOrDefaultAsync(p => p.Id == product.Id);
+        var productItems = productItemGenerator.Generate(3).Select(pi =>
         {
-        }
+            pi.ProductId = product.Id;
+            return pi;
+        }).ToList().Concat(savedProduct.Items.Take(5)).ToList();
 
-        [Fact]
-        public async Task AddRemoveRowsTest()
-        {
-            var dbContext = Scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
-            var productGenerator = Scope.Resolve<ProductGenerator>();
-            var productItemGenerator = Scope.Resolve<ProductItemGenerator>();
+        await EntityHelper.AddRemoveRowsAsync(dbContext.ProductItems, savedProduct.Items, productItems,
+            (e, e1) => e.Id == e1.Id,
+            pi => new ProductItemEntity {SerialNo = pi.SerialNo, ProductId = pi.ProductId});
 
-            var product = productGenerator.Generate();
-            product.Items = productItemGenerator.Generate(10);
+        await dbContext.SaveChangesAsync();
 
-            await EntityCreateHelper.AddAsync<EasyForNetEntityFrameworkTestsDb, ProductEntity, long>(dbContext, product,
-                p => p.Model);
+        var updateSavedProduct =
+            await dbContext.Products.Include(p => p.Items).SingleAsync(p => p.Id == product.Id);
 
-            await dbContext.SaveChangesAsync();
-
-            dbContext = NewScopeService<EasyForNetEntityFrameworkTestsDb>();
-
-            var savedProduct =
-                await dbContext.Products.Include(p => p.Items).SingleOrDefaultAsync(p => p.Id == product.Id);
-            var productItems = productItemGenerator.Generate(3).Select(pi =>
-            {
-                pi.ProductId = product.Id;
-                return pi;
-            }).ToList().Concat(savedProduct.Items.Take(5)).ToList();
-
-            await EntityHelper.AddRemoveRowsAsync(dbContext.ProductItems, savedProduct.Items, productItems,
-                (e, e1) => e.Id == e1.Id,
-                pi => new ProductItemEntity {SerialNo = pi.SerialNo, ProductId = pi.ProductId});
-
-            await dbContext.SaveChangesAsync();
-
-            var updateSavedProduct =
-                await dbContext.Products.Include(p => p.Items).SingleAsync(p => p.Id == product.Id);
-
-            Assert.NotNull(updateSavedProduct);
-            Assert.NotNull(updateSavedProduct.Items);
-            Assert.Equal(8, savedProduct.Items.Count);
-        }
+        Assert.NotNull(updateSavedProduct);
+        Assert.NotNull(updateSavedProduct.Items);
+        Assert.Equal(8, savedProduct.Items.Count);
     }
 }

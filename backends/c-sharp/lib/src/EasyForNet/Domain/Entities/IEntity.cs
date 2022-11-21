@@ -1,9 +1,8 @@
-﻿namespace EasyForNet.Domain.Entities
-{
-    public interface IEntity<TKey>
-    {
-        TKey Id { get; set; }
+﻿namespace EasyForNet.Domain.Entities;
 
-        bool IsTransient();
-    }
+public interface IEntity<TKey>
+{
+    TKey Id { get; set; }
+
+    bool IsTransient();
 }

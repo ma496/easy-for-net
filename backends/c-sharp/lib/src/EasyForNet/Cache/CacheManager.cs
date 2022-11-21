@@ -6,93 +6,92 @@ using Microsoft.Extensions.Caching.Distributed;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EasyForNet.Cache
+namespace EasyForNet.Cache;
+
+public interface ICacheManager
 {
-    public interface ICacheManager
+    TValue Get<TValue>(string key);
+    Task<TValue> GetAsync<TValue>(string key, CancellationToken token = default(CancellationToken));
+    void Set<TValue>(string key, TValue value, DistributedCacheEntryOptions options);
+    Task SetAsync<TValue>(string key, TValue value, DistributedCacheEntryOptions options, CancellationToken token = default(CancellationToken));
+    void Refresh(string key);
+    Task RefreshAsync(string key, CancellationToken token = default(CancellationToken));
+    void Remove(string key);
+    Task RemoveAsync(string key, CancellationToken token = default(CancellationToken));
+}
+
+public class CacheManager : ICacheManager, ITransientDependency
+{
+    private readonly IDistributedCache _distributedCache;
+    private readonly IKeyManager _keyManager;
+
+    public CacheManager(IDistributedCache distributedCache, IKeyManager keyManager)
     {
-        TValue Get<TValue>(string key);
-        Task<TValue> GetAsync<TValue>(string key, CancellationToken token = default(CancellationToken));
-        void Set<TValue>(string key, TValue value, DistributedCacheEntryOptions options);
-        Task SetAsync<TValue>(string key, TValue value, DistributedCacheEntryOptions options, CancellationToken token = default(CancellationToken));
-        void Refresh(string key);
-        Task RefreshAsync(string key, CancellationToken token = default(CancellationToken));
-        void Remove(string key);
-        Task RemoveAsync(string key, CancellationToken token = default(CancellationToken));
+        _distributedCache = distributedCache;
+        _keyManager = keyManager;
     }
 
-    public class CacheManager : ICacheManager, ITransientDependency
+    public virtual TValue Get<TValue>(string key)
     {
-        private readonly IDistributedCache _distributedCache;
-        private readonly IKeyManager _keyManager;
+        Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
-        public CacheManager(IDistributedCache distributedCache, IKeyManager keyManager)
-        {
-            _distributedCache = distributedCache;
-            _keyManager = keyManager;
-        }
+        var bytes = _distributedCache.Get(_keyManager.GlobalKey(key));
+        var obj = JsonHelper.Deserialize<TValue>(bytes);
+        return obj;
+    }
 
-        public virtual TValue Get<TValue>(string key)
-        {
-            Guard.Against.NullOrWhiteSpace(key, nameof(key));
+    public virtual async Task<TValue> GetAsync<TValue>(string key, CancellationToken token = default)
+    {
+        Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
-            var bytes = _distributedCache.Get(_keyManager.GlobalKey(key));
-            var obj = JsonHelper.Deserialize<TValue>(bytes);
-            return obj;
-        }
+        var bytes = await _distributedCache.GetAsync(_keyManager.GlobalKey(key), token);
+        var obj = JsonHelper.Deserialize<TValue>(bytes);
+        return obj;
+    }
 
-        public virtual async Task<TValue> GetAsync<TValue>(string key, CancellationToken token = default)
-        {
-            Guard.Against.NullOrWhiteSpace(key, nameof(key));
+    public virtual void Set<TValue>(string key, TValue value, DistributedCacheEntryOptions options)
+    {
+        Guard.Against.NullOrWhiteSpace(key, nameof(key));
+        Guard.Against.Null(value, nameof(value));
 
-            var bytes = await _distributedCache.GetAsync(_keyManager.GlobalKey(key), token);
-            var obj = JsonHelper.Deserialize<TValue>(bytes);
-            return obj;
-        }
+        var bytes = JsonHelper.ToBytes(value);
+        _distributedCache.Set(_keyManager.GlobalKey(key), bytes, options);
+    }
 
-        public virtual void Set<TValue>(string key, TValue value, DistributedCacheEntryOptions options)
-        {
-            Guard.Against.NullOrWhiteSpace(key, nameof(key));
-            Guard.Against.Null(value, nameof(value));
+    public virtual async Task SetAsync<TValue>(string key, TValue value, DistributedCacheEntryOptions options, CancellationToken token = default)
+    {
+        Guard.Against.NullOrWhiteSpace(key, nameof(key));
+        Guard.Against.Null(value, nameof(value));
 
-            var bytes = JsonHelper.ToBytes(value);
-            _distributedCache.Set(_keyManager.GlobalKey(key), bytes, options);
-        }
+        var bytes = JsonHelper.ToBytes(value);
+        await _distributedCache.SetAsync(_keyManager.GlobalKey(key), bytes, options, token);
+    }
 
-        public virtual async Task SetAsync<TValue>(string key, TValue value, DistributedCacheEntryOptions options, CancellationToken token = default)
-        {
-            Guard.Against.NullOrWhiteSpace(key, nameof(key));
-            Guard.Against.Null(value, nameof(value));
+    public virtual void Refresh(string key)
+    {
+        Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
-            var bytes = JsonHelper.ToBytes(value);
-            await _distributedCache.SetAsync(_keyManager.GlobalKey(key), bytes, options, token);
-        }
+        _distributedCache.Refresh(_keyManager.GlobalKey(key));
+    }
 
-        public virtual void Refresh(string key)
-        {
-            Guard.Against.NullOrWhiteSpace(key, nameof(key));
+    public virtual async Task RefreshAsync(string key, CancellationToken token = default)
+    {
+        Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
-            _distributedCache.Refresh(_keyManager.GlobalKey(key));
-        }
+        await _distributedCache.RefreshAsync(_keyManager.GlobalKey(key), token);
+    }
 
-        public virtual async Task RefreshAsync(string key, CancellationToken token = default)
-        {
-            Guard.Against.NullOrWhiteSpace(key, nameof(key));
+    public virtual void Remove(string key)
+    {
+        Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
-            await _distributedCache.RefreshAsync(_keyManager.GlobalKey(key), token);
-        }
+        _distributedCache.Remove(_keyManager.GlobalKey(key));
+    }
 
-        public virtual void Remove(string key)
-        {
-            Guard.Against.NullOrWhiteSpace(key, nameof(key));
+    public virtual async Task RemoveAsync(string key, CancellationToken token = default)
+    {
+        Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
-            _distributedCache.Remove(_keyManager.GlobalKey(key));
-        }
-
-        public virtual async Task RemoveAsync(string key, CancellationToken token = default)
-        {
-            Guard.Against.NullOrWhiteSpace(key, nameof(key));
-
-            await _distributedCache.RemoveAsync(_keyManager.GlobalKey(key), token);
-        }
+        await _distributedCache.RemoveAsync(_keyManager.GlobalKey(key), token);
     }
 }

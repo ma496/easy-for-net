@@ -7,49 +7,48 @@ using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace EasyForNet.Tests.Events
+namespace EasyForNet.Tests.Events;
+
+public class LocalEventsManagerTests : TestsBase
 {
-    public class LocalEventsManagerTests : TestsBase
+    public LocalEventsManagerTests(ITestOutputHelper outputHelper) : base(outputHelper)
     {
-        public LocalEventsManagerTests(ITestOutputHelper outputHelper) : base(outputHelper)
+    }
+
+    [Fact]
+    public async Task LocalEventsTest()
+    {
+        var eventManager = Scope.Resolve<ILocalEventManager>();
+
+        await eventManager.RaiseAsync(new ProductEvent());
+
+        Assert.True(ProductLocalEventHandler.IsOccur);
+        Assert.True(ProductOneLocalEventHandler.IsOccur);
+    }
+
+    public class ProductLocalEventHandler : LocalEventHandler<ProductEvent>
+    {
+        public static bool IsOccur;
+
+        public override async Task HandleAsync(ProductEvent @event)
         {
+            IsOccur = true;
+            await Task.CompletedTask;
         }
+    }
 
-        [Fact]
-        public async Task LocalEventsTest()
+    public class ProductOneLocalEventHandler : LocalEventHandler<ProductEvent>
+    {
+        public static bool IsOccur;
+
+        public override async Task HandleAsync(ProductEvent @event)
         {
-            var eventManager = Scope.Resolve<ILocalEventManager>();
-
-            await eventManager.RaiseAsync(new ProductEvent());
-
-            Assert.True(ProductLocalEventHandler.IsOccur);
-            Assert.True(ProductOneLocalEventHandler.IsOccur);
+            IsOccur = true;
+            await Task.CompletedTask;
         }
+    }
 
-        public class ProductLocalEventHandler : LocalEventHandler<ProductEvent>
-        {
-            public static bool IsOccur;
-
-            public override async Task HandleAsync(ProductEvent @event)
-            {
-                IsOccur = true;
-                await Task.CompletedTask;
-            }
-        }
-
-        public class ProductOneLocalEventHandler : LocalEventHandler<ProductEvent>
-        {
-            public static bool IsOccur;
-
-            public override async Task HandleAsync(ProductEvent @event)
-            {
-                IsOccur = true;
-                await Task.CompletedTask;
-            }
-        }
-
-        public class ProductEvent
-        {
-        }
+    public class ProductEvent
+    {
     }
 }

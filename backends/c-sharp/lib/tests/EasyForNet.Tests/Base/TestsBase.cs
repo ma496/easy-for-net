@@ -2,13 +2,12 @@
 using Xunit;
 using Xunit.Abstractions;
 
-namespace EasyForNet.Tests.Base
+namespace EasyForNet.Tests.Base;
+
+[Collection(nameof(EasyForNetTestsCollectionFixture))]
+public abstract class TestsBase : TestsCommon
 {
-    [Collection(nameof(EasyForNetTestsCollectionFixture))]
-    public abstract class TestsBase : TestsCommon
+    protected TestsBase(ITestOutputHelper outputHelper) : base(outputHelper)
     {
-        protected TestsBase(ITestOutputHelper outputHelper) : base(outputHelper)
-        {
-        }
     }
 }

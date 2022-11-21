@@ -1,19 +1,18 @@
-﻿namespace EasyForNet
-{
-    public static class IncrementalId
-    {
-        private static readonly object LockObj = new object();
-        private static int _id;
+﻿namespace EasyForNet;
 
-        public static int Id
+public static class IncrementalId
+{
+    private static readonly object LockObj = new object();
+    private static int _id;
+
+    public static int Id
+    {
+        get
         {
-            get
+            lock (LockObj)
             {
-                lock (LockObj)
-                {
-                    _id++;
-                    return _id;
-                }
+                _id++;
+                return _id;
             }
         }
     }

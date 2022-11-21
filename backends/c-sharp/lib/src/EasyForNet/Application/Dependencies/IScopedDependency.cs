@@ -1,6 +1,5 @@
-﻿namespace EasyForNet.Application.Dependencies
+﻿namespace EasyForNet.Application.Dependencies;
+
+public interface IScopedDependency
 {
-    public interface IScopedDependency
-    {
-    }
 }

@@ -1,8 +1,7 @@
-﻿namespace EasyForNet.EntityFramework.Query
+﻿namespace EasyForNet.EntityFramework.Query;
+
+public interface ISortAndFilterQueryParams
 {
-    public interface ISortAndFilterQueryParams
-    {
-        string SortBy { get; }
-        string Filter { get; }
-    }
+    string SortBy { get; }
+    string Filter { get; }
 }

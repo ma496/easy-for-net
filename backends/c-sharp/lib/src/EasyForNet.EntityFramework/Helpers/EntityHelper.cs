@@ -5,83 +5,82 @@ using Ardalis.GuardClauses;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace EasyForNet.EntityFramework.Helpers
+namespace EasyForNet.EntityFramework.Helpers;
+
+public static class EntityHelper
 {
-    public static class EntityHelper
+    public static string EntityName<TEntity>()
+        where TEntity : class
     {
-        public static string EntityName<TEntity>()
-            where TEntity : class
+        return typeof(TEntity).Name.Replace("Entity", "").ToLower();
+    }
+
+    public static object PropertyValue(object obj, string propertyName, bool isAllowDefaultValue)
+    {
+        var property = obj.GetType().GetProperty(propertyName);
+        if (property == null)
+            throw new Exception($"{propertyName} not found on {obj.GetType().FullName}");
+
+        var value = property.GetValue(obj);
+        if (value == default && !isAllowDefaultValue)
         {
-            return typeof(TEntity).Name.Replace("Entity", "").ToLower();
+            throw new Exception($"Not allowed default value for {propertyName}: {property.PropertyType.FullName}");
         }
 
-        public static object PropertyValue(object obj, string propertyName, bool isAllowDefaultValue)
-        {
-            var property = obj.GetType().GetProperty(propertyName);
-            if (property == null)
-                throw new Exception($"{propertyName} not found on {obj.GetType().FullName}");
+        if (property.PropertyType.IsEnum)
+            return Convert.ToInt32(value);
+        return value;
+    }
 
-            var value = property.GetValue(obj);
-            if (value == default && !isAllowDefaultValue)
-            {
-                throw new Exception($"Not allowed default value for {propertyName}: {property.PropertyType.FullName}");
-            }
+    public static async Task RemoveRowsAsync<TEntity, T>(DbSet<TEntity> dbSet,
+        [NotNull] List<TEntity> oldRows, List<T> newRows, [NotNull] Func<TEntity, T, bool> match,
+        [NotNull] Func<T, TEntity> create)
+        where TEntity : class
+    {
+        Guard.Against.Null(oldRows, nameof(oldRows));
 
-            if (property.PropertyType.IsEnum)
-                return Convert.ToInt32(value);
-            return value;
-        }
+        newRows ??= new List<T>();
 
-        public static async Task RemoveRowsAsync<TEntity, T>(DbSet<TEntity> dbSet,
-            [NotNull] List<TEntity> oldRows, List<T> newRows, [NotNull] Func<TEntity, T, bool> match,
-            [NotNull] Func<T, TEntity> create)
-            where TEntity : class
-        {
-            Guard.Against.Null(oldRows, nameof(oldRows));
+        Guard.Against.Null(match, nameof(match));
+        Guard.Against.Null(create, nameof(create));
 
-            newRows ??= new List<T>();
+        var removeEntities = new List<TEntity>();
 
-            Guard.Against.Null(match, nameof(match));
-            Guard.Against.Null(create, nameof(create));
+        foreach (var or in oldRows)
+            if (!newRows.Exists(nr => match(or, nr)))
+                removeEntities.Add(or);
 
-            var removeEntities = new List<TEntity>();
+        if (removeEntities.Count > 0)
+            dbSet.RemoveRange(removeEntities);
 
-            foreach (var or in oldRows)
-                if (!newRows.Exists(nr => match(or, nr)))
-                    removeEntities.Add(or);
+        await Task.CompletedTask;
+    }
 
-            if (removeEntities.Count > 0)
-                dbSet.RemoveRange(removeEntities);
+    public static async Task AddRemoveRowsAsync<TEntity, T>(DbSet<TEntity> dbSet,
+        [NotNull] List<TEntity> oldRows, List<T> newRows, [NotNull] Func<TEntity, T, bool> match,
+        [NotNull] Func<T, TEntity> create)
+        where TEntity : class
+    {
+        Guard.Against.Null(oldRows, nameof(oldRows));
 
-            await Task.CompletedTask;
-        }
+        newRows ??= new List<T>();
 
-        public static async Task AddRemoveRowsAsync<TEntity, T>(DbSet<TEntity> dbSet,
-            [NotNull] List<TEntity> oldRows, List<T> newRows, [NotNull] Func<TEntity, T, bool> match,
-            [NotNull] Func<T, TEntity> create)
-            where TEntity : class
-        {
-            Guard.Against.Null(oldRows, nameof(oldRows));
+        Guard.Against.Null(match, nameof(match));
+        Guard.Against.Null(create, nameof(create));
 
-            newRows ??= new List<T>();
+        var newEntities = new List<TEntity>();
+        var removeEntities = new List<TEntity>();
+        foreach (var nr in newRows)
+            if (!oldRows.Exists(or => match(or, nr)))
+                newEntities.Add(create(nr));
 
-            Guard.Against.Null(match, nameof(match));
-            Guard.Against.Null(create, nameof(create));
+        foreach (var or in oldRows)
+            if (!newRows.Exists(nr => match(or, nr)))
+                removeEntities.Add(or);
 
-            var newEntities = new List<TEntity>();
-            var removeEntities = new List<TEntity>();
-            foreach (var nr in newRows)
-                if (!oldRows.Exists(or => match(or, nr)))
-                    newEntities.Add(create(nr));
-
-            foreach (var or in oldRows)
-                if (!newRows.Exists(nr => match(or, nr)))
-                    removeEntities.Add(or);
-
-            if (newEntities.Count > 0)
-                await dbSet.AddRangeAsync(newEntities);
-            if (removeEntities.Count > 0)
-                dbSet.RemoveRange(removeEntities);
-        }
+        if (newEntities.Count > 0)
+            await dbSet.AddRangeAsync(newEntities);
+        if (removeEntities.Count > 0)
+            dbSet.RemoveRange(removeEntities);
     }
 }

@@ -4,31 +4,30 @@ using EasyForNet.Tests.Base;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace EasyForNet.Tests.Modules
+namespace EasyForNet.Tests.Modules;
+
+// ReSharper disable once InconsistentNaming
+public class AppInitializer_InitTests : TestsBase
 {
-    // ReSharper disable once InconsistentNaming
-    public class AppInitializer_InitTests : TestsBase
+    public AppInitializer_InitTests(ITestOutputHelper outputHelper) : base(outputHelper)
     {
-        public AppInitializer_InitTests(ITestOutputHelper outputHelper) : base(outputHelper)
-        {
-        }
+    }
 
-        [Fact]
-        public void Init_AgainstMoreThenOne()
+    [Fact]
+    public void Init_AgainstMoreThenOne()
+    {
+        var exception = Assert.Throws<Exception>(() =>
         {
-            var exception = Assert.Throws<Exception>(() =>
-            {
-                AppInitializer.Init<TempModule>(null);
-                AppInitializer.Init<TempModule>(null);
-            });
+            AppInitializer.Init<TempModule>(null);
+            AppInitializer.Init<TempModule>(null);
+        });
 
-            Assert.Equal($"{typeof(TempModule).FullName} module already initialized",
-                exception.Message);
-        }
+        Assert.Equal($"{typeof(TempModule).FullName} module already initialized",
+            exception.Message);
+    }
 
-        // ReSharper disable once InconsistentNaming
-        private class TempModule : ModuleBase
-        {
-        }
+    // ReSharper disable once InconsistentNaming
+    private class TempModule : ModuleBase
+    {
     }
 }

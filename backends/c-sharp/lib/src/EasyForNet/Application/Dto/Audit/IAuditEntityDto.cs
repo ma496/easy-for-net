@@ -1,15 +1,14 @@
 ﻿using System;
 
-namespace EasyForNet.Application.Dto.Audit
+namespace EasyForNet.Application.Dto.Audit;
+
+public interface IAuditEntityDto
 {
-    public interface IAuditEntityDto
-    {
-        DateTime CreatedAt { get; set; }
+    DateTime CreatedAt { get; set; }
 
-        string CreatedBy { get; set; }
+    string CreatedBy { get; set; }
 
-        DateTime UpdatedAt { get; set; }
+    DateTime UpdatedAt { get; set; }
 
-        string UpdatedBy { get; set; }
-    }
+    string UpdatedBy { get; set; }
 }

@@ -1,38 +1,37 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 
-namespace EasyForNet.Exceptions.UserFriendly
+namespace EasyForNet.Exceptions.UserFriendly;
+
+public class ValidationException : UserFriendlyException
 {
-    public class ValidationException : UserFriendlyException
+    public List<ValidationError> ValidationErrors { get; }
+
+    public ValidationException(List<ValidationError> validationErrors) : base(GetMessage(validationErrors))
     {
-        public List<ValidationError> ValidationErrors { get; }
-
-        public ValidationException(List<ValidationError> validationErrors) : base(GetMessage(validationErrors))
-        {
-            ValidationErrors = validationErrors;
-        }
-
-        private static string GetMessage(List<ValidationError> validationErrors)
-        {
-            var messageBuilder = new StringBuilder();
-            foreach (var ve in validationErrors)
-            {
-                messageBuilder.AppendLine(ve.ErrorMessage);
-            }
-
-            return messageBuilder.ToString();
-        }
+        ValidationErrors = validationErrors;
     }
 
-    public class ValidationError
+    private static string GetMessage(List<ValidationError> validationErrors)
     {
-        public ValidationError(string propertyName, string errorMessage)
+        var messageBuilder = new StringBuilder();
+        foreach (var ve in validationErrors)
         {
-            PropertyName = propertyName;
-            ErrorMessage = errorMessage;
+            messageBuilder.AppendLine(ve.ErrorMessage);
         }
 
-        public string PropertyName { get; }
-        public string ErrorMessage { get; }
+        return messageBuilder.ToString();
     }
+}
+
+public class ValidationError
+{
+    public ValidationError(string propertyName, string errorMessage)
+    {
+        PropertyName = propertyName;
+        ErrorMessage = errorMessage;
+    }
+
+    public string PropertyName { get; }
+    public string ErrorMessage { get; }
 }

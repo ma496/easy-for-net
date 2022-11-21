@@ -3,51 +3,50 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EasyForNet.Repository
+namespace EasyForNet.Repository;
+
+public interface IRepository<TEntity, in TKey> : IRepository<TEntity>
+    where TEntity : class, IEntity<TKey>
 {
-    public interface IRepository<TEntity, in TKey> : IRepository<TEntity>
-        where TEntity : class, IEntity<TKey>
-    {
-        TEntity Find(TKey id, bool isTracking = false);
+    TEntity Find(TKey id, bool isTracking = false);
 
-        Task<TEntity> FindAsync(TKey id, bool isTracking = false);
+    Task<TEntity> FindAsync(TKey id, bool isTracking = false);
 
-        TEntity GetById(TKey id, bool isTracking = false);
+    TEntity GetById(TKey id, bool isTracking = false);
 
-        Task<TEntity> GetByIdAsync(TKey id, bool isTracking = false);
+    Task<TEntity> GetByIdAsync(TKey id, bool isTracking = false);
 
-        void Delete(TKey id, bool isAutoSave = false);
+    void Delete(TKey id, bool isAutoSave = false);
 
-        Task DeleteAsync(TKey id, bool isAutoSave = false);
+    Task DeleteAsync(TKey id, bool isAutoSave = false);
 
-        void DeleteRange(IEnumerable<TKey> ids, bool isAutoSave = false);
+    void DeleteRange(IEnumerable<TKey> ids, bool isAutoSave = false);
 
-        Task DeleteRangeAsync(IEnumerable<TKey> ids, bool isAutoSave = false);
-    }
+    Task DeleteRangeAsync(IEnumerable<TKey> ids, bool isAutoSave = false);
+}
 
-    public interface IRepository<TEntity>
-        where TEntity : class
-    {
-        IQueryable<TEntity> GetAll(bool isTracking = false);
+public interface IRepository<TEntity>
+    where TEntity : class
+{
+    IQueryable<TEntity> GetAll(bool isTracking = false);
 
-        void Create(TEntity entity, bool isAutoSave = false);
+    void Create(TEntity entity, bool isAutoSave = false);
 
-        Task CreateAsync(TEntity entity, bool isAutoSave = false);
+    Task CreateAsync(TEntity entity, bool isAutoSave = false);
 
-        void CreateRange(List<TEntity> entities, bool isAutoSave = false);
+    void CreateRange(List<TEntity> entities, bool isAutoSave = false);
 
-        Task CreateRangeAsync(List<TEntity> entities, bool isAutoSave = false);
+    Task CreateRangeAsync(List<TEntity> entities, bool isAutoSave = false);
 
-        void Update(TEntity entity, bool isAutoSave = false);
+    void Update(TEntity entity, bool isAutoSave = false);
 
-        Task UpdateAsync(TEntity entity, bool isAutoSave = false);
+    Task UpdateAsync(TEntity entity, bool isAutoSave = false);
 
-        void UpdateRange(List<TEntity> entities, bool isAutoSave = false);
+    void UpdateRange(List<TEntity> entities, bool isAutoSave = false);
 
-        Task UpdateRangeAsync(List<TEntity> entities, bool isAutoSave = false);
+    Task UpdateRangeAsync(List<TEntity> entities, bool isAutoSave = false);
 
-        int SaveChanges();
+    int SaveChanges();
 
-        Task<int> SaveChangesAsync();
-    }
+    Task<int> SaveChangesAsync();
 }

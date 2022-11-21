@@ -1,13 +1,12 @@
 ﻿using FluentValidation;
 
-namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests
+namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests;
+
+public class CustomerDtoValidator : AbstractValidator<CustomerDto>
 {
-    public class CustomerDtoValidator : AbstractValidator<CustomerDto>
+    public CustomerDtoValidator()
     {
-        public CustomerDtoValidator()
-        {
-            RuleFor(c => c.IdCard)
-                .NotEmpty();
-        }
+        RuleFor(c => c.IdCard)
+            .NotEmpty();
     }
 }

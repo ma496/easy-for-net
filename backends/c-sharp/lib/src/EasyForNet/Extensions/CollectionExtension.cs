@@ -1,14 +1,13 @@
 ﻿using System.Collections;
 using JetBrains.Annotations;
 
-namespace EasyForNet.Extensions
+namespace EasyForNet.Extensions;
+
+public static class CollectionExtension
 {
-    public static class CollectionExtension
+    [ContractAnnotation("source:null => true")]
+    public static bool IsNullOrEmpty(this ICollection source)
     {
-        [ContractAnnotation("source:null => true")]
-        public static bool IsNullOrEmpty(this ICollection source)
-        {
-            return source == null || source.Count <= 0;
-        }
+        return source == null || source.Count <= 0;
     }
 }

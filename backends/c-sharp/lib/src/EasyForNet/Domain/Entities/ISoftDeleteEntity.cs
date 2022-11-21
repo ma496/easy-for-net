@@ -1,7 +1,6 @@
-﻿namespace EasyForNet.Domain.Entities
+﻿namespace EasyForNet.Domain.Entities;
+
+public interface ISoftDeleteEntity
 {
-    public interface ISoftDeleteEntity
-    {
-        bool IsDeleted { get; set; }
-    }
+    bool IsDeleted { get; set; }
 }

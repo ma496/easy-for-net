@@ -4,23 +4,22 @@ using EasyForNet.Tests.Share;
 using EasyForNet.Tests.Share.Common;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace EasyForNet.EntityFramework.Tests.Base
+namespace EasyForNet.EntityFramework.Tests.Base;
+
+public class EasyForNetEntityFrameworkTestsFixture : TestsFixtureCommon<EasyForNetEntityFrameworkTestsModule>
 {
-    public class EasyForNetEntityFrameworkTestsFixture : TestsFixtureCommon<EasyForNetEntityFrameworkTestsModule>
+    public EasyForNetEntityFrameworkTestsFixture()
     {
-        public EasyForNetEntityFrameworkTestsFixture()
-        {
-            using var scope = GlobalObjects.Container.BeginLifetimeScope();
+        using var scope = GlobalObjects.Container.BeginLifetimeScope();
 
-            var dbContext = scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
-            dbContext.Database.EnsureDeletedAsync().Wait();
-            dbContext.Database.EnsureCreatedAsync().Wait();
-        }
+        var dbContext = scope.Resolve<EasyForNetEntityFrameworkTestsDb>();
+        dbContext.Database.EnsureDeletedAsync().Wait();
+        dbContext.Database.EnsureCreatedAsync().Wait();
+    }
 
-        protected override void AddServices(IServiceCollection services)
-        {
-            base.AddServices(services);
-            services.AddDistributedMemoryCache();
-        }
+    protected override void AddServices(IServiceCollection services)
+    {
+        base.AddServices(services);
+        services.AddDistributedMemoryCache();
     }
 }

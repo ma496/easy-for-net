@@ -4,57 +4,56 @@ using System.Text.Json.Serialization;
 using Ardalis.GuardClauses;
 using EasyForNet.Helpers;
 
-namespace EasyForNet.Extensions
+namespace EasyForNet.Extensions;
+
+// TODO Do ObjectExtension methods test
+public static class ObjectExtension
 {
-    // TODO Do ObjectExtension methods test
-    public static class ObjectExtension
+    public static T Clone<T>(this T source)
     {
-        public static T Clone<T>(this T source)
+        // Don't serialize a null object, simply return the default for that object
+        if (ReferenceEquals(source, null))
         {
-            // Don't serialize a null object, simply return the default for that object
-            if (ReferenceEquals(source, null))
-            {
-                return default;
-            }
-
-            var serializerOptions = new JsonSerializerOptions 
-            {
-                PropertyNameCaseInsensitive = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                ReferenceHandler = ReferenceHandler.IgnoreCycles,
-            };
-
-            var json = JsonHelper.ToJson(source, serializerOptions);
-
-            return JsonHelper.Deserialize<T>(json, serializerOptions);
+            return default;
         }
 
-        public static void SetPropertyValue(this object obj, string propertyName, object value)
+        var serializerOptions = new JsonSerializerOptions 
         {
-            Guard.Against.Null(obj, nameof(obj));
-            Guard.Against.Null(propertyName, nameof(propertyName));
+            PropertyNameCaseInsensitive = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            ReferenceHandler = ReferenceHandler.IgnoreCycles,
+        };
 
-            var type = obj.GetType();
-            Guard.Against.Null(type, nameof(type));
+        var json = JsonHelper.ToJson(source, serializerOptions);
 
-            if (!type.HasProperty(propertyName))
-                throw new Exception($"{type.FullName} has no {propertyName} property.");
+        return JsonHelper.Deserialize<T>(json, serializerOptions);
+    }
 
-            type.GetProperty(propertyName)?.SetValue(obj, value);
-        }
+    public static void SetPropertyValue(this object obj, string propertyName, object value)
+    {
+        Guard.Against.Null(obj, nameof(obj));
+        Guard.Against.Null(propertyName, nameof(propertyName));
 
-        public static object GetPropertyValue(this object obj, string propertyName)
-        {
-            Guard.Against.Null(obj, nameof(obj));
-            Guard.Against.Null(propertyName, nameof(propertyName));
+        var type = obj.GetType();
+        Guard.Against.Null(type, nameof(type));
 
-            var type = obj.GetType();
-            Guard.Against.Null(type, nameof(type));
+        if (!type.HasProperty(propertyName))
+            throw new Exception($"{type.FullName} has no {propertyName} property.");
 
-            if (!type.HasProperty(propertyName))
-                throw new Exception($"{type.FullName} has no {propertyName} property.");
+        type.GetProperty(propertyName)?.SetValue(obj, value);
+    }
 
-            return type.GetProperty(propertyName)?.GetValue(obj);
-        }
+    public static object GetPropertyValue(this object obj, string propertyName)
+    {
+        Guard.Against.Null(obj, nameof(obj));
+        Guard.Against.Null(propertyName, nameof(propertyName));
+
+        var type = obj.GetType();
+        Guard.Against.Null(type, nameof(type));
+
+        if (!type.HasProperty(propertyName))
+            throw new Exception($"{type.FullName} has no {propertyName} property.");
+
+        return type.GetProperty(propertyName)?.GetValue(obj);
     }
 }

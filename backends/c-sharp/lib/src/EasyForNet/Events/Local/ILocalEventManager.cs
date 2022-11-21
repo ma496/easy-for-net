@@ -1,10 +1,9 @@
 ﻿using System.Threading.Tasks;
 
-namespace EasyForNet.Events.Local
+namespace EasyForNet.Events.Local;
+
+public interface ILocalEventManager
 {
-    public interface ILocalEventManager
-    {
-        Task RaiseAsync<TEvent>(TEvent @event)
-            where TEvent : class;
-    }
+    Task RaiseAsync<TEvent>(TEvent @event)
+        where TEvent : class;
 }

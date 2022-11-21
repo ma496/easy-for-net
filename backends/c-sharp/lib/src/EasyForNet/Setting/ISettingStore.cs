@@ -2,15 +2,14 @@
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace EasyForNet.Setting
+namespace EasyForNet.Setting;
+
+public interface ISettingStore<TEntity>
+    where TEntity : EfnSettingEntity
 {
-    public interface ISettingStore<TEntity>
-        where TEntity : EfnSettingEntity
-    {
-        TValue Get<TValue>(string key);
-        Task<TValue> GetAsync<TValue>(string key);
-        void Set<TValue>(string key, TValue value);
-        Task SetAsync<TValue>(string key, TValue value);
-        IQueryable<TEntity> GetAll();
-    }
+    TValue Get<TValue>(string key);
+    Task<TValue> GetAsync<TValue>(string key);
+    void Set<TValue>(string key, TValue value);
+    Task SetAsync<TValue>(string key, TValue value);
+    IQueryable<TEntity> GetAll();
 }

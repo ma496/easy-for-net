@@ -1,7 +1,6 @@
-﻿namespace EasyForNet.Application.Dto
+﻿namespace EasyForNet.Application.Dto;
+
+public interface IEntityDto<TKey>
 {
-    public interface IEntityDto<TKey>
-    {
-        TKey Id { get; set; }
-    }
+    TKey Id { get; set; }
 }
