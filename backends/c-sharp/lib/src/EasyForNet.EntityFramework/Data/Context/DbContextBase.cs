@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using EasyForNet.Domain.Entities;
 using EasyForNet.Domain.Entities.Audit;
+using EasyForNet.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace EasyForNet.EntityFramework.Data.Context;
@@ -22,6 +26,21 @@ public abstract class DbContextBase : DbContext
 
     #region Methods
 
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+        
+        var softDeleteEntities = 
+            GetType().Assembly.GetConcreteTypes()
+            .Where(type => typeof(ISoftDeleteEntity).IsAssignableFrom(type));
+
+        foreach (var softDeleteEntity in softDeleteEntities)
+        {
+            modelBuilder.Entity(softDeleteEntity)
+                .HasQueryFilter(NotDeletedExp(softDeleteEntity));
+        }
+    }
+
     public override int SaveChanges()
     {
         OnBeforeSaving();
@@ -40,10 +59,34 @@ public abstract class DbContextBase : DbContext
 
     #region Helpers
 
+    private LambdaExpression NotDeletedExp(Type type)
+    {
+        // we should generate:  e => e.IsDeleted == false
+        // or: e => !e.IsDeleted
+
+        // e =>
+        var parameter = Expression.Parameter(type, "e");
+
+        // false
+        var falseConstant = Expression.Constant(false);
+
+        // e.IsDeleted
+        var propertyAccess = Expression.PropertyOrField(parameter, nameof(ISoftDeleteEntity.IsDeleted));
+
+        // e.IsDeleted == false
+        var equalExpression = Expression.Equal(propertyAccess, falseConstant);
+
+        // e => e.IsDeleted == false
+        var lambda = Expression.Lambda(equalExpression, parameter);
+
+        return lambda;
+    }
+    
     private void OnBeforeSaving()
     {
         var entries = ChangeTracker.Entries();
         foreach (var entry in entries)
+        {
             if (entry.Entity is IAuditEntity auditable)
             {
                 var now = DateTime.UtcNow;
@@ -65,6 +108,7 @@ public abstract class DbContextBase : DbContext
                         break;
                 }
             }
+        }
     }
 
     #endregion

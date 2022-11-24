@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace EasyForNet.EntityFramework.Tests.Data.Configuration;
 
-public class CustomerEntityTypeConfiguration : SoftDeleteEntityTypeConfiguration<CustomerEntity>
+public class CustomerEntityTypeConfiguration : EntityTypeConfiguration<CustomerEntity>
 {
     public CustomerEntityTypeConfiguration() : base("Customers")
     {

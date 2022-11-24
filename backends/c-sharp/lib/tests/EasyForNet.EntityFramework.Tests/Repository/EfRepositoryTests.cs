@@ -209,19 +209,6 @@ public class EfRepositoryTests : TestsBase
     }
 
     [Fact]
-    public void Delete_NoEntityTest()
-    {
-        var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
-
-        var exception = Assert.Throws<DbUpdateConcurrencyException>(() =>
-        {
-            repository.Delete(5634346343, true);
-        });
-
-        exception.Message.Should().Contain("The database operation was expected to affect 1 row(s), but actually affected 0 row(s); data may have been modified or deleted since entities were loaded.");
-    }
-
-    [Fact]
     public async Task DeleteAsyncTest()
     {
         var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
@@ -237,26 +224,13 @@ public class EfRepositoryTests : TestsBase
     }
 
     [Fact]
-    public async Task DeleteAsync_NoEntityTest()
-    {
-        var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
-
-        var exception = await Assert.ThrowsAsync<DbUpdateConcurrencyException>(async () =>
-        {
-            await repository.DeleteAsync(5634346343, true);
-        });
-
-        exception.Message.Should().Contain("The database operation was expected to affect 1 row(s), but actually affected 0 row(s); data may have been modified or deleted since entities were loaded.");
-    }
-
-    [Fact]
     public void DeleteRangeTest()
     {
         var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
         var customers = _customerGenerator.Generate(10);
         repository.CreateRange(customers, true);
 
-        var keys = customers.Select(c => c.Id);
+        var keys = customers.Select(c => c.Id).ToList();
         repository = NewScopeService<IRepository<CustomerEntity, long>>();
 
         repository.DeleteRange(keys, true);
@@ -273,7 +247,7 @@ public class EfRepositoryTests : TestsBase
         var customers = _customerGenerator.Generate(10);
         await repository.CreateRangeAsync(customers, true);
 
-        var keys = customers.Select(c => c.Id);
+        var keys = customers.Select(c => c.Id).ToList();
         repository = NewScopeService<IRepository<CustomerEntity, long>>();
 
         await repository.DeleteRangeAsync(keys, true);

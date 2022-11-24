@@ -19,10 +19,18 @@ public interface IRepository<TEntity, in TKey> : IRepository<TEntity>
     void Delete(TKey id, bool isAutoSave = false);
 
     Task DeleteAsync(TKey id, bool isAutoSave = false);
+    
+    void Delete(TEntity entity, bool isAutoSave = false);
+
+    Task DeleteAsync(TEntity entity, bool isAutoSave = false);
 
     void DeleteRange(IEnumerable<TKey> ids, bool isAutoSave = false);
 
     Task DeleteRangeAsync(IEnumerable<TKey> ids, bool isAutoSave = false);
+    
+    void DeleteRange(IEnumerable<TEntity> entities, bool isAutoSave = false);
+
+    Task DeleteRangeAsync(IEnumerable<TEntity> entities, bool isAutoSave = false);
 }
 
 public interface IRepository<TEntity>
@@ -34,17 +42,17 @@ public interface IRepository<TEntity>
 
     Task CreateAsync(TEntity entity, bool isAutoSave = false);
 
-    void CreateRange(List<TEntity> entities, bool isAutoSave = false);
+    void CreateRange(IEnumerable<TEntity> entities, bool isAutoSave = false);
 
-    Task CreateRangeAsync(List<TEntity> entities, bool isAutoSave = false);
+    Task CreateRangeAsync(IEnumerable<TEntity> entities, bool isAutoSave = false);
 
     void Update(TEntity entity, bool isAutoSave = false);
 
     Task UpdateAsync(TEntity entity, bool isAutoSave = false);
 
-    void UpdateRange(List<TEntity> entities, bool isAutoSave = false);
+    void UpdateRange(IEnumerable<TEntity> entities, bool isAutoSave = false);
 
-    Task UpdateRangeAsync(List<TEntity> entities, bool isAutoSave = false);
+    Task UpdateRangeAsync(IEnumerable<TEntity> entities, bool isAutoSave = false);
 
     int SaveChanges();
 

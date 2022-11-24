@@ -26,6 +26,8 @@ public class EasyForNetEntityFrameworkTestsDb : DbContextBase
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+        
         modelBuilder.ConfigureSetting<EfnSettingEntity>();
 
         modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);

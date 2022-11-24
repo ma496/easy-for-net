@@ -7,16 +7,17 @@ using System.Collections.Generic;
 using EasyForNet.Exceptions.UserFriendly;
 using EasyForNet.EntityFramework.Helpers;
 using EasyForNet.Domain.Entities;
+using EasyForNet.Extensions;
 
 namespace EasyForNet.EntityFramework.Repository;
 
 public class EfRepository<TDbContext, TEntity, TKey> : EfRepository<TDbContext, TEntity>, IRepository<TEntity, TKey>
     where TDbContext : DbContextBase
-    where TEntity : class, IEntity<TKey>, new()
+    where TEntity : class, IEntity<TKey>
 {
     private readonly TDbContext _dbContext;
 
-    public EfRepository(TDbContext dbContext) : base(dbContext)
+    protected EfRepository(TDbContext dbContext) : base(dbContext)
     {
         _dbContext = dbContext;
     }
@@ -49,50 +50,113 @@ public class EfRepository<TDbContext, TEntity, TKey> : EfRepository<TDbContext, 
 
     public void Delete(TKey id, bool isAutoSave = false)
     {
-        var entity = new TEntity { Id = id };
-        _dbContext.Set<TEntity>().Remove(entity);
-        if (isAutoSave)
-            SaveChanges();
+        var entity = GetById(id);
+
+        Delete(entity, isAutoSave);
     }
 
     public async Task DeleteAsync(TKey id, bool isAutoSave = false)
     {
-        var entity = new TEntity { Id = id };
-        _dbContext.Set<TEntity>().Remove(entity);
+        var entity = await GetByIdAsync(id);
+
+        await DeleteAsync(entity, isAutoSave);
+    }
+
+    public void Delete(TEntity entity, bool isAutoSave = false)
+    {
+        if (entity == null) return;
+        
+        if (entity is ISoftDeleteEntity softDeleteEntity)
+        {
+            softDeleteEntity.IsDeleted = true;
+            _dbContext.Set<TEntity>().Update(entity);
+        }
+        else
+        {
+            _dbContext.Set<TEntity>().Remove(entity);
+        }
+        
+        if (isAutoSave)
+            SaveChanges();
+    }
+    
+    public async Task DeleteAsync(TEntity entity, bool isAutoSave = false)
+    {
+        if (entity == null) return;
+        
+        if (entity is ISoftDeleteEntity softDeleteEntity)
+        {
+            softDeleteEntity.IsDeleted = true;
+            _dbContext.Set<TEntity>().Update(entity);
+        }
+        else
+        {
+            _dbContext.Set<TEntity>().Remove(entity);
+        }
+        
         if (isAutoSave)
             await SaveChangesAsync();
     }
 
     public void DeleteRange(IEnumerable<TKey> ids, bool isAutoSave = false)
     {
-        var entities = ids.Select(k => new TEntity { Id = k });
-        _dbContext.Set<TEntity>().RemoveRange(entities);
-        if (isAutoSave)
-            SaveChanges();
+        var entities = GetQuery(false).Where(e => ids.Contains(e.Id)).ToList();
+        
+        DeleteRange(entities, isAutoSave);
     }
 
     public async Task DeleteRangeAsync(IEnumerable<TKey> ids, bool isAutoSave = false)
     {
-        var entities = ids.Select(k => new TEntity { Id = k });
-        _dbContext.Set<TEntity>().RemoveRange(entities);
+        var entities = await GetQuery(false).Where(e => ids.Contains(e.Id)).ToListAsync();
+
+        await DeleteRangeAsync(entities, isAutoSave);
+    }
+
+    public void DeleteRange(IEnumerable<TEntity> entities, bool isAutoSave = false)
+    {
+        var array = entities as TEntity[] ?? entities.ToArray();
+        if (array.IsNullOrEmpty()) return;
+        
+        if (typeof(ISoftDeleteEntity).IsAssignableFrom(typeof(TEntity)))
+        {
+            foreach (var entity in array)
+            {
+                var softDeleteEntity = (ISoftDeleteEntity)entity;
+                softDeleteEntity.IsDeleted = true;
+            }
+            _dbContext.Set<TEntity>().UpdateRange(array);
+        }
+        else
+        {
+            _dbContext.Set<TEntity>().RemoveRange(array);
+        }
+        
+        if (isAutoSave)
+            SaveChanges();
+    }
+    
+    public async Task DeleteRangeAsync(IEnumerable<TEntity> entities, bool isAutoSave = false)
+    {
+        var array = entities as TEntity[] ?? entities.ToArray();
+        if (array.IsNullOrEmpty()) return;
+        
+        if (typeof(ISoftDeleteEntity).IsAssignableFrom(typeof(TEntity)))
+        {
+            foreach (var entity in array)
+            {
+                var softDeleteEntity = (ISoftDeleteEntity)entity;
+                softDeleteEntity.IsDeleted = true;
+            }
+            _dbContext.Set<TEntity>().UpdateRange(array);
+        }
+        else
+        {
+            _dbContext.Set<TEntity>().RemoveRange(array);
+        }
+        
         if (isAutoSave)
             await SaveChangesAsync();
     }
-
-    #region Helpers
-
-    //protected static Expression<Func<TEntity, bool>> IdCompareExpression(TKey id)
-    //{
-    //    var primaryKeyName = nameof(IEntity<TKey>.Id);
-    //    ParameterExpression pe = Expression.Parameter(typeof(TEntity), "entity");
-    //    MemberExpression me = Expression.Property(pe, primaryKeyName);
-    //    ConstantExpression constant = Expression.Constant(id, id.GetType());
-    //    BinaryExpression body = Expression.Equal(me, constant);
-    //    Expression<Func<TEntity, bool>> expressionTree = Expression.Lambda<Func<TEntity, bool>>(body, new[] { pe });
-    //    return expressionTree;
-    //}
-
-    #endregion
 }
 
 public class EfRepository<TDbContext, TEntity> : IRepository<TEntity>
@@ -101,7 +165,7 @@ public class EfRepository<TDbContext, TEntity> : IRepository<TEntity>
 {
     private readonly TDbContext _dbContext;
 
-    public EfRepository(TDbContext dbContext)
+    protected EfRepository(TDbContext dbContext)
     {
         _dbContext = dbContext;
     }
@@ -125,13 +189,13 @@ public class EfRepository<TDbContext, TEntity> : IRepository<TEntity>
             await SaveChangesAsync();
     }
 
-    public void CreateRange(List<TEntity> entities, bool isAutoSave = false)
+    public void CreateRange(IEnumerable<TEntity> entities, bool isAutoSave = false)
     {
         _dbContext.Set<TEntity>().AddRange(entities);
         if (isAutoSave) SaveChanges();
     }
 
-    public async Task CreateRangeAsync(List<TEntity> entities, bool isAutoSave = false)
+    public async Task CreateRangeAsync(IEnumerable<TEntity> entities, bool isAutoSave = false)
     {
         await _dbContext.Set<TEntity>().AddRangeAsync(entities);
         if (isAutoSave) await SaveChangesAsync();
@@ -151,13 +215,13 @@ public class EfRepository<TDbContext, TEntity> : IRepository<TEntity>
             await SaveChangesAsync();
     }
 
-    public void UpdateRange(List<TEntity> entities, bool isAutoSave = false)
+    public void UpdateRange(IEnumerable<TEntity> entities, bool isAutoSave = false)
     {
         _dbContext.Set<TEntity>().UpdateRange(entities);
         if (isAutoSave) SaveChanges();
     }
 
-    public async Task UpdateRangeAsync(List<TEntity> entities, bool isAutoSave = false)
+    public async Task UpdateRangeAsync(IEnumerable<TEntity> entities, bool isAutoSave = false)
     {
         _dbContext.Set<TEntity>().UpdateRange(entities);
         if (isAutoSave) await SaveChangesAsync();
