@@ -24,7 +24,7 @@ public class EfRepositoryTests : TestsBase
     }
 
     [Fact]
-    public void CreateTest()
+    public void Should_Create()
     {
         var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
         var customer = _customerGenerator.Generate();
@@ -37,7 +37,7 @@ public class EfRepositoryTests : TestsBase
     }
 
     [Fact]
-    public async Task CreateAsyncTest()
+    public async Task Should_CreateAsync()
     {
         var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
         var customer = _customerGenerator.Generate();
@@ -50,7 +50,7 @@ public class EfRepositoryTests : TestsBase
     }
 
     [Fact]
-    public void CreateRangeTest()
+    public void Should_CreateRange()
     {
         var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
         var customers = _customerGenerator.Generate(10);
@@ -70,7 +70,7 @@ public class EfRepositoryTests : TestsBase
     }
 
     [Fact]
-    public async Task CreateRangeAsyncTest()
+    public async Task Should_CreateRangeAsync()
     {
         var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
         var customers = _customerGenerator.Generate(10);
@@ -90,7 +90,7 @@ public class EfRepositoryTests : TestsBase
     }
 
     [Fact]
-    public void UpdateTest()
+    public void Should_Update()
     {
         var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
         var customer = _customerGenerator.Generate();
@@ -112,7 +112,7 @@ public class EfRepositoryTests : TestsBase
     }
 
     [Fact]
-    public async Task UpdateAsyncTest()
+    public async Task Should_UpdateAsync()
     {
         var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
         var customer = _customerGenerator.Generate();
@@ -134,7 +134,7 @@ public class EfRepositoryTests : TestsBase
     }
 
     [Fact]
-    public void UpdateRangeTest()
+    public void Should_UpdateRange()
     {
         var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
         var customers = _customerGenerator.Generate(10);
@@ -164,7 +164,7 @@ public class EfRepositoryTests : TestsBase
     }
 
     [Fact]
-    public async Task UpdateRangeAsyncTest()
+    public async Task Should_UpdateRangeAsync()
     {
         var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
         var customers = _customerGenerator.Generate(10);
@@ -194,7 +194,7 @@ public class EfRepositoryTests : TestsBase
     }
 
     [Fact]
-    public void DeleteTest()
+    public void Should_Delete()
     {
         var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
         var customer = _customerGenerator.Generate();
@@ -209,7 +209,7 @@ public class EfRepositoryTests : TestsBase
     }
 
     [Fact]
-    public async Task DeleteAsyncTest()
+    public async Task Should_DeleteAsync()
     {
         var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
         var customer = _customerGenerator.Generate();
@@ -224,7 +224,7 @@ public class EfRepositoryTests : TestsBase
     }
 
     [Fact]
-    public void DeleteRangeTest()
+    public void Should_DeleteRange()
     {
         var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
         var customers = _customerGenerator.Generate(10);
@@ -235,13 +235,13 @@ public class EfRepositoryTests : TestsBase
 
         repository.DeleteRange(keys, true);
 
-        var savedCustomers = repository.GetAll().Where(e => keys.Contains(e.Id));
+        var savedCustomers = repository.GetAll().Where(e => keys.Contains(e.Id)).ToList();
 
         savedCustomers.Should().BeNullOrEmpty();
     }
 
     [Fact]
-    public async Task DeleteRangeAsyncTest()
+    public async Task Should_DeleteRangeAsync()
     {
         var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
         var customers = _customerGenerator.Generate(10);
@@ -252,13 +252,109 @@ public class EfRepositoryTests : TestsBase
 
         await repository.DeleteRangeAsync(keys, true);
 
-        var savedCustomers = repository.GetAll().Where(e => keys.Contains(e.Id));
+        var savedCustomers = await repository.GetAll().Where(e => keys.Contains(e.Id)).ToListAsync();
 
         savedCustomers.Should().BeNullOrEmpty();
     }
 
     [Fact]
-    public void GetByIdTest()
+    public void Should_UndoDelete()
+    {
+        var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
+        var customer = _customerGenerator.Generate();
+        repository.Create(customer, true);
+
+        repository = NewScopeService<IRepository<CustomerEntity, long>>();
+        repository.Delete(customer.Id, true);
+
+        var savedCustomer = repository.Find(customer.Id);
+
+        savedCustomer.Should().BeNull();
+
+        repository = NewScopeService<IRepository<CustomerEntity, long>>();
+
+        repository.UndoDelete(customer.Id, true);
+
+        savedCustomer = repository.Find(customer.Id);
+
+        savedCustomer.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task Should_UndoDeleteAsync()
+    {
+        var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
+        var customer = _customerGenerator.Generate();
+        await repository.CreateAsync(customer, true);
+
+        repository = NewScopeService<IRepository<CustomerEntity, long>>();
+        await repository.DeleteAsync(customer.Id, true);
+
+        var savedCustomer = await repository.FindAsync(customer.Id);
+
+        savedCustomer.Should().BeNull();
+
+        repository = NewScopeService<IRepository<CustomerEntity, long>>();
+
+        await repository.UndoDeleteAsync(customer.Id, true);
+
+        savedCustomer = await repository.FindAsync(customer.Id);
+
+        savedCustomer.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void Should_UndoDeleteRange()
+    {
+        var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
+        var customers = _customerGenerator.Generate(10);
+        repository.CreateRange(customers, true);
+
+        var keys = customers.Select(c => c.Id).ToList();
+        repository = NewScopeService<IRepository<CustomerEntity, long>>();
+
+        repository.DeleteRange(keys, true);
+
+        var savedCustomers = repository.GetAll().Where(e => keys.Contains(e.Id)).ToList();
+
+        savedCustomers.Should().BeNullOrEmpty();
+
+        repository = NewScopeService<IRepository<CustomerEntity, long>>();
+
+        repository.UndoDeleteRange(keys, true);
+
+        savedCustomers = repository.GetAll().Where(e => keys.Contains(e.Id)).ToList();
+
+        savedCustomers.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task Should_UndoDeleteRangeAsync()
+    {
+        var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
+        var customers = _customerGenerator.Generate(10);
+        await repository.CreateRangeAsync(customers, true);
+
+        var keys = customers.Select(c => c.Id).ToList();
+        repository = NewScopeService<IRepository<CustomerEntity, long>>();
+
+        await repository.DeleteRangeAsync(keys, true);
+
+        var savedCustomers = await repository.GetAll().Where(e => keys.Contains(e.Id)).ToListAsync();
+
+        savedCustomers.Should().BeNullOrEmpty();
+
+        repository = NewScopeService<IRepository<CustomerEntity, long>>();
+
+        await repository.UndoDeleteRangeAsync(keys, true);
+
+        savedCustomers = await repository.GetAll().Where(e => keys.Contains(e.Id)).ToListAsync();
+
+        savedCustomers.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public void Should_GetById()
     {
         var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
         var customer = _customerGenerator.Generate();
@@ -276,7 +372,7 @@ public class EfRepositoryTests : TestsBase
     }
 
     [Fact]
-    public async Task GetByIdAsyncTest()
+    public async Task Should_GetByIdAsync()
     {
         var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
         var customer = _customerGenerator.Generate();
@@ -294,7 +390,7 @@ public class EfRepositoryTests : TestsBase
     }
 
     [Fact]
-    public void SaveChangesTest()
+    public void Should_SaveChanges()
     {
         var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
         var customer = _customerGenerator.Generate();
@@ -312,7 +408,7 @@ public class EfRepositoryTests : TestsBase
     }
 
     [Fact]
-    public async Task SaveChangesAsyncTest()
+    public async Task Should_SaveChangesAsync()
     {
         var repository = Scope.Resolve<IRepository<CustomerEntity, long>>();
         var customer = _customerGenerator.Generate();

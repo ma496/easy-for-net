@@ -8,6 +8,7 @@ using EasyForNet.Exceptions.UserFriendly;
 using EasyForNet.EntityFramework.Helpers;
 using EasyForNet.Domain.Entities;
 using EasyForNet.Extensions;
+using System;
 
 namespace EasyForNet.EntityFramework.Repository;
 
@@ -62,42 +63,6 @@ public class EfRepository<TDbContext, TEntity, TKey> : EfRepository<TDbContext, 
         await DeleteAsync(entity, isAutoSave);
     }
 
-    public void Delete(TEntity entity, bool isAutoSave = false)
-    {
-        if (entity == null) return;
-        
-        if (entity is ISoftDeleteEntity softDeleteEntity)
-        {
-            softDeleteEntity.IsDeleted = true;
-            _dbContext.Set<TEntity>().Update(entity);
-        }
-        else
-        {
-            _dbContext.Set<TEntity>().Remove(entity);
-        }
-        
-        if (isAutoSave)
-            SaveChanges();
-    }
-    
-    public async Task DeleteAsync(TEntity entity, bool isAutoSave = false)
-    {
-        if (entity == null) return;
-        
-        if (entity is ISoftDeleteEntity softDeleteEntity)
-        {
-            softDeleteEntity.IsDeleted = true;
-            _dbContext.Set<TEntity>().Update(entity);
-        }
-        else
-        {
-            _dbContext.Set<TEntity>().Remove(entity);
-        }
-        
-        if (isAutoSave)
-            await SaveChangesAsync();
-    }
-
     public void DeleteRange(IEnumerable<TKey> ids, bool isAutoSave = false)
     {
         var entities = GetQuery(false).Where(e => ids.Contains(e.Id)).ToList();
@@ -112,50 +77,36 @@ public class EfRepository<TDbContext, TEntity, TKey> : EfRepository<TDbContext, 
         await DeleteRangeAsync(entities, isAutoSave);
     }
 
-    public void DeleteRange(IEnumerable<TEntity> entities, bool isAutoSave = false)
+    public void UndoDelete(TKey id, bool isAutoSave = false)
     {
-        var array = entities as TEntity[] ?? entities.ToArray();
-        if (array.IsNullOrEmpty()) return;
-        
-        if (typeof(ISoftDeleteEntity).IsAssignableFrom(typeof(TEntity)))
-        {
-            foreach (var entity in array)
-            {
-                var softDeleteEntity = (ISoftDeleteEntity)entity;
-                softDeleteEntity.IsDeleted = true;
-            }
-            _dbContext.Set<TEntity>().UpdateRange(array);
-        }
-        else
-        {
-            _dbContext.Set<TEntity>().RemoveRange(array);
-        }
-        
-        if (isAutoSave)
-            SaveChanges();
+        var entity = GetQuery(false).IgnoreQueryFilters().Where(e => e.Id.Equals(id)).SingleOrDefault();
+        if (entity == null)
+            throw new EntityNotFoundException(EntityHelper.EntityName<TEntity>(), id);
+
+        UndoDelete(entity, isAutoSave);
     }
-    
-    public async Task DeleteRangeAsync(IEnumerable<TEntity> entities, bool isAutoSave = false)
+
+    public async Task UndoDeleteAsync(TKey id, bool isAutoSave = false)
     {
-        var array = entities as TEntity[] ?? entities.ToArray();
-        if (array.IsNullOrEmpty()) return;
-        
-        if (typeof(ISoftDeleteEntity).IsAssignableFrom(typeof(TEntity)))
-        {
-            foreach (var entity in array)
-            {
-                var softDeleteEntity = (ISoftDeleteEntity)entity;
-                softDeleteEntity.IsDeleted = true;
-            }
-            _dbContext.Set<TEntity>().UpdateRange(array);
-        }
-        else
-        {
-            _dbContext.Set<TEntity>().RemoveRange(array);
-        }
-        
-        if (isAutoSave)
-            await SaveChangesAsync();
+        var entity = await GetQuery(false).IgnoreQueryFilters().Where(e => e.Id.Equals(id)).SingleOrDefaultAsync();
+        if (entity == null)
+            throw new EntityNotFoundException(EntityHelper.EntityName<TEntity>(), id);
+
+        await UndoDeleteAsync(entity, isAutoSave);
+    }
+
+    public void UndoDeleteRange(IEnumerable<TKey> ids, bool isAutoSave = false)
+    {
+        var entities = GetQuery(false).IgnoreQueryFilters().Where(e => ids.Contains(e.Id)).ToList();
+
+        UndoDeleteRange(entities, isAutoSave);
+    }
+
+    public async Task UndoDeleteRangeAsync(IEnumerable<TKey> ids, bool isAutoSave = false)
+    {
+        var entities = await GetQuery(false).IgnoreQueryFilters().Where(e => ids.Contains(e.Id)).ToListAsync();
+
+        await UndoDeleteRangeAsync(entities, isAutoSave);
     }
 }
 
@@ -225,6 +176,156 @@ public class EfRepository<TDbContext, TEntity> : IRepository<TEntity>
     {
         _dbContext.Set<TEntity>().UpdateRange(entities);
         if (isAutoSave) await SaveChangesAsync();
+    }
+
+    public void Delete(TEntity entity, bool isAutoSave = false)
+    {
+        if (entity == null) return;
+
+        if (entity is ISoftDeleteEntity softDeleteEntity)
+        {
+            softDeleteEntity.IsDeleted = true;
+            _dbContext.Set<TEntity>().Update(entity);
+        }
+        else
+        {
+            _dbContext.Set<TEntity>().Remove(entity);
+        }
+
+        if (isAutoSave)
+            SaveChanges();
+    }
+
+    public async Task DeleteAsync(TEntity entity, bool isAutoSave = false)
+    {
+        if (entity == null) return;
+
+        if (entity is ISoftDeleteEntity softDeleteEntity)
+        {
+            softDeleteEntity.IsDeleted = true;
+            _dbContext.Set<TEntity>().Update(entity);
+        }
+        else
+        {
+            _dbContext.Set<TEntity>().Remove(entity);
+        }
+
+        if (isAutoSave)
+            await SaveChangesAsync();
+    }
+
+    public void DeleteRange(IEnumerable<TEntity> entities, bool isAutoSave = false)
+    {
+        var array = entities as TEntity[] ?? entities.ToArray();
+        if (array.IsNullOrEmpty()) return;
+
+        if (typeof(ISoftDeleteEntity).IsAssignableFrom(typeof(TEntity)))
+        {
+            foreach (var entity in array)
+            {
+                var softDeleteEntity = (ISoftDeleteEntity)entity;
+                softDeleteEntity.IsDeleted = true;
+            }
+            _dbContext.Set<TEntity>().UpdateRange(array);
+        }
+        else
+        {
+            _dbContext.Set<TEntity>().RemoveRange(array);
+        }
+
+        if (isAutoSave)
+            SaveChanges();
+    }
+
+    public async Task DeleteRangeAsync(IEnumerable<TEntity> entities, bool isAutoSave = false)
+    {
+        var array = entities as TEntity[] ?? entities.ToArray();
+        if (array.IsNullOrEmpty()) return;
+
+        if (typeof(ISoftDeleteEntity).IsAssignableFrom(typeof(TEntity)))
+        {
+            foreach (var entity in array)
+            {
+                var softDeleteEntity = (ISoftDeleteEntity)entity;
+                softDeleteEntity.IsDeleted = true;
+            }
+            _dbContext.Set<TEntity>().UpdateRange(array);
+        }
+        else
+        {
+            _dbContext.Set<TEntity>().RemoveRange(array);
+        }
+
+        if (isAutoSave)
+            await SaveChangesAsync();
+    }
+
+    public void UndoDelete(TEntity entity, bool isAutoSave = false)
+    {
+        if (entity == null) return;
+
+        if (!typeof(ISoftDeleteEntity).IsAssignableFrom(entity.GetType()))
+            throw new Exception($"{entity.GetType().FullName} class not implement {nameof(ISoftDeleteEntity)}");
+
+        var softDeleteEntity = (ISoftDeleteEntity)entity;
+        softDeleteEntity.IsDeleted = false;
+        _dbContext.Set<TEntity>().Update(entity);
+
+        if (isAutoSave)
+            SaveChanges();
+    }
+
+    public async Task UndoDeleteAsync(TEntity entity, bool isAutoSave = false)
+    {
+        if (entity == null) return;
+
+        if (!typeof(ISoftDeleteEntity).IsAssignableFrom(entity.GetType()))
+            throw new Exception($"{entity.GetType().FullName} class not implement {nameof(ISoftDeleteEntity)}");
+
+        var softDeleteEntity = (ISoftDeleteEntity)entity;
+        softDeleteEntity.IsDeleted = false;
+        _dbContext.Set<TEntity>().Update(entity);
+
+        if (isAutoSave)
+            await SaveChangesAsync();
+    }
+
+    public void UndoDeleteRange(IEnumerable<TEntity> entities, bool isAutoSave = false)
+    {
+        if (!typeof(ISoftDeleteEntity).IsAssignableFrom(typeof(TEntity)))
+            throw new Exception($"{typeof(TEntity).FullName} class not implement {nameof(ISoftDeleteEntity)}");
+
+        var array = entities as TEntity[] ?? entities.ToArray();
+        if (array.IsNullOrEmpty()) return;
+
+        foreach (var entity in array)
+        {
+            var softDeleteEntity = (ISoftDeleteEntity)entity;
+            softDeleteEntity.IsDeleted = false;
+        }
+        _dbContext.Set<TEntity>().UpdateRange(array);
+
+        if (isAutoSave)
+            SaveChanges();
+    }
+
+    public async Task UndoDeleteRangeAsync(IEnumerable<TEntity> entities, bool isAutoSave = false)
+    {
+        if (!typeof(ISoftDeleteEntity).IsAssignableFrom(typeof(TEntity)))
+            throw new Exception($"{typeof(TEntity).FullName} class not implement {nameof(ISoftDeleteEntity)}");
+
+        var array = entities as TEntity[] ?? entities.ToArray();
+        if (array.IsNullOrEmpty()) return;
+
+        foreach (var entity in array)
+        {
+            var softDeleteEntity = (ISoftDeleteEntity)entity;
+            softDeleteEntity.IsDeleted = false;
+        }
+        _dbContext.Set<TEntity>().UpdateRange(array);
+
+        if (isAutoSave)
+            await SaveChangesAsync();
     }
 
     public int SaveChanges()
