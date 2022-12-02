@@ -23,6 +23,7 @@ public class EasyForNetEntityFrameworkTestsModule : ModuleBase
         {
             var options = new DbContextOptionsBuilder()
                 .UseSqlite("Data Source = EasyForNetEntityFrameworkTests.db")
+                //.UseSqlServer("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=EasyForNetEntityFrameworkTests")
                 .EnableSensitiveDataLogging()
                 .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
                 .Options;
