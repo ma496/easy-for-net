@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using EasyForNet.Domain.Entities;
 using EasyForNet.Domain.Entities.Audit;
+using EasyForNet.Entities;
 using EasyForNet.Extensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,16 +30,10 @@ public abstract class DbContextBase : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
-        var softDeleteEntities = 
-            GetType().Assembly.GetConcreteTypes()
-            .Where(type => typeof(ISoftDeleteEntity).IsAssignableFrom(type));
 
-        foreach (var softDeleteEntity in softDeleteEntities)
-        {
-            modelBuilder.Entity(softDeleteEntity)
-                .HasQueryFilter(NotDeletedExp(softDeleteEntity));
-        }
+        SoftDeleteFilter(modelBuilder);
+
+        SettingConfiguration(modelBuilder);
     }
 
     public override int SaveChanges()
@@ -58,6 +53,19 @@ public abstract class DbContextBase : DbContext
     #endregion
 
     #region Helpers
+
+    private void SoftDeleteFilter(ModelBuilder modelBuilder)
+    {
+        var softDeleteEntities =
+                    GetType().Assembly.GetConcreteTypes()
+                    .Where(type => typeof(ISoftDeleteEntity).IsAssignableFrom(type));
+
+        foreach (var softDeleteEntity in softDeleteEntities)
+        {
+            modelBuilder.Entity(softDeleteEntity)
+                .HasQueryFilter(NotDeletedExp(softDeleteEntity));
+        }
+    }
 
     private LambdaExpression NotDeletedExp(Type type)
     {
@@ -109,6 +117,14 @@ public abstract class DbContextBase : DbContext
                 }
             }
         }
+    }
+
+    private void SettingConfiguration(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<EfnSettingEntity>()
+            .ToTable("EfnSettings")
+            .HasIndex(e => e.Key)
+            .IsUnique();
     }
 
     #endregion

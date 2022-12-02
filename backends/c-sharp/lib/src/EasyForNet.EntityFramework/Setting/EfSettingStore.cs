@@ -10,16 +10,15 @@ using System.Threading.Tasks;
 
 namespace EasyForNet.EntityFramework.Setting;
 
-public class SettingStore<TDbContext, TEntity> : ISettingStore<TEntity>
-    where TDbContext : DbContextBase
+public class EfSettingStore<TEntity> : ISettingStore<TEntity>
     where TEntity : EfnSettingEntity
 {
-    private readonly TDbContext _dbContext;
+    private readonly DbContextBase _dbContext;
     private readonly IKeyManager _keyManager;
 
     protected DbSet<TEntity> DbSet { get; }
 
-    public SettingStore(TDbContext dbContext, IKeyManager keyManager)
+    public EfSettingStore(DbContextBase dbContext, IKeyManager keyManager)
     {
         DbSet = dbContext.Set<TEntity>();
         _dbContext = dbContext;

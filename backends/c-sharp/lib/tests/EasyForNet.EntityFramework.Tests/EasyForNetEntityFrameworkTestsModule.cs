@@ -1,10 +1,9 @@
 ﻿using Autofac;
 using EasyForNet.Entities;
+using EasyForNet.EntityFramework.Data.Context;
 using EasyForNet.EntityFramework.Setting;
 using EasyForNet.EntityFramework.Tests.Data;
-using EasyForNet.EntityFramework.Tests.Repository;
 using EasyForNet.Modules;
-using EasyForNet.Repository;
 using EasyForNet.Setting;
 using EasyForNet.Tests.Share;
 using Microsoft.EntityFrameworkCore;
@@ -30,18 +29,9 @@ public class EasyForNetEntityFrameworkTestsModule : ModuleBase
             var currentUser = sp.Resolve<ICurrentUser>();
             var db = new EasyForNetEntityFrameworkTestsDb(options, currentUser);
             return db;
-        }).InstancePerLifetimeScope();
-
-        builder.RegisterType<SettingStore<EasyForNetEntityFrameworkTestsDb, EfnSettingEntity>>()
-            .As<ISettingStore<EfnSettingEntity>>()
-            .InstancePerDependency();
-
-        builder.RegisterGeneric(typeof(EasyForNetRepository<,>))
-            .As(typeof(IRepository<,>))
-            .InstancePerDependency();
-
-        builder.RegisterGeneric(typeof(EasyForNetRepository<>))
-            .As(typeof(IRepository<>))
-            .InstancePerDependency();
+        })
+            .AsSelf()
+            .As<DbContextBase>()
+            .InstancePerLifetimeScope();
     }
 }

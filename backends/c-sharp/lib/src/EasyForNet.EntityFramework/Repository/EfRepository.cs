@@ -12,15 +12,11 @@ using System;
 
 namespace EasyForNet.EntityFramework.Repository;
 
-public class EfRepository<TDbContext, TEntity, TKey> : EfRepository<TDbContext, TEntity>, IRepository<TEntity, TKey>
-    where TDbContext : DbContextBase
+public class EfRepository<TEntity, TKey> : EfRepository<TEntity>, IRepository<TEntity, TKey>
     where TEntity : class, IEntity<TKey>
 {
-    private readonly TDbContext _dbContext;
-
-    protected EfRepository(TDbContext dbContext) : base(dbContext)
+    public EfRepository(DbContextBase dbContext) : base(dbContext)
     {
-        _dbContext = dbContext;
     }
 
     public TEntity Find(TKey id, bool isTracking = false)
@@ -110,13 +106,12 @@ public class EfRepository<TDbContext, TEntity, TKey> : EfRepository<TDbContext, 
     }
 }
 
-public class EfRepository<TDbContext, TEntity> : IRepository<TEntity>
-    where TDbContext : DbContextBase
+public class EfRepository<TEntity> : IRepository<TEntity>
     where TEntity : class
 {
-    private readonly TDbContext _dbContext;
+    private readonly DbContextBase _dbContext;
 
-    protected EfRepository(TDbContext dbContext)
+    public EfRepository(DbContextBase dbContext)
     {
         _dbContext = dbContext;
     }

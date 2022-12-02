@@ -36,8 +36,6 @@ public class EasyForNetEntityFrameworkTestsDb : DbContextBase
     {
         base.OnModelCreating(modelBuilder);
         
-        modelBuilder.ConfigureSetting<EfnSettingEntity>();
-
         modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
     }
 }
