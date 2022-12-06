@@ -10,10 +10,10 @@ namespace EasyForNet.Setting;
 
 public class SettingManager : ISettingManager, ITransientDependency
 {
-    private readonly ISettingStore<EfnSettingEntity> _settingStore;
+    private readonly ISettingStore<EfnSetting> _settingStore;
     private readonly ICacheManager _cacheManager;
 
-    public SettingManager(ISettingStore<EfnSettingEntity> settingStore, ICacheManager cacheManager)
+    public SettingManager(ISettingStore<EfnSetting> settingStore, ICacheManager cacheManager)
     {
         _settingStore = settingStore;
         _cacheManager = cacheManager;

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace EasyForNet.EntityFramework.Setting;
 
 public class EfSettingStore<TEntity> : ISettingStore<TEntity>
-    where TEntity : EfnSettingEntity
+    where TEntity : EfnSetting
 {
     private readonly DbContextBase _dbContext;
     private readonly IKeyManager _keyManager;
@@ -62,7 +62,7 @@ public class EfSettingStore<TEntity> : ISettingStore<TEntity>
             .SingleOrDefault();
 
         if (setting == null)
-            DbSet.Add((TEntity)new EfnSettingEntity { Key = globalKey, Value = jsonValue });
+            DbSet.Add((TEntity)new EfnSetting { Key = globalKey, Value = jsonValue });
         else
         {
             setting.Value = jsonValue;
@@ -82,7 +82,7 @@ public class EfSettingStore<TEntity> : ISettingStore<TEntity>
             .SingleOrDefaultAsync();
 
         if (setting == null)
-            DbSet.Add((TEntity)new EfnSettingEntity { Key = globalKey, Value = jsonValue });
+            DbSet.Add((TEntity)new EfnSetting { Key = globalKey, Value = jsonValue });
         else
         {
             setting.Value = jsonValue;

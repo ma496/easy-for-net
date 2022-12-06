@@ -24,8 +24,8 @@ public class EasyForNetEntityFrameworkModule : ModuleBase
             .AsSelf()
             .InstancePerDependency();
 
-        builder.RegisterType<EfSettingStore<EfnSettingEntity>>()
-            .As<ISettingStore<EfnSettingEntity>>()
+        builder.RegisterType<EfSettingStore<EfnSetting>>()
+            .As<ISettingStore<EfnSetting>>()
             .InstancePerDependency();
     }
 }

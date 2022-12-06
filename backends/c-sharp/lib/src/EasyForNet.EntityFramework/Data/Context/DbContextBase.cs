@@ -121,7 +121,7 @@ public abstract class DbContextBase : DbContext
 
     private void SettingConfiguration(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<EfnSettingEntity>()
+        modelBuilder.Entity<EfnSetting>()
             .ToTable("EfnSettings")
             .HasIndex(e => e.Key)
             .IsUnique();

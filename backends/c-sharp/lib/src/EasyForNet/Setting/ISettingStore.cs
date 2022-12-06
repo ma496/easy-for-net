@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace EasyForNet.Setting;
 
 public interface ISettingStore<TEntity>
-    where TEntity : EfnSettingEntity
+    where TEntity : EfnSetting
 {
     TValue Get<TValue>(string key);
     Task<TValue> GetAsync<TValue>(string key);

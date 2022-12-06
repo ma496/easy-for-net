@@ -15,11 +15,11 @@ namespace EasyForNet.EntityFramework.Tests.Setting;
 
 public class SettingStoreTests : TestsBase
 {
-    private readonly ISettingStore<EfnSettingEntity> _settingStore;
+    private readonly ISettingStore<EfnSetting> _settingStore;
 
     public SettingStoreTests(ITestOutputHelper outputHelper) : base(outputHelper)
     {
-        _settingStore = Scope.Resolve<ISettingStore<EfnSettingEntity>>();
+        _settingStore = Scope.Resolve<ISettingStore<EfnSetting>>();
     }
 
     [Fact]
