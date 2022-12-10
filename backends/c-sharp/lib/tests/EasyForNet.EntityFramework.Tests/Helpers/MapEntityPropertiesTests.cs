@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using AutoMapper;
-using EasyForNet.Application.Dto.Audit;
+using EasyForNet.Application.Dto.Entities.Audit;
 using EasyForNet.Domain.Entities.Audit;
 using EasyForNet.EntityFramework.Helpers;
 using EasyForNet.EntityFramework.Tests.Base;

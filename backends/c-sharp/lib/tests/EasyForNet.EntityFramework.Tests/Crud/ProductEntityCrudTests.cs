@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using EasyForNet.Application.Dependencies;
-using EasyForNet.Application.Dto.Audit;
+using EasyForNet.Application.Dto.Entities.Audit;
 using EasyForNet.EntityFramework.Crud;
 using EasyForNet.EntityFramework.Helpers;
 using EasyForNet.EntityFramework.Tests.Base;

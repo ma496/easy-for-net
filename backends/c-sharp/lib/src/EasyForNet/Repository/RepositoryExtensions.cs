@@ -2,7 +2,7 @@
 using Ardalis.GuardClauses;
 using JetBrains.Annotations;
 using System.Linq.Dynamic.Core;
-using EasyForNet.Application.Services.Crud;
+using EasyForNet.Application.Dto.Crud;
 
 namespace System.Linq;
 

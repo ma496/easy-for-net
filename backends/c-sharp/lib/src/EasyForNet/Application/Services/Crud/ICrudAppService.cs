@@ -1,11 +1,12 @@
-﻿using System.Linq;
+﻿using EasyForNet.Application.Dto.Crud;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace EasyForNet.Application.Services.Crud;
 
-public interface ICrudAppService<in TKey, in TListInput, out TListDto, in TCreateInput, in TUpdateInput, TGetDto>
+public interface ICrudAppService<in TKey, in TGetListInput, TGetListDto, in TCreateInput, in TUpdateInput, TGetDto>
 {
-    IQueryable<TListDto> List(TListInput input);
+    Task<PagedResultDto<TGetListDto>> GetListAsync(TGetListInput input);
     Task<TGetDto> CreateAsync(TCreateInput input);
     Task<TGetDto> UpdateAsync(TKey id, TUpdateInput input);
     Task<TGetDto> GetAsync(TKey id);

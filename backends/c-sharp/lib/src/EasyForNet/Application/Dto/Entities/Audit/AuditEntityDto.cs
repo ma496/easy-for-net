@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace EasyForNet.Application.Dto.Audit;
+namespace EasyForNet.Application.Dto.Entities.Audit;
 
 public abstract class AuditEntityDto<TKey> : EntityDto<TKey>, IAuditEntityDto
 {

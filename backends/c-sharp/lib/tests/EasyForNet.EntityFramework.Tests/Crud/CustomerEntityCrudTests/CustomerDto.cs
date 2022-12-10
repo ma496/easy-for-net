@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using EasyForNet.Application.Dto.Audit;
+using EasyForNet.Application.Dto.Entities.Audit;
 
 namespace EasyForNet.EntityFramework.Tests.Crud.CustomerEntityCrudTests;
 

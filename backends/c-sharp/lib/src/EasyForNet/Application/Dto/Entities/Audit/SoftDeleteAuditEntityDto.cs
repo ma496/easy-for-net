@@ -1,4 +1,4 @@
-﻿namespace EasyForNet.Application.Dto.Audit;
+﻿namespace EasyForNet.Application.Dto.Entities.Audit;
 
 public class SoftDeleteAuditEntityDto<TKey> : AuditEntityDto<TKey>, ISoftDeleteEntityDto
 {

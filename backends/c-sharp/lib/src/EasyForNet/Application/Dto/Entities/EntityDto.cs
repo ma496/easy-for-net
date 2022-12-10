@@ -1,4 +1,4 @@
-﻿namespace EasyForNet.Application.Dto;
+﻿namespace EasyForNet.Application.Dto.Entities;
 
 public abstract class EntityDto<TKey> : IEntityDto<TKey>
 {

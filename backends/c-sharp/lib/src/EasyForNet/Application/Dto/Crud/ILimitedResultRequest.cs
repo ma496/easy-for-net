@@ -1,4 +1,4 @@
-﻿namespace EasyForNet.Application.Services.Crud;
+﻿namespace EasyForNet.Application.Dto.Crud;
 
 public interface ILimitedResultRequest
 {

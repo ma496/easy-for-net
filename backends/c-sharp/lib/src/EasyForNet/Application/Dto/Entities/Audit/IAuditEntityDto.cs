@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace EasyForNet.Application.Dto.Audit;
+namespace EasyForNet.Application.Dto.Entities.Audit;
 
 public interface IAuditEntityDto
 {

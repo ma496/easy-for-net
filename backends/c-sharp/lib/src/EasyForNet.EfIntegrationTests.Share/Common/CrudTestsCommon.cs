@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Ardalis.GuardClauses;
 using Autofac;
-using EasyForNet.Application.Dto;
+using EasyForNet.Application.Dto.Entities;
 using EasyForNet.Domain.Entities;
 using EasyForNet.EntityFramework.Crud;
 using EasyForNet.Exceptions.UserFriendly;

@@ -1,4 +1,4 @@
-﻿namespace EasyForNet.Application.Dto;
+﻿namespace EasyForNet.Application.Dto.Entities;
 
 public interface IEntityDto<TKey>
 {

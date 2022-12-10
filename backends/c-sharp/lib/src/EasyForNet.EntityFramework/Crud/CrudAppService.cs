@@ -10,11 +10,12 @@ using EasyForNet.Application.Services.Crud;
 using System.Linq.Dynamic.Core;
 using Autofac;
 using EasyForNet.Domain.Entities.Audit;
+using EasyForNet.Application.Dto.Crud;
 
 namespace EasyForNet.EntityFramework.Crud;
 
-public abstract class CrudAppService<TEntity, TKey, TListInput, TListDto, TCreateDto, TUpdateDto, TGetDto>
-        : AppService, ICrudAppService<TKey, TListInput, TListDto, TCreateDto, TUpdateDto, TGetDto>
+public abstract class CrudAppService<TEntity, TKey, TGetListInput, TGetListDto, TCreateDto, TUpdateDto, TGetDto>
+        : AppService, ICrudAppService<TKey, TGetListInput, TGetListDto, TCreateDto, TUpdateDto, TGetDto>
         where TEntity : class, IEntity<TKey>, new()
 {
     private readonly IRepository<TEntity, TKey> _repository;
@@ -24,13 +25,15 @@ public abstract class CrudAppService<TEntity, TKey, TListInput, TListDto, TCreat
         _repository = repository;
     }
 
-    public IQueryable<TListDto> List(TListInput input)
+    public async Task<PagedResultDto<TGetListDto>> GetListAsync(TGetListInput input)
     {
-        var query = ListQuery(input) ?? DefaultQuery();
+        var query = await ListQueryAsync(input) ?? await DefaultQueryAsync();
         query = ApplyFilter(query, input);
+        var totalCount = query.Count();
         query = ApplySorting(query, input);
         query = ApplyPaging(query, input);
-        return query.ProjectTo<TListDto>(Mapper.ConfigurationProvider);
+        var items = await query.ProjectTo<TGetListDto>(Mapper.ConfigurationProvider).ToListAsync();
+        return new PagedResultDto<TGetListDto>(items, totalCount);
     }
 
     public async Task<TGetDto> CreateAsync(TCreateDto input)
@@ -52,7 +55,7 @@ public abstract class CrudAppService<TEntity, TKey, TListInput, TListDto, TCreat
 
     public async Task<TGetDto> GetAsync(TKey id)
     {
-        var query = GetQuery(id) ?? DefaultQuery();
+        var query = await GetQueryAsync(id) ?? await DefaultQueryAsync();
         return await query
             .Where(e => e.Id.Equals(id))
             .ProjectTo<TGetDto>(Mapper.ConfigurationProvider)
@@ -71,27 +74,27 @@ public abstract class CrudAppService<TEntity, TKey, TListInput, TListDto, TCreat
 
     #region Helpers
 
-    protected virtual IQueryable<TEntity> DefaultQuery()
+    protected virtual Task<IQueryable<TEntity>> DefaultQueryAsync()
     {
-        return _repository.GetAll();
+        return Task.FromResult(_repository.GetAll());
     }
 
-    protected virtual IQueryable<TEntity> ListQuery(TListInput input)
-    {
-        return null;
-    }
-
-    protected virtual IQueryable<TEntity> GetQuery(TKey id)
+    protected virtual Task<IQueryable<TEntity>> ListQueryAsync(TGetListInput input)
     {
         return null;
     }
 
-    protected virtual IQueryable<TEntity> ApplyFilter(IQueryable<TEntity> query, TListInput input)
+    protected virtual Task<IQueryable<TEntity>> GetQueryAsync(TKey id)
+    {
+        return null;
+    }
+
+    protected virtual IQueryable<TEntity> ApplyFilter(IQueryable<TEntity> query, TGetListInput input)
     {
         return query;
     }
 
-    protected virtual IQueryable<TEntity> ApplySorting(IQueryable<TEntity> query, TListInput input)
+    protected virtual IQueryable<TEntity> ApplySorting(IQueryable<TEntity> query, TGetListInput input)
     {
         if (input is ISortedResultRequest sortInput)
         {
@@ -109,7 +112,7 @@ public abstract class CrudAppService<TEntity, TKey, TListInput, TListDto, TCreat
         return query;
     }
 
-    protected virtual IQueryable<TEntity> ApplyPaging(IQueryable<TEntity> query, TListInput input)
+    protected virtual IQueryable<TEntity> ApplyPaging(IQueryable<TEntity> query, TGetListInput input)
     {
         if (input is IPagedResultRequest pagedInput)
         {

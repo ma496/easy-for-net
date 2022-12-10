@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Autofac;
 using AutoMapper;
-using EasyForNet.Application.Dto;
+using EasyForNet.Application.Dto.Entities;
 using EasyForNet.EntityFramework.Helpers;
 using EasyForNet.EntityFramework.Tests.Base;
 using EasyForNet.EntityFramework.Tests.Data;

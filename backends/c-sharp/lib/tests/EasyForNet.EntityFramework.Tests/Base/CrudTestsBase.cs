@@ -1,5 +1,5 @@
 ﻿using System;
-using EasyForNet.Application.Dto;
+using EasyForNet.Application.Dto.Entities;
 using EasyForNet.Domain.Entities;
 using EasyForNet.EfIntegrationTests.Share.Common;
 using EasyForNet.EntityFramework.Crud;

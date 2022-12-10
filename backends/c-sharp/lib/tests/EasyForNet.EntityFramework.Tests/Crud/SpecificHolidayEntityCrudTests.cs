@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using EasyForNet.Application.Dependencies;
-using EasyForNet.Application.Dto;
+using EasyForNet.Application.Dto.Entities;
 using EasyForNet.EntityFramework.Crud;
 using EasyForNet.EntityFramework.Helpers;
 using EasyForNet.EntityFramework.Tests.Base;

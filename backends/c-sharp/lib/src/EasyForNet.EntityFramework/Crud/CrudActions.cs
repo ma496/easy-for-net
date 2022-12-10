@@ -5,7 +5,7 @@ using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using EasyForNet.Application.Dto;
+using EasyForNet.Application.Dto.Entities;
 using EasyForNet.Application.Helpers;
 using EasyForNet.Domain.Entities;
 using EasyForNet.EntityFramework.Data.Context;

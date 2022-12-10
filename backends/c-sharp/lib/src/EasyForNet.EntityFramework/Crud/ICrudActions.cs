@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using EasyForNet.Application.Dto;
+using EasyForNet.Application.Dto.Entities;
 
 namespace EasyForNet.EntityFramework.Crud;
 
