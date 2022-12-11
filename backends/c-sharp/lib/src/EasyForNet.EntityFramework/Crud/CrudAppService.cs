@@ -27,7 +27,7 @@ public abstract class CrudAppService<TEntity, TKey, TGetListInput, TGetListDto, 
 
     public async Task<PagedResultDto<TGetListDto>> GetListAsync(TGetListInput input)
     {
-        var query = await ListQueryAsync(input) ?? await DefaultQueryAsync();
+        var query = await (ListQueryAsync(input) ?? DefaultQueryAsync());
         query = ApplyFilter(query, input);
         var totalCount = query.Count();
         query = ApplySorting(query, input);
@@ -55,7 +55,7 @@ public abstract class CrudAppService<TEntity, TKey, TGetListInput, TGetListDto, 
 
     public async Task<TGetDto> GetAsync(TKey id)
     {
-        var query = await GetQueryAsync(id) ?? await DefaultQueryAsync();
+        var query = await (GetQueryAsync(id) ?? DefaultQueryAsync());
         return await query
             .Where(e => e.Id.Equals(id))
             .ProjectTo<TGetDto>(Mapper.ConfigurationProvider)
@@ -64,12 +64,12 @@ public abstract class CrudAppService<TEntity, TKey, TGetListInput, TGetListDto, 
 
     public async Task DeleteAsync(TKey id)
     {
-        await _repository.DeleteAsync(id);
+        await _repository.DeleteAsync(id, true);
     }
 
     public async Task UndoDeleteAsync(TKey id)
     {
-        await _repository.UndoDeleteAsync(id);
+        await _repository.UndoDeleteAsync(id, true);
     }
 
     #region Helpers

@@ -1,5 +1,4 @@
 ﻿using EasyForNet.Application.Dto.Crud;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace EasyForNet.Application.Services.Crud;

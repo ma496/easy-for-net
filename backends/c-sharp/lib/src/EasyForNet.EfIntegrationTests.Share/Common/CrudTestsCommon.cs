@@ -299,7 +299,7 @@ public abstract class
 
         var createdDto = await crudActions.GetAsync(responseDto.Id);
 
-        responseDto.Should().BeEquivalentTo(createdDto, opt => opt.BeCloseToDateTime(TimeSpan.FromSeconds(1)));
+        responseDto.Should().BeEquivalentTo(createdDto, opt => opt.BeCloseTo(TimeSpan.FromSeconds(1)));
 
         await crudActions.DeleteAsync(responseDto.Id);
 
@@ -318,7 +318,7 @@ public abstract class
         var undoDto = await crudActions.GetAsync(responseDto.Id);
 
         Assert.NotNull(undoDto);
-        createdDto.Should().BeEquivalentTo(undoDto, opt => opt.BeCloseToDateTime(TimeSpan.FromSeconds(1)));
+        createdDto.Should().BeEquivalentTo(undoDto, opt => opt.BeCloseTo(TimeSpan.FromSeconds(1)));
 
         afterUndoDelete?.Invoke(responseDto.Id);
     }
