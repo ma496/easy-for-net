@@ -14,9 +14,36 @@ using EasyForNet.Application.Dto.Crud;
 
 namespace EasyForNet.EntityFramework.Crud;
 
+public abstract class CrudAppService<TEntity, TKey, TGetListInput, TDto>
+    : CrudAppService<TEntity, TKey, TGetListInput, TDto, TDto, TDto, TDto>
+    where TEntity : class, IEntity<TKey>
+{
+    protected CrudAppService(IRepository<TEntity, TKey> repository) : base(repository)
+    {
+    }
+}
+
+public abstract class CrudAppService<TEntity, TKey, TGetListInput, TDto, TCreateOrUpdateDto>
+    : CrudAppService<TEntity, TKey, TGetListInput, TDto, TCreateOrUpdateDto, TCreateOrUpdateDto, TDto>
+    where TEntity : class, IEntity<TKey>
+{
+    protected CrudAppService(IRepository<TEntity, TKey> repository) : base(repository)
+    {
+    }
+}
+
+public abstract class CrudAppService<TEntity, TKey, TGetListInput, TDto, TCreateDto, TUpdateDto>
+    : CrudAppService<TEntity, TKey, TGetListInput, TDto, TCreateDto, TUpdateDto, TDto>
+    where TEntity : class, IEntity<TKey>
+{
+    protected CrudAppService(IRepository<TEntity, TKey> repository) : base(repository)
+    {
+    }
+}
+
 public abstract class CrudAppService<TEntity, TKey, TGetListInput, TGetListDto, TCreateDto, TUpdateDto, TGetDto>
         : AppService, ICrudAppService<TKey, TGetListInput, TGetListDto, TCreateDto, TUpdateDto, TGetDto>
-        where TEntity : class, IEntity<TKey>, new()
+        where TEntity : class, IEntity<TKey>
 {
     private readonly IRepository<TEntity, TKey> _repository;
 

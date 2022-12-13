@@ -168,7 +168,7 @@ public class CrudAppServiceTests : TestsBase
     }
 
     public class CustomerAppService : CrudAppService<CustomerEntity, long, PagedAndSortedResultRequest,
-        CustomerDto, CustomerDto, CustomerDto, CustomerDto>
+        CustomerDto>
     {
         public CustomerAppService(IRepository<CustomerEntity, long> repository) : base(repository)
         {
