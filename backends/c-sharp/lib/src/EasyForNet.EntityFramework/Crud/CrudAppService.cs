@@ -159,9 +159,9 @@ public abstract class CrudAppService<TEntity, TKey, TGetListInput, TGetListDto, 
 
     protected virtual IQueryable<TEntity> ApplyDefaultSorting(IQueryable<TEntity> query)
     {
-        if (typeof(TEntity).IsAssignableTo<IAuditEntity>())
+        if (typeof(TEntity).IsAssignableTo<ICreateAuditEntity>())
         {
-            return query.OrderByDescending(e => ((IAuditEntity)e).CreatedAt);
+            return query.OrderByDescending(e => ((ICreateAuditEntity)e).CreatedAt);
         }
 
         throw new Exception("No sorting specified but this query requires sorting. Override the ApplyDefaultSorting method for your application service derived from CrudAppService!");

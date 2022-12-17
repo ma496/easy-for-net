@@ -1,14 +1,5 @@
-﻿using System;
+﻿namespace EasyForNet.Application.Dto.Entities.Audit;
 
-namespace EasyForNet.Application.Dto.Entities.Audit;
-
-public interface IAuditEntityDto
+public interface IAuditEntityDto : ICreateAuditEntityDto, IUpdateAuditEntityDto
 {
-    DateTime CreatedAt { get; set; }
-
-    string CreatedBy { get; set; }
-
-    DateTime UpdatedAt { get; set; }
-
-    string UpdatedBy { get; set; }
 }

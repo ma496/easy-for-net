@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using AutoMapper;
 using EasyForNet.Application.Dto.Crud;
+using EasyForNet.Application.Dto.Entities;
 using EasyForNet.Application.Dto.Entities.Audit;
 using EasyForNet.EntityFramework.Crud;
 using EasyForNet.EntityFramework.Tests.Base;
@@ -77,7 +78,7 @@ public class CrudAppServiceTests : TestsBase
         customerAppService = NewScopeService<CustomerAppService>();
         returnCustomer.Name = $"Name_{IncrementalId.Id}";
         returnCustomer.Code = IncrementalId.Id;
-        await customerAppService.UpdateAsync(returnCustomer.Id, returnCustomer);
+        returnCustomer = await customerAppService.UpdateAsync(returnCustomer.Id, returnCustomer);
 
         var savedCustomer = await customerAppService.GetAsync(returnCustomer.Id);
 
@@ -199,8 +200,10 @@ public class CrudAppServiceTests : TestsBase
     #region Classes
 
     [AutoMap(typeof(CustomerEntity), ReverseMap = true)]
-    public class CustomerDto : SoftDeleteAuditEntityDto<long>
+    public class CustomerDto : AuditEntityDto<long>, ISoftDeleteEntityDto
     {
+        public bool IsDeleted { get; set; }
+
         public long Code { get; set; }
 
         [Required] public string Name { get; set; }

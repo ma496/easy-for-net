@@ -95,26 +95,48 @@ public abstract class DbContextBase : DbContext
         var entries = ChangeTracker.Entries();
         foreach (var entry in entries)
         {
-            if (entry.Entity is IAuditEntity auditable)
+            //if (entry.Entity is IAuditEntity auditable)
+            //{
+            //    var now = DateTime.UtcNow;
+            //    var user = _currentUser?.Username;
+            //    switch (entry.State)
+            //    {
+            //        case EntityState.Added:
+            //            auditable.CreatedAt = now;
+            //            auditable.CreatedBy = user;
+            //            auditable.UpdatedAt = now;
+            //            auditable.UpdatedBy = user;
+            //            break;
+
+            //        case EntityState.Modified:
+            //            entry.Property(nameof(auditable.CreatedAt)).IsModified = false;
+            //            entry.Property(nameof(auditable.CreatedBy)).IsModified = false;
+            //            auditable.UpdatedAt = now;
+            //            auditable.UpdatedBy = user;
+            //            break;
+            //    }
+            //}
+
+            if (entry.State == EntityState.Added && entry.Entity is ICreateAuditEntity createAuditable)
             {
                 var now = DateTime.UtcNow;
                 var user = _currentUser?.Username;
-                switch (entry.State)
-                {
-                    case EntityState.Added:
-                        auditable.CreatedAt = now;
-                        auditable.CreatedBy = user;
-                        auditable.UpdatedAt = now;
-                        auditable.UpdatedBy = user;
-                        break;
 
-                    case EntityState.Modified:
-                        entry.Property(nameof(auditable.CreatedAt)).IsModified = false;
-                        entry.Property(nameof(auditable.CreatedBy)).IsModified = false;
-                        auditable.UpdatedAt = now;
-                        auditable.UpdatedBy = user;
-                        break;
+                createAuditable.CreatedAt = now;
+                createAuditable.CreatedBy = user;
+            }
+            else if (entry.State == EntityState.Modified && entry.Entity is IUpdateAuditEntity updateAuditable)
+            {
+                var now = DateTime.UtcNow;
+                var user = _currentUser?.Username;
+
+                if (entry.Entity is ICreateAuditEntity)
+                {
+                    entry.Property(nameof(ICreateAuditEntity.CreatedAt)).IsModified = false;
+                    entry.Property(nameof(ICreateAuditEntity.CreatedBy)).IsModified = false;
                 }
+                updateAuditable.UpdatedAt = now;
+                updateAuditable.UpdatedBy = user;
             }
         }
     }

@@ -32,9 +32,7 @@ public class AuditEntityTests : TestsBase
         var user = Scope.Resolve<ICurrentUser>();
 
         Assert.Equal(user.Username, savedCustomer.CreatedBy);
-        Assert.Equal(user.Username, savedCustomer.UpdatedBy);
 
         savedCustomer.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(3));
-        savedCustomer.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(3));
     }
 }
