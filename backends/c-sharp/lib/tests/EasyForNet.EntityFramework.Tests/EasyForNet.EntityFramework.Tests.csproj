@@ -23,7 +23,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\EasyForNet.EntityFramework\EasyForNet.EntityFramework.csproj" />
-        <ProjectReference Include="..\..\src\EasyForNet.EfIntegrationTests.Share\EasyForNet.EfIntegrationTests.Share.csproj" />
         <ProjectReference Include="..\..\src\EasyForNet.Tests.Share\EasyForNet.Tests.Share.csproj" />
         <ProjectReference Include="..\..\src\EasyForNet\EasyForNet.csproj" />
     </ItemGroup>
