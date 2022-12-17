@@ -11,6 +11,9 @@ using System.Linq.Dynamic.Core;
 using Autofac;
 using EasyForNet.Domain.Entities.Audit;
 using EasyForNet.Application.Dto.Crud;
+using System.Linq.Expressions;
+using EasyForNet.Exceptions.UserFriendly;
+using Ardalis.GuardClauses;
 
 namespace EasyForNet.EntityFramework.Crud;
 
@@ -45,14 +48,14 @@ public abstract class CrudAppService<TEntity, TKey, TGetListInput, TGetListDto, 
         : AppService, ICrudAppService<TKey, TGetListInput, TGetListDto, TCreateDto, TUpdateDto, TGetDto>
         where TEntity : class, IEntity<TKey>
 {
-    private readonly IRepository<TEntity, TKey> _repository;
+    protected IRepository<TEntity, TKey> Repository { get; }
 
     protected CrudAppService(IRepository<TEntity, TKey> repository)
     {
-        _repository = repository;
+        Repository = repository;
     }
 
-    public async Task<PagedResultDto<TGetListDto>> GetListAsync(TGetListInput input)
+    public virtual async Task<PagedResultDto<TGetListDto>> GetListAsync(TGetListInput input)
     {
         var query = await (ListQueryAsync(input) ?? DefaultQueryAsync());
         query = ApplyFilter(query, input);
@@ -63,24 +66,24 @@ public abstract class CrudAppService<TEntity, TKey, TGetListInput, TGetListDto, 
         return new PagedResultDto<TGetListDto>(items, totalCount);
     }
 
-    public async Task<TGetDto> CreateAsync(TCreateDto input)
+    public virtual async Task<TGetDto> CreateAsync(TCreateDto input)
     {
         var entity = Mapper.Map<TEntity>(input);
-        await _repository.CreateAsync(entity, true);
+        await Repository.CreateAsync(entity, true);
         var dto = Mapper.Map<TGetDto>(entity);
         return dto;
     }
 
-    public async Task<TGetDto> UpdateAsync(TKey id, TUpdateDto input)
+    public virtual async Task<TGetDto> UpdateAsync(TKey id, TUpdateDto input)
     {
-        var entity = await _repository.GetByIdAsync(id);
+        var entity = await Repository.GetByIdAsync(id);
         Mapper.Map(input, entity);
-        await _repository.UpdateAsync(entity, true);
+        await Repository.UpdateAsync(entity, true);
         var dto = Mapper.Map<TGetDto>(entity);
         return dto;
     }
 
-    public async Task<TGetDto> GetAsync(TKey id)
+    public virtual async Task<TGetDto> GetAsync(TKey id)
     {
         var query = await (GetQueryAsync(id) ?? DefaultQueryAsync());
         return await query
@@ -89,21 +92,21 @@ public abstract class CrudAppService<TEntity, TKey, TGetListInput, TGetListDto, 
             .SingleOrDefaultAsync();
     }
 
-    public async Task DeleteAsync(TKey id)
+    public virtual async Task DeleteAsync(TKey id)
     {
-        await _repository.DeleteAsync(id, true);
+        await Repository.DeleteAsync(id, true);
     }
 
-    public async Task UndoDeleteAsync(TKey id)
+    public virtual async Task UndoDeleteAsync(TKey id)
     {
-        await _repository.UndoDeleteAsync(id, true);
+        await Repository.UndoDeleteAsync(id, true);
     }
 
     #region Helpers
 
     protected virtual Task<IQueryable<TEntity>> DefaultQueryAsync()
     {
-        return Task.FromResult(_repository.GetAll());
+        return Task.FromResult(Repository.GetAll());
     }
 
     protected virtual Task<IQueryable<TEntity>> ListQueryAsync(TGetListInput input)
@@ -162,6 +165,29 @@ public abstract class CrudAppService<TEntity, TKey, TGetListInput, TGetListDto, 
         }
 
         throw new Exception("No sorting specified but this query requires sorting. Override the ApplyDefaultSorting method for your application service derived from CrudAppService!");
+    }
+
+    protected virtual async Task AnyAsync(Expression<Func<TEntity, bool>> predicate, string propertyName,
+        TKey id = default, string errorMessage = null, bool isUserFriendlyException = true)
+    {
+        Guard.Against.Null(predicate, nameof(predicate));
+        Guard.Against.NullOrWhiteSpace(propertyName, nameof(propertyName));
+
+        var query = Repository.GetAll().Where(predicate);
+        if (!id.Equals(default(TKey)))
+        {
+            query = query.Where(e => !e.Id.Equals(id));
+        }
+        var isAny = await query.AnyAsync();
+        if (isAny)
+        {
+            if (isUserFriendlyException)
+                throw new DuplicateException(propertyName, errorMessage);
+            else
+                throw new Exception(errorMessage.IsNullOrWhiteSpace() 
+                    ? $"Value of {propertyName} already exist"
+                    : errorMessage);
+        }
     }
 
     #endregion
