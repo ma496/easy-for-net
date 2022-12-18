@@ -21,8 +21,6 @@ public static class AppInitializer
         where TModule : ModuleBase
     {
         var builder = new ContainerBuilder();
-        if (services != null)
-            builder.Populate(services);
            
         var moduleName = typeof(TModule).FullName;
 
@@ -35,6 +33,7 @@ public static class AppInitializer
             {
                 DependencyThroughInterfaces(moduleInfo.Module, builder);
                 moduleInfo.Module.Dependencies(builder, configuration);
+                moduleInfo.Module.Dependencies(services, configuration);
 
                 mapperConfigurationExpression.AddMaps(moduleInfo.Module.GetType().Assembly);
                 moduleInfo.Module.Mapping(mapperConfigurationExpression, configuration);
@@ -52,7 +51,10 @@ public static class AppInitializer
         {
             throw new Exception($"{moduleName} module already initialized");
         }
-            
+
+        if (services != null)
+            builder.Populate(services);
+
         return builder.Build();
     }
 
