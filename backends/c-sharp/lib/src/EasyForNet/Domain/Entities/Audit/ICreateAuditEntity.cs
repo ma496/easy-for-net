@@ -1,11 +1,10 @@
 ﻿using System;
 
-namespace EasyForNet.Domain.Entities.Audit
-{
-    public interface ICreateAuditEntity
-    {
-        DateTime CreatedAt { get; set; }
+namespace EasyForNet.Domain.Entities.Audit;
 
-        string CreatedBy { get; set; }
-    }
+public interface ICreateAuditEntity
+{
+    DateTime CreatedAt { get; set; }
+
+    string CreatedBy { get; set; }
 }
