@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace EasyForNet.EntityFramework.Tests.Data;
 
 [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
-public class EasyForNetEntityFrameworkTestsDb : DbContextBase
+public class EasyForNetEntityFrameworkTestsDb : EfnDbContext
 {
     public EasyForNetEntityFrameworkTestsDb(DbContextOptions dbContextOptions, ICurrentUser currentUser) : base(
         dbContextOptions, currentUser)

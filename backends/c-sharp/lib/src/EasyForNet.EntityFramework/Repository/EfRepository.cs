@@ -15,7 +15,7 @@ namespace EasyForNet.EntityFramework.Repository;
 public class EfRepository<TEntity, TKey> : EfRepository<TEntity>, IRepository<TEntity, TKey>
     where TEntity : class, IEntity<TKey>
 {
-    public EfRepository(DbContextBase dbContext) : base(dbContext)
+    public EfRepository(EfnDbContext dbContext) : base(dbContext)
     {
     }
 
@@ -109,9 +109,9 @@ public class EfRepository<TEntity, TKey> : EfRepository<TEntity>, IRepository<TE
 public class EfRepository<TEntity> : IRepository<TEntity>
     where TEntity : class
 {
-    private readonly DbContextBase _dbContext;
+    private readonly EfnDbContext _dbContext;
 
-    public EfRepository(DbContextBase dbContext)
+    public EfRepository(EfnDbContext dbContext)
     {
         _dbContext = dbContext;
     }

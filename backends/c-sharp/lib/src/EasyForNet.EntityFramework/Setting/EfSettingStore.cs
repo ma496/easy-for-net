@@ -13,12 +13,12 @@ namespace EasyForNet.EntityFramework.Setting;
 public class EfSettingStore<TEntity> : ISettingStore<TEntity>
     where TEntity : EfnSetting
 {
-    private readonly DbContextBase _dbContext;
+    private readonly EfnDbContext _dbContext;
     private readonly IKeyManager _keyManager;
 
     protected DbSet<TEntity> DbSet { get; }
 
-    public EfSettingStore(DbContextBase dbContext, IKeyManager keyManager)
+    public EfSettingStore(EfnDbContext dbContext, IKeyManager keyManager)
     {
         DbSet = dbContext.Set<TEntity>();
         _dbContext = dbContext;

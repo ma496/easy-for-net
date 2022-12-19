@@ -31,7 +31,7 @@ public class EasyForNetEntityFrameworkTestsModule : ModuleBase
             return db;
         })
             .AsSelf()
-            .As<DbContextBase>()
+            .As<EfnDbContext>()
             .InstancePerLifetimeScope();
     }
 }

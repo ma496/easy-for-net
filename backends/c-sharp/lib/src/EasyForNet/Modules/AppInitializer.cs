@@ -21,7 +21,7 @@ public static class AppInitializer
         where TModule : ModuleBase
     {
         var builder = new ContainerBuilder();
-           
+
         var moduleName = typeof(TModule).FullName;
 
         var mapperConfigurationExpression = new MapperConfigurationExpression();
@@ -33,7 +33,6 @@ public static class AppInitializer
             {
                 DependencyThroughInterfaces(moduleInfo.Module, builder);
                 moduleInfo.Module.Dependencies(builder, configuration);
-                moduleInfo.Module.Dependencies(services, configuration);
 
                 mapperConfigurationExpression.AddMaps(moduleInfo.Module.GetType().Assembly);
                 moduleInfo.Module.Mapping(mapperConfigurationExpression, configuration);
