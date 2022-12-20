@@ -1,6 +1,6 @@
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using CSharpTemplate.Api;
-using CSharpTemplate.App.Extensions;
-using EasyForNet;
 using EasyForNet.Modules;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -8,14 +8,16 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+builder.Host.ConfigureContainer<ContainerBuilder>(cb =>
+{
+    AppInitializer.Init<CSharpTemplateApiModule>(cb, builder.Services, builder.Configuration);
+});
+
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-builder.Services.AddDbContextAndIdentity(builder.Configuration);
-
-builder.Services.AddTransient<ICurrentUser, CurrentUser>();
 
 builder.Services.AddAuthentication(auth =>
 {
@@ -30,13 +32,11 @@ builder.Services.AddAuthentication(auth =>
         ValidAudience = builder.Configuration["AuthSettings:Audience"],
         ValidIssuer = builder.Configuration["AuthSettings:Issuer"],
         RequireExpirationTime = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["AuthSettings:Key"])),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["AuthSettings:Key"] ?? string.Empty)),
         ValidateIssuerSigningKey = true
     };
 });
 builder.Services.AddAuthorization();
-
-AppInitializer.Init<CSharpTemplateApiModule>(builder.Services, builder.Configuration);
 
 var app = builder.Build();
 

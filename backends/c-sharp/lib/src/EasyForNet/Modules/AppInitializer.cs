@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using Ardalis.GuardClauses;
 using Autofac;
-using Autofac.Extensions.DependencyInjection;
 using AutoMapper;
 using EasyForNet.Application.Dependencies;
 using EasyForNet.Extensions;
@@ -17,10 +16,12 @@ public static class AppInitializer
 {
     private static readonly List<string> InitModules = new();
 
-    public static IContainer Init<TModule>(IServiceCollection services, IConfiguration configuration = null, bool isValidateMapper = true)
+    public static void Init<TModule>(ContainerBuilder builder, IServiceCollection services,
+        IConfiguration configuration = null, bool isValidateMapper = true)
         where TModule : ModuleBase
     {
-        var builder = new ContainerBuilder();
+        Guard.Against.Null(builder, nameof(builder));
+        Guard.Against.Null(services, nameof(services));
 
         var moduleName = typeof(TModule).FullName;
 
@@ -33,6 +34,7 @@ public static class AppInitializer
             {
                 DependencyThroughInterfaces(moduleInfo.Module, builder);
                 moduleInfo.Module.Dependencies(builder, configuration);
+                moduleInfo.Module.Dependencies(services, configuration);
 
                 mapperConfigurationExpression.AddMaps(moduleInfo.Module.GetType().Assembly);
                 moduleInfo.Module.Mapping(mapperConfigurationExpression, configuration);
@@ -50,11 +52,6 @@ public static class AppInitializer
         {
             throw new Exception($"{moduleName} module already initialized");
         }
-
-        if (services != null)
-            builder.Populate(services);
-
-        return builder.Build();
     }
 
     private static void CheckModuleType(Type type)

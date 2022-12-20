@@ -1,4 +1,6 @@
 ﻿using System.IO;
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using EasyForNet.Modules;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +21,10 @@ public abstract class TestsFixtureCommon<TModule>
         var configuration = builder.Build();
 
         AddServices(services);
-        GlobalObjects.Container = AppInitializer.Init<TModule>(services, configuration);
+        var cb = new ContainerBuilder();
+        AppInitializer.Init<TModule>(cb, services, configuration);
+        cb.Populate(services);
+        GlobalObjects.Container = cb.Build();
     }
 
     protected virtual void AddServices(IServiceCollection services) { }

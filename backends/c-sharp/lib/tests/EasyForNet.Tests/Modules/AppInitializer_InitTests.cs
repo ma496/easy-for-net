@@ -1,6 +1,8 @@
 ﻿using System;
+using Autofac;
 using EasyForNet.Modules;
 using EasyForNet.Tests.Base;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -18,8 +20,8 @@ public class AppInitializer_InitTests : TestsBase
     {
         var exception = Assert.Throws<Exception>(() =>
         {
-            AppInitializer.Init<TempModule>(null);
-            AppInitializer.Init<TempModule>(null);
+            AppInitializer.Init<TempModule>(new ContainerBuilder(), new ServiceCollection());
+            AppInitializer.Init<TempModule>(new ContainerBuilder(), new ServiceCollection());
         });
 
         Assert.Equal($"{typeof(TempModule).FullName} module already initialized",
