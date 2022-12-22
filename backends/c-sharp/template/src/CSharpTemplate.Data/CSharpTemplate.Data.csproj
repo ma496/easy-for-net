@@ -11,8 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\lib\src\EasyForNet.EntityFramework\EasyForNet.EntityFramework.csproj" />
-    <ProjectReference Include="..\..\lib\src\EasyForNet\EasyForNet.csproj" />
+    <ProjectReference Include="..\..\..\lib\src\EasyForNet.EntityFramework\EasyForNet.EntityFramework.csproj" />
+    <ProjectReference Include="..\..\..\lib\src\EasyForNet\EasyForNet.csproj" />
   </ItemGroup>
 
 </Project>

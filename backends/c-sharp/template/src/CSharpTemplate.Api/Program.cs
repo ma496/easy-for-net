@@ -38,7 +38,7 @@ builder.Services.AddAuthorization();
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 builder.Host.ConfigureContainer<ContainerBuilder>(cb =>
 {
-    AppInitializer.Init<CSharpTemplateApiModule>(cb, builder.Services, builder.Configuration);
+    AppInitializer.Init<CSharpTemplateApiModule>(cb, builder.Configuration);
 });
 
 var app = builder.Build();

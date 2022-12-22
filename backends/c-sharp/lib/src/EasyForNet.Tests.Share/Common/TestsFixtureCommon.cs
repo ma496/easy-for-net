@@ -22,7 +22,7 @@ public abstract class TestsFixtureCommon<TModule>
 
         AddServices(services);
         var cb = new ContainerBuilder();
-        AppInitializer.Init<TModule>(cb, services, configuration);
+        AppInitializer.Init<TModule>(cb, configuration);
         cb.Populate(services);
         GlobalObjects.Container = cb.Build();
     }

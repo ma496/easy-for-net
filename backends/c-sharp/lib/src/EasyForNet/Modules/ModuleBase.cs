@@ -1,17 +1,12 @@
 ﻿using Autofac;
 using AutoMapper;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace EasyForNet.Modules;
 
 public abstract class ModuleBase
 {
     public virtual void Dependencies(ContainerBuilder builder, IConfiguration configuration)
-    {
-    }
-
-    public virtual void Dependencies(IServiceCollection services, IConfiguration configuration)
     {
     }
 
