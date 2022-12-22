@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Ardalis.GuardClauses;
 using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using AutoMapper;
 using EasyForNet.Application.Dependencies;
 using EasyForNet.Extensions;
@@ -52,6 +53,8 @@ public static class AppInitializer
         {
             throw new Exception($"{moduleName} module already initialized");
         }
+
+        builder.Populate(services);
     }
 
     private static void CheckModuleType(Type type)

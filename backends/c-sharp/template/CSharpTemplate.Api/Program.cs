@@ -1,18 +1,15 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using CSharpTemplate.Api;
+using CSharpTemplate.Api.Endpoints;
 using EasyForNet.Modules;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
-builder.Host.ConfigureContainer<ContainerBuilder>(cb =>
-{
-    AppInitializer.Init<CSharpTemplateApiModule>(cb, builder.Services, builder.Configuration);
-});
+
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -37,6 +34,12 @@ builder.Services.AddAuthentication(auth =>
     };
 });
 builder.Services.AddAuthorization();
+
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+builder.Host.ConfigureContainer<ContainerBuilder>(cb =>
+{
+    AppInitializer.Init<CSharpTemplateApiModule>(cb, builder.Services, builder.Configuration);
+});
 
 var app = builder.Build();
 
@@ -71,6 +74,8 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
+
+app.RegisterEndpoints();
 
 app.Run();
 
