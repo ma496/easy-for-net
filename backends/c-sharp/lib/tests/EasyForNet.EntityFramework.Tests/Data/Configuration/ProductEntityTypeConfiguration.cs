@@ -1,18 +1,15 @@
-﻿using EasyForNet.EntityFramework.Configuration;
-using EasyForNet.EntityFramework.Tests.Data.Entities;
+﻿using EasyForNet.EntityFramework.Tests.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace EasyForNet.EntityFramework.Tests.Data.Configuration;
 
-public class ProductEntityTypeConfiguration : EntityTypeConfiguration<ProductEntity>
+public class ProductEntityTypeConfiguration : IEntityTypeConfiguration<ProductEntity>
 {
-    public ProductEntityTypeConfiguration() : base("Products")
+    public void Configure(EntityTypeBuilder<ProductEntity> builder)
     {
-    }
+        builder.ToTable("Products");
 
-    protected override void ConfigureEntity(EntityTypeBuilder<ProductEntity> builder)
-    {
         builder.HasIndex(p => p.Model)
             .IsUnique();
 

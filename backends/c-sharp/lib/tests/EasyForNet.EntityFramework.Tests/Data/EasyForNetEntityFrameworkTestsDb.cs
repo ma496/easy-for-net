@@ -1,8 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using EasyForNet.Entities;
 using EasyForNet.EntityFramework.Data.Context;
 using EasyForNet.EntityFramework.Tests.Data.Entities;
-using EntityFramework.Exceptions.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace EasyForNet.EntityFramework.Tests.Data;
@@ -24,18 +22,4 @@ public class EasyForNetEntityFrameworkTestsDb : EfnDbContext
     public DbSet<ProductItemEntity> ProductItems { get; set; }
 
     public DbSet<SpecificHolidayEntity> SpecificHolidays { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        base.OnConfiguring(optionsBuilder);
-
-        optionsBuilder.UseExceptionProcessor();
-    }
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
-        
-        modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
-    }
 }

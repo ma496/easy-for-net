@@ -35,6 +35,8 @@ public abstract class EfnDbContext : DbContext
         SoftDeleteFilter(modelBuilder);
 
         SettingConfiguration(modelBuilder.Entity<EfnSetting>());
+
+        modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
     }
 
     public override int SaveChanges()

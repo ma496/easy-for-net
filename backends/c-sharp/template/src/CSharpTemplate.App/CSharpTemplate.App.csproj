@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\lib\src\EasyForNet.EntityFramework\EasyForNet.EntityFramework.csproj" />
     <ProjectReference Include="..\..\..\lib\src\EasyForNet\EasyForNet.csproj" />
+    <ProjectReference Include="..\CSharpTemplate.Common\CSharpTemplate.Common.csproj" />
     <ProjectReference Include="..\CSharpTemplate.Data\CSharpTemplate.Data.csproj" />
   </ItemGroup>
 

@@ -7,12 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.1" />
+    <ProjectReference Include="..\..\..\lib\src\EasyForNet.EntityFramework\EasyForNet.EntityFramework.csproj" />
+    <ProjectReference Include="..\..\..\lib\src\EasyForNet\EasyForNet.csproj" />
+    <ProjectReference Include="..\CSharpTemplate.Common\CSharpTemplate.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\lib\src\EasyForNet.EntityFramework\EasyForNet.EntityFramework.csproj" />
-    <ProjectReference Include="..\..\..\lib\src\EasyForNet\EasyForNet.csproj" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.1" />
   </ItemGroup>
 
 </Project>

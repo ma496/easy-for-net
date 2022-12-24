@@ -1,17 +1,15 @@
-﻿using EasyForNet.EntityFramework.Configuration;
-using EasyForNet.EntityFramework.Tests.Data.Entities;
+﻿using EasyForNet.EntityFramework.Tests.Data.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace EasyForNet.EntityFramework.Tests.Data.Configuration;
 
-public class SpecificHolidayEntityTypeConfiguration : EntityTypeConfiguration<SpecificHolidayEntity>
+public class SpecificHolidayEntityTypeConfiguration : IEntityTypeConfiguration<SpecificHolidayEntity>
 {
-    public SpecificHolidayEntityTypeConfiguration() : base("SpecificHolidays")
+    public void Configure(EntityTypeBuilder<SpecificHolidayEntity> builder)
     {
-    }
+        builder.ToTable("SpecificHolidays");
 
-    protected override void ConfigureEntity(EntityTypeBuilder<SpecificHolidayEntity> builder)
-    {
         builder.HasIndex(e => e.Date)
             .IsUnique();
     }

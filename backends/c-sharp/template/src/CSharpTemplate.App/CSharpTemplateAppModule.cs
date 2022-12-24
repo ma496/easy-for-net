@@ -1,4 +1,5 @@
-﻿using CSharpTemplate.Data;
+﻿using CSharpTemplate.Common;
+using CSharpTemplate.Data;
 using EasyForNet;
 using EasyForNet.EntityFramework;
 using EasyForNet.Modules;
@@ -7,6 +8,7 @@ namespace CSharpTemplate.App;
 
 [DependOn(typeof(EasyForNetModule))]
 [DependOn(typeof(EasyForNetEntityFrameworkModule))]
+[DependOn(typeof(CSharpTemplateCommonModule))]
 [DependOn(typeof(CSharpTemplateDataModule))]
 public class CSharpTemplateAppModule : ModuleBase
 {
