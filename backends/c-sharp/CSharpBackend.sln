@@ -31,14 +31,17 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9B5FF5BB-B790-4135-B44A-7959DA006D7D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{B22018F7-C1BC-4F88-B675-725212C71C65}"
+	ProjectSection(SolutionItems) = preProject
+		template\src\CSharpTemplate.Api\Program.cs = template\src\CSharpTemplate.Api\Program.cs
+	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpTemplate.Data", "template\src\CSharpTemplate.Data\CSharpTemplate.Data.csproj", "{0892D180-56AE-4EC4-93B1-BE45E78CB44A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSharpTemplate.Data", "template\src\CSharpTemplate.Data\CSharpTemplate.Data.csproj", "{0892D180-56AE-4EC4-93B1-BE45E78CB44A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpTemplate.App", "template\src\CSharpTemplate.App\CSharpTemplate.App.csproj", "{B49C29B9-FE0F-44F1-899E-DF3960B49CCE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSharpTemplate.App", "template\src\CSharpTemplate.App\CSharpTemplate.App.csproj", "{B49C29B9-FE0F-44F1-899E-DF3960B49CCE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpTemplate.Api", "template\src\CSharpTemplate.Api\CSharpTemplate.Api.csproj", "{7A8C839E-3B2B-4769-B8BB-CCE01A1DBEB8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSharpTemplate.Api", "template\src\CSharpTemplate.Api\CSharpTemplate.Api.csproj", "{7A8C839E-3B2B-4769-B8BB-CCE01A1DBEB8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpTemplate.Common", "template\src\CSharpTemplate.Common\CSharpTemplate.Common.csproj", "{C082A1D4-CE2C-4105-93C5-4B42FDDC5682}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSharpTemplate.Common", "template\src\CSharpTemplate.Common\CSharpTemplate.Common.csproj", "{C082A1D4-CE2C-4105-93C5-4B42FDDC5682}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

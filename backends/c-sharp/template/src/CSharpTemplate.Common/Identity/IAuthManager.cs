@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace EasyForNet.EntityFramework.Identity;
+﻿namespace CSharpTemplate.Common.Identity;
 
 public interface IAuthManager
 {

@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace EasyForNet.EntityFramework.Identity;
+namespace CSharpTemplate.Common.Identity;
 
-public class LoginUserInput
+public class RegisterUserInput
 {
     [Required]
     [StringLength(1024)]

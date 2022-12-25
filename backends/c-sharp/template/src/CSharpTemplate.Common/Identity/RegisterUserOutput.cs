@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace EasyForNet.EntityFramework.Identity;
+﻿namespace CSharpTemplate.Common.Identity;
 
 public class RegisterUserOutput
 {

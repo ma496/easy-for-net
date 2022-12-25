@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System;
-
-namespace EasyForNet.EntityFramework.Identity;
+﻿namespace CSharpTemplate.Common.Identity;
 
 public class LoginUserOutput
 {

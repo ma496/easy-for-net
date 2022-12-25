@@ -1,4 +1,4 @@
-﻿using EasyForNet.EntityFramework.Identity;
+﻿using CSharpTemplate.Common.Identity;
 
 namespace CSharpTemplate.Api.Endpoints;
 

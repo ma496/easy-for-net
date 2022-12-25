@@ -1,4 +1,4 @@
-﻿using CSharpTemplate.Common.Authorization.Entities;
+﻿using CSharpTemplate.Common.Identity.Entities;
 using EasyForNet;
 using EasyForNet.EntityFramework.Data.Context;
 using Microsoft.EntityFrameworkCore;

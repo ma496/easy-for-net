@@ -2,7 +2,7 @@
 using EasyForNet.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace CSharpTemplate.Common.Authorization.Entities;
+namespace CSharpTemplate.Common.Identity.Entities;
 
 [Index(nameof(Username), IsUnique = true)]
 [Index(nameof(Email), IsUnique = true)]
@@ -16,7 +16,7 @@ public class AppUser : Entity<long>
     [StringLength(1024)]
     [EmailAddress]
     public string Email { get; set; } = string.Empty;
-    
+
     [Required]
     [StringLength(128)]
     public string HashedPassword { get; set; } = string.Empty;
