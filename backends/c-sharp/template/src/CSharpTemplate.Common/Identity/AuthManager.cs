@@ -6,54 +6,66 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using CSharpTemplate.Common.Context;
+using CSharpTemplate.Common.Identity.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace CSharpTemplate.Common.Identity;
 
 public class AuthManager : DomainService, IAuthManager
 {
-    private readonly UserManager<IdentityUser> _userManager;
+    private readonly IPasswordHasher<AppUser> _passwordHasher;
     private readonly IConfiguration _configuration;
+    private readonly CSharpTemplateDbContextBase _dbContext;
 
-    public AuthManager(UserManager<IdentityUser> userManager, IConfiguration configuration)
+    public AuthManager(IPasswordHasher<AppUser> passwordHasher, IConfiguration configuration, 
+        CSharpTemplateDbContextBase dbContext)
     {
-        _userManager = userManager;
+        _passwordHasher = passwordHasher;
         _configuration = configuration;
+        _dbContext = dbContext;
     }
 
     public async Task<RegisterUserOutput> RegisterUserAsync(RegisterUserInput input)
     {
         Guard.Against.Null(input, nameof(input));
 
-        var identityUser = new IdentityUser
+        try
         {
-            Email = input.Email,
-            UserName = input.Email,
-        };
+            var transaction = await _dbContext.Database.BeginTransactionAsync();
+            var entry = await _dbContext.Users.AddAsync(new AppUser
+            {
+                Username = input.Email,
+                Email = input.Email
+            });
+            await _dbContext.SaveChangesAsync();
 
-        var result = await _userManager.CreateAsync(identityUser, input.Password);
+            entry.Entity.HashedPassword = _passwordHasher.HashPassword(entry.Entity, input.Password);
+            await _dbContext.SaveChangesAsync();
 
-        if (result.Succeeded)
-        {
+            await transaction.CommitAsync();
+            
             return new RegisterUserOutput
             {
                 Message = "User created successfully!",
                 IsSuccess = true,
             };
         }
-
-        return new RegisterUserOutput
+        catch (Exception)
         {
-            Message = "User did not create",
-            IsSuccess = false,
-            Errors = result.Errors.Select(e => e.Description)
-        };
+            return new RegisterUserOutput
+            {
+                Message = "User did not create",
+                IsSuccess = false
+            };
+        }
     }
 
     public async Task<LoginUserOutput> LoginUserAsync(LoginUserInput input)
     {
         Guard.Against.Null(input, nameof(input));
 
-        var user = await _userManager.FindByEmailAsync(input.Email);
+        var user = await _dbContext.Users.FirstOrDefaultAsync(u => string.Equals(u.Email.ToLower(), input.Email.ToLower()));
 
         if (user == null)
         {
@@ -64,38 +76,40 @@ public class AuthManager : DomainService, IAuthManager
             };
         }
 
-        var result = await _userManager.CheckPasswordAsync(user, input.Password);
+        var result = _passwordHasher.VerifyHashedPassword(user, user.HashedPassword, input.Password);
 
-        if (!result)
-            return new LoginUserOutput
+        if (result == PasswordVerificationResult.Success)
+        {
+            var claims = new[]
             {
-                Message = "Invalid password",
-                IsSuccess = false,
+                new Claim(ClaimTypes.Email, input.Email),
+                new Claim(ClaimTypes.NameIdentifier, user.Username),
             };
 
-        var claims = new[]
-        {
-             new Claim("Email", input.Email),
-             new Claim(ClaimTypes.NameIdentifier, user.Id),
-         };
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["AuthSettings:Key"]));
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["AuthSettings:Key"]));
+            var token = new JwtSecurityToken(
+                issuer: _configuration["AuthSettings:Issuer"],
+                audience: _configuration["AuthSettings:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddDays(30),
+                signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
 
-        var token = new JwtSecurityToken(
-            issuer: _configuration["AuthSettings:Issuer"],
-            audience: _configuration["AuthSettings:Audience"],
-            claims: claims,
-            expires: DateTime.Now.AddDays(30),
-            signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
+            var tokenAsString = new JwtSecurityTokenHandler().WriteToken(token);
 
-        var tokenAsString = new JwtSecurityTokenHandler().WriteToken(token);
+            return new LoginUserOutput
+            {
+                Message = "User login successfully!",
+                Token = tokenAsString,
+                IsSuccess = true,
+                ExpireDate = token.ValidTo
+            };
+        }
 
         return new LoginUserOutput
         {
-            Message = "User login successfully!",
-            Token = tokenAsString,
-            IsSuccess = true,
-            ExpireDate = token.ValidTo
+            Message = "Password dont match",
+            IsSuccess = false
         };
     }
 }

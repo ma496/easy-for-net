@@ -11,5 +11,5 @@ public abstract class CSharpTemplateDbContextBase : EfnDbContext
     {
     }
 
-    public DbSet<AppUser>? Users { get; set; }
+    public DbSet<AppUser> Users { get; set; }
 }
