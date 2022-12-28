@@ -31,9 +31,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9B5FF5BB-B790-4135-B44A-7959DA006D7D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{B22018F7-C1BC-4F88-B675-725212C71C65}"
-	ProjectSection(SolutionItems) = preProject
-		template\src\CSharpTemplate.Api\Program.cs = template\src\CSharpTemplate.Api\Program.cs
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSharpTemplate.Data", "template\src\CSharpTemplate.Data\CSharpTemplate.Data.csproj", "{0892D180-56AE-4EC4-93B1-BE45E78CB44A}"
 EndProject
