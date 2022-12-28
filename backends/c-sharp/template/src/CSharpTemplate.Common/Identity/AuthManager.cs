@@ -26,39 +26,22 @@ public class AuthManager : DomainService, IAuthManager
         _dbContext = dbContext;
     }
 
-    public async Task<RegisterUserOutput> RegisterUserAsync(RegisterUserInput input)
+    public async Task RegisterUserAsync(RegisterUserInput input)
     {
         Guard.Against.Null(input, nameof(input));
 
-        try
+        var transaction = await _dbContext.Database.BeginTransactionAsync();
+        var entry = await _dbContext.Users.AddAsync(new AppUser
         {
-            var transaction = await _dbContext.Database.BeginTransactionAsync();
-            var entry = await _dbContext.Users.AddAsync(new AppUser
-            {
-                Username = input.Email,
-                Email = input.Email
-            });
-            await _dbContext.SaveChangesAsync();
+            Username = input.Email,
+            Email = input.Email
+        });
+        await _dbContext.SaveChangesAsync();
 
-            entry.Entity.HashedPassword = _passwordHasher.HashPassword(entry.Entity, input.Password);
-            await _dbContext.SaveChangesAsync();
+        entry.Entity.HashedPassword = _passwordHasher.HashPassword(entry.Entity, input.Password);
+        await _dbContext.SaveChangesAsync();
 
-            await transaction.CommitAsync();
-            
-            return new RegisterUserOutput
-            {
-                Message = "User created successfully!",
-                IsSuccess = true,
-            };
-        }
-        catch (Exception)
-        {
-            return new RegisterUserOutput
-            {
-                Message = "User did not create",
-                IsSuccess = false
-            };
-        }
+        await transaction.CommitAsync();
     }
 
     public async Task<LoginUserOutput> LoginUserAsync(LoginUserInput input)

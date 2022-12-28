@@ -10,18 +10,14 @@ public static class AuthEndpoints
 
         group.MapPost("/register", async (RegisterUserInput input, IAuthManager authManager) => 
         {
-            var result = await authManager.RegisterUserAsync(input);
-            if (result.IsSuccess)
-                return Results.Ok(result);
-            return Results.BadRequest(result);
+            await authManager.RegisterUserAsync(input);
         });
 
         group.MapPost("/login", async (LoginUserInput input, IAuthManager authManager) =>
         {
             var result = await authManager.LoginUserAsync(input);
-            if (result.IsSuccess)
-                return Results.Ok(result);
-            return Results.BadRequest(result);
-        });
+            return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);
+        }).Produces<LoginUserOutput>()
+            .Produces<LoginUserOutput>(400);
     }
 }

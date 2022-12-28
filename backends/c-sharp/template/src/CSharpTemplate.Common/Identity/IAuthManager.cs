@@ -2,6 +2,6 @@
 
 public interface IAuthManager
 {
-    Task<RegisterUserOutput> RegisterUserAsync(RegisterUserInput input);
+    Task RegisterUserAsync(RegisterUserInput input);
     Task<LoginUserOutput> LoginUserAsync(LoginUserInput input);
 }
