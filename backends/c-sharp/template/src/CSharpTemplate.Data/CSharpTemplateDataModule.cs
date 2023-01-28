@@ -4,6 +4,7 @@ using CSharpTemplate.Common.Context;
 using CSharpTemplate.Data.Context;
 using EasyForNet;
 using EasyForNet.EntityFramework;
+using EasyForNet.EntityFramework.Data.Context;
 using EasyForNet.Modules;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -24,6 +25,7 @@ public class CSharpTemplateDataModule : ModuleBase
             return new CSharpTemplateDbContext(optionBuilder.Options, c.Resolve<ICurrentUser>());
         }).InstancePerLifetimeScope()
         .AsSelf()
-        .As<CSharpTemplateDbContextBase>();
+        .As<CSharpTemplateDbContextBase>()
+        .As<EfnDbContext>();
     }
 }

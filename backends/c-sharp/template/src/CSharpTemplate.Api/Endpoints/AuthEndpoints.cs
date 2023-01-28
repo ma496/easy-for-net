@@ -1,19 +1,20 @@
-﻿using CSharpTemplate.Common.Identity;
+﻿using CSharpTemplate.Api.Validation;
+using CSharpTemplate.Common.Identity;
 
 namespace CSharpTemplate.Api.Endpoints;
 
 public static class AuthEndpoints
 {
-    public static void Register(WebApplication app)
+    public static void Register(RouteGroupBuilder root)
     {
-        var group = app.MapGroup("/auth").WithTags("Auth");
+        var group = root.MapGroup("/auth").WithTags("Auth");
 
-        group.MapPost("/register", async (RegisterUserInput input, IAuthManager authManager) => 
+        group.MapPost("/register", async ([Validate]RegisterUserInput input, IAuthManager authManager) =>
         {
             await authManager.RegisterUserAsync(input);
         });
 
-        group.MapPost("/login", async (LoginUserInput input, IAuthManager authManager) =>
+        group.MapPost("/login", async ([Validate]LoginUserInput input, IAuthManager authManager) =>
         {
             var result = await authManager.LoginUserAsync(input);
             return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result);

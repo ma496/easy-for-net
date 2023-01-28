@@ -7,7 +7,10 @@ namespace CSharpTemplate.Common.Context;
 
 public abstract class CSharpTemplateDbContextBase : EfnDbContext
 {
-    protected CSharpTemplateDbContextBase(DbContextOptions dbContextOptions, ICurrentUser? currentUser) : base(dbContextOptions, currentUser)
+#pragma warning disable CS8618
+    protected CSharpTemplateDbContextBase(DbContextOptions dbContextOptions, ICurrentUser? currentUser)
+#pragma warning restore CS8618
+        : base(dbContextOptions, currentUser)
     {
     }
 

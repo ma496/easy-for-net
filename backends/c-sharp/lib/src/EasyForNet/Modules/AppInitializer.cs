@@ -7,6 +7,7 @@ using Autofac;
 using AutoMapper;
 using EasyForNet.Application.Dependencies;
 using EasyForNet.Extensions;
+using FluentValidation;
 using Microsoft.Extensions.Configuration;
 
 namespace EasyForNet.Modules;
@@ -93,7 +94,8 @@ public static class AppInitializer
         var types = module.GetType().Assembly.GetConcreteTypes()
             .Where(t =>
                 typeof(IScopedDependency).IsAssignableFrom(t) || typeof(ITransientDependency).IsAssignableFrom(t)
-                                                              || typeof(ISingletonDependency).IsAssignableFrom(t))
+                                                              || typeof(ISingletonDependency).IsAssignableFrom(t)
+                                                              || typeof(IValidator).IsAssignableFrom(t))
             .ToList();
         foreach (var type in types)
             if (typeof(IScopedDependency).IsAssignableFrom(type))
@@ -116,6 +118,14 @@ public static class AppInitializer
             {
                 builder.RegisterType(type)
                     .SingleInstance()
+                    .AsSelf()
+                    .AsImplementedInterfaces()
+                    .PropertiesAutowired();
+            }
+            else if (typeof(IValidator).IsAssignableFrom(type))
+            {
+                builder.RegisterType(type)
+                    .InstancePerLifetimeScope()
                     .AsSelf()
                     .AsImplementedInterfaces()
                     .PropertiesAutowired();

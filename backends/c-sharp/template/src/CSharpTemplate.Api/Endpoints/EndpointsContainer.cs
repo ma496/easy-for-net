@@ -2,8 +2,9 @@
 
 public static class EndpointsContainer
 {
-    public static void RegisterEndpoints(this WebApplication app)
+    public static void RegisterEndpoints(this RouteGroupBuilder root)
     {
-        AuthEndpoints.Register(app);
+        AuthEndpoints.Register(root);
+        UserEndpoints.Register(root);
     }
 }

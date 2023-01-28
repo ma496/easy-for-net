@@ -10,12 +10,12 @@ public class CSharpTemplateDbContextFactory : IDesignTimeDbContextFactory<CSharp
     {
         var path = Directory.GetCurrentDirectory();
 
-        IConfigurationBuilder builder =
+        var builder =
             new ConfigurationBuilder()
                 .SetBasePath(path)
                 .AddJsonFile("appsettings.json");
 
-        IConfigurationRoot config = builder.Build();
+        var config = builder.Build();
 
         var connectionString = config.GetConnectionString("DefaultConnection");
 

@@ -6,7 +6,7 @@ public static class SwaggerIntegration
 {
     public static void AddSwaggerWithSecurity(this IServiceCollection services)
     {
-        var securityScheme = new OpenApiSecurityScheme()
+        var securityScheme = new OpenApiSecurityScheme
         {
             Name = "Authorization",
             Type = SecuritySchemeType.ApiKey,
@@ -16,7 +16,7 @@ public static class SwaggerIntegration
             Description = "JSON Web Token based security",
         };
 
-        var securityReq = new OpenApiSecurityRequirement()
+        var securityReq = new OpenApiSecurityRequirement
         {
             { // key and value pair
                 new OpenApiSecurityScheme
@@ -31,20 +31,20 @@ public static class SwaggerIntegration
             }
         };
 
-        var contact = new OpenApiContact()
+        var contact = new OpenApiContact
         {
             Name = "",
             Email = "",
             Url = null
         };
 
-        var license = new OpenApiLicense()
+        var license = new OpenApiLicense
         {
             Name = "",
             Url = null
         };
 
-        var info = new OpenApiInfo()
+        var info = new OpenApiInfo
         {
             Version = "v1",
             Title = "CSharpTemplate API",

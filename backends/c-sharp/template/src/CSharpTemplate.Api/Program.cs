@@ -1,14 +1,30 @@
+using System.Text;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using CSharpTemplate.Api;
 using CSharpTemplate.Api.Endpoints;
-using EasyForNet.Modules;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using CSharpTemplate.Api.ExceptionHandling;
 using CSharpTemplate.Api.Extensions;
+using CSharpTemplate.Api.Validation;
+using EasyForNet.Modules;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: myAllowSpecificOrigins,
+        policy  =>
+        {
+            policy.WithOrigins("http://127.0.0.1:5174")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowAnyOrigin();
+        });
+});
 
 builder.Services.AddSwaggerWithSecurity();
 
@@ -48,15 +64,23 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors(myAllowSpecificOrigins);
+
+app.UseMiddleware<ExceptionMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+var root = app.MapGroup("");
+
+root.AddEndpointFilterFactory(ValidationFilter.ValidationFilterFactory);
 
 var summaries = new[]
 {
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
 
-app.MapGet("/weatherforecast", () =>
+root.MapGet("/weatherforecast", () =>
 {
     var forecast = Enumerable.Range(1, 5).Select(index =>
         new WeatherForecast
@@ -69,10 +93,9 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 })
 .WithName("GetWeatherForecast")
-.WithOpenApi()
-.RequireAuthorization();
+.WithOpenApi();
 
-app.RegisterEndpoints();
+root.RegisterEndpoints();
 
 app.Run();
 
