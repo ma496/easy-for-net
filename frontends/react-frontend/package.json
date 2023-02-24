@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 3090",
     "build": "tsc && vite build",
-    "preview": "vite preview",
+    "preview": "vite preview --port 3098",
     "g-client": "openapi --input http://localhost:5173/swagger/v1/swagger.json --output ./src/generatedClient --name AppClient"
   },
   "dependencies": {

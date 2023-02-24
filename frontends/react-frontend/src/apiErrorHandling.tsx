@@ -26,6 +26,13 @@ export const showError = (error: any) => {
 };
 
 const extractError = (err: any): ErrorModal => {
+  if (!err.body) {
+    return {
+      status: 0,
+      title: 'Server error',
+      message: err.message
+    }
+  }
   const body = typeof err.body === 'object' ? err.body : JSON.parse(err.body);
 
   if (err.status === 422) {

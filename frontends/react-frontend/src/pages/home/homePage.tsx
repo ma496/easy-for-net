@@ -1,15 +1,17 @@
 ﻿import {useMainStore} from "../../store/mainStore";
-import {Text} from "@mantine/core";
+
+import React from 'react';
+import {Flex, Text} from "@mantine/core";
+
 
 export function HomePage() {
   const token = useMainStore(s => s.token);
   const user = useMainStore(s => s.user);
+
   return (
-    <div style={{padding: 30}}>
-      <h1>Token</h1>
-      <Text>{token}</Text>
-      <h1>User</h1>
+    <Flex direction={"column"} p={20} gap={40}>
+      <Text w={500} lineClamp={5}>{token}</Text>
       <Text>{JSON.stringify(user)}</Text>
-    </div>
-  )
+    </Flex>
+  );
 }
