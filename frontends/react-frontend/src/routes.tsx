@@ -3,6 +3,7 @@ import {LoginPage} from "./pages/login/loginPage";
 import {RegisterPage} from "./pages/register/registerPage";
 import {HomePage} from "./pages/home/homePage";
 import {App} from "./App";
+import {NotFoundPage} from "./pages/error/notFoundPage";
 
 export const router = createBrowserRouter([
   {
@@ -22,5 +23,9 @@ export const router = createBrowserRouter([
   {
     path: "/register",
     element: <RegisterPage/>
+  },
+  {
+    path: '*',
+    element: <NotFoundPage/>
   },
 ]);

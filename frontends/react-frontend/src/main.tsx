@@ -29,7 +29,9 @@ const queryClient = new QueryClient({
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <MantineProvider withGlobalStyles withNormalizeCSS>
+      <MantineProvider withGlobalStyles withNormalizeCSS theme={{
+        primaryColor: 'blue'
+      }}>
         <ModalsProvider>
           <NotificationsProvider>
             <RouterProvider router={router} />

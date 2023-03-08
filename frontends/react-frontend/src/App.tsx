@@ -2,7 +2,7 @@
 import {useQuery} from "react-query";
 import {apiClient} from "./apiClientInstance";
 import {Flex, Loader} from "@mantine/core";
-import {AdminLayout} from "./components/layout/AdminLayout";
+import {AdminLayout} from "./components/layout/admin/AdminLayout";
 
 export function App() {
   const setToken = useMainStore(s => s.setToken);
@@ -23,7 +23,7 @@ export function App() {
 
   return isLoading
     ? (
-      <Flex justify={"center"} align={"center"} style={{height: 300}}>
+      <Flex justify={"center"} align={"center"} style={{height: '100vh'}}>
         <Loader />
       </Flex>
     )

@@ -1,36 +1,34 @@
-﻿import {IconActivity, IconFingerprint, IconGauge, TablerIcon} from "@tabler/icons";
-
-export interface MenuItem {
-  icon: TablerIcon,
-  label: string,
-  description?: string,
-  children?: MenuItem[],
-  rightSection?: JSX.Element,
-  opened?: boolean,
-  active?: boolean
-}
+﻿import {IconActivity, IconFingerprint, IconGauge} from "@tabler/icons";
+import {MenuItem} from "./models/menuItem";
 
 export const menuItems: MenuItem[] = [
   {
     icon: IconGauge,
     label: 'Dashboard',
     description: 'Item with description',
-    active: true
+    url: '/'
   },
   {
     icon: IconFingerprint,
     label: 'Security',
     // rightSection: <IconChevronRight size={14} stroke={1.5} />,
+    url: '/security'
   },
-  { icon: IconActivity, label: 'Activity', opened: true,
+  {
+    icon: IconActivity,
+    label: 'Activity',
+    opened: true,
+    url: '/activity',
     children: [
       {
         icon: IconGauge,
-        label: 'Item 1'
+        label: 'Item 1',
+        url: '/activity/item-1',
       },
       {
         icon: IconGauge,
-        label: 'Item 2'
+        label: 'Item 2',
+        url: '/activity/item-2',
       },
       {
         icon: IconGauge,
@@ -39,7 +37,8 @@ export const menuItems: MenuItem[] = [
         children: [
           {
             icon: IconGauge,
-            label: 'Item 1'
+            label: 'Item 1',
+            url: '/activity/item-3/item-1',
           },
           {
             icon: IconGauge,
