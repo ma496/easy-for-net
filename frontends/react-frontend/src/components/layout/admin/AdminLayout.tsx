@@ -3,6 +3,7 @@ import {AppShell, useMantineTheme,} from '@mantine/core';
 import {Outlet} from "react-router-dom";
 import {AdminHeader} from "./AdminHeader";
 import {AdminNavbar} from "./AdminNavbar";
+import {NavbarDemo} from "./NavbarDemo";
 
 export function AdminLayout() {
   const theme = useMantineTheme();
@@ -18,6 +19,7 @@ export function AdminLayout() {
       asideOffsetBreakpoint="sm"
       navbar={
         <AdminNavbar opened={opened} />
+        // <NavbarDemo />
       }
       // aside={
       //   <MediaQuery smallerThan="sm" styles={{display: 'none'}}>
