@@ -1,10 +1,12 @@
-﻿using CSharpTemplate.Api.Validation;
+﻿using CSharpTemplate.Api.Endpoints.Automation;
+using CSharpTemplate.Api.Validation;
 using CSharpTemplate.Common.Identity;
 
 namespace CSharpTemplate.Api.Endpoints;
 
 public static class AuthEndpoints
 {
+    [MinimalApi]
     public static void Register(RouteGroupBuilder root)
     {
         var group = root.MapGroup("/auth").WithTags("Auth");

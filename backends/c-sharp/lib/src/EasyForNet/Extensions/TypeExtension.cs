@@ -20,6 +20,11 @@ public static class TypeExtension
         return type.IsClass && !type.IsAbstract;
     }
 
+    public static bool IsStaticClass(this Type type)
+    {
+        return type is { IsAbstract: true, IsSealed: true, IsNested: false };
+    }
+
     public static List<FieldInfo> GetConstants(this Type type)
     {
         var fieldInfos = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic |

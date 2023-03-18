@@ -2,7 +2,7 @@ using System.Text;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using CSharpTemplate.Api;
-using CSharpTemplate.Api.Endpoints;
+using CSharpTemplate.Api.Endpoints.Automation;
 using CSharpTemplate.Api.ExceptionHandling;
 using CSharpTemplate.Api.Extensions;
 using CSharpTemplate.Api.Validation;
