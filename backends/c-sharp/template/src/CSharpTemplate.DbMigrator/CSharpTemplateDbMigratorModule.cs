@@ -1,21 +1,22 @@
 ﻿using Autofac;
+using CSharpTemplate.App;
 using CSharpTemplate.Common.Identity.Permissions.Provider;
 using EasyForNet;
+using EasyForNet.EntityFramework;
 using EasyForNet.Modules;
-using EasyForNet.Tests.Share;
 using Microsoft.Extensions.Configuration;
 
-namespace CSharpTemplate.Common.Tests;
+namespace CSharpTemplate.DbMigrator;
 
 [DependOn(typeof(EasyForNetModule))]
-[DependOn(typeof(EasyForNetTestsShareModule))]
-[DependOn(typeof(CSharpTemplateCommonModule))]
-public class CSharpTemplateCommonTestsModule : ModuleBase
+[DependOn(typeof(EasyForNetEntityFrameworkModule))]
+[DependOn(typeof(CSharpTemplateAppModule))]
+public class CSharpTemplateDbMigratorModule : ModuleBase
 {
     public override void Dependencies(ContainerBuilder builder, IConfiguration configuration)
     {
         builder.RegisterType<PermissionsContext>()
             .As<IPermissionsContext>()
-            .InstancePerLifetimeScope();
+            .SingleInstance();
     }
 }

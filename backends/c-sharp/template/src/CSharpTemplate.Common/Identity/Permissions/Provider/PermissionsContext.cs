@@ -1,8 +1,6 @@
-﻿using EasyForNet.Application.Dependencies;
+﻿namespace CSharpTemplate.Common.Identity.Permissions.Provider;
 
-namespace CSharpTemplate.Common.Identity.Permissions.Provider;
-
-public class PermissionsContext : IPermissionsContext, IScopedDependency
+public class PermissionsContext : IPermissionsContext
 {
     private readonly HashSet<PermissionsGroup> _permissionsGroups = new();
     
@@ -41,8 +39,22 @@ public class PermissionsContext : IPermissionsContext, IScopedDependency
     {
         return _permissionsGroups;
     }
+    
+    public HashSet<string> GetFlatPermissions()
+    {
+        var groups = GetPermissionsByGroup();
+        return GetFlatPermissions(groups);
+    }
+    
+    public HashSet<string> GetFlatAllPermissions()
+    {
+        var groups = GetAllPermissionsByGroup();
+        return GetFlatPermissions(groups);
+    }
 
-    private HashSet<PermissionDefinition> RemoveDeveloperPermissions(HashSet<PermissionDefinition> permissions)
+    #region Utilities
+
+    private static HashSet<PermissionDefinition> RemoveDeveloperPermissions(HashSet<PermissionDefinition> permissions)
     {
         var filteredPermissions = new HashSet<PermissionDefinition>();
         foreach (var p in permissions)
@@ -60,4 +72,46 @@ public class PermissionsContext : IPermissionsContext, IScopedDependency
 
         return filteredPermissions;
     }
+
+    private static HashSet<string> GetFlatPermissions(HashSet<PermissionsGroup> groups)
+    {
+        var result = new HashSet<string>();
+
+        foreach (var group in groups)
+        {
+            result.UnionWith(GetFlatPermissions(group));
+        }
+
+        return result;
+    }
+
+    private static HashSet<string> GetFlatPermissions(PermissionsGroup group)
+    {
+        var result = new HashSet<string>();
+
+        foreach (var permission in group.Permissions)
+        {
+            result.Add(permission.Name);
+
+            result.UnionWith(GetFlatPermissions(permission));
+        }
+
+        return result;
+    }
+
+    private static HashSet<string> GetFlatPermissions(PermissionDefinition permission)
+    {
+        var result = new HashSet<string>();
+
+        foreach (var childPermission in permission.Permissions)
+        {
+            result.Add(childPermission.Name);
+
+            result.UnionWith(GetFlatPermissions(childPermission));
+        }
+
+        return result;
+    }
+
+    #endregion
 }

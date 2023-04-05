@@ -29,24 +29,5 @@ public abstract class CSharpTemplateDbContextBase : EfnDbContext
         
         modelBuilder.Entity<RolePermission>()
             .HasKey(e => new { e.RoleId, e.PermissionId });
-
-        CreateRoles(modelBuilder);
-        CreateUsers(modelBuilder);
-    }
-    
-    private void CreateRoles(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<Role>().HasData(
-            new Role
-            {
-                Name = "Admin",
-                
-            }
-        );
-    }
-
-    private void CreateUsers(ModelBuilder modelBuilder)
-    {
-        throw new NotImplementedException();
     }
 }
