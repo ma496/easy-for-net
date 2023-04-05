@@ -1,4 +1,4 @@
-﻿namespace CSharpTemplate.Common.Identity;
+﻿namespace CSharpTemplate.Common.Identity.Dto;
 
 public class LoginUserOutput
 {

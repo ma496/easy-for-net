@@ -6,3 +6,8 @@ public interface IEntity<TKey>
 
     bool IsTransient();
 }
+
+public interface IEntity
+{
+    
+}

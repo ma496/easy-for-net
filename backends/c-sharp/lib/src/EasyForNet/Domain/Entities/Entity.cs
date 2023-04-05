@@ -50,3 +50,8 @@ public abstract class Entity<TKey> : IEntity<TKey>
         return $"[{GetType().Name} {Id}]";
     }
 }
+
+public abstract class Entity : IEntity
+{
+    
+}

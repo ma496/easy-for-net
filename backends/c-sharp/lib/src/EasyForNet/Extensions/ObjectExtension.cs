@@ -21,7 +21,7 @@ public static class ObjectExtension
         {
             PropertyNameCaseInsensitive = true,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            ReferenceHandler = ReferenceHandler.IgnoreCycles,
+            ReferenceHandler = ReferenceHandler.Preserve,
         };
 
         var json = JsonHelper.ToJson(source, serializerOptions);

@@ -10,3 +10,11 @@ public abstract class CreateAuditEntityDto<TKey> : EntityDto<TKey>, ICreateAudit
     [MaxLength(256)]
     public virtual string CreatedBy { get; set; }
 }
+
+public abstract class CreateAuditEntityDto : EntityDto, ICreateAuditEntityDto
+{
+    public virtual DateTime CreatedAt { get; set; }
+
+    [MaxLength(256)]
+    public virtual string CreatedBy { get; set; }
+}

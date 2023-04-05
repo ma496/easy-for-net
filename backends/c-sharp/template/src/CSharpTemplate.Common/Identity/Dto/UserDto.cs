@@ -4,7 +4,7 @@ using EasyForNet.Application.Dto.Entities;
 
 namespace CSharpTemplate.Common.Identity.Dto;
 
-[AutoMap(typeof(AppUser), ReverseMap = true)]
+[AutoMap(typeof(User), ReverseMap = true)]
 public class UserDto : EntityDto<long>
 {
     public string Username { get; set; } = string.Empty;

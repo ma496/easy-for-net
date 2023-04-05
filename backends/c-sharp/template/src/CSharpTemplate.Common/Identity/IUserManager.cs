@@ -5,8 +5,9 @@ namespace CSharpTemplate.Common.Identity;
 
 public interface IUserManager
 {
-    Task<AppUser> CreateAsync(UserDto user);
-    Task UpdatePasswordAsync(AppUser user, string password);
+    Task<User> CreateAsync(UserDto user);
+    Task UpdatePasswordAsync(User user, string password);
     Task<UserDto?> GetByIdAsync(long id);
     Task<UserDto?> GetByEmailAsync(string email);
+    Task<List<UserDto>> GetListAsync();
 }

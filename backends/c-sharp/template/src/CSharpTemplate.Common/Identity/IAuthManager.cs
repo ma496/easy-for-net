@@ -1,4 +1,6 @@
-﻿namespace CSharpTemplate.Common.Identity;
+﻿using CSharpTemplate.Common.Identity.Dto;
+
+namespace CSharpTemplate.Common.Identity;
 
 public interface IAuthManager
 {

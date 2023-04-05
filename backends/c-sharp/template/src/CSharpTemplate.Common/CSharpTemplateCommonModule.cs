@@ -14,8 +14,8 @@ public class CSharpTemplateCommonModule : ModuleBase
 {
     public override void Dependencies(ContainerBuilder builder, IConfiguration configuration)
     {
-        builder.RegisterType<PasswordHasher<AppUser>>()
-            .As<IPasswordHasher<AppUser>>()
+        builder.RegisterType<PasswordHasher<User>>()
+            .As<IPasswordHasher<User>>()
             .InstancePerDependency();
 
     }

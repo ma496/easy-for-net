@@ -16,5 +16,9 @@ public static class UserEndpoints
 
         group.MapGet("/get-by-email/{email}", async (string email, IUserManager userManager) 
             => await userManager.GetByEmailAsync(email)).Produces<UserDto>();
+
+        group.MapGet("/get-list", async (IUserManager userManager)
+            => await userManager.GetListAsync())
+            .RequireAuthorization("ReadUsers");
     }
 }

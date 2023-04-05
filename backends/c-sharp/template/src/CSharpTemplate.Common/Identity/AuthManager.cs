@@ -5,6 +5,7 @@ using Ardalis.GuardClauses;
 using CSharpTemplate.Common.Context;
 using CSharpTemplate.Common.Identity.Dto;
 using CSharpTemplate.Common.Identity.Entities;
+using CSharpTemplate.Common.Identity.Permissions;
 using EasyForNet.Domain.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -15,18 +16,20 @@ namespace CSharpTemplate.Common.Identity;
 
 public class AuthManager : DomainService, IAuthManager
 {
-    private readonly IPasswordHasher<AppUser> _passwordHasher;
+    private readonly IPasswordHasher<User> _passwordHasher;
     private readonly IConfiguration _configuration;
     private readonly CSharpTemplateDbContextBase _dbContext;
     private readonly IUserManager _userManager;
+    private readonly IPermissionManager _permissionManager;
 
-    public AuthManager(IPasswordHasher<AppUser> passwordHasher, IConfiguration configuration, 
-        CSharpTemplateDbContextBase dbContext, IUserManager userManager)
+    public AuthManager(IPasswordHasher<User> passwordHasher, IConfiguration configuration, 
+        CSharpTemplateDbContextBase dbContext, IUserManager userManager, IPermissionManager permissionManager)
     {
         _passwordHasher = passwordHasher;
         _configuration = configuration;
         _dbContext = dbContext;
         _userManager = userManager;
+        _permissionManager = permissionManager;
     }
 
     public async Task RegisterUserAsync(RegisterUserInput input)
@@ -67,8 +70,9 @@ public class AuthManager : DomainService, IAuthManager
         {
             var claims = new[]
             {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, input.Email),
-                new Claim(ClaimTypes.NameIdentifier, user.Username),
+                new Claim(ClaimTypes.Name, user.Username),
             };
 
             var keyStr = _configuration["AuthSettings:Key"];
@@ -84,6 +88,8 @@ public class AuthManager : DomainService, IAuthManager
                 signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
 
             var tokenAsString = new JwtSecurityTokenHandler().WriteToken(token);
+
+            await _permissionManager.SetPermissions(user.Id);
 
             return new LoginUserOutput
             {

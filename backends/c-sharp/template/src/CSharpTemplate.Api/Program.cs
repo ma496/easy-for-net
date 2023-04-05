@@ -6,8 +6,10 @@ using CSharpTemplate.Api.Endpoints.Automation;
 using CSharpTemplate.Api.ExceptionHandling;
 using CSharpTemplate.Api.Extensions;
 using CSharpTemplate.Api.Validation;
+using CSharpTemplate.Common.Identity.Permissions;
 using EasyForNet.Modules;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +30,8 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSwaggerWithSecurity();
 
+builder.Services.AddDistributedMemoryCache();
+
 builder.Services.AddAuthentication(auth =>
 {
     auth.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -46,6 +50,8 @@ builder.Services.AddAuthentication(auth =>
     };
 });
 builder.Services.AddAuthorization();
+builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
 
 builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
 builder.Host.ConfigureContainer<ContainerBuilder>(cb =>

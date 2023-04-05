@@ -10,6 +10,7 @@ namespace EasyForNet.Setting;
 
 public class SettingManager : ISettingManager, ITransientDependency
 {
+    private const string KeyPrefix = "Settings";
     private readonly ISettingStore<EfnSetting> _settingStore;
     private readonly ICacheManager _cacheManager;
 
@@ -23,12 +24,12 @@ public class SettingManager : ISettingManager, ITransientDependency
     {
         Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
-        var value = _cacheManager.Get<TValue>(key);
+        var value = _cacheManager.Get<TValue>(GetKey(key));
         if (value == null)
         {
-            value = _settingStore.Get<TValue>(key);
+            value = _settingStore.Get<TValue>(GetKey(key));
             if (value != null)
-                SetInternalCache(key, value);
+                SetInternalCache(GetKey(key), value);
         }
         return value;
     }
@@ -37,12 +38,12 @@ public class SettingManager : ISettingManager, ITransientDependency
     {
         Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
-        var value = await _cacheManager.GetAsync<TValue>(key);
+        var value = await _cacheManager.GetAsync<TValue>(GetKey(key));
         if (value == null)
         {
-            value = await _settingStore.GetAsync<TValue>(key);
+            value = await _settingStore.GetAsync<TValue>(GetKey(key));
             if (value != null)
-                await SetInternalCacheAsync(key, value);
+                await SetInternalCacheAsync(GetKey(key), value);
         }
         return value;
     }
@@ -52,7 +53,7 @@ public class SettingManager : ISettingManager, ITransientDependency
         Guard.Against.NullOrWhiteSpace(key, nameof(key));
         Guard.Against.Null(value, nameof(value));
 
-        SetInternal(key, value);
+        SetInternal(GetKey(key), value);
     }
 
     public async Task SetAsync<TValue>(string key, TValue value)
@@ -60,7 +61,7 @@ public class SettingManager : ISettingManager, ITransientDependency
         Guard.Against.NullOrWhiteSpace(key, nameof(key));
         Guard.Against.Null(value, nameof(value));
 
-        await SetInternalAsync(key, value);
+        await SetInternalAsync(GetKey(key), value);
     }
 
     #region Helpers
@@ -91,6 +92,11 @@ public class SettingManager : ISettingManager, ITransientDependency
     {
         await _settingStore.SetAsync(key, value);
         await SetInternalCacheAsync(key, value);
+    }
+
+    private string GetKey(string key)
+    {
+        return !key.StartsWith($"{KeyPrefix}_") ? $"{KeyPrefix}_{key}" : key;
     }
 
     #endregion

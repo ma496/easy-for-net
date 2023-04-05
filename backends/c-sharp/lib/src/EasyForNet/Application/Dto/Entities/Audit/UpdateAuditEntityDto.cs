@@ -10,3 +10,11 @@ public abstract class UpdateAuditEntityDto<TKey> : EntityDto<TKey>, IUpdateAudit
     [MaxLength(256)]
     public virtual string UpdatedBy { get; set; }
 }
+
+public abstract class UpdateAuditEntityDto : EntityDto, IUpdateAuditEntityDto
+{
+    public virtual DateTime UpdatedAt { get; set; }
+
+    [MaxLength(256)]
+    public virtual string UpdatedBy { get; set; }
+}

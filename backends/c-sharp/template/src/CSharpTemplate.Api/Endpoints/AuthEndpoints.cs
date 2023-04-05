@@ -1,6 +1,7 @@
 ﻿using CSharpTemplate.Api.Endpoints.Automation;
 using CSharpTemplate.Api.Validation;
 using CSharpTemplate.Common.Identity;
+using CSharpTemplate.Common.Identity.Dto;
 
 namespace CSharpTemplate.Api.Endpoints;
 

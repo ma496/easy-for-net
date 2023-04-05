@@ -1,29 +1,26 @@
-﻿using Ardalis.GuardClauses;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using Ardalis.GuardClauses;
 using EasyForNet.Application.Dependencies;
 using EasyForNet.Helpers;
-using EasyForNet.Key;
 using Microsoft.Extensions.Caching.Distributed;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace EasyForNet.Cache;
 
 public class CacheManager : ICacheManager, ITransientDependency
 {
     private readonly IDistributedCache _distributedCache;
-    private readonly IKeyManager _keyManager;
 
-    public CacheManager(IDistributedCache distributedCache, IKeyManager keyManager)
+    public CacheManager(IDistributedCache distributedCache)
     {
         _distributedCache = distributedCache;
-        _keyManager = keyManager;
     }
 
     public virtual TValue Get<TValue>(string key)
     {
         Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
-        var bytes = _distributedCache.Get(_keyManager.GlobalKey(key));
+        var bytes = _distributedCache.Get(key);
         var obj = JsonHelper.Deserialize<TValue>(bytes);
         return obj;
     }
@@ -32,7 +29,7 @@ public class CacheManager : ICacheManager, ITransientDependency
     {
         Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
-        var bytes = await _distributedCache.GetAsync(_keyManager.GlobalKey(key), token);
+        var bytes = await _distributedCache.GetAsync(key, token);
         var obj = JsonHelper.Deserialize<TValue>(bytes);
         return obj;
     }
@@ -43,7 +40,7 @@ public class CacheManager : ICacheManager, ITransientDependency
         Guard.Against.Null(value, nameof(value));
 
         var bytes = JsonHelper.ToBytes(value);
-        _distributedCache.Set(_keyManager.GlobalKey(key), bytes, options);
+        _distributedCache.Set(key, bytes, options);
     }
 
     public virtual async Task SetAsync<TValue>(string key, TValue value, DistributedCacheEntryOptions options, CancellationToken token = default)
@@ -52,34 +49,34 @@ public class CacheManager : ICacheManager, ITransientDependency
         Guard.Against.Null(value, nameof(value));
 
         var bytes = JsonHelper.ToBytes(value);
-        await _distributedCache.SetAsync(_keyManager.GlobalKey(key), bytes, options, token);
+        await _distributedCache.SetAsync(key, bytes, options, token);
     }
 
     public virtual void Refresh(string key)
     {
         Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
-        _distributedCache.Refresh(_keyManager.GlobalKey(key));
+        _distributedCache.Refresh(key);
     }
 
     public virtual async Task RefreshAsync(string key, CancellationToken token = default)
     {
         Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
-        await _distributedCache.RefreshAsync(_keyManager.GlobalKey(key), token);
+        await _distributedCache.RefreshAsync(key, token);
     }
 
     public virtual void Remove(string key)
     {
         Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
-        _distributedCache.Remove(_keyManager.GlobalKey(key));
+        _distributedCache.Remove(key);
     }
 
     public virtual async Task RemoveAsync(string key, CancellationToken token = default)
     {
         Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
-        await _distributedCache.RemoveAsync(_keyManager.GlobalKey(key), token);
+        await _distributedCache.RemoveAsync(key, token);
     }
 }

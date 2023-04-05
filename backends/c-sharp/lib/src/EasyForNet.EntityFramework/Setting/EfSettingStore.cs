@@ -2,7 +2,6 @@
 using EasyForNet.Entities;
 using EasyForNet.EntityFramework.Data.Context;
 using EasyForNet.Helpers;
-using EasyForNet.Key;
 using EasyForNet.Setting;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
@@ -14,26 +13,23 @@ public class EfSettingStore<TEntity> : ISettingStore<TEntity>
     where TEntity : EfnSetting
 {
     private readonly EfnDbContext _dbContext;
-    private readonly IKeyManager _keyManager;
 
     protected DbSet<TEntity> DbSet { get; }
 
-    public EfSettingStore(EfnDbContext dbContext, IKeyManager keyManager)
+    public EfSettingStore(EfnDbContext dbContext)
     {
         DbSet = dbContext.Set<TEntity>();
         _dbContext = dbContext;
-        _keyManager = keyManager;
     }
 
     public virtual TValue Get<TValue>(string key)
     {
         Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
-        var setting = DbSet.Where(e => e.Key.Equals(_keyManager.GlobalKey(key)))
-            .SingleOrDefault();
+        var setting = DbSet.SingleOrDefault(e => e.Key.Equals(key));
 
         if (setting == null || setting.Value == null)
-            return default(TValue);
+            return default;
 
         return JsonHelper.Deserialize<TValue>(setting.Value);
     }
@@ -42,7 +38,7 @@ public class EfSettingStore<TEntity> : ISettingStore<TEntity>
     {
         Guard.Against.NullOrWhiteSpace(key, nameof(key));
 
-        var setting = await DbSet.Where(e => e.Key.Equals(_keyManager.GlobalKey(key)))
+        var setting = await DbSet.Where(e => e.Key.Equals(key))
             .SingleOrDefaultAsync();
 
         if (setting == null || setting.Value == null)
@@ -56,13 +52,11 @@ public class EfSettingStore<TEntity> : ISettingStore<TEntity>
         Guard.Against.NullOrWhiteSpace(key, nameof(key));
         Guard.Against.Null(value, nameof(value));
 
-        var globalKey = _keyManager.GlobalKey(key);
         var jsonValue = JsonHelper.ToJson(value);
-        var setting = DbSet.Where(e => e.Key.Equals(globalKey))
-            .SingleOrDefault();
+        var setting = DbSet.SingleOrDefault(e => e.Key.Equals(key));
 
         if (setting == null)
-            DbSet.Add((TEntity)new EfnSetting { Key = globalKey, Value = jsonValue });
+            DbSet.Add((TEntity)new EfnSetting { Key = key, Value = jsonValue });
         else
         {
             setting.Value = jsonValue;
@@ -76,13 +70,12 @@ public class EfSettingStore<TEntity> : ISettingStore<TEntity>
         Guard.Against.NullOrWhiteSpace(key, nameof(key));
         Guard.Against.Null(value, nameof(value));
 
-        var globalKey = _keyManager.GlobalKey(key);
         var jsonValue = JsonHelper.ToJson(value);
-        var setting = await DbSet.Where(e => e.Key.Equals(globalKey))
+        var setting = await DbSet.Where(e => e.Key.Equals(key))
             .SingleOrDefaultAsync();
 
         if (setting == null)
-            DbSet.Add((TEntity)new EfnSetting { Key = globalKey, Value = jsonValue });
+            DbSet.Add((TEntity)new EfnSetting { Key = key, Value = jsonValue });
         else
         {
             setting.Value = jsonValue;

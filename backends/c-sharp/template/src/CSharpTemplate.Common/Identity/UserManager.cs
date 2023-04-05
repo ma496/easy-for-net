@@ -11,28 +11,28 @@ namespace CSharpTemplate.Common.Identity;
 
 public class UserManager : DomainService, IUserManager
 {
-    private readonly IRepository<AppUser, long> _userRepository;
-    private readonly IPasswordHasher<AppUser> _passwordHasher;
+    private readonly IRepository<User, long> _userRepository;
+    private readonly IPasswordHasher<User> _passwordHasher;
 
-    public UserManager(IRepository<AppUser, long> userRepository, IPasswordHasher<AppUser> passwordHasher)
+    public UserManager(IRepository<User, long> userRepository, IPasswordHasher<User> passwordHasher)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
     }
     
-    public async Task<AppUser> CreateAsync(UserDto user)
+    public async Task<User> CreateAsync(UserDto user)
     {
         if (await _userRepository.GetAll().Where(u => u.Email.ToLower() == user.Email.ToLower()).AnyAsync())
             throw new DuplicateException(nameof(user.Email));
         if (await _userRepository.GetAll().Where(u => u.Username.ToLower() == user.Username.ToLower()).AnyAsync())
             throw new DuplicateException(nameof(user.Username));
         
-        var appUser = Mapper.Map<AppUser>(user);
+        var appUser = Mapper.Map<User>(user);
         await _userRepository.CreateAsync(appUser, true);
         return appUser;
     }
 
-    public async Task UpdatePasswordAsync(AppUser user, string password)
+    public async Task UpdatePasswordAsync(User user, string password)
     {
         user.HashedPassword = _passwordHasher.HashPassword(user, password);
         await _userRepository.SaveChangesAsync();
@@ -54,5 +54,12 @@ public class UserManager : DomainService, IUserManager
             .ProjectTo<UserDto>(Mapper.ConfigurationProvider)
             .FirstOrDefaultAsync();
         return user;
+    }
+
+    public async Task<List<UserDto>> GetListAsync()
+    {
+        return await _userRepository.GetAll()
+            .ProjectTo<UserDto>(Mapper.ConfigurationProvider)
+            .ToListAsync();
     }
 }
