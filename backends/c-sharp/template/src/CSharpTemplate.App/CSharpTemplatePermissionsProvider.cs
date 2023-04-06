@@ -9,8 +9,5 @@ public class CSharpTemplatePermissionsProvider : PermissionsProvider
         base.Permissions(context);
 
         var defaultGroup = context.CreateGroup("Default", "Default");
-
-        defaultGroup.AddPermission("Permissions.ChangePassword", "ChangePassword");
-        defaultGroup.AddPermission("Permissions.Developer.Tool", "Tool");
     }
 }

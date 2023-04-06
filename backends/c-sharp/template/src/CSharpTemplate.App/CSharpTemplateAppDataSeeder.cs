@@ -1,4 +1,5 @@
-﻿using CSharpTemplate.Common.Identity;
+﻿using System.Globalization;
+using CSharpTemplate.Common.Identity;
 using CSharpTemplate.Common.Identity.Entities;
 using CSharpTemplate.Common.Identity.Permissions.Provider;
 using CSharpTemplate.Data.Context;
@@ -33,12 +34,28 @@ public class CSharpTemplateAppDataSeeder : DataSeeder
     private async Task CreatePermissions()
     {
         var permissions = _permissionsContext.GetFlatAllPermissions();
-        var entities = permissions.Select(p => new Permission
+        var savedPermissions = await _dbContext.Permissions.ToListAsync();
+
+        var newPermissions = new List<Permission>();
+        foreach (var p in permissions)
         {
-            Name = p
-        }).ToList();
+            if(!savedPermissions.Exists(sp => sp.Name == p))
+                newPermissions.Add(new Permission
+                {
+                    Name = p
+                });
+        }
         
-        await _dbContext.Permissions.AddRangeAsync(entities);
+        await _dbContext.Permissions.AddRangeAsync(newPermissions);
+
+        var obsoletePermissions = new List<Permission>();
+        foreach (var sp in savedPermissions)
+        {
+           if (!permissions.Contains(sp.Name))
+               obsoletePermissions.Add(sp);
+        }
+        
+        _dbContext.Permissions.RemoveRange(obsoletePermissions);
         
         await _dbContext.SaveChangesAsync();
     }
@@ -47,87 +64,82 @@ public class CSharpTemplateAppDataSeeder : DataSeeder
     {
         var allPermissions = await _dbContext.Permissions.ToListAsync();
         
-        await CreateDeveloperRole(allPermissions);
+        await CreateRole("Developer", allPermissions);
 
         var permissions = allPermissions.Where(p => !p.Name.Contains(".Developer.")).ToList();
         
-        await CreateAdminRole(permissions);
+        await CreateRole("Admin", permissions);
 
         await _dbContext.SaveChangesAsync();
     }
     
-    private async Task CreateDeveloperRole(List<Permission> permissions)
+    private async Task CreateRole(string roleName, List<Permission> permissions)
     {
-        var developerRole = new Role
+        var savedRole = await _dbContext.Roles
+            .Include(r => r.RolePermissions)
+            .SingleOrDefaultAsync(r => r.Name == roleName);
+        
+        if (savedRole == null)
         {
-            Name = "Developer",
-            RolePermissions = permissions.Select(p => new RolePermission
+            var role = new Role
             {
-                Permission = p
-            }).ToList()
-        };
-        await _dbContext.Roles.AddAsync(developerRole);
-    }
+                Name = roleName,
+                RolePermissions = permissions.Select(p => new RolePermission
+                {
+                    Permission = p
+                }).ToList()
+            };
+            
+            await _dbContext.Roles.AddAsync(role);
+        }
+        else
+        {
+            var newRolePermissions = new List<RolePermission>();
+            foreach (var p in permissions)
+            {
+                if (!savedRole.RolePermissions.ToList().Exists(rp => rp.PermissionId == p.Id))
+                    newRolePermissions.Add(new RolePermission
+                    {
+                        Role = savedRole,
+                        Permission = p
+                    });
+            }
 
-    private async Task CreateAdminRole(List<Permission> permissions)
-    {
-        var adminRole = new Role
-        {
-            Name = "Admin",
-            RolePermissions = permissions.Select(p => new RolePermission
-            {
-                Permission = p
-            }).ToList()
-        };
-        await _dbContext.Roles.AddAsync(adminRole);
+            await _dbContext.RolePermissions.AddRangeAsync(newRolePermissions);
+        }
     }
 
     private async Task CreateUsers()
     {
-        await CreateDeveloperUser();
-        await CreateAdminUser();
+        await CreateUser("developer", "developer", "Dev@3app");
+        await CreateUser("admin", "admin", "admin123");
 
         await _dbContext.SaveChangesAsync();
     }
     
-    private async Task CreateDeveloperUser()
+    private async Task CreateUser(string userName, string roleName, string password)
     {
-        var developerRole = await _dbContext.Roles.SingleAsync(r => r.Name.ToLower() == "developer");
-        var developerUser = new User
+        var role = await _dbContext.Roles.SingleAsync(r => r.Name.ToLower() == roleName);
+        var savedUser = await _dbContext.Users.SingleOrDefaultAsync(u => u.Username == userName);
+
+        if (savedUser == null)
         {
-            Name = "Developer",
-            Username = "developer",
-            Email = "developer@developer.com",
-            UserRoles = new List<UserRole>
+            var user = new User
             {
-                new()
+                Name = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(userName),
+                Username = userName,
+                Email = $"{userName}@{userName}.com",
+                UserRoles = new List<UserRole>
                 {
-                    Role = developerRole
+                    new()
+                    {
+                        Role = role
+                    }
                 }
-            }
-        };
-        await _dbContext.Users.AddAsync(developerUser);
-        await _userManager.UpdatePasswordAsync(developerUser, "Dev#4app");
-    }
-    
-    private async Task CreateAdminUser()
-    {
-        var adminRole = await _dbContext.Roles.SingleAsync(r => r.Name.ToLower() == "admin");
-        var adminUser = new User
-        {
-            Name = "Admin",
-            Username = "admin",
-            Email = "admin@admin.com",
-            UserRoles = new List<UserRole>
-            {
-                new()
-                {
-                    Role = adminRole
-                }
-            }
-        };
-        await _dbContext.Users.AddAsync(adminUser);
-        await _userManager.UpdatePasswordAsync(adminUser, "admin123");
+            };
+            await _dbContext.Users.AddAsync(user);
+            await _userManager.UpdatePasswordAsync(user, password);
+        }
     }
 
     #endregion
