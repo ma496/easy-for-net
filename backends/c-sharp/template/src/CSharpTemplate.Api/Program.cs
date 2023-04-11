@@ -77,6 +77,8 @@ app.UseMiddleware<ExceptionMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
+await app.DbMigrateAsync();
+
 var root = app.MapGroup("");
 
 root.AddEndpointFilterFactory(ValidationFilter.ValidationFilterFactory);

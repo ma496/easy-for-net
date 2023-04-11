@@ -6,7 +6,7 @@ using CSharpTemplate.Data.Context;
 using EasyForNet.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace CSharpTemplate.App;
+namespace CSharpTemplate.App.Data;
 
 public class CSharpTemplateAppDataSeeder : DataSeeder
 {

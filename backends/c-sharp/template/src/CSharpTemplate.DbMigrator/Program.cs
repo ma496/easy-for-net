@@ -1,19 +1,29 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using CSharpTemplate.Common.Identity.Permissions.Provider;
-using CSharpTemplate.Data.Context;
+using CSharpTemplate.App.Data;
 using CSharpTemplate.DbMigrator;
-using EasyForNet.Data;
 using EasyForNet.Modules;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Serilog;
 
 await Start();
 
 async Task Start()
 {
-    var services = new ServiceCollection();
+    Log.Logger = new LoggerConfiguration()
+        .MinimumLevel.Debug()
+        .WriteTo.Console()
+        .WriteTo.File("logs/dbMigrator.txt", rollingInterval: RollingInterval.Day)
+        .CreateLogger();
+    
+    var services = new ServiceCollection()
+        .AddLogging(lb =>
+        {
+            lb.ClearProviders();
+            lb.AddSerilog();
+        });
 
     var builder = new ConfigurationBuilder()
         .SetBasePath(Directory.GetCurrentDirectory())
@@ -29,17 +39,8 @@ async Task Start()
 
     await using var scope = container.BeginLifetimeScope();
     
-    var dbContext = scope.Resolve<CSharpTemplateDbContext>();
-    await dbContext.Database.MigrateAsync();
+    var dbManager = scope.Resolve<CSharpTemplateDbManager>();
+    await dbManager.MigrateAsync();
 
-    var permissionsContext = scope.Resolve<IPermissionsContext>();
-    var permissionsProvider = scope.Resolve<IPermissionsProvider>();
-    permissionsProvider.Permissions(permissionsContext);
-    
-    var dataSeeders = scope.Resolve<IEnumerable<IDataSeeder>>();
-    Console.WriteLine("Seed the data");
-    foreach (var dataSeeder in dataSeeders)
-    {
-        await dataSeeder.SeedAsync();
-    }
+    await Log.CloseAndFlushAsync();
 }
