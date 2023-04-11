@@ -69,6 +69,8 @@ public class CSharpTemplateAppDataSeeder : DataSeeder
         var permissions = allPermissions.Where(p => !p.Name.Contains(".Developer.")).ToList();
         
         await CreateRole("Admin", permissions);
+        
+        await CreateRole("User", new List<Permission>());
 
         await _dbContext.SaveChangesAsync();
     }
@@ -113,6 +115,7 @@ public class CSharpTemplateAppDataSeeder : DataSeeder
     {
         await CreateUser("developer", "developer", "Dev@3app");
         await CreateUser("admin", "admin", "admin123");
+        await CreateUser("user", "user", "user123");
 
         await _dbContext.SaveChangesAsync();
     }
