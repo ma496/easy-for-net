@@ -1,0 +1,44 @@
+{
+  "name": "react-frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 3090",
+    "build": "tsc && vite build",
+    "preview": "vite preview --port 3098",
+    "g-client": "openapi --input http://localhost:5173/swagger/v1/swagger.json --output ./src/generatedClient --name AppClient"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.10.6",
+    "@mantine/carousel": "^6.0.1",
+    "@mantine/core": "^6.0.1",
+    "@mantine/dates": "^6.0.1",
+    "@mantine/dropzone": "^6.0.1",
+    "@mantine/form": "^6.0.1",
+    "@mantine/hooks": "^6.0.1",
+    "@mantine/modals": "^6.0.1",
+    "@mantine/notifications": "^6.0.1",
+    "@mantine/nprogress": "^6.0.1",
+    "@mantine/tiptap": "^6.0.1",
+    "@tabler/icons-react": "^2.9.0",
+    "@tiptap/extension-link": "^2.0.0-beta.220",
+    "@tiptap/react": "^2.0.0-beta.220",
+    "@tiptap/starter-kit": "^2.0.0-beta.220",
+    "dayjs": "^1.11.7",
+    "embla-carousel-react": "^7.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-query": "^3.39.3",
+    "react-router-dom": "^6.8.2",
+    "zustand": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.27",
+    "@types/react-dom": "^18.0.10",
+    "@vitejs/plugin-react-swc": "^3.0.0",
+    "openapi-typescript-codegen": "^0.23.0",
+    "typescript": "^4.9.3",
+    "vite": "^4.1.0"
+  }
+}
