@@ -34,7 +34,7 @@ export default function AsideMenuLayer({ menu, className = '', ...props }: Props
         >
           <div className='flex-1 flex justify-center items-center'>
             <div>
-              <b className="font-black">One</b>
+              <b className="font-black">React Frontend</b>
             </div>
           </div>
           <button
