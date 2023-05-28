@@ -1,0 +1,37 @@
+﻿using Autofac;
+using EasyForNet.Entities;
+using EasyForNet.EntityFramework.Data.Context;
+using EasyForNet.EntityFramework.Setting;
+using EasyForNet.EntityFramework.Tests.Data;
+using EasyForNet.Modules;
+using EasyForNet.Setting;
+using EasyForNet.Tests.Share;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+
+namespace EasyForNet.EntityFramework.Tests;
+
+[DependOn(typeof(EasyForNetModule))]
+[DependOn(typeof(EasyForNetEntityFrameworkModule))]
+[DependOn(typeof(EasyForNetTestsShareModule))]
+public class EasyForNetEntityFrameworkTestsModule : ModuleBase
+{
+    public override void Dependencies(ContainerBuilder builder, IConfiguration configuration)
+    {
+        builder.Register(sp =>
+        {
+            var options = new DbContextOptionsBuilder()
+                .UseSqlite("Data Source = EasyForNetEntityFrameworkTests.db")
+                //.UseSqlServer("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=EasyForNetEntityFrameworkTests")
+                .EnableSensitiveDataLogging()
+                .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+                .Options;
+            var currentUser = sp.Resolve<ICurrentUser>();
+            var db = new EasyForNetEntityFrameworkTestsDb(options, currentUser);
+            return db;
+        })
+            .AsSelf()
+            .As<EfnDbContext>()
+            .InstancePerLifetimeScope();
+    }
+}
