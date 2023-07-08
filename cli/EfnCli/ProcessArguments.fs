@@ -26,17 +26,19 @@ let private prepareArguments (args: string array) =
     else
         arguments |> List.toArray
 
-let private createProject (name: string) (path: string) =
+let private createProject (path: string) (name: string) =
     printfn "Creating the project (%s)" name
 
-    let sourcePath =
-        Path.Combine(getTemplateDirectory (), "Latest", "backends", "c-sharp")
+    let sourcePath = Path.Combine(getTemplateDirectory (), "Latest", "backends", "c-sharp")
 
     let destinationPath = Path.Combine(Directory.GetCurrentDirectory(), path, name)
-        
-    copyDirectoryRecursively sourcePath destinationPath
 
-let private modifySlnFile (path: string) =
+    if Directory.Exists(destinationPath) then
+        Exception($"{Path.GetFullPath destinationPath} directory already exist") |> raise
+
+    copyDirectoryRecursively sourcePath destinationPath false
+
+let private modifySlnIds (path: string) =
     let mutable content = File.ReadAllText path
     let regex = new Regex(@"\{([^{}]+)\}")
     let idMatches = regex.Matches(content)
@@ -57,38 +59,40 @@ let private modifySlnFile (path: string) =
 
     File.WriteAllText(path, content)
 
+let private renameSlnFile (path: string) (name: string) =
+    let slnFileName = "CSharpBackend.sln"
+    let slnFilePath = Path.Combine(Directory.GetCurrentDirectory(), path, name, slnFileName)
+    let slnFile = FileInfo(slnFilePath)
+    slnFile.MoveTo(slnFile.FullName.Replace(slnFileName, $"{name}.sln"))
+
 let private modifyFileContent (path: string) (oldText: string) (newNext: string) =
     let mutable content = File.ReadAllText path
     content <- content.Replace(oldText, newNext)
     File.WriteAllText(path, content)
 
-let rec private renameProject (name: string) (path: string) =
-    let wordToChange = "CSharpBackend"
-    let path = Path.Combine(Directory.GetCurrentDirectory(), path, name)
+let rec private renameAndModify (path: string) (oldText: string) (newText: string) =
     let directory = DirectoryInfo(path)
 
     directory.GetFiles()
     |> Array.iter(fun f -> 
-        // modify .sln file
-        // if f.Name = $"{wordToChange}.sln" then
-        //     modifySlnFile f.FullName
-
-        modifyFileContent f.FullName wordToChange name
+        modifyFileContent f.FullName oldText newText
 
         // rename file
-        if f.Name.Contains(wordToChange) then
-            f.MoveTo(f.FullName.Replace(wordToChange, name), true)
+        if f.Name.Contains(oldText) then
+            f.MoveTo(f.FullName.Replace(oldText, newText))
     )
 
     for subdirectory in directory.GetDirectories() do
-        let newPath = Path.Combine(path, subdirectory.Name)
-        renameProject subdirectory.FullName newPath
+        renameAndModify subdirectory.FullName oldText newText
 
-let private processNewArgument (name: string) (path: string) =
+let private processNewArgument (path: string) (name: string) =
     clone()
-    createProject name path
-    renameProject name path
+    createProject path name 
+    renameSlnFile path name
+    renameAndModify (Path.Combine(path, name)) "EasyForNet" name
+    Console.ForegroundColor <- ConsoleColor.Green
     printfn "Successfully created the project (%s)" name
+    Console.ResetColor()
 
 let processArguments args = 
     let arguments = prepareArguments args
@@ -101,5 +105,5 @@ let processArguments args =
     parseResults.GetAllResults() 
     |> List.iter (fun r -> 
         match r with
-        | New(n, p) -> processNewArgument n p
+        | New(n, p) -> processNewArgument p n
     )

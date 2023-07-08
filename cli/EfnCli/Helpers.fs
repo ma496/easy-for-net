@@ -11,7 +11,7 @@ let getTemplateDirectory () =
 
     dir
 
-let rec copyDirectoryRecursively sourcePath destinationPath  =
+let rec copyDirectoryRecursively sourcePath destinationPath overwrite  =
     let sourceDirectory = DirectoryInfo(sourcePath);
     let destinationDirectory = DirectoryInfo(destinationPath)
 
@@ -20,11 +20,11 @@ let rec copyDirectoryRecursively sourcePath destinationPath  =
 
     for file in sourceDirectory.GetFiles() do
         let destinationFilePath = Path.Combine(destinationPath, file.Name)
-        file.CopyTo(destinationFilePath, true) |> ignore
+        file.CopyTo(destinationFilePath, overwrite) |> ignore
 
     for subdirectory in sourceDirectory.GetDirectories() do
         let newDestinationPath = Path.Combine(destinationPath, subdirectory.Name)
-        copyDirectoryRecursively subdirectory.FullName newDestinationPath
+        copyDirectoryRecursively subdirectory.FullName newDestinationPath overwrite
 
 let cleanTemplate dir =
     printfn "%s" "Clean the template"

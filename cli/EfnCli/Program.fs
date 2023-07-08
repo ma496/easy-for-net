@@ -1,5 +1,6 @@
 ﻿open ProcessArguments
 open Argu
+open System
 
 [<EntryPoint>]
 let main argv = 
@@ -11,4 +12,7 @@ let main argv =
     with
     | :? ArguParseException as ex ->
         printfn "%s" ex.Message
+        0
+    | ex ->
+        printfn "Error: %s" ex.Message
         0
