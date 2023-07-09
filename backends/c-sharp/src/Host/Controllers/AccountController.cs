@@ -1,12 +1,12 @@
-﻿using EasyForNet.Application.Account.Login;
+﻿using EasyForNet.Application.Account.SignIn;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EasyForNet.Host.Controllers;
 
 public class AccountController : ApiControllerBase
 {
-    [HttpPost]
-    public async Task<LoginDto> Login(LoginCommand command)
+    [HttpPost("SignIn")]
+    public async Task<SignInDto> SignIn(SignInCommand command)
     {
         return await Mediator.Send(command);
     }

@@ -82,7 +82,7 @@ public class IdentityService : IIdentityService
         return result.ToApplicationResult();
     }
 
-    public async Task<(bool isSuccess, string? token)> LoginAsync(string username, string password)
+    public async Task<(bool isSuccess, string? token)> SignInAsync(string username, string password)
     {
         var user = await _userManager.FindByNameAsync(username);
         if (user != null && await _userManager.CheckPasswordAsync(user, password))

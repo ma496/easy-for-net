@@ -1,10 +1,10 @@
 ﻿using FluentValidation;
 
-namespace EasyForNet.Application.Account.Login;
+namespace EasyForNet.Application.Account.SignIn;
 
-public class LoginCommandValidator : AbstractValidator<LoginCommand>
+public class SignInCommandValidator : AbstractValidator<SignInCommand>
 {
-    public LoginCommandValidator()
+    public SignInCommandValidator()
     {
         RuleFor(x => x.Username)
             .NotEmpty();

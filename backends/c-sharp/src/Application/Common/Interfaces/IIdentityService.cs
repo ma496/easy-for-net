@@ -14,5 +14,5 @@ public interface IIdentityService
 
     Task<Result> DeleteUserAsync(string userId);
 
-    Task<(bool isSuccess, string? token)> LoginAsync(string username, string password);
+    Task<(bool isSuccess, string? token)> SignInAsync(string username, string password);
 }
