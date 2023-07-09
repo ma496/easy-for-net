@@ -3,6 +3,7 @@ using EasyForNet.Application.Common.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace EasyForNet.Infrastructure.Identity;
 
@@ -11,15 +12,17 @@ public class IdentityService : IIdentityService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IUserClaimsPrincipalFactory<ApplicationUser> _userClaimsPrincipalFactory;
     private readonly IAuthorizationService _authorizationService;
+    private readonly IConfiguration _configuration;
 
     public IdentityService(
         UserManager<ApplicationUser> userManager,
         IUserClaimsPrincipalFactory<ApplicationUser> userClaimsPrincipalFactory,
-        IAuthorizationService authorizationService)
+        IAuthorizationService authorizationService, IConfiguration configuration)
     {
         _userManager = userManager;
         _userClaimsPrincipalFactory = userClaimsPrincipalFactory;
         _authorizationService = authorizationService;
+        _configuration = configuration;
     }
 
     public async Task<string?> GetUserNameAsync(string userId)
@@ -77,5 +80,17 @@ public class IdentityService : IIdentityService
         var result = await _userManager.DeleteAsync(user);
 
         return result.ToApplicationResult();
+    }
+
+    public async Task<(bool isSuccess, string? token)> LoginAsync(string username, string password)
+    {
+        var user = await _userManager.FindByNameAsync(username);
+        if (user != null && await _userManager.CheckPasswordAsync(user, password))
+        {
+            var token = JwtHelper.GenerateToken(user, _configuration);
+            return (true, token);
+        }
+
+        return (false, null);
     }
 }
