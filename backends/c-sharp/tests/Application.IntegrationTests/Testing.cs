@@ -11,7 +11,7 @@ using Respawn;
 namespace EasyForNet.Application.IntegrationTests;
 
 [SetUpFixture]
-public partial class Testing
+public class Testing
 {
     private static WebApplicationFactory<Program> _factory = null!;
     private static IConfiguration _configuration = null!;
@@ -101,13 +101,15 @@ public partial class Testing
 
     public static async Task ResetState()
     {
-        try
-        {
-            await _checkpoint.ResetAsync(_configuration.GetConnectionString("DefaultConnection")!);
-        }
-        catch (Exception) 
-        {
-        }
+        // try
+        // {
+        //     await _checkpoint.ResetAsync(_configuration.GetConnectionString("DefaultConnection")!);
+        // }
+        // catch (Exception) 
+        // {
+        // }
+        
+        await _checkpoint.ResetAsync(_configuration.GetConnectionString("DefaultConnection")!);
 
         _currentUserId = null;
     }

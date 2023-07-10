@@ -25,18 +25,18 @@ internal class CustomWebApplicationFactory : WebApplicationFactory<Program>
             configurationBuilder.AddConfiguration(integrationConfig);
         });
 
-        builder.ConfigureServices((builder, services) =>
+        builder.ConfigureServices((b, services) =>
         {
             services
                 .Remove<ICurrentUserService>()
-                .AddTransient(provider => Mock.Of<ICurrentUserService>(s =>
+                .AddTransient(_ => Mock.Of<ICurrentUserService>(s =>
                     s.UserId == GetCurrentUserId()));
 
             services
                 .Remove<DbContextOptions<ApplicationDbContext>>()
-                .AddDbContext<ApplicationDbContext>((sp, options) =>
-                    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
-                        builder => builder.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
+                .AddDbContext<ApplicationDbContext>((_, options) =>
+                    options.UseSqlServer(b.Configuration.GetConnectionString("DefaultConnection"),
+                        sb => sb.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
         });
     }
 }

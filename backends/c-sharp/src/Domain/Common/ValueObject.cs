@@ -1,6 +1,7 @@
 ﻿namespace EasyForNet.Domain.Common;
 
 // Learn more: https://docs.microsoft.com/en-us/dotnet/standard/microservices-architecture/microservice-ddd-cqrs-patterns/implement-value-objects
+// TODO Review ValueObject class
 public abstract class ValueObject
 {
     protected static bool EqualOperator(ValueObject left, ValueObject right)

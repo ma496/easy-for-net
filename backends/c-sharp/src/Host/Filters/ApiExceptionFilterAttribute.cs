@@ -29,17 +29,16 @@ public class ApiExceptionFilterAttribute : ExceptionFilterAttribute
 
     private void HandleException(ExceptionContext context)
     {
-        Type type = context.Exception.GetType();
-        if (_exceptionHandlers.ContainsKey(type))
+        var type = context.Exception.GetType();
+        if (_exceptionHandlers.TryGetValue(type, out Action<ExceptionContext>? handler))
         {
-            _exceptionHandlers[type].Invoke(context);
+            handler.Invoke(context);
             return;
         }
 
         if (!context.ModelState.IsValid)
         {
             HandleInvalidModelStateException(context);
-            return;
         }
     }
 
