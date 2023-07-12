@@ -1,4 +1,5 @@
 ﻿using EasyForNet.Application.Common.Exceptions;
+using EasyForNet.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -17,6 +18,7 @@ public class ApiExceptionFilterAttribute : ExceptionFilterAttribute
                 { typeof(NotFoundException), HandleNotFoundException },
                 { typeof(UnauthorizedAccessException), HandleUnauthorizedAccessException },
                 { typeof(ForbiddenAccessException), HandleForbiddenAccessException },
+                { typeof(UserFriendlyException), HandleUserFriendlyException },
             };
     }
 
@@ -113,6 +115,24 @@ public class ApiExceptionFilterAttribute : ExceptionFilterAttribute
         context.Result = new ObjectResult(details)
         {
             StatusCode = StatusCodes.Status403Forbidden
+        };
+
+        context.ExceptionHandled = true;
+    }
+    
+    private void HandleUserFriendlyException(ExceptionContext context)
+    {
+        var exception = (UserFriendlyException)context.Exception;
+        var details = new ProblemDetails
+        {
+            Status = StatusCodes.Status422UnprocessableEntity,
+            Title = "Client Error",
+            Detail = exception.Message
+        };
+
+        context.Result = new ObjectResult(details)
+        {
+            StatusCode = StatusCodes.Status422UnprocessableEntity
         };
 
         context.ExceptionHandled = true;
