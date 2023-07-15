@@ -125,8 +125,9 @@ public class ApiExceptionFilterAttribute : ExceptionFilterAttribute
         var exception = (UserFriendlyException)context.Exception;
         var details = new ProblemDetails
         {
+            Type = "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422",
             Status = StatusCodes.Status422UnprocessableEntity,
-            Title = "Client Error",
+            Title = "Error",
             Detail = exception.Message
         };
 

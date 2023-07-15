@@ -1,5 +1,6 @@
 ﻿using EasyForNet.Application.Common.Interfaces;
 using EasyForNet.Application.Common.Models;
+using EasyForNet.Domain.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -82,15 +83,15 @@ public class IdentityService : IIdentityService
         return result.ToApplicationResult();
     }
 
-    public async Task<(bool isSuccess, string? token)> SignInAsync(string username, string password)
+    public async Task<string> SignInAsync(string username, string password)
     {
         var user = await _userManager.FindByNameAsync(username);
         if (user != null && await _userManager.CheckPasswordAsync(user, password))
         {
             var token = JwtHelper.GenerateToken(user, _configuration);
-            return (true, token);
+            return token;
         }
 
-        return (false, null);
+        throw new UserFriendlyException("Username or Password not correct.");
     }
 }
