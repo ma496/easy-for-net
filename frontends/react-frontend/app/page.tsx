@@ -3,8 +3,8 @@ import {Button} from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <div className={'flex justify-center items-center h-screen'}>
-      <Button variant={'default'}>Click Me</Button>
+    <div>
+      <h1>All Page</h1>
     </div>
   )
 }
