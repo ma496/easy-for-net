@@ -6,7 +6,8 @@ import { IoIosArrowDown } from "react-icons/io";
 import { usePathname } from 'next/navigation'
 import Link from "next/link";
 
-import { MenuModel } from "./menuModel";
+import { MenuModel } from "./models";
+import { appendUrl } from "@/lib/utils";
 
 type SubMenuProps = {
   menu: MenuModel
@@ -14,12 +15,12 @@ type SubMenuProps = {
 
 const SubMenu: React.FC<SubMenuProps> = ({ menu }) => {
   const pathname = usePathname();
-  const [subMenuOpen, setSubMenuOpen] = useState(false);
+  const [subMenuOpen, setSubMenuOpen] = useState(pathname.includes(menu.url));
 
   return (
     <>
       <li
-        className={`link ${pathname.includes(menu.url) && "text-blue-600"}`}
+        className={`link ${pathname.includes(menu.url) && "active"}`}
         onClick={() => setSubMenuOpen(!subMenuOpen)}
       >
         {menu.icon && <menu.icon size={23} className="min-w-max" />}
@@ -44,8 +45,8 @@ const SubMenu: React.FC<SubMenuProps> = ({ menu }) => {
           <li key={i}>
             {/* className="hover:text-blue-600 hover:font-medium" */}
             <Link
-              href={`/${menu.url}/${children.url}`}
-              className="link !bg-transparent capitalize"
+              href={appendUrl(menu.url, children.url)}
+              className={`link capitalize ${pathname === appendUrl(menu.url, children.url) ? "active" : ""}`}
             >
               {children.title}
             </Link>

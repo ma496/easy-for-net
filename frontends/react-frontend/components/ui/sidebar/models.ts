@@ -6,3 +6,8 @@ export type MenuModel = {
   icon?: IconType
   children?: MenuModel[]
 }
+
+export type MenuGroupModel = {
+  group: string
+  menus: MenuModel[]
+}

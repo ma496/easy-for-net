@@ -1,7 +1,7 @@
 'use client'
 
 import Link from "next/link"
-import { MenuModel } from "./menuModel"
+import { MenuModel } from "./models"
 import { usePathname } from "next/navigation"
 
 type MenuProps = {
