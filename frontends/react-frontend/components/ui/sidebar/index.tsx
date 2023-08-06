@@ -3,8 +3,6 @@
 import { useEffect, useState, useRef } from "react";
 import SubMenu from "./subMenu";
 import { motion } from "framer-motion";
-
-// * React icons
 import { IoIosArrowBack } from "react-icons/io";
 import { useMediaQuery } from "react-responsive";
 import { usePathname } from 'next/navigation'
@@ -20,11 +18,7 @@ const Sidebar = () => {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (isTabletMid) {
-      setOpen(false);
-    } else {
-      setOpen(true);
-    }
+    setOpen(!isTabletMid)
   }, [isTabletMid]);
 
   useEffect(() => {
@@ -69,7 +63,7 @@ const Sidebar = () => {
       menu.children && menu.children.length > 0
         ? (open || isTabletMid) && (
           <div className="flex flex-col gap-1">
-            <SubMenu menu={menu} />
+            <SubMenu menu={menu} previousUrl={menu.url} nestedLevel={0} />
           </div>
         )
         : (
@@ -78,7 +72,7 @@ const Sidebar = () => {
     )
   }
 
-  const RenderMenuGroup = ({group}: {group: MenuGroupModel}) => {
+  const RenderMenuGroup = ({ group }: { group: MenuGroupModel }) => {
     return (
       (open || isTabletMid) && (
         <div className="border-y py-5 border-slate-300 ">
@@ -102,39 +96,22 @@ const Sidebar = () => {
         variants={Nav_animation}
         initial={{ x: isTabletMid ? -250 : 0 }}
         animate={open ? "open" : "closed"}
-        className=" bg-white text-gray shadow-xl z-[999] max-w-[16rem]  w-[16rem]
-            overflow-hidden md:relative fixed
-         h-screen "
+        className=" bg-white text-gray shadow-xl z-[999] max-w-[16rem] w-[16rem] fixed h-screen"
       >
-        <div className="flex items-center gap-2.5 font-medium border-b py-3 border-slate-300  mx-3">
+        <div className="flex items-center gap-2.5 h-16 font-medium border-b py-3 border-slate-300 mx-3">
           <img
             src="https://img.icons8.com/color/512/firebase.png"
             width={45}
             alt=""
           />
           <span className="text-xl whitespace-pre">Fireball</span>
+          <div className="m-3 cursor-pointer" onClick={() => setOpen(!open)}>
+            <MdMenu size={25} />
+          </div>
         </div>
 
-        <div className="flex flex-col  h-full">
-          <ul className="whitespace-pre px-2.5 text-[0.9rem] py-5 flex flex-col gap-1  font-medium overflow-x-hidden scrollbar-thin scrollbar-track-white scrollbar-thumb-slate-100   md:h-[68%] h-[70%]">
-            {/* {(open || isTabletMid) && (
-              <div className="border-y py-5 border-slate-300 ">
-                <small className="pl-3 text-slate-500 inline-block mb-2">
-                  Product categories
-                </small>
-                {menus?.map((menu) => (
-                  menu.children && menu.children.length > 0
-                    ? (
-                      <div key={menu.title} className="flex flex-col gap-1">
-                        <SubMenu menu={menu} />
-                      </div>
-                    )
-                    : (
-                      <Menu menu={menu} />
-                    )
-                ))}
-              </div>
-            )} */}
+        <div className="flex flex-col h-full pb-16 overflow-y-auto scrollbar-thin scrollbar-track-white scrollbar-thumb-slate-100">
+          <ul className="whitespace-pre px-2.5 text-[0.9rem] py-5 flex flex-col gap-1 font-medium">
             {menus?.map((menu, i) => {
               let output: React.JSX.Element | null | false = null
               if ('title' in menu) {
@@ -145,7 +122,7 @@ const Sidebar = () => {
               return output
             })}
           </ul>
-          {open && (
+          {/* {open && (
             <div className="flex-1 text-sm z-50  max-h-48 my-auto  whitespace-pre   w-full  font-medium  ">
               <div className="flex border-y border-slate-300 p-4 items-center justify-between">
                 <div>
@@ -157,9 +134,9 @@ const Sidebar = () => {
                 </p>
               </div>
             </div>
-          )}
+          )} */}
         </div>
-        <motion.div
+        {/* <motion.div
           onClick={() => {
             setOpen(!open);
           }}
@@ -180,11 +157,8 @@ const Sidebar = () => {
           className="absolute w-fit h-fit md:block z-50 hidden right-2 bottom-3 cursor-pointer"
         >
           <IoIosArrowBack size={25} />
-        </motion.div>
+        </motion.div> */}
       </motion.div>
-      <div className="m-3 md:hidden" onClick={() => setOpen(true)}>
-        <MdMenu size={25} />
-      </div>
     </div>
   );
 };
