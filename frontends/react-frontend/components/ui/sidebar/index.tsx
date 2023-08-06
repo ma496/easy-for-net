@@ -16,6 +16,7 @@ const Sidebar = () => {
   const [open, setOpen] = useState(isTabletMid ? false : true);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
+  let isPreviousMenuGroup = false
 
   useEffect(() => {
     setOpen(!isTabletMid)
@@ -72,10 +73,11 @@ const Sidebar = () => {
     )
   }
 
-  const RenderMenuGroup = ({ group }: { group: MenuGroupModel }) => {
+  const RenderMenuGroup = ({ group, isPreviousMenuGroup }: { group: MenuGroupModel, isPreviousMenuGroup: boolean }) => {
+    debugger
     return (
       (open || isTabletMid) && (
-        <div className="border-y py-5 border-slate-300 ">
+        <div className={`py-5 ${!isPreviousMenuGroup ? 'border-y border-slate-300' : 'border-b border-slate-300'}`}>
           <small className="pl-3 text-slate-500 inline-block mb-2">
             {group.group}
           </small>
@@ -112,15 +114,19 @@ const Sidebar = () => {
 
         <div className="flex flex-col h-full pb-16 overflow-y-auto scrollbar-thin scrollbar-track-white scrollbar-thumb-slate-100">
           <ul className="whitespace-pre px-2.5 text-[0.9rem] py-5 flex flex-col gap-1 font-medium">
-            {menus?.map((menu, i) => {
-              let output: React.JSX.Element | null | false = null
-              if ('title' in menu) {
-                output = <RenderMenu key={i} menu={menu} />
-              } else if ('group' in menu) {
-                output = <RenderMenuGroup key={i} group={menu} />
-              }
-              return output
-            })}
+            {
+              menus?.map((menu, i) => {
+                let output: React.JSX.Element | null | false = null
+                if ('title' in menu) {
+                  output = <RenderMenu key={i} menu={menu} />
+                  isPreviousMenuGroup = false
+                } else if ('group' in menu) {
+                  debugger
+                  output = <RenderMenuGroup key={i} group={menu} isPreviousMenuGroup={isPreviousMenuGroup} />
+                  isPreviousMenuGroup = true
+                }
+                return output
+              })}
           </ul>
           {/* {open && (
             <div className="flex-1 text-sm z-50  max-h-48 my-auto  whitespace-pre   w-full  font-medium  ">

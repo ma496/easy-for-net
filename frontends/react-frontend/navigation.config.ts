@@ -93,6 +93,39 @@ const menus: (MenuModel | MenuGroupModel)[] = [
     icon: SlSettings,
     url: "/settings"
   },
+  {
+    group: 'Product Categories',
+    menus: [
+      {
+        title: "build",
+        icon: RiBuilding3Line,
+        url: "build",
+        children: [
+          { title: "auth", url: "auth" },
+          { title: "app settings", url: "app-settings" },
+          { title: "storage", url: "storage" },
+          { title: "hosting", url: "hosting" }
+        ],
+      },
+      {
+        title: "analytics",
+        icon: TbReportAnalytics,
+        url: "analytics",
+        children: [
+          {
+            title: "dashboard", url: "dashboard", icon: TbReportAnalytics,
+            children: [
+              { title: "dashboard", url: "dashboard", icon: TbReportAnalytics, },
+              { title: "realtime", url: "realtime" },
+              { title: "events", url: "events" },
+            ]
+          },
+          { title: "realtime", url: "realtime" },
+          { title: "events", url: "events" },
+        ]
+      },
+    ]
+  },
 ]
 
 export { menus }
