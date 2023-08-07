@@ -1,4 +1,4 @@
-import MainLayout from '@/components/layouts/mainLayout'
+import MainLayout from '@/components/layouts/main/mainLayout'
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'

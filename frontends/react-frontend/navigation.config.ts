@@ -1,5 +1,5 @@
 import { AiOutlineAppstore } from "react-icons/ai";
-import { MenuModel, MenuGroupModel } from "./components/ui/sidebar/models";
+import { MenuModel, MenuGroupModel } from "./components/layouts/main/sidebar/models";
 import { BsPerson } from "react-icons/bs";
 import { HiOutlineDatabase } from "react-icons/hi";
 import { RiBuilding3Line } from "react-icons/ri";

@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import Sidebar from '../ui/sidebar';
+import Sidebar from './sidebar';
 
 type RootLayoutProps = {
   children: ReactNode;
