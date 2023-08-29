@@ -4,9 +4,11 @@ import { menus } from "@/navigation.config"
 import { Menu } from "./menu"
 import { MenuGroup } from "./menu-group"
 import { useMainLayoutContext } from "./context"
+import { useRouter } from "next/navigation"
 
 const Sidebar = () => {
   const { sidebarOpen, sidebarWidth, headerHeight, getDurationCss } = useMainLayoutContext()
+  const router = useRouter()
   let isPreviousMenuGroup = false
 
   return (
@@ -18,17 +20,18 @@ const Sidebar = () => {
         marginLeft: sidebarOpen ? 0 : -sidebarWidth
       }}>
       <div
-        className={`flex items-center gap-2.5 font-medium border-b py-3 mx-3 shadow-none`}
-        style={{ height: headerHeight }}>
+        className={`flex items-center gap-2.5 font-medium border-b py-3 mx-3 shadow-none cursor-pointer`}
+        style={{ height: headerHeight }}
+        onClick={() => router.push('/')}>
         <img
           src="/icons8-easy-48.png"
-          width={45}
+          width={35}
           alt=""
         />
         <span className="text-xl whitespace-pre">Easy For Net</span>
       </div>
       <div
-        className="fixed bg-background shadow-lg h-full overflow-y-auto scrollbar-thin scrollbar-thumb-secondary-scrollbar"
+        className="fixed bg-background shadow-lg h-full overflow-auto scrollbar-thin scrollbar-thumb-secondary-scrollbar"
         style={{ width: sidebarWidth, paddingBottom: headerHeight }}>
         <ul className="whitespace-pre px-2.5 text-[0.9rem] py-5 flex flex-col gap-1 font-medium">
           {

@@ -1,6 +1,6 @@
 import { LightOrDarkTheme } from "../../theme/light-or-dark-theme"
 import { useMainLayoutContext } from "./context"
-import { Menu } from "lucide-react"
+import { RiMenuLine, RiMenu2Line } from "react-icons/ri"
 
 const Header = () => {
   const { headerHeight, sidebarOpen, setSidebarOpen, sidebarWidth, getDurationCss } = useMainLayoutContext()
@@ -14,9 +14,19 @@ const Header = () => {
         paddingRight: sidebarOpen ? sidebarWidth + 8 : 8
       }}>
       <div>
-        <Menu
-          className="cursor-pointer"
-          onClick={() => setSidebarOpen(!sidebarOpen)} size={30} />
+        {
+          !sidebarOpen
+            ? (
+              <RiMenuLine
+                className="cursor-pointer"
+                onClick={() => setSidebarOpen(!sidebarOpen)} size={30} />
+            )
+            : (
+              <RiMenu2Line
+                className="cursor-pointer"
+                onClick={() => setSidebarOpen(!sidebarOpen)} size={30} />
+            )
+        }
       </div>
       <div>
         <LightOrDarkTheme />
