@@ -75,7 +75,19 @@ const menus: (MenuModel | MenuGroupModel)[] = [
           {
             title: "Nested Menu 1.2.2",
             icon: BiBookmark,
-            url: "/2"
+            url: "/2",
+            children: [
+              {
+                title: "Nested Menu 1.2.2.1",
+                icon: BiBookmark,
+                url: "/1"
+              },
+              {
+                title: "Nested Menu 1.2.2.2",
+                icon: BiBookmark,
+                url: "/2"
+              },
+            ]
           },
         ]
       },

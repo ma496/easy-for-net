@@ -36,11 +36,11 @@ const SubMenu: React.FC<SubMenuProps> = ({ menu, previousUrl, nestedLevel }) => 
           subMenuOpen
             ? {
               height: "fit-content",
-              display: "block"
+              display: "block",
             }
             : {
               height: 0,
-              display: "none"
+              display: "none",
             }
         }
         className={`flex h-0 flex-col text-[0.8rem] font-normal ${nestedLevel === 0 ? 'pl-[40px]' : 'pl-[18px]'}`}

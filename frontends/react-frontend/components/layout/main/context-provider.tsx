@@ -8,15 +8,17 @@ type MainLayoutProviderProps = {
 }
 
 export const MainLayoutProvider: React.FC<MainLayoutProviderProps> = ({ children }: MainLayoutProviderProps) => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [tabletOrMobile, setTabletOrMobile] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const contextValue: MainLayoutContextType = {
-    tabletOrMobile: false,
+    tabletOrMobile: tabletOrMobile,
     headerHeight: 64,
     sidebarWidth: 256,
     sidebarOpen: sidebarOpen,
     duration: 500,
     setSidebarOpen: setSidebarOpen,
+    setTabletOrMobile: setTabletOrMobile,
     getDurationCss: () => {
       return {
         transitionDuration: `${contextValue.duration}ms`,

@@ -7,6 +7,7 @@ export type MainLayoutContextType = {
   sidebarOpen: boolean
   duration: number,
   setSidebarOpen: (value: boolean) => void
+  setTabletOrMobile: (value: boolean) => void
   getDurationCss: () => CSSProperties
 }
 
