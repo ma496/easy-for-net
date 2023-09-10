@@ -1,23 +1,16 @@
 'use client'
 
-import React, { useEffect } from "react"
+import React from "react"
 import { Sidebar } from "./sidebar"
 import { Header } from "./header"
 import { useMainLayoutContext } from "./context"
-import { useMediaQuery } from "react-responsive"
 
 type MainLayoutProps = {
   children: React.ReactNode
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
-  const { sidebarOpen, sidebarWidth, headerHeight, getDurationCss, setSidebarOpen, setTabletOrMobile } = useMainLayoutContext()
-  const isTabletOrMobile = useMediaQuery({ query: '(max-width: 1024px)' })
-
-  useEffect(() => {
-    setTabletOrMobile(isTabletOrMobile)
-    setSidebarOpen(!isTabletOrMobile)
-  }, [isTabletOrMobile])
+  const { sidebarOpen, sidebarWidth, headerHeight, getDurationCss } = useMainLayoutContext()
 
   return (
     <div className="flex">
