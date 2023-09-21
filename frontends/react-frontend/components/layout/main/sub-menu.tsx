@@ -1,28 +1,28 @@
 'use client'
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { IoIosArrowDown } from "react-icons/io";
-import { usePathname } from 'next/navigation'
 import Link from "next/link";
 
-import { MenuModel } from "./models";
-import { appendUrl } from "@/lib/utils";
+import { MenuType } from "./context";
 
 type SubMenuProps = {
-  menu: MenuModel
-  previousUrl: string
+  menu: MenuType
   nestedLevel: number
 }
 
-const SubMenu: React.FC<SubMenuProps> = ({ menu, previousUrl, nestedLevel }) => {
-  const pathname = usePathname()
-  const [subMenuOpen, setSubMenuOpen] = useState(pathname.includes(menu.url))
+const SubMenu: React.FC<SubMenuProps> = ({ menu, nestedLevel }) => {
+  const [subMenuOpen, setSubMenuOpen] = useState(menu.isActive)
+
+  useEffect(() => {
+    setSubMenuOpen(menu.isActive)
+  }, [menu.isActive])
 
   return (
     <>
       <li
-        className={`${nestedLevel === 0 ? 'link' : 'nested-link'} ${pathname.includes(menu.url) && "active"}`}
+        className={`${nestedLevel === 0 ? 'link' : 'nested-link'} ${menu.isActive && "active"}`}
         onClick={() => setSubMenuOpen(!subMenuOpen)}
       >
         {menu.icon && <menu.icon size={nestedLevel === 0 ? 23 : 17} className="min-w-max" />}
@@ -52,8 +52,8 @@ const SubMenu: React.FC<SubMenuProps> = ({ menu, previousUrl, nestedLevel }) => 
               <li
                 key={i}>
                 <Link
-                  href={appendUrl(previousUrl, children.url)}
-                  className={`nested-link capitalize ${pathname === appendUrl(previousUrl, children.url) ? "active" : ""}`}
+                  href={children.url ? children.url : ''}
+                  className={`nested-link capitalize ${children.isActive ? "active" : ""}`}
                 >
                   {children.icon && <children.icon size={17} className="min-w-max" />}
                   <p className="flex-1 capitalize">{children.title}</p>
@@ -61,7 +61,7 @@ const SubMenu: React.FC<SubMenuProps> = ({ menu, previousUrl, nestedLevel }) => 
               </li>
             )
           } else {
-            output = <SubMenu key={i} menu={children} previousUrl={appendUrl(previousUrl, children.url)} nestedLevel={nestedLevel + 1} />
+            output = <SubMenu key={i} menu={children} nestedLevel={nestedLevel + 1} />
           }
           return output
         })}

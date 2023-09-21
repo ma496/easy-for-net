@@ -1,15 +1,61 @@
 'use client'
 
-import { menus } from "@/navigation.config"
 import { Menu } from "./menu"
 import { MenuGroup } from "./menu-group"
-import { useMainLayoutContext } from "./context"
-import { useRouter } from "next/navigation"
+import { MenuGroupType, MenuType, useMainLayoutContext } from "./context"
+import { usePathname, useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import React from "react"
+
+const doActiveMenuRecursively = (pathName: string, menu: MenuType): void => {
+  if (menu.url === pathName) {
+    menu.isActive = true
+    let parent = menu.parent
+    while (parent) {
+      parent.isActive = true
+      parent = parent.parent
+    }
+  } else {
+    menu.isActive = false
+  }
+
+  if (menu.children && menu.children.length > 0) {
+    for (const c of menu.children) {
+      doActiveMenuRecursively(pathName, c)
+    }
+  }
+}
+
+const doActiveMenu = (pathName: string, menus: (MenuType | MenuGroupType)[]): void => {
+  for (const m of menus) {
+    if ('group' in m) {
+      for (const gm of m.menus) {
+        doActiveMenuRecursively(pathName, gm)
+      }
+    } else {
+      doActiveMenuRecursively(pathName, m)
+    }
+  }
+}
 
 const Sidebar = () => {
-  const { sidebarOpen, sidebarWidth, headerHeight, getDurationCss } = useMainLayoutContext()
+  const { sidebarOpen, sidebarWidth, headerHeight, getDurationCss, menus, setMenus } = useMainLayoutContext()
   const router = useRouter()
+  const pathName = usePathname()
   let isPreviousMenuGroup = false
+  const [forceUpdate, setForceUpdate] = useState(false)
+
+  const setMenuState = () => {
+    doActiveMenu(pathName, menus)
+    setMenus(menus)
+    setForceUpdate(prev => !prev)
+  }
+
+  useEffect(() => {
+    if (menus && menus.length > 0) {
+      setMenuState()
+    }
+  }, [pathName, menus])
 
   return (
     <div
@@ -37,15 +83,22 @@ const Sidebar = () => {
           {
             menus?.map((menu, i) => {
               let output: React.JSX.Element | null | false = null
-              if ('title' in menu) {
-                output = <Menu key={i} menu={menu} />
-                isPreviousMenuGroup = false
-              } else if ('group' in menu) {
+              if ('menus' in menu) {
                 output = <MenuGroup key={i} group={menu} isPreviousMenuGroup={isPreviousMenuGroup} />
                 isPreviousMenuGroup = true
+              } else {
+                output = <Menu key={i} menu={menu} />
+                isPreviousMenuGroup = false
               }
-              return output
-            })}
+              return (
+                <React.Fragment key={i}>
+                  {output}
+                  {/* Use forceUpdate as a key */}
+                  {forceUpdate && <div key={`forceUpdate-${i}`} />}
+                </React.Fragment>
+              )
+            })
+          }
         </ul>
       </div>
     </div>

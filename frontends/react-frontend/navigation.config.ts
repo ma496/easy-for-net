@@ -43,49 +43,45 @@ const menus: (MenuModel | MenuGroupModel)[] = [
   {
     title: "Nested Menu 1",
     icon: BiBookmark,
-    url: "/nested-menu-1",
     children: [
       {
         title: "Nested Menu 1.1",
         icon: BiBookmark,
-        url: "/1"
+        url: "/nested-menu-1/1"
       },
       {
         title: "Nested Menu 1.2",
         icon: BiBookmark,
-        url: "/2",
         children: [
           {
             title: "Nested Menu 1.2.1",
             icon: BiBookmark,
-            url: "/1",
             children: [
               {
                 title: "Nested Menu 1.2.1.1",
                 icon: BiBookmark,
-                url: "/1"
+                url: "/nested-menu-1/2/1/1"
               },
               {
                 title: "Nested Menu 1.2.1.2",
                 icon: BiBookmark,
-                url: "/2"
+                url: "/nested-menu-1/2/1/2"
               },
             ]
           },
           {
             title: "Nested Menu 1.2.2",
             icon: BiBookmark,
-            url: "/2",
             children: [
               {
                 title: "Nested Menu 1.2.2.1",
                 icon: BiBookmark,
-                url: "/1"
+                url: "/nested-menu-1/2/2/1"
               },
               {
                 title: "Nested Menu 1.2.2.2",
                 icon: BiBookmark,
-                url: "/2"
+                url: "/nested-menu-1/2/2/2"
               },
             ]
           },
@@ -94,7 +90,7 @@ const menus: (MenuModel | MenuGroupModel)[] = [
       {
         title: "Nested Menu 1.3",
         icon: BiBookmark,
-        url: "/3"
+        url: "/nested-menu-1/3"
       },
     ]
   },

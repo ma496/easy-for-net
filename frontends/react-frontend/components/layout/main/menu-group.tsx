@@ -1,9 +1,9 @@
 import React from "react"
-import { MenuGroupModel } from "./models"
 import { Menu } from "./menu"
+import { MenuGroupType } from "./context"
 
 type MenuGroupProps = {
-  group: MenuGroupModel
+  group: MenuGroupType
   isPreviousMenuGroup: boolean
 }
 
