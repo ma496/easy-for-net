@@ -1,6 +1,7 @@
-import { LightOrDarkTheme } from "../../theme/light-or-dark-theme"
-import { useMainLayoutContext } from "./context"
+import { LightOrDarkTheme } from "../../../theme/light-or-dark-theme"
+import { useMainLayoutContext } from "./../context"
 import { RiMenuLine, RiMenu2Line } from "react-icons/ri"
+import { UserNav } from "./components/user-nav"
 
 const Header = () => {
   const { headerHeight, sidebarOpen, setSidebarOpen, sidebarWidth, getDurationCss } = useMainLayoutContext()
@@ -28,8 +29,9 @@ const Header = () => {
             )
         }
       </div>
-      <div>
-        <LightOrDarkTheme />
+      <div className="flex gap-1 items-center">
+        <LightOrDarkTheme width={20} height={20} />
+        <UserNav width={43} height={43}/>
       </div>
     </div>
   )
