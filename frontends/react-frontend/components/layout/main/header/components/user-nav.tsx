@@ -30,7 +30,7 @@ const UserNav: React.FC<UserNavProps> = ({width, height}) => {
           className={`relative rounded-full`}
           style={{width: width, height: height}}>
           <Avatar style={{ width: width, height: height }}>
-            <AvatarImage src="/avatars/01.png" alt="@shadcn" />
+            {/* <AvatarImage src="/avatars/01.png" alt="@shadcn" /> */}
             <AvatarFallback>SC</AvatarFallback>
           </Avatar>
         </Button>

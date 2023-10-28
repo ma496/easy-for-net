@@ -3,5 +3,7 @@
   "css.lint.unknownAtRules": "ignore",
   "[css]": {
     "editor.defaultFormatter": "bradlc.vscode-tailwindcss"
-  }
+  },
+  "editor.formatOnPaste": true,
+  "editor.formatOnSave": true
 }

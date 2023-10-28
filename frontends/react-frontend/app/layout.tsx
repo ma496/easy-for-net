@@ -1,10 +1,9 @@
-import { MainLayout } from '@/components/layout/main'
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import { ThemeProvider } from "@/components/theme/theme-provider"
 import { Providers } from '@/redux/providers'
-import { MainLayoutProvider } from '@/components/layout/main/context-provider'
+import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -23,13 +22,10 @@ export default function RootLayout({
       <body className={`${inter.className} scrollbar-thin scrollbar-thumb-scrollbar`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Providers>
-            <MainLayoutProvider>
-              <MainLayout>
-                {children}
-              </MainLayout>
-            </MainLayoutProvider>
+            {children}
           </Providers>
         </ThemeProvider>
+        <Toaster />
       </body>
     </html>
   )
