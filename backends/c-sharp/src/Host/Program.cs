@@ -12,12 +12,14 @@ builder.Services.AddHostServices();
 
 var app = builder.Build();
 
+app.UseExceptionHandler(opt => { });
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    
+
     // Initialize and seed database
     using (var scope = app.Services.CreateScope())
     {
@@ -32,6 +34,8 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseCors();
 
 app.MapControllers();
 

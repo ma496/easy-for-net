@@ -6,10 +6,6 @@ public class UserFriendlyException : Exception
 {
     public int Code { get; }
 
-    public UserFriendlyException()
-    {
-    }
-
     public UserFriendlyException(string message)
         : base(message)
     {

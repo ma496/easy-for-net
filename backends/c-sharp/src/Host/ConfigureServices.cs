@@ -10,11 +10,18 @@ public static class ConfigureServices
 {
     public static IServiceCollection AddHostServices(this IServiceCollection services)
     {
+        services.AddExceptionHandler<ValidationExceptionHandler>();
+        services.AddExceptionHandler<NotFoundExceptionHandler>();
+        services.AddExceptionHandler<UnauthorizedAccessExceptionHandler>();
+        services.AddExceptionHandler<ForbiddenAccessExceptionHandler>();
+        services.AddExceptionHandler<UserFriendlyExceptionHandler>();
+        services.AddExceptionHandler<DefaultExceptionHandler>();
+
         services.AddControllers();
-        
+
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         services.AddEndpointsApiExplorer();
-        
+
         services.AddSwaggerGen(c =>
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "EasyForNet API", Version = "v1" });
@@ -44,8 +51,18 @@ public static class ConfigureServices
                 }
             });
         });
-        
+
         services.AddHttpContextAccessor();
+
+        services.AddCors(opt =>
+        {
+            opt.AddDefaultPolicy(builder =>
+            {
+                builder.AllowAnyHeader();
+                builder.AllowAnyMethod();
+                builder.AllowAnyOrigin();
+            });
+        });
 
         services.AddHealthChecks()
             .AddDbContextCheck<ApplicationDbContext>();
@@ -53,7 +70,7 @@ public static class ConfigureServices
         // Customize default API behaviour
         services.Configure<ApiBehaviorOptions>(options =>
             options.SuppressModelStateInvalidFilter = true);
-        
+
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         return services;

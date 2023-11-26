@@ -21,34 +21,55 @@ import {
 } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
-import { toast } from "@/components/ui/use-toast"
+import { useSignInMutation } from "@/redux/api/authApi"
 
 const FormSchema = z.object({
-  email: z.string().min(1, "Email is required.").email(),
+  username: z.string().min(1, "Username is required."),
   password: z.string().min(6, "Password must be at least 6 characters."),
   remember: z.boolean()
 })
+
+// const FormSchema = z.object({
+//   username: z.string(),
+//   password: z.string(),
+//   remember: z.boolean()
+// })
+
+// export default function Login() {
+//   return (<h1>Login</h1>)
+// }
 
 export default function Login() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
       remember: false
     },
   })
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    console.log("onSubmit")
-    toast({
-      title: "You submitted the following values:",
-      description: (
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
-    })
+  const [signIn, { isLoading: signInWaiting, isError: signInIsError, error: signInError }] = useSignInMutation()
+
+  async function onSubmit(data: z.infer<typeof FormSchema>) {
+    // console.log("onSubmit")
+    // toast({
+    //   title: "You submitted the following values:",
+    //   description: (
+    //     <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
+    //       <code className="text-white">{JSON.stringify(data, null, 2)}</code>
+    //     </pre>
+    //   ),
+    // })
+
+    // try {
+    //   const token = await signIn(data)
+    //   console.log(token)
+    // } catch (error) {
+    //   console.log(error)
+    // }
+
+    await signIn(data)
   }
 
   return (
@@ -58,7 +79,10 @@ export default function Login() {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">Sign in</CardTitle>
             <CardDescription className="text-center">
-              Enter your email and password to login
+              Enter your username and password to login
+              {/* <div>
+                {signInIsError && (<span>{JSON.stringify(signInError)}</span>)}
+              </div> */}
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
@@ -66,10 +90,10 @@ export default function Login() {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
-                  name="email"
+                  name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>Username</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -109,7 +133,10 @@ export default function Login() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full">Login</Button>
+                <Button type="submit" className="w-full">
+                  {signInWaiting ? "Wait..." : "Login"}
+                  {/* Login */}
+                </Button>
               </form>
             </Form>
           </CardContent>

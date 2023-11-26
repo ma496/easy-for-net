@@ -9,6 +9,7 @@ public class SignInCommandValidator : AbstractValidator<SignInCommand>
         RuleFor(x => x.Username)
             .NotEmpty();
         RuleFor(x => x.Password)
-            .NotEmpty();
+            .NotEmpty()
+            .MinimumLength(6);
     }
 }
