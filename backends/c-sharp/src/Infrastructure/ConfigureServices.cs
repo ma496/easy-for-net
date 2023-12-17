@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using EasyForNet.Application.Common.Interfaces;
+using EasyForNet.Application.Identity;
 using EasyForNet.Infrastructure.Files;
 using EasyForNet.Infrastructure.Identity;
 using EasyForNet.Infrastructure.Persistence;
@@ -62,6 +63,7 @@ public static class ConfigureServices
 
         services.AddTransient<IDateTime, DateTimeService>();
         services.AddTransient<IIdentityService, IdentityService>();
+        services.AddTransient<IUserService, UserService>();
         services.AddTransient<ICsvFileBuilder, CsvFileBuilder>();
 
         return services;

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using EasyForNet.Application.Common.Interfaces;
+using EasyForNet.Application.Identity;
 using MediatR;
 using Microsoft.Extensions.Logging;
 

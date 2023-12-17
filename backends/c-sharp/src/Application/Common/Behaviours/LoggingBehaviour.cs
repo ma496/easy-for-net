@@ -1,4 +1,5 @@
 ﻿using EasyForNet.Application.Common.Interfaces;
+using EasyForNet.Application.Identity;
 using MediatR.Pipeline;
 using Microsoft.Extensions.Logging;
 

@@ -2,6 +2,7 @@
 using EasyForNet.Application.Common.Exceptions;
 using EasyForNet.Application.Common.Interfaces;
 using EasyForNet.Application.Common.Security;
+using EasyForNet.Application.Identity;
 using MediatR;
 
 namespace EasyForNet.Application.Common.Behaviours;

@@ -1,4 +1,4 @@
-﻿using EasyForNet.Application.Common.Interfaces;
+﻿using EasyForNet.Application.Identity;
 using MediatR;
 
 namespace EasyForNet.Application.Account.SignIn;
