@@ -14,7 +14,7 @@ public class MappingTests
 
     public MappingTests()
     {
-        _configuration = new MapperConfiguration(config => 
+        _configuration = new MapperConfiguration(config =>
             config.AddProfile<MappingProfile>());
 
         _mapper = _configuration.CreateMapper();
@@ -38,12 +38,12 @@ public class MappingTests
         _mapper.Map(instance, source, destination);
     }
 
-    private object GetInstanceOf(Type type)
+    private object? GetInstanceOf(Type type)
     {
         if (type.GetConstructor(Type.EmptyTypes) != null)
             return Activator.CreateInstance(type)!;
 
-        // Type without parameterless constructor
-        return FormatterServices.GetUninitializedObject(type);
+        throw new Exception($"Unable to create an instance of '{type}'. " +
+                            $"Ensure the type has a parameterless constructor.");
     }
 }

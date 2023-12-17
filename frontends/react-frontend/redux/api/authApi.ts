@@ -5,15 +5,27 @@ type SignInInput = {
   password: string
 }
 
+export type SignInDto = {
+  token: string
+}
+
 const userApi = appApi.injectEndpoints({
   overrideExisting: false,
   endpoints: (builder => ({
-    signIn: builder.mutation<string, SignInInput>({
+    signIn: builder.mutation<SignInDto, SignInInput>({
       query: (input) => ({
         url: "Account/SignIn",
         method: "POST",
         body: input
-      })
+      }),
+      // transformErrorResponse: (error) => {
+      //   return {
+      //     ...error,
+      //     meta: {
+      //       ignoreStatuses: [422],
+      //     },
+      //   };
+      // },
     })
   }))
 })

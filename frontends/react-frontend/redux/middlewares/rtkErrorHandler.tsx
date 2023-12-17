@@ -1,4 +1,4 @@
-import { MiddlewareAPI, isRejected, isRejectedWithValue } from '@reduxjs/toolkit';
+import { MiddlewareAPI, isRejectedWithValue } from '@reduxjs/toolkit';
 import { setError } from '../slices/errorSlice';
 
 const getValidationMessage = (errors: any) => {
@@ -13,14 +13,34 @@ const getValidationMessage = (errors: any) => {
   return message
 }
 
+const isSetError = (action: any, ...statuses: number[]): boolean => {
+  if (!statuses) {
+    return false
+  }
+
+  for (let status of statuses) {
+    const ignoreStatuses = action.payload?.meta?.ignoreStatuses
+    if (action.payload.status === status && !ignoreStatuses) {
+      return true
+    }
+    if (action.payload.status === status && ignoreStatuses) {
+      const ignoreStatus = ignoreStatuses.find((s: any) => s === status)
+      return !ignoreStatus
+    }
+  }
+
+  return false
+}
+
 export const rtkErrorHandler = (api: MiddlewareAPI) => (next: any) => (action: any) => {
   if (isRejectedWithValue(action)) {
-    if (action.payload.status === 401 || action.payload.status === 403 || action.payload.status === 404
-      || action.payload.status === 422 || action.payload.status === 500) {
+    if (isSetError(action, 401, 403, 404, 422, 500)) {
       api.dispatch(setError({ title: action.payload.data.title, message: action.payload.data.detail }))
-    } else if (action.payload.status === 400) {
+    } else if (isSetError(action, 400)) {
       if (action.payload.data.errors) {
         api.dispatch(setError({ title: action.payload.data.title, message: getValidationMessage(action.payload.data.errors) }))
+      } else {
+        api.dispatch(setError({ title: action.payload.data.title, message: action.payload.data.detail }))
       }
     }
   }

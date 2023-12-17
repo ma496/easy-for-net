@@ -21,7 +21,9 @@ import {
 } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
-import { useSignInMutation } from "@/redux/api/authApi"
+import { SignInDto, useSignInMutation } from "@/redux/api/authApi"
+import { useLocalStorage } from "@/lib/hooks"
+import { constants } from "@/lib/constants"
 
 const FormSchema = z.object({
   username: z.string().min(1, "Username is required."),
@@ -35,10 +37,6 @@ const FormSchema = z.object({
 //   remember: z.boolean()
 // })
 
-// export default function Login() {
-//   return (<h1>Login</h1>)
-// }
-
 export default function Login() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -49,27 +47,17 @@ export default function Login() {
     },
   })
 
-  const [signIn, { isLoading: signInWaiting, isError: signInIsError, error: signInError }] = useSignInMutation()
+  const [signIn, { isLoading: signInWaiting }] = useSignInMutation()
+  const [loginInfo, setLoginInfo] = useLocalStorage<SignInDto>(constants.localStorage.login)
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    // console.log("onSubmit")
-    // toast({
-    //   title: "You submitted the following values:",
-    //   description: (
-    //     <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-    //       <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-    //     </pre>
-    //   ),
-    // })
-
-    // try {
-    //   const token = await signIn(data)
-    //   console.log(token)
-    // } catch (error) {
-    //   console.log(error)
+    let res = await signIn(data)
+    // if ('error' in res) {
+    //   alert(JSON.stringify(res.error))
     // }
-
-    await signIn(data)
+    if ('data' in res) {
+      setLoginInfo(res.data)
+    }
   }
 
   return (
@@ -80,9 +68,6 @@ export default function Login() {
             <CardTitle className="text-2xl text-center">Sign in</CardTitle>
             <CardDescription className="text-center">
               Enter your username and password to login
-              {/* <div>
-                {signInIsError && (<span>{JSON.stringify(signInError)}</span>)}
-              </div> */}
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
@@ -135,7 +120,6 @@ export default function Login() {
                 />
                 <Button type="submit" className="w-full">
                   {signInWaiting ? "Wait..." : "Login"}
-                  {/* Login */}
                 </Button>
               </form>
             </Form>

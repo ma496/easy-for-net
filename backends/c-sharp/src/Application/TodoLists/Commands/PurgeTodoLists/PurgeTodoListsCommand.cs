@@ -4,7 +4,7 @@ using MediatR;
 
 namespace EasyForNet.Application.TodoLists.Commands.PurgeTodoLists;
 
-[Authorize(Roles = "Administrator")]
+[Authorize(Roles = "Admin")]
 [Authorize(Policy = "CanPurge")]
 public record PurgeTodoListsCommand : IRequest;
 

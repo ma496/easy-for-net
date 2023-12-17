@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog"
 import { useAppDispatch, useAppSelector } from '@/redux/hooks'
 import { clearError } from '@/redux/slices/errorSlice'
-import { AppScrollbar } from "./ui-extend/app-scrollbar"
+import { AppScrollbar } from "./aui/app-scrollbar"
 
 const ShowError = () => {
   const isError = useAppSelector(s => s.error.isError)

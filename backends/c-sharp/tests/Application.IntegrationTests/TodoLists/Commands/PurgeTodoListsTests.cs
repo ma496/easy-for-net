@@ -24,7 +24,7 @@ public class PurgeTodoListsTests : BaseTestFixture
     }
 
     [Test]
-    public async Task ShouldDenyNonAdministrator()
+    public async Task ShouldDenyNonAdmin()
     {
         await RunAsDefaultUserAsync();
 
@@ -36,9 +36,9 @@ public class PurgeTodoListsTests : BaseTestFixture
     }
 
     [Test]
-    public async Task ShouldAllowAdministrator()
+    public async Task ShouldAllowAdmin()
     {
-        await RunAsAdministratorAsync();
+        await RunAsAdminAsync();
 
         var command = new PurgeTodoListsCommand();
 
@@ -50,7 +50,7 @@ public class PurgeTodoListsTests : BaseTestFixture
     [Test]
     public async Task ShouldDeleteAllLists()
     {
-        await RunAsAdministratorAsync();
+        await RunAsAdminAsync();
 
         await SendAsync(new CreateTodoListCommand
         {

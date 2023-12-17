@@ -57,12 +57,12 @@ public class Testing
 
     public static async Task<string> RunAsDefaultUserAsync()
     {
-        return await RunAsUserAsync("test@local", "Testing1234!", Array.Empty<string>());
+        return await RunAsUserAsync("test@local", "Testing1234!", []);
     }
 
-    public static async Task<string> RunAsAdministratorAsync()
+    public static async Task<string> RunAsAdminAsync()
     {
-        return await RunAsUserAsync("administrator@local", "Administrator1234!", new[] { "Administrator" });
+        return await RunAsUserAsync("admin@test", "Testing1234!", ["Admin"]);
     }
 
     public static async Task<string> RunAsUserAsync(string userName, string password, string[] roles)
@@ -74,6 +74,13 @@ public class Testing
         var user = new ApplicationUser { UserName = userName, Email = userName };
 
         var result = await userManager.CreateAsync(user, password);
+
+        if (!result.Succeeded)
+        {
+            var errors = string.Join(Environment.NewLine, result.ToApplicationResult().Errors);
+
+            throw new Exception($"Unable to create {userName}.{Environment.NewLine}{errors}");
+        }
 
         if (roles.Any())
         {
@@ -87,16 +94,9 @@ public class Testing
             await userManager.AddToRolesAsync(user, roles);
         }
 
-        if (result.Succeeded)
-        {
-            _currentUserId = user.Id;
+        _currentUserId = user.Id;
 
-            return _currentUserId;
-        }
-
-        var errors = string.Join(Environment.NewLine, result.ToApplicationResult().Errors);
-
-        throw new Exception($"Unable to create {userName}.{Environment.NewLine}{errors}");
+        return _currentUserId;
     }
 
     public static async Task ResetState()
@@ -108,7 +108,7 @@ public class Testing
         // catch (Exception) 
         // {
         // }
-        
+
         await _checkpoint.ResetAsync(_configuration.GetConnectionString("DefaultConnection")!);
 
         _currentUserId = null;
