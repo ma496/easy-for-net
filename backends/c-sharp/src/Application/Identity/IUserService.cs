@@ -1,10 +1,12 @@
-﻿using EasyForNet.Application.Common.Models;
+﻿using EasyForNet.Application.Identity.Dto;
 
 namespace EasyForNet.Application.Identity;
 
 public interface IUserService
 {
-    Task<(Result Result, string UserId)> CreateUserAsync(string userName, string password);
+    Task<string> CreateUserAsync(UserCreateDto input);
 
-    Task<Result> DeleteUserAsync(string userId);
+    Task UpdateUserAsync(string id, UserUpdateDto input);
+
+    Task DeleteUserAsync(string userId);
 }

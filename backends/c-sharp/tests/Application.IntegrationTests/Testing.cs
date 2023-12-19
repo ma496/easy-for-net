@@ -71,13 +71,13 @@ public class Testing
 
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-        var user = new ApplicationUser { UserName = userName, Email = userName };
+        var user = ApplicationUser.Create(userName, userName);
 
         var result = await userManager.CreateAsync(user, password);
 
         if (!result.Succeeded)
         {
-            var errors = string.Join(Environment.NewLine, result.ToApplicationResult().Errors);
+            var errors = string.Join(Environment.NewLine, result.Errors.Select(e => e.Description));
 
             throw new Exception($"Unable to create {userName}.{Environment.NewLine}{errors}");
         }

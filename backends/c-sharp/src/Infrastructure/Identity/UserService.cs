@@ -1,5 +1,6 @@
-﻿using EasyForNet.Application.Common.Models;
-using EasyForNet.Application.Identity;
+﻿using EasyForNet.Application.Identity;
+using EasyForNet.Application.Identity.Dto;
+using EasyForNet.Domain.Exceptions;
 using Microsoft.AspNetCore.Identity;
 
 namespace EasyForNet.Infrastructure.Identity;
@@ -13,23 +14,46 @@ public class UserService : IUserService
         _userManager = userManager;
     }
 
-    public async Task<(Result Result, string UserId)> CreateUserAsync(string userName, string password)
+    public async Task<string> CreateUserAsync(UserCreateDto input)
     {
-        var user = new ApplicationUser
+        var user = ApplicationUser.Create(input.UserName, input.Email, input.FirstName, input.LastName);
+
+        var result = await _userManager.CreateAsync(user, input.Password);
+
+        if (!result.Succeeded)
         {
-            UserName = userName,
-            Email = userName,
-        };
+            throw new UserFriendlyException(string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
+        }   
 
-        var result = await _userManager.CreateAsync(user, password);
-
-        return (result.ToApplicationResult(), user.Id);
+        return user.Id;
     }
 
-    public async Task<Result> DeleteUserAsync(string userId)
+    public async Task UpdateUserAsync(string id, UserUpdateDto input)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+
+        if (user == null)
+        {
+            throw new UserFriendlyException("User not found");
+        }
+
+        user.Update(input.Email, input.FirstName, input.LastName);
+
+        var result = await _userManager.UpdateAsync(user);
+
+        if (!result.Succeeded)
+        {
+            throw new UserFriendlyException(string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
+        }
+    }
+
+    public async Task DeleteUserAsync(string userId)
     {
         var user = _userManager.Users.SingleOrDefault(u => u.Id == userId);
 
-        return user != null ? (await _userManager.DeleteAsync(user)).ToApplicationResult() : Result.Success();
+        if (user != null)
+        {
+            await _userManager.DeleteAsync(user);
+        }
     }
 }
