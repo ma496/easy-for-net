@@ -64,6 +64,6 @@ public class IdentityService : IIdentityService
             return token;
         }
 
-        throw new UserFriendlyException("Username or Password not correct.");
+        throw new AppException("Username or Password not correct.");
     }
 }

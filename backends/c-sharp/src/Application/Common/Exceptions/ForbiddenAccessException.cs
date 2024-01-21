@@ -1,9 +1,11 @@
-﻿namespace EasyForNet.Application.Common.Exceptions;
+﻿using EasyForNet.Domain.Exceptions;
 
-public class ForbiddenAccessException : Exception
+namespace EasyForNet.Application.Common.Exceptions;
+
+public class ForbiddenAccessException : AppException
 {
     public ForbiddenAccessException()
-        : base("You are not allowed to access this resource.")
+        : base("You are not allowed to access this resource.", AppErrorCodes.Forbidden)
     {
 
     }

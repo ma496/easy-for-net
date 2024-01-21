@@ -1,4 +1,5 @@
 ﻿using EasyForNet.Application.Common.Interfaces;
+using EasyForNet.Host.ExceptionHandlers;
 using EasyForNet.Host.Services;
 using EasyForNet.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
@@ -10,11 +11,7 @@ public static class ConfigureServices
 {
     public static IServiceCollection AddHostServices(this IServiceCollection services)
     {
-        services.AddExceptionHandler<ValidationExceptionHandler>();
-        services.AddExceptionHandler<NotFoundExceptionHandler>();
-        services.AddExceptionHandler<UnauthorizedAccessExceptionHandler>();
-        services.AddExceptionHandler<ForbiddenAccessExceptionHandler>();
-        services.AddExceptionHandler<UserFriendlyExceptionHandler>();
+        services.AddExceptionHandler<AppExceptionHandler>();
         services.AddExceptionHandler<DefaultExceptionHandler>();
 
         services.AddControllers();

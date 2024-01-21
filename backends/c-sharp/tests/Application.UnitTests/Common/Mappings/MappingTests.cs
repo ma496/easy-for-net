@@ -1,5 +1,4 @@
-﻿using System.Runtime.Serialization;
-using AutoMapper;
+﻿using AutoMapper;
 using EasyForNet.Application.Common.Mappings;
 using EasyForNet.Application.Common.Models;
 using EasyForNet.Application.TodoLists.Queries.GetTodos;

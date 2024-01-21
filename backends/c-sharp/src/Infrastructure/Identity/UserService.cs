@@ -1,6 +1,7 @@
 ﻿using EasyForNet.Application.Identity;
 using EasyForNet.Application.Identity.Dto;
 using EasyForNet.Domain.Exceptions;
+using EasyForNet.Domain.Exceptions;
 using Microsoft.AspNetCore.Identity;
 
 namespace EasyForNet.Infrastructure.Identity;
@@ -22,7 +23,7 @@ public class UserService : IUserService
 
         if (!result.Succeeded)
         {
-            throw new UserFriendlyException(string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
+            throw new AppException(string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
         }   
 
         return user.Id;
@@ -34,7 +35,7 @@ public class UserService : IUserService
 
         if (user == null)
         {
-            throw new UserFriendlyException("User not found");
+            throw new AppException("User not found");
         }
 
         user.Update(input.Email, input.FirstName, input.LastName);
@@ -43,7 +44,7 @@ public class UserService : IUserService
 
         if (!result.Succeeded)
         {
-            throw new UserFriendlyException(string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
+            throw new AppException(string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
         }
     }
 

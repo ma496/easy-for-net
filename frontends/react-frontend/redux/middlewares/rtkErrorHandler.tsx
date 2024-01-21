@@ -34,7 +34,7 @@ const isSetError = (action: any, ...statuses: number[]): boolean => {
 
 export const rtkErrorHandler = (api: MiddlewareAPI) => (next: any) => (action: any) => {
   if (isRejectedWithValue(action)) {
-    if (isSetError(action, 401, 403, 404, 422, 500)) {
+    if (isSetError(action, 401, 403, 404, 500)) {
       api.dispatch(setError({ title: action.payload.data.title, message: action.payload.data.detail }))
     } else if (isSetError(action, 400)) {
       if (action.payload.data.errors) {
