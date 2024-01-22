@@ -1,4 +1,4 @@
-﻿namespace Tests.SayHello;
+﻿namespace Efn.Tests.SayHello;
 
 public class Fixture(IMessageSink s) : TestFixture<Program>(s)
 {

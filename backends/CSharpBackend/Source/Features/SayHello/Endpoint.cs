@@ -1,4 +1,4 @@
-﻿namespace SayHello;
+﻿namespace Efn.Features.SayHello;
 
 sealed class Endpoint : Endpoint<Request, Response>
 {

@@ -5,8 +5,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsTestProject>true</IsTestProject>
-        <AssemblyName />
-        <RootNamespace />
+        <AssemblyName>Efn.Tests</AssemblyName>
+        <RootNamespace>Efn.Tests</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

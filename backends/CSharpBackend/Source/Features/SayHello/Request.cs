@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 
-namespace SayHello;
+namespace Efn.Features.SayHello;
 
 sealed class Request
 {

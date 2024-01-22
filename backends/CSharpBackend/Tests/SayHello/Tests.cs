@@ -1,6 +1,6 @@
 using SayHello;
 
-namespace Tests.SayHello;
+namespace Efn.Tests.SayHello;
 
 public class Tests(Fixture f, ITestOutputHelper o) : TestClass<Fixture>(f, o)
 {
