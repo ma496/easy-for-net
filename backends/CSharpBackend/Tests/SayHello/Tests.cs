@@ -1,4 +1,4 @@
-using SayHello;
+using Efn.Features.SayHello;
 
 namespace Efn.Tests.SayHello;
 
