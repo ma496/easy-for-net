@@ -1,4 +1,4 @@
-using Efn.Features.Identity.Users;
+using Efn.Identity.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

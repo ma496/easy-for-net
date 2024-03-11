@@ -1,4 +1,4 @@
-using Efn.Features.Identity.Users;
+using Efn.Identity.Entities;
 using Efn.Infrastructure.EfPersistence.Interceptors;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<User> Users { get; set; }
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

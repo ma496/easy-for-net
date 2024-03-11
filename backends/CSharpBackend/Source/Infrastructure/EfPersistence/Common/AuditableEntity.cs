@@ -1,6 +1,6 @@
 namespace Efn.Infrastructure.EfPersistence.Common;
 
-public abstract class BaseAuditableEntity : BaseEntity
+public abstract class AuditableEntity : Entity
 {
     public DateTime Created { get; set; }
 
