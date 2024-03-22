@@ -29,7 +29,7 @@ let private prepareArguments (args: string array) =
 let private createProject (path: string) (name: string) =
     printfn "Creating the project (%s)" name
 
-    let sourcePath = Path.Combine(getTemplateDirectory (), "Latest", "backends", "c-sharp")
+    let sourcePath = Path.Combine(getTemplateDirectory (), "Latest", "backends", "CSharpBackend")
 
     let destinationPath = Path.Combine(Directory.GetCurrentDirectory(), path, name)
 

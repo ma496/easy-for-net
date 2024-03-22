@@ -9,12 +9,12 @@ export type SignInDto = {
   token: string
 }
 
-const userApi = appApi.injectEndpoints({
+const authApi = appApi.injectEndpoints({
   overrideExisting: false,
   endpoints: (builder => ({
     signIn: builder.mutation<SignInDto, SignInInput>({
       query: (input) => ({
-        url: "Account/SignIn",
+        url: "/auth/login",
         method: "POST",
         body: input
       }),
@@ -30,4 +30,4 @@ const userApi = appApi.injectEndpoints({
   }))
 })
 
-export const { useSignInMutation } = userApi
+export const { useSignInMutation } = authApi

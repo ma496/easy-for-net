@@ -25,17 +25,17 @@ import { SignInDto, useSignInMutation } from "@/redux/api/authApi"
 import { useLocalStorage } from "@/lib/hooks"
 import { constants } from "@/lib/constants"
 
-const FormSchema = z.object({
-  username: z.string().min(1, "Username is required."),
-  password: z.string().min(6, "Password must be at least 6 characters."),
-  remember: z.boolean()
-})
-
 // const FormSchema = z.object({
-//   username: z.string(),
-//   password: z.string(),
+//   username: z.string().min(1, "Username is required."),
+//   password: z.string().min(6, "Password must be at least 6 characters."),
 //   remember: z.boolean()
 // })
+
+const FormSchema = z.object({
+  username: z.string(),
+  password: z.string(),
+  remember: z.boolean()
+})
 
 export default function Login() {
   const form = useForm<z.infer<typeof FormSchema>>({

@@ -1,4 +1,4 @@
-import { MiddlewareAPI, isRejectedWithValue } from '@reduxjs/toolkit';
+import { MiddlewareAPI, isRejected, isRejectedWithValue } from '@reduxjs/toolkit';
 import { setError } from '../slices/errorSlice';
 
 const getValidationMessage = (errors: any) => {
@@ -13,20 +13,17 @@ const getValidationMessage = (errors: any) => {
   return message
 }
 
-const isSetError = (action: any, ...statuses: number[]): boolean => {
-  if (!statuses) {
-    return false
-  }
+const isError = (action: any, status: number): boolean => {
 
-  for (let status of statuses) {
-    const ignoreStatuses = action.payload?.meta?.ignoreStatuses
-    if (action.payload.status === status && !ignoreStatuses) {
-      return true
-    }
-    if (action.payload.status === status && ignoreStatuses) {
-      const ignoreStatus = ignoreStatuses.find((s: any) => s === status)
-      return !ignoreStatus
-    }
+  let payloadStatus = action.payload?.status
+
+  const ignoreStatuses = action.payload?.meta?.ignoreStatuses
+  if (payloadStatus === status && !ignoreStatuses) {
+    return true
+  }
+  if (payloadStatus === status && ignoreStatuses) {
+    const ignoreStatus = ignoreStatuses.find((is: any) => is === status)
+    return !ignoreStatus
   }
 
   return false
@@ -34,14 +31,17 @@ const isSetError = (action: any, ...statuses: number[]): boolean => {
 
 export const rtkErrorHandler = (api: MiddlewareAPI) => (next: any) => (action: any) => {
   if (isRejectedWithValue(action)) {
-    if (isSetError(action, 401, 403, 404, 500)) {
-      api.dispatch(setError({ title: action.payload.data.title, message: action.payload.data.detail }))
-    } else if (isSetError(action, 400)) {
-      if (action.payload.data.errors) {
-        api.dispatch(setError({ title: action.payload.data.title, message: getValidationMessage(action.payload.data.errors) }))
-      } else {
-        api.dispatch(setError({ title: action.payload.data.title, message: action.payload.data.detail }))
-      }
+    debugger;
+    if (isError(action, 400) && action.payload.data.errors) {
+      api.dispatch(setError({ title: 'Error', message: getValidationMessage(action.payload.data.errors) }))
+    } else if (isError(action, 401)) {
+      api.dispatch(setError({ title: 'Error', message: 'Please login!' }))
+    } else if (isError(action, 403)) {
+      api.dispatch(setError({ title: 'Error', message: 'You are not allowed to access this resource.' }))
+    } else if (isError(action, 404)) {
+      api.dispatch(setError({ title: 'Error', message: 'Not Found!' }))
+    } else if (isError(action, 500)) {
+      api.dispatch(setError({ title: 'Error', message: 'Internal Server Error!' }))
     }
   }
 

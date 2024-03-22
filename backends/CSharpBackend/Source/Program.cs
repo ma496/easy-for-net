@@ -3,7 +3,9 @@ using Efn.Infrastructure.EfPersistence;
 using Efn.Infrastructure.EfPersistence.Interceptors;
 using Efn.Infrastructure.Services;
 using Efn.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using FastEndpoints.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services
@@ -21,7 +23,12 @@ builder.Services
    })
    .AddHealthChecks()
    .AddDbContextCheck<AppDbContext>();
-builder.Services.AddAuthentication();
+builder.Services.AddAuthentication(opt => 
+{
+    opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+});
+builder.Services.AddAuthenticationJwtBearer(opt => opt.SigningKey = builder.Configuration["JWTSigningKey"]);
 builder.Services.AddAuthorization();
 
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -32,6 +39,7 @@ builder.Services.AddScoped<IDataSeedManager, DataSeedManager>();
 
 var app = builder.Build();
 app
+    .UseDefaultExceptionHandler()
     .UseAuthentication()
     .UseAuthorization()
     .UseFastEndpoints(c =>
