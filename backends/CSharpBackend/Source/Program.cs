@@ -6,6 +6,9 @@ using Efn.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using FastEndpoints.Security;
+using System.Net;
+using Newtonsoft.Json;
+using Efn.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services
@@ -40,6 +43,7 @@ builder.Services.AddScoped<IDataSeedManager, DataSeedManager>();
 var app = builder.Build();
 app
     .UseDefaultExceptionHandler()
+    .UseAuthenticatedAndUnauthorizedResponse()
     .UseAuthentication()
     .UseAuthorization()
     .UseFastEndpoints(c =>

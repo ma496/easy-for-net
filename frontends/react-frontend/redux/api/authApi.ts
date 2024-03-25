@@ -6,7 +6,7 @@ type SignInInput = {
 }
 
 export type SignInDto = {
-  token: string
+  accessToken: string
 }
 
 const authApi = appApi.injectEndpoints({
