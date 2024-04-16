@@ -1,9 +1,9 @@
 using Efn.Tests.Setup;
-using Efn.Features.Auth.Login;
 using System.Text;
 using System.Text.Json;
 using Efn.Features.Auth;
 using FastEndpoints.Security;
+using Efn.Features.Auth.SignIn;
 
 namespace Efn.Tests.Features.Auth.RefreshToken;
 

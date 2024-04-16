@@ -29,7 +29,7 @@ public class UserTokenService : RefreshTokenService<TokenRequest, MyTokenRespons
 
     public override async Task PersistTokenAsync(MyTokenResponse rsp)
     {
-        // call on login and refresh token endpoint
+        // call on sign-in and refresh token endpoint
         var refreshToken = await _dbContext.RefreshTokens
             .Where(e => e.UserId.ToString() == rsp.UserId)
             .FirstOrDefaultAsync();

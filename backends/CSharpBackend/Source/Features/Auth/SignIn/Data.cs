@@ -1,4 +1,4 @@
-namespace Efn.Features.Auth.Login;
+namespace Efn.Features.Auth.SignIn;
 
 [RegisterService<Data>(LifeTime.Scoped)]
 class Data

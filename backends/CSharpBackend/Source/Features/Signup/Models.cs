@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Efn.Features.Signup;
+namespace Efn.Features.SignUp;
 
 sealed public class Request
 {

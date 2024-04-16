@@ -11,6 +11,9 @@ export function appendUrl(url1: string, url2: string): string {
 }
 
 export function setLocalStorageValue(key: string, value: any) {
+  if (typeof window === "undefined")
+    return
+
   if (value) {
     localStorage.setItem(key, JSON.stringify(value))
   } else {
@@ -19,6 +22,9 @@ export function setLocalStorageValue(key: string, value: any) {
 }
 
 export function getLocalStorageValue<T>(key: string, fallbackValue: T | null = null): T | null {
+  if (typeof window === "undefined")
+    return null
+
   const stored = localStorage.getItem(key)
   return stored ? JSON.parse(stored) : fallbackValue
 }

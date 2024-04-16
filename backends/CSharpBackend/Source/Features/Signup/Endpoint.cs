@@ -1,6 +1,6 @@
 using Efn.Identity.Services;
 
-namespace Efn.Features.Signup;
+namespace Efn.Features.SignUp;
 
 sealed class Endpoint : Endpoint<Request, Response, Mapper>
 {
@@ -13,7 +13,7 @@ sealed class Endpoint : Endpoint<Request, Response, Mapper>
 
     public override void Configure()
     {
-        Post("signup");
+        Post("sign-up");
         AllowAnonymous();
     }
 

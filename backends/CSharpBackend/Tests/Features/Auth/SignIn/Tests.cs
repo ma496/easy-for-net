@@ -1,13 +1,13 @@
 using Efn.Features.Auth;
-using Efn.Features.Auth.Login;
+using Efn.Features.Auth.SignIn;
 using Efn.Tests.Setup;
 
-namespace Efn.Tests.Features.Auth.Login;
+namespace Efn.Tests.Features.Auth.SignIn;
 
 public class Tests(EndpointsFixture f, ITestOutputHelper o) : EndpointsTest(f, o)
 {
     [Fact]
-    public async Task Login_Success()
+    public async Task SignIn_Success()
     {
         var (rsp, res) = await Fixture.Client.POSTAsync<Endpoint, Request, MyTokenResponse>(new()
         {
@@ -21,7 +21,7 @@ public class Tests(EndpointsFixture f, ITestOutputHelper o) : EndpointsTest(f, o
     }
 
     [Fact]
-    public async Task Login_Fail_With_InvalidUsername()
+    public async Task SignIn_Fail_With_InvalidUsername()
     {
         var (rsp, res) = await Fixture.Client.POSTAsync<Endpoint, Request, ErrorResponse>(new()
         {
@@ -38,7 +38,7 @@ public class Tests(EndpointsFixture f, ITestOutputHelper o) : EndpointsTest(f, o
     }
 
     [Fact]
-    public async Task Login_Fail_With_InvalidPassword()
+    public async Task SignIn_Fail_With_InvalidPassword()
     {
         var (rsp, res) = await Fixture.Client.POSTAsync<Endpoint, Request, ErrorResponse>(new()
         {

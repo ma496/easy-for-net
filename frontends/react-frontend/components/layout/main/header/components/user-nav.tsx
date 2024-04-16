@@ -1,3 +1,5 @@
+"use client"
+
 import {
   Avatar,
   AvatarFallback,
@@ -14,6 +16,10 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { constants } from "@/lib/constants"
+import { useLocalStorage } from "@/lib/hooks"
+import { SignInDto } from "@/redux/api/authApi"
+import { useRouter } from "next/navigation"
 import React from "react"
 
 type UserNavProps = {
@@ -21,14 +27,22 @@ type UserNavProps = {
   height: number
 }
 
-const UserNav: React.FC<UserNavProps> = ({width, height}) => {
+const UserNav: React.FC<UserNavProps> = ({ width, height }) => {
+  const [, setSignInInfo] = useLocalStorage<SignInDto>(constants.localStorage.signIn)
+  const router = useRouter()
+
+  const logout = () => {
+    setSignInInfo(null)
+    router.push('/sign-in')
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
           className={`relative rounded-full`}
-          style={{width: width, height: height}}>
+          style={{ width: width, height: height }}>
           <Avatar style={{ width: width, height: height }}>
             {/* <AvatarImage src="/avatars/01.png" alt="@shadcn" /> */}
             <AvatarFallback>SC</AvatarFallback>
@@ -61,7 +75,7 @@ const UserNav: React.FC<UserNavProps> = ({width, height}) => {
           <DropdownMenuItem>New Team</DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={logout}>
           Log out
           <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
         </DropdownMenuItem>

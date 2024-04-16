@@ -1,5 +1,5 @@
 export const constants = {
   localStorage: {
-    login: 'login',
+    signIn: 'signIn',
   },
 };

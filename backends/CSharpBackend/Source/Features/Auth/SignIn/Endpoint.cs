@@ -3,7 +3,7 @@ using Efn.Features.Auth.RefreshToken;
 using Efn.Infrastructure.EfPersistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace Efn.Features.Auth.Login;
+namespace Efn.Features.Auth.SignIn;
 
 sealed class Endpoint : Endpoint<Request, MyTokenResponse>
 {
@@ -16,7 +16,7 @@ sealed class Endpoint : Endpoint<Request, MyTokenResponse>
 
     public override void Configure()
     {
-        Post("auth/login");
+        Post("auth/sign-in");
         AllowAnonymous();
     }
 

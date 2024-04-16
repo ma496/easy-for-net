@@ -1,6 +1,6 @@
 using Efn.Identity.Entities;
 
-namespace Efn.Features.Signup;
+namespace Efn.Features.SignUp;
 
 sealed class Mapper : Mapper<Request, Response, User>
 {
@@ -9,7 +9,7 @@ sealed class Mapper : Mapper<Request, Response, User>
         Age = r.Age,
         Email = r.Email,
         Username = r.Username,
-        Password = r.Password, //never store clear passwords in db. always hash/salt before saving.
+        Password = r.Password, // TODO never store clear passwords in db. always hash/salt before saving.
         Name = r.Name
     };
 }

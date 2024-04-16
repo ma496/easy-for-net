@@ -1,7 +1,7 @@
 using Bogus;
-using Efn.Features.Signup;
+using Efn.Features.SignUp;
 
-namespace Efn.Tests.Features.Signup;
+namespace Efn.Tests.Features.SignUp;
 
 public class RequestFaker : Faker<Request>
 {

@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Efn.Features.Auth.Login;
+namespace Efn.Features.Auth.SignIn;
 
 sealed class Request
 {

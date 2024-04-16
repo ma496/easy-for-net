@@ -9,9 +9,9 @@ export const appApi = createApi({
     baseUrl: 'https://localhost:5224/api/',
     prepareHeaders: (headers, api) => {
       if (api.endpoint === 'signIn') return headers
-      const loginInfo = getLocalStorageValue<SignInDto>(constants.localStorage.login)
-      if (loginInfo && loginInfo.accessToken) {
-        headers.set('authorization', `Bearer ${loginInfo.accessToken}`)
+      const signInInfo = getLocalStorageValue<SignInDto>(constants.localStorage.signIn)
+      if (signInInfo && signInInfo.accessToken) {
+        headers.set('authorization', `Bearer ${signInInfo.accessToken}`)
       }
       return headers
     },

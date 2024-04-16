@@ -24,20 +24,21 @@ import { Input } from "@/components/ui/input"
 import { SignInDto, useSignInMutation } from "@/redux/api/authApi"
 import { useLocalStorage } from "@/lib/hooks"
 import { constants } from "@/lib/constants"
-
-// const FormSchema = z.object({
-//   username: z.string().min(1, "Username is required."),
-//   password: z.string().min(6, "Password must be at least 6 characters."),
-//   remember: z.boolean()
-// })
+import { useRouter } from "next/navigation"
 
 const FormSchema = z.object({
-  username: z.string(),
-  password: z.string(),
+  username: z.string().min(1, "Username is required."),
+  password: z.string().min(6, "Password must be at least 6 characters."),
   remember: z.boolean()
 })
 
-export default function Login() {
+// const FormSchema = z.object({
+//   username: z.string(),
+//   password: z.string(),
+//   remember: z.boolean()
+// })
+
+export default function SignIn() {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -48,7 +49,8 @@ export default function Login() {
   })
 
   const [signIn, { isLoading: signInWaiting }] = useSignInMutation()
-  const [loginInfo, setLoginInfo] = useLocalStorage<SignInDto>(constants.localStorage.login)
+  const [, setSignInInfo] = useLocalStorage<SignInDto>(constants.localStorage.signIn)
+  const router = useRouter()
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
     let res = await signIn(data)
@@ -56,7 +58,8 @@ export default function Login() {
     //   alert(JSON.stringify(res.error))
     // }
     if ('data' in res) {
-      setLoginInfo(res.data)
+      setSignInInfo(res.data)
+      router.push('/')
     }
   }
 
@@ -67,7 +70,7 @@ export default function Login() {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">Sign in</CardTitle>
             <CardDescription className="text-center">
-              Enter your username and password to login
+              Enter your username and password to sign-in
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
@@ -119,7 +122,7 @@ export default function Login() {
                   )}
                 />
                 <Button type="submit" className="w-full">
-                  {signInWaiting ? "Wait..." : "Login"}
+                  {signInWaiting ? "Wait..." : "SignIn"}
                 </Button>
               </form>
             </Form>

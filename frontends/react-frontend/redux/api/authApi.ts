@@ -14,7 +14,7 @@ const authApi = appApi.injectEndpoints({
   endpoints: (builder => ({
     signIn: builder.mutation<SignInDto, SignInInput>({
       query: (input) => ({
-        url: "/auth/login",
+        url: "/auth/sign-in",
         method: "POST",
         body: input
       }),

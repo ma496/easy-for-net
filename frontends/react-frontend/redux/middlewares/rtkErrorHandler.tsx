@@ -34,7 +34,7 @@ export const rtkErrorHandler = (api: MiddlewareAPI) => (next: any) => (action: a
     if (isError(action, 400) && action.payload.data.errors) {
       api.dispatch(setError({ title: 'Error', message: getValidationMessage(action.payload.data.errors) }))
     } else if (isError(action, 401)) {
-      api.dispatch(setError({ title: 'Error', message: 'Please login!' }))
+      api.dispatch(setError({ title: 'Error', message: 'Please sign-in!' }))
     } else if (isError(action, 403)) {
       api.dispatch(setError({ title: 'Error', message: 'You are not allowed to access this resource!' }))
     } else if (isError(action, 404)) {

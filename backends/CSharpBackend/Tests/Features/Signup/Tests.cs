@@ -1,7 +1,7 @@
-using Efn.Features.Signup;
+using Efn.Features.SignUp;
 using Efn.Tests.Setup;
 
-namespace Efn.Tests.Features.Signup;
+namespace Efn.Tests.Features.SignUp;
 
 public class Tests(EndpointsFixture f, ITestOutputHelper o) : EndpointsTest(f, o)
 {
