@@ -72,7 +72,7 @@ const Header = () => {
 
   const themeConfig = useSelector((state: IRootState) => state.themeConfig);
   const setLocale = (flag: string) => {
-    if (flag.toLowerCase() === 'ae') {
+    if (flag.toLowerCase() === 'ae' || flag.toLowerCase() === 'pk') {
       dispatch(toggleRTL('rtl'));
     } else {
       dispatch(toggleRTL('ltr'));

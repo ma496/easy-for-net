@@ -16,7 +16,8 @@ import ru from './public/locales/ru.json';
 import sv from './public/locales/sv.json';
 import tr from './public/locales/tr.json';
 import zh from './public/locales/zh.json';
-const langObj: any = { en, ae, da, de, el, es, fr, hu, it, ja, pl, pt, ru, sv, tr, zh };
+import pk from './public/locales/ur.json';
+const langObj: any = { en, ae, da, de, el, es, fr, hu, it, ja, pl, pt, ru, sv, tr, zh, pk };
 
 const getLang = () => {
   let lang = null;

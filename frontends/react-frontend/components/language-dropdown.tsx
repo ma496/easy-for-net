@@ -21,7 +21,8 @@ const LanguageDropdown = ({ className = '' }: LanguageDropdownProps) => {
 
   const themeConfig = useSelector((state: IRootState) => state.themeConfig);
   const setLocale = (flag: string) => {
-    if (flag.toLowerCase() === 'ae') {
+    console.log(flag)
+    if (flag.toLowerCase() === 'ae' || flag.toLowerCase() === 'pk') {
       dispatch(toggleRTL('rtl'));
     } else {
       dispatch(toggleRTL('ltr'));
