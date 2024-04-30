@@ -7,12 +7,15 @@ import LanguageDropdown from '@/components/language-dropdown';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import React from 'react';
+import { getTranslation } from '@/i18n';
 
 export const metadata: Metadata = {
   title: 'Login Boxed',
 };
 
 const BoxedSignIn = () => {
+  const {t} = getTranslation()
+
   return (
     <div>
       <div className="absolute inset-0">
@@ -31,13 +34,13 @@ const BoxedSignIn = () => {
             </div>
             <div className="mx-auto w-full max-w-[440px]">
               <div className="mb-10">
-                <h1 className="text-3xl font-extrabold uppercase !leading-snug text-primary md:text-4xl">Sign in</h1>
-                <p className="text-base font-bold leading-normal text-white-dark">Enter your email and password to login</p>
+                <h1 className="text-3xl font-extrabold uppercase !leading-snug text-primary md:text-4xl">{t('sign_in')}</h1>
+                <p className="text-base font-bold leading-normal text-white-dark">{t('sign_in_caption')}</p>
               </div>
               <SignInForm />
               <div className="relative my-7 text-center md:mb-9">
                 <span className="absolute inset-x-0 top-1/2 h-px w-full -translate-y-1/2 bg-white-light dark:bg-white-dark"></span>
-                <span className="relative bg-white px-2 font-bold uppercase text-white-dark dark:bg-dark dark:text-white-light">or</span>
+                <span className="relative bg-white px-2 font-bold uppercase text-white-dark dark:bg-dark dark:text-white-light">{t('or')}</span>
               </div>
               <div className="mb-10 md:mb-[60px]">
                 <ul className="flex justify-center gap-3.5 text-white">
@@ -79,10 +82,10 @@ const BoxedSignIn = () => {
                   </li>
                 </ul>
               </div>
-              <div className="text-center dark:text-white">
-                Don&apos;t have an account ?&nbsp;
+              <div className="flex justify-center dark:text-white">
+                <span className='ltr:mr-2 rtl:ml-2'>{t('dont_have_account')}</span>
                 <Link href="/auth/boxed-signup" className="uppercase text-primary underline transition hover:text-black dark:hover:text-white">
-                  SIGN UP
+                  {t('sign_up')}
                 </Link>
               </div>
             </div>
