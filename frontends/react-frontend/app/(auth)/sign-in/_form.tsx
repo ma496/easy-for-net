@@ -7,10 +7,12 @@ import * as Yup from 'yup';
 import { Field, Form, Formik } from 'formik';
 import Swal from 'sweetalert2';
 import { getTranslation } from '@/i18n';
+import { setValidationTranslations } from '@/utils/validationUtils';
 
 const SignInForm = () => {
   const router = useRouter()
   const { t } = getTranslation()
+  setValidationTranslations(t)
   const submitForm = () => {
     const toast = Swal.mixin({
       toast: true,
@@ -24,11 +26,10 @@ const SignInForm = () => {
       padding: '10px 20px',
     });
   };
-  const validations = Yup.object().shape({
+  const schema = Yup.object().shape({
     email: Yup.string().required().email(),
     password: Yup.string().required(),
   });
-
 
   return (
     <Formik
@@ -36,7 +37,7 @@ const SignInForm = () => {
         email: '',
         password: '',
       }}
-      validationSchema={validations}
+      validationSchema={schema}
       onSubmit={submitForm}>
       {({ errors, submitCount, touched, values }) => (
         <Form className="space-y-5">

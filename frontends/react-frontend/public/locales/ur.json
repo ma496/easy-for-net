@@ -134,5 +134,11 @@
   "enter_email": "ای میل درج کریں",
   "password": "پاس ورڈ",
   "enter_password": "پاس ورڈ درج کریں",
-  "remember_me": "مجھے یاد رکھیں"
+  "remember_me": "مجھے یاد رکھیں",
+  "required": "${path} ضروری فیلڈ ہے",
+  "email_valid": "${path} کوئی درست ای میل ہونا ضروری ہے",
+  "min_string": "${path} کم از کم ${min} حروف ہونا ضروری ہے",
+  "max_string": "${path} زیادہ سے زیادہ ${max} حروف ہونا ضروری ہے",
+  "min_number": "${path} کم از کم ${min} ہونا ضروری ہے",
+  "max_number": "${path} زیادہ سے زیادہ ${max} ہونا ضروری ہے"
 }

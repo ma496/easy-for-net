@@ -134,5 +134,11 @@
   "enter_email": "Enter Email",
   "password": "Password",
   "enter_password": "Enter Password",
-  "remember_me": "Remember me"
+  "remember_me": "Remember me",
+  "required": "${path} is a required field",
+  "email_valid": "${path} must be a valid email",
+  "min_string": "${path} must be at least ${min} characters",
+  "max_string": "${path} must be at most ${max} characters",
+  "min_number": "${path} must be greater than or equal to ${min}",
+  "max_number": "${path} must be less than or equal to ${max}"
 }
