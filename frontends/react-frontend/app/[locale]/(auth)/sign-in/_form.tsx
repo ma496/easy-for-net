@@ -49,7 +49,7 @@ const SignInForm = () => {
                 <IconMail fill={true} />
               </span>
             </div>
-            {submitCount ? errors.email ? <div className="text-danger mt-1">{errors.email}</div> : <div className="text-success mt-1">Looks Good!</div> : ''}
+            {submitCount ? errors.email ? <div className="text-danger mt-1">{errors.email}</div> : <div className="text-success mt-1">{t('looks_good')}</div> : ''}
           </div>
           <div className={submitCount ? (errors.password ? 'has-error' : 'has-success') : ''}>
             <label htmlFor="password">{t('password')}</label>
@@ -59,7 +59,7 @@ const SignInForm = () => {
                 <IconLockDots fill={true} />
               </span>
             </div>
-            {submitCount ? errors.password ? <div className="text-danger mt-1">{errors.password}</div> : <div className="text-success mt-1">Looks Good!</div> : ''}
+            {submitCount ? errors.password ? <div className="text-danger mt-1">{errors.password}</div> : <div className="text-success mt-1">{t('looks_good')}</div> : ''}
           </div>
           <div>
             <label className="flex cursor-pointer items-center">

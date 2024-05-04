@@ -140,5 +140,8 @@
   "min_string": "${path} must be at least ${min} characters",
   "max_string": "${path} must be at most ${max} characters",
   "min_number": "${path} must be greater than or equal to ${min}",
-  "max_number": "${path} must be less than or equal to ${max}"
+  "max_number": "${path} must be less than or equal to ${max}",
+  "looks_good": "Looks Good!",
+  "404_description": "The page you requested was not found!",
+  "home": "Home"
 }
