@@ -1,10 +1,9 @@
 'use client';
 import Dropdown from '@/components/dropdown';
 import IconCaretDown from '@/components/icon/icon-caret-down';
-import useChangeLanguage from '@/hooks/useChangeLanguage';
+import useLanguage from '@/hooks/useLanguage';
 import { IRootState } from '@/store';
 import { Language } from '@/store/themeConfigSlice';
-import { getLang } from '@/utils/commonUtils';
 import { useLocale } from 'next-intl';
 import React from 'react';
 import { useSelector } from 'react-redux';
@@ -17,7 +16,7 @@ const LanguageDropdown = ({ className = '' }: LanguageDropdownProps) => {
   const locale = useLocale();
   const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl';
   const themeConfig = useSelector((state: IRootState) => state.themeConfig);
-  const changeLanguage = useChangeLanguage();
+  const {getLanguage, changeLanguage} = useLanguage();
 
   return (
     <div className={`dropdown ${className}`}>
@@ -29,7 +28,7 @@ const LanguageDropdown = ({ className = '' }: LanguageDropdownProps) => {
           button={
             <>
               <div>
-                <img src={`/assets/images/flags/${getLang(themeConfig.languageList, locale)?.flag.toUpperCase()}.svg`} alt="image" className="h-5 w-5 rounded-full object-cover" />
+                <img src={`/assets/images/flags/${getLanguage(locale)?.flag.toUpperCase()}.svg`} alt="image" className="h-5 w-5 rounded-full object-cover" />
               </div>
               <div className="text-base font-bold uppercase">{locale}</div>
               <span className="shrink-0">

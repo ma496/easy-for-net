@@ -28,17 +28,16 @@ import IconMenuDatatables from '@/components/icon/menu/icon-menu-datatables';
 import IconMenuForms from '@/components/icon/menu/icon-menu-forms';
 import IconMenuPages from '@/components/icon/menu/icon-menu-pages';
 import IconMenuMore from '@/components/icon/menu/icon-menu-more';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { getLang } from '@/utils/commonUtils';
-import useChangeLanguage from '@/hooks/useChangeLanguage';
+import useLanguage from '@/hooks/useLanguage';
 
 const Header = () => {
   const pathname = usePathname();
   const dispatch = useDispatch();
   const t = useTranslations();
   const locale = useLocale();
-  const changeLanguage = useChangeLanguage();
+  const { changeLanguage, getLanguage } = useLanguage();
 
   useEffect(() => {
     const selector = document.querySelector('ul.horizontal-menu a[href="' + window.location.pathname + '"]');
@@ -221,7 +220,7 @@ const Header = () => {
                 offset={[0, 8]}
                 placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`}
                 btnClassName="block p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60"
-                button={locale && <img className="h-5 w-5 rounded-full object-cover" src={`/assets/images/flags/${getLang(themeConfig.languageList, locale)?.flag.toUpperCase()}.svg`} alt="flag" />}
+                button={locale && <img className="h-5 w-5 rounded-full object-cover" src={`/assets/images/flags/${getLanguage(locale)?.flag.toUpperCase()}.svg`} alt="flag" />}
               >
                 <ul className="grid w-[280px] grid-cols-2 gap-2 !px-2 font-semibold text-dark dark:text-white-dark dark:text-white-light/90">
                   {themeConfig.languageList.map((item: Language) => {
