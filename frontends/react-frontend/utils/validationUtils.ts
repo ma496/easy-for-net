@@ -1,12 +1,12 @@
 import { setLocale } from "yup";
 
-export const setValidationTranslations = (t: (key: string) => any) => {
-  const required = t("required");
-  const minString = t("min_string");
-  const maxString = t("max_string");
-  const emailValid = t("email_valid");
-  const minNumber = t("min_number");
-  const maxNumber = t("max_number");
+export const setValidationTranslations = (t: any) => {
+  const required = t("required", {'path': '{path}'});
+  const minString = t("min_string", {'path': '{path}', 'min': '{min}'});
+  const maxString = t("max_string", {'path': '{path}', 'max': '{max}'});
+  const emailValid = t("email_valid", {'path': '{path}'});
+  const minNumber = t("min_number", {'path': '{path}', 'min': '{min}'});
+  const maxNumber = t("max_number", {'path': '{path}', 'max': '{max}'});
 
   setLocale({
     mixed: {

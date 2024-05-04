@@ -32,11 +32,11 @@ import IconMenuPages from '@/components/icon/menu/icon-menu-pages';
 import IconMenuAuthentication from '@/components/icon/menu/icon-menu-authentication';
 import IconMenuDocumentation from '@/components/icon/menu/icon-menu-documentation';
 import { usePathname } from 'next/navigation';
-import { getTranslation } from '@/i18n';
+import { useTranslations } from 'next-intl';
 
 const Sidebar = () => {
   const dispatch = useDispatch();
-  const { t } = getTranslation();
+  const t = useTranslations();
   const pathname = usePathname();
   const [currentMenu, setCurrentMenu] = useState<string>('');
   const [errorSubMenu, setErrorSubMenu] = useState(false);

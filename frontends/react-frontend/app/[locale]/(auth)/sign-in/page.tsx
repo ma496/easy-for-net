@@ -5,16 +5,16 @@ import IconInstagram from '@/components/icon/icon-instagram';
 import IconTwitter from '@/components/icon/icon-twitter';
 import LanguageDropdown from '@/components/language-dropdown';
 import { Metadata } from 'next';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import React from 'react';
-import { getTranslation } from '@/i18n';
 
 export const metadata: Metadata = {
   title: 'Login Boxed',
 };
 
 const BoxedSignIn = () => {
-  const {t} = getTranslation()
+  const t = useTranslations()
 
   return (
     <div>

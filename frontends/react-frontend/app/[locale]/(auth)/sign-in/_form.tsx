@@ -6,12 +6,12 @@ import React from 'react';
 import * as Yup from 'yup';
 import { Field, Form, Formik } from 'formik';
 import Swal from 'sweetalert2';
-import { getTranslation } from '@/i18n';
 import { setValidationTranslations } from '@/utils/validationUtils';
+import { useTranslations } from 'next-intl';
 
 const SignInForm = () => {
   const router = useRouter()
-  const { t } = getTranslation()
+  const t = useTranslations()
   setValidationTranslations(t)
   const submitForm = () => {
     const toast = Swal.mixin({

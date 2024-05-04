@@ -3,6 +3,8 @@ import 'react-perfect-scrollbar/dist/css/styles.css';
 import '../styles/tailwind.css';
 import { Metadata } from 'next';
 import { Nunito } from 'next/font/google';
+import React from 'react';
+import { NextIntlClientProvider, useMessages } from 'next-intl';
 
 export const metadata: Metadata = {
   title: {
@@ -17,11 +19,22 @@ const nunito = Nunito({
   variable: '--font-nunito',
 });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+type Props = {
+  children: React.ReactNode
+  params: {
+    locale: "en" | "ur"
+  }
+}
+
+export default function RootLayout({ children, params: {locale} }: Props) {
+  const messages = useMessages();
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body className={nunito.variable}>
-        <ProviderComponent>{children}</ProviderComponent>
+        <NextIntlClientProvider messages={messages}>
+          <ProviderComponent>{children}</ProviderComponent>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

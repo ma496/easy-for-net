@@ -3,12 +3,9 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Link from 'next/link';
 import { IRootState } from '@/store';
-import { toggleTheme, toggleSidebar, toggleRTL } from '@/store/themeConfigSlice';
+import { toggleTheme, toggleSidebar, Language } from '@/store/themeConfigSlice';
 import Dropdown from '@/components/dropdown';
 import IconMenu from '@/components/icon/icon-menu';
-import IconCalendar from '@/components/icon/icon-calendar';
-import IconEdit from '@/components/icon/icon-edit';
-import IconChatNotification from '@/components/icon/icon-chat-notification';
 import IconSearch from '@/components/icon/icon-search';
 import IconXCircle from '@/components/icon/icon-x-circle';
 import IconSun from '@/components/icon/icon-sun';
@@ -32,13 +29,16 @@ import IconMenuForms from '@/components/icon/menu/icon-menu-forms';
 import IconMenuPages from '@/components/icon/menu/icon-menu-pages';
 import IconMenuMore from '@/components/icon/menu/icon-menu-more';
 import { usePathname, useRouter } from 'next/navigation';
-import { getTranslation } from '@/i18n';
+import { useLocale, useTranslations } from 'next-intl';
+import { getLang } from '@/utils/commonUtils';
+import useChangeLanguage from '@/hooks/useChangeLanguage';
 
 const Header = () => {
   const pathname = usePathname();
   const dispatch = useDispatch();
-  const router = useRouter();
-  const { t, i18n } = getTranslation();
+  const t = useTranslations();
+  const locale = useLocale();
+  const changeLanguage = useChangeLanguage();
 
   useEffect(() => {
     const selector = document.querySelector('ul.horizontal-menu a[href="' + window.location.pathname + '"]');
@@ -69,16 +69,7 @@ const Header = () => {
   }, [pathname]);
 
   const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl';
-
   const themeConfig = useSelector((state: IRootState) => state.themeConfig);
-  const setLocale = (flag: string) => {
-    if (flag.toLowerCase() === 'ae' || flag.toLowerCase() === 'pk') {
-      dispatch(toggleRTL('rtl'));
-    } else {
-      dispatch(toggleRTL('ltr'));
-    }
-    router.refresh();
-  };
 
   function createMarkup(messages: any) {
     return { __html: messages };
@@ -230,21 +221,20 @@ const Header = () => {
                 offset={[0, 8]}
                 placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`}
                 btnClassName="block p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60"
-                button={i18n.language && <img className="h-5 w-5 rounded-full object-cover" src={`/assets/images/flags/${i18n.language.toUpperCase()}.svg`} alt="flag" />}
+                button={locale && <img className="h-5 w-5 rounded-full object-cover" src={`/assets/images/flags/${getLang(themeConfig.languageList, locale)?.flag.toUpperCase()}.svg`} alt="flag" />}
               >
                 <ul className="grid w-[280px] grid-cols-2 gap-2 !px-2 font-semibold text-dark dark:text-white-dark dark:text-white-light/90">
-                  {themeConfig.languageList.map((item: any) => {
+                  {themeConfig.languageList.map((item: Language) => {
                     return (
                       <li key={item.code}>
                         <button
                           type="button"
-                          className={`flex w-full hover:text-primary ${i18n.language === item.code ? 'bg-primary/10 text-primary' : ''}`}
+                          className={`flex w-full hover:text-primary ${locale === item.code ? 'bg-primary/10 text-primary' : ''}`}
                           onClick={() => {
-                            i18n.changeLanguage(item.code);
-                            setLocale(item.code);
+                            changeLanguage(item.code);
                           }}
                         >
-                          <img src={`/assets/images/flags/${item.code.toUpperCase()}.svg`} alt="flag" className="h-5 w-5 rounded-full object-cover" />
+                          <img src={`/assets/images/flags/${item.flag.toUpperCase()}.svg`} alt="flag" className="h-5 w-5 rounded-full object-cover" />
                           <span className="ltr:ml-3 rtl:mr-3">{item.name}</span>
                         </button>
                       </li>

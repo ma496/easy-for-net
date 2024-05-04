@@ -1,6 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit';
 import themeConfig from '@/theme.config';
 
+export type Language = {
+  code: string
+  name: string
+  flag: string
+  rtl: boolean
+}
+
 const initialState = {
   isDarkMode: false,
   sidebar: false,
@@ -13,9 +20,9 @@ const initialState = {
   locale: themeConfig.locale,
   semidark: themeConfig.semidark,
   languageList: [
-    { code: 'en', name: 'English' },
-    { code: 'pk', name: 'Urdu' },
-  ],
+    { code: 'en', name: 'English', flag: 'en' },
+    { code: 'ur', name: 'Urdu', flag: 'pk', rtl: true },
+  ] as Language[],
 };
 
 const themeConfigSlice = createSlice({
