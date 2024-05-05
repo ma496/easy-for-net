@@ -144,5 +144,10 @@
   "looks_good": "Looks Good!",
   "404_description": "The page you requested was not found!",
   "home": "Home",
-  "language": "Language"
+  "language": "Language",
+  "sign_up_description": "Enter your email and password to register",
+  "have_account": "Already have an account ?",
+  "name": "Name",
+  "enter_name": "Enter Name",
+  "subscribe_weekly_news_letter": "Subscribe to weekly newsletter"
 }

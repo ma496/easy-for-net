@@ -1,4 +1,4 @@
-import SignInForm from './_form';
+import SignUpForm from './_form';
 import IconFacebookCircle from '@/components/icon/icon-facebook-circle';
 import IconGoogle from '@/components/icon/icon-google';
 import IconInstagram from '@/components/icon/icon-instagram';
@@ -10,12 +10,12 @@ import Link from 'next/link';
 import React from 'react';
 
 export const metadata: Metadata = {
-  title: 'Login',
+  title: 'Register',
 };
 
-const BoxedSignIn = () => {
-  const t = useTranslations()
+const BoxedSignUp = () => {
   const locale = useLocale()
+  const t = useTranslations()
 
   return (
     <div>
@@ -35,10 +35,10 @@ const BoxedSignIn = () => {
             </div>
             <div className="mx-auto w-full max-w-[440px]">
               <div className="mb-10">
-                <h1 className="text-3xl font-extrabold uppercase !leading-snug text-primary md:text-4xl">{t('sign_in')}</h1>
-                <p className="text-base font-bold leading-normal text-white-dark">{t('sign_in_caption')}</p>
+                <h1 className="text-3xl font-extrabold uppercase !leading-snug text-primary md:text-4xl">{t('sign_up')}</h1>
+                <p className="text-base font-bold leading-normal text-white-dark">{t('sign_up_description')}</p>
               </div>
-              <SignInForm />
+              <SignUpForm />
               <div className="relative my-7 text-center md:mb-9">
                 <span className="absolute inset-x-0 top-1/2 h-px w-full -translate-y-1/2 bg-white-light dark:bg-white-dark"></span>
                 <span className="relative bg-white px-2 font-bold uppercase text-white-dark dark:bg-dark dark:text-white-light">{t('or')}</span>
@@ -83,10 +83,10 @@ const BoxedSignIn = () => {
                   </li>
                 </ul>
               </div>
-              <div className="flex justify-center dark:text-white">
-                <span className='ltr:mr-2 rtl:ml-2'>{t('dont_have_account')}</span>
-                <Link href={`/${locale}/sign-up`} className="uppercase text-primary underline transition hover:text-black dark:hover:text-white">
-                  {t('sign_up')}
+              <div className="text-center dark:text-white">
+                <span className='ltr:mr-2 rtl:ml-2'>{t('have_account')}</span>
+                <Link href={`/${locale}/sign-in`} className="uppercase text-primary underline transition hover:text-black dark:hover:text-white">
+                  {t('sign_in')}
                 </Link>
               </div>
             </div>
@@ -97,4 +97,4 @@ const BoxedSignIn = () => {
   );
 };
 
-export default BoxedSignIn;
+export default BoxedSignUp;
