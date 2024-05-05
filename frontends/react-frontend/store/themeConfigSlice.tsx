@@ -5,7 +5,7 @@ export type Language = {
   code: string
   name: string
   flag: string
-  rtl: boolean
+  rtlClass: 'ltr' | 'rtl'
 }
 
 const initialState = {
@@ -15,13 +15,14 @@ const initialState = {
   menu: themeConfig.menu,
   layout: themeConfig.layout,
   rtlClass: themeConfig.rtlClass,
+  manuallyRtlClass: themeConfig.manuallyRtlClass,
   animation: themeConfig.animation,
   navbar: themeConfig.navbar,
   locale: themeConfig.locale,
   semidark: themeConfig.semidark,
   languageList: [
-    { code: 'en', name: 'English', flag: 'en' },
-    { code: 'ur', name: 'Urdu', flag: 'pk', rtl: true },
+    { code: 'en', name: 'English', flag: 'en', rtlClass: 'ltr' },
+    { code: 'ur', name: 'Urdu', flag: 'pk', rtlClass: 'rtl' },
   ] as Language[],
 };
 
@@ -67,6 +68,10 @@ const themeConfigSlice = createSlice({
       state.rtlClass = payload;
       document.querySelector('html')?.setAttribute('dir', state.rtlClass || 'ltr');
     },
+    manuallyToggleRTL(state, { payload }) {
+      localStorage.setItem('manuallyRtlClass', payload);
+      state.manuallyRtlClass = payload;
+    },
     toggleAnimation(state, { payload }) {
       payload = payload || state.animation; // animate__fadeIn, animate__fadeInDown, animate__fadeInUp, animate__fadeInLeft, animate__fadeInRight, animate__slideInDown, animate__slideInLeft, animate__slideInRight, animate__zoomIn
       payload = payload?.trim();
@@ -92,6 +97,6 @@ const themeConfigSlice = createSlice({
   },
 });
 
-export const { toggleTheme, toggleMenu, toggleLayout, toggleRTL, toggleAnimation, toggleNavbar, toggleSemidark, toggleSidebar, resetToggleSidebar } = themeConfigSlice.actions;
+export const { toggleTheme, toggleMenu, toggleLayout, toggleRTL, manuallyToggleRTL, toggleAnimation, toggleNavbar, toggleSemidark, toggleSidebar, resetToggleSidebar } = themeConfigSlice.actions;
 
 export default themeConfigSlice.reducer;

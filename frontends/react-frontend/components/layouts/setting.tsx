@@ -2,16 +2,18 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { IRootState } from '@/store';
-import { toggleAnimation, toggleLayout, toggleMenu, toggleNavbar, toggleRTL, toggleTheme, toggleSemidark, resetToggleSidebar } from '@/store/themeConfigSlice';
+import { toggleAnimation, toggleLayout, toggleMenu, toggleNavbar, toggleRTL, toggleTheme, toggleSemidark, resetToggleSidebar, manuallyToggleRTL } from '@/store/themeConfigSlice';
 import IconSettings from '@/components/icon/icon-settings';
 import IconX from '@/components/icon/icon-x';
 import IconSun from '@/components/icon/icon-sun';
 import IconMoon from '@/components/icon/icon-moon';
 import IconLaptop from '@/components/icon/icon-laptop';
+import { useTranslations } from 'use-intl';
 
 const Setting = () => {
   const themeConfig = useSelector((state: IRootState) => state.themeConfig);
   const dispatch = useDispatch();
+  const t = useTranslations();
 
   const [showCustomizer, setShowCustomizer] = useState(false);
 
@@ -128,12 +130,35 @@ const Setting = () => {
           <div className="mb-3 rounded-md border border-dashed border-white-light p-3 dark:border-[#1b2e4b]">
             <h5 className="mb-1 text-base leading-none dark:text-white">Direction</h5>
             <p className="text-xs text-white-dark">Select the direction for your app.</p>
-            <div className="mt-3 flex gap-2">
-              <button type="button" className={`${themeConfig.rtlClass === 'ltr' ? 'btn-primary' : 'btn-outline-primary'} btn flex-auto`} onClick={() => dispatch(toggleRTL('ltr'))}>
+            <div className='mt-2'>
+              <label className='inline-flex'>
+                <input
+                  type='checkbox'
+                  className='form-checkbox'
+                  checked={themeConfig.manuallyRtlClass === ''}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      dispatch(manuallyToggleRTL(''))
+                    } else {
+                      dispatch(manuallyToggleRTL(themeConfig.rtlClass))
+                    }
+                  }} />
+                <span className='text-xs text-white-dark'>Language</span>
+              </label>
+            </div>
+            <div className="mt-3 flex gap-2 justify-center items-center">
+              <button
+                type="button"
+                className={`${themeConfig.rtlClass === 'ltr' ? 'btn-primary' : 'btn-outline-primary'} btn flex-auto`}
+                onClick={() => dispatch(manuallyToggleRTL('ltr'))}
+                disabled={themeConfig.manuallyRtlClass === ''}>
                 LTR
               </button>
-
-              <button type="button" className={`${themeConfig.rtlClass === 'rtl' ? 'btn-primary' : 'btn-outline-primary'} btn flex-auto`} onClick={() => dispatch(toggleRTL('rtl'))}>
+              <button
+                type="button"
+                className={`${themeConfig.rtlClass === 'rtl' ? 'btn-primary' : 'btn-outline-primary'} btn flex-auto`}
+                onClick={() => dispatch(manuallyToggleRTL('rtl'))}
+                disabled={themeConfig.manuallyRtlClass === ''}>
                 RTL
               </button>
             </div>

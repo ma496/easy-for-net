@@ -143,5 +143,6 @@
   "max_number": "${path} must be less than or equal to ${max}",
   "looks_good": "Looks Good!",
   "404_description": "The page you requested was not found!",
-  "home": "Home"
+  "home": "Home",
+  "language": "Language"
 }
