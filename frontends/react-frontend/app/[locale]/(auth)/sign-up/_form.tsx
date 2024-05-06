@@ -4,11 +4,14 @@ import IconMail from '@/components/icon/icon-mail';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 import * as Yup from 'yup';
-import { Field, Form, Formik } from 'formik';
+import { Form, Formik } from 'formik';
 import Swal from 'sweetalert2';
 import { setValidationTranslations } from '@/utils/validationUtils';
 import { useTranslations } from 'next-intl';
 import IconUser from '@/components/icon/icon-user';
+import Input from '@/components/input';
+import Checkbox from '@/components/checkbox';
+import Button from '@/components/button';
 
 const SignInForm = () => {
   const router = useRouter()
@@ -39,50 +42,40 @@ const SignInForm = () => {
         name: '',
         email: '',
         password: '',
+        subscribe: false
       }}
       validationSchema={schema}
       onSubmit={submitForm}>
-      {({ errors, submitCount, touched, values }) => (
-        <Form className="space-y-5">
-          <div className={submitCount ? (errors.name ? 'has-error' : 'has-success') : ''}>
-            <label htmlFor="name">{t('name')}</label>
-            <div className="relative text-white-dark">
-              <Field name="name" type="text" id="name" placeholder={t('enter_name')} className="form-input ps-10 placeholder:text-white-dark" />
-              <span className="absolute start-4 top-1/2 -translate-y-1/2">
-                <IconUser fill={true} />
-              </span>
-            </div>
-            {submitCount ? errors.name ? <div className="text-danger mt-1">{errors.name}</div> : <div className="text-success mt-1">{t('looks_good')}</div> : ''}
-          </div>
-          <div className={submitCount ? (errors.email ? 'has-error' : 'has-success') : ''}>
-            <label htmlFor="email">{t('email')}</label>
-            <div className="relative text-white-dark">
-              <Field name="email" type="text" id="email" placeholder={t('enter_email')} className="form-input ps-10 placeholder:text-white-dark" />
-              <span className="absolute start-4 top-1/2 -translate-y-1/2">
-                <IconMail fill={true} />
-              </span>
-            </div>
-            {submitCount ? errors.email ? <div className="text-danger mt-1">{errors.email}</div> : <div className="text-success mt-1">{t('looks_good')}</div> : ''}
-          </div>
-          <div className={submitCount ? (errors.password ? 'has-error' : 'has-success') : ''}>
-            <label htmlFor="password">{t('password')}</label>
-            <div className="relative text-white-dark">
-              <Field name="password" type="password" id="password" placeholder={t('enter_password')} className="form-input ps-10 placeholder:text-white-dark" />
-              <span className="absolute start-4 top-1/2 -translate-y-1/2">
-                <IconLockDots fill={true} />
-              </span>
-            </div>
-            {submitCount ? errors.password ? <div className="text-danger mt-1">{errors.password}</div> : <div className="text-success mt-1">{t('looks_good')}</div> : ''}
-          </div>
-          <div>
-            <label className="flex cursor-pointer items-center">
-              <input type="checkbox" className="form-checkbox bg-white dark:bg-black" />
-              <span className="text-white-dark">{t('subscribe_weekly_news_letter')}</span>
-            </label>
-          </div>
-          <button type="submit" className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]">
+      {() => (
+        <Form className="space-y-5" noValidate={true}>
+          <Input
+            name='name'
+            type='text'
+            label={t('name')}
+            placeholder={t('enter_name')}
+            prefixElm={<IconUser fill={true} />}
+          />
+          <Input
+            name='email'
+            type='email'
+            label={t('email')}
+            placeholder={t('enter_email')}
+            prefixElm={<IconMail fill={true} />}
+          />
+          <Input
+            name='password'
+            type='password'
+            label={t('password')}
+            placeholder={t('enter_password')}
+            prefixElm={<IconLockDots fill={true} />}
+          />
+          <Checkbox
+            name='subscribe'
+            label={t('subscribe_weekly_news_letter')}
+          />
+          <Button type="submit" className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]">
             {t('sign_up')}
-          </button>
+          </Button>
         </Form>
       )}
     </Formik>
