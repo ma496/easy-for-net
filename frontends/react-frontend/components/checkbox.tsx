@@ -15,6 +15,13 @@ const checkboxVariants = cva(
         danger: "text-danger",
         secondary: "text-secondary",
         dark: "text-dark",
+        primary_outline: "outline-primary",
+        info_outline: "outline-info",
+        success_outline: "outline-success",
+        warning_outline: "outline-warning",
+        danger_outline: "outline-danger",
+        secondary_outline: "outline-secondary",
+        dark_outline: "outline-dark",
       },
     },
     defaultVariants: {

@@ -49,7 +49,7 @@ const TestForm = () => {
           <Checkbox
             name='test'
             label='test'
-            variant={'dark'}
+            variant={'secondary_outline'}
           />
           <p>{values.test ? 'yes' : 'no'}</p>
           <button
