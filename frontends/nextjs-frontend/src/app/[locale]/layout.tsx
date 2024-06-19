@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { Nunito } from "next/font/google"
 import "../globals.css";
 import RootProvider from "@/components/providers/root-provider"
-import {NextIntlClientProvider} from 'next-intl'
+import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from "next-intl/server"
 
 const nunito = Nunito({
@@ -36,11 +36,9 @@ export default async function RootLayout({
         <NextIntlClientProvider
           messages={messages}
           locale={locale}>
-          <div className="light">
-            <RootProvider>
-              {children}
-            </RootProvider>
-          </div>
+          <RootProvider>
+            {children}
+          </RootProvider>
         </NextIntlClientProvider>
       </body>
     </html>
