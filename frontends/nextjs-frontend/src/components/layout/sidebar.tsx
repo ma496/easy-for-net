@@ -4,9 +4,8 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { navItmes } from "@/nav-itmes";
-import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { Link } from "@/navigation";
+import { Link, usePathname } from "@/navigation";
 
 export function Sidebar() {
   const path = usePathname()

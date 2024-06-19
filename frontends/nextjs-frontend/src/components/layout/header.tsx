@@ -2,14 +2,13 @@
 import { CircleUser, Menu, Search } from "lucide-react"
 import { Button } from "../ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "../ui/sheet"
-import Link from "next/link"
+import { Link, usePathname } from "@/navigation"
 import { Badge } from "../ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { Input } from "../ui/input"
 import { ThemesToggle } from "./themes-toggle"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu"
 import { navItmes } from "@/nav-itmes"
-import { usePathname } from "next/navigation"
 import Image from "next/image"
 
 export function Header() {
