@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui
 import { Input } from "../ui/input"
 import { ThemesToggle } from "./themes-toggle"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu"
-import { navigations } from "@/navigation"
+import { navItmes } from "@/nav-itmes"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
 
@@ -38,22 +38,22 @@ export function Header() {
               <span>Easy For Net</span>
             </Link>
             {
-              navigations.map((n, i) => (
+              navItmes.map((ni, i) => (
                 <Link
                   key={i}
-                  href={n.url}
-                  className={`mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground ${n.url === path ? 'bg-muted' : ''}`}
+                  href={ni.url}
+                  className={`mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground ${ni.url === path ? 'bg-muted' : ''}`}
                 >
                   {
-                    n.icon && (
-                      <n.icon className="h-5 w-5" />
+                    ni.icon && (
+                      <ni.icon className="h-5 w-5" />
                     )
                   }
-                  {n.label}
+                  {ni.label}
                   {
-                    n.badge && (
+                    ni.badge && (
                       <Badge className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
-                        {n.badge}
+                        {ni.badge}
                       </Badge>
                     )
                   }

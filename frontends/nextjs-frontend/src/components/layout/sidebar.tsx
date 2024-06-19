@@ -1,12 +1,12 @@
 "use client"
-import { Bell, Package2 } from "lucide-react";
-import Link from "next/link";
+import { Bell } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { navigations } from "@/navigation";
+import { navItmes } from "@/nav-itmes";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import { Link } from "@/navigation";
 
 export function Sidebar() {
   const path = usePathname()
@@ -27,18 +27,18 @@ export function Sidebar() {
         <div className="flex-1">
           <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
             {
-              navigations.map((n, i) => (
+              navItmes.map((ni, i) => (
                 <Link
                   key={i}
-                  href={n.url}
-                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${n.url === path ? 'bg-muted' : ''}`}
+                  href={`${ni.url}`}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${ni.url === path ? 'bg-muted' : ''}`}
                 >
-                  <n.icon className="h-4 w-4" />
-                  {n.label}
+                  <ni.icon className="h-4 w-4" />
+                  {ni.label}
                   {
-                    n.badge && (
+                    ni.badge && (
                       <Badge className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
-                        {n.badge}
+                        {ni.badge}
                       </Badge>
                     )
                   }
