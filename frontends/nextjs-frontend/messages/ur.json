@@ -1,1 +1,29 @@
-{}
+{
+  "nav": {
+    "Dashboard": "ڈیش بورڈ",
+    "Orders": "آرڈرز",
+    "Products": "مصنوعات",
+    "Customers": "گاہک",
+    "Analytics": "تجزیات"
+  },
+  "EasyForNet": "ایزی فار نیٹ",
+  "Upgrade": "اپ گریڈ",
+  "UpgradetoPro": "پرو میں اپ گریڈ کریں",
+  "UpgradeBenefit": "تمام خصوصیات کو ان لاک کریں اور ہماری سپورٹ ٹیم تک لامحدود رسائی حاصل کریں۔",
+  "SearchProducts": "مصنوعات تلاش کریں",
+  "MyAccount": "میرا اکاؤنٹ",
+  "Settings": "ترتیبات",
+  "Support": "سپورٹ",
+  "Logout": "لاگ آؤٹ",
+  "Light": "روشنی",
+  "Dark": "تاریک",
+  "Rose": "گلاب",
+  "Inventory": "انوینٹری",
+  "NoProducts": "آپ کے پاس کوئی مصنوعات نہیں ہیں",
+  "StartSelling": "آپ پروڈکٹ شامل کرنے کے فوراً بعد فروخت شروع کر سکتے ہیں۔",
+  "AddProduct": "پروڈکٹ شامل کریں",
+  "Orders": "آرڈرز",
+  "Products": "مصنوعات",
+  "Customers": "گاہک",
+  "Analytics": "تجزیات"
+}

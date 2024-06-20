@@ -11,20 +11,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useEffect, useState } from "react"
+import { useTranslations } from "next-intl"
 
 export function ThemesToggle() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const t = useTranslations()
   // The active theme is not available on the server.
   // If you have styling that is conditionally applied based on the active-theme,
   // you have to await the mounted state before rendering the active theme.
   useEffect(() => setMounted(true), [])
 
   const themeMapping: Record<string, string> = {
-    'light': 'Light',
-    'dark-classic': 'Dark',
-    'rose': 'Rose',
-    'dark-rose': 'Rose (dark)',
+    'light': t('Light'),
+    'dark-classic': t('Dark'),
+    'rose': t('Rose'),
+    'dark-rose': `${t('Rose')} (${t('Dark')})`,
   }
 
   return (

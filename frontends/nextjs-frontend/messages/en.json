@@ -1,1 +1,29 @@
-{}
+{
+  "nav": {
+    "Dashboard": "Dashboard",
+    "Orders": "Orders",
+    "Products": "Products",
+    "Customers": "Customers",
+    "Analytics": "Analytics"
+  },
+  "EasyForNet": "EasyForNet",
+  "Upgrade": "Upgrade",
+  "UpgradetoPro": "Upgrade to Pro",
+  "UpgradeBenefit": "Unlock all features and get unlimited access to our support team.",
+  "SearchProducts": "Search Products",
+  "MyAccount": "My Account",
+  "Settings": "Settings",
+  "Support": "Support",
+  "Logout": "Logout",
+  "Light": "Light",
+  "Dark": "Dark",
+  "Rose": "Rose",
+  "Inventory": "Inventory",
+  "NoProducts": "You have no products",
+  "StartSelling": "You can start selling as soon as you add a product.",
+  "AddProduct": "Add Product",
+  "Orders": "Orders",
+  "Products": "Products",
+  "Customers": "Customers",
+  "Analytics": "Analytics"
+}

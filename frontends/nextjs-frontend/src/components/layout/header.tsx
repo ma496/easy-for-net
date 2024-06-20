@@ -11,9 +11,11 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { navItmes } from "@/nav-itmes"
 import Image from "next/image"
 import { LanguageDropdownCircle } from "../language-dropdown-circle"
+import { useTranslations } from "next-intl"
 
 export function Header() {
   const path = usePathname()
+  const t = useTranslations()
 
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
@@ -35,7 +37,7 @@ export function Header() {
               className="flex items-center gap-2 text-lg font-semibold"
             >
               <Image src='/assets/images/icon.png' alt="app icon" width={30} height={30} />
-              <span>Easy For Net</span>
+              <span>{t('EasyForNet')}</span>
             </Link>
             {
               navItmes.map((ni, i) => (
@@ -49,7 +51,7 @@ export function Header() {
                       <ni.icon className="h-5 w-5" />
                     )
                   }
-                  {ni.label}
+                  {t(`nav.${ni.label}`)}
                   {
                     ni.badge && (
                       <Badge className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full">
@@ -64,15 +66,14 @@ export function Header() {
           <div className="mt-auto">
             <Card>
               <CardHeader>
-                <CardTitle>Upgrade to Pro</CardTitle>
+                <CardTitle>{t('UpgradetoPro')}</CardTitle>
                 <CardDescription>
-                  Unlock all features and get unlimited access to our
-                  support team.
+                  {t('UpgradeBenefit')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Button size="sm" className="w-full">
-                  Upgrade
+                  {t('Upgrade')}
                 </Button>
               </CardContent>
             </Card>
@@ -82,11 +83,11 @@ export function Header() {
       <div className="w-full flex-1">
         <form>
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-2.5 rtl:right-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search products..."
-              className="w-full appearance-none bg-background pl-8 shadow-none md:w-2/3 lg:w-1/3"
+              placeholder={t('SearchProducts')}
+              className="w-full appearance-none bg-background pl-8 rtl:pr-8 shadow-none md:w-2/3 lg:w-1/3"
             />
           </div>
         </form>
@@ -101,12 +102,12 @@ export function Header() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuLabel>{t('MyAccount')}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>Settings</DropdownMenuItem>
-          <DropdownMenuItem>Support</DropdownMenuItem>
+          <DropdownMenuItem>{t('Settings')}</DropdownMenuItem>
+          <DropdownMenuItem>{t('Support')}</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>Logout</DropdownMenuItem>
+          <DropdownMenuItem>{t('Logout')}</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
