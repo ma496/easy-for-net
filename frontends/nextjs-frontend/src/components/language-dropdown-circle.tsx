@@ -27,7 +27,7 @@ export function LanguageDropdownCircle() {
               onClick={() => changeLanguage(l.code)}
               className={`${l.code === locale ? 'bg-muted' : ''}`}
             >
-              <div className="flex gap-2 items-center">
+              <div className="flex gap-2 items-center rtl:flex-row-reverse w-full">
                 <img
                   src={`/assets/images/flags/${getLanguage(l.code)?.flag.toUpperCase()}.svg`}
                   alt="image"

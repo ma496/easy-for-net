@@ -39,7 +39,7 @@ export function ThemesToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <div className="flex flex-wrap gap-2 justify-around">
+        <div className="flex flex-wrap gap-2 justify-around rtl:flex-row-reverse">
           {
             Object.entries(themeMapping).map(([key, value]) => (
               <DropdownMenuItem

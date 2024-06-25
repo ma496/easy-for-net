@@ -25,5 +25,10 @@
   "Orders": "آرڈرز",
   "Products": "مصنوعات",
   "Customers": "گاہک",
-  "Analytics": "تجزیات"
+  "Analytics": "تجزیات",
+  "Login": "لاگ ان",
+  "LoginDescription": "اپنے اکاؤنٹ میں لاگ ان کرنے کے لئے نیچے اپنا ای میل درج کریں۔",
+  "Email": "ای میل",
+  "Password": "پاس ورڈ",
+  "Signin": "سائن ان کریں"
 }

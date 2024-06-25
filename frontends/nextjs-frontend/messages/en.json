@@ -25,5 +25,10 @@
   "Orders": "Orders",
   "Products": "Products",
   "Customers": "Customers",
-  "Analytics": "Analytics"
+  "Analytics": "Analytics",
+  "Login": "Login",
+  "LoginDescription": "Enter your email below to login to your account.",
+  "Email": "Email",
+  "Password": "Password",
+  "Signin": "Sign in"
 }

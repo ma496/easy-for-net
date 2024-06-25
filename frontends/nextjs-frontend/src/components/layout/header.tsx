@@ -102,12 +102,12 @@ export function Header() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>{t('MyAccount')}</DropdownMenuLabel>
+          <DropdownMenuLabel className="flex rtl:flex-row-reverse">{t('MyAccount')}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>{t('Settings')}</DropdownMenuItem>
-          <DropdownMenuItem>{t('Support')}</DropdownMenuItem>
+          <DropdownMenuItem className="flex rtl:flex-row-reverse">{t('Settings')}</DropdownMenuItem>
+          <DropdownMenuItem className="flex rtl:flex-row-reverse">{t('Support')}</DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>{t('Logout')}</DropdownMenuItem>
+          <DropdownMenuItem className="flex rtl:flex-row-reverse">{t('Logout')}</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
