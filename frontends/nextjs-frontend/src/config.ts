@@ -1,3 +1,5 @@
+import { LocalePrefix } from 'next-intl/routing';
+
 export type Language = {
   code: string
   name: string
@@ -11,3 +13,5 @@ export const languages: Language[] = [
 ]
 
 export const locales = languages.map(l => l.code)
+
+export const localePrefix = 'as-needed' satisfies LocalePrefix
