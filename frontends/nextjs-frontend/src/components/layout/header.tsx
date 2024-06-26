@@ -12,10 +12,12 @@ import { navItmes } from "@/nav-itmes"
 import Image from "next/image"
 import { LanguageDropdownCircle } from "../language-dropdown-circle"
 import { useTranslations } from "next-intl"
+import { useAppSelector } from "@/store/hooks"
 
 export function Header() {
   const path = usePathname()
   const t = useTranslations()
+  const themeConfig = useAppSelector(s => s.themeConfig)
 
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
@@ -93,7 +95,7 @@ export function Header() {
         </form>
       </div>
       <ThemesToggle />
-      <LanguageDropdownCircle />
+      {themeConfig.localeEnabled && <LanguageDropdownCircle />}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="secondary" size="icon" className="rounded-full">

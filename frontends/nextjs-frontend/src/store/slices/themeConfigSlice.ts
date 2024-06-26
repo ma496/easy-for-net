@@ -1,12 +1,14 @@
-import { languages } from "@/config"
+import { isLocaleEnabled, languages } from "@/config"
 import { createSlice, PayloadAction } from "@reduxjs/toolkit"
 
 export type ThemeConfigState = {
   locale: string
+  localeEnabled: boolean
 }
 
 const initialState: ThemeConfigState = {
   locale: 'en',
+  localeEnabled: isLocaleEnabled
 }
 
 export const themeConfigSlice = createSlice({
@@ -16,7 +18,7 @@ export const themeConfigSlice = createSlice({
     toggleLanguage(state, { payload }) {
       const locale = payload || state.locale
       const language = languages.find(l => l.code === locale)
-      const dirClass =  language?.rightDir ? 'rtl' : 'ltr'
+      const dirClass = language?.rightDir ? 'rtl' : 'ltr'
       localStorage.setItem('locale', locale)
       localStorage.setItem('dirClass', dirClass)
       state.locale = locale

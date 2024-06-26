@@ -15,3 +15,5 @@ export const languages: Language[] = [
 export const locales = languages.map(l => l.code)
 
 export const localePrefix = 'as-needed' satisfies LocalePrefix
+
+export const isLocaleEnabled = true
