@@ -1,1 +1,132 @@
-{}
+{
+  "zod": {
+    "errors": {
+      "invalid_type": "{expected} متوقع، {received} موصول",
+      "invalid_type_received_undefined": "خالی نہیں ہو سکتا",
+      "invalid_literal": "غلط اصل قدر، {expected} متوقع",
+      "unrecognized_keys": "آبجیکٹ میں نامعلوم کلیدیں: {keys}",
+      "invalid_union": "غلط ان پٹ",
+      "invalid_union_discriminator": "غلط امتیازی قدر، {options} متوقع",
+      "invalid_enum_value": "غلط انم قدر۔ {options} متوقع، {received} موصول",
+      "invalid_arguments": "غلط فنکشن آرگیومنٹس",
+      "invalid_return_type": "غلط فنکشن ریٹرن ٹائپ",
+      "invalid_date": "غلط تاریخ",
+      "custom": "غلط ان پٹ",
+      "invalid_intersection_types": "مجموعہ کے نتائج کو یکجا نہیں کیا جا سکا",
+      "not_multiple_of": "عدد {multipleOf} کا ضارب ہونا چاہئے",
+      "not_finite": "عدد متناہی ہونا چاہئے",
+      "invalid_string": {
+        "email": "غلط {validation}",
+        "emoji": "غلط {validation}",
+        "url": "غلط {validation}",
+        "uuid": "غلط {validation}",
+        "ulid": "غلط {validation}",
+        "ip": "غلط {validation}",
+        "cuid": "غلط {validation}",
+        "cuid2": "غلط {validation}",
+        "regex": "غلط",
+        "datetime": "غلط {validation}",
+        "startsWith": "غلط ان پٹ: \"{startsWith}\" سے شروع ہونا چاہئے",
+        "endsWith": "غلط ان پٹ: \"{endsWith}\" پر ختم ہونا چاہئے"
+      },
+      "too_small": {
+        "array": {
+          "exact": "{path, select, missingTranslation {Array} other {{path}}} میں بالکل {minimum} عنصر ہونا چاہئے",
+          "inclusive": "{path, select, missingTranslation {Array} other {{path}}} میں کم از کم {minimum} عنصر ہونا چاہئے",
+          "not_inclusive": "{path, select, missingTranslation {Array} other {{path}}} میں {minimum} عنصر سے زیادہ ہونا چاہئے"
+        },
+        "string": {
+          "exact": "{path, select, missingTranslation {String} other {{path}}} میں بالکل {minimum} حروف ہونا چاہئے",
+          "inclusive": "{path, select, missingTranslation {String} other {{path}}} میں کم از کم {minimum} حروف ہونا چاہئے",
+          "not_inclusive": "{path, select, missingTranslation {String} other {{path}}} میں {minimum} حروف سے زیادہ ہونا چاہئے"
+        },
+        "number": {
+          "exact": "{path, select, missingTranslation {Number} other {{path}}} بالکل {minimum} ہونا چاہئے",
+          "inclusive": "{path, select, missingTranslation {Number} other {{path}}} {minimum} یا زیادہ ہونا چاہئے",
+          "not_inclusive": "{path, select, missingTranslation {Number} other {{path}}} {minimum} سے زیادہ ہونا چاہئے"
+        },
+        "bigint": {
+          "exact": "{path, select, missingTranslation {Number} other {{path}}} بالکل {minimum} ہونا چاہئے",
+          "inclusive": "{path, select, missingTranslation {Number} other {{path}}} {minimum} یا زیادہ ہونا چاہئے",
+          "not_inclusive": "{path, select, missingTranslation {Number} other {{path}}} {minimum} سے زیادہ ہونا چاہئے"
+        },
+        "set": {
+          "exact": "غلط ان پٹ",
+          "inclusive": "غلط ان پٹ",
+          "not_inclusive": "غلط ان پٹ"
+        },
+        "date": {
+          "exact": "تاریخ بالکل {minimum, date, short} ہونی چاہئے",
+          "inclusive": "تاریخ {minimum, date, short} یا اس سے زیادہ ہونی چاہئے",
+          "not_inclusive": "تاریخ {minimum, date, short} سے زیادہ ہونی چاہئے"
+        }
+      },
+      "too_big": {
+        "array": {
+          "exact": "{path, select, missingTranslation {Array} other {{path}}} میں بالکل {maximum} عنصر ہونا چاہئے",
+          "inclusive": "{path, select, missingTranslation {Array} other {{path}}} میں زیادہ سے زیادہ {maximum} عنصر ہونا چاہئے",
+          "not_inclusive": "{path, select, missingTranslation {Array} other {{path}}} میں {maximum} عنصر سے کم ہونا چاہئے"
+        },
+        "string": {
+          "exact": "{path, select, missingTranslation {String} other {{path}}} میں بالکل {maximum} حروف ہونا چاہئے",
+          "inclusive": "{path, select, missingTranslation {String} other {{path}}} میں زیادہ سے زیادہ {maximum} حروف ہونا چاہئے",
+          "not_inclusive": "{path, select, missingTranslation {String} other {{path}}} میں {maximum} حروف سے کم ہونا چاہئے"
+        },
+        "number": {
+          "exact": "{path, select, missingTranslation {Number} other {{path}}} بالکل {maximum} ہونا چاہئے",
+          "inclusive": "{path, select, missingTranslation {Number} other {{path}}} {maximum} یا کم ہونا چاہئے",
+          "not_inclusive": "{path, select, missingTranslation {Number} other {{path}}} {maximum} سے کم ہونا چاہئے"
+        },
+        "bigint": {
+          "exact": "{path, select, missingTranslation {Number} other {{path}}} بالکل {maximum} ہونا چاہئے",
+          "inclusive": "{path, select, missingTranslation {Number} other {{path}}} {maximum} یا کم ہونا چاہئے",
+          "not_inclusive": "{path, select, missingTranslation {Number} other {{path}}} {maximum} سے کم ہونا چاہئے"
+        },
+        "set": {
+          "exact": "غلط ان پٹ",
+          "inclusive": "غلط ان پٹ",
+          "not_inclusive": "غلط ان پٹ"
+        },
+        "date": {
+          "exact": "تاریخ بالکل {maximum, date, short} ہونی چاہئے",
+          "inclusive": "تاریخ {maximum, date, short} یا اس سے کم ہونی چاہئے",
+          "not_inclusive": "تاریخ {maximum, date, short} سے کم ہونی چاہئے"
+        }
+      }
+    },
+    "validations": {
+      "email": "ای میل",
+      "emoji": "ایموجی",
+      "url": "یو آر ایل",
+      "uuid": "یو یو آئی ڈی",
+      "ulid": "یو ایل آئی ڈی",
+      "ip": "آئی پی",
+      "cuid": "سی یو آئی ڈی",
+      "cuid2": "سی یو آئی ڈی 2",
+      "regex": "ریجیکس",
+      "datetime": "تاریخ اور وقت"
+    },
+    "types": {
+      "function": "فنکشن",
+      "number": "عدد",
+      "string": "سٹرنگ",
+      "nan": "نا ن",
+      "integer": "عدد صحیح",
+      "float": "اعشاریہ",
+      "boolean": "بولین",
+      "date": "تاریخ",
+      "bigint": "بگ انٹ",
+      "undefined": "غیر معین",
+      "symbol": "سمبل",
+      "null": "نل",
+      "array": "ارے",
+      "object": "آبجیکٹ",
+      "unknown": "نامعلوم",
+      "promise": "پرومس",
+      "void": "وائڈ",
+      "never": "کبھی نہیں",
+      "map": "میپ",
+      "set": "سیٹ"
+    }
+  }
+}

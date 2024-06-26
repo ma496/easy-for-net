@@ -9,7 +9,7 @@ import { z } from "zod"
 import { useI18nZodErrors } from '@/lib/useI18nZodErrors'
 
 const formSchema = z.object({
-  email: z.string().min(1),
+  email: z.string().email(),
   password: z.string().min(6)
 })
 

@@ -6,6 +6,11 @@
     "Customers": "Customers",
     "Analytics": "Analytics"
   },
+  "form": {
+    "email": "Email",
+    "password": "Password"
+  },
+  "customErrors": {},
   "EasyForNet": "EasyForNet",
   "Upgrade": "Upgrade",
   "UpgradetoPro": "Upgrade to Pro",

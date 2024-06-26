@@ -6,6 +6,11 @@
     "Customers": "گاہک",
     "Analytics": "تجزیات"
   },
+  "form": {
+    "email": "ای میل",
+    "password": "پاس ورڈ"
+  },
+  "customErrors": {},
   "EasyForNet": "ایزی فار نیٹ",
   "Upgrade": "اپ گریڈ",
   "UpgradetoPro": "پرو میں اپ گریڈ کریں",
