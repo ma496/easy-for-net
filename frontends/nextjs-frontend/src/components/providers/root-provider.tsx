@@ -4,6 +4,7 @@ import React, { Suspense } from 'react';
 import Loading from '@/components/layout/loading';
 import StoreProvider from './store-provider';
 import ThemesProvider from './themes-provider';
+import { ShowError } from '../show-error';
 
 interface IProps {
   children: React.ReactNode
@@ -20,6 +21,7 @@ const RootProvider = ({ children }: IProps) => {
         disableTransitionOnChange>
         <Suspense fallback={<Loading />}>
           <App>{children}</App>
+          <ShowError />
         </Suspense>
       </ThemesProvider>
     </StoreProvider>

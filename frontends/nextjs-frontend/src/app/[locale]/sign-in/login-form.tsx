@@ -7,9 +7,12 @@ import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useI18nZodErrors } from '@/lib/useI18nZodErrors'
+import { SignInDto, useSignInMutation } from "@/store/api/authApi";
+import { localeStorageConst } from "@/lib/constants";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 
 const formSchema = z.object({
-  email: z.string().email(),
+  username: z.string().email(),
   password: z.string().min(6)
 })
 
@@ -25,8 +28,18 @@ export function LoginForm() {
     },
   })
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log(values)
+  const [signIn, isLoading] = useSignInMutation()
+  const [, setSignInInfo] = useLocalStorage<SignInDto>(localeStorageConst.signIn)
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    let res = await signIn(values)
+    // if ('error' in res) {
+    //   alert(JSON.stringify(res.error))
+    // }
+    if ('data' in res) {
+      setSignInInfo(res.data)
+      router.push('/')
+    }
   }
 
   return (
