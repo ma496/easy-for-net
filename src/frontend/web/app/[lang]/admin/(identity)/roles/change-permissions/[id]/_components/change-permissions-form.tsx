@@ -162,7 +162,7 @@ export const ChangePermissionsForm = ({ roleId }: ChangePermissionsFormProps) =>
     }
 
     successToast.fire({
-      title: t('page.roles.permissionsUpdateSuccess'),
+      text: t('page.roles.permissionsUpdateSuccess'),
     })
     router.push('/admin/roles/list')
   }

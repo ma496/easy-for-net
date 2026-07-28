@@ -67,7 +67,7 @@ export const UpdateProfile = () => {
     if (userInfo.data) {
       dispatch(setUserInfo(userInfo.data))
       successToast.fire({
-        title: t('page.profile.updateSuccess'),
+        text: t('page.profile.updateSuccess'),
       })
     }
   }

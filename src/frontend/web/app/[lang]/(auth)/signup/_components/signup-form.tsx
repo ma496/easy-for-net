@@ -85,7 +85,7 @@ const SignupForm = () => {
         return
       }
       successToast.fire({
-        title: t('page.verifyEmail.resendSuccess'),
+        text: t('page.verifyEmail.resendSuccess'),
       })
       setCountdown(15)
     } catch {

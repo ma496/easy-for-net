@@ -118,7 +118,7 @@ export const NotificationTable = () => {
       return
     } else {
       successToast.fire({
-        title: t('notifications.markedAsRead')
+        text: t('notifications.markedAsRead')
       })
     }
   }
@@ -135,7 +135,7 @@ export const NotificationTable = () => {
         return
       } else {
         successToast.fire({
-          title: t('notifications.markedAllAsRead')
+          text: t('notifications.markedAllAsRead')
         })
       }
     }
@@ -153,7 +153,7 @@ export const NotificationTable = () => {
         return
       } else {
         successToast.fire({
-          title: t('notifications.deleted')
+          text: t('notifications.deleted')
         })
       }
     }
