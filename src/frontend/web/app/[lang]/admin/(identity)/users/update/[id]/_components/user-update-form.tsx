@@ -148,13 +148,14 @@ export const UserUpdateForm = ({ userId }: UserUpdateFormProps) => {
               type="button"
               variant="outline"
               onClick={() => router.push('/admin/users/list')}
-              isLoading={isUserSaving || isLoadingUser}
+              disabled={isUserSaving || isLoadingUser}
             >
               {t('common.cancel')}
             </Button>
             <Button
               type="submit"
-              isLoading={isUserSaving || isLoadingUser}
+              disabled={isUserSaving || isLoadingUser}
+              isLoading={isUserSaving}
             >
               {t('common.submit')}
             </Button>

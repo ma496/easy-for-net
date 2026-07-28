@@ -151,7 +151,7 @@ export const UserCreateForm = () => {
               type="button"
               variant="outline"
               onClick={() => router.push('/admin/users/list')}
-              isLoading={isCreatingUser}
+              disabled={isCreatingUser}
             >
               {t('common.cancel')}
             </Button>

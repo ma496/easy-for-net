@@ -115,6 +115,7 @@ export const RoleUpdateForm = ({ roleId }: RoleUpdateFormProps) => {
               type="button"
               variant="outline"
               onClick={() => router.push('/admin/roles/list')}
+              disabled={isSavingRole}
             >
               {t('common.cancel')}
             </Button>
