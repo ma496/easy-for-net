@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { useId } from 'react'
 
 /** Props for the DataTablePagination, the data-table footer that shows a "showing N-M of T" summary, a page-size selector, and a numbered pagination control. */
-interface PaginationProps {
+interface DataTablePaginationProps {
   className?: string
   siblingCount?: number
 }
@@ -13,7 +13,7 @@ interface PaginationProps {
 /**
  * DataTablePagination is the footer component for a data table that renders a "showing entries" summary, a page-size selector, and a numbered pagination control (with first/prev/next/last and ellipsis truncation) wired to the shared DataTable context.
  */
-export function DataTablePagination<TData>({ className = '', siblingCount = 1 }: PaginationProps) {
+export function DataTablePagination<TData>({ className = '', siblingCount = 1 }: DataTablePaginationProps) {
   const { pageSizeOptions, rowCount, table } = useDataTable<TData>()
   const { t } = useTranslation()
 

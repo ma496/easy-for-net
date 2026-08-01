@@ -1,14 +1,14 @@
 import { Row } from '@tanstack/react-table'
 
-/** Props for the CheckboxCell, a tanstack-table row-selection checkbox bound to a single table row. */
-interface CheckboxCellProps<TData> {
+/** Props for the DataTableCheckboxCell, a tanstack-table row-selection checkbox bound to a single table row. */
+interface DataTableCheckboxCellProps<TData> {
   row: Row<TData>
 }
 
 /**
- * CheckboxCell renders a single row's selection checkbox in a data table by wiring it to the row's `getToggleSelectedHandler` from tanstack-react-table.
+ * DataTableCheckboxCell renders a single row's selection checkbox in a data table by wiring it to the row's `getToggleSelectedHandler` from tanstack-react-table.
  */
-export function CheckboxCell<TData>({ row }: CheckboxCellProps<TData>) {
+export function DataTableCheckboxCell<TData>({ row }: DataTableCheckboxCellProps<TData>) {
   return (
     <div className="flex items-center">
       <input
@@ -21,17 +21,17 @@ export function CheckboxCell<TData>({ row }: CheckboxCellProps<TData>) {
   )
 }
 
-/** Props for the CheckboxHeader, a "select all" checkbox in the data-table header that supports an indeterminate state. */
-interface CheckboxHeaderProps {
+/** Props for the DataTableCheckboxHeader, a "select all" checkbox in the data-table header that supports an indeterminate state. */
+interface DataTableCheckboxHeaderProps {
   checked: boolean
   indeterminate: boolean
   onChange: () => void
 }
 
 /**
- * CheckboxHeader renders the header "select-all" checkbox for a data table, exposing a controlled checked/indeterminate state for partial-selection scenarios.
+ * DataTableCheckboxHeader renders the header "select-all" checkbox for a data table, exposing a controlled checked/indeterminate state for partial-selection scenarios.
  */
-export function CheckboxHeader({ checked, indeterminate, onChange }: CheckboxHeaderProps) {
+export function DataTableCheckboxHeader({ checked, indeterminate, onChange }: DataTableCheckboxHeaderProps) {
   return (
     <div className="flex items-center">
       <input

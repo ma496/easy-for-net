@@ -1,6 +1,6 @@
 import { flexRender } from '@tanstack/react-table'
 import { useDataTable } from './context'
-import { SortIcon } from './sort-icon'
+import { DataTableSortIcon } from './sort-icon'
 import { Loading } from '../loading'
 import { useTranslation } from '@/i18n'
 import ScrollBar from 'react-perfect-scrollbar'
@@ -40,7 +40,7 @@ export function DataTable<TData>({ className = '', suppressScrollX = false, supp
                     {header.isPlaceholder ? null : (
                       <div className={`group flex items-center ${header.column.getCanSort() ? 'cursor-pointer select-none' : ''}`} onClick={header.column.getToggleSortingHandler()}>
                         {flexRender(header.column.columnDef.header, header.getContext())}
-                        {header.column.getCanSort() && <SortIcon isSorted={header.column.getIsSorted()} />}
+                        {header.column.getCanSort() && <DataTableSortIcon isSorted={header.column.getIsSorted()} />}
                       </div>
                     )}
                   </th>
