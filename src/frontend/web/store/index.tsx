@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { appApi } from '@/store/api/_app-api'
 import { themeConfigSlice, authSlice, notificationsSlice } from '@/store/slices'
-import { rtkErrorMiddleware } from '@/store/middlewares/rtk-error-middleware'
+import { rtkErrorMiddleware } from '@/store/middlewares'
 
 /**
  * Root Redux store combining the theme config, auth, and notifications
