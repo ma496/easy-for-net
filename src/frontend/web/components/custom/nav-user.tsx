@@ -1,16 +1,14 @@
 'use client'
-import { LocalizedLink } from '@/components/ui'
+import { LocalizedLink, Dropdown, type DropdownRef, Loading } from '@/components/ui'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
 import { signout } from '@/store/slices/authSlice'
 import { useLocalizedRouter } from '@/hooks/use-localized-router'
 import { useTranslation } from '@/i18n'
 import { User, LogOut, Lock } from 'lucide-react'
-import { Dropdown, DropdownRef } from '../ui/dropdown'
 import { useRef } from 'react'
 import { ImagePreview } from './image-preview'
 import { useSignoutMutation } from '@/store/api/identity'
 import { apiErrorAlert } from '@/lib/utils'
-import { Loading } from '../ui/loading'
 
 /**
  * Header dropdown that shows the signed-in user avatar, profile/change-password links, and a sign-out action that hits the logout API and redirects to the sign-in page.

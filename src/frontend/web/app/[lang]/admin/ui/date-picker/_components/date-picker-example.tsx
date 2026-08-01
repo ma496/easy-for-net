@@ -37,7 +37,7 @@ export const DatePickerExample = () => {
   const [rangeDate, setRangeDate] = useState<DateRange>()
 
   const codeExamples = {
-    basic: `import { DatePicker } from '@/components/ui/date-picker'
+    basic: `import { DatePicker } from '@/components/ui/form'
 
 const [date, setDate] = useState<Date>()
 
@@ -48,7 +48,7 @@ const [date, setDate] = useState<Date>()
   showIcon={true}
 />`,
 
-    formik: `import { FormDatePicker } from '@/components/ui/form-date-picker'
+    formik: `import { FormDatePicker } from '@/components/ui/form'
 import { Formik, Form } from 'formik'
 
 // Single Date Mode
@@ -95,7 +95,7 @@ import { Formik, Form } from 'formik'
   </Form>
 </Formik>`,
 
-    multiple: `import { DatePicker } from '@/components/ui/date-picker'
+    multiple: `import { DatePicker } from '@/components/ui/form'
 
 const [dates, setDates] = useState<Date[]>([])
 
@@ -106,7 +106,7 @@ const [dates, setDates] = useState<Date[]>([])
   placeholder="Select multiple dates"
 />`,
 
-    range: `import { DatePicker } from '@/components/ui/date-picker'
+    range: `import { DatePicker } from '@/components/ui/form'
 
 const [range, setRange] = useState<{ from?: Date; to?: Date }>()
 

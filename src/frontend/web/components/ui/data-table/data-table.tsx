@@ -1,7 +1,7 @@
 import { flexRender } from '@tanstack/react-table'
 import { useDataTable } from './context'
 import { DataTableSortIcon } from './sort-icon'
-import { Loading } from '../loading'
+import { Loading } from '..'
 import { useTranslation } from '@/i18n'
 import ScrollBar from 'react-perfect-scrollbar'
 

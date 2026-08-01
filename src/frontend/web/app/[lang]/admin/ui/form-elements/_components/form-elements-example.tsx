@@ -71,9 +71,9 @@ export const FormElementsExample = () => {
 
   const codeExamples = {
     formComponents: `// Form Components (with Formik integration)
-import { FormInput, FormTextarea, FormPasswordInput } from '@/components/ui/form-*'
-import { FormSelect, FormMultiSelect } from '@/components/ui/form-*'
-import { FormCheckbox, FormRadio, FormDatePicker } from '@/components/ui/form-*'
+import { FormInput, FormTextarea, FormPasswordInput } from '@/components/ui/form'
+import { FormSelect, FormMultiSelect } from '@/components/ui/form'
+import { FormCheckbox, FormRadio, FormDatePicker } from '@/components/ui/form'
 import { Formik, Form } from 'formik'
 
 <Formik
@@ -104,9 +104,9 @@ import { Formik, Form } from 'formik'
 </Formik>`,
 
     generalComponents: `// General Components (standalone, no Formik)
-import { Input, Textarea, PasswordInput } from '@/components/ui/*'
-import { Select, MultiSelect } from '@/components/ui/*'
-import { Checkbox, Radio } from '@/components/ui/*'
+import { Input, Textarea, PasswordInput } from '@/components/ui/form'
+import { Select, MultiSelect } from '@/components/ui/form'
+import { Checkbox, Radio } from '@/components/ui/form'
 
 const [value, setValue] = useState("")
 const [multiValue, setMultiValue] = useState([])

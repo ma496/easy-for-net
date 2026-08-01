@@ -3,8 +3,7 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Upload, Trash2 } from 'lucide-react'
 import { apiErrorAlert, cn, confirmDeleteAlert, errorAlert } from '@/lib/utils'
-import { Button, type ButtonProps } from '../button'
-import { IconButton } from '../icon-button'
+import { Button, type ButtonProps, IconButton } from '..'
 import { useFileUploadMutation, useFileDeleteMutation, useLazyFileGetQuery, FileUploadResponse } from '@/store/api/file-management'
 import { useTranslation } from '@/i18n'
 

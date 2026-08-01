@@ -12,17 +12,17 @@ export const DateViewExample = () => {
   const timestamp = 1704067200000 // 2024-01-01
 
   const codeExamples = {
-    basic: `import { DateView } from '@/components/ui/date-view'
+    basic: `import { DateView } from '@/components/ui'
 
 <DateView date={new Date()} />`,
 
-    formats: `import { DateView } from '@/components/ui/date-view'
+    formats: `import { DateView } from '@/components/ui'
 
 <DateView date={new Date()} format="yyyy-MM-dd" />
 <DateView date={new Date()} format="MM/dd/yyyy HH:mm" />
 <DateView date={new Date()} format="PPP" />`,
 
-    invalid: `import { DateView } from '@/components/ui/date-view'
+    invalid: `import { DateView } from '@/components/ui'
 
 <DateView date={null} />
 <DateView date="invalid-date" />`
