@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getLocalStorageValue, setLocalStorageValue } from '@/lib/utils/common'
+import { getLocalStorageValue, setLocalStorageValue } from '@/lib/utils'
 
 const COOKIE_CONSENT_KEY = 'cookie_consent'
 

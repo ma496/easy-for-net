@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
-import { hasAuthCookie } from '@/lib/utils/authentication-and-authorization'
+import { hasAuthCookie } from '@/lib/utils'
 import { isAuthRequired } from './auth-urls'
 import { i18nConfig } from './i18n'
 import { match as matchLocale } from '@formatjs/intl-localematcher'

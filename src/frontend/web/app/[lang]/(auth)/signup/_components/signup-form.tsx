@@ -8,8 +8,7 @@ import { useSignupMutation, useResendVerifyEmailMutation } from '@/store/api/ide
 import { Button, LocalizedLink } from '@/components/ui'
 import { useState, useEffect } from 'react'
 import { Mail, Lock, CheckCircle } from 'lucide-react'
-import { successToast } from '@/lib/utils/notification'
-import { apiErrorAlert } from '@/lib/utils'
+import { apiErrorAlert, successToast } from '@/lib/utils'
 
 /**
  * Interactive client-side form that registers a new user with username, email, and password.

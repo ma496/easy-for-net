@@ -4,7 +4,7 @@ import { useTranslation } from '@/i18n'
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
 import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable } from '@/components/ui/data-table'
 import { ApiErrorMessages, Badge, LocalizedLink, Button, Truncated, Loading } from '@/components/ui'
-import { apiErrorAlert, confirmDeleteAlert, successToast } from '@/lib/utils'
+import { apiErrorAlert, confirmAlert, confirmDeleteAlert, successToast } from '@/lib/utils'
 import {
   NotificationDto,
   NotificationType,
@@ -15,7 +15,7 @@ import {
 } from '@/store/api/notifications'
 import { formatDistanceToNow } from 'date-fns'
 import { Check, Trash2, CheckCheck, AlertCircle, AlertTriangle, CheckCircle, Info } from 'lucide-react'
-import { confirmAlert } from '@/lib/utils/notification'
+
 import { NotificationFilterPanel, NotificationFilters } from './notification-filter-panel'
 import { NotificationFilterButton } from './notification-filter-button'
 import { useTableUrlState } from '@/hooks/use-table-url-state'

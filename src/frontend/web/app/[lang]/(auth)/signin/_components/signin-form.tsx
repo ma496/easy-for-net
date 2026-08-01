@@ -9,9 +9,8 @@ import { useTokenMutation, useLazyGetUserInfoQuery, useResendVerifyEmailMutation
 import { useAppDispatch } from '@/store/hooks'
 import { setUserInfo } from '@/store/slices/authSlice'
 import { Button, LocalizedLink } from '@/components/ui'
-import { successToast } from '@/lib/utils/notification'
 import { useLocalizedRouter } from '@/hooks/use-localized-router'
-import { apiErrorAlert } from '@/lib/utils'
+import { apiErrorAlert, successToast } from '@/lib/utils'
 
 /**
  * Interactive client-side form that authenticates a user with username/password and routes them to the appropriate landing page.
