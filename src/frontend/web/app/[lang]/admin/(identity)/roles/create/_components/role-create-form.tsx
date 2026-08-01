@@ -2,7 +2,7 @@
 import * as Yup from 'yup'
 import { useTranslation } from '@/i18n'
 import { useLocalizedRouter } from '@/hooks/use-localized-router'
-import { useRoleCreateMutation } from '@/store/api/identity/roles/roles-api'
+import { useRoleCreateMutation } from '@/store/api/identity'
 import { Form, Formik } from 'formik'
 import { Button } from '@/components/ui'
 import { FormInput, FormTextarea } from '@/components/ui/form'

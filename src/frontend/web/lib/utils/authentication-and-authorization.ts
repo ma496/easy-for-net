@@ -1,4 +1,4 @@
-import { GetUserInfoResponse } from "@/store/api/identity/account/account-dtos"
+import { GetUserInfoResponse } from '@/store/api/identity'
 
 /** Authentication slice shape: the current user (with roles/permissions) and an isAuthenticated flag. */
 export interface AuthState {

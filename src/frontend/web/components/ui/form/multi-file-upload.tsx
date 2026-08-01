@@ -4,7 +4,7 @@ import { Plus, Trash2, Loader2, Pencil } from 'lucide-react'
 import { apiErrorAlert, cn, confirmDeleteAlert } from '@/lib/utils'
 import { useTranslation } from '@/i18n'
 import { IconButton } from '../icon-button'
-import { useFileUploadMutation, useLazyFileGetQuery, useFileDeleteMutation } from '@/store/api/file-management/files/files-api'
+import { useFileUploadMutation, useLazyFileGetQuery, useFileDeleteMutation } from '@/store/api/file-management'
 import { ReactSortable } from 'react-sortablejs'
 
 /** Props for the MultiFileUpload component, which uploads and reorders multiple files via the file-management API, exposing replace/delete actions for each file and notifying the parent of the new filename list. */

@@ -1,6 +1,6 @@
 'use client'
 
-import { useVerifyEmailMutation } from '@/store/api/identity/account/account-api'
+import { useVerifyEmailMutation } from '@/store/api/identity'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import { useTranslation } from '@/i18n'

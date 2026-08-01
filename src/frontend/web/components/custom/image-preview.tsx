@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { useFileGetQuery } from '@/store/api/file-management/files/files-api'
+import { useFileGetQuery } from '@/store/api/file-management'
 import { cn } from '@/lib/utils'
 
 /**

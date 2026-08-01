@@ -8,7 +8,7 @@ import { User, LogOut, Lock } from 'lucide-react'
 import { Dropdown, DropdownRef } from '../ui/dropdown'
 import { useRef } from 'react'
 import { ImagePreview } from './image-preview'
-import { useSignoutMutation } from '@/store/api/identity/account/account-api'
+import { useSignoutMutation } from '@/store/api/identity'
 import { apiErrorAlert } from '@/lib/utils'
 import { Loading } from '../ui/loading'
 

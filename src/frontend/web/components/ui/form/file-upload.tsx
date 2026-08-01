@@ -5,8 +5,7 @@ import { Upload, Trash2 } from 'lucide-react'
 import { apiErrorAlert, cn, confirmDeleteAlert, errorAlert } from '@/lib/utils'
 import { Button, type ButtonProps } from '../button'
 import { IconButton } from '../icon-button'
-import { useFileUploadMutation, useFileDeleteMutation, useLazyFileGetQuery } from '@/store/api/file-management/files/files-api'
-import { FileUploadResponse } from '@/store/api/file-management/files/files-dtos'
+import { useFileUploadMutation, useFileDeleteMutation, useLazyFileGetQuery, FileUploadResponse } from '@/store/api/file-management'
 import { useTranslation } from '@/i18n'
 
 /** Props for the FileUpload component, which wraps a hidden file input, calls the file-management API to upload/delete files, and optionally renders a custom UI via a render-prop child. */

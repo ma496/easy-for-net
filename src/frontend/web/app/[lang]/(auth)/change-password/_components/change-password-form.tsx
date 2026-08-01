@@ -2,7 +2,7 @@
 import * as Yup from 'yup'
 import { useTranslation } from '@/i18n'
 import { useLocalizedRouter } from '@/hooks/use-localized-router'
-import { useChangePasswordMutation } from '@/store/api/identity/account/account-api'
+import { useChangePasswordMutation } from '@/store/api/identity'
 import { useAppDispatch } from '@/store/hooks'
 import { signout } from '@/store/slices/authSlice'
 import { apiErrorAlert, successToast } from '@/lib/utils'

@@ -5,7 +5,7 @@ import { toggleRTL, toggleTheme, toggleMenu, toggleLayout, toggleAnimation, togg
 import { AppLoading } from '@/components/layouts'
 import { i18nConfig, Locale } from '@/i18n'
 import { setUserInfo } from './store/slices/authSlice'
-import { useLazyGetUserInfoQuery } from './store/api/identity/account/account-api'
+import { useLazyGetUserInfoQuery } from './store/api/identity'
 import { isAllowed } from './lib/utils'
 import { usePathname, useRouter } from 'next/navigation'
 import { getMatchedAuthUrl } from './auth-urls'

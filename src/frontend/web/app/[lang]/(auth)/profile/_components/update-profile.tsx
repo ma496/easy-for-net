@@ -1,6 +1,6 @@
 'use client'
 
-import { useGetUserProfileQuery, useLazyGetUserInfoQuery, useUpdateProfileMutation } from '@/store/api/identity/account/account-api'
+import { useGetUserProfileQuery, useLazyGetUserInfoQuery, useUpdateProfileMutation, UpdateProfileRequest } from '@/store/api/identity'
 import { FormInput, FileUpload } from '@/components/ui/form'
 import { useAppDispatch } from '@/store/hooks'
 import { setUserInfo } from '@/store/slices/authSlice'
@@ -9,7 +9,6 @@ import { Mail, Pencil, Trash2, User } from 'lucide-react'
 import * as Yup from 'yup'
 import { Formik, Form } from 'formik'
 import { useTranslation } from '@/i18n'
-import { UpdateProfileRequest } from '@/store/api/identity/account/account-dtos'
 import { apiErrorAlert, confirmDeleteAlert, successToast } from '@/lib/utils'
 
 /**

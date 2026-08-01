@@ -2,7 +2,7 @@
 
 import { useTranslation } from '@/i18n'
 import { Select } from '@/components/ui/form'
-import { useRoleListQuery } from '@/store/api/identity/roles/roles-api'
+import { useRoleListQuery } from '@/store/api/identity'
 import { Search, X } from 'lucide-react'
 import { Button, Loading, ApiErrorMessages } from '@/components/ui'
 
