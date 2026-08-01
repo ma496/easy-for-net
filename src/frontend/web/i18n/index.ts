@@ -1,4 +1,4 @@
-export * from './config'
-export * from './client'
-export * from './server'
-export * from './non-component'
+export { i18nConfig, type Locale } from './config'
+export { useTranslation } from './client'
+export { getDictionary, getServerTranslation } from './server'
+export { getTranslation } from './non-component'

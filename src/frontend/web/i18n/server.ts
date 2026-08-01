@@ -1,4 +1,4 @@
-import type { Locale } from '.'
+import type { Locale } from './config'
 
 const dictionaries = {
   en: () => import('../public/locales/en.json').then((module) => module.default),
