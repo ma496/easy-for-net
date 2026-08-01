@@ -1,5 +1,3 @@
-import { NotificationBell } from './notification-bell'
-import { NotificationItem } from './notification-item'
-import { NotificationPanel } from './notification-panel'
-
-export { NotificationBell, NotificationItem, NotificationPanel }
+export { NotificationBell } from './notification-bell'
+export { NotificationItem } from './notification-item'
+export { NotificationPanel } from './notification-panel'
