@@ -12,7 +12,7 @@ import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
 import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable } from '@/components/ui/data-table'
 import { UserFilterPanel, UserFilters } from './user-filter-panel'
 import { UserFilterButton } from './user-filter-button'
-import { useTableUrlState } from '@/hooks/use-table-url-state'
+import { useTableUrlState } from '@/hooks'
 import { parseAsString, parseAsStringEnum } from 'nuqs'
 
 /**

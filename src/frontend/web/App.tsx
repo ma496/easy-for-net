@@ -10,7 +10,7 @@ import { isAllowed } from './lib/utils'
 import { usePathname, useRouter } from 'next/navigation'
 import { getMatchedAuthUrl } from './auth-urls'
 import { CookieConsentDialog } from '@/components/custom'
-import { useCookieConsent } from '@/hooks/use-cookie-consent'
+import { useCookieConsent } from '@/hooks'
 
 /**
  * Interactive client-side root component that loads the authenticated user, applies the persisted theme/menu/layout preferences, performs route-level permission checks, and conditionally renders the cookie consent dialog.

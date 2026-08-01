@@ -1,6 +1,6 @@
 'use client'
 import { useId, useState } from 'react'
-import { useLocalizedRouter } from '@/hooks/use-localized-router'
+import { useLocalizedRouter } from '@/hooks'
 import { SearchableItem, searchableItems } from '@/searchable-items'
 import { authUrls } from '@/auth-urls'
 import { LocalizedLink } from '@/components/ui'

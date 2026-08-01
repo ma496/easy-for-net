@@ -1,6 +1,6 @@
 'use client'
 
-import { useLocalizedRouter } from '@/hooks/use-localized-router'
+import { useLocalizedRouter } from '@/hooks'
 import { ArrowLeft } from 'lucide-react'
 
 /**

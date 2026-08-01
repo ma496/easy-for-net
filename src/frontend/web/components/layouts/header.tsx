@@ -9,7 +9,7 @@ import { SearchComponent } from './search-component'
 import { Menu } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { NotificationBell } from '@/components/notifications'
-import { useNotificationHub } from '@/hooks/use-notification-hub'
+import { useNotificationHub } from '@/hooks'
 
 /**
  * Header is the client-side application top bar that contains the brand logo, mobile sidebar toggle, search box, notification bell, theme changer, language dropdown, and the user navigation menu; it also activates the current horizontal-menu link and subscribes to the notification hub.

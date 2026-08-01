@@ -1,7 +1,7 @@
 'use client'
 import * as Yup from 'yup'
 import { useTranslation } from '@/i18n'
-import { useLocalizedRouter } from '@/hooks/use-localized-router'
+import { useLocalizedRouter } from '@/hooks'
 import { useChangePasswordMutation } from '@/store/api/identity'
 import { useAppDispatch } from '@/store/hooks'
 import { signout } from '@/store/slices/authSlice'

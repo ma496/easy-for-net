@@ -15,10 +15,9 @@ import {
 } from '@/store/api/notifications'
 import { formatDistanceToNow } from 'date-fns'
 import { Check, Trash2, CheckCheck, AlertCircle, AlertTriangle, CheckCircle, Info } from 'lucide-react'
-
 import { NotificationFilterPanel, NotificationFilters } from './notification-filter-panel'
 import { NotificationFilterButton } from './notification-filter-button'
-import { useTableUrlState } from '@/hooks/use-table-url-state'
+import { useTableUrlState } from '@/hooks'
 import { parseAsString, parseAsStringEnum } from 'nuqs'
 
 /**

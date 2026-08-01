@@ -1,7 +1,7 @@
 'use client'
 import * as Yup from 'yup'
 import { useTranslation } from '@/i18n'
-import { useLocalizedRouter } from '@/hooks/use-localized-router'
+import { useLocalizedRouter } from '@/hooks'
 import { useUserCreateMutation, useLazyRoleListQuery, RoleListRequest, RoleListDto } from '@/store/api/identity'
 import { Form, Formik } from 'formik'
 import { FormPasswordInput, FormInput, FormCheckbox, FormLazyMultiSelect } from '@/components/ui/form'

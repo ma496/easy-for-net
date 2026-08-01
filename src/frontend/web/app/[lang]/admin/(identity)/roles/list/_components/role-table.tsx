@@ -10,7 +10,7 @@ import { apiErrorAlert, exportData, ExportFormat, isAllowed, confirmDeleteAlert,
 import { Dropdown, Badge, LocalizedLink, ApiErrorMessages } from '@/components/ui'
 import { useAppSelector } from '@/store/hooks'
 import { Allow } from '@/allow'
-import { useTableUrlState } from '@/hooks/use-table-url-state'
+import { useTableUrlState } from '@/hooks'
 
 /**
  * Interactive client-side data table that lists roles with sorting, pagination, search, and per-row update/delete/change-permissions actions gated by the user's permissions.

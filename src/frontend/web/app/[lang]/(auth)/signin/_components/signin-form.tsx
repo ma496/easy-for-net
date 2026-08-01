@@ -9,7 +9,7 @@ import { useTokenMutation, useLazyGetUserInfoQuery, useResendVerifyEmailMutation
 import { useAppDispatch } from '@/store/hooks'
 import { setUserInfo } from '@/store/slices/authSlice'
 import { Button, LocalizedLink } from '@/components/ui'
-import { useLocalizedRouter } from '@/hooks/use-localized-router'
+import { useLocalizedRouter } from '@/hooks'
 import { apiErrorAlert, successToast } from '@/lib/utils'
 
 /**
