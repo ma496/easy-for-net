@@ -1,4 +1,4 @@
-import SignupForm from './_components/signup-form'
+import { SignupForm } from './_components/signup-form'
 import { LanguageDropdown } from '@/components/custom/language-dropdown'
 import { Metadata } from 'next'
 import { getServerTranslation } from '@/i18n'

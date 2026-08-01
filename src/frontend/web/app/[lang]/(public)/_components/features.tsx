@@ -5,7 +5,7 @@ import { getServerTranslation } from '@/i18n'
  * Server-rendered features section of the public landing page.
  * Loads the localized strings for the badge, heading, and six feature cards, then renders them in a responsive grid with icons.
  */
-const Features = async ({ lang }: { lang: string }) => {
+export const Features = async ({ lang }: { lang: string }) => {
   const [
     titleBadge,
     title,
@@ -106,4 +106,3 @@ const Features = async ({ lang }: { lang: string }) => {
   )
 }
 
-export default Features

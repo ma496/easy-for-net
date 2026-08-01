@@ -19,7 +19,7 @@ import { apiErrorAlert } from '@/lib/utils'
  * Interactive client-side form that authenticates a user with username/password and routes them to the appropriate landing page.
  * Manages a verification-message sub-state with a resend-email countdown for accounts whose email is not yet verified.
  */
-const SigninForm = () => {
+export const SigninForm = () => {
   const router = useLocalizedRouter()
   const { t } = useTranslation()
 
@@ -150,4 +150,3 @@ const SigninForm = () => {
   )
 }
 
-export default SigninForm

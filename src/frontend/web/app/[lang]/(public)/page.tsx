@@ -1,9 +1,9 @@
 import { Metadata } from 'next'
 import { getServerTranslation } from '@/i18n'
-import Hero from './_components/hero'
-import Features from './_components/features'
-import CTA from './_components/cta'
-import Footer from './_components/footer'
+import { Hero } from './_components/hero'
+import { Features } from './_components/features'
+import { CTA } from './_components/cta'
+import { Footer } from './_components/footer'
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params

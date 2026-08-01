@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 /**
  * Interactive client-side view that displays the 403 access-denied illustration, localized title/message, and a back button.
  */
-const UnauthorizedView = () => {
+export const UnauthorizedView = () => {
   const router = useLocalizedRouter()
   const { t } = useTranslation()
 
@@ -60,4 +60,3 @@ const UnauthorizedView = () => {
   )
 }
 
-export default UnauthorizedView

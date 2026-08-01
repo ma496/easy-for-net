@@ -5,7 +5,7 @@ import { getServerTranslation } from '@/i18n'
  * Server-rendered site footer used on the public landing page.
  * Displays the brand name, current-year copyright line, and the language switcher.
  */
-const Footer = async ({ lang }: { lang: string }) => {
+export const Footer = async ({ lang }: { lang: string }) => {
   const [brandName, allRightsReserved] = await Promise.all([
     getServerTranslation(lang, 'brand.name'),
     getServerTranslation(lang, 'common.allRightsReserved'),
@@ -27,4 +27,3 @@ const Footer = async ({ lang }: { lang: string }) => {
   )
 }
 
-export default Footer

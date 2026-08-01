@@ -8,7 +8,7 @@ import { useTranslation } from '@/i18n'
  * Interactive client-side hero section for the public landing page.
  * Reads the auth state to swap the primary call-to-action between sign-in and admin dashboard, and renders the headline, description, and supporting GitHub link.
  */
-const Hero = () => {
+export const Hero = () => {
   const { t } = useTranslation()
   const authState = useAppSelector(s => s.auth)
 
@@ -74,4 +74,3 @@ const Hero = () => {
   )
 }
 
-export default Hero

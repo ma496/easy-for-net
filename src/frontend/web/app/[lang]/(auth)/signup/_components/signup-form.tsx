@@ -18,7 +18,7 @@ import { apiErrorAlert } from '@/lib/utils'
  * Interactive client-side form that registers a new user with username, email, and password.
  * Shows a success view after registration and optionally offers a resend-verification-email countdown when email verification is required.
  */
-const SignupForm = () => {
+export const SignupForm = () => {
   const { t } = useTranslation()
   const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined)
   const [registeredEmail, setRegisteredEmail] = useState<string>('')
@@ -146,4 +146,3 @@ const SignupForm = () => {
   )
 }
 
-export default SignupForm

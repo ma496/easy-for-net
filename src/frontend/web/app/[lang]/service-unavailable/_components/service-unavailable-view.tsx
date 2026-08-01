@@ -7,7 +7,7 @@ import { ServerOff } from 'lucide-react'
  * Interactive client-side view displayed when the backend API is unreachable.
  * Shows a stylized illustration, localized title/message.
  */
-const ServiceUnavailableView = () => {
+export const ServiceUnavailableView = () => {
   const { t } = useTranslation()
 
   return (
@@ -48,4 +48,3 @@ const ServiceUnavailableView = () => {
   )
 }
 
-export default ServiceUnavailableView

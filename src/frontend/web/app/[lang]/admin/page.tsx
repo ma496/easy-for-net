@@ -1,4 +1,4 @@
-import SaleDashboard from './_components/sale-dashboard'
+import { SaleDashboard } from './_components/sale-dashboard'
 
 /**
  * Server-rendered admin dashboard route that simply delegates to the SaleDashboard component.
