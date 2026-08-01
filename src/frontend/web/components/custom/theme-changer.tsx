@@ -14,7 +14,7 @@ interface ThemeChangerProps {
 /**
  * Renders a round icon button that cycles through the available theme modes (light, dark, system) and dispatches the new theme to the Redux store.
  */
-const ThemeChanger = ({ theme, className }: ThemeChangerProps) => {
+export const ThemeChanger = ({ theme, className }: ThemeChangerProps) => {
   const dispatch = useDispatch()
 
   const getThemeIcon = () => {
@@ -53,4 +53,3 @@ const ThemeChanger = ({ theme, className }: ThemeChangerProps) => {
   )
 }
 
-export default ThemeChanger

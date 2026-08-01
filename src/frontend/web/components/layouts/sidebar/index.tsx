@@ -23,7 +23,7 @@ const isNavItemGroup = (item: NavItem | NavItemGroup): item is NavItemGroup => {
 /**
  * Client-side sidebar navigation: filters nav items by the current user's permissions, manages which group is open, auto-expands the active parent on route change, and renders the logo plus a scrollable list of {@link SidebarNavGroup}s.
  */
-const Sidebar = () => {
+export const Sidebar = () => {
   const dispatch = useAppDispatch()
   const { t } = useTranslation()
   const pathname = usePathname()
@@ -155,4 +155,3 @@ const Sidebar = () => {
   )
 }
 
-export default Sidebar

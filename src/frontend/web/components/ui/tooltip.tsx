@@ -164,4 +164,3 @@ export const Tooltip = ({ content, children, position = 'top', className, delay 
   )
 }
 
-export default Tooltip

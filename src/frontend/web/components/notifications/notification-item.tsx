@@ -16,7 +16,7 @@ interface NotificationItemProps {
 /**
  * Renders a single notification row (icon, translated title/message, relative timestamp) as a link to the notification details, color-coded by type and styled differently when unread.
  */
-const NotificationItem = ({ notification }: NotificationItemProps) => {
+export const NotificationItem = ({ notification }: NotificationItemProps) => {
   const { t } = useTranslation()
 
   const getTypeStyles = (type: NotificationType | string) => {
@@ -69,4 +69,3 @@ const NotificationItem = ({ notification }: NotificationItemProps) => {
   )
 }
 
-export default NotificationItem

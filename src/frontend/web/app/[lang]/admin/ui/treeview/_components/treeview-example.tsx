@@ -1,7 +1,7 @@
 'use client'
 import React from 'react'
 import { TreeNode, TreeView } from '@/components/ui/treeview'
-import CodeShowcase from '@/components/ui/code-showcase'
+import { CodeShowcase } from '@/components/ui/code-showcase'
 
 const basicTreeData: TreeNode[] = [
   {

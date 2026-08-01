@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { ApiErrorMessages } from '@/components/ui/api-error-messages'
 import { useTranslation } from '@/i18n'
 import { useLocalizedRouter } from '@/hooks/use-localized-router'
-import AppLoading from '@/components/layouts/app-loading'
+import { AppLoading } from '@/components/layouts/app-loading'
 import { Search } from 'lucide-react'
 import { apiErrorAlert, successToast } from '@/lib/utils'
 

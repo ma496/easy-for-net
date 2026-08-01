@@ -2,12 +2,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { Bell } from 'lucide-react'
 import { useAppSelector } from '@/store/hooks'
-import NotificationPanel from './notification-panel'
+import { NotificationPanel } from './notification-panel'
 
 /**
  * Header bell button that toggles the {@link NotificationPanel} and shows an unread-count badge (capped at "99+") from the notifications slice.
  */
-const NotificationBell = () => {
+export const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false)
   const unreadCount = useAppSelector(state => state.notifications.unreadCount)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -45,4 +45,3 @@ const NotificationBell = () => {
   )
 }
 
-export default NotificationBell

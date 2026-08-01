@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks'
 /**
  * Renders a translucent mobile-only backdrop that closes the sidebar when tapped.
  */
-const Overlay = () => {
+export const Overlay = () => {
   const themeConfig = useAppSelector((state) => state.theme)
   const dispatch = useAppDispatch()
   return (
@@ -16,4 +16,3 @@ const Overlay = () => {
   )
 }
 
-export default Overlay

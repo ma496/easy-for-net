@@ -1,5 +1,5 @@
 'use client'
-import Dropdown, { DropdownRef } from '@/components/ui/dropdown'
+import { Dropdown, DropdownRef } from '@/components/ui/dropdown'
 import { ChevronDown } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
@@ -29,7 +29,7 @@ interface LanguageDropdownProps {
 /**
  * Client-side dropdown that lists the available languages and allows the user to switch the active locale, updating i18n, RTL state, and refreshing the localized router.
  */
-const LanguageDropdown = ({ className = '', onlyFlag = false }: LanguageDropdownProps) => {
+export const LanguageDropdown = ({ className = '', onlyFlag = false }: LanguageDropdownProps) => {
   const dispatch = useAppDispatch()
   const router = useLocalizedRouter()
   const { i18n } = useTranslation()
@@ -109,4 +109,3 @@ const LanguageDropdown = ({ className = '', onlyFlag = false }: LanguageDropdown
   )
 }
 
-export default LanguageDropdown

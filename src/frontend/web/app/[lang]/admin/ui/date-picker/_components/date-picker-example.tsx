@@ -7,7 +7,7 @@ import { DatePicker } from '@/components/ui/form/date-picker'
 import { FormDatePicker } from '@/components/ui/form/form-date-picker'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import CodeShowcase from '@/components/ui/code-showcase'
+import { CodeShowcase } from '@/components/ui/code-showcase'
 import { Calendar } from 'lucide-react'
 import { DateRange } from 'react-day-picker'
 

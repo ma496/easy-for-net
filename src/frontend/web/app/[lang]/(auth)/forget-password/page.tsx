@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 import { ForgetPasswordForm } from './_components/forget-password-form'
-import LanguageDropdown from '@/components/custom/language-dropdown'
+import { LanguageDropdown } from '@/components/custom/language-dropdown'
 import { getServerTranslation } from '@/i18n'
 import { BackLink } from '@/components/custom/back-link'
 

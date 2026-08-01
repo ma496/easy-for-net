@@ -66,4 +66,3 @@ export const CodeShowcase = ({ title, description, preview, code, className = ''
   )
 }
 
-export default CodeShowcase

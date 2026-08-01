@@ -68,7 +68,7 @@ const ModalFooter = ({ children, className = '' }: ModalFooterProps) => {
 /**
  * Modal is a headless-ui-based dialog with size variants (sm/lg/xl) that composes Modal.Header, content, and Modal.Footer children into a centered, animated panel with a dark backdrop.
  */
-const Modal = ({ isOpen, onClose, children, size = 'lg', className = '' }: ModalProps) => {
+export const Modal = ({ isOpen, onClose, children, size = 'lg', className = '' }: ModalProps) => {
   const maxWidthClass = {
     sm: 'max-w-sm',
     lg: 'max-w-xl',
@@ -135,4 +135,3 @@ Modal.Header = ModalHeader
 Modal.Footer = ModalFooter
 
 export type { ModalProps, ModalHeaderProps, ModalFooterProps, ModalSize }
-export default Modal

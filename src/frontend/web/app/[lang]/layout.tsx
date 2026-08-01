@@ -1,4 +1,4 @@
-import ProviderComponent from '@/components/layouts/provider-component'
+import { ProviderComponent } from '@/components/layouts/provider-component'
 import { Nunito } from 'next/font/google'
 import { getDictionary, i18nConfig, type Locale } from '@/i18n'
 import { getServerTranslation } from '@/i18n'

@@ -4,7 +4,7 @@ import { signout } from '@/store/slices/authSlice'
 import { useLocalizedRouter } from '@/hooks/use-localized-router'
 import { useTranslation } from '@/i18n'
 import { User, LogOut, Lock } from 'lucide-react'
-import Dropdown, { DropdownRef } from '../ui/dropdown'
+import { Dropdown, DropdownRef } from '../ui/dropdown'
 import { useRef } from 'react'
 import { ImagePreview } from './image-preview'
 import { useSignoutMutation } from '@/store/api/identity/account/account-api'
@@ -14,7 +14,7 @@ import { Loading } from '../ui/loading'
 /**
  * Header dropdown that shows the signed-in user avatar, profile/change-password links, and a sign-out action that hits the logout API and redirects to the sign-in page.
  */
-const NavUser = () => {
+export const NavUser = () => {
   const { user } = useAppSelector((state) => state.auth)
   const router = useLocalizedRouter()
   const dispatch = useAppDispatch()
@@ -119,4 +119,3 @@ const NavUser = () => {
   )
 }
 
-export default NavUser

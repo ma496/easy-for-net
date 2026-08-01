@@ -25,17 +25,16 @@ export const Truncated = ({ text, limit = 40, className, animate = false, underl
     return <span className={cn('inline-block', className)}>{text}</span>
   }
 
-  const truncated = text.substring(0, limit) + '...'
+  const truncatedText = text.substring(0, limit) + '...'
 
   const underlineClass = underline ? 'border-b border-dashed border-gray-300 dark:border-gray-600 hover:border-primary' : ''
 
   return (
     <Tooltip content={text} animate={animate} className="max-w-xs wrap-break-word">
       <span className={cn('inline-block cursor-help', underlineClass, 'transition-colors duration-200 hover:text-primary', className)}>
-        {truncated}
+        {truncatedText}
       </span>
     </Tooltip>
   )
 }
 
-export default Truncated

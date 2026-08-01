@@ -1,9 +1,9 @@
-import MainContainer from '@/components/layouts/main-container'
-import MainContent from '@/components/layouts/main-content'
-import Overlay from '@/components/layouts/overlay'
-import ScrollToTop from '@/components/layouts/scroll-to-top'
-import Setting from '@/components/layouts/setting'
-import Sidebar from '@/components/layouts/sidebar'
+import { MainContainer } from '@/components/layouts/main-container'
+import { MainContent } from '@/components/layouts/main-content'
+import { Overlay } from '@/components/layouts/overlay'
+import { ScrollToTop } from '@/components/layouts/scroll-to-top'
+import { Setting } from '@/components/layouts/setting'
+import { Sidebar } from '@/components/layouts/sidebar'
 
 /**
  * Server-rendered layout for the admin route group, providing the authenticated admin shell (sidebar, main container, settings panel, overlay, scroll-to-top).

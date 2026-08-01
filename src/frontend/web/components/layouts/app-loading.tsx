@@ -4,7 +4,7 @@ import { Loading } from '@/components/ui/loading'
 /**
  * AppLoading is a full-screen centered loading spinner shown while the application is bootstrapping.
  */
-const AppLoading = () => {
+export const AppLoading = () => {
   return (
     <div className="flex h-screen items-center justify-center bg-[#fafafa] dark:bg-[#060818]">
       <Loading size="xl" />
@@ -23,4 +23,3 @@ const AppLoading = () => {
   )
 }
 
-export default AppLoading

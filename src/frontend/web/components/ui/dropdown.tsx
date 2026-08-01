@@ -23,7 +23,7 @@ export interface DropdownRef {
  * Interactive dropdown menu that toggles its content visibility on button click and closes when clicking outside.
  * Forwards a ref exposing a `close` method to dismiss the dropdown from parent components.
  */
-const Dropdown = forwardRef<DropdownRef, DropdownProps>((props, ref) => {
+export const Dropdown = forwardRef<DropdownRef, DropdownProps>((props, ref) => {
   const [visibility, setVisibility] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -84,4 +84,3 @@ const Dropdown = forwardRef<DropdownRef, DropdownProps>((props, ref) => {
 
 Dropdown.displayName = 'Dropdown'
 
-export default Dropdown

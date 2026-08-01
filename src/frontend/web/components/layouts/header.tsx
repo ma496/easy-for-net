@@ -3,20 +3,20 @@ import { useEffect } from 'react'
 import { LocalizedLink } from '@/components/ui/localized-link'
 import { toggleSidebar } from '@/store/slices/themeConfigSlice'
 import { usePathname } from 'next/navigation'
-import ThemeChanger from '../custom/theme-changer'
-import NavUser from '../custom/nav-user'
+import { ThemeChanger } from '../custom/theme-changer'
+import { NavUser } from '../custom/nav-user'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import SearchComponent from './search-component'
+import { SearchComponent } from './search-component'
 import { Menu } from 'lucide-react'
-import LanguageDropdown from '../custom/language-dropdown'
+import { LanguageDropdown } from '../custom/language-dropdown'
 import { useTranslation } from '@/i18n'
-import NotificationBell from '../notifications/notification-bell'
+import { NotificationBell } from '../notifications/notification-bell'
 import { useNotificationHub } from '@/hooks/use-notification-hub'
 
 /**
  * Header is the client-side application top bar that contains the brand logo, mobile sidebar toggle, search box, notification bell, theme changer, language dropdown, and the user navigation menu; it also activates the current horizontal-menu link and subscribes to the notification hub.
  */
-const Header = () => {
+export const Header = () => {
   const pathname = usePathname()
   const dispatch = useAppDispatch()
   const themeConfig = useAppSelector((state) => state.theme)
@@ -98,4 +98,3 @@ const Header = () => {
   )
 }
 
-export default Header

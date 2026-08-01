@@ -18,7 +18,7 @@ interface CookieConsentDialogProps {
 /**
  * Renders an animated bottom-sheet dialog prompting the user to accept or decline cookies, with localized title/description/buttons and HeadlessUI transitions.
  */
-const CookieConsentDialog = ({ isOpen, onAccept, onDecline }: CookieConsentDialogProps) => {
+export const CookieConsentDialog = ({ isOpen, onAccept, onDecline }: CookieConsentDialogProps) => {
   const { t } = useTranslation()
 
   return (
@@ -108,4 +108,3 @@ const CookieConsentDialog = ({ isOpen, onAccept, onDecline }: CookieConsentDialo
   )
 }
 
-export default CookieConsentDialog

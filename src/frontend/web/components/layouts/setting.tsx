@@ -7,7 +7,7 @@ import { Settings, X, Sun, Moon, Laptop } from 'lucide-react'
 /**
  * Off-canvas "template customizer" panel that exposes runtime toggles for color scheme, navbar type, and router transition animation, persisting choices via the theme config slice.
  */
-const Setting = () => {
+export const Setting = () => {
   const themeConfig = useAppSelector((state) => state.theme)
   const dispatch = useAppDispatch()
 
@@ -103,4 +103,3 @@ const Setting = () => {
   )
 }
 
-export default Setting

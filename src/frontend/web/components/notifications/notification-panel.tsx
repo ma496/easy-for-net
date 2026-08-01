@@ -1,7 +1,7 @@
 'use client'
 import { useTranslation } from '@/i18n'
 import { useNotificationListQuery } from '@/store/api/notifications/notifications-api'
-import NotificationItem from './notification-item'
+import { NotificationItem } from './notification-item'
 import { LocalizedLink } from '@/components/ui/localized-link'
 import Scrollbar from 'react-perfect-scrollbar'
 
@@ -15,7 +15,7 @@ interface NotificationPanelProps {
 /**
  * Dropdown panel that fetches the most recent notifications (first page, 5 items) and renders them in a scrollable list, with a header, empty/loading states, and a footer link to the full notifications page.
  */
-const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
+export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
   const { t } = useTranslation()
   const { data: notifications, isLoading: isNotificationsLoading } = useNotificationListQuery({ page: 1, pageSize: 5 })
 
@@ -62,4 +62,3 @@ const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
   )
 }
 
-export default NotificationPanel
