@@ -1,6 +1,6 @@
 'use client'
 import { useTranslation } from '@/i18n'
-import { useNotificationListQuery } from '@/store/api/notifications/notifications/notifications-api'
+import { useNotificationListQuery } from '@/store/api/notifications'
 import { NotificationItem } from './notification-item'
 import { LocalizedLink } from '@/components/ui'
 import Scrollbar from 'react-perfect-scrollbar'

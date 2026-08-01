@@ -1,12 +1,10 @@
 'use client'
-import { useNotificationGetQuery, useNotificationMarkAsReadMutation, useNotificationMarkAsUnreadMutation } from '@/store/api/notifications/notifications/notifications-api'
+import { useNotificationGetQuery, useNotificationMarkAsReadMutation, useNotificationMarkAsUnreadMutation, NotificationType } from '@/store/api/notifications'
 import { useTranslation } from '@/i18n'
 import { formatDistanceToNow, format } from 'date-fns'
 import { AlertCircle, AlertTriangle, CheckCircle, Info, Check, EyeOff } from 'lucide-react'
 import { Badge, Button, ApiErrorMessages, Loading } from '@/components/ui'
-import { NotificationType } from '@/store/api/notifications/enums'
-import { successToast } from '@/lib/utils/notification'
-import { apiErrorAlert } from '@/lib/utils'
+import { apiErrorAlert, successToast } from '@/lib/utils'
 
 /**
  * Props for the NotificationDetail component, supplying the id of the notification to display.

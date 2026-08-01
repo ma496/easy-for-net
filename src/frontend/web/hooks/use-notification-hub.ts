@@ -2,7 +2,7 @@
 import { useEffect } from 'react'
 import { useAppDispatch } from '@/store/hooks'
 import { setUnreadCount } from '@/store/slices/notificationsSlice'
-import { useNotificationGetUnreadCountQuery } from '@/store/api/notifications/notifications/notifications-api'
+import { useNotificationGetUnreadCountQuery } from '@/store/api/notifications'
 
 const POLL_INTERVAL_MS = 30_000
 

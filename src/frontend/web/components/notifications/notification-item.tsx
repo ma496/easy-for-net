@@ -1,7 +1,6 @@
 'use client'
 import { useTranslation } from '@/i18n'
-import { NotificationDto } from '@/store/api/notifications/notifications/notifications-dtos'
-import { NotificationType } from '@/store/api/notifications/enums'
+import { NotificationDto, NotificationType } from '@/store/api/notifications'
 import { formatDistanceToNow } from 'date-fns'
 import { AlertTriangle, AlertCircle, CheckCircle, Info } from 'lucide-react'
 import { LocalizedLink } from '@/components/ui'
