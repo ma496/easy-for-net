@@ -1,5 +1,5 @@
 'use client'
-import { useNotificationGetQuery, useNotificationMarkAsReadMutation, useNotificationMarkAsUnreadMutation } from '@/store/api/notifications/notifications-api'
+import { useNotificationGetQuery, useNotificationMarkAsReadMutation, useNotificationMarkAsUnreadMutation } from '@/store/api/notifications/notifications/notifications-api'
 import { useTranslation } from '@/i18n'
 import { formatDistanceToNow, format } from 'date-fns'
 import { AlertCircle, AlertTriangle, CheckCircle, Info, Check, EyeOff } from 'lucide-react'

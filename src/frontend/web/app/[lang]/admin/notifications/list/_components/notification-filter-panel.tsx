@@ -4,7 +4,7 @@ import { useTranslation } from '@/i18n'
 import { Select } from '@/components/ui/form'
 import { Search, X } from 'lucide-react'
 import { Button, Loading, ApiErrorMessages } from '@/components/ui'
-import { useNotificationGetGroupsQuery } from '@/store/api/notifications/notifications-api'
+import { useNotificationGetGroupsQuery } from '@/store/api/notifications/notifications/notifications-api'
 
 /**
  * Filter values accepted by the notification list filter panel, representing read-status and group selection as strings.

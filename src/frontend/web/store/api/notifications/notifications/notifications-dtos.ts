@@ -1,4 +1,4 @@
-import { NotificationType } from './enums'
+import { NotificationType } from '../enums'
 import { BaseDto, RequestBase, GenericAuditableDto, ListRequestDto, ListDto } from '@/store/api'
 
 /** Request body for creating a notification, using i18n keys for title/message and optional group/metadata. */

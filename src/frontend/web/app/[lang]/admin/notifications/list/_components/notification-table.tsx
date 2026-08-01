@@ -5,14 +5,14 @@ import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
 import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable } from '@/components/ui/data-table'
 import { ApiErrorMessages, Badge, LocalizedLink, Button, Truncated, Loading } from '@/components/ui'
 import { apiErrorAlert, confirmDeleteAlert, successToast } from '@/lib/utils'
-import { NotificationDto } from '@/store/api/notifications/notifications-dtos'
+import { NotificationDto } from '@/store/api/notifications/notifications/notifications-dtos'
 import { NotificationType } from '@/store/api/notifications/enums'
 import {
   useNotificationListQuery,
   useNotificationMarkAsReadMutation,
   useNotificationMarkAllAsReadMutation,
   useNotificationDeleteMutation
-} from '@/store/api/notifications/notifications-api'
+} from '@/store/api/notifications/notifications/notifications-api'
 import { formatDistanceToNow } from 'date-fns'
 import { Check, Trash2, CheckCheck, AlertCircle, AlertTriangle, CheckCircle, Info } from 'lucide-react'
 import { confirmAlert } from '@/lib/utils/notification'
