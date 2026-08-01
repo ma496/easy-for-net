@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import { environment } from '@/config/environment'
+import { environment } from '@/config'
 import { Mutex } from 'async-mutex'
 import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { signout } from '../slices/authSlice'
