@@ -1,7 +1,7 @@
 'use client'
 import { useId, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { toggleAnimation, toggleNavbar, toggleTheme } from '@/store/slices/themeConfigSlice'
+import { toggleAnimation, toggleNavbar, toggleTheme } from '@/store/slices'
 import { Settings, X, Sun, Moon, Laptop } from 'lucide-react'
 
 /**

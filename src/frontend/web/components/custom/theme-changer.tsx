@@ -1,5 +1,5 @@
 import { useDispatch } from 'react-redux'
-import { toggleTheme } from '@/store/slices/themeConfigSlice'
+import { toggleTheme } from '@/store/slices'
 import { Sun, Moon, Laptop } from 'lucide-react'
 import { cn } from '@/lib/utils'
 

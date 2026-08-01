@@ -2,7 +2,7 @@
 
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import { LocalizedLink as Link } from '@/components/ui'
-import { toggleSidebar } from '@/store/slices/themeConfigSlice'
+import { toggleSidebar } from '@/store/slices'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { useState, useEffect, useMemo } from 'react'
 import { ChevronsDown } from 'lucide-react'

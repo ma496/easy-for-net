@@ -3,7 +3,7 @@
 import { useGetUserProfileQuery, useLazyGetUserInfoQuery, useUpdateProfileMutation, UpdateProfileRequest } from '@/store/api/identity'
 import { FormInput, FileUpload } from '@/components/ui/form'
 import { useAppDispatch } from '@/store/hooks'
-import { setUserInfo } from '@/store/slices/authSlice'
+import { setUserInfo } from '@/store/slices'
 import { Button, ApiErrorMessages, IconButton } from '@/components/ui'
 import { Mail, Pencil, Trash2, User } from 'lucide-react'
 import * as Yup from 'yup'

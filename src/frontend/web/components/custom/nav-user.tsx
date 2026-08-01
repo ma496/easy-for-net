@@ -1,7 +1,7 @@
 'use client'
 import { LocalizedLink, Dropdown, type DropdownRef, Loading } from '@/components/ui'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
-import { signout } from '@/store/slices/authSlice'
+import { signout } from '@/store/slices'
 import { useLocalizedRouter } from '@/hooks'
 import { useTranslation } from '@/i18n'
 import { User, LogOut, Lock } from 'lucide-react'

@@ -1,5 +1,5 @@
 'use client'
-import { toggleSidebar } from '@/store/slices/themeConfigSlice'
+import { toggleSidebar } from '@/store/slices'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 
 /**

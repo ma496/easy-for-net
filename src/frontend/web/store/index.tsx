@@ -1,8 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { appApi } from '@/store/api/_app-api'
-import { themeConfigSlice } from '@/store/slices/themeConfigSlice'
-import { authSlice } from '@/store/slices/authSlice'
-import { notificationsSlice } from '@/store/slices/notificationsSlice'
+import { themeConfigSlice, authSlice, notificationsSlice } from '@/store/slices'
 import { rtkErrorMiddleware } from '@/store/middlewares/rtk-error-middleware'
 
 /**

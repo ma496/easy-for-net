@@ -1,7 +1,7 @@
 'use client'
 import { useEffect } from 'react'
 import { useAppDispatch } from '@/store/hooks'
-import { setUnreadCount } from '@/store/slices/notificationsSlice'
+import { setUnreadCount } from '@/store/slices'
 import { useNotificationGetUnreadCountQuery } from '@/store/api/notifications'
 
 const POLL_INTERVAL_MS = 30_000

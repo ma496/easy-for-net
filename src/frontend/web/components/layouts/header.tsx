@@ -1,7 +1,7 @@
 'use client'
 import { useEffect } from 'react'
 import { LocalizedLink } from '@/components/ui'
-import { toggleSidebar } from '@/store/slices/themeConfigSlice'
+import { toggleSidebar } from '@/store/slices'
 import { usePathname } from 'next/navigation'
 import { ThemeChanger, NavUser, LanguageDropdown } from '@/components/custom'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
