@@ -3,7 +3,7 @@
 import { useLocalizedRouter } from '@/hooks/use-localized-router'
 import { useTranslation } from '@/i18n'
 import { ArrowLeft, ShieldAlert } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui'
 
 /**
  * Interactive client-side view that displays the 403 access-denied illustration, localized title/message, and a back button.

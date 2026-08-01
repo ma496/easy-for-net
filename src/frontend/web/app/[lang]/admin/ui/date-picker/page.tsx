@@ -1,6 +1,6 @@
 import { getServerTranslation } from '@/i18n'
 import { DatePickerExample } from "./_components/date-picker-example"
-import { AdminPageContent } from '@/components/layouts/admin-page-content'
+import { AdminPageContent } from '@/components/layouts'
 
 /**
  * Props for the date picker showcase page, providing the localized route lang segment.

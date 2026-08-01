@@ -2,17 +2,12 @@
 import * as Yup from 'yup'
 import { useTranslation } from '@/i18n'
 import { useLocalizedRouter } from '@/hooks/use-localized-router'
-import { useUserUpdateMutation } from '@/store/api/identity/users/users-api'
-import { useUserGetQuery } from '@/store/api/identity/users/users-api'
+import { useUserUpdateMutation, useUserGetQuery } from '@/store/api/identity/users/users-api'
 import { useLazyRoleListQuery } from '@/store/api/identity/roles/roles-api'
 import { Form, Formik } from 'formik'
-import { Button } from '@/components/ui/button'
-import { FormInput } from '@/components/ui/form/form-input'
-import { FormCheckbox } from '@/components/ui/form/form-checkbox'
-import { FormLazyMultiSelect } from '@/components/ui/form/form-lazy-multi-select'
-import { ApiErrorMessages } from '@/components/ui/api-error-messages'
+import { Button, ApiErrorMessages, Loading } from '@/components/ui'
+import { FormInput, FormCheckbox, FormLazyMultiSelect } from '@/components/ui/form'
 import { apiErrorAlert, successToast } from '@/lib/utils'
-import { Loading } from '@/components/ui/loading'
 
 /**
  * Builds a Yup validation schema for the user update form using the supplied translation function for error messages.

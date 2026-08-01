@@ -1,5 +1,4 @@
-import type { Middleware } from '@reduxjs/toolkit'
-import { isRejectedWithValue } from '@reduxjs/toolkit'
+import { type Middleware, isRejectedWithValue } from '@reduxjs/toolkit'
 import { rtkErrorHandler } from '@/lib/utils'
 
 const ignoreEndpoints = ['getUserInfo']

@@ -1,8 +1,6 @@
-import { ProviderComponent } from '@/components/layouts/provider-component'
+import { ProviderComponent, TranslationProvider } from '@/components/layouts'
 import { Nunito } from 'next/font/google'
-import { getDictionary, i18nConfig, type Locale } from '@/i18n'
-import { getServerTranslation } from '@/i18n'
-import { TranslationProvider } from '@/components/layouts/translation-provider'
+import { getDictionary, i18nConfig, type Locale, getServerTranslation } from '@/i18n'
 
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import '../../styles/tailwind.css'

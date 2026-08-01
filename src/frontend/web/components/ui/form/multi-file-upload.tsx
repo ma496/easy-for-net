@@ -3,7 +3,7 @@ import React, { useId, useState, useCallback, useEffect } from 'react'
 import { Plus, Trash2, Loader2, Pencil } from 'lucide-react'
 import { apiErrorAlert, cn, confirmDeleteAlert } from '@/lib/utils'
 import { useTranslation } from '@/i18n'
-import { IconButton } from '@/components/ui/icon-button'
+import { IconButton } from '../icon-button'
 import { useFileUploadMutation, useLazyFileGetQuery, useFileDeleteMutation } from '@/store/api/file-management/files/files-api'
 import { ReactSortable } from 'react-sortablejs'
 

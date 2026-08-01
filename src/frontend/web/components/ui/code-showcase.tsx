@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from './button'
+import { Card, CardContent, CardHeader, CardTitle } from './card'
 import { EyeIcon, CodeIcon, CopyIcon, CheckIcon } from 'lucide-react'
 
 /** Props for the CodeShowcase component, which renders a title, optional description, a live preview, and a toggleable code block with a copy-to-clipboard action. */

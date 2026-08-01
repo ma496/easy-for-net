@@ -4,9 +4,8 @@ import { useTranslation } from '@/i18n'
 import { useLocalizedRouter } from '@/hooks/use-localized-router'
 import { useRoleCreateMutation } from '@/store/api/identity/roles/roles-api'
 import { Form, Formik } from 'formik'
-import { Button } from '@/components/ui/button'
-import { FormInput } from '@/components/ui/form/form-input'
-import { FormTextarea } from '@/components/ui/form/form-textarea'
+import { Button } from '@/components/ui'
+import { FormInput, FormTextarea } from '@/components/ui/form'
 import { apiErrorAlert, successToast } from '@/lib/utils'
 
 /**

@@ -3,11 +3,8 @@
 import { useState } from 'react'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
-import { DatePicker } from '@/components/ui/form/date-picker'
-import { FormDatePicker } from '@/components/ui/form/form-date-picker'
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { CodeShowcase } from '@/components/ui/code-showcase'
+import { DatePicker, FormDatePicker } from '@/components/ui/form'
+import { Button, Card, CodeShowcase } from '@/components/ui'
 import { Calendar } from 'lucide-react'
 import { DateRange } from 'react-day-picker'
 

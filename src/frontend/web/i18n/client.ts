@@ -1,6 +1,6 @@
 'use client'
 
-import { TranslationContext } from "@/components/layouts/translation-provider"
+import { TranslationContext } from "@/components/layouts"
 import { usePathname, useRouter } from "next/navigation"
 import { useContext } from "react"
 import { i18nConfig } from "./config"

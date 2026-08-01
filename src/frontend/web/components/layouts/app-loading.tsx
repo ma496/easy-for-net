@@ -1,5 +1,5 @@
 import React from 'react'
-import { Loading } from '@/components/ui/loading'
+import { Loading } from '@/components/ui'
 
 /**
  * AppLoading is a full-screen centered loading spinner shown while the application is bootstrapping.

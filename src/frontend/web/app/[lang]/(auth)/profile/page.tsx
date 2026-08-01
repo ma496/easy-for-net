@@ -1,8 +1,7 @@
 import { UpdateProfile } from './_components/update-profile'
-import { LanguageDropdown } from '@/components/custom/language-dropdown'
+import { LanguageDropdown, BackLink } from '@/components/custom'
 import { Metadata } from 'next'
 import { getServerTranslation } from '@/i18n'
-import { BackLink } from '@/components/custom/back-link'
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params

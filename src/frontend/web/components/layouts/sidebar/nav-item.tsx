@@ -1,6 +1,6 @@
 'use client'
 
-import { LocalizedLink as Link } from '@/components/ui/localized-link'
+import { LocalizedLink as Link } from '@/components/ui'
 import { NavItem } from '@/nav-items'
 import AnimateHeight from 'react-animate-height'
 import { ChevronDown } from 'lucide-react'

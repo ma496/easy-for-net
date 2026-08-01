@@ -4,7 +4,7 @@ import { useVerifyEmailMutation } from '@/store/api/identity/account/account-api
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import { useTranslation } from '@/i18n'
-import { LocalizedLink } from '@/components/ui/localized-link'
+import { LocalizedLink } from '@/components/ui'
 import { Loader2, CheckCircle, XCircle } from 'lucide-react'
 
 /**

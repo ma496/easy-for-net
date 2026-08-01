@@ -1,6 +1,6 @@
 import { getServerTranslation } from '@/i18n'
 import { NotificationTable } from './_components/notification-table'
-import { AdminPageContent } from '@/components/layouts/admin-page-content'
+import { AdminPageContent } from '@/components/layouts'
 
 /**
  * Props for the notifications list page, providing the localized route lang segment.

@@ -1,6 +1,6 @@
 import { getServerTranslation } from '@/i18n'
 import { ChangePermissionsForm } from './_components/change-permissions-form'
-import { AdminPageContent } from '@/components/layouts/admin-page-content'
+import { AdminPageContent } from '@/components/layouts'
 
 /**
  * Props for the role change-permissions page, providing the route lang segment and the target role id.

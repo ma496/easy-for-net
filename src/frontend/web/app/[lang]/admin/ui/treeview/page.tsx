@@ -1,6 +1,6 @@
 import { getServerTranslation } from '@/i18n'
 import { TreeviewExample } from "./_components/treeview-example"
-import { AdminPageContent } from '@/components/layouts/admin-page-content'
+import { AdminPageContent } from '@/components/layouts'
 
 /**
  * Props for the treeview showcase page, providing the localized route lang segment.

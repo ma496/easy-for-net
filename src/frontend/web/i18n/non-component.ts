@@ -1,4 +1,4 @@
-import { globalDictionary } from "@/components/layouts/translation-provider";
+import { globalDictionary } from "@/components/layouts";
 import { i18nConfig } from "./config";
 
 /**

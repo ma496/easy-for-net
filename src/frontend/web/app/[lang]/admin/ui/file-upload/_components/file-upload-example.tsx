@@ -1,12 +1,10 @@
 'use client'
 
-import { CodeShowcase } from '@/components/ui/code-showcase'
-import { FileUpload } from '@/components/ui/form/file-upload'
+import { CodeShowcase, IconButton } from '@/components/ui'
+import { FileUpload, MultiFileUpload } from '@/components/ui/form'
 import { Pencil, Trash2 } from 'lucide-react'
-import { IconButton } from '@/components/ui/icon-button'
 import { confirmDeleteAlert } from '@/lib/utils'
 import { useTranslation } from '@/i18n'
-import { MultiFileUpload } from '@/components/ui/form/multi-file-upload'
 import { useState } from 'react'
 
 /**

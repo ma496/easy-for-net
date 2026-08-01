@@ -1,6 +1,6 @@
 import { getServerTranslation } from '@/i18n'
 import { CardsExample } from "./_components/cards-example"
-import { AdminPageContent } from '@/components/layouts/admin-page-content'
+import { AdminPageContent } from '@/components/layouts'
 
 /**
  * Props for the cards showcase page, providing the localized route lang segment.

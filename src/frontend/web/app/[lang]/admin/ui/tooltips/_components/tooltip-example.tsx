@@ -1,9 +1,6 @@
 'use client'
 
-import { Tooltip } from '@/components/ui/tooltip'
-import { Truncated } from '@/components/ui/truncated'
-import { Button } from '@/components/ui/button'
-import { CodeShowcase } from '@/components/ui/code-showcase'
+import { Tooltip, Truncated, Button, CodeShowcase } from '@/components/ui'
 import { InfoIcon, SettingsIcon, UserIcon, HeartIcon } from 'lucide-react'
 
 /**

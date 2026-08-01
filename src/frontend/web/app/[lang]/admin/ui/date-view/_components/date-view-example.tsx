@@ -1,7 +1,6 @@
 'use client'
 
-import { DateView } from '@/components/ui/date-view'
-import { CodeShowcase } from '@/components/ui/code-showcase'
+import { DateView, CodeShowcase } from '@/components/ui'
 import { Calendar } from 'lucide-react'
 
 /**

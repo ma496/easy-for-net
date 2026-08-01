@@ -1,6 +1,6 @@
 import { getServerTranslation } from '@/i18n'
 import { FormElementsExample } from "./_components/form-elements-example"
-import { AdminPageContent } from '@/components/layouts/admin-page-content'
+import { AdminPageContent } from '@/components/layouts'
 
 /**
  * Props for the form elements showcase page, providing the localized route lang segment.

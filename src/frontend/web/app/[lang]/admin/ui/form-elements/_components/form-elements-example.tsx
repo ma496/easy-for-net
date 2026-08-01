@@ -4,29 +4,8 @@ import { useState } from 'react'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
 
-// Form components
-import { FormInput } from '@/components/ui/form/form-input'
-import { FormTextarea } from '@/components/ui/form/form-textarea'
-import { FormPasswordInput } from '@/components/ui/form/form-password-input'
-import { FormSelect } from '@/components/ui/form/form-select'
-import { FormMultiSelect } from '@/components/ui/form/form-multi-select'
-import { FormCheckbox } from '@/components/ui/form/form-checkbox'
-import { FormRadio } from '@/components/ui/form/form-radio'
-import { FormDatePicker } from '@/components/ui/form/form-date-picker'
-
-// General components
-import { Input } from '@/components/ui/form/input'
-import { Textarea } from '@/components/ui/form/textarea'
-import { PasswordInput } from '@/components/ui/form/password-input'
-import { Select } from '@/components/ui/form/select'
-import { MultiSelect } from '@/components/ui/form/multi-select'
-import { Checkbox } from '@/components/ui/form/checkbox'
-import { Radio } from '@/components/ui/form/radio'
-import { DatePicker } from '@/components/ui/form/date-picker'
-
-import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { CodeShowcase } from '@/components/ui/code-showcase'
+import { FormInput, FormTextarea, FormPasswordInput, FormSelect, FormMultiSelect, FormCheckbox, FormRadio, FormDatePicker, Input, Textarea, PasswordInput, Select, MultiSelect, Checkbox, Radio, DatePicker } from '@/components/ui/form'
+import { Button, Card, CodeShowcase } from '@/components/ui'
 import { FormInput as FormInputIcon, Lock, User, Mail, MapPin, Tag, Briefcase } from 'lucide-react'
 
 const validationSchema = Yup.object({

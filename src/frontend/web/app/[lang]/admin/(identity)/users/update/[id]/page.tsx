@@ -1,6 +1,6 @@
 import { getServerTranslation } from '@/i18n'
 import { UserUpdateForm } from './_components/user-update-form'
-import { AdminPageContent } from '@/components/layouts/admin-page-content'
+import { AdminPageContent } from '@/components/layouts'
 
 /**
  * Props for the user update page, providing the route lang segment and the id of the user being edited.

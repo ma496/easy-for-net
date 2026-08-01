@@ -2,14 +2,14 @@
 import { PropsWithChildren, useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { toggleRTL, toggleTheme, toggleMenu, toggleLayout, toggleAnimation, toggleNavbar, toggleSemidark } from '@/store/slices/themeConfigSlice'
-import { AppLoading } from '@/components/layouts/app-loading'
+import { AppLoading } from '@/components/layouts'
 import { i18nConfig, Locale } from '@/i18n'
 import { setUserInfo } from './store/slices/authSlice'
 import { useLazyGetUserInfoQuery } from './store/api/identity/account/account-api'
 import { isAllowed } from './lib/utils'
 import { usePathname, useRouter } from 'next/navigation'
 import { getMatchedAuthUrl } from './auth-urls'
-import { CookieConsentDialog } from '@/components/custom/cookie-consent-dialog'
+import { CookieConsentDialog } from '@/components/custom'
 import { useCookieConsent } from '@/hooks/use-cookie-consent'
 
 /**

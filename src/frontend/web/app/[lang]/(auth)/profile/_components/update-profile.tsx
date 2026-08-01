@@ -1,19 +1,16 @@
 'use client'
 
 import { useGetUserProfileQuery, useLazyGetUserInfoQuery, useUpdateProfileMutation } from '@/store/api/identity/account/account-api'
-import { FormInput } from '@/components/ui/form/form-input'
+import { FormInput, FileUpload } from '@/components/ui/form'
 import { useAppDispatch } from '@/store/hooks'
 import { setUserInfo } from '@/store/slices/authSlice'
-import { Button } from '@/components/ui/button'
+import { Button, ApiErrorMessages, IconButton } from '@/components/ui'
 import { Mail, Pencil, Trash2, User } from 'lucide-react'
 import * as Yup from 'yup'
 import { Formik, Form } from 'formik'
 import { useTranslation } from '@/i18n'
 import { UpdateProfileRequest } from '@/store/api/identity/account/account-dtos'
 import { apiErrorAlert, confirmDeleteAlert, successToast } from '@/lib/utils'
-import { ApiErrorMessages } from '@/components/ui/api-error-messages'
-import { FileUpload } from '@/components/ui/form/file-upload'
-import { IconButton } from '@/components/ui/icon-button'
 
 /**
  * Builds a Yup validation schema for the update-profile form using the supplied translation function for error messages.

@@ -4,12 +4,9 @@ import { useTranslation } from '@/i18n'
 import { useLocalizedRouter } from '@/hooks/use-localized-router'
 import { useRoleUpdateMutation, useRoleGetQuery } from '@/store/api/identity/roles/roles-api'
 import { Form, Formik } from 'formik'
-import { Button } from '@/components/ui/button'
-import { FormInput } from '@/components/ui/form/form-input'
-import { FormTextarea } from '@/components/ui/form/form-textarea'
-import { ApiErrorMessages } from '@/components/ui/api-error-messages'
+import { Button, ApiErrorMessages, Loading } from '@/components/ui'
+import { FormInput, FormTextarea } from '@/components/ui/form'
 import { apiErrorAlert, successToast } from '@/lib/utils'
-import { Loading } from '@/components/ui/loading'
 
 /**
  * Builds a Yup validation schema for the role update form using the supplied translation function for error messages.

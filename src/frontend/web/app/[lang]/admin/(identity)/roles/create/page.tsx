@@ -1,6 +1,6 @@
 import { getServerTranslation } from '@/i18n'
 import { RoleCreateForm } from './_components/role-create-form'
-import { AdminPageContent } from '@/components/layouts/admin-page-content'
+import { AdminPageContent } from '@/components/layouts'
 
 /**
  * Props for the role create page, providing the localized route lang segment.

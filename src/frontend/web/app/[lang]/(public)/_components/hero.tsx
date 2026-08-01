@@ -1,5 +1,5 @@
 'use client'
-import { LocalizedLink } from '@/components/ui/localized-link'
+import { LocalizedLink } from '@/components/ui'
 import { ArrowRight, Code2 } from 'lucide-react'
 import { useAppSelector } from '@/store/hooks'
 import { useTranslation } from '@/i18n'

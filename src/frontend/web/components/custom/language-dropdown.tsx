@@ -1,5 +1,5 @@
 'use client'
-import { Dropdown, DropdownRef } from '@/components/ui/dropdown'
+import { Dropdown, type DropdownRef } from '@/components/ui'
 import { ChevronDown } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'

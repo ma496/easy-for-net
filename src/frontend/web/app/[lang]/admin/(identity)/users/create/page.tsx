@@ -1,6 +1,6 @@
 import { getServerTranslation } from '@/i18n'
 import { UserCreateForm } from './_components/user-create-form'
-import { AdminPageContent } from '@/components/layouts/admin-page-content'
+import { AdminPageContent } from '@/components/layouts'
 
 /**
  * Props for the user create page, providing the localized route lang segment.

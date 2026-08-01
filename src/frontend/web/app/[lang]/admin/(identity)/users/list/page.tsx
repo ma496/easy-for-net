@@ -1,6 +1,6 @@
 import { getServerTranslation } from '@/i18n'
 import { UserTable } from './_components/user-table'
-import { AdminPageContent } from '@/components/layouts/admin-page-content'
+import { AdminPageContent } from '@/components/layouts'
 
 /**
  * Props for the users list page, providing the localized route lang segment.

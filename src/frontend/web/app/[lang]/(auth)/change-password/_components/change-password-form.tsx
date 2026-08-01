@@ -7,8 +7,8 @@ import { useAppDispatch } from '@/store/hooks'
 import { signout } from '@/store/slices/authSlice'
 import { apiErrorAlert, successToast } from '@/lib/utils'
 import { Form, Formik } from 'formik'
-import { FormPasswordInput } from '@/components/ui/form/form-password-input'
-import { Button } from '@/components/ui/button'
+import { FormPasswordInput } from '@/components/ui/form'
+import { Button } from '@/components/ui'
 import { Lock } from 'lucide-react'
 
 /**

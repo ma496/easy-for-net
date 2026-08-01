@@ -1,4 +1,5 @@
-import { LocalizedLink } from '@/components/ui/localized-link'
+'use client'
+import { LocalizedLink } from '@/components/ui'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
 import { signout } from '@/store/slices/authSlice'
 import { useLocalizedRouter } from '@/hooks/use-localized-router'

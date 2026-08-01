@@ -1,3 +1,4 @@
+'use client'
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react'
 import { Fragment, ReactNode, Children, isValidElement, createContext, useContext } from 'react'
 

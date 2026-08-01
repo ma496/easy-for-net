@@ -1,8 +1,7 @@
 'use client'
 
 import { useRouter as useNextRouter } from 'next/navigation'
-import { useTranslation } from '@/i18n'
-import { i18nConfig } from '@/i18n'
+import { useTranslation, i18nConfig } from '@/i18n'
 
 /**
  * Wraps Next.js' useRouter and returns a router whose push/replace methods

@@ -1,6 +1,4 @@
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { CodeShowcase } from '@/components/ui/code-showcase'
+import { Button, Card, CardContent, CardFooter, CardHeader, CardTitle, CodeShowcase } from '@/components/ui'
 
 /**
  * Interactive showcase component that demonstrates basic, full-width, custom-sized, custom-spacing, product, and variant Card configurations alongside their source snippets.

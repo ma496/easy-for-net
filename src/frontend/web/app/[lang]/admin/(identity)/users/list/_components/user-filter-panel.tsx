@@ -1,12 +1,10 @@
 'use client'
 
 import { useTranslation } from '@/i18n'
-import { Select } from '@/components/ui/form/select'
+import { Select } from '@/components/ui/form'
 import { useRoleListQuery } from '@/store/api/identity/roles/roles-api'
 import { Search, X } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Loading } from '@/components/ui/loading'
-import { ApiErrorMessages } from '@/components/ui/api-error-messages'
+import { Button, Loading, ApiErrorMessages } from '@/components/ui'
 
 /**
  * Filter values accepted by the user list filter panel, representing active status and role selection as strings.

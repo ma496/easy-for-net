@@ -1,6 +1,6 @@
 import { getServerTranslation } from '@/i18n'
 import { RoleTable } from './_components/role-table'
-import { AdminPageContent } from '@/components/layouts/admin-page-content'
+import { AdminPageContent } from '@/components/layouts'
 
 /**
  * Props for the roles list page, providing the localized route lang segment.

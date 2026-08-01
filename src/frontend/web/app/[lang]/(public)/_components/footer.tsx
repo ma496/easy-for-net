@@ -1,4 +1,4 @@
-import { LanguageDropdown } from '@/components/custom/language-dropdown'
+import { LanguageDropdown } from '@/components/custom'
 import { getServerTranslation } from '@/i18n'
 
 /**

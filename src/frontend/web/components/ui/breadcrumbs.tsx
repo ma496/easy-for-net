@@ -1,7 +1,7 @@
 'use client'
 
 import { NavItem, NavItemGroup, navItems } from '@/nav-items'
-import { LocalizedLink as Link } from '@/components/ui/localized-link'
+import { LocalizedLink as Link } from './localized-link'
 import { usePathname } from 'next/navigation'
 import { useTranslation } from '@/i18n'
 

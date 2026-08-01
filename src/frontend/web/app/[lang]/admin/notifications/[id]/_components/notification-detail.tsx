@@ -3,13 +3,10 @@ import { useNotificationGetQuery, useNotificationMarkAsReadMutation, useNotifica
 import { useTranslation } from '@/i18n'
 import { formatDistanceToNow, format } from 'date-fns'
 import { AlertCircle, AlertTriangle, CheckCircle, Info, Check, EyeOff } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Badge, Button, ApiErrorMessages, Loading } from '@/components/ui'
 import { NotificationType } from '@/store/api/notifications/enums'
-import { ApiErrorMessages } from '@/components/ui/api-error-messages'
 import { successToast } from '@/lib/utils/notification'
 import { apiErrorAlert } from '@/lib/utils'
-import { Loading } from '@/components/ui/loading'
 
 /**
  * Props for the NotificationDetail component, supplying the id of the notification to display.

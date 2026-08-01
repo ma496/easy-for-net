@@ -4,7 +4,7 @@ import { store } from '@/store'
 import { Provider } from 'react-redux'
 import { ReactNode, Suspense } from 'react'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
-import { AppLoading } from '@/components/layouts/app-loading'
+import { AppLoading } from './app-loading'
 import { BarProgressProvider } from './bar-progress-provider'
 
 /**

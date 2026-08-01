@@ -1,6 +1,6 @@
 import { getServerTranslation } from '@/i18n'
 import { FileUploadExample } from "./_components/file-upload-example"
-import { AdminPageContent } from '@/components/layouts/admin-page-content'
+import { AdminPageContent } from '@/components/layouts'
 
 /**
  * Props for the file upload showcase page, providing the localized route lang segment.

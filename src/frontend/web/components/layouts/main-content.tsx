@@ -1,9 +1,9 @@
 'use client'
 
-import { Breadcrumbs } from '../ui/breadcrumbs'
+import { Breadcrumbs } from '@/components/ui'
 import { ContentAnimation } from './content-animation'
 import { Header } from './header'
-import { Portals } from '../portals'
+import { Portals } from '@/components'
 import { Footer } from './footer'
 
 /**

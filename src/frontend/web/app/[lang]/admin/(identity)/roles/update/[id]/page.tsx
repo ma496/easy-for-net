@@ -1,6 +1,6 @@
 import { getServerTranslation } from '@/i18n'
 import { RoleUpdateForm } from './_components/role-update-form'
-import { AdminPageContent } from '@/components/layouts/admin-page-content'
+import { AdminPageContent } from '@/components/layouts'
 
 /**
  * Props for the role update page, providing the route lang segment and the id of the role being edited.

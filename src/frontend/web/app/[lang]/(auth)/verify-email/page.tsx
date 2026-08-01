@@ -1,6 +1,6 @@
 import { getServerTranslation } from '@/i18n'
 import { VerifyEmailView } from './_components/verify-email-view'
-import { LanguageDropdown } from '@/components/custom/language-dropdown'
+import { LanguageDropdown } from '@/components/custom'
 import { Metadata } from 'next'
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {

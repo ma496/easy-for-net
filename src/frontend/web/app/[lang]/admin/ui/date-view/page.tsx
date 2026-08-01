@@ -1,6 +1,6 @@
 import { getServerTranslation } from '@/i18n'
 import { DateViewExample } from './_components/date-view-example'
-import { AdminPageContent } from '@/components/layouts/admin-page-content'
+import { AdminPageContent } from '@/components/layouts'
 
 /**
  * Props for the date view showcase page, providing the localized route lang segment.

@@ -1,4 +1,4 @@
-import { LocalizedLink } from '@/components/ui/localized-link'
+import { LocalizedLink } from '@/components/ui'
 import { Github } from 'lucide-react'
 import { getServerTranslation } from '@/i18n'
 

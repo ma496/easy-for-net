@@ -3,7 +3,7 @@
 import { Transition, TransitionChild } from '@headlessui/react'
 import { Fragment } from 'react'
 import { Cookie, X } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui'
 import { useTranslation } from '@/i18n'
 
 /**

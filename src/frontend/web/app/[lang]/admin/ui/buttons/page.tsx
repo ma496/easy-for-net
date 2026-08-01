@@ -1,6 +1,6 @@
 import { getServerTranslation } from '@/i18n'
 import { ButtonsExample } from "./_components/buttons-example"
-import { AdminPageContent } from '@/components/layouts/admin-page-content'
+import { AdminPageContent } from '@/components/layouts'
 
 /**
  * Props for the buttons showcase page, providing the localized route lang segment.

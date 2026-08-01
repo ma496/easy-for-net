@@ -3,7 +3,7 @@
 import { useLocalizedRouter } from '@/hooks/use-localized-router'
 import { useTranslation } from '@/i18n'
 import { FileQuestion, ArrowLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui'
 
 /**
  * Interactive client-side 404 not-found view that displays a stylized illustration, the localized title and message, and a back button to return to the previous page.

@@ -1,3 +1,4 @@
+'use client'
 import { forwardRef, useImperativeHandle, useState, useRef, useEffect, ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
