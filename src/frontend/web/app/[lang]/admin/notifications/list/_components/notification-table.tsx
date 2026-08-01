@@ -19,7 +19,7 @@ import {
 import { formatDistanceToNow } from 'date-fns'
 import { Check, Trash2, CheckCheck, AlertCircle, AlertTriangle, CheckCircle, Info } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { LocalizedLink } from '@/components/localized-link'
+import { LocalizedLink } from '@/components/ui/localized-link'
 import { Button } from '@/components/ui/button'
 import { confirmAlert } from '@/lib/utils/notification'
 import { NotificationFilterPanel, NotificationFilters } from './notification-filter-panel'

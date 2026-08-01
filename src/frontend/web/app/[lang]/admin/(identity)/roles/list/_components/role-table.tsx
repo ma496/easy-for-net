@@ -11,10 +11,10 @@ import { RoleListDto } from '@/store/api/identity/roles/roles-dtos'
 import { Download, Loader2, Trash2, Plus, Pencil, Shield } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { apiErrorAlert, exportData, ExportFormat, isAllowed } from '@/lib/utils'
-import Dropdown from '@/components/dropdown'
+import Dropdown from '@/components/ui/dropdown'
 import { Badge } from '@/components/ui/badge'
 import { useAppSelector } from '@/store/hooks'
-import { LocalizedLink } from '@/components/localized-link'
+import { LocalizedLink } from '@/components/ui/localized-link'
 import { ApiErrorMessages } from '@/components/ui/api-error-messages'
 import { Allow } from '@/allow'
 import { confirmDeleteAlert, errorAlert, successToast } from '@/lib/utils'
@@ -144,7 +144,7 @@ export const RoleTable = () => {
               className="btn cursor-pointer btn-danger btn-sm"
               disabled={isDeletingRole}
               onClick={() => handleDelete(info.row.original.id)}>
-              { isDeletingRole ? <Loader2 className="animate-spin h-3 w-3" /> : <Trash2 className="h-3 w-3" /> }
+              {isDeletingRole ? <Loader2 className="animate-spin h-3 w-3" /> : <Trash2 className="h-3 w-3" />}
             </button>
           )}
           {canChangePermissions && (

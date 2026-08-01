@@ -2,7 +2,7 @@
 import { useTranslation } from '@/i18n'
 import { useNotificationListQuery } from '@/store/api/notifications/notifications-api'
 import NotificationItem from './notification-item'
-import { LocalizedLink } from '@/components/localized-link'
+import { LocalizedLink } from '@/components/ui/localized-link'
 import Scrollbar from 'react-perfect-scrollbar'
 
 /**

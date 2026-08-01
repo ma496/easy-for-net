@@ -1,6 +1,6 @@
 'use client'
 import { useEffect } from 'react'
-import { LocalizedLink } from '@/components/localized-link'
+import { LocalizedLink } from '@/components/ui/localized-link'
 import { toggleSidebar } from '@/store/slices/themeConfigSlice'
 import { usePathname } from 'next/navigation'
 import ThemeChanger from '../custom/theme-changer'

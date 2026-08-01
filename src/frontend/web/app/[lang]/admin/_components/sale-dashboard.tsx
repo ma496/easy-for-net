@@ -1,5 +1,5 @@
 'use client'
-import Dropdown from '@/components/dropdown'
+import Dropdown from '@/components/ui/dropdown'
 import { useEffect, useState } from 'react'
 import ReactApexChart from 'react-apexcharts'
 import { ApexOptions } from 'apexcharts'
