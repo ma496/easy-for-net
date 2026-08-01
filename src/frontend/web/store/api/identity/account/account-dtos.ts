@@ -1,4 +1,4 @@
-import { RequestBase } from "@/store/api/base/dto/request-base"
+import { RequestBase } from '@/store/api'
 
 /** Request body for the change-password endpoint, supplying the current and desired new password. */
 export interface ChangePasswordRequest extends RequestBase {

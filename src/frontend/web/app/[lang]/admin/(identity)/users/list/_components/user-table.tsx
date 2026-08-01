@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useUserListQuery, useLazyUserListQuery, useUserDeleteMutation } from '@/store/api/identity/users/users-api'
-import { SortDirection } from '@/store/api/base/sort-direction'
+import { SortDirection } from '@/store/api'
 import { UserListDto, UserRoleDto } from '@/store/api/identity/users/users-dtos'
 import { Download, Loader2, Trash2, Plus, Pencil } from 'lucide-react'
 import { useTranslation } from '@/i18n'

@@ -1,4 +1,4 @@
-import { SortDirection } from '@/store/api/base/sort-direction'
+import { SortDirection } from '@/store/api'
 
 /** Standard pagination/sorting/filtering parameters accepted by list endpoints, parameterized by the entity id type. */
 export interface ListRequestDto<TId> {

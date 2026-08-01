@@ -1,4 +1,4 @@
-import { RequestBase } from "@/store/api/base/dto/request-base"
+import { RequestBase } from '@/store/api'
 
 /** Request parameters for deleting a file by its server-side name. */
 export interface FileDeleteRequest extends RequestBase {

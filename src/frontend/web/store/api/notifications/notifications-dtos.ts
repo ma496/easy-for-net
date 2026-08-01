@@ -1,9 +1,5 @@
 import { NotificationType } from './enums'
-import { BaseDto } from '@/store/api/base/dto/base-dto'
-import { RequestBase } from '@/store/api/base/dto/request-base'
-import { GenericAuditableDto } from '@/store/api/base/dto/auditable-dto'
-import { ListRequestDto } from '@/store/api/base/dto/list-request-dto'
-import { ListDto } from '@/store/api/base/dto/list-dto'
+import { BaseDto, RequestBase, GenericAuditableDto, ListRequestDto, ListDto } from '@/store/api'
 
 /** Request body for creating a notification, using i18n keys for title/message and optional group/metadata. */
 export interface NotificationCreateRequest extends RequestBase {
