@@ -126,15 +126,12 @@ bld.Services.AddScoped<IEmailBackgroundJobs, EmailBackgroundJobs>();
 
 var app = bld.Build();
 
-// Run migrations and seed data when not in testing environment
-if (!app.Environment.IsEnvironment("Testing"))
-{
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.Migrate();
-    var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
-    await seeder.SeedAsync();
-}
+// Run migrations and seed data
+using var scope = app.Services.CreateScope();
+var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+dbContext.Database.Migrate();
+var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
+await seeder.SeedAsync();
 
 app.UseCors()
    .UseAuthentication()
