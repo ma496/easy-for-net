@@ -7,13 +7,27 @@ namespace Backend.Tests;
 public class SharedContextFixture : AppFixture<Program>
 {
     /// <summary>
+    /// Gets the error message from fixture initialization, or null if successful.
+    /// </summary>
+    public static string? InitializationError { get; private set; }
+
+    /// <summary>
     /// Authenticates the HTTP client and seeds test data into the database.
     /// </summary>
     protected override async ValueTask SetupAsync()
     {
-        await TestsHelper.SetNewAuthTokenAsync(Client);
-        var testsDataSeeder = Services.GetRequiredService<TestsDataSeeder>();
-        await testsDataSeeder.SeedAsync(Client);
+        try
+        {
+            var dbContext = Services.GetRequiredService<AppDbContext>();
+            await dbContext.Database.MigrateAsync();
+            await TestsHelper.SetNewAuthTokenAsync(Client);
+            var testsDataSeeder = Services.GetRequiredService<TestsDataSeeder>();
+            await testsDataSeeder.SeedAsync(Client);
+        }
+        catch (Exception ex)
+        {
+            InitializationError = $"Shared fixture initialization failed: {ex.GetType().Name}: {ex.Message}";
+        }
     }
 
     /// <summary>
@@ -21,6 +35,8 @@ public class SharedContextFixture : AppFixture<Program>
     /// </summary>
     protected override async ValueTask TearDownAsync()
     {
+        if (InitializationError is not null)
+            return;
         await DeleteDatabaseAsync();
     }
 

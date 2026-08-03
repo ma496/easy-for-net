@@ -80,18 +80,20 @@ bld.Services
 bld.Services.AddAuthorization();
 bld.Services.AddHttpContextAccessor();
 
-// Add Hangfire services with PostgreSQL storage
-bld.Services.AddHangfire(config =>
+// configure HanngFire when not in testing environment
+if (!bld.Environment.IsEnvironment("Testing"))
 {
-    config.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-          .UseSimpleAssemblyNameTypeSerializer()
-          .UseRecommendedSerializerSettings()
-          .UsePostgreSqlStorage(options =>
-              options.UseNpgsqlConnection(bld.Configuration.GetConnectionString("DefaultConnection")));
-});
+    bld.Services.AddHangfire(config =>
+    {
+        config.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+              .UseSimpleAssemblyNameTypeSerializer()
+              .UseRecommendedSerializerSettings()
+              .UsePostgreSqlStorage(options =>
+                  options.UseNpgsqlConnection(bld.Configuration.GetConnectionString("DefaultConnection")));
+    });
 
-// Add the Hangfire server
-bld.Services.AddHangfireServer();
+    bld.Services.AddHangfireServer();
+}
 
 // configure settings
 bld.Services.Configure<PayloadSetting>(bld.Configuration.GetSection("Payload"));
@@ -124,11 +126,12 @@ bld.Services.AddScoped<IEmailBackgroundJobs, EmailBackgroundJobs>();
 
 var app = bld.Build();
 
-using (var scope = app.Services.CreateScope())
+// Run migrations and seed data when not in testing environment
+if (!app.Environment.IsEnvironment("Testing"))
 {
+    using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.Migrate();
-
     var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
     await seeder.SeedAsync();
 }
@@ -166,17 +169,20 @@ app.UseCors()
        })
    .UseSwaggerGen();
 
-// Configure Hangfire dashboard after database is ready
-app.UseHangfireDashboard("/hangfire", new DashboardOptions
+// Configure Hangfire dashboard after database is ready if not in testing environment
+if (!app.Environment.IsEnvironment("Testing"))
 {
-    Authorization = [new HangfireAuthorizationFilter()]
-});
+    app.UseHangfireDashboard("/hangfire", new DashboardOptions
+    {
+        Authorization = [new HangfireAuthorizationFilter()]
+    });
 
-// Move recurring jobs setup after database is ready
-using (app.Services.CreateScope())
-{
-    RecurringJob.AddOrUpdate<IAuthTokenCleanService>("delete-expired-auth-tokens", service => service.DeleteExpiredTokensAsync(), Cron.Daily);
-    RecurringJob.AddOrUpdate<ITokenCleanService>("delete-expired-tokens", service => service.DeleteExpiredTokensAsync(), Cron.Daily);
+    // Move recurring jobs setup after database is ready
+    using (app.Services.CreateScope())
+    {
+        RecurringJob.AddOrUpdate<IAuthTokenCleanService>("delete-expired-auth-tokens", service => service.DeleteExpiredTokensAsync(), Cron.Daily);
+        RecurringJob.AddOrUpdate<ITokenCleanService>("delete-expired-tokens", service => service.DeleteExpiredTokensAsync(), Cron.Daily);
+    }
 }
 
 app.Run();

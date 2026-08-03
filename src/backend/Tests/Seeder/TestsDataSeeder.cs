@@ -7,7 +7,7 @@ using Backend.Features.Identity.Core.Entities;
 /// Seeds test data into the database including users, roles, and permissions.
 /// Populates the shared <see cref="TestUsers"/> and <see cref="TestRoles"/> static holders with generated IDs.
 /// </summary>
-public class TestsDataSeeder(IUserService userService, IRoleService roleService, IPermissionService permissionService)
+public class TestsDataSeeder(DataSeeder dataSeeder, IUserService userService, IRoleService roleService, IPermissionService permissionService)
 {
     /// <summary>
     /// Seeds test users (test, testone, testtwo) with corresponding roles and all permissions.
@@ -15,6 +15,8 @@ public class TestsDataSeeder(IUserService userService, IRoleService roleService,
     /// </summary>
     public async Task SeedAsync(HttpClient _)
     {
+        await dataSeeder.SeedAsync();
+        
         var permissions = await permissionService.Permissions().ToListAsync();
 
         var (testUserId, testRoleId) = await CreateUserWithRole(permissions, "test", "Test");
