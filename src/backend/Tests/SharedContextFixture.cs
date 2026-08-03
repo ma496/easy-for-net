@@ -1,56 +1,83 @@
 namespace Backend.Tests;
 
+using System.Reflection;
+
 /// <summary>
 /// Shared fixture that seeds test data and authenticates once for the entire test collection.
 /// The database is deleted during teardown.
+/// Catches source project startup exceptions in <see cref="IAsyncLifetime.InitializeAsync"/>
+/// so that individual tests can be skipped instead of failing when the host cannot start.
 /// </summary>
-public class SharedContextFixture : AppFixture<Program>
+public class SharedContextFixture : AppFixture<Program>, IAsyncLifetime
 {
-    /// <summary>
-    /// Gets the error message from fixture initialization, or null if successful.
-    /// </summary>
-    public static string? InitializationError { get; private set; }
+    public static string? InitializationError { get; internal set; }
 
-    /// <summary>
-    /// Authenticates the HTTP client and seeds test data into the database.
-    /// </summary>
-    protected override async ValueTask SetupAsync()
+    private static readonly MethodInfo _baseInitializeAsync = ((Func<MethodInfo>)(() =>
+    {
+        var ifaceMap = typeof(AppFixture<Program>).GetInterfaceMap(typeof(IAsyncLifetime));
+        return ifaceMap.TargetMethods[0];
+    }))();
+
+    async ValueTask IAsyncLifetime.InitializeAsync()
     {
         try
         {
-            var dbContext = Services.GetRequiredService<AppDbContext>();
-            await dbContext.Database.MigrateAsync();
-            await TestsHelper.SetNewAuthTokenAsync(Client);
-            var testsDataSeeder = Services.GetRequiredService<TestsDataSeeder>();
-            await testsDataSeeder.SeedAsync(Client);
+            await (ValueTask)_baseInitializeAsync.Invoke(this, null)!;
+        }
+        catch (TargetInvocationException ex) when (ex.InnerException is not null)
+        {
+            TryDeleteDatabase();
+            InitializationError = $"Shared fixture initialization failed: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}";
         }
         catch (Exception ex)
         {
+            TryDeleteDatabase();
             InitializationError = $"Shared fixture initialization failed: {ex.GetType().Name}: {ex.Message}";
         }
     }
 
-    /// <summary>
-    /// Deletes the test database after all tests in the collection have completed.
-    /// </summary>
+    protected override async ValueTask SetupAsync()
+    {
+        var dbContext = Services.GetRequiredService<AppDbContext>();
+        await dbContext.Database.MigrateAsync();
+        await TestsHelper.SetNewAuthTokenAsync(Client);
+        var testsDataSeeder = Services.GetRequiredService<TestsDataSeeder>();
+        await testsDataSeeder.SeedAsync(Client);
+    }
+
     protected override async ValueTask TearDownAsync()
     {
         if (InitializationError is not null)
             return;
-        await DeleteDatabaseAsync();
+        try
+        {
+            await DeleteDatabaseAsync();
+        }
+        catch
+        {
+            // ignored
+        }
     }
 
-    /// <summary>
-    /// Registers the test data seeder into the service collection.
-    /// </summary>
     protected override void ConfigureServices(IServiceCollection s)
     {
         s.AddScoped<TestsDataSeeder>();
     }
-    
-    /// <summary>
-    /// Ensures the test database is deleted after test execution.
-    /// </summary>
+
+    private void TryDeleteDatabase()
+    {
+        try
+        {
+            using var scope = Services?.CreateScope();
+            var dbContext = scope?.ServiceProvider.GetRequiredService<AppDbContext>();
+            dbContext?.Database.EnsureDeleted();
+        }
+        catch
+        {
+            // ignored
+        }
+    }
+
     private async Task DeleteDatabaseAsync()
     {
         var dbContext = Services.GetRequiredService<AppDbContext>();

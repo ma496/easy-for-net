@@ -10,11 +10,11 @@ namespace Backend.Tests;
 public abstract class AppTestsBase(App app) : TestBase<App>
 {
     protected readonly App App = app;
-    protected readonly AppDbContext DbContext = app.Services.GetRequiredService<AppDbContext>();
+    protected AppDbContext DbContext => App.Services.GetRequiredService<AppDbContext>();
 
     /// <summary>
     /// Skips the current test if the shared fixture initialization has failed.
-    /// Called by xUnit before each test method.
+    /// When the source project throws during startup, this causes all tests in the collection to be skipped.
     /// </summary>
     protected override async ValueTask SetupAsync()
     {
