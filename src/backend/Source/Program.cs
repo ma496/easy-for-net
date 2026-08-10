@@ -80,10 +80,8 @@ bld.Services
 bld.Services.AddAuthorization();
 bld.Services.AddHttpContextAccessor();
 
-// configure HanngFire when not in testing environment
-if (!bld.Environment.IsEnvironment("Testing"))
-{
-    bld.Services.AddHangfire(config =>
+// configure HanngFire
+bld.Services.AddHangfire(config =>
     {
         config.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
               .UseSimpleAssemblyNameTypeSerializer()
@@ -92,8 +90,7 @@ if (!bld.Environment.IsEnvironment("Testing"))
                   options.UseNpgsqlConnection(bld.Configuration.GetConnectionString("DefaultConnection")));
     });
 
-    bld.Services.AddHangfireServer();
-}
+bld.Services.AddHangfireServer();
 
 // configure settings
 bld.Services.Configure<PayloadSetting>(bld.Configuration.GetSection("Payload"));
@@ -166,20 +163,17 @@ app.UseCors()
        })
    .UseSwaggerGen();
 
-// Configure Hangfire dashboard after database is ready if not in testing environment
-if (!app.Environment.IsEnvironment("Testing"))
+// Configure Hangfire dashboard after database is ready
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
 {
-    app.UseHangfireDashboard("/hangfire", new DashboardOptions
-    {
-        Authorization = [new HangfireAuthorizationFilter()]
-    });
+    Authorization = [new HangfireAuthorizationFilter()]
+});
 
-    // Move recurring jobs setup after database is ready
-    using (app.Services.CreateScope())
-    {
-        RecurringJob.AddOrUpdate<IAuthTokenCleanService>("delete-expired-auth-tokens", service => service.DeleteExpiredTokensAsync(), Cron.Daily);
-        RecurringJob.AddOrUpdate<ITokenCleanService>("delete-expired-tokens", service => service.DeleteExpiredTokensAsync(), Cron.Daily);
-    }
+// Move recurring jobs setup after database is ready
+using (app.Services.CreateScope())
+{
+    RecurringJob.AddOrUpdate<IAuthTokenCleanService>("delete-expired-auth-tokens", service => service.DeleteExpiredTokensAsync(), Cron.Daily);
+    RecurringJob.AddOrUpdate<ITokenCleanService>("delete-expired-tokens", service => service.DeleteExpiredTokensAsync(), Cron.Daily);
 }
 
 app.Run();
