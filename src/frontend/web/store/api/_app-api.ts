@@ -59,7 +59,9 @@ const baseQueryWithReauth: BaseQueryFn<
           api.dispatch(signout())
           const pathname = typeof window !== 'undefined' ? window.location.pathname : undefined
           if (pathname && isAuthRequired(pathname)) {
-            window.location.href = '/signin'
+            const signinUrl = new URL('/signin', window.location.origin)
+            signinUrl.searchParams.set('redirect', pathname)
+            window.location.href = signinUrl.toString()
           }
         }
       } finally {

@@ -5,12 +5,17 @@ import { Formik, Form } from 'formik'
 import { FormInput, FormPasswordInput } from '@/components/ui/form'
 import { Mail, Lock, AlertCircle } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useTokenMutation, useLazyGetUserInfoQuery, useResendVerifyEmailMutation } from '@/store/api/identity'
 import { useAppDispatch } from '@/store/hooks'
 import { setUserInfo } from '@/store/slices'
 import { Button, LocalizedLink } from '@/components/ui'
 import { useLocalizedRouter } from '@/hooks'
 import { apiErrorAlert, successToast } from '@/lib/utils'
+
+function isValidRedirectPath(path: string): boolean {
+  return path.startsWith('/') && !path.startsWith('//') && path !== '/signin'
+}
 
 /**
  * Interactive client-side form that authenticates a user with username/password and routes them to the appropriate landing page.
@@ -19,6 +24,9 @@ import { apiErrorAlert, successToast } from '@/lib/utils'
 export const SigninForm = () => {
   const router = useLocalizedRouter()
   const { t } = useTranslation()
+  const searchParams = useSearchParams()
+  const rawRedirect = searchParams.get('redirect')
+  const redirectTo = rawRedirect ? decodeURIComponent(rawRedirect) : null
 
   const validationSchema = Yup.object().shape({
     username: Yup.string()
@@ -78,10 +86,12 @@ export const SigninForm = () => {
     }
     if (userInfoRes.data) {
       dispatch(setUserInfo(userInfoRes.data))
-      if (userInfoRes.data.roles.find((role) => role.name === 'Public')) {
-        router.push(`/`, { scroll: false })
-      } else {
+      if (redirectTo && isValidRedirectPath(redirectTo)) {
+        router.push(redirectTo, { scroll: false })
+      } else if (userInfoRes.data.roles.find((role) => role.name === 'Admin')) {
         router.push(`/admin`, { scroll: false })
+      } else {
+        router.push(`/`, { scroll: false })
       }
     }
   }

@@ -92,16 +92,13 @@ export async function proxy(request: NextRequest) {
   const isAuthenticated = await hasAuthCookie()
 
   if (isAuthRequired(pathToCheck) && !isAuthenticated) {
-    // Redirect to signin, preserving locale
-    // If currentLocale is default, signin is `/signin`
-    // If currentLocale is other, signin is `/${currentLocale}/signin`
-
     let signinPath = '/signin'
     if (currentLocale !== i18nConfig.defaultLocale) {
       signinPath = `/${currentLocale}/signin`
     }
-
-    return NextResponse.redirect(new URL(signinPath, request.url))
+    const signinUrl = new URL(signinPath, request.url)
+    signinUrl.searchParams.set('redirect', pathToCheck)
+    return NextResponse.redirect(signinUrl)
   }
 
   return response || NextResponse.next()
