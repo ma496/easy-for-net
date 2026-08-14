@@ -2,7 +2,7 @@
 import { PropsWithChildren, useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { toggleRTL, toggleTheme, toggleMenu, toggleLayout, toggleAnimation, toggleNavbar, toggleSemidark, setUserInfo } from '@/store/slices'
-import { AppLoading } from '@/components/layouts'
+import { AppLoading, ServiceUnavailableView } from '@/components/layouts'
 import { i18nConfig, Locale } from '@/i18n'
 import { useLazyGetUserInfoQuery } from './store/api/identity'
 import { isAllowed } from './lib/utils'
@@ -20,6 +20,7 @@ function App({ children }: PropsWithChildren) {
   const pathname = usePathname()
   const router = useRouter()
   const authState = useAppSelector((state) => state.auth)
+  const isServiceUnavailable = useAppSelector((state) => state.serviceAvailability.isUnavailable)
   const [isLoading, setIsLoading] = useState(true)
   const [getUserInfo, { isLoading: isLoadingUserInfo }] = useLazyGetUserInfoQuery()
   const { showDialog: showConsentDialog, isLoading: consentLoading, accept, decline } = useCookieConsent()
@@ -35,6 +36,7 @@ function App({ children }: PropsWithChildren) {
   }, [getUserInfo, dispatch])
 
   useEffect(() => {
+    if (isServiceUnavailable) return
     if (isLoadingUserInfo) return
 
     if (!authState.isAuthenticated || !authState.user) return
@@ -47,7 +49,7 @@ function App({ children }: PropsWithChildren) {
     if (matchedUrl?.permissions && matchedUrl.permissions.length > 0 && !isAllowed(authState, matchedUrl.permissions)) {
       router.replace(lang === i18nConfig.defaultLocale ? '/unauthorized' : `/${lang}/unauthorized`)
     }
-  }, [pathname, authState, isLoadingUserInfo, router])
+  }, [pathname, authState, isLoadingUserInfo, isServiceUnavailable, router])
 
   useEffect(() => {
     dispatch(toggleTheme(localStorage.getItem('theme') || themeConfig.theme))
@@ -74,8 +76,8 @@ function App({ children }: PropsWithChildren) {
       className={`${(themeConfig.sidebar && 'toggle-sidebar') || ''} ${themeConfig.menu} ${themeConfig.layout} ${themeConfig.rtlClass
         } main-section relative font-nunito text-sm font-normal antialiased`}
     >
-      {isLoading || isLoadingUserInfo ? <AppLoading /> : children}
-      {showConsentDialog && !consentLoading && (
+      {isServiceUnavailable ? <ServiceUnavailableView /> : isLoading || isLoadingUserInfo ? <AppLoading /> : children}
+      {!isServiceUnavailable && showConsentDialog && !consentLoading && (
         <CookieConsentDialog isOpen={true} onAccept={accept} onDecline={decline} />
       )}
     </div>

@@ -157,7 +157,8 @@
     },
     "serviceUnavailable": {
       "title": "Service Unavailable",
-      "message": "The server is currently unreachable. Please try again in a few moments."
+      "message": "The server is currently unreachable. Please try again in a few moments.",
+      "retry": "Retry"
     },
     "server": {
       "internalServerError": "Internal server error",

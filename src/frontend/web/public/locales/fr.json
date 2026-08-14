@@ -157,7 +157,8 @@
     },
     "serviceUnavailable": {
       "title": "Service Indisponible",
-      "message": "Le serveur est actuellement inaccessible. Veuillez réessayer dans quelques instants."
+      "message": "Le serveur est actuellement inaccessible. Veuillez réessayer dans quelques instants.",
+      "retry": "Réessayer"
     },
     "server": {
       "internalServerError": "Erreur interne du serveur",

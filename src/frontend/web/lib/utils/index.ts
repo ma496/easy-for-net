@@ -1,6 +1,5 @@
 export { cn, setLocalStorageValue, getLocalStorageValue, shortName, isTranslationKeyExist } from './common'
 export { toast, successToast, errorToast, sweetAlert, successAlert, errorAlert, warningAlert, infoAlert, confirmAlert, confirmDeleteAlert } from './notification'
-export { rtkErrorHandler } from './error-handler'
 export { type ExportFormat, exportData } from './export'
 export { type AuthState, isAllowed, hasAuthCookie } from './authentication-and-authorization'
 export { constants } from './constants'

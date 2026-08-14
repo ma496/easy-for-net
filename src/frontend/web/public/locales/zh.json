@@ -157,7 +157,8 @@
     },
     "serviceUnavailable": {
       "title": "服务不可用",
-      "message": "服务器当前无法访问。请稍后再试。"
+      "message": "服务器当前无法访问。请稍后再试。",
+      "retry": "重试"
     },
     "server": {
       "internalServerError": "服务器内部错误",

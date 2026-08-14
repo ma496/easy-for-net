@@ -1,21 +1,19 @@
 import { type Middleware, isRejectedWithValue } from '@reduxjs/toolkit'
-import { rtkErrorHandler } from '@/lib/utils'
-
-const ignoreEndpoints = ['getUserInfo']
+import { showServiceUnavailable } from '@/store/slices'
 
 /**
- * Redux middleware that intercepts rejected RTK Query actions and routes
- * their payloads through the centralized rtkErrorHandler, while skipping
- * a configured list of endpoints (e.g. getUserInfo) to avoid noisy errors.
+ * Redux middleware that intercepts rejected RTK Query actions and marks the
+ * backend as unavailable when a request fails before receiving a response.
  */
-export const rtkErrorMiddleware: Middleware = (_api) => (next) => (action: unknown) => {
+export const rtkErrorMiddleware: Middleware = (api) => (next) => (action: unknown) => {
   if (isRejectedWithValue(action)) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rejectedAction = action as any
-    if (ignoreEndpoints.includes(rejectedAction.meta?.arg?.endpointName)) return next(action)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payload: any = rejectedAction.payload ?? rejectedAction.error
-    rtkErrorHandler(payload)
+    if (payload?.status === 'FETCH_ERROR') {
+      api.dispatch(showServiceUnavailable())
+    }
   }
   return next(action)
 }
