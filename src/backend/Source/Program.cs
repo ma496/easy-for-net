@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Text.Json.Serialization;
 using Backend.External.Email;
 using Backend.Features.Identity.Core;
+using Backend.Middleware;
 using Backend.Settings;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -132,8 +133,12 @@ await seeder.SeedAsync();
 
 app.UseCors()
    .UseAuthentication()
-   .UseAuthorization()
-   .UseFastEndpoints(
+   .UseAuthorization();
+
+if (app.Environment.IsDevelopment())
+    app.UseMiddleware<DevelopmentEndpointLoggingMiddleware>();
+
+app.UseFastEndpoints(
        c =>
        {
            c.Serializer.Options.Converters.Add(new JsonStringEnumConverter());
