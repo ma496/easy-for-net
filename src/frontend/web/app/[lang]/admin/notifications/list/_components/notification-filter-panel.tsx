@@ -3,7 +3,7 @@
 import { useTranslation } from '@/i18n'
 import { Select } from '@/components/ui/form'
 import { Search, X } from 'lucide-react'
-import { Button, Loading, ApiErrorMessages } from '@/components/ui'
+import { Button, Loader, ApiErrorMessages } from '@/components/ui'
 import { useNotificationGetGroupsQuery } from '@/store/api/notifications'
 
 /**
@@ -50,7 +50,7 @@ export const NotificationFilterPanel = ({ filters, onChange, onSearch, onClear }
   if (isGroupsLoading) {
     return (
       <div className="flex justify-center items-center">
-        <Loading />
+        <Loader />
       </div>
     )
   }

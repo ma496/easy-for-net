@@ -1,7 +1,7 @@
 import { flexRender } from '@tanstack/react-table'
 import { useDataTable } from './context'
 import { DataTableSortIcon } from './sort-icon'
-import { Loading } from '..'
+import { Loader } from '..'
 import { useTranslation } from '@/i18n'
 import ScrollBar from 'react-perfect-scrollbar'
 
@@ -52,7 +52,7 @@ export function DataTable<TData>({ className = '', suppressScrollX = false, supp
             {isFetching ? (
               <tr>
                 <td colSpan={columns.length} className="py-6 text-center">
-                  <Loading size="lg" />
+                  <Loader size="lg" />
                 </td>
               </tr>
             ) : table.getRowModel().rows.length > 0 ? (

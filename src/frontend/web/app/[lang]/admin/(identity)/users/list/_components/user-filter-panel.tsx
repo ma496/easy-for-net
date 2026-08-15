@@ -4,7 +4,7 @@ import { useTranslation } from '@/i18n'
 import { Select } from '@/components/ui/form'
 import { useRoleListQuery } from '@/store/api/identity'
 import { Search, X } from 'lucide-react'
-import { Button, Loading, ApiErrorMessages } from '@/components/ui'
+import { Button, Loader, ApiErrorMessages } from '@/components/ui'
 
 /**
  * Filter values accepted by the user list filter panel, representing active status and role selection as strings.
@@ -51,7 +51,7 @@ export const UserFilterPanel = ({ filters, onChange, onSearch, onClear }: UserFi
   if (isRolesLoading) {
     return (
       <div className="flex justify-center items-center">
-        <Loading />
+        <Loader />
       </div>
     )
   }

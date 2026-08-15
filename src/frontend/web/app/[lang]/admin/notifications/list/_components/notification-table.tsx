@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from '@/i18n'
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
 import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable } from '@/components/ui/data-table'
-import { ApiErrorMessages, Badge, LocalizedLink, Button, Truncated, Loading } from '@/components/ui'
+import { ApiErrorMessages, Badge, LocalizedLink, Button, Truncated, Loader } from '@/components/ui'
 import { apiErrorAlert, confirmAlert, confirmDeleteAlert, successToast } from '@/lib/utils'
 import {
   NotificationDto,
@@ -254,7 +254,7 @@ export const NotificationTable = () => {
               title={t('notifications.markAsRead')}
               disabled={isMarkingAsRead || isMarkingAllAsRead || isDeletingNotification}
             >
-              {isMarkingAsRead ? <Loading className="h-3 w-3" /> : <Check className="h-3 w-3" />}
+              {isMarkingAsRead ? <Loader className="h-3 w-3" /> : <Check className="h-3 w-3" />}
             </button>
           )}
           <button
@@ -264,7 +264,7 @@ export const NotificationTable = () => {
             title={t('notifications.delete')}
             disabled={isMarkingAsRead || isMarkingAllAsRead || isDeletingNotification}
           >
-            {isDeletingNotification ? <Loading className="h-3 w-3" /> : <Trash2 className="h-3 w-3" />}
+            {isDeletingNotification ? <Loader className="h-3 w-3" /> : <Trash2 className="h-3 w-3" />}
           </button>
         </div>
       ),

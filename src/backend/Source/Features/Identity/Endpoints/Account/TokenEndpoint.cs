@@ -54,8 +54,8 @@ sealed class TokenEndpoint(IUserService userService, IOptions<SigninSetting> sig
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
-                SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict,
+                Secure = HttpContext.Request.IsHttps,
+                SameSite = SameSiteMode.Strict,
                 Expires = DateTime.UtcNow.AddHours(authSetting.Value.RefreshTokenValidity)
             };
             HttpContext.Response.Cookies.Append("refreshToken", $"{Response.UserId}:{Response.RefreshToken}", cookieOptions);
