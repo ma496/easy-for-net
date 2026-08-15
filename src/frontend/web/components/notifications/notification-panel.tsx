@@ -20,7 +20,7 @@ export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
   const { data: notifications, isLoading: isNotificationsLoading } = useNotificationListQuery({ page: 1, pageSize: 5 })
 
   return (
-    <div className="absolute inset-e-0 top-full z-50 mt-2 w-80 rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+    <div className="fixed inset-x-2 top-14 z-50 w-auto max-w-[calc(100vw-1rem)] rounded-lg border border-gray-200 bg-white shadow-lg sm:absolute sm:inset-x-auto sm:inset-e-0 sm:top-full sm:mt-2 sm:w-80 dark:border-gray-700 dark:bg-gray-800">
       <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2 dark:border-gray-700">
         <h3 className="font-semibold">{t('common.notifications')}</h3>
         <button
