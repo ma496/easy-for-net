@@ -25,8 +25,7 @@ if (bld.Environment.IsDevelopment())
     {
         options.AddDefaultPolicy(builder =>
         {
-            builder.SetIsOriginAllowed(origin =>
-                   origin.StartsWith("http://localhost:"))
+            builder.SetIsOriginAllowed(_ => true)
                    .AllowAnyMethod()
                    .AllowAnyHeader()
                    .AllowCredentials();
@@ -57,7 +56,9 @@ bld.Services
     .AddAuthenticationCookie(TimeSpan.FromMinutes(bld.Configuration.GetValue<int>("Auth:AccessTokenValidity")), options =>
     {
         options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Ensure Secure is true
+        options.Cookie.SecurePolicy = bld.Environment.IsDevelopment()
+            ? CookieSecurePolicy.SameAsRequest
+            : CookieSecurePolicy.Always;
         options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;
     })
     .AddAuthenticationJwtBearer(x => x.SigningKey = bld.Configuration["Auth:Jwt:Key"])

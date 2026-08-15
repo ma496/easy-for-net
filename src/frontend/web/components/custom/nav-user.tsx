@@ -1,5 +1,5 @@
 'use client'
-import { LocalizedLink, Dropdown, type DropdownRef, Loading } from '@/components/ui'
+import { LocalizedLink, Dropdown, type DropdownRef, Loader } from '@/components/ui'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
 import { signout } from '@/store/slices'
 import { useLocalizedRouter } from '@/hooks'
@@ -105,7 +105,7 @@ export const NavUser = () => {
               className="py-3! text-danger"
               onClick={signoutAction}>
               {isSigningOut ? (
-                <Loading className="h-4.5 w-4.5 shrink-0 rotate-90 ltr:mr-2 rtl:ml-2" />
+                <Loader className="h-4.5 w-4.5 shrink-0 rotate-90 ltr:mr-2 rtl:ml-2" />
               ) : (
                 <LogOut className="h-4.5 w-4.5 shrink-0 rotate-90 ltr:mr-2 rtl:ml-2" />
               )}

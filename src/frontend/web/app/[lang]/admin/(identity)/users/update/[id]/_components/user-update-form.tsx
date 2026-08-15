@@ -4,7 +4,7 @@ import { useTranslation } from '@/i18n'
 import { useLocalizedRouter } from '@/hooks'
 import { useUserUpdateMutation, useUserGetQuery, useLazyRoleListQuery } from '@/store/api/identity'
 import { Form, Formik } from 'formik'
-import { Button, ApiErrorMessages, Loading } from '@/components/ui'
+import { Button, ApiErrorMessages, Loader } from '@/components/ui'
 import { FormInput, FormCheckbox, FormLazyMultiSelect } from '@/components/ui/form'
 import { apiErrorAlert, successToast } from '@/lib/utils'
 
@@ -50,7 +50,7 @@ export const UserUpdateForm = ({ userId }: UserUpdateFormProps) => {
   if (isLoadingUser) {
     return (
       <div className="flex justify-center items-center">
-        <Loading />
+        <Loader />
       </div>
     )
   }

@@ -1,17 +1,17 @@
 import { cn } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
 
-/** Props for the Loading spinner component, which supports a color variant and a size. */
-interface LoadingProps {
+/** Props for the Loader spinner component, which supports a color variant and a size. */
+interface LoaderProps {
   variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'dark'
   size?: 'sm' | 'md' | 'lg' | 'xl'
   className?: string
 }
 
 /**
- * Loading renders a centered, animated lucide-react spinner whose color and size are controlled via the variant and size props.
+ * Loader renders a centered, animated lucide-react spinner whose color and size are controlled via the variant and size props.
  */
-const Loading = ({ variant = 'primary', size = 'md', className }: LoadingProps) => {
+const Loader = ({ variant = 'primary', size = 'md', className }: LoaderProps) => {
   const sizeClasses = {
     sm: 'w-4 h-4',
     md: 'w-6 h-6',
@@ -36,4 +36,4 @@ const Loading = ({ variant = 'primary', size = 'md', className }: LoadingProps) 
   )
 }
 
-export { Loading }
+export { Loader }

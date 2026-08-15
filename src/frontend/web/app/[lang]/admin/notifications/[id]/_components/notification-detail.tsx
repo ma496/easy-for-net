@@ -3,7 +3,7 @@ import { useNotificationGetQuery, useNotificationMarkAsReadMutation, useNotifica
 import { useTranslation } from '@/i18n'
 import { formatDistanceToNow, format } from 'date-fns'
 import { AlertCircle, AlertTriangle, CheckCircle, Info, Check, EyeOff } from 'lucide-react'
-import { Badge, Button, ApiErrorMessages, Loading } from '@/components/ui'
+import { Badge, Button, ApiErrorMessages, Loader } from '@/components/ui'
 import { apiErrorAlert, successToast } from '@/lib/utils'
 
 /**
@@ -79,7 +79,7 @@ export const NotificationDetail = ({ id }: NotificationDetailProps) => {
   if (isNotificationLoading) {
     return (
       <div className="flex items-center justify-center">
-        <Loading />
+        <Loader />
       </div>
     )
   }

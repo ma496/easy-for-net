@@ -75,12 +75,12 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
+                Secure = _httpContextAccessor.HttpContext?.Request.IsHttps ?? false,
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTime.UtcNow.AddHours(_refreshTokenValidity)
             };
             // Embed UserId in the cookie so we can recover it when the session expires
-            _httpContextAccessor.HttpContext.Response.Cookies.Append("refreshToken", $"{response.UserId}:{response.RefreshToken}", cookieOptions);
+            _httpContextAccessor.HttpContext?.Response.Cookies.Append("refreshToken", $"{response.UserId}:{response.RefreshToken}", cookieOptions);
         }
     }
 

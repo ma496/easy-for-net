@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import { ChevronDown, Search, X } from 'lucide-react'
 import { TypedUseLazyQuery } from '@reduxjs/toolkit/query/react'
 import { ListDto } from '@/store/api'
-import { Loading } from '..'
+import { Loader } from '..'
 import { useDebounce } from '@/hooks'
 import { Input } from './input'
 import ScrollBar from 'react-perfect-scrollbar'
@@ -363,7 +363,7 @@ export const FormLazyMultiSelect = <TItem, TRequest>({
             <ul className="overflow-hidden">
               {isFetching && page === 1 && (
                 <li className="flex items-center justify-center px-4 py-2 text-gray-400">
-                  <Loading />
+                  <Loader />
                 </li>
               )}
               {!isFetching && fetchedOptions.length === 0 && <li className="px-4 py-2 text-gray-400">No options</li>}
@@ -383,7 +383,7 @@ export const FormLazyMultiSelect = <TItem, TRequest>({
               ))}
               {isFetching && page > 1 && (
                 <li className="flex items-center justify-center px-4 py-2 text-gray-400">
-                  <Loading />
+                  <Loader />
                 </li>
               )}
             </ul>
