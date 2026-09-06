@@ -12,6 +12,7 @@ import { navItems, NavItem, NavItemGroup } from '@/nav-items'
 import { authUrls } from '@/auth-urls'
 import { SidebarNavGroup } from './nav-group'
 import { isAllowed } from '@/lib/utils'
+import Image from 'next/image'
 
 /**
  * Type guard that narrows a {@link NavItem} | {@link NavItemGroup} union to {@link NavItemGroup} by checking for the `items` property.
@@ -130,8 +131,8 @@ export const Sidebar = () => {
         <div className="flex h-full flex-col bg-white dark:bg-black">
           <div className="flex items-center justify-between px-4 py-3">
             <Link href="/admin" className="flex shrink-0 items-center main-logo">
-              <img className="ms-1.25 w-8 flex-none" src="/assets/images/icon.png" alt="logo" />
-              <span className="align-middle text-[18px] font-semibold lg:inline ms-1.5 dark:text-white-light">{t('brand.name')}</span>
+              <Image className="ms-1.25 h-8 w-8 flex-none" src="/assets/images/icon.png" alt="logo" width={32} height={32} unoptimized priority />
+              <span className="ms-1.5 align-middle text-[18px] font-semibold lg:inline dark:text-white-light">{t('brand.name')}</span>
             </Link>
 
             <button
@@ -154,4 +155,3 @@ export const Sidebar = () => {
     </div>
   )
 }
-

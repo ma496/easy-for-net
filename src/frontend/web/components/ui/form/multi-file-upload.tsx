@@ -6,6 +6,7 @@ import { useTranslation } from '@/i18n'
 import { IconButton } from '..'
 import { useFileUploadMutation, useLazyFileGetQuery, useFileDeleteMutation } from '@/store/api/file-management'
 import { ReactSortable } from 'react-sortablejs'
+import Image from 'next/image'
 
 /** Props for the MultiFileUpload component, which uploads and reorders multiple files via the file-management API, exposing replace/delete actions for each file and notifying the parent of the new filename list. */
 interface MultiFileUploadProps {
@@ -40,26 +41,29 @@ export const MultiFileUpload = ({
   const replaceInputRef = React.useRef<HTMLInputElement>(null)
   const replaceInputId = useId()
 
-  const loadFileUrls = useCallback(async (names: string[]) => {
-    const urls: { [key: string]: string } = {}
-    for (const fileName of names) {
-      if (!fileUrlsRef.current[fileName]) {
-        const result = await lazyFileGet({ fileName })
-        if (result.error) {
-          apiErrorAlert(result.error, [404])
-          continue
-        }
-        if (result.data) {
-          const blob = result.data as Blob
-          const url = URL.createObjectURL(blob)
-          urls[fileName] = url
+  const loadFileUrls = useCallback(
+    async (names: string[]) => {
+      const urls: { [key: string]: string } = {}
+      for (const fileName of names) {
+        if (!fileUrlsRef.current[fileName]) {
+          const result = await lazyFileGet({ fileName })
+          if (result.error) {
+            apiErrorAlert(result.error, [404])
+            continue
+          }
+          if (result.data) {
+            const blob = result.data as Blob
+            const url = URL.createObjectURL(blob)
+            urls[fileName] = url
+          }
         }
       }
-    }
-    if (Object.keys(urls).length > 0) {
-      setFileUrls((prev: { [key: string]: string }) => ({ ...prev, ...urls }))
-    }
-  }, [lazyFileGet])
+      if (Object.keys(urls).length > 0) {
+        setFileUrls((prev: { [key: string]: string }) => ({ ...prev, ...urls }))
+      }
+    },
+    [lazyFileGet],
+  )
 
   useEffect(() => {
     loadFileUrls(fileNames)
@@ -171,20 +175,24 @@ export const MultiFileUpload = ({
 
   return (
     <div className="space-y-4">
-      {label && <label htmlFor={inputId} className="label form-label">{label}</label>}
+      {label && (
+        <label htmlFor={inputId} className="label form-label">
+          {label}
+        </label>
+      )}
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         <ReactSortable
-          list={fileNames.map(name => ({ id: name, name }))}
-          setList={(newList) => onFilesChanged(newList.map(item => item.name))}
+          list={fileNames.map((name) => ({ id: name, name }))}
+          setList={(newList) => onFilesChanged(newList.map((item) => item.name))}
           className="contents"
           animation={200}
           ghostClass="opacity-50"
         >
           {fileNames.map((fileName, index) => (
-            <div key={fileName} className="group relative aspect-square cursor-move overflow-hidden rounded-lg border border-white-light dark:border-[#17263c] bg-gray-100 dark:bg-gray-800">
+            <div key={fileName} className="group relative aspect-square cursor-move overflow-hidden rounded-lg border border-white-light bg-gray-100 dark:border-[#17263c] dark:bg-gray-800">
               {fileUrls[fileName] ? (
-                <img src={fileUrls[fileName]} alt="" className="h-full w-full object-contain" />
+                <Image src={fileUrls[fileName]} alt="" width={1} height={1} unoptimized className="h-full w-full object-contain" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center">
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -221,8 +229,8 @@ export const MultiFileUpload = ({
         <label
           htmlFor={inputId}
           className={cn(
-            "flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-white-light transition-colors hover:border-primary hover:bg-primary/5 dark:border-[#17263c] dark:hover:border-primary",
-            isUploading && "pointer-events-none opacity-50"
+            'flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-white-light transition-colors hover:border-primary hover:bg-primary/5 dark:border-[#17263c] dark:hover:border-primary',
+            isUploading && 'pointer-events-none opacity-50',
           )}
         >
           {isUploading ? (
@@ -233,24 +241,8 @@ export const MultiFileUpload = ({
               <span className="text-xs text-gray-400">{t('file.upload')}</span>
             </>
           )}
-          <input
-            id={inputId}
-            type="file"
-            multiple
-            accept={accept}
-            className="hidden"
-            onChange={handleFileChange}
-            disabled={isUploading}
-          />
-          <input
-            id={replaceInputId}
-            ref={replaceInputRef}
-            type="file"
-            accept={accept}
-            className="hidden"
-            onChange={handleReplaceChange}
-            disabled={isUploading}
-          />
+          <input id={inputId} type="file" multiple accept={accept} className="hidden" onChange={handleFileChange} disabled={isUploading} />
+          <input id={replaceInputId} ref={replaceInputRef} type="file" accept={accept} className="hidden" onChange={handleReplaceChange} disabled={isUploading} />
         </label>
       </div>
     </div>

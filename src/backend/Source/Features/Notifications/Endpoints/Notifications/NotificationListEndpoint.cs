@@ -25,13 +25,6 @@ sealed class NotificationListEndpoint(AppDbContext dbContext, ICurrentUserServic
             return;
         }
 
-        // Fetch all visited notification IDs for the user first (needed for IsRead filtering)
-        var visitedNotificationIds = await dbContext.NotificationVisits
-            .AsNoTracking()
-            .Where(v => v.UserId == userId.Value)
-            .Select(v => v.NotificationId)
-            .ToListAsync(cancellationToken);
-
         var query = dbContext.Notifications
             .AsNoTracking()
             .Where(x => x.UserId == userId.Value || x.UserId == null);
@@ -39,13 +32,13 @@ sealed class NotificationListEndpoint(AppDbContext dbContext, ICurrentUserServic
         if (request.IsRead == true)
         {
             query = query.Where(x => x.UserId == null
-                ? visitedNotificationIds.Contains(x.Id)
+                ? dbContext.NotificationVisits.Any(v => v.UserId == userId.Value && v.NotificationId == x.Id)
                 : x.IsRead);
         }
         else if (request.IsRead == false)
         {
             query = query.Where(x => x.UserId == null
-                ? !visitedNotificationIds.Contains(x.Id)
+                ? !dbContext.NotificationVisits.Any(v => v.UserId == userId.Value && v.NotificationId == x.Id)
                 : !x.IsRead);
         }
 
@@ -65,27 +58,36 @@ sealed class NotificationListEndpoint(AppDbContext dbContext, ICurrentUserServic
 
         var total = await query.CountAsync(cancellationToken);
 
-        query = query
-            .OrderBy(x => x.IsRead)
-            .Process(request, applyDefaultOrdering: false);
-
-        var notifications = await NotificationListDtoMapper.ProjectTo(query)
-            .ToListAsync(cancellationToken);
-
-        // Rebuild visitedNotificationIds for only the returned notifications
-        var notificationIds = notifications.Select(n => n.Id).ToList();
-        var pageVisitedIds = await dbContext.NotificationVisits
-            .AsNoTracking()
-            .Where(v => v.UserId == userId.Value && notificationIds.Contains(v.NotificationId))
-            .Select(v => v.NotificationId)
-            .ToListAsync(cancellationToken);
-
-        notifications.ForEach(n =>
+        if (string.IsNullOrWhiteSpace(request.SortField))
         {
-            n.IsRead = n.UserId == null
-                ? pageVisitedIds.Contains(n.Id)
-                : n.IsRead;
-        });
+            query = query
+                .OrderBy(x => x.UserId == null
+                    ? dbContext.NotificationVisits.Any(v => v.UserId == userId.Value && v.NotificationId == x.Id)
+                    : x.IsRead)
+                .ThenByDescending(x => x.CreatedAt);
+        }
+
+        query = query.Process(request, applyDefaultOrdering: false);
+
+        var notifications = await query
+            .Select(notification => new NotificationListDto
+            {
+                Id = notification.Id,
+                CreatedAt = notification.CreatedAt,
+                CreatedBy = notification.CreatedBy,
+                UpdatedAt = notification.UpdatedAt,
+                UpdatedBy = notification.UpdatedBy,
+                Type = notification.Type,
+                TitleKey = notification.TitleKey,
+                MessageKey = notification.MessageKey,
+                IsRead = notification.UserId == null
+                    ? dbContext.NotificationVisits.Any(visit => visit.UserId == userId.Value && visit.NotificationId == notification.Id)
+                    : notification.IsRead,
+                Group = notification.Group,
+                Metadata = notification.Metadata,
+                UserId = notification.UserId
+            })
+            .ToListAsync(cancellationToken);
 
         await Send.ResponseAsync(new NotificationListResponse
         {
@@ -113,6 +115,11 @@ sealed class NotificationListValidator : Validator<NotificationListRequest>
     public NotificationListValidator()
     {
         Include(new ListRequestDtoValidator<Guid>());
+        RuleFor(request => request.SortField)
+            .Must(field => string.IsNullOrWhiteSpace(field) ||
+                           new[] { "Id", "Type", "TitleKey", "MessageKey", "Group", "CreatedAt", "UpdatedAt" }
+                               .Contains(field, StringComparer.OrdinalIgnoreCase))
+            .WithMessage("The sort field is not supported.");
     }
 }
 

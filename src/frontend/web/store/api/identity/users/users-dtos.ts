@@ -24,7 +24,7 @@ export interface UserCreateResponse extends BaseDto<string> {
 }
 
 /** Request parameters for deleting a user by id. */
-export interface UserDeleteRequest extends BaseDto<string>, RequestBase { }
+export interface UserDeleteRequest extends BaseDto<string>, RequestBase {}
 
 /** Response from the delete-user endpoint, indicating success and an accompanying message. */
 export interface UserDeleteResponse extends BaseDto<string> {
@@ -33,7 +33,7 @@ export interface UserDeleteResponse extends BaseDto<string> {
 }
 
 /** Request parameters for fetching a single user by id. */
-export interface UserGetRequest extends BaseDto<string>, RequestBase { }
+export interface UserGetRequest extends BaseDto<string>, RequestBase {}
 
 /** Response from the get-user endpoint, returning the user's profile, status, roles, and audit fields. */
 export interface UserGetResponse extends GenericAuditableDto<string> {
@@ -54,7 +54,7 @@ export interface UserListRequest extends ListRequestDto<string>, RequestBase {
 }
 
 /** Paged response of users returned by the list-users endpoint. */
-export interface UserListResponse extends ListDto<UserListDto> { }
+export interface UserListResponse extends ListDto<UserListDto> {}
 
 /** Summary representation of a user in list responses, with expanded role objects. */
 export interface UserListDto extends GenericAuditableDto<string> {
@@ -62,8 +62,8 @@ export interface UserListDto extends GenericAuditableDto<string> {
   usernameNormalized: string
   email: string
   emailNormalized: string
-  firstName: string
-  lastName: string
+  firstName?: string
+  lastName?: string
   isActive: boolean
   roles: UserRoleDto[]
 }

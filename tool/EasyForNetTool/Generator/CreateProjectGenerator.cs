@@ -28,11 +28,13 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
         );
         var versionedTemplateDir = Path.Combine(templateBaseDir, version);
         var gitUrl = "https://github.com/ma496/EasyForNet.git";
+        var createdTemplateCache = false;
 
         try
         {
             if (!Directory.Exists(versionedTemplateDir))
             {
+                createdTemplateCache = true;
                 Console.WriteLine("Creating template directory...");
                 Directory.CreateDirectory(versionedTemplateDir);
 
@@ -85,7 +87,8 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             CopyFrom($"{backendProjectPath}/Source", $"{backendTargetPath}/Source", "appsettings.json", "appsettings.Development.json");
             CopyFrom($"{backendProjectPath}/Source", $"{backendTargetPath}/Source", "appsettings.json", "appsettings.Testing.json");
             CopyDirectory(webProjectPath, webTargetPath, true);
-            CopyFiles(versionedTemplateDir, targetPath, ".editorconfig", ".gitignore", "AGENTS.md");
+            CopyFiles(versionedTemplateDir, targetPath, ".editorconfig", ".gitignore", ".nvmrc", "AGENTS.md", "global.json");
+            CopyDirectory($"{versionedTemplateDir}/.github", $"{targetPath}/.github", true);
             CopyDirectory($"{versionedTemplateDir}/.config", $"{targetPath}/.config", true);
             CopyDirectory($"{versionedTemplateDir}/.ai", $"{targetPath}/.ai", true);
             CopyDirectory($"{versionedTemplateDir}/.vscode", $"{targetPath}/.vscode", true);
@@ -102,7 +105,6 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
                 throw new UserFriendlyException($"Failed to get root namespace from project '{backendTestProjectTargetPath}'. csproj file is not found.");
             }
             // update connection string
-            await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(backendProjectTargetPath, "appsettings.json"), "Auth.Jwt.Key", Guid.NewGuid().ToString());
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(backendProjectTargetPath, "appsettings.json"), "ConnectionStrings.DefaultConnection", $"Host=localhost;Port=5432;Database={pascalCaseProjectName};Username=postgres;Password={{password}}");
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(backendProjectTargetPath, "appsettings.json"), "Hangfire.Storage.ConnectionString", $"Host=localhost;Port=5432;Database={pascalCaseProjectName};Username=postgres;Password={{password}}");
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(backendProjectTargetPath, "appsettings.Development.json"), "Auth.Jwt.Key", Guid.NewGuid().ToString());
@@ -132,7 +134,8 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(webTargetPath, "package-lock.json"), "name", kebabCaseProjectName);
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(webTargetPath, "package-lock.json"), "packages..name", kebabCaseProjectName);
             // update common-rules.md
-            await ReplaceInFile(Path.Combine(targetPath, ".ai/rules/common-rules.md"), @"EasyForNet\.sln", $@"{pascalCaseProjectName}.sln");
+            await ReplaceInFile(Path.Combine(targetPath, ".ai/rules/common-rules.md"), @"EasyForNet\.slnx", $@"{pascalCaseProjectName}.slnx");
+            await ReplaceInFile(Path.Combine(targetPath, "AGENTS.md"), @"EasyForNet\.slnx", $@"{pascalCaseProjectName}.slnx");
 
             // Cleanup localization files when multiLanguage is false
             if (!argument.MultiLanguage)
@@ -186,7 +189,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
 
             // create solution file
             Console.WriteLine("Creating solution file...");
-            var solutionPath = Path.Combine(backendTargetPath, $"{pascalCaseProjectName}.slnx");
+            var solutionPath = Path.Combine(targetPath, $"{pascalCaseProjectName}.slnx");
             await ExecuteCommand("dotnet", $"new sln -n {pascalCaseProjectName} -o \"{Path.GetDirectoryName(solutionPath)}\" -f slnx");
 
             // Add projects to solution
@@ -205,7 +208,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
         }
         catch (Exception ex)
         {
-            if (Directory.Exists(versionedTemplateDir) && !Directory.EnumerateFileSystemEntries(versionedTemplateDir).Any())
+            if (createdTemplateCache && Directory.Exists(versionedTemplateDir))
             {
                 try
                 {

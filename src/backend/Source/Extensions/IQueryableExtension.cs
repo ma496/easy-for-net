@@ -27,7 +27,14 @@ public static class IQueryableExtension
 
         if (!string.IsNullOrWhiteSpace(request.SortField))
         {
-            processQuery = processQuery.OrderBy($"{request.SortField} {(request.SortDirection == SortDirection.Desc ? "DESC" : "ASC")}");
+            var sortProperty = typeof(T).GetProperties()
+                .FirstOrDefault(property => string.Equals(property.Name, request.SortField, StringComparison.OrdinalIgnoreCase));
+            if (sortProperty is null || !IsSortableType(sortProperty.PropertyType))
+            {
+                throw new ArgumentException($"'{request.SortField}' is not a sortable field.", nameof(request.SortField));
+            }
+
+            processQuery = processQuery.OrderBy($"{sortProperty.Name} {(request.SortDirection == SortDirection.Desc ? "DESC" : "ASC")}");
         }
         else if (applyDefaultOrdering && typeof(IUpdatableEntity).IsAssignableFrom(typeof(T)))
         {
@@ -43,13 +50,22 @@ public static class IQueryableExtension
             processQuery = processQuery.Where(x => request.IncludeIds.Contains(x.Id));
         }
 
-        processQuery = request.All || request.IncludeIds?.Count > 0
-            ? processQuery
-            : processQuery
-                .Skip<T>((request.Page - 1) * request.PageSize)
-                .Take<T>(request.PageSize);
+        processQuery = request.All
+            ? processQuery.Take<T>(10000)
+            : request.IncludeIds?.Count > 0
+                ? processQuery
+                : processQuery
+                    .Skip<T>((request.Page - 1) * request.PageSize)
+                    .Take<T>(request.PageSize);
 
         return processQuery;
+    }
+
+    private static bool IsSortableType(Type type)
+    {
+        type = Nullable.GetUnderlyingType(type) ?? type;
+        return type.IsPrimitive || type.IsEnum || type == typeof(string) || type == typeof(Guid)
+               || type == typeof(DateTime) || type == typeof(DateTimeOffset) || type == typeof(decimal);
     }
 
     /// <summary>

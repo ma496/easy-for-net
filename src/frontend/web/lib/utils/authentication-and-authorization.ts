@@ -15,8 +15,8 @@ export const isAllowed = (state: AuthState, permissions: string[]): boolean => {
   if (!state.user || !state.user.roles) return false
   if (!permissions || permissions.length === 0) return true
 
-  // Check if any of the user's role permissions match the required permissions
-  return state.user.roles.some((role) => role.permissions?.some((permission) => permissions.includes(permission.name)))
+  const grantedPermissions = new Set(state.user.roles.flatMap((role) => role.permissions?.map((permission) => permission.name) ?? []))
+  return permissions.every((permission) => grantedPermissions.has(permission))
 }
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports

@@ -6,14 +6,14 @@ This document provides essential information for AI coding agents working on the
 
 - **Backend:** .NET 10 + FastEndpoints + EF Core (PostgreSQL) + xUnit v3 tests
 - **Frontend:** Next.js 16 + React 19 + Redux Toolkit + Tailwind CSS v4
-- **Solution:** `EasyForNet.sln` at repository root
+- **Solution:** `EasyForNet.slnx` at repository root
 
 ## Build, Test & Lint Commands
 
 ### Backend (.NET)
 ```bash
 # Build entire solution
-dotnet build EasyForNet.sln
+dotnet build EasyForNet.slnx
 
 # Build backend only
 dotnet build src/backend/Source/Backend.csproj

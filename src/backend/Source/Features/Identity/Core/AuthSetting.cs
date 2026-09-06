@@ -15,6 +15,8 @@ public class AuthSetting
 /// </summary>
 public class JwtSetting
 {
+    public const string PlaceholderKey = "a long secret string used to sign jwts. usually set via matching environment variable.";
+
     public string Key { get; set; } = null!;
     public string Issuer { get; set; } = null!;
     public string Audience { get; set; } = null!;

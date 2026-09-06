@@ -33,14 +33,14 @@ public class EmailService(IOptions<EmailSetting> emailSetting) : IEmailService
     /// <inheritdoc/>
     public async Task SendEmailAsync(string to, string subject, string body, bool isHtml = false)
     {
-        var smtpClient = new SmtpClient(_emailSetting.SmtpServer)
+        using var smtpClient = new SmtpClient(_emailSetting.SmtpServer)
         {
             Port = _emailSetting.SmtpPort,
             Credentials = new NetworkCredential(_emailSetting.SmtpUsername, _emailSetting.SmtpPassword),
             EnableSsl = true,
         };
 
-        var mailMessage = new MailMessage
+        using var mailMessage = new MailMessage
         {
             From = new MailAddress(_emailSetting.SenderEmail, _emailSetting.SenderName),
             Subject = subject,

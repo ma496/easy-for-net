@@ -9,6 +9,7 @@ import { useRef } from 'react'
 import { ImagePreview } from './image-preview'
 import { useSignoutMutation } from '@/store/api/identity'
 import { apiErrorAlert } from '@/lib/utils'
+import Image from 'next/image'
 
 /**
  * Header dropdown that shows the signed-in user avatar, profile/change-password links, and a sign-out action that hits the logout API and redirects to the sign-in page.
@@ -43,23 +44,17 @@ export const NavUser = () => {
   }
 
   return (
-    <div className="dropdown w-9 h-9">
+    <div className="dropdown h-9 w-9">
       <Dropdown
         ref={dropdownRef}
         placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`}
         btnClassName="block w-9 h-9 p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60"
         button={
-          <div className="w-5 h-5 rounded-full overflow-hidden">
+          <div className="h-5 w-5 overflow-hidden rounded-full">
             {user?.image ? (
-              <ImagePreview
-                imageName={user.image}
-                alt="userProfile"
-                className="object-cover saturate-50 group-hover:saturate-100"
-                fallback={<User className="w-5 h-5" />}
-                objectFit="cover"
-              />
+              <ImagePreview imageName={user.image} alt="userProfile" className="object-cover saturate-50 group-hover:saturate-100" fallback={<User className="h-5 w-5" />} objectFit="cover" />
             ) : (
-              <User className="w-5 h-5" />
+              <User className="h-5 w-5" />
             )}
           </div>
         }
@@ -67,17 +62,17 @@ export const NavUser = () => {
         <ul className="w-57.5 py-0! font-semibold text-dark dark:text-white-light/90">
           <li>
             <div className="flex items-center px-4 py-4">
-              <div className="h-9 w-9 rounded-full overflow-hidden">
+              <div className="h-9 w-9 overflow-hidden rounded-full">
                 {user?.image ? (
                   <ImagePreview
                     imageName={user.image}
                     alt="userProfile"
                     className="object-cover saturate-50 group-hover:saturate-100"
-                    fallback={<img className="h-full w-full object-cover" src="/assets/images/default-avatar.svg" alt="userProfile" />}
+                    fallback={<Image className="h-full w-full object-cover" src="/assets/images/default-avatar.svg" alt="user profile" width={40} height={40} />}
                     objectFit="cover"
                   />
                 ) : (
-                  <img className="h-full w-full object-cover" src="/assets/images/default-avatar.svg" alt="userProfile" />
+                  <Image className="h-full w-full object-cover" src="/assets/images/default-avatar.svg" alt="user profile" width={40} height={40} />
                 )}
               </div>
               <div className="truncate ltr:pl-4 rtl:pr-4">
@@ -101,14 +96,8 @@ export const NavUser = () => {
             </LocalizedLink>
           </li>
           <li className="cursor-pointer border-t border-white-light dark:border-white-light/10">
-            <a
-              className="py-3! text-danger"
-              onClick={signoutAction}>
-              {isSigningOut ? (
-                <Loader className="h-4.5 w-4.5 shrink-0 rotate-90 ltr:mr-2 rtl:ml-2" />
-              ) : (
-                <LogOut className="h-4.5 w-4.5 shrink-0 rotate-90 ltr:mr-2 rtl:ml-2" />
-              )}
+            <a className="py-3! text-danger" onClick={signoutAction}>
+              {isSigningOut ? <Loader className="h-4.5 w-4.5 shrink-0 rotate-90 ltr:mr-2 rtl:ml-2" /> : <LogOut className="h-4.5 w-4.5 shrink-0 rotate-90 ltr:mr-2 rtl:ml-2" />}
               {t('page.auth.signout')}
             </a>
           </li>
@@ -117,4 +106,3 @@ export const NavUser = () => {
     </div>
   )
 }
-

@@ -51,6 +51,15 @@ dotnet tool restore
 dotnet build
 ```
 
+Production deployments should apply migrations explicitly before starting the API:
+
+```bash
+dotnet ef database update --project src/backend/Source/Backend.csproj
+```
+
+Automatic migrations remain enabled for Development and Testing. Set
+`Database:ApplyMigrationsOnStartup` explicitly if a different environment needs that behavior.
+
 ## Change Connection Strings
 
 Go to `{name}/src/backend/Source` directory. By default, the EasyForNet sets up connection strings for PostgreSQL in the `appsettings.json`, `appsettings.Development.json` and `appsettings.Testing.json` files. To change the connection strings, follow these steps:

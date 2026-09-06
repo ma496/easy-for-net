@@ -12,7 +12,7 @@ internal class Program
     /// <summary>
     /// Processes command-line arguments, parses them and invokes the appropriate code generator.
     /// </summary>
-    static async Task Main(string[] args)
+    static async Task<int> Main(string[] args)
     {
         try
         {
@@ -22,27 +22,28 @@ internal class Program
                 Console.WriteLine("-------------");
                 Console.WriteLine("\nUsage:");
                 ShowHelp();
-                return;
+                return 0;
             }
             if (args.Length == 1 && (args[0] == "--help" || args[0] == "-h"))
             {
                 Console.WriteLine("Usage:");
                 ShowHelp();
-                return;
+                return 0;
             }
             if (args.Length == 2 && (args[1] == "--help" || args[1] == "-h"))
             {
                 ShowHelp(args[0]);
-                return;
+                return 0;
             }
             if (args.Length == 1 && (args[0] == "--version" || args[0] == "-v"))
             {
                 Console.WriteLine($"EasyForNet Tool Version v{Helpers.GetVersion()}");
-                return;
+                return 0;
             }
 
             var argument = new Parser().Parse(args);
             await new CodeGenerator().Generate(argument);
+            return 0;
         }
         catch (UserFriendlyException ex)
         {
@@ -52,6 +53,7 @@ internal class Program
             else
                 Console.WriteLine($"Error: {ex.Message}");
             Console.ResetColor();
+            return 1;
         }
         catch (TargetInvocationException ex)
         {
@@ -63,6 +65,7 @@ internal class Program
             else
                 Console.WriteLine($"Error: {ex.InnerException?.Message}");
             Console.ResetColor();
+            return 1;
         }
     }
 

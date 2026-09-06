@@ -6,6 +6,7 @@ import { Pencil, Trash2 } from 'lucide-react'
 import { confirmDeleteAlert } from '@/lib/utils'
 import { useTranslation } from '@/i18n'
 import { useState } from 'react'
+import Image from 'next/image'
 
 /**
  * Interactive client-side showcase component that demonstrates the FileUpload in basic, profile-avatar, and multi-file configurations with their source snippets.
@@ -31,11 +32,7 @@ export const FileUploadExample = () => {
         preview={
           <div className="panel w-105">
             <div className="flex items-center justify-center space-y-3">
-              <FileUpload
-                name="basic-upload"
-                forceDelete={true}
-                maxSizeBytes={2 * 1024 * 1024}
-              />
+              <FileUpload name="basic-upload" forceDelete={true} maxSizeBytes={2 * 1024 * 1024} />
             </div>
           </div>
         }
@@ -55,7 +52,7 @@ export const FileUploadExample = () => {
     <div className="space-y-3">
       <div className="flex items-center justify-center">
         {selectedFileUrl ? (
-          <img src={selectedFileUrl} alt="avatar" className="w-24 h-24 rounded-full object-cover border" />
+          <Image src={selectedFileUrl} alt="avatar" width={96} height={96} unoptimized className="w-24 h-24 rounded-full object-cover border" />
         ) : (
           <div className="w-24 h-24 rounded-full border flex items-center justify-center text-muted">No Image</div>
         )}
@@ -113,7 +110,7 @@ export const FileUploadExample = () => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-center">
                       {selectedFileUrl ? (
-                        <img src={selectedFileUrl} alt="avatar" className="h-24 w-24 rounded-full border object-cover" />
+                        <Image src={selectedFileUrl} alt="avatar" width={96} height={96} unoptimized className="h-24 w-24 rounded-full border object-cover" />
                       ) : (
                         <div className="text-muted flex h-24 w-24 items-center justify-center rounded-full border">No Image</div>
                       )}
@@ -169,12 +166,7 @@ export const FileUploadExample = () => {
 />`}
         preview={
           <div className="panel w-full max-w-150">
-            <MultiFileUpload
-              name="multi-upload"
-              label="Gallery"
-              fileNames={multiFiles}
-              onFilesChanged={setMultiFiles}
-            />
+            <MultiFileUpload name="multi-upload" label="Gallery" fileNames={multiFiles} onFilesChanged={setMultiFiles} />
           </div>
         }
       />

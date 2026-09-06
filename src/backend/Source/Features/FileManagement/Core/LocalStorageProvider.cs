@@ -9,7 +9,25 @@ using Backend.Attributes;
 [NoDirectUse]
 public class LocalStorageProvider(IWebHostEnvironment webHostEnvironment) : IStorageProvider
 {
-    private readonly string _storagePath = Path.Combine(webHostEnvironment.ContentRootPath, "uploads");
+    private readonly string _storagePath = Path.GetFullPath(Path.Combine(webHostEnvironment.ContentRootPath, "uploads"));
+
+    private string GetSafePath(string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName) || fileName != Path.GetFileName(fileName))
+        {
+            throw new ArgumentException("The file name is invalid.", nameof(fileName));
+        }
+
+        var path = Path.GetFullPath(Path.Combine(_storagePath, fileName));
+        var storagePrefix = _storagePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                            + Path.DirectorySeparatorChar;
+        if (!path.StartsWith(storagePrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("The file name is invalid.", nameof(fileName));
+        }
+
+        return path;
+    }
 
     /// <summary>
     /// Creates the uploads directory on disk if it does not already exist.
@@ -29,7 +47,7 @@ public class LocalStorageProvider(IWebHostEnvironment webHostEnvironment) : ISto
     public async Task<string> SaveAsync(Stream stream, string fileName, string contentType)
     {
         EnsureDirectoryExists();
-        var path = Path.Combine(_storagePath, fileName);
+        var path = GetSafePath(fileName);
         await using var fileStream = new FileStream(path, FileMode.Create);
         await stream.CopyToAsync(fileStream);
         return fileName;
@@ -41,7 +59,7 @@ public class LocalStorageProvider(IWebHostEnvironment webHostEnvironment) : ISto
     /// </summary>
     public Task<Stream?> GetAsync(string fileName)
     {
-        var path = Path.Combine(_storagePath, fileName);
+        var path = GetSafePath(fileName);
         if (!File.Exists(path))
         {
             return Task.FromResult<Stream?>(null);
@@ -55,7 +73,7 @@ public class LocalStorageProvider(IWebHostEnvironment webHostEnvironment) : ISto
     /// </summary>
     public Task DeleteAsync(string fileName)
     {
-        var path = Path.Combine(_storagePath, fileName);
+        var path = GetSafePath(fileName);
         if (File.Exists(path))
         {
             File.Delete(path);
@@ -69,7 +87,7 @@ public class LocalStorageProvider(IWebHostEnvironment webHostEnvironment) : ISto
     /// </summary>
     public bool Exists(string fileName)
     {
-        var path = Path.Combine(_storagePath, fileName);
+        var path = GetSafePath(fileName);
         return File.Exists(path);
     }
 }

@@ -1,11 +1,13 @@
 namespace Backend.Features.Notifications.Endpoints.Notifications;
 
+using Backend.Features.Identity.Core;
 using Microsoft.EntityFrameworkCore;
 
 /// <summary>
 /// GET endpoint that returns the distinct set of notification group names used for filtering in the UI.
 /// </summary>
-sealed class NotificationGetGroupsEndpoint(AppDbContext dbContext) : EndpointWithoutRequest<NotificationGetGroupsResponse>
+sealed class NotificationGetGroupsEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService)
+    : EndpointWithoutRequest<NotificationGetGroupsResponse>
 {
     public override void Configure()
     {
@@ -15,9 +17,16 @@ sealed class NotificationGetGroupsEndpoint(AppDbContext dbContext) : EndpointWit
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
+        var userId = currentUserService.GetCurrentUserId();
+        if (!userId.HasValue)
+        {
+            await Send.UnauthorizedAsync(cancellationToken);
+            return;
+        }
+
         var groups = await dbContext.Notifications
             .AsNoTracking()
-            .Where(x => x.Group != null)
+            .Where(x => x.Group != null && (x.UserId == null || x.UserId == userId.Value))
             .Select(x => x.Group!)
             .Distinct()
             .OrderBy(x => x)

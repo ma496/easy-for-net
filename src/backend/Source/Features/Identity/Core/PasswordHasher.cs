@@ -10,6 +10,7 @@ public interface IPasswordHasher
 {
     string HashPassword(string password);
     bool VerifyPassword(string hashedPassword, string providedPassword);
+    bool NeedsRehash(string hashedPassword);
 }
 
 /// <summary>
@@ -20,7 +21,9 @@ public class PasswordHasher : IPasswordHasher
 {
     private const int SaltSize = 16; // 128 bit
     private const int KeySize = 32;  // 256 bit
-    private const int Iterations = 100000;
+    private const int Iterations = 600000;
+    private const int LegacyIterations = 100000;
+    private const string Algorithm = "pbkdf2-sha256";
     private static readonly HashAlgorithmName _hashAlgorithm = HashAlgorithmName.SHA256;
 
     public string HashPassword(string password)
@@ -33,27 +36,41 @@ public class PasswordHasher : IPasswordHasher
             _hashAlgorithm,
             KeySize);
 
-        return $"{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
+        return $"{Algorithm}.{Iterations}.{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hash)}";
     }
 
     public bool VerifyPassword(string hashedPassword, string providedPassword)
     {
-        var parts = hashedPassword.Split('.', 2);
-        if (parts.Length != 2)
+        try
+        {
+            var parts = hashedPassword.Split('.');
+            var isLegacy = parts.Length == 2;
+            if (!isLegacy && (parts.Length != 4 || parts[0] != Algorithm || !int.TryParse(parts[1], out _)))
+            {
+                return false;
+            }
+
+            var iterations = isLegacy ? LegacyIterations : int.Parse(parts[1]);
+            var salt = Convert.FromBase64String(parts[isLegacy ? 0 : 2]);
+            var hash = Convert.FromBase64String(parts[isLegacy ? 1 : 3]);
+
+            var providedHash = Rfc2898DeriveBytes.Pbkdf2(
+                providedPassword,
+                salt,
+                iterations,
+                _hashAlgorithm,
+                KeySize);
+
+            return CryptographicOperations.FixedTimeEquals(hash, providedHash);
+        }
+        catch (FormatException)
         {
             return false;
         }
+    }
 
-        var salt = Convert.FromBase64String(parts[0]);
-        var hash = Convert.FromBase64String(parts[1]);
-
-        var providedHash = Rfc2898DeriveBytes.Pbkdf2(
-            providedPassword,
-            salt,
-            Iterations,
-            _hashAlgorithm,
-            KeySize);
-
-        return CryptographicOperations.FixedTimeEquals(hash, providedHash);
+    public bool NeedsRehash(string hashedPassword)
+    {
+        return !hashedPassword.StartsWith($"{Algorithm}.{Iterations}.", StringComparison.Ordinal);
     }
 }

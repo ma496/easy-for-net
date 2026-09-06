@@ -28,11 +28,16 @@ sealed class UpdateProfileEndpoint(AppDbContext dbContext, ICurrentUserService c
         }
 
         var oldImage = user.Image;
+        var emailChanged = !string.Equals(user.Email, request.Email, StringComparison.OrdinalIgnoreCase);
 
         user.Email = request.Email;
         user.FirstName = request.FirstName;
         user.LastName = request.LastName;
         user.Image = request.Image;
+        if (emailChanged)
+        {
+            user.IsEmailVerified = false;
+        }
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -78,6 +83,9 @@ sealed class UserUpdateProfileValidator : Validator<UserUpdateProfileRequest>
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(100);
         RuleFor(x => x.FirstName).MinimumLength(3).MaximumLength(50).When(x => !string.IsNullOrWhiteSpace(x.FirstName));
         RuleFor(x => x.LastName).MinimumLength(3).MaximumLength(50).When(x => !string.IsNullOrWhiteSpace(x.LastName));
+        RuleFor(x => x.Image)
+            .Must(image => string.IsNullOrWhiteSpace(image) || image == Path.GetFileName(image))
+            .WithMessage("The image file name is invalid.");
     }
 }
 

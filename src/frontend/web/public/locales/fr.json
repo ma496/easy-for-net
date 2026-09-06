@@ -205,7 +205,8 @@
       "message": "Message",
       "status": "Statut",
       "date": "Date",
-      "group": "Groupe"
+      "group": "Groupe",
+      "updated": "Mis à jour"
     },
     "pagination": {
       "showingEntries": "Affichage de ${from} à ${to} sur ${totalRecords} entrées"

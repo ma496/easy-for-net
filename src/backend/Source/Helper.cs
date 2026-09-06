@@ -1,6 +1,8 @@
 namespace Backend;
 
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 
@@ -45,9 +47,18 @@ public static class Helper
             new (ClaimTypes.NameIdentifier, user.Id.ToString()),
             new (ClaimTypes.Name, user.Username),
             new (ClaimTypes.Email, user.Email),
+            new (ClaimConstants.SessionVersion, CreateSessionVersion(user.PasswordHash)),
         };
         claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
         claims.AddRange(permissions.Select(p => new Claim(ClaimConstants.Permission, p)));
         return claims;
+    }
+
+    /// <summary>
+    /// Creates a non-sensitive version identifier that changes whenever the password hash changes.
+    /// </summary>
+    public static string CreateSessionVersion(string passwordHash)
+    {
+        return Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(passwordHash)));
     }
 }
