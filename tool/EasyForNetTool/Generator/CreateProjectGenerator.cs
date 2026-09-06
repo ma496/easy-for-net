@@ -87,6 +87,8 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             CopyFrom($"{backendProjectPath}/Source", $"{backendTargetPath}/Source", "appsettings.json", "appsettings.Development.json");
             CopyFrom($"{backendProjectPath}/Source", $"{backendTargetPath}/Source", "appsettings.json", "appsettings.Testing.json");
             CopyDirectory(webProjectPath, webTargetPath, true);
+            // .env.development is git-ignored in the template, so seed it from the tracked example file
+            CopyFrom(webProjectPath, webTargetPath, ".env.example", ".env.development");
             CopyFiles(versionedTemplateDir, targetPath, ".editorconfig", ".gitignore", "global.json");
             CopyDirectory($"{versionedTemplateDir}/.config", $"{targetPath}/.config", true);
             CopyDirectory($"{versionedTemplateDir}/.vscode", $"{targetPath}/.vscode", true);
