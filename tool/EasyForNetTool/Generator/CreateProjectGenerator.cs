@@ -87,11 +87,10 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             CopyFrom($"{backendProjectPath}/Source", $"{backendTargetPath}/Source", "appsettings.json", "appsettings.Development.json");
             CopyFrom($"{backendProjectPath}/Source", $"{backendTargetPath}/Source", "appsettings.json", "appsettings.Testing.json");
             CopyDirectory(webProjectPath, webTargetPath, true);
-            CopyFiles(versionedTemplateDir, targetPath, ".editorconfig", ".gitignore", ".nvmrc", "AGENTS.md", "global.json");
-            CopyDirectory($"{versionedTemplateDir}/.github", $"{targetPath}/.github", true);
+            CopyFiles(versionedTemplateDir, targetPath, ".editorconfig", ".gitignore", "global.json");
             CopyDirectory($"{versionedTemplateDir}/.config", $"{targetPath}/.config", true);
-            CopyDirectory($"{versionedTemplateDir}/.ai", $"{targetPath}/.ai", true);
             CopyDirectory($"{versionedTemplateDir}/.vscode", $"{targetPath}/.vscode", true);
+            WriteEmbeddedFile("new-project-claude.md", Path.Combine(targetPath, "CLAUDE.md"));
 
             Console.WriteLine("Customizing project files...");
             var (backendProjectName, backendProjectRootNamespace) = Helpers.GetProjectInfo(backendProjectTargetPath);
@@ -133,9 +132,8 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(webTargetPath, "package.json"), "name", kebabCaseProjectName);
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(webTargetPath, "package-lock.json"), "name", kebabCaseProjectName);
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(webTargetPath, "package-lock.json"), "packages..name", kebabCaseProjectName);
-            // update common-rules.md
-            await ReplaceInFile(Path.Combine(targetPath, ".ai/rules/common-rules.md"), @"EasyForNet\.slnx", $@"{pascalCaseProjectName}.slnx");
-            await ReplaceInFile(Path.Combine(targetPath, "AGENTS.md"), @"EasyForNet\.slnx", $@"{pascalCaseProjectName}.slnx");
+            // update CLAUDE.md
+            await ReplaceInFile(Path.Combine(targetPath, "CLAUDE.md"), @"EasyForNet\.slnx", $@"{pascalCaseProjectName}.slnx");
 
             // Cleanup localization files when multiLanguage is false
             if (!argument.MultiLanguage)
@@ -406,6 +404,22 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
                 throw new Exception($"File '{fileName}' does not exist in the source directory '{sourceDirectory}'.");
             }
         }
+    }
+
+    /// <summary>
+    /// Writes a file that is embedded in the tool assembly to the specified target path.
+    /// </summary>
+    /// <param name="resourceFileName">The name of the embedded file, as declared by its logical name.</param>
+    /// <param name="targetFilePath">The full path of the file to create.</param>
+    private static void WriteEmbeddedFile(string resourceFileName, string targetFilePath)
+    {
+        var assembly = typeof(CreateProjectGenerator).Assembly;
+        var resourceName = $"{assembly.GetName().Name}.{resourceFileName}";
+
+        using var stream = assembly.GetManifestResourceStream(resourceName)
+            ?? throw new Exception($"Embedded file '{resourceName}' was not found in the tool package.");
+        using var fileStream = File.Create(targetFilePath);
+        stream.CopyTo(fileStream);
     }
 
     /// <summary>

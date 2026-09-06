@@ -17,6 +17,8 @@
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="" />
+    <!-- Shipped inside the tool and written out as CLAUDE.md when a project is created. -->
+    <EmbeddedResource Include="new-project-claude.md" LogicalName="EasyForNetTool.new-project-claude.md" />
   </ItemGroup>
 
   <ItemGroup>
