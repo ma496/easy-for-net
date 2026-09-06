@@ -8,29 +8,35 @@ using Backend.Features.Identity.Core;
 public class AuthTokenServiceTests(App app) : AppTestsBase(app)
 {
     /// <summary>
-    /// Verifies that <see cref="IAuthTokenService.IsValidRefreshTokenAsync"/> returns true when the refresh token is not expired.
+    /// Verifies that a valid refresh token can be consumed exactly once.
     /// </summary>
     [Fact]
-    public async Task IsValidRefreshTokenAsync_ShouldReturnTrue_WhenTokenIsValid()
+    public async Task ConsumeRefreshTokenAsync_ShouldReturnTrueOnce_WhenTokenIsValid()
     {
         var authTokenService = App.Services.GetRequiredService<IAuthTokenService>();
+        var cancellationToken = TestContext.Current.CancellationToken;
         var token = NewToken(TestUsers.TestUserId, $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(1), $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(1));
-        var savedToken = await authTokenService.SaveTokenAsync(token);
-        var isValid = await authTokenService.IsValidRefreshTokenAsync(new TokenRequest { RefreshToken = savedToken.RefreshToken, UserId = TestUsers.TestUserId.ToString() });
+        await authTokenService.SaveTokenAsync(token);
+        var request = new TokenRequest { RefreshToken = token.RefreshToken, UserId = TestUsers.TestUserId.ToString() };
+        var isValid = await authTokenService.ConsumeRefreshTokenAsync(request, cancellationToken);
+        var replayIsValid = await authTokenService.ConsumeRefreshTokenAsync(request, cancellationToken);
 
         isValid.Should().BeTrue();
+        replayIsValid.Should().BeFalse();
     }
 
     /// <summary>
-    /// Verifies that <see cref="IAuthTokenService.IsValidRefreshTokenAsync"/> returns false when the refresh token has expired.
+    /// Verifies that an expired refresh token cannot be consumed.
     /// </summary>
     [Fact]
-    public async Task IsValidRefreshTokenAsync_ShouldReturnFalse_WhenTokenIsInvalid()
+    public async Task ConsumeRefreshTokenAsync_ShouldReturnFalse_WhenTokenIsInvalid()
     {
         var authTokenService = App.Services.GetRequiredService<IAuthTokenService>();
+        var cancellationToken = TestContext.Current.CancellationToken;
         var token = NewToken(TestUsers.TestUserId, $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(-1), $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(-1));
-        var savedToken = await authTokenService.SaveTokenAsync(token);
-        var isValid = await authTokenService.IsValidRefreshTokenAsync(new TokenRequest { RefreshToken = savedToken.RefreshToken, UserId = TestUsers.TestUserId.ToString() });
+        await authTokenService.SaveTokenAsync(token);
+        var isValid = await authTokenService.ConsumeRefreshTokenAsync(
+            new TokenRequest { RefreshToken = token.RefreshToken, UserId = TestUsers.TestUserId.ToString() }, cancellationToken);
 
         isValid.Should().BeFalse();
     }

@@ -23,29 +23,21 @@ sealed class NotificationMarkAllAsReadEndpoint(AppDbContext dbContext, ICurrentU
             return;
         }
 
-        var userSpecificUnread = await dbContext.Notifications
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        await dbContext.Notifications
             .Where(x => x.UserId == userId.Value && !x.IsRead)
-            .ToListAsync(cancellationToken);
-        foreach (var n in userSpecificUnread)
-            n.IsRead = true;
+            .ExecuteUpdateAsync(setters => setters.SetProperty(notification => notification.IsRead, true), cancellationToken);
 
-        var globalUnread = await dbContext.Notifications
-            .Where(x => x.UserId == null)
-            .Where(x => !dbContext.NotificationVisits
-                .Any(v => v.NotificationId == x.Id && v.UserId == userId.Value))
-            .ToListAsync(cancellationToken);
+        await dbContext.Database.ExecuteSqlInterpolatedAsync($$"""
+            INSERT INTO notifications."NotificationVisits" ("Id", "UserId", "VisitedAt", "NotificationId")
+            SELECT gen_random_uuid(), {{userId.Value}}, NOW(), notification."Id"
+            FROM notifications."Notifications" AS notification
+            WHERE notification."UserId" IS NULL AND notification."IsDeleted" = FALSE
+            ON CONFLICT ("NotificationId", "UserId") DO NOTHING
+            """, cancellationToken);
 
-        foreach (var n in globalUnread)
-        {
-            dbContext.NotificationVisits.Add(new NotificationVisit
-            {
-                NotificationId = n.Id,
-                UserId = userId.Value,
-                VisitedAt = DateTime.UtcNow
-            });
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         await Send.ResponseAsync(new NotificationMarkAllAsReadResponse { Success = true, Message = "All notifications marked as read" }, cancellation: cancellationToken);
     }

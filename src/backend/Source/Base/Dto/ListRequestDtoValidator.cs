@@ -10,8 +10,11 @@ public class ListRequestDtoValidator<TId> : Validator<ListRequestDto<TId>>
     {
         RuleFor(x => x.Page).GreaterThan(0)
             .When(x => !x.All && x.IncludeIds?.Count == 0);
-        RuleFor(x => x.PageSize).GreaterThan(0)
+        RuleFor(x => x.PageSize).InclusiveBetween(1, 100)
             .When(x => !x.All && x.IncludeIds?.Count == 0);
+        RuleFor(x => x.IncludeIds)
+            .Must(ids => ids is null || ids.Count <= 100)
+            .WithMessage("No more than 100 IDs may be requested.");
         RuleFor(x => x.SortDirection).IsInEnum()
             .When(x => !string.IsNullOrWhiteSpace(x.SortField));
     }

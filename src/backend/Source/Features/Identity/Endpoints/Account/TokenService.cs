@@ -14,6 +14,7 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
     private readonly IUserService _userService;
     private readonly IAuthTokenService _authTokenService;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly SigninSetting _signinSetting;
     private readonly int _refreshTokenValidity;
 
     /// <summary>
@@ -22,6 +23,7 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
     /// </summary>
     public TokenService(IUserService userService,
                        IOptions<AuthSetting> authSetting,
+                       IOptions<SigninSetting> signinSetting,
                        IAuthTokenService authTokenService,
                        IHttpContextAccessor httpContextAccessor)
     {
@@ -29,6 +31,7 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
         var authSettingValue = authSetting.Value;
         _authTokenService = authTokenService;
         _httpContextAccessor = httpContextAccessor;
+        _signinSetting = signinSetting.Value;
         _refreshTokenValidity = authSettingValue.RefreshTokenValidity;
 
         Setup(o =>
@@ -99,7 +102,7 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
         if (string.IsNullOrEmpty(req.UserId) || string.IsNullOrEmpty(req.RefreshToken))
             ThrowError(r => r.RefreshToken, "Refresh token is missing or invalid!", StatusCodes.Status401Unauthorized);
 
-        if (!await _authTokenService.IsValidRefreshTokenAsync(req))
+        if (!await _authTokenService.ConsumeRefreshTokenAsync(req))
             ThrowError(r => r.RefreshToken, "Refresh token is invalid!", StatusCodes.Status401Unauthorized);
     }
 
@@ -116,6 +119,10 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
         var user = await _userService.GetByIdAsync(Guid.Parse(request.UserId));
         if (user == null)
             ThrowError(r => r.UserId, "User not found", ErrorCodes.UserNotFound);
+        if (!user.IsActive)
+            ThrowError(r => r.UserId, "User is not active", ErrorCodes.UserNotActive);
+        if (_signinSetting.IsEmailVerificationRequired && !user.IsEmailVerified)
+            ThrowError(r => r.UserId, "Email is not verified", ErrorCodes.EmailNotVerified);
 
         var roles = await _userService.GetUserRolesAsync(user.Id);
         var permissions = await _userService.GetUserPermissionsAsync(user.Id);

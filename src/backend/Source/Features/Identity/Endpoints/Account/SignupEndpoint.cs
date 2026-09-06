@@ -66,7 +66,7 @@ sealed class SignupEndpoint(IUserService userService,
         if (signinSetting.Value.IsEmailVerificationRequired)
         {
             // Generate verification token
-            var token = await tokenService.GenerateTokenAsync(user);
+            var token = await tokenService.GenerateTokenAsync(user, TokenPurpose.EmailVerification);
 
             // Send verification email
             emailBackgroundJobs.Enqueue(user.Email, "Verify Email",

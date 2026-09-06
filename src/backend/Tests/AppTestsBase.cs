@@ -13,17 +13,6 @@ public abstract class AppTestsBase(App app) : TestBase<App>
     protected AppDbContext DbContext => App.Services.GetRequiredService<AppDbContext>();
 
     /// <summary>
-    /// Skips the current test if the shared fixture initialization has failed.
-    /// When the source project throws during startup, this causes all tests in the collection to be skipped.
-    /// </summary>
-    protected override async ValueTask SetupAsync()
-    {
-        if (SharedContextFixture.InitializationError is { } error)
-            Assert.Skip(error);
-        await base.SetupAsync();
-    }
-
-    /// <summary>
     /// Authenticates the HTTP client by setting a Bearer token obtained from the token endpoint.
     /// </summary>
     protected async Task SetAuthTokenAsync(string username = "admin", string password = "Admin#123")

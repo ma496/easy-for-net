@@ -449,7 +449,8 @@
       "title": "Notifications",
       "detail": {
         "title": "Notification Details"
-      }
+      },
+      "viewAll": "View all notifications"
     }
   },
   "notifications": {

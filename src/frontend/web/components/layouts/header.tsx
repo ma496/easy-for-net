@@ -10,6 +10,7 @@ import { Menu } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { NotificationBell } from '@/components/notifications'
 import { useNotificationHub } from '@/hooks'
+import Image from 'next/image'
 
 /**
  * Header is the client-side application top bar that contains the brand logo, mobile sidebar toggle, search box, notification bell, theme changer, language dropdown, and the user navigation menu; it also activates the current horizontal-menu link and subscribes to the notification hub.
@@ -55,7 +56,7 @@ export const Header = () => {
         <div className="relative flex w-full items-center bg-white px-5 py-2.5 dark:bg-black">
           <div className="ms-2 horizontal-logo flex items-center justify-between lg:hidden">
             <LocalizedLink href="/admin" className="flex shrink-0 items-center main-logo">
-              <img className="-ms-1 inline w-8" src="/assets/images/icon.png" alt="logo" />
+              <Image className="-ms-1 inline h-8 w-8" src="/assets/images/icon.png" alt="logo" width={32} height={32} unoptimized priority />
               <span className="ms-1.5 hidden align-middle text-sm font-semibold transition-all duration-300 md:inline dark:text-white-light">{t('brand.name')}</span>
             </LocalizedLink>
             <button
@@ -95,4 +96,3 @@ export const Header = () => {
     </header>
   )
 }
-

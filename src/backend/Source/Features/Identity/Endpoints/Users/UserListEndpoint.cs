@@ -77,6 +77,11 @@ sealed class UserListValidator : Validator<UserListRequest>
     public UserListValidator()
     {
         Include(new ListRequestDtoValidator<Guid>());
+        RuleFor(request => request.SortField)
+            .Must(field => string.IsNullOrWhiteSpace(field) ||
+                           new[] { "Id", "Username", "Email", "FirstName", "LastName", "IsActive", "CreatedAt", "UpdatedAt" }
+                               .Contains(field, StringComparer.OrdinalIgnoreCase))
+            .WithMessage("The sort field is not supported.");
     }
 }
 

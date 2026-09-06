@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using Backend.External.Email;
 using Backend.Features.Identity.Core;
 using Backend.Middleware;
@@ -10,47 +11,41 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Net.Http.Headers;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Backend.Processors;
 
 var bld = WebApplication.CreateBuilder(args);
+if (!bld.Environment.IsDevelopment() &&
+    !bld.Environment.IsEnvironment("Testing") &&
+    bld.Configuration["Auth:Jwt:Key"] == JwtSetting.PlaceholderKey)
+{
+    throw new InvalidOperationException("Auth:Jwt:Key must be supplied through secure configuration outside development and testing.");
+}
+var maximumPayloadSize = bld.Configuration.GetValue<long?>("Payload:MaximumSize") ?? 25 * 1024 * 1024;
+var defaultConnection = bld.Configuration.GetConnectionString("DefaultConnection")
+                        ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.");
+var hangfireConnection = bld.Configuration["Hangfire:Storage:ConnectionString"] ?? defaultConnection;
 
 bld.Services
    .AddFastEndpoints(o => o.SourceGeneratorDiscoveredTypes = DiscoveredTypes.All)
    .SwaggerDocument();
 
-// Add CORS configuration - flexible for development, strict for production
-if (bld.Environment.IsDevelopment())
+bld.Services.AddCors(options =>
 {
-    bld.Services.AddCors(options =>
+    options.AddDefaultPolicy(builder =>
     {
-        options.AddDefaultPolicy(builder =>
-        {
-            builder.SetIsOriginAllowed(_ => true)
-                   .AllowAnyMethod()
-                   .AllowAnyHeader()
-                   .AllowCredentials();
-        });
+        var webSetting = bld.Configuration.GetRequiredSection("Web").Get<WebSetting>()
+                         ?? throw new InvalidOperationException("Web configuration is required.");
+        builder.WithOrigins(webSetting.AllowedDomains())
+               .AllowAnyMethod()
+               .AllowAnyHeader()
+               .AllowCredentials();
     });
-}
-else
-{
-    bld.Services.AddCors(options =>
-    {
-        options.AddDefaultPolicy(builder =>
-        {
-            var webSetting = new WebSetting();
-            bld.Configuration.GetSection("Web").Bind(webSetting);
-
-            builder.WithOrigins(webSetting.AllowedDomains())
-                   .AllowAnyMethod()
-                   .AllowAnyHeader()
-                   .AllowCredentials();
-        });
-    });
-}
+});
 
 bld.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(bld.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(defaultConnection));
 
 bld.Services
     .AddAuthenticationCookie(TimeSpan.FromMinutes(bld.Configuration.GetValue<int>("Auth:AccessTokenValidity")), options =>
@@ -80,7 +75,37 @@ bld.Services
        };
    });
 bld.Services.AddAuthorization();
+bld.Services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
+{
+    options.TokenValidationParameters.ValidateIssuer = true;
+    options.TokenValidationParameters.ValidIssuer = bld.Configuration["Auth:Jwt:Issuer"];
+    options.TokenValidationParameters.ValidateAudience = true;
+    options.TokenValidationParameters.ValidAudience = bld.Configuration["Auth:Jwt:Audience"];
+});
 bld.Services.AddHttpContextAccessor();
+bld.Services.AddProblemDetails();
+bld.Services.AddHealthChecks();
+bld.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+});
+bld.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+    {
+        var key = context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                  ?? context.Connection.RemoteIpAddress?.ToString()
+                  ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 300,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        });
+    });
+});
 
 // configure HanngFire
 bld.Services.AddHangfire(config =>
@@ -89,18 +114,25 @@ bld.Services.AddHangfire(config =>
               .UseSimpleAssemblyNameTypeSerializer()
               .UseRecommendedSerializerSettings()
               .UsePostgreSqlStorage(options =>
-                  options.UseNpgsqlConnection(bld.Configuration.GetConnectionString("DefaultConnection")));
+                  options.UseNpgsqlConnection(hangfireConnection));
     });
 
 bld.Services.AddHangfireServer();
 
 // configure settings
-bld.Services.Configure<PayloadSetting>(bld.Configuration.GetSection("Payload"));
-bld.Services.Configure<WebSetting>(bld.Configuration.GetSection("Web"));
+bld.Services.AddOptions<PayloadSetting>()
+    .Bind(bld.Configuration.GetRequiredSection("Payload"))
+    .Validate(setting => setting.MaximumSize is > 0 and <= 1024L * 1024 * 1024, "Payload maximum size must be between 1 byte and 1 GB.")
+    .ValidateOnStart();
+bld.Services.AddOptions<WebSetting>()
+    .Bind(bld.Configuration.GetRequiredSection("Web"))
+    .Validate(setting => setting.AllowedDomains().Length > 0 && setting.AllowedDomains().All(domain => Uri.TryCreate(domain, UriKind.Absolute, out _)),
+        "Web domains must be valid absolute URLs.")
+    .ValidateOnStart();
 
 // rely on middleware and FormOptions to enforce limits to avoid abrupt connection resets
-bld.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = null);
-bld.Services.Configure<FormOptions>(o => o.MultipartBodyLengthLimit = 1073741824); // 1024 mb
+bld.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = maximumPayloadSize);
+bld.Services.Configure<FormOptions>(o => o.MultipartBodyLengthLimit = maximumPayloadSize);
 
 // configure features
 Helper.AddFeatures(bld.Services, bld.Configuration);
@@ -128,12 +160,27 @@ var app = bld.Build();
 // Run migrations and seed data
 using var scope = app.Services.CreateScope();
 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-dbContext.Database.Migrate();
+var applyMigrationsOnStartup = bld.Configuration.GetValue<bool?>("Database:ApplyMigrationsOnStartup")
+                               ?? (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"));
+if (applyMigrationsOnStartup)
+{
+    dbContext.Database.Migrate();
+}
 var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
 await seeder.SeedAsync();
 
+app.UseForwardedHeaders();
+if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
+{
+    app.UseExceptionHandler();
+    app.UseHsts();
+    app.UseHttpsRedirection();
+}
+
 app.UseCors()
    .UseAuthentication()
+   .UseMiddleware<SessionValidationMiddleware>()
+   .UseRateLimiter()
    .UseAuthorization();
 
 if (app.Environment.IsDevelopment())
@@ -166,8 +213,14 @@ app.UseFastEndpoints(
                    _ => "One or more errors occurred!"
                };
            });
-       })
-   .UseSwaggerGen();
+       });
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwaggerGen();
+}
+
+app.MapHealthChecks("/health").AllowAnonymous();
 
 // Configure Hangfire dashboard after database is ready
 app.UseHangfireDashboard("/hangfire", new DashboardOptions

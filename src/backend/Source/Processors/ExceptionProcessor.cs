@@ -8,7 +8,7 @@ using Npgsql;
 /// <see cref="DbUpdateException"/> to surface PostgreSQL constraint violations as
 /// 400-level errors and treats any other exception as a 500 internal server error.
 /// </summary>
-public class ExceptionProcessor(IWebHostEnvironment env) : IGlobalPostProcessor
+public class ExceptionProcessor(IWebHostEnvironment env, ILogger<ExceptionProcessor> logger) : IGlobalPostProcessor
 {
     /// <summary>
     /// Inspects the request context for an unhandled exception, maps it to an
@@ -25,6 +25,7 @@ public class ExceptionProcessor(IWebHostEnvironment env) : IGlobalPostProcessor
             context.MarkExceptionAsHandled(); //only if handling the exception here.
 
             var ex = (DbUpdateException)context.ExceptionDispatchInfo.SourceException;
+            logger.LogWarning(ex, "Database update failed for {Method} {Path}", context.HttpContext.Request.Method, context.HttpContext.Request.Path);
             context.HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
             context.HttpContext.Response.ContentType = "application/json";
             var error = ex.InnerException is PostgresException pgEx ? GetErrorMessage(pgEx) : (null, ex.Message, ErrorCodes.DatabaseError);
@@ -48,6 +49,7 @@ public class ExceptionProcessor(IWebHostEnvironment env) : IGlobalPostProcessor
             context.MarkExceptionAsHandled(); //only if handling the exception here.
 
             var ex = context.ExceptionDispatchInfo.SourceException;
+            logger.LogError(ex, "Unhandled exception for {Method} {Path}", context.HttpContext.Request.Method, context.HttpContext.Request.Path);
             context.HttpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
             context.HttpContext.Response.ContentType = "application/json";
             var response = new
@@ -61,7 +63,7 @@ public class ExceptionProcessor(IWebHostEnvironment env) : IGlobalPostProcessor
                 {
                     new
                     {
-                        reason = ex.Message,
+                        reason = env.IsDevelopment() ? ex.Message : "An unexpected error occurred.",
                         code = ErrorCodes.InternalServerError,
                         stackTrace = env.IsDevelopment() ? ex.StackTrace : null
                     }

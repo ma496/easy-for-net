@@ -1,7 +1,7 @@
 'use client'
 import { PropsWithChildren, useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { toggleRTL, toggleTheme, toggleMenu, toggleLayout, toggleAnimation, toggleNavbar, toggleSemidark, setUserInfo } from '@/store/slices'
+import { toggleRTL, toggleTheme, setDarkMode, toggleMenu, toggleLayout, toggleAnimation, toggleNavbar, toggleSemidark, setUserInfo } from '@/store/slices'
 import { AppLoading, ServiceUnavailableView } from '@/components/layouts'
 import { i18nConfig, Locale } from '@/i18n'
 import { useLazyGetUserInfoQuery } from './store/api/identity'
@@ -10,6 +10,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { getMatchedAuthUrl } from './auth-urls'
 import { CookieConsentDialog } from '@/components/custom'
 import { useCookieConsent } from '@/hooks'
+import defaultThemeConfig from '@/theme.config'
 
 /**
  * Interactive client-side root component that loads the authenticated user, applies the persisted theme/menu/layout preferences, performs route-level permission checks, and conditionally renders the cookie consent dialog.
@@ -52,34 +53,56 @@ function App({ children }: PropsWithChildren) {
   }, [pathname, authState, isLoadingUserInfo, isServiceUnavailable, router])
 
   useEffect(() => {
-    dispatch(toggleTheme(localStorage.getItem('theme') || themeConfig.theme))
-    dispatch(toggleMenu(localStorage.getItem('menu') || themeConfig.menu))
-    dispatch(toggleLayout(localStorage.getItem('layout') || themeConfig.layout))
-    dispatch(toggleAnimation(localStorage.getItem('animation') || themeConfig.animation))
-    dispatch(toggleNavbar(localStorage.getItem('navbar') || themeConfig.navbar))
-    dispatch(toggleSemidark(localStorage.getItem('semidark') || themeConfig.semidark))
-
-    // Calculate direction based on URL language
-    const pathSegment = pathname.split('/')[1]
-    const lang = i18nConfig.locales.includes(pathSegment as Locale) ? pathSegment : i18nConfig.defaultLocale
-    const currentLang = themeConfig.languageList.find(l => l.code === lang)
-    const direction = currentLang ? (currentLang.isRTL ? 'rtl' : 'ltr') : 'ltr'
-
-    dispatch(toggleRTL(direction))
+    dispatch(toggleTheme(localStorage.getItem('theme') || defaultThemeConfig.theme))
+    dispatch(toggleMenu(localStorage.getItem('menu') || defaultThemeConfig.menu))
+    dispatch(toggleLayout(localStorage.getItem('layout') || defaultThemeConfig.layout))
+    dispatch(toggleAnimation(localStorage.getItem('animation') || defaultThemeConfig.animation))
+    dispatch(toggleNavbar(localStorage.getItem('navbar') || defaultThemeConfig.navbar))
+    dispatch(toggleSemidark(localStorage.getItem('semidark') || defaultThemeConfig.semidark))
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(false)
-  }, [dispatch, themeConfig.theme, themeConfig.menu, themeConfig.layout, themeConfig.rtlClass, themeConfig.animation, themeConfig.navbar, themeConfig.locale, themeConfig.semidark, pathname, themeConfig.languageList])
+  }, [dispatch])
+
+  useEffect(() => {
+    if (isLoading) return
+
+    const applyTheme = () => {
+      const isDark = themeConfig.theme === 'dark' || (themeConfig.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+      dispatch(setDarkMode(isDark))
+      document.body.classList.toggle('dark', isDark)
+    }
+
+    localStorage.setItem('theme', themeConfig.theme)
+    localStorage.setItem('menu', themeConfig.menu)
+    localStorage.setItem('layout', themeConfig.layout)
+    localStorage.setItem('rtlClass', themeConfig.rtlClass)
+    localStorage.setItem('animation', themeConfig.animation)
+    localStorage.setItem('navbar', themeConfig.navbar)
+    localStorage.setItem('semidark', String(themeConfig.semidark))
+    document.documentElement.setAttribute('dir', themeConfig.rtlClass || 'ltr')
+    applyTheme()
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    if (themeConfig.theme === 'system') mediaQuery.addEventListener('change', applyTheme)
+    return () => mediaQuery.removeEventListener('change', applyTheme)
+  }, [dispatch, isLoading, themeConfig.animation, themeConfig.layout, themeConfig.menu, themeConfig.navbar, themeConfig.rtlClass, themeConfig.semidark, themeConfig.theme])
+
+  useEffect(() => {
+    const pathSegment = pathname.split('/')[1]
+    const lang = i18nConfig.locales.includes(pathSegment as Locale) ? pathSegment : i18nConfig.defaultLocale
+    const currentLang = themeConfig.languageList.find((language) => language.code === lang)
+    dispatch(toggleRTL(currentLang?.isRTL ? 'rtl' : 'ltr'))
+  }, [dispatch, pathname, themeConfig.languageList])
 
   return (
     <div
-      className={`${(themeConfig.sidebar && 'toggle-sidebar') || ''} ${themeConfig.menu} ${themeConfig.layout} ${themeConfig.rtlClass
-        } main-section relative font-nunito text-sm font-normal antialiased`}
+      className={`${(themeConfig.sidebar && 'toggle-sidebar') || ''} ${themeConfig.menu} ${themeConfig.layout} ${
+        themeConfig.rtlClass
+      } main-section relative font-nunito text-sm font-normal antialiased`}
     >
       {isServiceUnavailable ? <ServiceUnavailableView /> : isLoading || isLoadingUserInfo ? <AppLoading /> : children}
-      {!isServiceUnavailable && showConsentDialog && !consentLoading && (
-        <CookieConsentDialog isOpen={true} onAccept={accept} onDecline={decline} />
-      )}
+      {!isServiceUnavailable && showConsentDialog && !consentLoading && <CookieConsentDialog isOpen={true} onAccept={accept} onDecline={decline} />}
     </div>
   )
 }

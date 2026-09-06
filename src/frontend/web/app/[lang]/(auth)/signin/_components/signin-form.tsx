@@ -12,10 +12,7 @@ import { setUserInfo } from '@/store/slices'
 import { Button, LocalizedLink } from '@/components/ui'
 import { useLocalizedRouter } from '@/hooks'
 import { apiErrorAlert, successToast } from '@/lib/utils'
-
-function isValidRedirectPath(path: string): boolean {
-  return path.startsWith('/') && !path.startsWith('//') && path !== '/signin'
-}
+import { isValidRedirectPath } from '@/lib/utils/redirect'
 
 /**
  * Interactive client-side form that authenticates a user with username/password and routes them to the appropriate landing page.
@@ -25,8 +22,7 @@ export const SigninForm = () => {
   const router = useLocalizedRouter()
   const { t } = useTranslation()
   const searchParams = useSearchParams()
-  const rawRedirect = searchParams.get('redirect')
-  const redirectTo = rawRedirect ? decodeURIComponent(rawRedirect) : null
+  const redirectTo = searchParams.get('redirect')
 
   const validationSchema = Yup.object().shape({
     username: Yup.string()
@@ -121,22 +117,16 @@ export const SigninForm = () => {
             <div role="alert" className="relative flex items-start gap-3 rounded-lg border border-danger/30 bg-danger-light p-4 text-sm dark:border-danger/40 dark:bg-danger/10">
               <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-danger" />
               <div className="flex-1 space-y-2">
-                <p className="font-semibold text-danger-dark dark:text-danger">{t('page.verifyEmail.notVerifiedTitle')}</p>
+                <p className="text-danger-dark font-semibold dark:text-danger">{t('page.verifyEmail.notVerifiedTitle')}</p>
                 <p className="text-danger-dark/80 dark:text-danger/80">{t('page.verifyEmail.notVerifiedMessage')}</p>
-                <Button
-                  type="button"
-                  className="btn btn-outline-primary"
-                  onClick={handleResendEmail}
-                  disabled={countdown > 0 || isResending}
-                  isLoading={isResending}
-                >
+                <Button type="button" className="btn btn-outline-primary" onClick={handleResendEmail} disabled={countdown > 0 || isResending} isLoading={isResending}>
                   {countdown > 0 ? t('page.verifyEmail.resendWait', { seconds: countdown }) : t('page.verifyEmail.resendButton')}
                 </Button>
               </div>
             </div>
           )}
 
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <div className="flex gap-2">
               <span className="text-sm dark:text-gray-400">{t('page.auth.signin.noAccount')}</span>
               <LocalizedLink href="/signup" className="text-sm text-primary hover:underline dark:text-white">
@@ -156,4 +146,3 @@ export const SigninForm = () => {
     </Formik>
   )
 }
-

@@ -23,42 +23,26 @@ export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
     <div className="fixed inset-x-2 top-14 z-50 w-auto max-w-[calc(100vw-1rem)] rounded-lg border border-gray-200 bg-white shadow-lg sm:absolute sm:inset-x-auto sm:inset-e-0 sm:top-full sm:mt-2 sm:w-80 dark:border-gray-700 dark:bg-gray-800">
       <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2 dark:border-gray-700">
         <h3 className="font-semibold">{t('common.notifications')}</h3>
-        <button
-          onClick={onClose}
-          className="cursor-pointer text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-        >
+        <button onClick={onClose} className="cursor-pointer text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
           ×
         </button>
       </div>
 
-      <Scrollbar
-        className="max-h-96"
-        options={{ suppressScrollX: true }}
-      >
+      <Scrollbar className="max-h-96" options={{ suppressScrollX: true }}>
         {isNotificationsLoading ? (
           <div className="p-4 text-center text-gray-500">{t('common.loading')}</div>
         ) : notifications?.items.length === 0 ? (
           <div className="p-4 text-center text-gray-500">{t('notifications.noNotifications')}</div>
         ) : (
-          notifications?.items.map((notification) => (
-            <NotificationItem
-              key={notification.id}
-              notification={notification}
-            />
-          ))
+          notifications?.items.map((notification) => <NotificationItem key={notification.id} notification={notification} />)
         )}
       </Scrollbar>
 
       <div className="border-t border-gray-200 p-2 text-center dark:border-gray-700">
-        <LocalizedLink
-          href="/admin/notifications"
-          className="text-sm text-primary hover:underline capitalize"
-          onClick={onClose}
-        >
+        <LocalizedLink href="/admin/notifications/list" className="text-sm text-primary capitalize hover:underline" onClick={onClose}>
           {t('common.viewAll')}
         </LocalizedLink>
       </div>
     </div>
   )
 }
-

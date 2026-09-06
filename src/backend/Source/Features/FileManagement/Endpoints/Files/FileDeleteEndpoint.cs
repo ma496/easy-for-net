@@ -12,6 +12,7 @@ public class FileDeleteEndpoint(IFileService fileService) : Endpoint<FileDeleteR
     {
         Delete("{fileName}");
         Group<FileGroup>();
+        Permissions(Allow.File_Delete);
     }
 
     public override async Task HandleAsync(FileDeleteRequest req, CancellationToken ct)
@@ -37,6 +38,9 @@ public class FileDeleteRequestValidator : Validator<FileDeleteRequest>
 {
     public FileDeleteRequestValidator()
     {
-        RuleFor(x => x.FileName).NotEmpty();
+        RuleFor(x => x.FileName)
+            .NotEmpty()
+            .Must(fileName => fileName == Path.GetFileName(fileName))
+            .WithMessage("The file name is invalid.");
     }
 }

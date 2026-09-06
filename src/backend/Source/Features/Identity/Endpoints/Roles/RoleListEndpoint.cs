@@ -63,6 +63,11 @@ sealed class RoleListValidator : Validator<RoleListRequest>
     public RoleListValidator()
     {
         Include(new ListRequestDtoValidator<Guid>());
+        RuleFor(request => request.SortField)
+            .Must(field => string.IsNullOrWhiteSpace(field) ||
+                           new[] { "Id", "Name", "Description", "CreatedAt", "UpdatedAt" }
+                               .Contains(field, StringComparer.OrdinalIgnoreCase))
+            .WithMessage("The sort field is not supported.");
     }
 }
 

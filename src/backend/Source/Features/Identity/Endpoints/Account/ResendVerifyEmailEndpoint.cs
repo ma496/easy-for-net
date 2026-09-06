@@ -2,6 +2,7 @@ namespace Backend.Features.Identity.Endpoints.Account;
 
 using Backend.External.Email;
 using Backend.Features.Identity.Core;
+using Backend.Features.Identity.Core.Entities;
 using Backend.Settings;
 using Microsoft.Extensions.Options;
 
@@ -46,7 +47,7 @@ sealed class ResendVerifyEmailEndpoint(IUserService userService,
         }
 
         // Generate verification token
-        var token = await tokenService.GenerateTokenAsync(user);
+        var token = await tokenService.GenerateTokenAsync(user, TokenPurpose.EmailVerification);
 
         // Send verification email
         emailBackgroundJobs.Enqueue(user.Email, "Verify Email",

@@ -43,6 +43,9 @@ public class FileGetValidator : Validator<FileGetRequest>
 {
     public FileGetValidator()
     {
-        RuleFor(x => x.FileName).NotEmpty();
+        RuleFor(x => x.FileName)
+            .NotEmpty()
+            .Must(fileName => fileName == Path.GetFileName(fileName))
+            .WithMessage("The file name is invalid.");
     }
 }

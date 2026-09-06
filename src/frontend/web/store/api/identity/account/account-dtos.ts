@@ -16,8 +16,8 @@ export interface GetUserInfoResponse {
   id: string
   username: string
   email: string
-  firstName: string
-  lastName: string
+  firstName?: string
+  lastName?: string
   image?: string
   roles: GetUserInfoRole[]
 }
@@ -41,8 +41,8 @@ export interface GetUserProfileResponse {
   id: string
   username: string
   email: string
-  firstName: string
-  lastName: string
+  firstName?: string
+  lastName?: string
   image?: string
 }
 
@@ -74,8 +74,8 @@ export interface ResetPasswordRequest extends RequestBase {
 export interface SignupRequest extends RequestBase {
   username: string
   email: string
-  password?: string
-  confirmPassword?: string
+  password: string
+  confirmPassword: string
 }
 
 /** Response from the signup endpoint, indicating whether email verification must be completed before login. */
@@ -86,6 +86,8 @@ export interface SignupResponse {
 /** Request body for the login (/account/token) endpoint, supplying username and password. */
 export interface TokenRequest extends RequestBase {
   username: string
+  isEmail?: boolean
+  email?: string
   password: string
 }
 
@@ -108,8 +110,8 @@ export interface UpdateProfileRequest extends RequestBase {
 export interface UpdateProfileResponse {
   id: string
   email: string
-  firstName: string
-  lastName: string
+  firstName?: string
+  lastName?: string
   image?: string
 }
 

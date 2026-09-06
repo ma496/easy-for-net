@@ -90,7 +90,14 @@ public class UserService(AppDbContext dbContext, IPasswordHasher passwordHasher)
 
     public async Task<bool> ValidatePasswordAsync(User user, string password)
     {
-        return await Task.FromResult(passwordHasher.VerifyPassword(user.PasswordHash, password));
+        var isValid = passwordHasher.VerifyPassword(user.PasswordHash, password);
+        if (isValid && passwordHasher.NeedsRehash(user.PasswordHash))
+        {
+            user.PasswordHash = passwordHasher.HashPassword(password);
+            await dbContext.SaveChangesAsync();
+        }
+
+        return isValid;
     }
 
     public async Task<List<string>> GetUserRolesAsync(Guid userId)

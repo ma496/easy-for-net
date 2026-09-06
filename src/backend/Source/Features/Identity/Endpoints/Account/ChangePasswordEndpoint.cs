@@ -8,7 +8,8 @@ using Backend.Features.Identity.Core;
 /// </summary>
 sealed class ChangePasswordEndpoint(AppDbContext dbContext,
                                     ICurrentUserService currentUserService,
-                                    IUserService userService)
+                                    IUserService userService,
+                                    IAuthTokenService authTokenService)
     : Endpoint<ChangePasswordRequest, EmptyResponse>
 {
     public override void Configure()
@@ -33,6 +34,7 @@ sealed class ChangePasswordEndpoint(AppDbContext dbContext,
             return;
         }
         await userService.UpdatePasswordAsync(user, request.NewPassword);
+        await authTokenService.RevokeAllAsync(user.Id, cancellationToken);
         await Send.OkAsync(cancellationToken);
     }
 }

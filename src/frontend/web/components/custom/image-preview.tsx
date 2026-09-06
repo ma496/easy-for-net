@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import { useFileGetQuery } from '@/store/api/file-management'
 import { cn } from '@/lib/utils'
+import Image from 'next/image'
 
 /**
  * Props for the {@link ImagePreview} component, providing the image filename, alt text, optional fallback element, and object-fit style.
@@ -16,21 +17,12 @@ interface ImagePreviewProps {
 }
 
 /**
- * Client-side component that fetches a binary image blob by filename, creates a temporary object URL, and renders an `<img>` (with optional fallback) while cleaning up the URL on unmount or change.
+ * Client-side component that fetches a binary image blob by filename, creates a temporary object URL, and renders it with an optional fallback while cleaning up the URL on unmount or change.
  */
-export const ImagePreview = ({
-  imageName,
-  alt = 'Image Preview',
-  className,
-  fallback,
-  objectFit = 'contain',
-}: ImagePreviewProps) => {
+export const ImagePreview = ({ imageName, alt = 'Image Preview', className, fallback, objectFit = 'contain' }: ImagePreviewProps) => {
   const [imageUrl, setImageUrl] = useState<string | undefined>()
 
-  const { data: blob, isSuccess } = useFileGetQuery(
-    { fileName: imageName },
-    { skip: !imageName }
-  )
+  const { data: blob, isSuccess } = useFileGetQuery({ fileName: imageName }, { skip: !imageName })
 
   useEffect(() => {
     let url: string | undefined
@@ -47,18 +39,11 @@ export const ImagePreview = ({
     }
   }, [blob, isSuccess, imageName])
 
-  if (!isSuccess && !imageUrl) {
+  if (!imageUrl) {
     return <>{fallback}</>
   }
 
-  return (
-    <img
-      src={imageUrl}
-      alt={alt}
-      className={cn('h-full w-full', className)}
-      style={{ objectFit }}
-    />
-  )
+  return <Image src={imageUrl} alt={alt} width={1} height={1} unoptimized className={cn('h-full w-full', className)} style={{ objectFit }} />
 }
 
 ImagePreview.displayName = 'ImagePreview'

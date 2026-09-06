@@ -67,18 +67,18 @@
 ## Backend
 
 **Location:** `src/backend`
-**Solution File:** `EasyForNet.sln`
+**Solution File:** `EasyForNet.slnx`
 
 ### Build
 Run from the root of the repository or `src/backend`:
 ```powershell
-dotnet build src/backend/EasyForNet.sln
+dotnet build EasyForNet.slnx
 ```
 
 ### Test
 Run from the root of the repository or `src/backend`:
 ```powershell
-dotnet test src/backend/EasyForNet.sln
+dotnet test EasyForNet.slnx
 ```
 
 ## Frontend

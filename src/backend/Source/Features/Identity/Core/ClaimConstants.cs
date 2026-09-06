@@ -6,4 +6,5 @@ namespace Backend.Features.Identity.Core;
 public static class ClaimConstants
 {
     public const string Permission = "permission";
+    public const string SessionVersion = "session_version";
 }

@@ -47,8 +47,8 @@ const initialState: ThemeConfigState = {
 /**
  * Theme/layout configuration slice managing dark mode, menu style, layout,
  * RTL direction, page animations, navbar style, sidebar visibility, and
- * the supported language list. Reducers also persist values to
- * localStorage and apply DOM side effects (e.g. toggling body class).
+ * the supported language list. Browser persistence and DOM updates are
+ * handled by the app component so reducers remain deterministic.
  */
 export const themeConfigSlice = createSlice({
   name: 'theme',
@@ -56,56 +56,39 @@ export const themeConfigSlice = createSlice({
   reducers: {
     toggleTheme(state, { payload }) {
       payload = payload || state.theme // light | dark | system
-      localStorage.setItem('theme', payload)
       state.theme = payload
       if (payload === 'light') {
         state.isDarkMode = false
       } else if (payload === 'dark') {
         state.isDarkMode = true
-      } else if (payload === 'system') {
-        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          state.isDarkMode = true
-        } else {
-          state.isDarkMode = false
-        }
       }
-
-      if (state.isDarkMode) {
-        document.querySelector('body')?.classList.add('dark')
-      } else {
-        document.querySelector('body')?.classList.remove('dark')
-      }
+    },
+    setDarkMode(state, { payload }) {
+      state.isDarkMode = Boolean(payload)
     },
     toggleMenu(state, { payload }) {
       payload = payload || state.menu // vertical, collapsible-vertical, horizontal
-      localStorage.setItem('menu', payload)
       state.menu = payload
     },
     toggleLayout(state, { payload }) {
       payload = payload || state.layout // full, boxed-layout
-      localStorage.setItem('layout', payload)
       state.layout = payload
     },
     toggleRTL(state, { payload }) {
       payload = payload || state.rtlClass // rtl, ltr
-      localStorage.setItem('rtlClass', payload)
       state.rtlClass = payload
-      document.querySelector('html')?.setAttribute('dir', state.rtlClass || 'ltr')
     },
     toggleAnimation(state, { payload }) {
       payload = payload || state.animation // animate__fadeIn, animate__fadeInDown, animate__fadeInUp, animate__fadeInLeft, animate__fadeInRight, animate__slideInDown, animate__slideInLeft, animate__slideInRight, animate__zoomIn
       payload = payload?.trim()
-      localStorage.setItem('animation', payload)
       state.animation = payload
     },
     toggleNavbar(state, { payload }) {
       payload = payload || state.navbar // navbar-sticky, navbar-floating, navbar-static
-      localStorage.setItem('navbar', payload)
       state.navbar = payload
     },
     toggleSemidark(state, { payload }) {
       payload = payload === true || payload === 'true' ? true : false
-      localStorage.setItem('semidark', payload)
       state.semidark = payload
     },
     toggleSidebar(state) {
@@ -117,4 +100,4 @@ export const themeConfigSlice = createSlice({
   },
 })
 
-export const { toggleTheme, toggleMenu, toggleLayout, toggleRTL, toggleAnimation, toggleNavbar, toggleSemidark, toggleSidebar, resetToggleSidebar } = themeConfigSlice.actions
+export const { toggleTheme, setDarkMode, toggleMenu, toggleLayout, toggleRTL, toggleAnimation, toggleNavbar, toggleSemidark, toggleSidebar, resetToggleSidebar } = themeConfigSlice.actions

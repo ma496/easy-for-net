@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { hasAuthCookie } from '@/lib/utils'
+import { hasAuthCookie } from '@/lib/utils/authentication-and-authorization'
 import { isAuthRequired } from './auth-urls'
 import { i18nConfig } from './i18n'
 import { match as matchLocale } from '@formatjs/intl-localematcher'
@@ -32,9 +32,7 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // 1. Localization Logic
-  const pathnameIsMissingLocale = i18nConfig.locales.every(
-    (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
-  )
+  const pathnameIsMissingLocale = i18nConfig.locales.every((locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`)
 
   let response: NextResponse | undefined
   let currentLocale: string
@@ -59,8 +57,8 @@ export async function proxy(request: NextRequest) {
 
     // Check if it's default locale in URL (e.g. /en/...) and redirect to prefix-less if needed
     if (segment === i18nConfig.defaultLocale) {
-      const newPathname = pathname.replace(`/${i18nConfig.defaultLocale}`, '') || '/';
-      return NextResponse.redirect(new URL(newPathname, request.url));
+      const newPathname = pathname.replace(`/${i18nConfig.defaultLocale}`, '') || '/'
+      return NextResponse.redirect(new URL(newPathname, request.url))
     }
   }
 

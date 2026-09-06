@@ -2,17 +2,18 @@ namespace Backend.Features.Identity.Core;
 
 using Backend.Attributes;
 using Backend.Features.Identity.Core.Entities;
+using System.Security.Cryptography;
+using System.Text;
 
 /// <summary>
 /// Manages short-lived, single-use tokens (email verification, password reset, etc.) for <see cref="User"/> accounts.
 /// </summary>
 public interface ITokenService
 {
-    Task<Token> GenerateTokenAsync(User user);
-    Task<bool> ValidateTokenAsync(string token);
+    Task<Token> GenerateTokenAsync(User user, TokenPurpose purpose);
     bool ValidateToken(Token token);
-    Task UsedTokenAsync(Token token);
-    Task<Token?> GetTokenAsync(string token);
+    Task<bool> UseTokenAsync(Token token, CancellationToken cancellationToken = default);
+    Task<Token?> GetTokenAsync(string token, TokenPurpose purpose, CancellationToken cancellationToken = default);
     Task DeleteTokenAsync(Token token);
 }
 
@@ -22,19 +23,26 @@ public interface ITokenService
 [NoDirectUse]
 public class TokenService(AppDbContext dbContext) : ITokenService
 {
-    public async Task<Token> GenerateTokenAsync(User user)
+    public async Task<Token> GenerateTokenAsync(User user, TokenPurpose purpose)
     {
-        var token = new Token { Value = Guid.NewGuid().ToString(), Expiry = DateTime.UtcNow.AddMinutes(15), UserId = user.Id };
+        var rawValue = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+        var token = new Token
+        {
+            Value = HashToken(rawValue),
+            Expiry = DateTime.UtcNow.AddMinutes(15),
+            UserId = user.Id,
+            Purpose = purpose
+        };
         dbContext.Tokens.Add(token);
         await dbContext.SaveChangesAsync();
-        return token;
-    }
-
-    public async Task<bool> ValidateTokenAsync(string token)
-    {
-        return await dbContext
-                     .Tokens
-                     .AnyAsync(t => !t.IsUsed && t.Value == token && t.Expiry > DateTime.UtcNow);
+        return new Token
+        {
+            Id = token.Id,
+            Value = rawValue,
+            Expiry = token.Expiry,
+            UserId = token.UserId,
+            Purpose = token.Purpose
+        };
     }
 
     public bool ValidateToken(Token token)
@@ -42,21 +50,28 @@ public class TokenService(AppDbContext dbContext) : ITokenService
         return !token.IsUsed && token.Expiry > DateTime.UtcNow;
     }
 
-    public async Task UsedTokenAsync(Token token)
+    public async Task<bool> UseTokenAsync(Token token, CancellationToken cancellationToken = default)
     {
-        token.IsUsed = true;
-        dbContext.Tokens.Update(token);
-        await dbContext.SaveChangesAsync();
+        var updated = await dbContext.Tokens
+            .Where(item => item.Id == token.Id && !item.IsUsed && item.Expiry > DateTime.UtcNow)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(item => item.IsUsed, true), cancellationToken);
+        return updated == 1;
     }
 
-    public async Task<Token?> GetTokenAsync(string token)
+    public async Task<Token?> GetTokenAsync(string token, TokenPurpose purpose, CancellationToken cancellationToken = default)
     {
-        return await dbContext.Tokens.FirstOrDefaultAsync(t => t.Value == token);
+        return await dbContext.Tokens
+            .FirstOrDefaultAsync(t => t.Value == HashToken(token) && t.Purpose == purpose, cancellationToken);
     }
 
     public async Task DeleteTokenAsync(Token token)
     {
         dbContext.Tokens.Remove(token);
         await dbContext.SaveChangesAsync();
+    }
+
+    private static string HashToken(string token)
+    {
+        return Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
     }
 }

@@ -10,6 +10,7 @@ import * as Yup from 'yup'
 import { Formik, Form } from 'formik'
 import { useTranslation } from '@/i18n'
 import { apiErrorAlert, confirmDeleteAlert, successToast } from '@/lib/utils'
+import Image from 'next/image'
 
 /**
  * Builds a Yup validation schema for the update-profile form using the supplied translation function for error messages.
@@ -22,9 +23,7 @@ const createValidationSchema = (t: (key: string, params?: Record<string, string 
       otherwise: (schema) => schema.optional(),
     }),
     lastName: Yup.string().optional(),
-    email: Yup.string()
-      .required(t('validation.required'))
-      .email(t('validation.invalidEmail')),
+    email: Yup.string().required(t('validation.required')).email(t('validation.invalidEmail')),
     image: Yup.string().optional(),
   })
 }
@@ -86,6 +85,7 @@ export const UpdateProfile = () => {
               name="profile-image"
               accept="image/*"
               maxSizeBytes={10 * 1024 * 1024}
+              forceDelete={false}
               fileName={values.image}
               onUploaded={(res) => {
                 setFieldValue('image', res.fileName)
@@ -97,11 +97,7 @@ export const UpdateProfile = () => {
               {({ open, isUploading, isDeleting, deleteFile, selectedFileUrl }) => (
                 <div className="flex flex-col items-center gap-4">
                   <div className="h-24 w-24 overflow-hidden rounded-full">
-                    <img
-                      src={selectedFileUrl || '/assets/images/default-avatar.svg'}
-                      alt={t('page.profile.altImage')}
-                      className="h-full w-full object-cover"
-                    />
+                    <Image src={selectedFileUrl || '/assets/images/default-avatar.svg'} alt={t('page.profile.altImage')} width={96} height={96} unoptimized className="h-full w-full object-cover" />
                   </div>
                   <div className="flex gap-2">
                     <IconButton

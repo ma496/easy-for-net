@@ -16,10 +16,7 @@ export const store = configureStore({
     [notificationsSlice.name]: notificationsSlice.reducer,
     [serviceAvailabilitySlice.name]: serviceAvailabilitySlice.reducer,
   },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: false,
-    }).concat(rtkErrorMiddleware, appApi.middleware),
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(rtkErrorMiddleware, appApi.middleware),
   devTools: process.env.NODE_ENV !== 'production',
 })
 

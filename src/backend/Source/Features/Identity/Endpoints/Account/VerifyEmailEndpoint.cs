@@ -1,6 +1,7 @@
 namespace Backend.Features.Identity.Endpoints.Account;
 
 using Backend.Features.Identity.Core;
+using Backend.Features.Identity.Core.Entities;
 
 /// <summary>
 /// Anonymous POST endpoint that marks a user's email as verified after validating the
@@ -18,7 +19,7 @@ sealed class VerifyEmailEndpoint(ITokenService tokenService, IUserService userSe
 
     public override async Task HandleAsync(VerifyEmailRequest request, CancellationToken cancellationToken)
     {
-        var token = await tokenService.GetTokenAsync(request.Token);
+        var token = await tokenService.GetTokenAsync(request.Token, TokenPurpose.EmailVerification, cancellationToken);
         if (token == null || !tokenService.ValidateToken(token))
         {
             ThrowError("Invalid or expired token", ErrorCodes.InvalidToken);
@@ -35,7 +36,10 @@ sealed class VerifyEmailEndpoint(ITokenService tokenService, IUserService userSe
 
         user.IsEmailVerified = true;
         await userService.UpdateAsync(user);
-        await tokenService.UsedTokenAsync(token);
+        if (!await tokenService.UseTokenAsync(token, cancellationToken))
+        {
+            ThrowError("Invalid or expired token", ErrorCodes.InvalidToken);
+        }
 
         await transaction.CommitAsync(cancellationToken);
 

@@ -2,6 +2,7 @@ namespace Backend.Features.Identity.Endpoints.Account;
 
 using Backend.External.Email;
 using Backend.Features.Identity.Core;
+using Backend.Features.Identity.Core.Entities;
 using Backend.Settings;
 using Microsoft.Extensions.Options;
 
@@ -33,7 +34,7 @@ sealed class ForgetPasswordEndpoint(ITokenService tokenService,
         }
 
         // Generate reset token
-        var resetToken = await tokenService.GenerateTokenAsync(user);
+        var resetToken = await tokenService.GenerateTokenAsync(user, TokenPurpose.PasswordReset);
 
         // Send email with reset token
         emailBackgroundJobs.Enqueue(user.Email, "Reset Password",
