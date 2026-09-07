@@ -13,7 +13,7 @@ Consequences to keep in mind when editing:
 
 - Changes under `src/` ship to every newly scaffolded project, so keep the template generic (no project-specific hardcoding).
 - The tool resolves the template by **git tag matching its own version**. `publish-package.sh` enforces this: clean working tree → run tool tests → `dotnet pack` → create/push tag `v$VERSION` → `dotnet nuget push`.
-- `CreateProjectGenerator` copies an explicit list of root files/directories (`.editorconfig`, `.gitignore`, `global.json`, `.github`, `.config`, `.vscode`, …). If a new root-level file should reach generated projects, it must be added to that list.
+- `CreateProjectGenerator` copies an explicit list of root files/directories (`.editorconfig`, `.gitignore`, `global.json`, `.config`, `.vscode`, `.claude` minus the `new-project` and `template-maintenance` skills, and a `CLAUDE.md` written from the embedded `new-project-claude.md`). If a new root-level file should reach generated projects, it must be added to that list. Markdown under `.claude` is rewritten on copy (`Backend.` → the new root namespace, `EasyForNet.slnx` → `<Name>.slnx`), so keep namespace references there in that qualified form.
 - Migrations are deliberately **not** copied into generated projects (`CopyDirectory(..., ["Migrations"])`); new projects run `dotnet ef migrations add Initial` themselves.
 
 ## Commands
@@ -93,3 +93,15 @@ Next.js App Router under `app/[lang]/` — **every route is locale-prefixed**. R
 Client permission checks use the `Allow` map in `allow.ts`, kept in sync with the backend constants. Shared pieces: `components/{custom,ui,layouts,notifications}`, `hooks/` (`use-table-url-state`, `use-localized-router`, `use-debounce`, `use-notification-hub` — polling, not a socket), `lib/utils/` (API error helpers, auth helpers). Navigation and global search entries are declared in `nav-items.ts` and `searchable-items.ts`.
 
 Adding a language means adding it to `i18n/config.ts` and adding `public/locales/<code>.json`; the CLI's `-m false` (default) mode ships English only, so check how the generator filters locale files when changing this.
+
+## Task guides
+
+`.claude/skills/` holds step-by-step guides for the recurring tasks here. Consult the matching one before writing code.
+
+- Cross-cutting: `coding-conventions`
+- API: `backend-feature`, `backend-endpoint`, `backend-entity`, `backend-tests`, `permissions`, `background-jobs`, `file-storage`, `notifications`
+- Web: `rtk-query-api`, `frontend-page`, `frontend-crud`, `ui-component`, `redux-state`, `localization`, `frontend-tests`
+- Spanning both: `api-error-handling`
+- This repository and the CLI: `new-project` (scaffolding), `template-maintenance`
+
+Every skill except those last two ships to generated projects, so keep them generic.

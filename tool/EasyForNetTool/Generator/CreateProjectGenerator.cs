@@ -92,6 +92,9 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             CopyFiles(versionedTemplateDir, targetPath, ".editorconfig", ".gitignore", "global.json");
             CopyDirectory($"{versionedTemplateDir}/.config", $"{targetPath}/.config", true);
             CopyDirectory($"{versionedTemplateDir}/.vscode", $"{targetPath}/.vscode", true);
+            // the new-project and template-maintenance skills describe working on the template
+            // repository itself, so they are of no use inside a generated project
+            CopyDirectory($"{versionedTemplateDir}/.claude", $"{targetPath}/.claude", true, ["new-project", "template-maintenance"]);
             WriteEmbeddedFile("new-project-claude.md", Path.Combine(targetPath, "CLAUDE.md"));
 
             Console.WriteLine("Customizing project files...");
@@ -136,6 +139,10 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(webTargetPath, "package-lock.json"), "packages..name", kebabCaseProjectName);
             // update CLAUDE.md
             await ReplaceInFile(Path.Combine(targetPath, "CLAUDE.md"), @"EasyForNet\.slnx", $@"{pascalCaseProjectName}.slnx");
+            // update the skill guides, which reference the template's namespaces and solution file
+            var claudeSkillsPath = Path.Combine(targetPath, ".claude");
+            await ReplaceInFiles(claudeSkillsPath, $@"{Regex.Escape(backendProjectRootNamespace)}\.", $@"{pascalCaseProjectName}.", ".md");
+            await ReplaceInFiles(claudeSkillsPath, @"EasyForNet\.slnx", $@"{pascalCaseProjectName}.slnx", ".md");
 
             // Cleanup localization files when multiLanguage is false
             if (!argument.MultiLanguage)

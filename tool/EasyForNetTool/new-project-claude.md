@@ -80,3 +80,12 @@ Next.js App Router under `app/[lang]/` — **every route is locale-prefixed**. R
 Client permission checks use the `Allow` map in `allow.ts`, kept in sync with the backend constants. Shared pieces: `components/{custom,ui,layouts,notifications}`, `hooks/` (`use-table-url-state`, `use-localized-router`, `use-debounce`, `use-notification-hub` — polling, not a socket), `lib/utils/` (API error helpers, auth helpers). Navigation and global search entries are declared in `nav-items.ts` and `searchable-items.ts`.
 
 Adding a language means adding it to `i18n/config.ts` and adding `public/locales/<code>.json`. If the project was created without multi-language support, only English is present and `i18n/config.ts`, `i18n/server.ts` and `store/slices/themeConfigSlice.tsx` list `en` alone.
+
+## Task guides
+
+`.claude/skills/` holds step-by-step guides for the recurring tasks in this codebase. Consult the matching one before writing code so new work follows the same shape as the existing features.
+
+- Cross-cutting: `coding-conventions`
+- API: `backend-feature`, `backend-endpoint`, `backend-entity`, `backend-tests`, `permissions`, `background-jobs`, `file-storage`, `notifications`
+- Web: `rtk-query-api`, `frontend-page`, `frontend-crud`, `ui-component`, `redux-state`, `localization`, `frontend-tests`
+- Spanning both: `api-error-handling`
