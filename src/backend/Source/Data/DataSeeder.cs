@@ -49,7 +49,7 @@ public class DataSeeder(IUserService userService,
 
         // admin role
         var adminRole = await roleService.GetByNameAsync("Admin") ??
-            await roleService.CreateAsync(new Role { Default = true, Name = "Admin", Description = "Admin Role" });
+            await roleService.CreateAsync(new Role { SystemCreated = true, Name = "Admin", Description = "Admin Role" });
         var adminPermissions = await permissionService.GetRolePermissionsAsync(adminRole.Id);
         var adminPermissionsToAssign = permissions.Where(p => adminPermissions.All(ap => ap.Name != p.Name)).ToList();
         await roleService.AssignPermissionsAsync(adminRole.Id, [.. adminPermissionsToAssign.Select(p => p.Id)]);
@@ -58,7 +58,7 @@ public class DataSeeder(IUserService userService,
 
         // admin user
         var adminUser = await userService.GetByUsernameAsync("admin") ??
-            await userService.CreateAsync(new User { Default = true, Username = "admin", Email = "admin@example.com", IsEmailVerified = true }, "Admin#123");
+            await userService.CreateAsync(new User { SystemCreated = true, Username = "admin", Email = "admin@example.com", IsEmailVerified = true }, "Admin#123");
         if (!await userService.IsInRoleAsync(adminUser.Id, adminRole.Id))
         {
             await userService.AssignRoleAsync(adminUser.Id, adminRole.Id);
@@ -129,6 +129,6 @@ public class DataSeeder(IUserService userService,
 
         // Public role
         var publicRole = await roleService.GetByNameAsync("Public") ??
-            await roleService.CreateAsync(new Role { Default = true, Name = "Public", Description = "Public Role" });
+            await roleService.CreateAsync(new Role { SystemCreated = true, Name = "Public", Description = "Public Role" });
     }
 }

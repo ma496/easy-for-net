@@ -182,11 +182,11 @@
       "emailNotVerified": "البريد الإلكتروني غير تم التحقق منه",
       "roleNameAlreadyExists": "اسم الدور موجود بالفعل",
       "roleNotFound": "الدور غير موجود",
-      "defaultRolePermissionsCannotBeChanged": "لا يمكن تغيير أذونات الدور الافتراضي",
-      "defaultRoleCannotBeDeleted": "لا يمكن حذف الدور الافتراضي",
-      "defaultRoleCannotBeUpdated": "لا يمكن تحديث الدور الافتراضي",
-      "defaultUserCannotBeDeleted": "لا يمكن حذف المستخدم الافتراضي",
-      "defaultUserCannotBeUpdated": "لا يمكن تحديث المستخدم الافتراضي"
+      "systemCreatedRolePermissionsCannotBeChanged": "لا يمكن تغيير أذونات الدور الذي أنشأه النظام",
+      "systemCreatedRoleCannotBeDeleted": "لا يمكن حذف الدور الذي أنشأه النظام",
+      "systemCreatedRoleCannotBeUpdated": "لا يمكن تحديث الدور الذي أنشأه النظام",
+      "systemCreatedUserCannotBeDeleted": "لا يمكن حذف المستخدم الذي أنشأه النظام",
+      "systemCreatedUserCannotBeUpdated": "لا يمكن تحديث المستخدم الذي أنشأه النظام"
     }
   },
   "table": {

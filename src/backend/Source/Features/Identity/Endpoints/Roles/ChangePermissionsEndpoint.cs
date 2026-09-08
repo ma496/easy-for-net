@@ -27,8 +27,8 @@ sealed class ChangePermissionsEndpoint(IRoleService roleService)
             await Send.NotFoundAsync(cancellationToken);
             return;
         }
-        if (entity.Default)
-            ThrowError("Default role permissions cannot be changed", ErrorCodes.DefaultRolePermissionsCannotBeChanged);
+        if (entity.SystemCreated)
+            ThrowError("System-created role permissions cannot be changed", ErrorCodes.SystemCreatedRolePermissionsCannotBeChanged);
 
         // update role permissions based on request and already assigned permissions
         var permissionsToAssign = request.Permissions.Where(x => !entity.RolePermissions.Any(rp => rp.PermissionId == x)).ToList();

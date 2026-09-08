@@ -4,7 +4,7 @@ using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 
 /// <summary>
-/// This endpoint that handles <c>PUT /roles/{id}</c> to update a role's name and description (refusing default roles).
+/// This endpoint that handles <c>PUT /roles/{id}</c> to update a role's name and description (refusing system-created roles).
 /// </summary>
 sealed class RoleUpdateEndpoint(IRoleService roleService, AppDbContext dbContext)
     : Endpoint<RoleUpdateRequest, RoleUpdateResponse>
@@ -33,8 +33,8 @@ sealed class RoleUpdateEndpoint(IRoleService roleService, AppDbContext dbContext
             await Send.NotFoundAsync(cancellationToken);
             return;
         }
-        if (entity.Default)
-            ThrowError("Default role cannot be updated", ErrorCodes.DefaultRoleCannotBeUpdated);
+        if (entity.SystemCreated)
+            ThrowError("System-created role cannot be updated", ErrorCodes.SystemCreatedRoleCannotBeUpdated);
 
         var requestMapper = new RoleUpdateRequestMapper();
         requestMapper.Update(request, entity);

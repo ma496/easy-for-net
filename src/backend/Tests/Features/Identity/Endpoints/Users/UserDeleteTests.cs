@@ -4,7 +4,7 @@ using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Endpoints.Users;
 
 /// <summary>
-/// Tests for the <see cref="UserDeleteEndpoint"/> covering deletion of users, non-existent users, and protected default users.
+/// Tests for the <see cref="UserDeleteEndpoint"/> covering deletion of users, non-existent users, and protected system-created users.
 /// </summary>
 public class UserDeleteTests(App app) : AppTestsBase(app)
 {
@@ -68,27 +68,27 @@ public class UserDeleteTests(App app) : AppTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that attempting to delete the default admin user returns 400 Bad Request with <see cref="ErrorCodes.DefaultUserCannotBeDeleted"/>.
+    /// Verifies that attempting to delete the system-created admin user returns 400 Bad Request with <see cref="ErrorCodes.SystemCreatedUserCannotBeDeleted"/>.
     /// </summary>
     [Fact]
     public async Task Cannot_Delete_Admin_User()
     {
         await SetAuthTokenAsync();
 
-        // Get the default user (admin from seeder)
+        // Get the system-created user (admin from seeder)
         var userService = App.Services.GetRequiredService<IUserService>();
-        var defaultUser = await userService.GetByUsernameAsync("admin");
-        defaultUser.Should().NotBeNull();
+        var systemCreatedUser = await userService.GetByUsernameAsync("admin");
+        systemCreatedUser.Should().NotBeNull();
 
-        // Try to delete the default user
+        // Try to delete the system-created user
         var (deleteRsp, res) = await App.Client.DELETEAsync<UserDeleteEndpoint, UserDeleteRequest, ProblemDetails>(
             new()
             {
-                Id = defaultUser!.Id
+                Id = systemCreatedUser!.Id
             });
 
         deleteRsp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         res.Errors.Should().ContainSingle();
-        res.Errors.First().Code.Should().Be(ErrorCodes.DefaultUserCannotBeDeleted);
+        res.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedUserCannotBeDeleted);
     }
 }

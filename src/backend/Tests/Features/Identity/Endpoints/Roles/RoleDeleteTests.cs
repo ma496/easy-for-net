@@ -4,7 +4,7 @@ using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Endpoints.Roles;
 
 /// <summary>
-/// Tests for the <see cref="RoleDeleteEndpoint"/> covering deletion of roles, non-existent roles, and protected default roles.
+/// Tests for the <see cref="RoleDeleteEndpoint"/> covering deletion of roles, non-existent roles, and protected system-created roles.
 /// </summary>
 public class RoleDeleteTests(App app) : AppTestsBase(app)
 {
@@ -63,27 +63,27 @@ public class RoleDeleteTests(App app) : AppTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that attempting to delete the default Admin role returns 400 Bad Request with <see cref="ErrorCodes.DefaultRoleCannotBeDeleted"/>.
+    /// Verifies that attempting to delete the system-created Admin role returns 400 Bad Request with <see cref="ErrorCodes.SystemCreatedRoleCannotBeDeleted"/>.
     /// </summary>
     [Fact]
     public async Task Cannot_Delete_Admin_Role()
     {
         await SetAuthTokenAsync();
 
-        // Get a default role (Test role from seeder)
+        // Get a system-created role (Test role from seeder)
         var roleService = App.Services.GetRequiredService<IRoleService>();
-        var defaultRole = await roleService.GetByNameAsync("Admin");
-        defaultRole.Should().NotBeNull();
+        var systemCreatedRole = await roleService.GetByNameAsync("Admin");
+        systemCreatedRole.Should().NotBeNull();
 
-        // Try to delete the default role
+        // Try to delete the system-created role
         var (deleteRsp, res) = await App.Client.DELETEAsync<RoleDeleteEndpoint, RoleDeleteRequest, ProblemDetails>(
             new()
             {
-                Id = defaultRole!.Id
+                Id = systemCreatedRole!.Id
             });
 
         deleteRsp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         res.Errors.Should().ContainSingle();
-        res.Errors.First().Code.Should().Be(ErrorCodes.DefaultRoleCannotBeDeleted);
+        res.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedRoleCannotBeDeleted);
     }
 }

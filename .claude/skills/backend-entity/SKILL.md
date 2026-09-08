@@ -47,7 +47,7 @@ using Backend.Data.Entities.Base;
 /// </summary>
 public class Role : AuditableEntity<Guid>, IHasNormalizedProperties
 {
-    public bool Default { get; set; }
+    public bool SystemCreated { get; set; }
     public string Name { get; set; } = null!;
     public string NameNormalized { get; private set; } = null!;
     public string? Description { get; set; }
@@ -62,7 +62,7 @@ public class Role : AuditableEntity<Guid>, IHasNormalizedProperties
 ```
 
 Conventions: `Guid` keys, non-nullable reference properties initialised with `= null!`,
-collections initialised with `= []`, `Default` marks seeded rows that endpoints refuse to
+collections initialised with `= []`, `SystemCreated` marks seeded rows that endpoints refuse to
 modify or delete.
 
 ## Configuration

@@ -182,11 +182,11 @@
       "emailNotVerified": "ईमेल सत्यापित नहीं है",
       "roleNameAlreadyExists": "भूमिका नाम पहले से मौजूद है",
       "roleNotFound": "भूमिका नहीं मिली",
-      "defaultRolePermissionsCannotBeChanged": "डिफ़ॉल्ट भूमिका अनुमतियां बदली नहीं जा सकतीं",
-      "defaultRoleCannotBeDeleted": "डिफ़ॉल्ट भूमिका हटाई नहीं जा सकती",
-      "defaultRoleCannotBeUpdated": "डिफ़ॉल्ट भूमिका अपडेट नहीं की जा सकती",
-      "defaultUserCannotBeDeleted": "डिफ़ॉल्ट उपयोगकर्ता हटाया नहीं जा सकता",
-      "defaultUserCannotBeUpdated": "डिफ़ॉल्ट उपयोगकर्ता अपडेट नहीं किया जा सकता"
+      "systemCreatedRolePermissionsCannotBeChanged": "सिस्टम द्वारा बनाई गई भूमिका की अनुमतियां बदली नहीं जा सकतीं",
+      "systemCreatedRoleCannotBeDeleted": "सिस्टम द्वारा बनाई गई भूमिका हटाई नहीं जा सकती",
+      "systemCreatedRoleCannotBeUpdated": "सिस्टम द्वारा बनाई गई भूमिका अपडेट नहीं की जा सकती",
+      "systemCreatedUserCannotBeDeleted": "सिस्टम द्वारा बनाया गया उपयोगकर्ता हटाया नहीं जा सकता",
+      "systemCreatedUserCannotBeUpdated": "सिस्टम द्वारा बनाया गया उपयोगकर्ता अपडेट नहीं किया जा सकता"
     }
   },
   "table": {

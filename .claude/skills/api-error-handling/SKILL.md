@@ -34,7 +34,7 @@ Use the other `Send.*` helpers where the situation is not a validation failure:
 `ExceptionProcessor` turns unhandled ones into `internalServerError` with a 500.
 
 New codes go in `src/backend/Source/ErrorHandling/ErrorCodes.cs` as camelCase string constants
-(`usernameAlreadyExists`, `defaultRoleCannotBeDeleted`). Reuse an existing code when it already
+(`usernameAlreadyExists`, `systemCreatedRoleCannotBeDeleted`). Reuse an existing code when it already
 describes the situation — the list is deliberately shared across features.
 
 ## 2. Response shape

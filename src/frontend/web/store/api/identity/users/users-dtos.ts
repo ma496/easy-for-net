@@ -37,6 +37,7 @@ export interface UserGetRequest extends BaseDto<string>, RequestBase {}
 
 /** Response from the get-user endpoint, returning the user's profile, status, roles, and audit fields. */
 export interface UserGetResponse extends GenericAuditableDto<string> {
+  systemCreated: boolean
   username: string
   usernameNormalized: string
   email: string
@@ -58,6 +59,7 @@ export interface UserListResponse extends ListDto<UserListDto> {}
 
 /** Summary representation of a user in list responses, with expanded role objects. */
 export interface UserListDto extends GenericAuditableDto<string> {
+  systemCreated: boolean
   username: string
   usernameNormalized: string
   email: string

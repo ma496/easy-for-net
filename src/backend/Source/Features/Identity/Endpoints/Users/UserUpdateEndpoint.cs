@@ -27,8 +27,8 @@ sealed class UserUpdateEndpoint(IUserService userService)
             await Send.NotFoundAsync(cancellationToken);
             return;
         }
-        if (entity.Default)
-            ThrowError("Default user cannot be updated", ErrorCodes.DefaultUserCannotBeUpdated);
+        if (entity.SystemCreated)
+            ThrowError("System-created user cannot be updated", ErrorCodes.SystemCreatedUserCannotBeUpdated);
 
         var requestMapper = new UserUpdateRequestMapper();
         requestMapper.Update(request, entity);

@@ -37,6 +37,7 @@ export interface RoleGetRequest extends BaseDto<string>, RequestBase { }
 
 /** Response from the get-role endpoint, returning the role's name, description, permissions, assigned user count, and audit fields. */
 export interface RoleGetResponse extends GenericAuditableDto<string> {
+  systemCreated: boolean
   name: string
   nameNormalized: string
   description: string
@@ -52,6 +53,7 @@ export interface RoleListResponse extends ListDto<RoleListDto> { }
 
 /** Summary representation of a role in list responses, including permission ids and assigned user count. */
 export interface RoleListDto extends GenericAuditableDto<string> {
+  systemCreated: boolean
   name: string
   nameNormalized: string
   description: string

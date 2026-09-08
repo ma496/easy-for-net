@@ -182,11 +182,11 @@
       "emailNotVerified": "ای میل کی تصدیق نہیں ہوئی ہے",
       "roleNameAlreadyExists": "کردار کا نام پہلے ہی موجود ہے",
       "roleNotFound": "کردار نہیں ملا",
-      "defaultRolePermissionsCannotBeChanged": "پہلے سے طے شدہ کردار کی اجازتیں تبدیل نہیں کی جا سکتیں",
-      "defaultRoleCannotBeDeleted": "پہلے سے طے شدہ کردار کو حذف نہیں کیا جا سکتا",
-      "defaultRoleCannotBeUpdated": "پہلے سے طے شدہ کردار کو اپ ڈیٹ نہیں کیا جا سکتا",
-      "defaultUserCannotBeDeleted": "پہلے سے طے شدہ صارف کو حذف نہیں کیا جا سکتا",
-      "defaultUserCannotBeUpdated": "پہلے سے طے شدہ صارف کو اپ ڈیٹ نہیں کیا جا سکتا"
+      "systemCreatedRolePermissionsCannotBeChanged": "سسٹم کے بنائے ہوئے کردار کی اجازتیں تبدیل نہیں کی جا سکتیں",
+      "systemCreatedRoleCannotBeDeleted": "سسٹم کا بنایا ہوا کردار حذف نہیں کیا جا سکتا",
+      "systemCreatedRoleCannotBeUpdated": "سسٹم کا بنایا ہوا کردار اپ ڈیٹ نہیں کیا جا سکتا",
+      "systemCreatedUserCannotBeDeleted": "سسٹم کا بنایا ہوا صارف حذف نہیں کیا جا سکتا",
+      "systemCreatedUserCannotBeUpdated": "سسٹم کا بنایا ہوا صارف اپ ڈیٹ نہیں کیا جا سکتا"
     }
   },
   "table": {

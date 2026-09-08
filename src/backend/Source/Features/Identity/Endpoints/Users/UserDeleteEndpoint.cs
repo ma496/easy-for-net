@@ -3,7 +3,7 @@ namespace Backend.Features.Identity.Endpoints.Users;
 using Backend.Features.Identity.Core;
 
 /// <summary>
-/// This endpoint that handles <c>DELETE /users/{id}</c> to remove an existing user (refusing to delete a default user).
+/// This endpoint that handles <c>DELETE /users/{id}</c> to remove an existing user (refusing to delete a system-created user).
 /// </summary>
 sealed class UserDeleteEndpoint(IUserService userService) : Endpoint<UserDeleteRequest, UserDeleteResponse>
 {
@@ -23,8 +23,8 @@ sealed class UserDeleteEndpoint(IUserService userService) : Endpoint<UserDeleteR
             await Send.NotFoundAsync(cancellationToken);
             return;
         }
-        if (entity.Default)
-            ThrowError("Default user cannot be deleted", ErrorCodes.DefaultUserCannotBeDeleted);
+        if (entity.SystemCreated)
+            ThrowError("System-created user cannot be deleted", ErrorCodes.SystemCreatedUserCannotBeDeleted);
 
         // Delete the entity from the db
         await userService.DeleteAsync(request.Id);

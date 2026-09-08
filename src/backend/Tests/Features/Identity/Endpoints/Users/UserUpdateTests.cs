@@ -4,7 +4,7 @@ using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Endpoints.Users;
 
 /// <summary>
-/// Tests for the <see cref="UserUpdateEndpoint"/> covering updating users, non-existent users, and protected default users.
+/// Tests for the <see cref="UserUpdateEndpoint"/> covering updating users, non-existent users, and protected system-created users.
 /// </summary>
 public class UserUpdateTests(App app) : AppTestsBase(app)
 {
@@ -68,15 +68,15 @@ public class UserUpdateTests(App app) : AppTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that updating the default admin user returns 400 Bad Request with <see cref="ErrorCodes.DefaultUserCannotBeUpdated"/>.
+    /// Verifies that updating the system-created admin user returns 400 Bad Request with <see cref="ErrorCodes.SystemCreatedUserCannotBeUpdated"/>.
     /// </summary>
     [Fact]
     public async Task Update_Admin_User_Should_Fail()
     {
         await SetAuthTokenAsync();
 
-        // Get the default user
-        var defaultUser = await App.Services.GetRequiredService<IUserService>()
+        // Get the system-created user
+        var systemCreatedUser = await App.Services.GetRequiredService<IUserService>()
             .Users()
             .FirstAsync(u => u.Username == "admin", cancellationToken: TestContext.Current.CancellationToken);
 
@@ -84,7 +84,7 @@ public class UserUpdateTests(App app) : AppTestsBase(app)
         var (updateRsp, res) = await App.Client.PUTAsync<UserUpdateEndpoint, UserUpdateRequest, ProblemDetails>(
             new()
             {
-                Id = defaultUser.Id,
+                Id = systemCreatedUser.Id,
                 FirstName = "Modified",
                 LastName = "Default",
                 IsActive = false,
@@ -93,6 +93,6 @@ public class UserUpdateTests(App app) : AppTestsBase(app)
 
         updateRsp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         res.Errors.Should().ContainSingle();
-        res.Errors.First().Code.Should().Be(ErrorCodes.DefaultUserCannotBeUpdated);
+        res.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedUserCannotBeUpdated);
     }
 }

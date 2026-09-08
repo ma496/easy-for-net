@@ -25,11 +25,11 @@ public static class ErrorCodes
     public const string EmailNotVerified = "emailNotVerified";
     public const string EmailAlreadyExists = "emailAlreadyExists";
     public const string UsernameAlreadyExists = "usernameAlreadyExists";
-    public const string DefaultRolePermissionsCannotBeChanged = "defaultRolePermissionsCannotBeChanged";
-    public const string DefaultRoleCannotBeDeleted = "defaultRoleCannotBeDeleted";
-    public const string DefaultRoleCannotBeUpdated = "defaultRoleCannotBeUpdated";
-    public const string DefaultUserCannotBeDeleted = "defaultUserCannotBeDeleted";
-    public const string DefaultUserCannotBeUpdated = "defaultUserCannotBeUpdated";
+    public const string SystemCreatedRolePermissionsCannotBeChanged = "systemCreatedRolePermissionsCannotBeChanged";
+    public const string SystemCreatedRoleCannotBeDeleted = "systemCreatedRoleCannotBeDeleted";
+    public const string SystemCreatedRoleCannotBeUpdated = "systemCreatedRoleCannotBeUpdated";
+    public const string SystemCreatedUserCannotBeDeleted = "systemCreatedUserCannotBeDeleted";
+    public const string SystemCreatedUserCannotBeUpdated = "systemCreatedUserCannotBeUpdated";
     public const string RoleNotFound = "roleNotFound";
     public const string RoleNameAlreadyExists = "roleNameAlreadyExists";
 }

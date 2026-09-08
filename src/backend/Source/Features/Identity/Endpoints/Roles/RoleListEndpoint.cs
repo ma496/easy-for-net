@@ -83,6 +83,7 @@ public sealed class RoleListResponse : ListDto<RoleListDto>
 /// </summary>
 public sealed class RoleListDto : AuditableDto<Guid>
 {
+    public bool SystemCreated { get; set; }
     public string Name { get; set; } = null!;
     public string NameNormalized { get; set; } = null!;
     public string? Description { get; set; }

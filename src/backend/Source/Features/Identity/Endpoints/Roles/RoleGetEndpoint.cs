@@ -56,6 +56,7 @@ sealed class RoleGetValidator : Validator<RoleGetRequest>
 /// </summary>
 public sealed class RoleGetResponse : AuditableDto<Guid>
 {
+    public bool SystemCreated { get; set; }
     public string Name { get; set; } = null!;
     public string NameNormalized { get; set; } = null!;
     public string? Description { get; set; }

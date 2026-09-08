@@ -41,7 +41,7 @@ public abstract class AppTestsBase(App app) : TestBase<App>
         {
             user = await userService.CreateAsync(new User
             {
-                Default = true,
+                SystemCreated = true,
                 Username = username,
                 Email = $"{username}@example.com"
             }, password);

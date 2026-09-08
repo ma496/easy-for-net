@@ -32,6 +32,25 @@ public class RoleGetTests(App app) : AppTestsBase(app)
         getRsp.StatusCode.Should().Be(HttpStatusCode.OK);
         getRes.Name.Should().Be(request.Name);
         getRes.Description.Should().Be(request.Description);
+        getRes.SystemCreated.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// Verifies that a role created by the seeder is reported as system-created so the UI can hide its actions.
+    /// </summary>
+    [Fact]
+    public async Task Get_SystemCreated_Role()
+    {
+        await SetAuthTokenAsync();
+
+        var (getRsp, getRes) = await App.Client.GETAsync<RoleGetEndpoint, RoleGetRequest, RoleGetResponse>(
+            new()
+            {
+                Id = TestRoles.AdminRoleId
+            });
+
+        getRsp.StatusCode.Should().Be(HttpStatusCode.OK);
+        getRes.SystemCreated.Should().BeTrue();
     }
 
     /// <summary>

@@ -182,11 +182,11 @@
       "emailNotVerified": "电子邮件未验证",
       "roleNameAlreadyExists": "角色名称已存在",
       "roleNotFound": "角色未找到",
-      "defaultRolePermissionsCannotBeChanged": "无法更改默认角色权限",
-      "defaultRoleCannotBeDeleted": "无法删除默认角色",
-      "defaultRoleCannotBeUpdated": "无法更新默认角色",
-      "defaultUserCannotBeDeleted": "无法删除默认用户",
-      "defaultUserCannotBeUpdated": "无法更新默认用户"
+      "systemCreatedRolePermissionsCannotBeChanged": "无法更改系统创建的角色权限",
+      "systemCreatedRoleCannotBeDeleted": "无法删除系统创建的角色",
+      "systemCreatedRoleCannotBeUpdated": "无法更新系统创建的角色",
+      "systemCreatedUserCannotBeDeleted": "无法删除系统创建的用户",
+      "systemCreatedUserCannotBeUpdated": "无法更新系统创建的用户"
     }
   },
   "table": {

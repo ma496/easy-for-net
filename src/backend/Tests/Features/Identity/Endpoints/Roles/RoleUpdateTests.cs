@@ -4,7 +4,7 @@ using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Endpoints.Roles;
 
 /// <summary>
-/// Tests for the <see cref="RoleUpdateEndpoint"/> covering updating roles, non-existent roles, and protected default roles.
+/// Tests for the <see cref="RoleUpdateEndpoint"/> covering updating roles, non-existent roles, and protected system-created roles.
 /// </summary>
 public class RoleUpdateTests(App app) : AppTestsBase(app)
 {
@@ -55,20 +55,20 @@ public class RoleUpdateTests(App app) : AppTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that updating the default Admin role returns 400 Bad Request with <see cref="ErrorCodes.DefaultRoleCannotBeUpdated"/>.
+    /// Verifies that updating the system-created Admin role returns 400 Bad Request with <see cref="ErrorCodes.SystemCreatedRoleCannotBeUpdated"/>.
     /// </summary>
     [Fact]
     public async Task Update_Admin_Role_Should_Fail()
     {
         await SetAuthTokenAsync();
 
-        // Get the default role ID - assuming you have a way to identify it
-        var defaultRole = await App.Services.GetRequiredService<IRoleService>()
+        // Get the system-created role ID - assuming you have a way to identify it
+        var systemCreatedRole = await App.Services.GetRequiredService<IRoleService>()
             .Roles()
             .FirstAsync(r => r.Name == "Admin", cancellationToken: TestContext.Current.CancellationToken);
 
         var faker = new Faker<RoleUpdateRequest>()
-            .RuleFor(u => u.Id, f => defaultRole.Id)
+            .RuleFor(u => u.Id, f => systemCreatedRole.Id)
             .RuleFor(u => u.Name, f => f.Internet.UserName() + f.UniqueIndex)
             .RuleFor(u => u.Description, f => f.Lorem.Sentence());
         var request = faker.Generate();
@@ -76,6 +76,6 @@ public class RoleUpdateTests(App app) : AppTestsBase(app)
 
         updateRsp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         res.Errors.Should().ContainSingle();
-        res.Errors.First().Code.Should().Be(ErrorCodes.DefaultRoleCannotBeUpdated);
+        res.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedRoleCannotBeUpdated);
     }
 }

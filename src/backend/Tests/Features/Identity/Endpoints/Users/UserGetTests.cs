@@ -40,6 +40,25 @@ public class UserGetTests(App app) : AppTestsBase(app)
         getRsp.StatusCode.Should().Be(HttpStatusCode.OK);
         getRes.Username.Should().Be(request.Username);
         getRes.Email.Should().Be(request.Email);
+        getRes.SystemCreated.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// Verifies that a user created by the seeder is reported as system-created so the UI can hide its actions.
+    /// </summary>
+    [Fact]
+    public async Task Get_SystemCreated_User()
+    {
+        await SetAuthTokenAsync();
+
+        var (getRsp, getRes) = await App.Client.GETAsync<UserGetEndpoint, UserGetRequest, UserGetResponse>(
+            new()
+            {
+                Id = TestUsers.AdminUserId
+            });
+
+        getRsp.StatusCode.Should().Be(HttpStatusCode.OK);
+        getRes.SystemCreated.Should().BeTrue();
     }
 
     /// <summary>

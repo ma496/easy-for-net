@@ -3,7 +3,7 @@ namespace Backend.Features.Identity.Endpoints.Roles;
 using Backend.Features.Identity.Core;
 
 /// <summary>
-/// This endpoint that handles <c>DELETE /roles/{id}</c> to remove an existing role (refusing to delete a default role).
+/// This endpoint that handles <c>DELETE /roles/{id}</c> to remove an existing role (refusing to delete a system-created role).
 /// </summary>
 sealed class RoleDeleteEndpoint(IRoleService roleService) : Endpoint<RoleDeleteRequest, RoleDeleteResponse>
 {
@@ -23,8 +23,8 @@ sealed class RoleDeleteEndpoint(IRoleService roleService) : Endpoint<RoleDeleteR
             await Send.NotFoundAsync(cancellationToken);
             return;
         }
-        if (entity.Default)
-            ThrowError("Default role cannot be deleted", ErrorCodes.DefaultRoleCannotBeDeleted);
+        if (entity.SystemCreated)
+            ThrowError("System-created role cannot be deleted", ErrorCodes.SystemCreatedRoleCannotBeDeleted);
 
         // Delete the entity from the db
         await roleService.DeleteAsync(entity);

@@ -38,6 +38,32 @@ public class RoleListTests(App app) : AppTestsBase(app)
     }
 
     /// <summary>
+    /// Verifies that list rows carry the system-created flag, so the admin UI can hide the actions on seeded roles.
+    /// </summary>
+    [Fact]
+    public async Task List_Roles_Reports_SystemCreated()
+    {
+        await SetAuthTokenAsync();
+
+        var faker = new Faker<RoleCreateRequest>()
+            .RuleFor(u => u.Name, f => f.Internet.UserName() + f.UniqueIndex)
+            .RuleFor(u => u.Description, f => f.Lorem.Sentence());
+        var (createRsp, createRes) = await App.Client.POSTAsync<RoleCreateEndpoint, RoleCreateRequest, RoleCreateResponse>(faker.Generate());
+
+        createRsp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var (listRsp, listRes) = await App.Client.GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(
+            new()
+            {
+                All = true
+            });
+
+        listRsp.StatusCode.Should().Be(HttpStatusCode.OK);
+        listRes.Items.Single(x => x.Id == TestRoles.AdminRoleId).SystemCreated.Should().BeTrue();
+        listRes.Items.Single(x => x.Id == createRes.Id).SystemCreated.Should().BeFalse();
+    }
+
+    /// <summary>
     /// Verifies that pagination works correctly and returns different results for different pages.
     /// </summary>
     [Fact]

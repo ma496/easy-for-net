@@ -97,6 +97,7 @@ public sealed class UserListResponse : ListDto<UserListDto>
 /// </summary>
 public sealed class UserListDto : AuditableDto<Guid>
 {
+    public bool SystemCreated { get; set; }
     public string Username { get; set; } = null!;
     public string UsernameNormalized { get; set; } = null!;
     public string Email { get; set; } = null!;

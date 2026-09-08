@@ -182,11 +182,11 @@
       "emailNotVerified": "Email не подтвержден",
       "roleNameAlreadyExists": "Название роли уже существует",
       "roleNotFound": "Роль не найдена",
-      "defaultRolePermissionsCannotBeChanged": "Права роли по умолчанию нельзя изменить",
-      "defaultRoleCannotBeDeleted": "Роль по умолчанию нельзя удалить",
-      "defaultRoleCannotBeUpdated": "Роль по умолчанию нельзя обновить",
-      "defaultUserCannotBeDeleted": "Пользователя по умолчанию нельзя удалить",
-      "defaultUserCannotBeUpdated": "Пользователя по умолчанию нельзя обновить"
+      "systemCreatedRolePermissionsCannotBeChanged": "Права роли, созданной системой, нельзя изменить",
+      "systemCreatedRoleCannotBeDeleted": "Роль, созданную системой, нельзя удалить",
+      "systemCreatedRoleCannotBeUpdated": "Роль, созданную системой, нельзя обновить",
+      "systemCreatedUserCannotBeDeleted": "Пользователя, созданного системой, нельзя удалить",
+      "systemCreatedUserCannotBeUpdated": "Пользователя, созданного системой, нельзя обновить"
     }
   },
   "table": {

@@ -55,6 +55,7 @@ sealed class UserGetValidator : Validator<UserGetRequest>
 /// </summary>
 public sealed class UserGetResponse : AuditableDto<Guid>
 {
+    public bool SystemCreated { get; set; }
     public string Username { get; set; } = null!;
     public string UsernameNormalized { get; set; } = null!;
     public string Email { get; set; } = null!;

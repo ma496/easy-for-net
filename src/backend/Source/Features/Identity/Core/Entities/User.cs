@@ -7,7 +7,7 @@ using Backend.Data.Entities.Base;
 /// </summary>
 public class User : AuditableEntity<Guid>, IHasNormalizedProperties
 {
-    public bool Default { get; set; }
+    public bool SystemCreated { get; set; }
     public string Username { get; set; } = null!;
     public string UsernameNormalized { get; private set; } = null!;
     public string Email { get; set; } = null!;

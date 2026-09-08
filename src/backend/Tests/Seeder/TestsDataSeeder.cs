@@ -33,7 +33,7 @@ public class TestsDataSeeder(IUserService userService, IRoleService roleService,
     private async Task<(Guid userId, Guid roleId)> CreateUserWithRole(List<Permission> permissions, string username, string roleName)
     {
         var role = await roleService.GetByNameAsync(roleName) ??
-            await roleService.CreateAsync(new Role { Default = true, Name = roleName });
+            await roleService.CreateAsync(new Role { SystemCreated = true, Name = roleName });
         var rolePermissions = await permissionService.GetRolePermissionsAsync(role.Id);
         var permissionsToAssign = permissions.Where(p => !rolePermissions.Any(rp => rp.Name == p.Name)).ToList();
         foreach (var permission in permissionsToAssign)
@@ -42,7 +42,7 @@ public class TestsDataSeeder(IUserService userService, IRoleService roleService,
         }
 
         var user = await userService.GetByUsernameAsync(username) ??
-            await userService.CreateAsync(new User { Default = true, Username = username, Email = $"{username}@example.com" }, "Test#123");
+            await userService.CreateAsync(new User { SystemCreated = true, Username = username, Email = $"{username}@example.com" }, "Test#123");
         if (!await userService.IsInRoleAsync(user.Id, role.Id))
         {
             await userService.AssignRoleAsync(user.Id, role.Id);

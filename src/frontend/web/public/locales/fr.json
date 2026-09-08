@@ -182,11 +182,11 @@
       "emailNotVerified": "Email non vérifié",
       "roleNameAlreadyExists": "Le nom du rôle existe déjà",
       "roleNotFound": "Rôle non trouvé",
-      "defaultRolePermissionsCannotBeChanged": "Les permissions du rôle par défaut ne peuvent pas être modifiées",
-      "defaultRoleCannotBeDeleted": "Le rôle par défaut ne peut pas être supprimé",
-      "defaultRoleCannotBeUpdated": "Le rôle par défaut ne peut pas être mis à jour",
-      "defaultUserCannotBeDeleted": "L'utilisateur par défaut ne peut pas être supprimé",
-      "defaultUserCannotBeUpdated": "L'utilisateur par défaut ne peut pas être mis à jour"
+      "systemCreatedRolePermissionsCannotBeChanged": "Les permissions du rôle créé par le système ne peuvent pas être modifiées",
+      "systemCreatedRoleCannotBeDeleted": "Le rôle créé par le système ne peut pas être supprimé",
+      "systemCreatedRoleCannotBeUpdated": "Le rôle créé par le système ne peut pas être mis à jour",
+      "systemCreatedUserCannotBeDeleted": "L'utilisateur créé par le système ne peut pas être supprimé",
+      "systemCreatedUserCannotBeUpdated": "L'utilisateur créé par le système ne peut pas être mis à jour"
     }
   },
   "table": {

@@ -182,11 +182,11 @@
       "emailNotVerified": "Correo no verificado",
       "roleNameAlreadyExists": "El nombre del rol ya existe",
       "roleNotFound": "Rol no encontrado",
-      "defaultRolePermissionsCannotBeChanged": "Los permisos del rol predeterminado no se pueden cambiar",
-      "defaultRoleCannotBeDeleted": "El rol predeterminado no se puede eliminar",
-      "defaultRoleCannotBeUpdated": "El rol predeterminado no se puede actualizar",
-      "defaultUserCannotBeDeleted": "El usuario predeterminado no se puede eliminar",
-      "defaultUserCannotBeUpdated": "El usuario predeterminado no se puede actualizar"
+      "systemCreatedRolePermissionsCannotBeChanged": "Los permisos del rol creado por el sistema no se pueden cambiar",
+      "systemCreatedRoleCannotBeDeleted": "El rol creado por el sistema no se puede eliminar",
+      "systemCreatedRoleCannotBeUpdated": "El rol creado por el sistema no se puede actualizar",
+      "systemCreatedUserCannotBeDeleted": "El usuario creado por el sistema no se puede eliminar",
+      "systemCreatedUserCannotBeUpdated": "El usuario creado por el sistema no se puede actualizar"
     }
   },
   "table": {
