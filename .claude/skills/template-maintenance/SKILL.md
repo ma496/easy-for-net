@@ -42,10 +42,24 @@ intended baseline; add to them only what every new project would want.
 - `CLAUDE.md`, written from the embedded resource `tool/EasyForNetTool/new-project-claude.md`
 
 **A new root-level file or directory reaches generated projects only if it is added to that list.**
+`specs/` is deliberately absent — each project accumulates its own specifications.
+
+**Inside `.claude` the rule inverts.** `CopyDirectory` excludes by directory *name*, recursively, so
+everything under `.claude` ships unless its directory is named `new-project` or `template-maintenance`
+at some level. `.claude/skills`, `.claude/workflows` and `.claude/commands` all reach generated
+projects with no generator change. To keep something template-only, add its directory name to that
+array or put it outside `.claude`.
+
 Text inside copied markdown is rewritten (`Backend.` → the project's root namespace,
-`EasyForNet.slnx` → `<Name>.slnx`) — keep namespace references in `.claude/skills` and
+`EasyForNet.slnx` → `<Name>.slnx`) — keep namespace references in `.claude` markdown and
 `new-project-claude.md` in that `Backend.`-qualified form so the rewrite catches them, and avoid the
 bare word "Backend" in prose.
+
+**`ReplaceInFiles` filters on an exact extension, and it is only ever called with `.md`.** A `.js`,
+`.json` or `.ts` file under `.claude` is copied byte-for-byte. So the dynamic-workflow scripts in
+`.claude/workflows` must contain no namespace, no solution file name and no project file name; they
+delegate anything repo-specific to `CLAUDE.md` and to `.claude/skills/spec-driven/SKILL.md`, which are
+rewritten. `rg "Backend\.|EasyForNet|\.slnx|\.csproj" .claude/workflows` must return nothing.
 
 Renaming happens through `NamespaceRewriter` (Roslyn) for `.cs` files and regex `ReplaceInFile` /
 `ReplaceInFiles` for everything else, including `Meta.cs`'s `InternalsVisibleTo`,
@@ -64,7 +78,9 @@ change into their own `Initial`.
 Two docs describe the architecture: this repo's `CLAUDE.md` and the embedded
 `tool/EasyForNetTool/new-project-claude.md` that becomes the generated project's `CLAUDE.md`, plus
 the skills under `.claude/skills`. When an architectural rule changes, update all of them — they
-drift silently otherwise. Keep them purely operational: no provenance or origin statements.
+drift silently otherwise. The generated project's `CLAUDE.md` is a separate file, so a section added
+to this repo's `CLAUDE.md` does not reach new projects until it is added there too. Keep them purely
+operational: no provenance or origin statements.
 
 ## Commands
 

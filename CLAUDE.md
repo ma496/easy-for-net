@@ -13,7 +13,8 @@ Consequences to keep in mind when editing:
 
 - Changes under `src/` ship to every newly scaffolded project, so keep the template generic (no project-specific hardcoding).
 - The tool resolves the template by **git tag matching its own version**. `publish-package.sh` enforces this: clean working tree → run tool tests → `dotnet pack` → create/push tag `v$VERSION` → `dotnet nuget push`.
-- `CreateProjectGenerator` copies an explicit list of root files/directories (`.editorconfig`, `.gitignore`, `global.json`, `.config`, `.vscode`, `.claude` minus the `new-project` and `template-maintenance` skills, and a `CLAUDE.md` written from the embedded `new-project-claude.md`). If a new root-level file should reach generated projects, it must be added to that list. Markdown under `.claude` is rewritten on copy (`Backend.` → the new root namespace, `EasyForNet.slnx` → `<Name>.slnx`), so keep namespace references there in that qualified form.
+- `CreateProjectGenerator` copies an explicit list of root files/directories (`.editorconfig`, `.gitignore`, `global.json`, `.config`, `.vscode`, `.claude` minus the `new-project` and `template-maintenance` skills, and a `CLAUDE.md` written from the embedded `new-project-claude.md`). If a new root-level file should reach generated projects, it must be added to that list. Inside `.claude` the rule inverts: exclusion is by directory *name* at any depth, so `.claude/skills`, `.claude/workflows` and `.claude/commands` all ship with no generator change. Markdown under `.claude` is rewritten on copy (`Backend.` → the new root namespace, `EasyForNet.slnx` → `<Name>.slnx`), so keep namespace references there in that qualified form — and out of `.js` files entirely, which are copied byte-for-byte.
+- `specs/` is deliberately not copied: each project accumulates its own specifications.
 - Migrations are deliberately **not** copied into generated projects (`CopyDirectory(..., ["Migrations"])`); new projects run `dotnet ef migrations add Initial` themselves.
 
 ## Commands
@@ -94,10 +95,35 @@ Client permission checks use the `Allow` map in `allow.ts`, kept in sync with th
 
 Adding a language means adding it to `i18n/config.ts` and adding `public/locales/<code>.json`; the CLI's `-m false` (default) mode ships English only, so check how the generator filters locale files when changing this.
 
+## Spec-driven development
+
+Features large enough to be worth specifying go through four chained dynamic workflows in
+`.claude/workflows/`, driven by four slash commands. Each stage writes documents into
+`specs/<NNN-slug>/` and stops so a human can read them:
+
+```
+/specify   <request>            spec-specify    -> spec.md with numbered EARS acceptance criteria
+/plan      [NNN-slug]           spec-plan       -> plan.md, four contract documents, tasks.md
+/implement [NNN-slug]           spec-implement  -> code, in file-disjoint waves
+/verify    [NNN-slug]           spec-verify     -> verification.md, plus the remaining work as tasks
+```
+
+The stages are separate runs because a workflow cannot ask a question while it runs — every point
+where a human decision belongs is a stage boundary. `AC-nnn` and `T-nnn` ids are permanent and
+tie criteria to tasks to evidence. See the `spec-driven` skill for the loop, the document
+templates and the completeness checklist; `specs/README.md` describes the directory layout.
+
+One full loop is roughly 200 subagent calls, so it is for real features, not one-line fixes.
+
+The scripts are `.js`, and **the generator does not rewrite `.js`** — it rewrites only markdown
+under `.claude`. Keep namespaces, the solution file name and project file names out of the workflow
+scripts; put anything repo-specific in `.claude/skills/spec-driven/SKILL.md` instead.
+
 ## Task guides
 
 `.claude/skills/` holds step-by-step guides for the recurring tasks here. Consult the matching one before writing code.
 
+- Process: `spec-driven`
 - Cross-cutting: `coding-conventions`
 - API: `backend-feature`, `backend-endpoint`, `backend-entity`, `backend-tests`, `permissions`, `background-jobs`, `file-storage`, `notifications`
 - Web: `rtk-query-api`, `frontend-page`, `frontend-crud`, `ui-component`, `redux-state`, `localization`, `frontend-tests`

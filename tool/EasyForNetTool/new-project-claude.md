@@ -81,10 +81,28 @@ Client permission checks use the `Allow` map in `allow.ts`, kept in sync with th
 
 Adding a language means adding it to `i18n/config.ts` and adding `public/locales/<code>.json`. If the project was created without multi-language support, only English is present and `i18n/config.ts`, `i18n/server.ts` and `store/slices/themeConfigSlice.tsx` list `en` alone.
 
+## Spec-driven development
+
+Features large enough to be worth specifying go through four chained dynamic workflows in
+`.claude/workflows/`, driven by four slash commands. Each stage writes documents into
+`specs/<NNN-slug>/` and stops so a human can read them:
+
+```
+/specify   <request>            spec-specify    -> spec.md with numbered EARS acceptance criteria
+/plan      [NNN-slug]           spec-plan       -> plan.md, four contract documents, tasks.md
+/implement [NNN-slug]           spec-implement  -> code, in file-disjoint waves
+/verify    [NNN-slug]           spec-verify     -> verification.md, plus the remaining work as tasks
+```
+
+The stages are separate runs because a workflow cannot ask a question while it runs — every point where a human decision belongs is a stage boundary. `AC-nnn` and `T-nnn` ids are permanent and tie criteria to tasks to evidence. See the `spec-driven` skill for the loop, the document templates and the completeness checklist.
+
+One full loop is roughly 200 subagent calls, so it is for real features, not one-line fixes. `specs/` is created on first use and is committed to the repository.
+
 ## Task guides
 
 `.claude/skills/` holds step-by-step guides for the recurring tasks in this codebase. Consult the matching one before writing code so new work follows the same shape as the existing features.
 
+- Process: `spec-driven`
 - Cross-cutting: `coding-conventions`
 - API: `backend-feature`, `backend-endpoint`, `backend-entity`, `backend-tests`, `permissions`, `background-jobs`, `file-storage`, `notifications`
 - Web: `rtk-query-api`, `frontend-page`, `frontend-crud`, `ui-component`, `redux-state`, `localization`, `frontend-tests`
