@@ -96,7 +96,7 @@ Features large enough to be worth specifying go through four chained dynamic wor
 
 The stages are separate runs because a workflow cannot ask a question while it runs — every point where a human decision belongs is a stage boundary. `AC-nnn` and `T-nnn` ids are permanent and tie criteria to tasks to evidence. See the `spec-driven` skill for the loop, the document templates and the completeness checklist.
 
-One full loop is roughly 200 subagent calls, so it is for real features, not one-line fixes. `specs/` is created on first use and is committed to the repository.
+One full loop is roughly 100 subagent calls on a small feature and around 230 on a hundred-criterion one, so it is for real features, not one-line fixes. `specs/` is created on first use and is committed to the repository.
 
 ## Task guides
 

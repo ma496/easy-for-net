@@ -9,9 +9,10 @@ A specification is the unit of work handed to an agent; the code is the artifact
 Each stage is one dynamic workflow that fans out across many subagents, verifies its own output
 adversarially, and hands you a document to read before the next stage runs.
 
-**When not to use this.** One full loop is roughly 200 subagent calls. A one-line fix, a rename, a
-typo, a dependency bump — do those directly. Reach for the loop when the work spans both stacks, adds
-a permission or an entity, or is something you would want to be able to prove was built correctly.
+**When not to use this.** One full loop is roughly 100 subagent calls on a small feature and around
+230 on a hundred-criterion one. A one-line fix, a rename, a typo, a dependency bump — do those
+directly. Reach for the loop when the work spans both stacks, adds a permission or an entity, or is
+something you would want to be able to prove was built correctly.
 
 ## The loop
 
@@ -72,6 +73,12 @@ or "may". **No class names, file paths or library names inside a criterion** —
 job. Every failure path gets its own *If … then …* criterion; a spec whose criteria are all happy
 paths is not finished.
 
+**Group the criteria under `###` subheadings by area, and keep criteria about one area together.**
+That grouping is load-bearing rather than decoration: `/verify` traces criteria in batches taken in
+document order, so criteria that sit next to each other are examined by one agent that opens their
+slice of the codebase once. A spec whose criteria are shuffled across areas costs more to verify and
+gets weaker evidence per criterion.
+
 ## tasks.md format
 
 One task per line, parsed by `spec-implement`. Keep the format exactly:
@@ -123,7 +130,7 @@ The slash commands are thin wrappers; the workflows take these arguments:
 spec-specify   {request, slug?, specDir?}
 spec-plan      {specDir, focus?, approaches?}
 spec-implement {specDir, tasks?, maxParallel?, gateEveryWave?}
-spec-verify    {specDir, refuters?, autoFix?}
+spec-verify    {specDir, batchSize?, autoFix?, maxRounds?}
 ```
 
 Pass `specDir` (`specs/007-user-csv-export`) rather than letting a workflow guess — no workflow ever
@@ -131,7 +138,8 @@ looks for "the latest spec". Run `/specify` one at a time: directory numbering i
 reading the directory, so two concurrent runs would claim the same number.
 
 Every script scales its depth from the token budget you set for the turn, and logs anything it drops
-so a truncated run never reads like a complete one.
+so a truncated run never reads like a complete one. `/verify` traces every criterion — there is no
+cap — and refuses to report convergence if any criterion came back without a tracer result.
 
 ## Editing the workflow scripts
 
@@ -146,6 +154,23 @@ non-obvious decision carries an inline note — why a `parallel()` barrier is us
 would not do, how the wave scheduler decides two tasks may run together, how majority voting resolves
 adversarial verification. Keep that up: the next person to open these files will not have the context
 you have now.
+
+**Do not tell a subagent to read `CLAUDE.md`.** The workflow runtime injects it into every subagent
+already, so an instruction to read it buys a duplicate read of the largest document in the repository
+once per agent, and these scripts run hundreds of agents. Point an agent at a specific guide under
+`.claude/skills` only when its job actually turns on that guide, and inline the one rule it needs
+when that is cheaper than a whole file.
+
+**Prefer JavaScript to an agent for anything exact.** Coverage arithmetic, dependency cycles, unknown
+ids and file-set collisions are set operations over data the schemas already return. `spec-plan`
+computes all of those in code; an auditor agent answered them approximately and cost an agent per
+dimension per round. Reserve agents for judgment — whether a task really serves the criterion it
+cites, or whether its declared file list is complete.
+
+**Batch a fan-out whose items share their reading.** One agent per criterion, per lens, or per claim
+is waste when those items live in the same slice and each agent re-opens the same files. Batch them
+and return a result per item. Keep the adversarial panels — the skeptics, the refuters, the judges —
+but run one agent per lens over the batch rather than a full panel per item.
 
 **The scripts must stay free of namespaces.** They ship into generated projects byte-for-byte —
 only markdown under `.claude` is rewritten — so a namespace-qualified type name, a solution file name

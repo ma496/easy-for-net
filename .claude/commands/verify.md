@@ -17,8 +17,9 @@ not write a script.
 
 When it returns:
 
-1. Report the counts: satisfied, partial, missing — and say plainly if `acsVerified` is lower than
-   `acsTotal`, which means the run was capped and some criteria were never checked.
+1. Report the counts: satisfied, partial, missing. Every criterion is traced, so `acsVerified` below
+   `acsTotal` means a tracer died rather than that the run was capped — say so plainly, and note that
+   the workflow refuses to report convergence in that case.
 2. List every `partial` and `missing` criterion with its gap. A criterion downgraded from satisfied
    to partial was refuted by independent review; that is a real finding, not a formality.
 3. Surface `specDrift` separately: code that no criterion asked for. Each entry is a decision for the

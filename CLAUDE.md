@@ -113,7 +113,8 @@ where a human decision belongs is a stage boundary. `AC-nnn` and `T-nnn` ids are
 tie criteria to tasks to evidence. See the `spec-driven` skill for the loop, the document
 templates and the completeness checklist; `specs/README.md` describes the directory layout.
 
-One full loop is roughly 200 subagent calls, so it is for real features, not one-line fixes.
+One full loop is roughly 100 subagent calls on a small feature and around 230 on a large one, so it
+is for real features, not one-line fixes.
 
 The scripts are `.js`, and **the generator does not rewrite `.js`** — it rewrites only markdown
 under `.claude`. Keep namespaces, the solution file name and project file names out of the workflow
