@@ -20,6 +20,7 @@ export type {
   GetUserInfoResponse,
   GetUserInfoRole,
   GetUserInfoPermission,
+  GetUserInfoTenant,
   GetUserProfileResponse,
   RefreshTokenRequest,
   RefreshTokenResponse,

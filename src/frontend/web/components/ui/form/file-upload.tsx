@@ -26,6 +26,13 @@ export interface FileUploadProps {
   id?: string
   disabled?: boolean
   forceDelete?: boolean // file delete only when forceDelete is true
+  /**
+   * Marks the uploaded file as belonging to the calling account rather than to the tenant's data - a
+   * profile image and the like. Such a file is attributed to no tenant and to the account that owns
+   * it, so it can be uploaded and read while acting in any tenant or in none. Left unset, the file is
+   * attributed to the tenant active at the time of upload.
+   */
+  accountOwned?: boolean
   maxSizeBytes?: number
   onClear?: () => void
   validateFile?: (file: File) => string | undefined
@@ -63,6 +70,7 @@ export const FileUpload = ({
   rounded,
   disabled,
   forceDelete = true,
+  accountOwned = false,
   onUploaded,
   onError,
   fileName,
@@ -120,7 +128,9 @@ export const FileUpload = ({
       if (selectedFileUrl?.startsWith('blob:')) {
         URL.revokeObjectURL(selectedFileUrl)
       }
-      const res = await uploadFile({ file })
+      // accountOwned travels with the upload so an account-owned file (a profile image, say) is
+      // attributed to the account instead of the active tenant, and is accepted with no tenant active.
+      const res = await uploadFile({ file, accountOwned })
       if (res.data) {
         if (forceDelete && oldFileName) {
           await deleteFileTrigger({ fileName: oldFileName })
@@ -138,7 +148,7 @@ export const FileUpload = ({
         inputRef.current.value = ''
       }
     },
-    [uploadFile, onUploaded, onError, selectedFileUrl, maxSizeBytes, validateFile, forceDelete, fileName, response, deleteFileTrigger, t, showError],
+    [uploadFile, onUploaded, onError, selectedFileUrl, maxSizeBytes, validateFile, forceDelete, accountOwned, fileName, response, deleteFileTrigger, t, showError],
   )
 
   const deleteFile = useCallback(async () => {

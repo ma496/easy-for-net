@@ -17,10 +17,13 @@ sealed class UserGetEndpoint(IUserService userService) : Endpoint<UserGetRequest
 
     public override async Task HandleAsync(UserGetRequest request, CancellationToken cancellationToken)
     {
-        // get entity from db
-        var entity = await userService.Users()
+        // The account is read from the set the caller may administer, so one holding no membership of
+        // the tenant being acted in is simply not there and answers exactly as an account that does not
+        // exist does. A platform administrator reads every account irrespective of membership.
+        var entity = await userService.TenantUsers()
             .AsNoTracking()
             .Include(x => x.UserRoles)
+            .ThenInclude(x => x.Role)
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
         if (entity == null)
         {
@@ -76,6 +79,8 @@ public partial class UserGetResponseMapper
     [MapProperty("UserRoles", "Roles", Use = nameof(UserRolesToRoles))]
     public partial UserGetResponse Map(User entity);
 
+    // Only the roles the caller may see are reported: an assignment to a role of another tenant comes
+    // back with no role attached, and naming it here would offer the update endpoint a role it refuses.
     private static List<Guid> UserRolesToRoles(ICollection<UserRole> userRoles)
-        => [.. userRoles.Select(x => x.RoleId)];
+        => [.. userRoles.Where(x => x.Role != null).Select(x => x.RoleId)];
 }

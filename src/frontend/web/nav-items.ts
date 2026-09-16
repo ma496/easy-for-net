@@ -1,4 +1,4 @@
-import { Users, Shield, Home, User, Lock, Palette, Zap, Calendar, TreePine, FormInput, Upload, Clock, Bell } from 'lucide-react'
+import { Users, Shield, Home, User, Lock, Palette, Zap, Calendar, TreePine, FormInput, Upload, Clock, Bell, Building2 } from 'lucide-react'
 import type { ElementType } from 'react'
 
 
@@ -89,6 +89,31 @@ export const navItems: (NavItem | NavItemGroup)[] = [
         ],
       },
       {
+        title: 'navigation.tenants',
+        url: '/admin/tenants/list',
+        icon: Building2,
+        children: [
+          {
+            title: 'navigation.tenantsList',
+            url: '/admin/tenants/list',
+          },
+          {
+            title: 'navigation.tenantsCreate',
+            url: '/admin/tenants/create',
+          },
+          {
+            title: 'navigation.tenantsUpdate',
+            url: '/admin/tenants/update/{id}',
+            show: false,
+          },
+          {
+            title: 'navigation.tenantsMembers',
+            url: '/admin/tenants/members/{id}',
+            show: false,
+          },
+        ],
+      },
+      {
         title: 'navigation.notifications',
         url: '/admin/notifications/list',
         icon: Bell,
@@ -162,6 +187,16 @@ export const navItems: (NavItem | NavItemGroup)[] = [
     title: 'navigation.profile',
     url: '/profile',
     icon: User,
+    show: false,
+  },
+  {
+    title: 'navigation.selectTenant',
+    url: '/select-tenant',
+    show: false,
+  },
+  {
+    title: 'navigation.noTenant',
+    url: '/no-tenant',
     show: false,
   },
 ]

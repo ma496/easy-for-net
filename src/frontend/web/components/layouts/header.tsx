@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { LocalizedLink } from '@/components/ui'
 import { toggleSidebar } from '@/store/slices'
 import { usePathname } from 'next/navigation'
-import { ThemeChanger, NavUser, LanguageDropdown } from '@/components/custom'
+import { ThemeChanger, NavUser, LanguageDropdown, TenantSwitcher } from '@/components/custom'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { SearchComponent } from './search-component'
 import { Menu } from 'lucide-react'
@@ -13,7 +13,7 @@ import { useNotificationHub } from '@/hooks'
 import Image from 'next/image'
 
 /**
- * Header is the client-side application top bar that contains the brand logo, mobile sidebar toggle, search box, notification bell, theme changer, language dropdown, and the user navigation menu; it also activates the current horizontal-menu link and subscribes to the notification hub.
+ * Header is the client-side application top bar that contains the brand logo, mobile sidebar toggle, search box, tenant switcher, notification bell, theme changer, language dropdown, and the user navigation menu; it also activates the current horizontal-menu link and subscribes to the notification hub.
  */
 export const Header = () => {
   const pathname = usePathname()
@@ -74,6 +74,10 @@ export const Header = () => {
             </div>
 
             <div className="flex items-center justify-center gap-2">
+              <div>
+                <TenantSwitcher />
+              </div>
+
               <div>
                 <NotificationBell />
               </div>

@@ -14,6 +14,8 @@ public static class ErrorCodes
     public const string ReferencedRecordNotFound = "referencedRecordNotFound";
     public const string InvalidValueProvided = "invalidValueProvided";
     public const string DatabaseError = "databaseError";
+    public const string AuthenticationRequired = "authenticationRequired";
+    public const string PermissionDenied = "permissionDenied";
     public const string InvalidCurrentPassword = "invalidCurrentPassword";
     public const string InvalidToken = "invalidToken";
     public const string TokenExpired = "tokenExpired";
@@ -32,4 +34,16 @@ public static class ErrorCodes
     public const string SystemCreatedUserCannotBeUpdated = "systemCreatedUserCannotBeUpdated";
     public const string RoleNotFound = "roleNotFound";
     public const string RoleNameAlreadyExists = "roleNameAlreadyExists";
+    public const string TenantNotFound = "tenantNotFound";
+    public const string TenantSuspended = "tenantSuspended";
+    public const string NotTenantMember = "notTenantMember";
+    public const string NoActiveTenant = "noActiveTenant";
+    public const string TenantIdentifierAlreadyExists = "tenantIdentifierAlreadyExists";
+    public const string DuplicateTenantMembership = "duplicateTenantMembership";
+    public const string LastTenantAdministrator = "lastTenantAdministrator";
+    public const string SystemCreatedTenantCannotBeModified = "systemCreatedTenantCannotBeModified";
+    public const string CrossTenantFileAccess = "crossTenantFileAccess";
+    public const string TenantMembershipRevoked = "tenantMembershipRevoked";
+    public const string PlatformPermissionNotGrantable = "platformPermissionNotGrantable";
+    public const string ConcurrentModification = "concurrentModification";
 }

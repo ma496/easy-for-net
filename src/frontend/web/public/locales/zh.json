@@ -35,7 +35,8 @@
     "allRightsReserved": "版权所有。",
     "deleteConfirm": "是的，删除它",
     "notifications": "通知",
-    "viewAll": "查看全部"
+    "viewAll": "查看全部",
+    "close": "关闭"
   },
   "navigation": {
     "home": "首页",
@@ -64,7 +65,14 @@
     "usersUpdate": "更新",
     "notifications": "通知",
     "notificationsList": "列表",
-    "notificationsDetail": "详情"
+    "notificationsDetail": "详情",
+    "tenants": "租户",
+    "tenantsList": "列表",
+    "tenantsCreate": "创建",
+    "tenantsUpdate": "更新",
+    "tenantsMembers": "成员",
+    "selectTenant": "选择租户",
+    "noTenant": "无租户"
   },
   "search": {
     "dashboard": "仪表板",
@@ -82,7 +90,9 @@
     "notifications": "通知",
     "uiFormElements": "UI 表单元素",
     "uiFileUpload": "UI 文件上传",
-    "uiTooltips": "UI 工具提示"
+    "uiTooltips": "UI 工具提示",
+    "tenants": "租户",
+    "tenantsCreate": "创建租户"
   },
   "form": {
     "label": {
@@ -98,7 +108,10 @@
       "roleDescription": "描述",
       "roles": "角色",
       "isActive": "启用",
-      "name": "名称"
+      "name": "名称",
+      "tenantName": "租户名称",
+      "tenantIdentifier": "标识符",
+      "user": "用户"
     },
     "placeholder": {
       "username": "输入用户名",
@@ -111,7 +124,10 @@
       "confirmPassword": "输入确认密码",
       "roleName": "输入角色名称",
       "roleDescription": "输入角色描述",
-      "roles": "选择角色"
+      "roles": "选择角色",
+      "tenantName": "输入租户名称",
+      "tenantIdentifier": "输入标识符（例如 acme）",
+      "user": "选择用户"
     }
   },
   "validation": {
@@ -121,7 +137,8 @@
     "email": "无效的电子邮件格式",
     "invalidEmail": "无效的电子邮件",
     "mustMatch": "字段必须与 ${otherField}匹配",
-    "atLeastOneSelected": "必须至少选择一项"
+    "atLeastOneSelected": "必须至少选择一项",
+    "tenantIdentifier": "请使用小写字母、数字和单个连字符，并以字母或数字开头和结尾"
   },
   "error": {
     "400": {
@@ -169,6 +186,8 @@
       "referencedRecordNotFound": "未找到引用的记录",
       "invalidValueProvided": "提供的值无效",
       "databaseError": "数据库错误",
+      "authenticationRequired": "此操作需要登录。",
+      "permissionDenied": "您的角色不授予此操作所需的权限。",
       "invalidCurrentPassword": "当前密码无效",
       "invalidToken": "无效的令牌",
       "tokenExpired": "令牌已过期",
@@ -186,7 +205,19 @@
       "systemCreatedRoleCannotBeDeleted": "无法删除系统创建的角色",
       "systemCreatedRoleCannotBeUpdated": "无法更新系统创建的角色",
       "systemCreatedUserCannotBeDeleted": "无法删除系统创建的用户",
-      "systemCreatedUserCannotBeUpdated": "无法更新系统创建的用户"
+      "systemCreatedUserCannotBeUpdated": "无法更新系统创建的用户",
+      "tenantNotFound": "租户未找到",
+      "tenantSuspended": "此租户已被暂停",
+      "notTenantMember": "您不是此租户的成员",
+      "noActiveTenant": "未选择启用的租户",
+      "tenantIdentifierAlreadyExists": "租户标识符已存在",
+      "duplicateTenantMembership": "此用户已是该租户的成员",
+      "lastTenantAdministrator": "无法移除最后一位租户管理员",
+      "systemCreatedTenantCannotBeModified": "无法修改系统创建的租户",
+      "crossTenantFileAccess": "此文件属于其他租户",
+      "tenantMembershipRevoked": "您在此租户中的成员资格已被撤销",
+      "platformPermissionNotGrantable": "平台权限无法授予租户角色",
+      "concurrentModification": "此记录已被他人修改。请重新加载后重试。"
     }
   },
   "table": {
@@ -206,7 +237,8 @@
       "status": "状态",
       "date": "日期",
       "group": "组",
-      "updated": "已更新"
+      "updated": "已更新",
+      "identifier": "标识符"
     },
     "pagination": {
       "showingEntries": "显示 ${from} 到 ${to} 条，共 ${totalRecords} 条记录"
@@ -232,7 +264,10 @@
       "role": "角色",
       "selectRole": "选择角色",
       "search": "搜索",
-      "clear": "清除"
+      "clear": "清除",
+      "tenantStatus": "租户状态",
+      "allStatuses": "所有状态",
+      "suspended": "已暂停"
     }
   },
   "file": {
@@ -451,6 +486,68 @@
         "title": "通知详情"
       },
       "viewAll": "查看所有通知"
+    },
+    "tenants": {
+      "title": "租户",
+      "notFound": "租户未找到",
+      "systemCreated": "系统创建",
+      "createSuccess": "租户创建成功",
+      "updateSuccess": "租户更新成功",
+      "deleteTitle": "删除租户",
+      "deleteConfirm": "您确定要删除此租户吗？",
+      "deleteSuccess": "租户删除成功",
+      "suspendTitle": "暂停租户",
+      "suspendConfirm": "您确定要暂停此租户吗？在重新启用之前，其成员将无法访问。",
+      "suspendSuccess": "租户暂停成功",
+      "reactivateTitle": "重新启用租户",
+      "reactivateConfirm": "您确定要重新启用此租户吗？",
+      "reactivateSuccess": "租户重新启用成功",
+      "list": {
+        "title": "租户列表"
+      },
+      "create": {
+        "title": "创建租户"
+      },
+      "update": {
+        "title": "更新租户"
+      },
+      "status": {
+        "active": "启用",
+        "suspended": "已暂停"
+      },
+      "members": {
+        "title": "租户成员",
+        "addTitle": "添加成员",
+        "addButton": "添加成员",
+        "addSuccess": "成员添加成功",
+        "rolesTitle": "更改成员角色",
+        "rolesButton": "更改角色",
+        "rolesSuccess": "成员角色更新成功",
+        "removeTitle": "移除成员",
+        "removeConfirm": "您确定要将此成员从租户中移除吗？",
+        "removeSuccess": "成员移除成功"
+      },
+      "switcher": {
+        "label": "租户",
+        "switchTo": "切换租户",
+        "switchSuccess": "您现在正在 ${tenant} 中工作",
+        "noTenant": "未选择租户"
+      }
+    },
+    "selectTenant": {
+      "title": "选择租户",
+      "description": "请选择您要使用的租户。",
+      "suspendedReason": "您之前使用的租户已被暂停。请选择其他租户以继续。",
+      "revokedReason": "您在该租户中的成员资格已被撤销。请选择其他租户以继续。",
+      "unavailableReason": "该租户已不可用。请选择其他租户以继续。",
+      "noSelectionReason": "打开此页面前请先选择一个租户。"
+    },
+    "noTenant": {
+      "title": "无租户",
+      "description": "您尚未加入任何启用的租户。请创建您自己的租户，或请管理员将您加入其租户。",
+      "createTitle": "创建您的租户",
+      "createButton": "创建租户",
+      "createSuccess": "租户已创建。您现在是其管理员。"
     }
   },
   "notifications": {

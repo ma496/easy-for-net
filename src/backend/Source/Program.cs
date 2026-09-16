@@ -8,6 +8,7 @@ using Backend.Settings;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Net.Http.Headers;
 using Microsoft.AspNetCore.Http.Features;
@@ -47,6 +48,11 @@ bld.Services.AddCors(options =>
 bld.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(defaultConnection));
 
+// one tenant scope per unit of work: the tenant query filter and the save-time attribution in
+// AppDbContext both read the active tenant from here, so a scoped registration is what keeps an
+// HTTP request, a background job and the seeder from ever seeing each other's tenant.
+bld.Services.AddScoped<ITenantContext, TenantContext>();
+
 bld.Services
     .AddAuthenticationCookie(TimeSpan.FromMinutes(bld.Configuration.GetValue<int>("Auth:AccessTokenValidity")), options =>
     {
@@ -75,6 +81,11 @@ bld.Services
        };
    });
 bld.Services.AddAuthorization();
+
+// Endpoint authorization is evaluated before the tenant enforcement point and against the permissions
+// the request currently holds, so a caller whose tenant selection went stale is refused there - with a
+// bare 403 - before the enforcement point can say why. This gives that refusal its reason.
+bld.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, TenantRefusalResultHandler>();
 bld.Services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
 {
     options.TokenValidationParameters.ValidateIssuer = true;
@@ -193,6 +204,10 @@ app.UseFastEndpoints(
            c.Endpoints.Configurator = ep =>
            {
                ep.PreProcessor<ToLargePayloadProcessor>(Order.Before);
+               // the single tenant enforcement point: it runs after the payload guard and before every
+               // endpoint-level pre-processor, establishes the tenant the request acts in, and
+               // refuses the request when a tenant-scoped endpoint has no usable tenant to act in.
+               ep.PreProcessor<TenantContextProcessor>(Order.Before);
                ep.PostProcessor<ExceptionProcessor>(Order.After);
                ep.PostProcessor<UnsupportedMediaTypeResponseProcessor>(Order.After);
            };

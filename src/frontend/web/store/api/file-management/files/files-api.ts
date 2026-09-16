@@ -2,8 +2,8 @@ import { appApi } from '@/store/api/_app-api'
 import { FileDeleteRequest, FileDeleteResponse, FileGetRequest, FileUploadRequest, FileUploadResponse } from './files-dtos'
 
 /**
- * RTK Query API for file management: upload a file (multipart FormData),
- * fetch a file as a Blob, and delete a file by its server-side name.
+ * RTK Query API for file management: upload a file (multipart FormData, carrying how the file is to
+ * be attributed), fetch a file as a Blob, and delete a file by its server-side name.
  */
 export const filesApi = appApi.injectEndpoints({
   overrideExisting: false,
@@ -12,6 +12,12 @@ export const filesApi = appApi.injectEndpoints({
       query: (input) => {
         const body = new FormData()
         body.append('file', input.file)
+        // Only sent when the caller marks the file account-owned: the server defaults the flag to
+        // false, so an ordinary upload keeps its existing shape and stays attributed to the active
+        // tenant - and is refused outright when no tenant is active.
+        if (input.accountOwned) {
+          body.append('accountOwned', 'true')
+        }
         return {
           url: '/file-management/upload',
           method: 'POST',

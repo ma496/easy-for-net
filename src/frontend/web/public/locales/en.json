@@ -35,7 +35,8 @@
     "allRightsReserved": "All rights reserved.",
     "deleteConfirm": "Yes, delete it",
     "notifications": "Notifications",
-    "viewAll": "View all"
+    "viewAll": "View all",
+    "close": "Close"
   },
   "navigation": {
     "home": "Home",
@@ -64,7 +65,14 @@
     "usersUpdate": "Update",
     "notifications": "Notifications",
     "notificationsList": "List",
-    "notificationsDetail": "Detail"
+    "notificationsDetail": "Detail",
+    "tenants": "Tenants",
+    "tenantsList": "List",
+    "tenantsCreate": "Create",
+    "tenantsUpdate": "Update",
+    "tenantsMembers": "Members",
+    "selectTenant": "Select Tenant",
+    "noTenant": "No Tenant"
   },
   "search": {
     "dashboard": "Dashboard",
@@ -82,7 +90,9 @@
     "notifications": "Notifications",
     "uiFormElements": "UI Form Elements",
     "uiFileUpload": "UI File Upload",
-    "uiTooltips": "UI Tooltips"
+    "uiTooltips": "UI Tooltips",
+    "tenants": "Tenants",
+    "tenantsCreate": "Create Tenant"
   },
   "form": {
     "label": {
@@ -98,7 +108,10 @@
       "roleDescription": "Description",
       "roles": "Roles",
       "isActive": "Active",
-      "name": "Name"
+      "name": "Name",
+      "tenantName": "Tenant Name",
+      "tenantIdentifier": "Identifier",
+      "user": "User"
     },
     "placeholder": {
       "username": "Enter username",
@@ -111,7 +124,10 @@
       "confirmPassword": "Enter confirm password",
       "roleName": "Enter role name",
       "roleDescription": "Enter role description",
-      "roles": "Select roles"
+      "roles": "Select roles",
+      "tenantName": "Enter tenant name",
+      "tenantIdentifier": "Enter identifier (for example acme)",
+      "user": "Select user"
     }
   },
   "validation": {
@@ -121,7 +137,8 @@
     "email": "Invalid email format",
     "invalidEmail": "Invalid email",
     "mustMatch": "Field must match with ${otherField}",
-    "atLeastOneSelected": "At least one item must be selected"
+    "atLeastOneSelected": "At least one item must be selected",
+    "tenantIdentifier": "Use lower-case letters, digits and single hyphens, starting and ending with a letter or digit"
   },
   "error": {
     "400": {
@@ -169,6 +186,8 @@
       "referencedRecordNotFound": "Referenced record not found",
       "invalidValueProvided": "Invalid value provided",
       "databaseError": "Database error",
+      "authenticationRequired": "Authentication is required for this operation.",
+      "permissionDenied": "Your roles do not grant the permission this operation requires.",
       "invalidCurrentPassword": "Invalid current password",
       "invalidToken": "Invalid token",
       "tokenExpired": "Token expired",
@@ -186,7 +205,19 @@
       "systemCreatedRoleCannotBeDeleted": "System-created role cannot be deleted",
       "systemCreatedRoleCannotBeUpdated": "System-created role cannot be updated",
       "systemCreatedUserCannotBeDeleted": "System-created user cannot be deleted",
-      "systemCreatedUserCannotBeUpdated": "System-created user cannot be updated"
+      "systemCreatedUserCannotBeUpdated": "System-created user cannot be updated",
+      "tenantNotFound": "Tenant not found",
+      "tenantSuspended": "This tenant is suspended",
+      "notTenantMember": "You are not a member of this tenant",
+      "noActiveTenant": "No active tenant is selected",
+      "tenantIdentifierAlreadyExists": "Tenant identifier already exists",
+      "duplicateTenantMembership": "This user is already a member of this tenant",
+      "lastTenantAdministrator": "The last tenant administrator cannot be removed",
+      "systemCreatedTenantCannotBeModified": "System-created tenant cannot be modified",
+      "crossTenantFileAccess": "This file belongs to another tenant",
+      "tenantMembershipRevoked": "Your membership in this tenant has been revoked",
+      "platformPermissionNotGrantable": "Platform permissions cannot be granted to a tenant role",
+      "concurrentModification": "This record was changed by someone else. Reload and try again."
     }
   },
   "table": {
@@ -206,7 +237,8 @@
       "status": "Status",
       "date": "Date",
       "group": "Group",
-      "updated": "Updated"
+      "updated": "Updated",
+      "identifier": "Identifier"
     },
     "pagination": {
       "showingEntries": "Showing ${from} to ${to} of ${totalRecords} entries"
@@ -232,7 +264,10 @@
       "role": "Role",
       "selectRole": "Select Role",
       "search": "Search",
-      "clear": "Clear"
+      "clear": "Clear",
+      "tenantStatus": "Tenant Status",
+      "allStatuses": "All Statuses",
+      "suspended": "Suspended"
     }
   },
   "file": {
@@ -451,6 +486,68 @@
         "title": "Notification Details"
       },
       "viewAll": "View all notifications"
+    },
+    "tenants": {
+      "title": "Tenants",
+      "notFound": "Tenant not found",
+      "systemCreated": "System-created",
+      "createSuccess": "Tenant created successfully",
+      "updateSuccess": "Tenant updated successfully",
+      "deleteTitle": "Delete Tenant",
+      "deleteConfirm": "Are you sure you want to delete this tenant?",
+      "deleteSuccess": "Tenant deleted successfully",
+      "suspendTitle": "Suspend Tenant",
+      "suspendConfirm": "Are you sure you want to suspend this tenant? Its members lose access until it is reactivated.",
+      "suspendSuccess": "Tenant suspended successfully",
+      "reactivateTitle": "Reactivate Tenant",
+      "reactivateConfirm": "Are you sure you want to reactivate this tenant?",
+      "reactivateSuccess": "Tenant reactivated successfully",
+      "list": {
+        "title": "Tenants List"
+      },
+      "create": {
+        "title": "Create Tenant"
+      },
+      "update": {
+        "title": "Update Tenant"
+      },
+      "status": {
+        "active": "Active",
+        "suspended": "Suspended"
+      },
+      "members": {
+        "title": "Tenant Members",
+        "addTitle": "Add Member",
+        "addButton": "Add Member",
+        "addSuccess": "Member added successfully",
+        "rolesTitle": "Change Member Roles",
+        "rolesButton": "Change Roles",
+        "rolesSuccess": "Member roles updated successfully",
+        "removeTitle": "Remove Member",
+        "removeConfirm": "Are you sure you want to remove this member from the tenant?",
+        "removeSuccess": "Member removed successfully"
+      },
+      "switcher": {
+        "label": "Tenant",
+        "switchTo": "Switch tenant",
+        "switchSuccess": "You are now working in ${tenant}",
+        "noTenant": "No tenant selected"
+      }
+    },
+    "selectTenant": {
+      "title": "Select Tenant",
+      "description": "Choose the tenant you want to work in.",
+      "suspendedReason": "The tenant you were working in has been suspended. Choose another tenant to continue.",
+      "revokedReason": "Your membership in that tenant has been revoked. Choose another tenant to continue.",
+      "unavailableReason": "That tenant is no longer available. Choose another tenant to continue.",
+      "noSelectionReason": "Choose a tenant before opening this screen."
+    },
+    "noTenant": {
+      "title": "No Tenant",
+      "description": "You do not belong to an active tenant yet. Create your own tenant, or ask an administrator to add you to theirs.",
+      "createTitle": "Create Your Tenant",
+      "createButton": "Create Tenant",
+      "createSuccess": "Tenant created. You are now its administrator."
     }
   },
   "notifications": {

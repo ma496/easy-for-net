@@ -3,11 +3,13 @@ using Backend.Features.Identity.Core;
 namespace Backend.Tests.Features.Identity.Endpoints.Users;
 
 using Backend.Features.Identity.Endpoints.Users;
+using Backend.Tests.Features.Tenancy;
 
 /// <summary>
-/// Tests for the <see cref="UserGetEndpoint"/> covering retrieval of existing and non-existent users.
+/// Tests for the <see cref="UserGetEndpoint"/> covering retrieval of existing and non-existent users,
+/// and the account of another tenant that is not there to be read (AC-094).
 /// </summary>
-public class UserGetTests(App app) : AppTestsBase(app)
+public class UserGetTests(App app) : TenancyTestsBase(app)
 {
     /// <summary>
     /// Verifies that a created user can be retrieved by ID with the correct username and email.
@@ -76,5 +78,56 @@ public class UserGetTests(App app) : AppTestsBase(app)
             });
 
         getRsp.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    /// <summary>
+    /// Verifies that reading an account holding no membership in the tenant being acted in answers
+    /// exactly as reading an account that does not exist does, and leaves it untouched (AC-094).
+    /// </summary>
+    /// <remarks>
+    /// The two answers are compared as one: the same status and the same body, so not even their shape
+    /// tells a caller whether the account it named belongs to another tenant or to nobody. The
+    /// account's stored values are compared as well, because a refusal that had read the row on its
+    /// way to being refused would be a different answer wearing the same costume.
+    /// </remarks>
+    [Fact]
+    public async Task Cross_Tenant_User_Responds_As_Missing()
+    {
+        var acted = await CreateTenantAsync();
+        var other = await CreateTenantAsync();
+        var administrator = await CreateTenantUserAsync(
+            acted.Id, await CreateTenantRoleAsync(acted.Id, Allow.User_View));
+        var stranger = await CreateTenantUserAsync(
+            other.Id, await CreateTenantRoleAsync(other.Id, Allow.User_View));
+
+        var stored = await DbContext.Users
+            .AsNoTracking()
+            .SingleAsync(account => account.Id == stranger.Id, TestContext.Current.CancellationToken);
+        var before = (stored.Username, stored.Email, stored.FirstName, stored.LastName, stored.IsActive);
+
+        var client = await ClientForAsync(administrator.Username);
+
+        var (refused, _) = await client
+            .GETAsync<UserGetEndpoint, UserGetRequest, UserGetResponse>(new() { Id = stranger.Id });
+
+        var (unknown, _) = await client
+            .GETAsync<UserGetEndpoint, UserGetRequest, UserGetResponse>(new() { Id = Guid.NewGuid() });
+
+        refused.StatusCode.Should().Be(unknown.StatusCode,
+            "an account of another tenant and an account that never existed are one answer, not two");
+        refused.StatusCode.Should().Be(HttpStatusCode.NotFound);
+
+        var refusedBody = await refused.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var unknownBody = await unknown.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        refusedBody.Should().Be(unknownBody,
+            "nothing in the answer distinguishes an account the caller may not administer from one that is not there");
+        refusedBody.Should().NotContain(stranger.Username,
+            "so that the account named by the caller is not confirmed back to them by being refused");
+
+        var after = await DbContext.Users
+            .AsNoTracking()
+            .SingleAsync(account => account.Id == stranger.Id, TestContext.Current.CancellationToken);
+        (after.Username, after.Email, after.FirstName, after.LastName, after.IsActive).Should().Be(before,
+            "the account of another tenant was not read, and is exactly as it was");
     }
 }

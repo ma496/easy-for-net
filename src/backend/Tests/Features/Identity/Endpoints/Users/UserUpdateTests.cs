@@ -2,11 +2,14 @@ namespace Backend.Tests.Features.Identity.Endpoints.Users;
 
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Endpoints.Users;
+using Backend.Tests.Features.Tenancy;
 
 /// <summary>
-/// Tests for the <see cref="UserUpdateEndpoint"/> covering updating users, non-existent users, and protected system-created users.
+/// Tests for the <see cref="UserUpdateEndpoint"/> covering updating users, non-existent users,
+/// protected system-created users, and the account of another tenant that is out of reach (AC-094,
+/// AC-105).
 /// </summary>
-public class UserUpdateTests(App app) : AppTestsBase(app)
+public class UserUpdateTests(App app) : TenancyTestsBase(app)
 {
     /// <summary>
     /// Verifies that a created user can be successfully updated with new first name, last name, active status, and roles.
@@ -94,5 +97,71 @@ public class UserUpdateTests(App app) : AppTestsBase(app)
         updateRsp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         res.Errors.Should().ContainSingle();
         res.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedUserCannotBeUpdated);
+    }
+
+    /// <summary>
+    /// Verifies that updating an account holding no membership in the tenant being acted in answers
+    /// exactly as updating an account that does not exist does, and leaves it untouched (AC-094,
+    /// AC-105).
+    /// </summary>
+    /// <remarks>
+    /// The request asks for a change to the account's profile and for it to be deactivated, so the
+    /// stored values compared afterwards say whether any part of it was applied: an account reached by
+    /// an administrator of another tenant would come back renamed, and - the half AC-105 speaks to -
+    /// an account whose active flag was reached from outside its tenant would be one deactivation away
+    /// from losing the access it was meant to keep.
+    /// </remarks>
+    [Fact]
+    public async Task Cross_Tenant_User_Responds_As_Missing()
+    {
+        var acted = await CreateTenantAsync();
+        var other = await CreateTenantAsync();
+        var actedRoleId = await CreateTenantRoleAsync(acted.Id, Allow.User_View, Allow.User_Update);
+        var administrator = await CreateTenantUserAsync(acted.Id, actedRoleId);
+        var stranger = await CreateTenantUserAsync(
+            other.Id, await CreateTenantRoleAsync(other.Id, Allow.User_View));
+
+        var stored = await DbContext.Users
+            .AsNoTracking()
+            .SingleAsync(account => account.Id == stranger.Id, TestContext.Current.CancellationToken);
+        var before = (stored.Username, stored.Email, stored.FirstName, stored.LastName, stored.IsActive);
+
+        var client = await ClientForAsync(administrator.Username);
+
+        var (refused, _) = await client
+            .PUTAsync<UserUpdateEndpoint, UserUpdateRequest, UserUpdateResponse>(new()
+            {
+                Id = stranger.Id,
+                FirstName = "Changed",
+                LastName = "Changed",
+                IsActive = false,
+                Roles = [actedRoleId]
+            });
+
+        var (unknown, _) = await client
+            .PUTAsync<UserUpdateEndpoint, UserUpdateRequest, UserUpdateResponse>(new()
+            {
+                Id = Guid.NewGuid(),
+                FirstName = "Changed",
+                LastName = "Changed",
+                IsActive = false,
+                Roles = [actedRoleId]
+            });
+
+        refused.StatusCode.Should().Be(unknown.StatusCode,
+            "an account of another tenant and an account that never existed are one answer, not two");
+        refused.StatusCode.Should().Be(HttpStatusCode.NotFound);
+
+        var refusedBody = await refused.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var unknownBody = await unknown.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        refusedBody.Should().Be(unknownBody,
+            "nothing in the answer distinguishes an account the caller may not administer from one that is not there");
+
+        var after = await DbContext.Users
+            .AsNoTracking()
+            .SingleAsync(account => account.Id == stranger.Id, TestContext.Current.CancellationToken);
+        after.IsActive.Should().BeTrue("the request asked for the account to be deactivated from outside its tenant, and was refused before reaching it");
+        (after.Username, after.Email, after.FirstName, after.LastName, after.IsActive).Should().Be(before,
+            "no part of the update was applied to the account of another tenant");
     }
 }

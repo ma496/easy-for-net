@@ -35,7 +35,8 @@
     "allRightsReserved": "Все права защищены.",
     "deleteConfirm": "Да, удалить",
     "notifications": "Уведомления",
-    "viewAll": "Показать все"
+    "viewAll": "Показать все",
+    "close": "Закрыть"
   },
   "navigation": {
     "home": "Главная",
@@ -64,7 +65,14 @@
     "usersUpdate": "Обновить",
     "notifications": "Уведомления",
     "notificationsList": "Список",
-    "notificationsDetail": "Детали"
+    "notificationsDetail": "Детали",
+    "tenants": "Арендаторы",
+    "tenantsList": "Список",
+    "tenantsCreate": "Создать",
+    "tenantsUpdate": "Обновить",
+    "tenantsMembers": "Участники",
+    "selectTenant": "Выбрать арендатора",
+    "noTenant": "Нет арендатора"
   },
   "search": {
     "dashboard": "Панель управления",
@@ -82,7 +90,9 @@
     "notifications": "Уведомления",
     "uiFormElements": "Элементы формы UI",
     "uiFileUpload": "Загрузка файлов UI",
-    "uiTooltips": "Подсказки UI"
+    "uiTooltips": "Подсказки UI",
+    "tenants": "Арендаторы",
+    "tenantsCreate": "Создать арендатора"
   },
   "form": {
     "label": {
@@ -98,7 +108,10 @@
       "roleDescription": "Описание",
       "roles": "Роли",
       "isActive": "Активен",
-      "name": "Название"
+      "name": "Название",
+      "tenantName": "Название арендатора",
+      "tenantIdentifier": "Идентификатор",
+      "user": "Пользователь"
     },
     "placeholder": {
       "username": "Введите имя пользователя",
@@ -111,7 +124,10 @@
       "confirmPassword": "Подтвердите пароль",
       "roleName": "Введите название роли",
       "roleDescription": "Введите описание роли",
-      "roles": "Выберите роли"
+      "roles": "Выберите роли",
+      "tenantName": "Введите название арендатора",
+      "tenantIdentifier": "Введите идентификатор (например acme)",
+      "user": "Выберите пользователя"
     }
   },
   "validation": {
@@ -121,7 +137,8 @@
     "email": "Неверный формат email",
     "invalidEmail": "Неверный email",
     "mustMatch": "Поле должно совпадать с ${otherField}",
-    "atLeastOneSelected": "Необходимо выбрать хотя бы один элемент"
+    "atLeastOneSelected": "Необходимо выбрать хотя бы один элемент",
+    "tenantIdentifier": "Используйте строчные латинские буквы, цифры и одиночные дефисы; значение должно начинаться и заканчиваться буквой или цифрой"
   },
   "error": {
     "400": {
@@ -169,6 +186,8 @@
       "referencedRecordNotFound": "Ссылочная запись не найдена",
       "invalidValueProvided": "Предоставлено неверное значение",
       "databaseError": "Ошибка базы данных",
+      "authenticationRequired": "Для этой операции требуется вход в систему.",
+      "permissionDenied": "Ваши роли не предоставляют разрешение, необходимое для этой операции.",
       "invalidCurrentPassword": "Неверный текущий пароль",
       "invalidToken": "Неверный токен",
       "tokenExpired": "Токен истек",
@@ -186,7 +205,19 @@
       "systemCreatedRoleCannotBeDeleted": "Роль, созданную системой, нельзя удалить",
       "systemCreatedRoleCannotBeUpdated": "Роль, созданную системой, нельзя обновить",
       "systemCreatedUserCannotBeDeleted": "Пользователя, созданного системой, нельзя удалить",
-      "systemCreatedUserCannotBeUpdated": "Пользователя, созданного системой, нельзя обновить"
+      "systemCreatedUserCannotBeUpdated": "Пользователя, созданного системой, нельзя обновить",
+      "tenantNotFound": "Арендатор не найден",
+      "tenantSuspended": "Этот арендатор приостановлен",
+      "notTenantMember": "Вы не являетесь участником этого арендатора",
+      "noActiveTenant": "Активный арендатор не выбран",
+      "tenantIdentifierAlreadyExists": "Идентификатор арендатора уже существует",
+      "duplicateTenantMembership": "Этот пользователь уже является участником этого арендатора",
+      "lastTenantAdministrator": "Последнего администратора арендатора нельзя удалить",
+      "systemCreatedTenantCannotBeModified": "Арендатора, созданного системой, нельзя изменить",
+      "crossTenantFileAccess": "Этот файл принадлежит другому арендатору",
+      "tenantMembershipRevoked": "Ваше членство в этом арендаторе отозвано",
+      "platformPermissionNotGrantable": "Права платформы нельзя назначить роли арендатора",
+      "concurrentModification": "Эта запись была изменена другим пользователем. Обновите страницу и попробуйте снова."
     }
   },
   "table": {
@@ -206,7 +237,8 @@
       "status": "Статус",
       "date": "Дата",
       "group": "Группа",
-      "updated": "Обновлено"
+      "updated": "Обновлено",
+      "identifier": "Идентификатор"
     },
     "pagination": {
       "showingEntries": "Показано с ${from} по ${to} из ${totalRecords} записей"
@@ -232,7 +264,10 @@
       "role": "Роль",
       "selectRole": "Выберите роль",
       "search": "Поиск",
-      "clear": "Очистить"
+      "clear": "Очистить",
+      "tenantStatus": "Статус арендатора",
+      "allStatuses": "Все статусы",
+      "suspended": "Приостановленные"
     }
   },
   "file": {
@@ -451,6 +486,68 @@
         "title": "Детали уведомления"
       },
       "viewAll": "Посмотреть все уведомления"
+    },
+    "tenants": {
+      "title": "Арендаторы",
+      "notFound": "Арендатор не найден",
+      "systemCreated": "Создан системой",
+      "createSuccess": "Арендатор успешно создан",
+      "updateSuccess": "Арендатор успешно обновлён",
+      "deleteTitle": "Удалить арендатора",
+      "deleteConfirm": "Вы уверены, что хотите удалить этого арендатора?",
+      "deleteSuccess": "Арендатор успешно удалён",
+      "suspendTitle": "Приостановить арендатора",
+      "suspendConfirm": "Вы уверены, что хотите приостановить этого арендатора? Его участники потеряют доступ до повторной активации.",
+      "suspendSuccess": "Арендатор успешно приостановлен",
+      "reactivateTitle": "Возобновить арендатора",
+      "reactivateConfirm": "Вы уверены, что хотите возобновить этого арендатора?",
+      "reactivateSuccess": "Арендатор успешно возобновлён",
+      "list": {
+        "title": "Список арендаторов"
+      },
+      "create": {
+        "title": "Создать арендатора"
+      },
+      "update": {
+        "title": "Обновить арендатора"
+      },
+      "status": {
+        "active": "Активен",
+        "suspended": "Приостановлен"
+      },
+      "members": {
+        "title": "Участники арендатора",
+        "addTitle": "Добавить участника",
+        "addButton": "Добавить участника",
+        "addSuccess": "Участник успешно добавлен",
+        "rolesTitle": "Изменить роли участника",
+        "rolesButton": "Изменить роли",
+        "rolesSuccess": "Роли участника успешно обновлены",
+        "removeTitle": "Удалить участника",
+        "removeConfirm": "Вы уверены, что хотите удалить этого участника из арендатора?",
+        "removeSuccess": "Участник успешно удалён"
+      },
+      "switcher": {
+        "label": "Арендатор",
+        "switchTo": "Сменить арендатора",
+        "switchSuccess": "Теперь вы работаете в ${tenant}",
+        "noTenant": "Арендатор не выбран"
+      }
+    },
+    "selectTenant": {
+      "title": "Выбрать арендатора",
+      "description": "Выберите арендатора, в котором хотите работать.",
+      "suspendedReason": "Арендатор, в котором вы работали, приостановлен. Выберите другого арендатора, чтобы продолжить.",
+      "revokedReason": "Ваше членство в этом арендаторе отозвано. Выберите другого арендатора, чтобы продолжить.",
+      "unavailableReason": "Этот арендатор больше недоступен. Выберите другого арендатора, чтобы продолжить.",
+      "noSelectionReason": "Выберите арендатора, прежде чем открывать этот экран."
+    },
+    "noTenant": {
+      "title": "Нет арендатора",
+      "description": "Вы пока не состоите в активном арендаторе. Создайте своего арендатора или попросите администратора добавить вас в свой.",
+      "createTitle": "Создайте своего арендатора",
+      "createButton": "Создать арендатора",
+      "createSuccess": "Арендатор создан. Теперь вы его администратор."
     }
   },
   "notifications": {

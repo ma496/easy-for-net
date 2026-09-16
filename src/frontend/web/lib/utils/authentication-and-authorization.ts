@@ -1,15 +1,30 @@
-import { GetUserInfoResponse } from '@/store/api/identity'
+import { GetUserInfoResponse, GetUserInfoTenant } from '@/store/api/identity'
 
-/** Authentication slice shape: the current user (with roles/permissions) and an isAuthenticated flag. */
+/**
+ * Authentication slice shape: the current user (with the roles and permissions granted
+ * in the tenant being acted in), the active tenant, every tenant the user may act in,
+ * the last tenant failure code reported by the API, and an isAuthenticated flag.
+ * activeTenant is undefined while the user has not chosen a tenant yet, and tenants is
+ * empty for an account that holds no usable membership.
+ */
 export interface AuthState {
   user: GetUserInfoResponse | undefined
   isAuthenticated: boolean
+  activeTenant: GetUserInfoTenant | undefined
+  tenants: GetUserInfoTenant[]
+  tenantError: string | undefined
 }
 
 /**
  * Returns true if the authenticated state grants all the listed
  * permission names, matching any of the user's roles. An empty
  * permissions list is treated as "no permission required".
+ *
+ * The roles held in state are the ones the API returns for the tenant the
+ * user is acting in, so the answer is already scoped to that tenant and no
+ * tenant argument is needed. The check deliberately does not require an
+ * active tenant: platform-tier permissions must keep evaluating while the
+ * user is acting in no tenant at all.
  */
 export const isAllowed = (state: AuthState, permissions: string[]): boolean => {
   if (!state.user || !state.user.roles) return false

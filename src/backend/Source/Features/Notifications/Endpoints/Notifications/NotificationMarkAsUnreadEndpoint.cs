@@ -2,11 +2,18 @@ namespace Backend.Features.Notifications.Endpoints.Notifications;
 
 using Backend.Base.Dto;
 using Backend.Features.Identity.Core;
+using Backend.Features.Notifications.Core;
 
 /// <summary>
 /// POST endpoint that marks a single notification as unread for the current user.
 /// </summary>
-sealed class NotificationMarkAsUnreadEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService) : Endpoint<NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>
+/// <remarks>
+/// The notification is sought among the ones the caller can see while acting in the active tenant, so a
+/// notification of another tenant answers as one that does not exist, while a platform-wide notification
+/// is reachable from whichever tenant the caller acts in - which is what lets a recipient put a broadcast
+/// back among their unread ones.
+/// </remarks>
+sealed class NotificationMarkAsUnreadEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext) : Endpoint<NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>
 {
     public override void Configure()
     {
@@ -23,8 +30,14 @@ sealed class NotificationMarkAsUnreadEndpoint(AppDbContext dbContext, ICurrentUs
             return;
         }
 
+        // Reading the active tenant here rather than leaning on the query filter is what lets the
+        // platform-wide notification back in: the filter alone would hide every row naming no tenant.
+        var activeTenantId = tenantContext.CurrentTenantId;
+
         var notification = await dbContext.Notifications
-            .FirstOrDefaultAsync(x => x.Id == request.Id && (x.UserId == userId.Value || x.UserId == null), cancellationToken);
+            .AcrossAllTenants()
+            .VisibleTo(userId.Value, activeTenantId)
+            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
         if (notification == null)
         {

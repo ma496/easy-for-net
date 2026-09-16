@@ -19,4 +19,18 @@ public partial class Allow
     public const string Role_ChangePermissions = "Role.ChangePermissions";
 
     public const string File_Delete = "File.Delete";
+
+    public const string Tenant_View = "Tenant.View";
+    public const string Tenant_Create = "Tenant.Create";
+    public const string Tenant_Update = "Tenant.Update";
+    public const string Tenant_Suspend = "Tenant.Suspend";
+    public const string Tenant_Reactivate = "Tenant.Reactivate";
+    public const string Tenant_Delete = "Tenant.Delete";
+
+    public const string TenantMember_View = "TenantMember.View";
+    public const string TenantMember_Add = "TenantMember.Add";
+    public const string TenantMember_UpdateRoles = "TenantMember.UpdateRoles";
+    public const string TenantMember_Remove = "TenantMember.Remove";
+
+    public const string Platform_Administration = "Platform.Administration";
 }

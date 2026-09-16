@@ -7,6 +7,12 @@ using Backend.Features.Identity.Core.Entities;
 /// Anonymous POST endpoint that completes the password-reset flow by validating a
 /// previously issued reset token and updating the user's password.
 /// </summary>
+/// <remarks>
+/// Marked <see cref="AllowNoTenantAttribute"/> because completing password recovery is one of the
+/// account self-service flows that has to work with no tenant established: it acts on the account
+/// the token names rather than on any tenant's data.
+/// </remarks>
+[AllowNoTenant]
 sealed class ResetPasswordEndpoint(ITokenService tokenService,
                                    IUserService userService,
                                    IPasswordHasher passwordHasher,

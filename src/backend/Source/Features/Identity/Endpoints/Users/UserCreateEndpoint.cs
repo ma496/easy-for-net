@@ -4,7 +4,9 @@ using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 
 /// <summary>
-/// This endpoint that handles <c>POST /users</c> to create a new user with the supplied roles.
+/// This endpoint that handles <c>POST /users</c> to create a new user with the supplied roles, and to
+/// make that account a member of the tenant the caller is acting in. The sign-in identifiers are kept
+/// unique across every tenant, while the roles the account may start with are the acting tenant's own.
 /// </summary>
 sealed class UserCreateEndpoint(IUserService userService, AppDbContext dbContext) : Endpoint<UserCreateRequest, UserCreateResponse>
 {
@@ -17,6 +19,11 @@ sealed class UserCreateEndpoint(IUserService userService, AppDbContext dbContext
 
     public override async Task HandleAsync(UserCreateRequest request, CancellationToken cancellationToken)
     {
+        // An account belongs to no tenant - one person authenticates with one account however many
+        // tenants they belong to - so both identifier checks read every account there is rather than
+        // the ones the caller may administer. A username or an email address already taken in another
+        // tenant is therefore taken here too, and the account is refused: a second account carrying
+        // the same sign-in identifier could never be told apart from the first at sign-in.
         var usernameExists = await dbContext.Users
             .AnyAsync(x => x.UsernameNormalized == request.Username.Trim().ToLowerInvariant(), cancellationToken);
         if (usernameExists)
@@ -31,10 +38,30 @@ sealed class UserCreateEndpoint(IUserService userService, AppDbContext dbContext
             ThrowError("Email already exists", ErrorCodes.EmailAlreadyExists);
         }
 
+        // The roles a new account may start with are the roles of the tenant being acted in and no
+        // others, so they are read straight through the tenant query filter - the same authority
+        // UserUpdateEndpoint reads them from, so a role that can be granted here can also be taken
+        // away there. A role belonging to another tenant is not found, exactly as a role that does not
+        // exist is not, and both are refused the same way.
+        var requestedRoleIds = request.Roles.Distinct().ToList();
+        var tenantRoleCount = await dbContext.Roles
+            .AsNoTracking()
+            .CountAsync(role => requestedRoleIds.Contains(role.Id), cancellationToken);
+        if (tenantRoleCount != requestedRoleIds.Count)
+        {
+            ThrowError(x => x.Roles, "Referenced record does not exist.", ErrorCodes.ReferencedRecordNotFound);
+        }
+
         var requestMapper = new UserCreateRequestMapper();
         var entity = requestMapper.Map(request);
         entity.IsEmailVerified = true;
-        // save entity to db
+        // Saving the account also grants it an active membership of the tenant being acted in, written
+        // in the same transaction by the service, so an administrator never creates an account that
+        // the very next list or read refuses to show them. The membership is attributed centrally from
+        // the active tenant rather than from anything the caller sent, so the request cannot name the
+        // tenant the new account lands in. This endpoint claims no exemption from the active-tenant
+        // requirement, so a tenant is always established by the time it runs and an account created
+        // here always joins one.
         await userService.CreateAsync(entity, request.Password);
         var responseMapper = new UserCreateResponseMapper();
         await Send.ResponseAsync(responseMapper.Map(entity), cancellation: cancellationToken);
@@ -96,8 +123,11 @@ public partial class UserCreateRequestMapper
      MapperIgnoreSource(nameof(UserCreateRequest.Password))]
     public partial User Map(UserCreateRequest request);
 
+    // A UserRole is keyed by the pair of account and role, so one request naming the same role twice
+    // would produce two rows carrying one key and fail the save rather than the request. The ids are
+    // collapsed to the set the endpoint validated, which is the set the response then echoes back.
     private static ICollection<UserRole> RolesToUserRoles(List<Guid> roles)
-        => [.. roles.Select(x => new UserRole { RoleId = x })];
+        => [.. roles.Distinct().Select(x => new UserRole { RoleId = x })];
 }
 
 /// <summary>

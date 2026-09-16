@@ -7,7 +7,13 @@ using Backend.Features.Notifications.Core.Entities;
 /// <summary>
 /// GET endpoint that returns a single notification by id, resolving its per-user read state.
 /// </summary>
-sealed class NotificationGetEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService) : Endpoint<NotificationGetRequest, NotificationGetResponse>
+/// <remarks>
+/// The notification is looked for among the ones the caller can see while acting in the active tenant,
+/// which is the same set the list answers from: the tenant's own notifications addressed to them or to
+/// its whole membership, and the platform-wide ones. Both halves matter here - a notification of another
+/// tenant is not the caller's to read, and a platform-wide one is, whichever tenant they act in.
+/// </remarks>
+sealed class NotificationGetEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext) : Endpoint<NotificationGetRequest, NotificationGetResponse>
 {
     public override void Configure()
     {
@@ -24,9 +30,15 @@ sealed class NotificationGetEndpoint(AppDbContext dbContext, ICurrentUserService
             return;
         }
 
+        // Reading the active tenant here rather than leaning on the query filter is what lets the
+        // platform-wide notification back in: the filter alone would hide every row naming no tenant.
+        var activeTenantId = tenantContext.CurrentTenantId;
+
         var query = dbContext.Notifications
             .AsNoTracking()
-            .Where(x => x.Id == request.Id && (x.UserId == userId.Value || x.UserId == null));
+            .AcrossAllTenants()
+            .VisibleTo(userId.Value, activeTenantId)
+            .Where(x => x.Id == request.Id);
 
         var notification = await NotificationGetResponseMapper.ProjectTo(query)
             .FirstOrDefaultAsync(cancellationToken);

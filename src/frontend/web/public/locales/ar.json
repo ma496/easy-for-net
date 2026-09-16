@@ -35,7 +35,8 @@
     "allRightsReserved": "جميع الحقوق محفوظة.",
     "deleteConfirm": "نعم، احذفه",
     "notifications": "الإشعارات",
-    "viewAll": "عرض الكل"
+    "viewAll": "عرض الكل",
+    "close": "إغلاق"
   },
   "navigation": {
     "home": "الرئيسية",
@@ -64,7 +65,14 @@
     "usersUpdate": "تحديث",
     "notifications": "الإشعارات",
     "notificationsList": "قائمة",
-    "notificationsDetail": "التفاصيل"
+    "notificationsDetail": "التفاصيل",
+    "tenants": "المستأجرون",
+    "tenantsList": "قائمة",
+    "tenantsCreate": "إنشاء",
+    "tenantsUpdate": "تحديث",
+    "tenantsMembers": "الأعضاء",
+    "selectTenant": "اختيار المستأجر",
+    "noTenant": "لا يوجد مستأجر"
   },
   "search": {
     "dashboard": "لوحة القيادة",
@@ -82,7 +90,9 @@
     "notifications": "الإشعارات",
     "uiFormElements": "عناصر النموذج",
     "uiFileUpload": "رفع الملفات",
-    "uiTooltips": "تلميحات واجهة المستخدم"
+    "uiTooltips": "تلميحات واجهة المستخدم",
+    "tenants": "المستأجرون",
+    "tenantsCreate": "إنشاء مستأجر"
   },
   "form": {
     "label": {
@@ -98,7 +108,10 @@
       "roleDescription": "الوصف",
       "roles": "الأدوار",
       "isActive": "نشط",
-      "name": "الاسم"
+      "name": "الاسم",
+      "tenantName": "اسم المستأجر",
+      "tenantIdentifier": "المعرّف",
+      "user": "المستخدم"
     },
     "placeholder": {
       "username": "أدخل اسم المستخدم",
@@ -111,7 +124,10 @@
       "confirmPassword": "أدخل تأكيد كلمة المرور",
       "roleName": "أدخل اسم الدور",
       "roleDescription": "أدخل وصف الدور",
-      "roles": "اختر الأدوار"
+      "roles": "اختر الأدوار",
+      "tenantName": "أدخل اسم المستأجر",
+      "tenantIdentifier": "أدخل المعرّف (مثال acme)",
+      "user": "اختر المستخدم"
     }
   },
   "validation": {
@@ -121,7 +137,8 @@
     "email": "تنسيق البريد الإلكتروني غير صالح",
     "invalidEmail": "بريد إلكتروني غير صالح",
     "mustMatch": "يجب أن يتطابق الحقل مع ${otherField}",
-    "atLeastOneSelected": "يجب اختيار عنصر واحد على الأقل"
+    "atLeastOneSelected": "يجب اختيار عنصر واحد على الأقل",
+    "tenantIdentifier": "استخدم أحرفًا إنجليزية صغيرة وأرقامًا وشرطات مفردة، على أن يبدأ وينتهي بحرف أو رقم"
   },
   "error": {
     "400": {
@@ -169,6 +186,8 @@
       "referencedRecordNotFound": "السجل المشار إليه غير موجود",
       "invalidValueProvided": "تم تقديم قيمة غير صالحة",
       "databaseError": "خطأ في قاعدة البيانات",
+      "authenticationRequired": "تتطلب هذه العملية تسجيل الدخول.",
+      "permissionDenied": "لا تمنح أدوارك الإذن الذي تتطلبه هذه العملية.",
       "invalidCurrentPassword": "كلمة المرور الحالية غير صالحة",
       "invalidToken": "رمز غير صالح",
       "tokenExpired": "انتهت صلاحية الرمز",
@@ -186,7 +205,19 @@
       "systemCreatedRoleCannotBeDeleted": "لا يمكن حذف الدور الذي أنشأه النظام",
       "systemCreatedRoleCannotBeUpdated": "لا يمكن تحديث الدور الذي أنشأه النظام",
       "systemCreatedUserCannotBeDeleted": "لا يمكن حذف المستخدم الذي أنشأه النظام",
-      "systemCreatedUserCannotBeUpdated": "لا يمكن تحديث المستخدم الذي أنشأه النظام"
+      "systemCreatedUserCannotBeUpdated": "لا يمكن تحديث المستخدم الذي أنشأه النظام",
+      "tenantNotFound": "المستأجر غير موجود",
+      "tenantSuspended": "هذا المستأجر معلّق",
+      "notTenantMember": "أنت لست عضوًا في هذا المستأجر",
+      "noActiveTenant": "لم يتم اختيار مستأجر نشط",
+      "tenantIdentifierAlreadyExists": "معرّف المستأجر موجود بالفعل",
+      "duplicateTenantMembership": "هذا المستخدم عضو بالفعل في هذا المستأجر",
+      "lastTenantAdministrator": "لا يمكن إزالة آخر مسؤول للمستأجر",
+      "systemCreatedTenantCannotBeModified": "لا يمكن تعديل المستأجر الذي أنشأه النظام",
+      "crossTenantFileAccess": "هذا الملف يخص مستأجرًا آخر",
+      "tenantMembershipRevoked": "تم إلغاء عضويتك في هذا المستأجر",
+      "platformPermissionNotGrantable": "لا يمكن منح أذونات المنصة لدور مستأجر",
+      "concurrentModification": "تم تغيير هذا السجل بواسطة شخص آخر. أعد التحميل وحاول مرة أخرى."
     }
   },
   "table": {
@@ -206,7 +237,8 @@
       "status": "الحالة",
       "date": "التاريخ",
       "group": "المجموعة",
-      "updated": "محدث"
+      "updated": "محدث",
+      "identifier": "المعرّف"
     },
     "pagination": {
       "showingEntries": "عرض ${from} إلى ${to} من ${totalRecords} مُدخل"
@@ -232,7 +264,10 @@
       "role": "الدور",
       "selectRole": "اختر دوراً",
       "search": "بحث",
-      "clear": "مسح"
+      "clear": "مسح",
+      "tenantStatus": "حالة المستأجر",
+      "allStatuses": "كل الحالات",
+      "suspended": "معلّق"
     }
   },
   "file": {
@@ -451,6 +486,68 @@
         "title": "تفاصيل الإشعار"
       },
       "viewAll": "عرض جميع الإشعارات"
+    },
+    "tenants": {
+      "title": "المستأجرون",
+      "notFound": "المستأجر غير موجود",
+      "systemCreated": "أنشأه النظام",
+      "createSuccess": "تم إنشاء المستأجر بنجاح",
+      "updateSuccess": "تم تحديث المستأجر بنجاح",
+      "deleteTitle": "حذف المستأجر",
+      "deleteConfirm": "هل أنت متأكد أنك تريد حذف هذا المستأجر؟",
+      "deleteSuccess": "تم حذف المستأجر بنجاح",
+      "suspendTitle": "تعليق المستأجر",
+      "suspendConfirm": "هل أنت متأكد أنك تريد تعليق هذا المستأجر؟ سيفقد أعضاؤه إمكانية الوصول حتى يتم إعادة تفعيله.",
+      "suspendSuccess": "تم تعليق المستأجر بنجاح",
+      "reactivateTitle": "إعادة تفعيل المستأجر",
+      "reactivateConfirm": "هل أنت متأكد أنك تريد إعادة تفعيل هذا المستأجر؟",
+      "reactivateSuccess": "تمت إعادة تفعيل المستأجر بنجاح",
+      "list": {
+        "title": "قائمة المستأجرين"
+      },
+      "create": {
+        "title": "إنشاء مستأجر"
+      },
+      "update": {
+        "title": "تحديث المستأجر"
+      },
+      "status": {
+        "active": "نشط",
+        "suspended": "معلّق"
+      },
+      "members": {
+        "title": "أعضاء المستأجر",
+        "addTitle": "إضافة عضو",
+        "addButton": "إضافة عضو",
+        "addSuccess": "تمت إضافة العضو بنجاح",
+        "rolesTitle": "تغيير أدوار العضو",
+        "rolesButton": "تغيير الأدوار",
+        "rolesSuccess": "تم تحديث أدوار العضو بنجاح",
+        "removeTitle": "إزالة العضو",
+        "removeConfirm": "هل أنت متأكد أنك تريد إزالة هذا العضو من المستأجر؟",
+        "removeSuccess": "تمت إزالة العضو بنجاح"
+      },
+      "switcher": {
+        "label": "المستأجر",
+        "switchTo": "تبديل المستأجر",
+        "switchSuccess": "أنت تعمل الآن في ${tenant}",
+        "noTenant": "لم يتم اختيار مستأجر"
+      }
+    },
+    "selectTenant": {
+      "title": "اختيار المستأجر",
+      "description": "اختر المستأجر الذي تريد العمل فيه.",
+      "suspendedReason": "تم تعليق المستأجر الذي كنت تعمل فيه. اختر مستأجرًا آخر للمتابعة.",
+      "revokedReason": "تم إلغاء عضويتك في ذلك المستأجر. اختر مستأجرًا آخر للمتابعة.",
+      "unavailableReason": "لم يعد ذلك المستأجر متاحًا. اختر مستأجرًا آخر للمتابعة.",
+      "noSelectionReason": "اختر مستأجرًا قبل فتح هذه الشاشة."
+    },
+    "noTenant": {
+      "title": "لا يوجد مستأجر",
+      "description": "أنت لا تنتمي إلى مستأجر نشط بعد. أنشئ مستأجرك الخاص، أو اطلب من المسؤول إضافتك إلى مستأجره.",
+      "createTitle": "أنشئ مستأجرك",
+      "createButton": "إنشاء مستأجر",
+      "createSuccess": "تم إنشاء المستأجر. أنت الآن المسؤول عنه."
     }
   },
   "notifications": {

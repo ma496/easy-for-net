@@ -35,7 +35,8 @@
     "allRightsReserved": "تمام حقوق محفوظ ہیں۔",
     "deleteConfirm": "ہاں، اسے حذف کریں",
     "notifications": "اطلاعات",
-    "viewAll": "سب دیکھیں"
+    "viewAll": "سب دیکھیں",
+    "close": "بند کریں"
   },
   "navigation": {
     "home": "ہوم",
@@ -64,7 +65,14 @@
     "usersUpdate": "اپ ڈیٹ",
     "notifications": "اطلاعات",
     "notificationsList": "فہرست",
-    "notificationsDetail": "تفصیلات"
+    "notificationsDetail": "تفصیلات",
+    "tenants": "ٹیننٹس",
+    "tenantsList": "فہرست",
+    "tenantsCreate": "بنائیں",
+    "tenantsUpdate": "اپ ڈیٹ",
+    "tenantsMembers": "اراکین",
+    "selectTenant": "ٹیننٹ منتخب کریں",
+    "noTenant": "کوئی ٹیننٹ نہیں"
   },
   "search": {
     "dashboard": "ڈیش بورڈ",
@@ -82,7 +90,9 @@
     "notifications": "اطلاعات",
     "uiFormElements": "UI فارم عناصر",
     "uiFileUpload": "UI فائل اپ لوڈ",
-    "uiTooltips": "UI ٹولٹپس"
+    "uiTooltips": "UI ٹولٹپس",
+    "tenants": "ٹیننٹس",
+    "tenantsCreate": "ٹیننٹ بنائیں"
   },
   "form": {
     "label": {
@@ -98,7 +108,10 @@
       "roleDescription": "تفصیل",
       "roles": "کردار",
       "isActive": "فعال",
-      "name": "نام"
+      "name": "نام",
+      "tenantName": "ٹیننٹ کا نام",
+      "tenantIdentifier": "شناخت کنندہ",
+      "user": "صارف"
     },
     "placeholder": {
       "username": "صارف کا نام درج کریں",
@@ -111,7 +124,10 @@
       "confirmPassword": "پاس ورڈ کی تصدیق درج کریں",
       "roleName": "کردار کا نام درج کریں",
       "roleDescription": "کردار کی تفصیل درج کریں",
-      "roles": "کردار منتخب کریں"
+      "roles": "کردار منتخب کریں",
+      "tenantName": "ٹیننٹ کا نام درج کریں",
+      "tenantIdentifier": "شناخت کنندہ درج کریں (مثال کے طور پر acme)",
+      "user": "صارف منتخب کریں"
     }
   },
   "validation": {
@@ -121,7 +137,8 @@
     "email": "غلط ای میل فارمیٹ",
     "invalidEmail": "غلط ای میل",
     "mustMatch": "فیلڈ ${otherField} کے ساتھ مماثل ہونا چاہیے",
-    "atLeastOneSelected": "کم از کم ایک آئٹم منتخب ہونا چاہیے"
+    "atLeastOneSelected": "کم از کم ایک آئٹم منتخب ہونا چاہیے",
+    "tenantIdentifier": "چھوٹے انگریزی حروف، ہندسے اور واحد ہائفن استعمال کریں، جو حرف یا ہندسے سے شروع اور ختم ہوں"
   },
   "error": {
     "400": {
@@ -169,6 +186,8 @@
       "referencedRecordNotFound": "حوالہ شدہ ریکارڈ نہیں ملا",
       "invalidValueProvided": "غلط ویلیو فراہم کی گئی",
       "databaseError": "ڈیٹا بیس کی خرابی",
+      "authenticationRequired": "اس عمل کے لیے سائن ان درکار ہے۔",
+      "permissionDenied": "آپ کے کردار اس عمل کے لیے مطلوبہ اجازت نہیں دیتے۔",
       "invalidCurrentPassword": "غلط موجودہ پاس ورڈ",
       "invalidToken": "غلط ٹوکن",
       "tokenExpired": "ٹوکن کی میعاد ختم ہوگئی",
@@ -186,7 +205,19 @@
       "systemCreatedRoleCannotBeDeleted": "سسٹم کا بنایا ہوا کردار حذف نہیں کیا جا سکتا",
       "systemCreatedRoleCannotBeUpdated": "سسٹم کا بنایا ہوا کردار اپ ڈیٹ نہیں کیا جا سکتا",
       "systemCreatedUserCannotBeDeleted": "سسٹم کا بنایا ہوا صارف حذف نہیں کیا جا سکتا",
-      "systemCreatedUserCannotBeUpdated": "سسٹم کا بنایا ہوا صارف اپ ڈیٹ نہیں کیا جا سکتا"
+      "systemCreatedUserCannotBeUpdated": "سسٹم کا بنایا ہوا صارف اپ ڈیٹ نہیں کیا جا سکتا",
+      "tenantNotFound": "ٹیننٹ نہیں ملا",
+      "tenantSuspended": "یہ ٹیننٹ معطل ہے",
+      "notTenantMember": "آپ اس ٹیننٹ کے رکن نہیں ہیں",
+      "noActiveTenant": "کوئی فعال ٹیننٹ منتخب نہیں ہے",
+      "tenantIdentifierAlreadyExists": "ٹیننٹ کا شناخت کنندہ پہلے سے موجود ہے",
+      "duplicateTenantMembership": "یہ صارف پہلے ہی اس ٹیننٹ کا رکن ہے",
+      "lastTenantAdministrator": "آخری ٹیننٹ منتظم کو نہیں ہٹایا جا سکتا",
+      "systemCreatedTenantCannotBeModified": "سسٹم کا بنایا ہوا ٹیننٹ تبدیل نہیں کیا جا سکتا",
+      "crossTenantFileAccess": "یہ فائل کسی دوسرے ٹیننٹ کی ہے",
+      "tenantMembershipRevoked": "اس ٹیننٹ میں آپ کی رکنیت منسوخ کر دی گئی ہے",
+      "platformPermissionNotGrantable": "پلیٹ فارم کی اجازتیں ٹیننٹ کے کردار کو نہیں دی جا سکتیں",
+      "concurrentModification": "یہ ریکارڈ کسی اور نے تبدیل کر دیا ہے۔ دوبارہ لوڈ کریں اور پھر کوشش کریں۔"
     }
   },
   "table": {
@@ -206,7 +237,8 @@
       "status": "حیثیت",
       "date": "تاریخ",
       "group": "گروپ",
-      "updated": "اپ ڈیٹ"
+      "updated": "اپ ڈیٹ",
+      "identifier": "شناخت کنندہ"
     },
     "pagination": {
       "showingEntries": "${totalRecords} اندراجات میں سے ${from} سے ${to} دکھائے جا رہے ہیں"
@@ -232,7 +264,10 @@
       "role": "کردار",
       "selectRole": "کردار منتخب کریں",
       "search": "تلاش",
-      "clear": "صاف کریں"
+      "clear": "صاف کریں",
+      "tenantStatus": "ٹیننٹ کی حیثیت",
+      "allStatuses": "تمام حیثیتیں",
+      "suspended": "معطل"
     }
   },
   "file": {
@@ -451,6 +486,68 @@
         "title": "اطلاع کی تفصیلات"
       },
       "viewAll": "تمام اطلاعات دیکھیں"
+    },
+    "tenants": {
+      "title": "ٹیننٹس",
+      "notFound": "ٹیننٹ نہیں ملا",
+      "systemCreated": "سسٹم کا بنایا ہوا",
+      "createSuccess": "ٹیننٹ کامیابی سے بنایا گیا",
+      "updateSuccess": "ٹیننٹ کامیابی سے اپ ڈیٹ ہو گیا",
+      "deleteTitle": "ٹیننٹ حذف کریں",
+      "deleteConfirm": "کیا آپ واقعی اس ٹیننٹ کو حذف کرنا چاہتے ہیں؟",
+      "deleteSuccess": "ٹیننٹ کامیابی سے حذف ہو گیا",
+      "suspendTitle": "ٹیننٹ معطل کریں",
+      "suspendConfirm": "کیا آپ واقعی اس ٹیننٹ کو معطل کرنا چاہتے ہیں؟ دوبارہ فعال ہونے تک اس کے اراکین کی رسائی ختم ہو جائے گی۔",
+      "suspendSuccess": "ٹیننٹ کامیابی سے معطل ہو گیا",
+      "reactivateTitle": "ٹیننٹ دوبارہ فعال کریں",
+      "reactivateConfirm": "کیا آپ واقعی اس ٹیننٹ کو دوبارہ فعال کرنا چاہتے ہیں؟",
+      "reactivateSuccess": "ٹیننٹ کامیابی سے دوبارہ فعال ہو گیا",
+      "list": {
+        "title": "ٹیننٹس کی فہرست"
+      },
+      "create": {
+        "title": "ٹیننٹ بنائیں"
+      },
+      "update": {
+        "title": "ٹیننٹ اپ ڈیٹ کریں"
+      },
+      "status": {
+        "active": "فعال",
+        "suspended": "معطل"
+      },
+      "members": {
+        "title": "ٹیننٹ کے اراکین",
+        "addTitle": "رکن شامل کریں",
+        "addButton": "رکن شامل کریں",
+        "addSuccess": "رکن کامیابی سے شامل ہو گیا",
+        "rolesTitle": "رکن کے کردار تبدیل کریں",
+        "rolesButton": "کردار تبدیل کریں",
+        "rolesSuccess": "رکن کے کردار کامیابی سے اپ ڈیٹ ہو گئے",
+        "removeTitle": "رکن ہٹائیں",
+        "removeConfirm": "کیا آپ واقعی اس رکن کو ٹیننٹ سے ہٹانا چاہتے ہیں؟",
+        "removeSuccess": "رکن کامیابی سے ہٹا دیا گیا"
+      },
+      "switcher": {
+        "label": "ٹیننٹ",
+        "switchTo": "ٹیننٹ تبدیل کریں",
+        "switchSuccess": "اب آپ ${tenant} میں کام کر رہے ہیں",
+        "noTenant": "کوئی ٹیننٹ منتخب نہیں"
+      }
+    },
+    "selectTenant": {
+      "title": "ٹیننٹ منتخب کریں",
+      "description": "وہ ٹیننٹ منتخب کریں جس میں آپ کام کرنا چاہتے ہیں۔",
+      "suspendedReason": "جس ٹیننٹ میں آپ کام کر رہے تھے وہ معطل کر دیا گیا ہے۔ جاری رکھنے کے لیے دوسرا ٹیننٹ منتخب کریں۔",
+      "revokedReason": "اس ٹیننٹ میں آپ کی رکنیت منسوخ کر دی گئی ہے۔ جاری رکھنے کے لیے دوسرا ٹیننٹ منتخب کریں۔",
+      "unavailableReason": "وہ ٹیننٹ اب دستیاب نہیں ہے۔ جاری رکھنے کے لیے دوسرا ٹیننٹ منتخب کریں۔",
+      "noSelectionReason": "یہ اسکرین کھولنے سے پہلے ایک ٹیننٹ منتخب کریں۔"
+    },
+    "noTenant": {
+      "title": "کوئی ٹیننٹ نہیں",
+      "description": "آپ ابھی تک کسی فعال ٹیننٹ سے وابستہ نہیں ہیں۔ اپنا ٹیننٹ بنائیں، یا کسی منتظم سے کہیں کہ وہ آپ کو اپنے ٹیننٹ میں شامل کرے۔",
+      "createTitle": "اپنا ٹیننٹ بنائیں",
+      "createButton": "ٹیننٹ بنائیں",
+      "createSuccess": "ٹیننٹ بن گیا۔ اب آپ اس کے منتظم ہیں۔"
     }
   },
   "notifications": {

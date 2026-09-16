@@ -57,7 +57,7 @@ export const rolesApi = appApi
         providesTags: (result, error, arg) => [{ type: 'Roles', id: arg.id }],
       }),
       roleList: builder.query<RoleListResponse, RoleListRequest>({
-        query: ({ page, pageSize, sortField, sortDirection, search, all, includeIds }) => ({
+        query: ({ page, pageSize, sortField, sortDirection, search, all, includeIds, tenantId }) => ({
           url: '/roles',
           params: {
             page,
@@ -67,6 +67,7 @@ export const rolesApi = appApi
             search,
             all,
             includeIds,
+            tenantId,
           },
           method: 'GET',
         }),

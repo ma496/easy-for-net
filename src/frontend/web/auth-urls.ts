@@ -45,6 +45,28 @@ export const authUrls: AuthUrl[] = [
     url: '/admin/roles/change-permissions/{id}',
     permissions: [Allow.Role_ChangePermissions],
   },
+  {
+    url: '/admin/tenants/list',
+    permissions: [Allow.Tenant_View],
+  },
+  {
+    url: '/admin/tenants/create',
+    permissions: [Allow.Tenant_Create],
+  },
+  {
+    url: '/admin/tenants/update/{id}',
+    permissions: [Allow.Tenant_Update],
+  },
+  {
+    url: '/admin/tenants/members/{id}',
+    permissions: [Allow.TenantMember_View],
+  },
+  {
+    url: '/select-tenant',
+  },
+  {
+    url: '/no-tenant',
+  },
 ]
 
 /**
@@ -86,4 +108,3 @@ export const getMatchedAuthUrl = (url: string): AuthUrl | undefined => {
 export const isAuthRequired = (url: string) => {
   return url.includes('/admin/') || !!getMatchedAuthUrl(url)
 }
-

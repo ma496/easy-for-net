@@ -86,6 +86,8 @@ export const UpdateProfile = () => {
               accept="image/*"
               maxSizeBytes={10 * 1024 * 1024}
               forceDelete={false}
+              // The avatar belongs to the account, not to a tenant, so it stays usable while acting in any tenant or in none.
+              accountOwned={true}
               fileName={values.image}
               onUploaded={(res) => {
                 setFieldValue('image', res.fileName)

@@ -6,9 +6,25 @@ using Backend.Features.Identity.Core.Entities;
 /// <summary>
 /// This endpoint that handles <c>PUT /roles/change-permissions/{id}</c> to replace a role's permission set in a single operation.
 /// </summary>
-sealed class ChangePermissionsEndpoint(IRoleService roleService)
+/// <remarks>
+/// Only the roles of the tenant being acted in can be re-permissioned here: a role belonging to another
+/// tenant is answered with the same 404 as an identifier naming no role at all and keeps the
+/// permissions it had, so nothing about it can be learned or changed from outside its tenant. A caller
+/// holding platform administration is the one exception and reaches any tenant's role. A tenant's
+/// system-created administrator role refuses permission changes outright. Beyond that, the catalogue is
+/// split in two tiers: a platform-tier permission governs the installation rather than any one tenant
+/// and can never be granted through a role that belongs to a tenant, so no tenant can promote itself to
+/// platform authority by re-permissioning one of its own roles.
+/// </remarks>
+sealed class ChangePermissionsEndpoint(
+    IRoleService roleService,
+    IPermissionService permissionService,
+    IPermissionDefinitionService permissionDefinitionService)
     : Endpoint<ChangePermissionsRequest, ChangePermissionsResponse>
 {
+    private const string SystemCreatedMessage = "System-created role permissions cannot be changed";
+    private const string PlatformPermissionMessage = "A platform permission cannot be granted through a tenant role";
+
     public override void Configure()
     {
         Put("change-permissions/{id}");
@@ -18,7 +34,8 @@ sealed class ChangePermissionsEndpoint(IRoleService roleService)
 
     public override async Task HandleAsync(ChangePermissionsRequest request, CancellationToken cancellationToken)
     {
-        // get entity from db
+        // get entity from db - narrowed to the roles the caller may see, so a role of another tenant is
+        // simply not found and falls into the 404 below.
         var entity = await roleService.Roles()
             .Include(x => x.RolePermissions)
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
@@ -28,7 +45,9 @@ sealed class ChangePermissionsEndpoint(IRoleService roleService)
             return;
         }
         if (entity.SystemCreated)
-            ThrowError("System-created role permissions cannot be changed", ErrorCodes.SystemCreatedRolePermissionsCannotBeChanged);
+            ThrowError(SystemCreatedMessage, ErrorCodes.SystemCreatedRolePermissionsCannotBeChanged);
+
+        await RefusePlatformPermissionsAsync(entity, request.Permissions, cancellationToken);
 
         // update role permissions based on request and already assigned permissions
         var permissionsToAssign = request.Permissions.Where(x => !entity.RolePermissions.Any(rp => rp.PermissionId == x)).ToList();
@@ -52,6 +71,45 @@ sealed class ChangePermissionsEndpoint(IRoleService roleService)
             }, cancellation: cancellationToken
         );
     }
+
+    /// <summary>
+    /// Refuses the change when it would leave a tenant's role holding a platform-tier permission.
+    /// </summary>
+    /// <param name="role">The role whose permission set is being replaced.</param>
+    /// <param name="permissionIds">The complete set of permissions the role is asked to end up with.</param>
+    /// <param name="cancellationToken">Token that cancels the lookup.</param>
+    /// <remarks>
+    /// A role that belongs to no tenant is platform scoped and may hold either tier; only a tenant's own
+    /// role is held to the tenant tier. The tier is a property of the code-declared catalogue rather
+    /// than of any stored row, so it is read from the catalogue and matched against the permission names
+    /// behind the identifiers supplied. The whole requested set is examined rather than only the
+    /// additions, so a platform permission cannot survive on a tenant role by being resubmitted along
+    /// with the rest.
+    /// </remarks>
+    private async Task RefusePlatformPermissionsAsync(Role role, List<Guid> permissionIds, CancellationToken cancellationToken)
+    {
+        if (role.TenantId is null || permissionIds.Count == 0)
+        {
+            return;
+        }
+
+        var platformPermissionNames = permissionDefinitionService.GetPlatformPermissionNames().ToList();
+        if (platformPermissionNames.Count == 0)
+        {
+            return;
+        }
+
+        var grantsPlatformPermission = await permissionService.Permissions()
+            .AsNoTracking()
+            .AnyAsync(permission => permissionIds.Contains(permission.Id)
+                                    && platformPermissionNames.Contains(permission.Name), cancellationToken);
+        if (grantsPlatformPermission)
+        {
+            // Attributed to the permissions field so the web form can attach the message to the
+            // selection the caller has to correct.
+            ThrowError(x => x.Permissions, PlatformPermissionMessage, ErrorCodes.PlatformPermissionNotGrantable);
+        }
+    }
 }
 
 /// <summary>
@@ -69,5 +127,3 @@ sealed class ChangePermissionsResponse : BaseDto<Guid>
 {
     public List<Guid> Permissions { get; set; } = [];
 }
-
-

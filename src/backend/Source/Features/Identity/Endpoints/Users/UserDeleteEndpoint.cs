@@ -16,8 +16,11 @@ sealed class UserDeleteEndpoint(IUserService userService) : Endpoint<UserDeleteR
 
     public override async Task HandleAsync(UserDeleteRequest request, CancellationToken cancellationToken)
     {
-        // get entity from db
-        var entity = await userService.GetByIdAsync(request.Id);
+        // The account is read from the set the caller may administer, so one holding no membership of
+        // the tenant being acted in answers exactly as an account that does not exist does and is left
+        // in place. A platform administrator administers every account.
+        var entity = await userService.TenantUsers()
+            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
         if (entity == null)
         {
             await Send.NotFoundAsync(cancellationToken);
@@ -26,8 +29,9 @@ sealed class UserDeleteEndpoint(IUserService userService) : Endpoint<UserDeleteR
         if (entity.SystemCreated)
             ThrowError("System-created user cannot be deleted", ErrorCodes.SystemCreatedUserCannotBeDeleted);
 
-        // Delete the entity from the db
-        await userService.DeleteAsync(request.Id);
+        // Delete the entity from the db - the account already read above, so the deletion cannot reach
+        // one the caller may not administer.
+        await userService.DeleteAsync(entity);
         await Send.ResponseAsync(new() { Success = true }, cancellation: cancellationToken);
     }
 }

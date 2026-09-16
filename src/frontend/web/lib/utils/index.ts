@@ -5,3 +5,4 @@ export { type AuthState, isAllowed, hasAuthCookie } from './authentication-and-a
 export { constants } from './constants'
 export { type ApiError, type ValidationError, getApiErrorMessages } from './api-error-helpers'
 export { apiErrorAlert } from './api-error-alert'
+export { type TenantLandingRoute, isTenantScopedPath, isActiveTenantStale, resolveTenantLanding } from './tenant-routing'

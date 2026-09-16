@@ -14,6 +14,7 @@ global using Backend.Base.Dto;
 global using Backend.ErrorHandling;
 global using Backend.Attributes;
 global using Backend.Exceptions;
+global using Backend.Tenancy;
 
 using System.Runtime.CompilerServices;
 

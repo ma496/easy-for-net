@@ -5,8 +5,19 @@ using Backend.Features.Identity.Core;
 /// <summary>
 /// This endpoint that handles <c>DELETE /roles/{id}</c> to remove an existing role (refusing to delete a system-created role).
 /// </summary>
+/// <remarks>
+/// Only the roles of the tenant being acted in can be deleted here: the lookup answers for that tenant
+/// alone, so a role belonging to another tenant is reported missing and is left untouched, exactly as
+/// an identifier naming no role at all would be. A caller holding platform administration is the one
+/// exception and reaches any tenant's role. A tenant's system-created administrator role is refused
+/// outright, so a tenant cannot be left without one. Deletion is soft: the row is retained and stops
+/// being read anywhere, so the role grants nothing from the next request on while its name stays
+/// reserved within its tenant and cannot be taken by a role created afterwards.
+/// </remarks>
 sealed class RoleDeleteEndpoint(IRoleService roleService) : Endpoint<RoleDeleteRequest, RoleDeleteResponse>
 {
+    private const string SystemCreatedMessage = "System-created role cannot be deleted";
+
     public override void Configure()
     {
         Delete("{id}");
@@ -16,7 +27,8 @@ sealed class RoleDeleteEndpoint(IRoleService roleService) : Endpoint<RoleDeleteR
 
     public override async Task HandleAsync(RoleDeleteRequest request, CancellationToken cancellationToken)
     {
-        // get entity from db
+        // get entity from db - narrowed to the roles the caller may see, so the tenant restriction and
+        // the missing-row case are the same code path and produce the same 404.
         var entity = await roleService.GetByIdAsync(request.Id);
         if (entity == null)
         {
@@ -24,9 +36,10 @@ sealed class RoleDeleteEndpoint(IRoleService roleService) : Endpoint<RoleDeleteR
             return;
         }
         if (entity.SystemCreated)
-            ThrowError("System-created role cannot be deleted", ErrorCodes.SystemCreatedRoleCannotBeDeleted);
+            ThrowError(SystemCreatedMessage, ErrorCodes.SystemCreatedRoleCannotBeDeleted);
 
-        // Delete the entity from the db
+        // Delete the entity from the db - a soft delete, so the row survives to go on reserving the
+        // role's name under the tenant's uniqueness constraint.
         await roleService.DeleteAsync(entity);
         await Send.ResponseAsync(new() { Success = true }, cancellation: cancellationToken);
     }
@@ -58,5 +71,3 @@ sealed class RoleDeleteResponse
     public bool Success { get; set; }
     public string Message { get; set; } = null!;
 }
-
-

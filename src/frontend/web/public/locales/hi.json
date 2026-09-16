@@ -35,7 +35,8 @@
     "allRightsReserved": "सर्वाधिकार सुरक्षित।",
     "deleteConfirm": "हाँ, इसे हटा दें",
     "notifications": "सूचनाएं",
-    "viewAll": "सभी देखें"
+    "viewAll": "सभी देखें",
+    "close": "बंद करें"
   },
   "navigation": {
     "home": "होम",
@@ -64,7 +65,14 @@
     "usersUpdate": "अपडेट करें",
     "notifications": "सूचनाएं",
     "notificationsList": "सूची",
-    "notificationsDetail": "विवरण"
+    "notificationsDetail": "विवरण",
+    "tenants": "टेनेंट",
+    "tenantsList": "सूची",
+    "tenantsCreate": "बनाएं",
+    "tenantsUpdate": "अपडेट करें",
+    "tenantsMembers": "सदस्य",
+    "selectTenant": "टेनेंट चुनें",
+    "noTenant": "कोई टेनेंट नहीं"
   },
   "search": {
     "dashboard": "डैशबोर्ड",
@@ -82,7 +90,9 @@
     "notifications": "सूचनाएं",
     "uiFormElements": "UI फॉर्म तत्व",
     "uiFileUpload": "UI फ़ाइल अपलोड",
-    "uiTooltips": "UI टूलटिप्स"
+    "uiTooltips": "UI टूलटिप्स",
+    "tenants": "टेनेंट",
+    "tenantsCreate": "टेनेंट बनाएं"
   },
   "form": {
     "label": {
@@ -98,7 +108,10 @@
       "roleDescription": "विवरण",
       "roles": "भूमिकाएं",
       "isActive": "सक्रिय",
-      "name": "नाम"
+      "name": "नाम",
+      "tenantName": "टेनेंट नाम",
+      "tenantIdentifier": "पहचानकर्ता",
+      "user": "उपयोगकर्ता"
     },
     "placeholder": {
       "username": "उपयोगकर्ता नाम दर्ज करें",
@@ -111,7 +124,10 @@
       "confirmPassword": "पुष्टि पासवर्ड दर्ज करें",
       "roleName": "भूमिका नाम दर्ज करें",
       "roleDescription": "भूमिका विवरण दर्ज करें",
-      "roles": "भूमिकाएं चुनें"
+      "roles": "भूमिकाएं चुनें",
+      "tenantName": "टेनेंट नाम दर्ज करें",
+      "tenantIdentifier": "पहचानकर्ता दर्ज करें (उदाहरण के लिए acme)",
+      "user": "उपयोगकर्ता चुनें"
     }
   },
   "validation": {
@@ -121,7 +137,8 @@
     "email": "अमान्य ईमेल प्रारूप",
     "invalidEmail": "अमान्य ईमेल",
     "mustMatch": "फ़ील्ड ${otherField} के साथ मेल खाना चाहिए",
-    "atLeastOneSelected": "कम से कम एक आइटम का चयन किया जाना चाहिए"
+    "atLeastOneSelected": "कम से कम एक आइटम का चयन किया जाना चाहिए",
+    "tenantIdentifier": "छोटे अंग्रेज़ी अक्षर, अंक और एकल हाइफ़न का उपयोग करें, जो अक्षर या अंक से शुरू और समाप्त हों"
   },
   "error": {
     "400": {
@@ -169,6 +186,8 @@
       "referencedRecordNotFound": "संदर्भित रिकॉर्ड नहीं मिला",
       "invalidValueProvided": "अमान्य मान प्रदान किया गया",
       "databaseError": "डेटाबेस त्रुटि",
+      "authenticationRequired": "इस कार्रवाई के लिए साइन इन आवश्यक है।",
+      "permissionDenied": "आपकी भूमिकाएँ इस कार्रवाई के लिए आवश्यक अनुमति नहीं देती हैं।",
       "invalidCurrentPassword": "अमान्य वर्तमान पासवर्ड",
       "invalidToken": "अमान्य टोकन",
       "tokenExpired": "टोकन समाप्त हो गया",
@@ -186,7 +205,19 @@
       "systemCreatedRoleCannotBeDeleted": "सिस्टम द्वारा बनाई गई भूमिका हटाई नहीं जा सकती",
       "systemCreatedRoleCannotBeUpdated": "सिस्टम द्वारा बनाई गई भूमिका अपडेट नहीं की जा सकती",
       "systemCreatedUserCannotBeDeleted": "सिस्टम द्वारा बनाया गया उपयोगकर्ता हटाया नहीं जा सकता",
-      "systemCreatedUserCannotBeUpdated": "सिस्टम द्वारा बनाया गया उपयोगकर्ता अपडेट नहीं किया जा सकता"
+      "systemCreatedUserCannotBeUpdated": "सिस्टम द्वारा बनाया गया उपयोगकर्ता अपडेट नहीं किया जा सकता",
+      "tenantNotFound": "टेनेंट नहीं मिला",
+      "tenantSuspended": "यह टेनेंट निलंबित है",
+      "notTenantMember": "आप इस टेनेंट के सदस्य नहीं हैं",
+      "noActiveTenant": "कोई सक्रिय टेनेंट चयनित नहीं है",
+      "tenantIdentifierAlreadyExists": "टेनेंट पहचानकर्ता पहले से मौजूद है",
+      "duplicateTenantMembership": "यह उपयोगकर्ता पहले से ही इस टेनेंट का सदस्य है",
+      "lastTenantAdministrator": "अंतिम टेनेंट प्रशासक को नहीं हटाया जा सकता",
+      "systemCreatedTenantCannotBeModified": "सिस्टम द्वारा बनाए गए टेनेंट को संशोधित नहीं किया जा सकता",
+      "crossTenantFileAccess": "यह फ़ाइल किसी अन्य टेनेंट की है",
+      "tenantMembershipRevoked": "इस टेनेंट में आपकी सदस्यता रद्द कर दी गई है",
+      "platformPermissionNotGrantable": "प्लेटफ़ॉर्म अनुमतियां टेनेंट भूमिका को नहीं दी जा सकतीं",
+      "concurrentModification": "यह रिकॉर्ड किसी और ने बदल दिया था। पुनः लोड करें और फिर से प्रयास करें।"
     }
   },
   "table": {
@@ -206,7 +237,8 @@
       "status": "स्थिति",
       "date": "तारीख",
       "group": "समूह",
-      "updated": "अपडेट किया गया"
+      "updated": "अपडेट किया गया",
+      "identifier": "पहचानकर्ता"
     },
     "pagination": {
       "showingEntries": "${totalRecords} प्रविष्टियों में से ${from} से ${to} दिखा रहा है"
@@ -232,7 +264,10 @@
       "role": "भूमिका",
       "selectRole": "भूमिका चुनें",
       "search": "खोजें",
-      "clear": "साफ़ करें"
+      "clear": "साफ़ करें",
+      "tenantStatus": "टेनेंट स्थिति",
+      "allStatuses": "सभी स्थितियां",
+      "suspended": "निलंबित"
     }
   },
   "file": {
@@ -451,6 +486,68 @@
         "title": "सूचना विवरण"
       },
       "viewAll": "सभी सूचनाएं देखें"
+    },
+    "tenants": {
+      "title": "टेनेंट",
+      "notFound": "टेनेंट नहीं मिला",
+      "systemCreated": "सिस्टम द्वारा बनाया गया",
+      "createSuccess": "टेनेंट सफलतापूर्वक बनाया गया",
+      "updateSuccess": "टेनेंट सफलतापूर्वक अपडेट किया गया",
+      "deleteTitle": "टेनेंट हटाएं",
+      "deleteConfirm": "क्या आप वाकई इस टेनेंट को हटाना चाहते हैं?",
+      "deleteSuccess": "टेनेंट सफलतापूर्वक हटाया गया",
+      "suspendTitle": "टेनेंट निलंबित करें",
+      "suspendConfirm": "क्या आप वाकई इस टेनेंट को निलंबित करना चाहते हैं? पुनः सक्रिय होने तक इसके सदस्यों की पहुंच समाप्त हो जाएगी।",
+      "suspendSuccess": "टेनेंट सफलतापूर्वक निलंबित किया गया",
+      "reactivateTitle": "टेनेंट पुनः सक्रिय करें",
+      "reactivateConfirm": "क्या आप वाकई इस टेनेंट को पुनः सक्रिय करना चाहते हैं?",
+      "reactivateSuccess": "टेनेंट सफलतापूर्वक पुनः सक्रिय किया गया",
+      "list": {
+        "title": "टेनेंट सूची"
+      },
+      "create": {
+        "title": "टेनेंट बनाएं"
+      },
+      "update": {
+        "title": "टेनेंट अपडेट करें"
+      },
+      "status": {
+        "active": "सक्रिय",
+        "suspended": "निलंबित"
+      },
+      "members": {
+        "title": "टेनेंट सदस्य",
+        "addTitle": "सदस्य जोड़ें",
+        "addButton": "सदस्य जोड़ें",
+        "addSuccess": "सदस्य सफलतापूर्वक जोड़ा गया",
+        "rolesTitle": "सदस्य की भूमिकाएं बदलें",
+        "rolesButton": "भूमिकाएं बदलें",
+        "rolesSuccess": "सदस्य की भूमिकाएं सफलतापूर्वक अपडेट की गईं",
+        "removeTitle": "सदस्य हटाएं",
+        "removeConfirm": "क्या आप वाकई इस सदस्य को टेनेंट से हटाना चाहते हैं?",
+        "removeSuccess": "सदस्य सफलतापूर्वक हटाया गया"
+      },
+      "switcher": {
+        "label": "टेनेंट",
+        "switchTo": "टेनेंट बदलें",
+        "switchSuccess": "अब आप ${tenant} में कार्य कर रहे हैं",
+        "noTenant": "कोई टेनेंट चयनित नहीं"
+      }
+    },
+    "selectTenant": {
+      "title": "टेनेंट चुनें",
+      "description": "वह टेनेंट चुनें जिसमें आप कार्य करना चाहते हैं।",
+      "suspendedReason": "जिस टेनेंट में आप कार्य कर रहे थे वह निलंबित कर दिया गया है। जारी रखने के लिए दूसरा टेनेंट चुनें।",
+      "revokedReason": "उस टेनेंट में आपकी सदस्यता रद्द कर दी गई है। जारी रखने के लिए दूसरा टेनेंट चुनें।",
+      "unavailableReason": "वह टेनेंट अब उपलब्ध नहीं है। जारी रखने के लिए दूसरा टेनेंट चुनें।",
+      "noSelectionReason": "इस स्क्रीन को खोलने से पहले एक टेनेंट चुनें।"
+    },
+    "noTenant": {
+      "title": "कोई टेनेंट नहीं",
+      "description": "आप अभी तक किसी सक्रिय टेनेंट से संबद्ध नहीं हैं। अपना स्वयं का टेनेंट बनाएं, या किसी प्रशासक से आपको उनके टेनेंट में जोड़ने के लिए कहें।",
+      "createTitle": "अपना टेनेंट बनाएं",
+      "createButton": "टेनेंट बनाएं",
+      "createSuccess": "टेनेंट बनाया गया। अब आप इसके प्रशासक हैं।"
     }
   },
   "notifications": {

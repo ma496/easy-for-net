@@ -6,6 +6,12 @@ using Backend.Features.Identity.Core;
 /// Authenticated POST endpoint that changes the current user's password after verifying the
 /// existing one.
 /// </summary>
+/// <remarks>
+/// Marked <see cref="AllowNoTenantAttribute"/> because changing one's own password is account
+/// self-service: it acts on the account rather than on any tenant's data, so it stays usable while
+/// the caller acts in any tenant or in none.
+/// </remarks>
+[AllowNoTenant]
 sealed class ChangePasswordEndpoint(AppDbContext dbContext,
                                     ICurrentUserService currentUserService,
                                     IUserService userService,

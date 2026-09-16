@@ -11,11 +11,14 @@ import { useAppDispatch } from '@/store/hooks'
 import { setUserInfo } from '@/store/slices'
 import { Button, LocalizedLink } from '@/components/ui'
 import { useLocalizedRouter } from '@/hooks'
-import { apiErrorAlert, successToast } from '@/lib/utils'
+import { apiErrorAlert, resolveTenantLanding, successToast } from '@/lib/utils'
 import { isValidRedirectPath } from '@/lib/utils/redirect'
 
 /**
  * Interactive client-side form that authenticates a user with username/password and routes them to the appropriate landing page.
+ * Where that is depends on the tenants the account may work in: straight on to the intended screen when the server already made a
+ * tenant active, to the chooser when no selection stands but there are tenants to pick from, and to the no-tenant screen
+ * when the account belongs to none.
  * Manages a verification-message sub-state with a resend-email countdown for accounts whose email is not yet verified.
  */
 export const SigninForm = () => {
@@ -82,6 +85,18 @@ export const SigninForm = () => {
     }
     if (userInfoRes.data) {
       dispatch(setUserInfo(userInfoRes.data))
+
+      // Sign-in only establishes an active tenant when the answer is unambiguous: an account with a
+      // single usable membership is put into it by the server, and lands on the screen it asked for.
+      // An account with several and no choice made yet has no active tenant, and one with none at all
+      // never will here, so both are sent to their landing screen instead - ahead of the `redirect`
+      // parameter, since honouring it would open a tenant-scoped screen with no tenant behind it.
+      const tenantLanding = resolveTenantLanding(userInfoRes.data)
+      if (tenantLanding) {
+        router.push(tenantLanding, { scroll: false })
+        return
+      }
+
       if (redirectTo && isValidRedirectPath(redirectTo)) {
         router.push(redirectTo, { scroll: false })
       } else if (userInfoRes.data.roles.find((role) => role.name === 'Admin')) {

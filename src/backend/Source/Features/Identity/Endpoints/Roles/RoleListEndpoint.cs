@@ -6,7 +6,15 @@ using Backend.Features.Identity.Core.Entities;
 /// <summary>
 /// This endpoint that handles <c>GET /roles</c> to return a paginated, searchable list of roles with their permissions and user counts.
 /// </summary>
-sealed class RoleListEndpoint(IRoleService roleService) : Endpoint<RoleListRequest, RoleListResponse>
+/// <remarks>
+/// The rows are the roles of the tenant being acted in and no other, so two tenants may each define a
+/// role of the same name without either one appearing in the other's list, search or total. A caller
+/// holding platform administration is the single exception: they list roles across every tenant, and
+/// may narrow that view to one tenant with the optional tenant filter, which is what lets a role
+/// picker offer the roles of the tenant whose members are being administered. For every other caller
+/// the filter is ignored rather than honoured, so naming a tenant can never widen a caller's own view.
+/// </remarks>
+sealed class RoleListEndpoint(IRoleService roleService, ICurrentUserService currentUserService) : Endpoint<RoleListRequest, RoleListResponse>
 {
     public override void Configure()
     {
@@ -17,12 +25,23 @@ sealed class RoleListEndpoint(IRoleService roleService) : Endpoint<RoleListReque
 
     public override async Task HandleAsync(RoleListRequest request, CancellationToken cancellationToken)
     {
-        // get entities from db
+        // The roles the caller may see: the tenant's own, widened to every tenant's for a platform
+        // administrator. The search, the tenant filter and the total below all narrow from this one
+        // query, so none of them can report a role the caller is not entitled to see.
         var query = roleService.Roles()
             .AsNoTracking()
             .Include(x => x.RolePermissions)
             .Include(x => x.UserRoles)
             .AsQueryable();
+
+        // The tenant filter only ever narrows, and only for a caller who already reads every tenant's
+        // roles. The tier is read from the caller's live permission claims rather than from anything in
+        // the request, so a caller acting in a tenant who names a tenant - their own or another's - is
+        // answered from the tenant they are acting in, exactly as if they had named none.
+        if (request.TenantId.HasValue && currentUserService.HasPermission(Allow.Platform_Administration))
+        {
+            query = query.Where(x => x.TenantId == request.TenantId.Value);
+        }
 
         var search = request.Search?.Trim().ToLowerInvariant();
         if (!string.IsNullOrWhiteSpace(search))
@@ -49,10 +68,13 @@ sealed class RoleListEndpoint(IRoleService roleService) : Endpoint<RoleListReque
 }
 
 /// <summary>
-/// Request payload for the role list endpoint, supporting search and standard pagination/sort options.
+/// Request payload for the role list endpoint, supporting search, standard pagination/sort options,
+/// and an optional tenant whose roles are wanted - honoured for a caller holding platform
+/// administration and ignored for every other caller.
 /// </summary>
 sealed class RoleListRequest : ListRequestDto<Guid>
 {
+    public Guid? TenantId { get; set; }
 }
 
 /// <summary>
@@ -97,8 +119,8 @@ public sealed class RoleListDto : AuditableDto<Guid>
 [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
 public partial class RoleListDtoMapper
 {
-    [MapProperty(nameof(Role.RolePermissions), nameof(RoleGetResponse.Permissions), Use = nameof(RolePermissionsToPermissions)),
-     MapProperty(nameof(Role.UserRoles.Count), nameof(RoleGetResponse.UserCount))]
+    [MapProperty(nameof(Role.RolePermissions), nameof(RoleListDto.Permissions), Use = nameof(RolePermissionsToPermissions)),
+     MapProperty(nameof(Role.UserRoles.Count), nameof(RoleListDto.UserCount))]
     public partial RoleListDto Map(Role entity);
 
     private static List<Guid> RolePermissionsToPermissions(ICollection<RolePermission> rolePermissions)

@@ -4,7 +4,7 @@ import { useTranslation } from '@/i18n'
 import { useLocalizedRouter } from '@/hooks'
 import { useChangePasswordMutation } from '@/store/api/identity'
 import { useAppDispatch } from '@/store/hooks'
-import { signout } from '@/store/slices'
+import { dispatchSignedOut } from '@/store/tenant-cache'
 import { apiErrorAlert, successToast } from '@/lib/utils'
 import { Form, Formik } from 'formik'
 import { FormPasswordInput } from '@/components/ui/form'
@@ -54,7 +54,11 @@ export const ChangePasswordForm = () => {
     successToast.fire({
       text: t('page.profile.changePasswordSuccess'),
     })
-    dispatch(signout())
+    // Changing the password ends every session this account had, so it is a sign-out path and has to
+    // leave nothing of the tenant behind like any other: dispatchSignedOut drops the RTK Query cache
+    // before the auth state, so the records cached for the tenant just left are not served to the next
+    // user signing in on this browser.
+    dispatchSignedOut(dispatch)
     router.push('/signin')
   }
 

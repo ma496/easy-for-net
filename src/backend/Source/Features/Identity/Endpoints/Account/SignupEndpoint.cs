@@ -7,14 +7,23 @@ using Backend.Settings;
 using Microsoft.Extensions.Options;
 
 /// <summary>
-/// Anonymous POST endpoint that registers a new user, assigns the default <c>Public</c> role,
-/// and optionally triggers an email verification workflow.
+/// Anonymous POST endpoint that registers a new user and optionally triggers an email verification
+/// workflow. The account it creates is global: it joins no tenant, carries no role and holds no
+/// permission, so signing up grants nothing beyond an authenticated identity. Creating a tenant is a
+/// separate, explicit act the new account may perform afterwards.
 /// </summary>
+/// <remarks>
+/// Marked <see cref="AllowNoTenantAttribute"/> because sign-up is one of the account self-service
+/// flows that has to work with no tenant established - there is no account yet that could hold a
+/// membership in one.
+/// </remarks>
+[AllowNoTenant]
 sealed class SignupEndpoint(IUserService userService,
                             ITokenService tokenService,
                             IEmailBackgroundJobs emailBackgroundJobs,
                             IOptions<WebSetting> webSetting,
                             IOptions<SigninSetting> signinSetting,
+                            ITenantContext tenantContext,
                             AppDbContext dbContext)
     : Endpoint<SignupRequest, SignupResponse>
 {
@@ -51,17 +60,16 @@ sealed class SignupEndpoint(IUserService userService,
             IsEmailVerified = false
         };
 
-        await userService.CreateAsync(user, request.Password);
-
-        var publicRole = await dbContext.Roles
-            .Where(x => x.Name == "Public")
-            .Select(x => new { x.Id })
-            .FirstOrDefaultAsync(cancellationToken);
-        if (publicRole == null)
+        // The account is created and nothing else is granted: no role is assigned, no membership is
+        // created and no permission is held. Platform scope is established for the creation so the
+        // new account joins no tenant even when the caller is signed in and acting inside one: this
+        // endpoint is anonymous and must not become a way of adding a member to a tenant without
+        // holding the permission that governs it. The account becomes a member of a tenant only by
+        // creating one itself or by being added to one from inside it.
+        using (tenantContext.BeginPlatformScope())
         {
-            throw new Exception("Public role not found");
+            await userService.CreateAsync(user, request.Password);
         }
-        await userService.AssignRoleAsync(user.Id, publicRole.Id);
 
         if (signinSetting.Value.IsEmailVerificationRequired)
         {

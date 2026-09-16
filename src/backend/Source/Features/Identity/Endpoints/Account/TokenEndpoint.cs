@@ -1,13 +1,32 @@
 namespace Backend.Features.Identity.Endpoints.Account;
 
+using System.Security.Claims;
+using Backend.Data.Entities;
 using Backend.Features.Identity.Core;
+using Backend.Features.Identity.Core.Entities;
 
 /// <summary>
 /// Anonymous POST endpoint that authenticates a user by username/email and password and
 /// issues a JWT access/refresh token pair along with a refresh-token cookie.
 /// </summary>
-sealed class TokenEndpoint(IUserService userService, IOptions<SigninSetting> signinSetting, IOptions<AuthSetting> authSetting) : Endpoint<TokenRequest, TokenResponse>
+/// <remarks>
+/// The credentials name no tenant: one account is one identity across the whole platform, so the
+/// person authenticates once whatever number of tenants they belong to. Which tenant the session
+/// starts in is decided here, after authentication, from the memberships the account holds at that
+/// moment - exactly one active membership starts the session inside that tenant with nothing for the
+/// user to choose, while none and several alike start a session that acts in no tenant, leaving every
+/// tenant-scoped operation refused until a tenant is selected. The endpoint is therefore exempt from
+/// the active-tenant requirement itself: it is one of the places a tenant is established.
+/// </remarks>
+[AllowNoTenant]
+sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IOptions<SigninSetting> signinSetting, IOptions<AuthSetting> authSetting) : Endpoint<TokenRequest, TokenResponse>
 {
+    /// <summary>
+    /// Authentication type of the principal the session being established is evaluated as. It never
+    /// authenticates a request; it only names the identity built to ask what this session is entitled to.
+    /// </summary>
+    private const string SigninAuthenticationType = "Signin";
+
     public override void Configure()
     {
         Post("token");
@@ -26,15 +45,28 @@ sealed class TokenEndpoint(IUserService userService, IOptions<SigninSetting> sig
         var result = await userService.ValidatePasswordAsync(user, req.Password);
         if (!result)
             ThrowError(errorMessage, errorCode);
+
+        // A globally deactivated account is refused here, before any membership is read, so no session is
+        // established for it in any tenant and the memberships it holds are neither read for authorization
+        // nor written to: they wait untouched for the account to be reactivated.
         if (!user.IsActive)
             ThrowError("User is not active", ErrorCodes.UserNotActive);
         if (signinSetting.Value?.IsEmailVerificationRequired == true && !user.IsEmailVerified)
             ThrowError("Email is not verified", ErrorCodes.EmailNotVerified);
 
-        var roles = await userService.GetUserRolesAsync(user.Id);
-        var permissions = await userService.GetUserPermissionsAsync(user.Id);
+        var tenantId = await ResolveSingleActiveTenantAsync(user.Id, c);
 
-        var claims = Helper.CreateClaims(user, roles, permissions);
+        // Recorded before the token pair is asked for, because the refresh-token row written for this
+        // session is all a later refresh has to go on: recording the tenant here is what makes a refresh
+        // re-establish the very tenant the session started in rather than none.
+        TokenService.RecordSessionTenant(HttpContext, tenantId);
+
+        // The grants the session starts with are read exactly the way every later request re-reads them -
+        // for the tenant being acted in and for no other - so the session begins carrying what it would be
+        // re-evaluated as on its next request rather than a set assembled only at sign-in.
+        var session = await SessionValidator.EvaluateAsync(SigninPrincipal(user, tenantId), dbContext, c);
+
+        var claims = Helper.CreateClaims(user, [.. session.Roles], [.. session.Permissions], tenantId);
 
         // for cookie authentication
         await CookieAuth.SignInAsync(u =>
@@ -63,12 +95,58 @@ sealed class TokenEndpoint(IUserService userService, IOptions<SigninSetting> sig
 
         await userService.UpdateLastSigninAsync(user.Id);
     }
+
+    /// <summary>
+    /// The tenant the session starts in: the single tenant the account holds an active membership of, or
+    /// <see langword="null"/> when it holds none or holds more than one. A membership counts only while
+    /// its row lives and its tenant exists and is not suspended, so an account whose only membership is
+    /// of a suspended tenant starts a session with no tenant active rather than one inside a tenant in
+    /// which nothing may be done.
+    /// </summary>
+    /// <param name="userId">The account that has just authenticated.</param>
+    /// <param name="cancellationToken">Token used to cancel the read.</param>
+    /// <returns>The tenant to start the session in, or <see langword="null"/> when there is not exactly one.</returns>
+    /// <remarks>
+    /// Two rows answer the whole question - one tenant, or more than one - so no more are read. The read
+    /// relaxes tenant restriction by name because it runs before any tenant is established, that being
+    /// the very thing it decides; the soft-delete filter stays in force throughout, so a removed
+    /// membership places nobody and a deleted tenant is not a tenant to start in.
+    /// </remarks>
+    private async Task<Guid?> ResolveSingleActiveTenantAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var tenantIds = await dbContext.TenantMemberships
+            .AsNoTracking()
+            .AcrossAllTenants()
+            .Where(membership => membership.UserId == userId
+                                 && dbContext.Tenants.Any(tenant => tenant.Id == membership.TenantId && tenant.Status == TenantStatus.Active))
+            .Select(membership => membership.TenantId)
+            .Distinct()
+            .Take(2)
+            .ToListAsync(cancellationToken);
+
+        return tenantIds.Count == 1 ? tenantIds[0] : null;
+    }
+
+    /// <summary>
+    /// Builds the principal the session being established is evaluated as, holding the account's identity
+    /// and the tenant it acts in and nothing else, so that the roles and permissions it starts with are
+    /// read from current data for that tenant rather than assembled separately at sign-in.
+    /// </summary>
+    /// <param name="user">The account that has just authenticated.</param>
+    /// <param name="tenantId">The tenant the session acts in, or <see langword="null"/> for none.</param>
+    /// <returns>A principal carrying identity and tenant claims only.</returns>
+    private static ClaimsPrincipal SigninPrincipal(User user, Guid? tenantId)
+        => new(new ClaimsIdentity(Helper.CreateClaims(user, [], [], tenantId), SigninAuthenticationType));
 }
 
 /// <summary>
 /// Request payload for the sign-in/token endpoint, allowing sign-in by either username
 /// or email (selected via <see cref="IsEmail"/>) together with the user's password.
 /// </summary>
+/// <remarks>
+/// No tenant is named anywhere in it: the tenant a session acts in is resolved from the account's
+/// memberships once the credentials are accepted, never supplied alongside them.
+/// </remarks>
 sealed class TokenRequest
 {
     public bool IsEmail { get; set; }

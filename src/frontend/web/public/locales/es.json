@@ -35,7 +35,8 @@
     "allRightsReserved": "Todos los derechos reservados.",
     "deleteConfirm": "Sí, eliminarlo",
     "notifications": "Notificaciones",
-    "viewAll": "Ver todo"
+    "viewAll": "Ver todo",
+    "close": "Cerrar"
   },
   "navigation": {
     "home": "Inicio",
@@ -64,7 +65,14 @@
     "usersUpdate": "Actualizar",
     "notifications": "Notificaciones",
     "notificationsList": "Lista",
-    "notificationsDetail": "Detalles"
+    "notificationsDetail": "Detalles",
+    "tenants": "Inquilinos",
+    "tenantsList": "Lista",
+    "tenantsCreate": "Crear",
+    "tenantsUpdate": "Actualizar",
+    "tenantsMembers": "Miembros",
+    "selectTenant": "Seleccionar inquilino",
+    "noTenant": "Sin inquilino"
   },
   "search": {
     "dashboard": "Tablero",
@@ -82,7 +90,9 @@
     "notifications": "Notificaciones",
     "uiFormElements": "Elementos de Formulario UI",
     "uiFileUpload": "Subida de Archivos UI",
-    "uiTooltips": "Tooltips UI"
+    "uiTooltips": "Tooltips UI",
+    "tenants": "Inquilinos",
+    "tenantsCreate": "Crear Inquilino"
   },
   "form": {
     "label": {
@@ -98,7 +108,10 @@
       "roleDescription": "Descripción",
       "roles": "Roles",
       "isActive": "Activo",
-      "name": "Nombre"
+      "name": "Nombre",
+      "tenantName": "Nombre del inquilino",
+      "tenantIdentifier": "Identificador",
+      "user": "Usuario"
     },
     "placeholder": {
       "username": "Ingrese nombre de usuario",
@@ -111,7 +124,10 @@
       "confirmPassword": "Confirme la contraseña",
       "roleName": "Ingrese nombre del rol",
       "roleDescription": "Ingrese descripción del rol",
-      "roles": "Seleccione roles"
+      "roles": "Seleccione roles",
+      "tenantName": "Ingrese el nombre del inquilino",
+      "tenantIdentifier": "Ingrese el identificador (por ejemplo acme)",
+      "user": "Seleccione un usuario"
     }
   },
   "validation": {
@@ -121,7 +137,8 @@
     "email": "Formato de correo inválido",
     "invalidEmail": "Correo inválido",
     "mustMatch": "El campo debe coincidir con ${otherField}",
-    "atLeastOneSelected": "Debe seleccionar al menos un elemento"
+    "atLeastOneSelected": "Debe seleccionar al menos un elemento",
+    "tenantIdentifier": "Use letras minúsculas, dígitos y guiones simples, comenzando y terminando con una letra o un dígito"
   },
   "error": {
     "400": {
@@ -169,6 +186,8 @@
       "referencedRecordNotFound": "Registro referenciado no encontrado",
       "invalidValueProvided": "Valor proporcionado inválido",
       "databaseError": "Error de base de datos",
+      "authenticationRequired": "Esta operación requiere iniciar sesión.",
+      "permissionDenied": "Sus roles no otorgan el permiso que requiere esta operación.",
       "invalidCurrentPassword": "Contraseña actual inválida",
       "invalidToken": "Token inválido",
       "tokenExpired": "Token expirado",
@@ -186,7 +205,19 @@
       "systemCreatedRoleCannotBeDeleted": "El rol creado por el sistema no se puede eliminar",
       "systemCreatedRoleCannotBeUpdated": "El rol creado por el sistema no se puede actualizar",
       "systemCreatedUserCannotBeDeleted": "El usuario creado por el sistema no se puede eliminar",
-      "systemCreatedUserCannotBeUpdated": "El usuario creado por el sistema no se puede actualizar"
+      "systemCreatedUserCannotBeUpdated": "El usuario creado por el sistema no se puede actualizar",
+      "tenantNotFound": "Inquilino no encontrado",
+      "tenantSuspended": "Este inquilino está suspendido",
+      "notTenantMember": "No es miembro de este inquilino",
+      "noActiveTenant": "No hay ningún inquilino activo seleccionado",
+      "tenantIdentifierAlreadyExists": "El identificador del inquilino ya existe",
+      "duplicateTenantMembership": "Este usuario ya es miembro de este inquilino",
+      "lastTenantAdministrator": "No se puede quitar al último administrador del inquilino",
+      "systemCreatedTenantCannotBeModified": "El inquilino creado por el sistema no se puede modificar",
+      "crossTenantFileAccess": "Este archivo pertenece a otro inquilino",
+      "tenantMembershipRevoked": "Su membresía en este inquilino ha sido revocada",
+      "platformPermissionNotGrantable": "Los permisos de plataforma no se pueden otorgar a un rol de inquilino",
+      "concurrentModification": "Otra persona modificó este registro. Recargue e inténtelo de nuevo."
     }
   },
   "table": {
@@ -206,7 +237,8 @@
       "status": "Estado",
       "date": "Fecha",
       "group": "Grupo",
-      "updated": "Actualizado"
+      "updated": "Actualizado",
+      "identifier": "Identificador"
     },
     "pagination": {
       "showingEntries": "Mostrando ${from} a ${to} de ${totalRecords} entradas"
@@ -232,7 +264,10 @@
       "role": "Rol",
       "selectRole": "Seleccionar Rol",
       "search": "Buscar",
-      "clear": "Limpiar"
+      "clear": "Limpiar",
+      "tenantStatus": "Estado del Inquilino",
+      "allStatuses": "Todos los Estados",
+      "suspended": "Suspendido"
     }
   },
   "file": {
@@ -451,6 +486,68 @@
         "title": "Detalles de la notificación"
       },
       "viewAll": "Ver todas las notificaciones"
+    },
+    "tenants": {
+      "title": "Inquilinos",
+      "notFound": "Inquilino no encontrado",
+      "systemCreated": "Creado por el sistema",
+      "createSuccess": "Inquilino creado exitosamente",
+      "updateSuccess": "Inquilino actualizado exitosamente",
+      "deleteTitle": "Eliminar Inquilino",
+      "deleteConfirm": "¿Está seguro de que desea eliminar este inquilino?",
+      "deleteSuccess": "Inquilino eliminado exitosamente",
+      "suspendTitle": "Suspender Inquilino",
+      "suspendConfirm": "¿Está seguro de que desea suspender este inquilino? Sus miembros perderán el acceso hasta que se reactive.",
+      "suspendSuccess": "Inquilino suspendido exitosamente",
+      "reactivateTitle": "Reactivar Inquilino",
+      "reactivateConfirm": "¿Está seguro de que desea reactivar este inquilino?",
+      "reactivateSuccess": "Inquilino reactivado exitosamente",
+      "list": {
+        "title": "Lista de inquilinos"
+      },
+      "create": {
+        "title": "Crear inquilino"
+      },
+      "update": {
+        "title": "Actualizar inquilino"
+      },
+      "status": {
+        "active": "Activo",
+        "suspended": "Suspendido"
+      },
+      "members": {
+        "title": "Miembros del inquilino",
+        "addTitle": "Agregar miembro",
+        "addButton": "Agregar miembro",
+        "addSuccess": "Miembro agregado exitosamente",
+        "rolesTitle": "Cambiar roles del miembro",
+        "rolesButton": "Cambiar roles",
+        "rolesSuccess": "Roles del miembro actualizados exitosamente",
+        "removeTitle": "Quitar miembro",
+        "removeConfirm": "¿Está seguro de que desea quitar a este miembro del inquilino?",
+        "removeSuccess": "Miembro quitado exitosamente"
+      },
+      "switcher": {
+        "label": "Inquilino",
+        "switchTo": "Cambiar de inquilino",
+        "switchSuccess": "Ahora está trabajando en ${tenant}",
+        "noTenant": "Ningún inquilino seleccionado"
+      }
+    },
+    "selectTenant": {
+      "title": "Seleccionar inquilino",
+      "description": "Elija el inquilino en el que desea trabajar.",
+      "suspendedReason": "El inquilino en el que trabajaba ha sido suspendido. Elija otro inquilino para continuar.",
+      "revokedReason": "Su membresía en ese inquilino ha sido revocada. Elija otro inquilino para continuar.",
+      "unavailableReason": "Ese inquilino ya no está disponible. Elija otro inquilino para continuar.",
+      "noSelectionReason": "Elija un inquilino antes de abrir esta pantalla."
+    },
+    "noTenant": {
+      "title": "Sin inquilino",
+      "description": "Todavía no pertenece a un inquilino activo. Cree su propio inquilino o pida a un administrador que lo agregue al suyo.",
+      "createTitle": "Cree su inquilino",
+      "createButton": "Crear inquilino",
+      "createSuccess": "Inquilino creado. Ahora usted es su administrador."
     }
   },
   "notifications": {

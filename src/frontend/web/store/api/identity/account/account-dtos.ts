@@ -11,7 +11,7 @@ export interface ForgetPasswordRequest extends RequestBase {
   email: string
 }
 
-/** Authenticated user info returned by /account/get-info, including roles and per-role permissions used for authorization checks in the UI. */
+/** Authenticated user info returned by /account/get-info, including the caller's tenants, the tenant they are acting in, and the roles and per-role permissions that tenant grants them. */
 export interface GetUserInfoResponse {
   id: string
   username: string
@@ -19,6 +19,10 @@ export interface GetUserInfoResponse {
   firstName?: string
   lastName?: string
   image?: string
+  activeTenantId?: string
+  activeTenant?: GetUserInfoTenant
+  tenants: GetUserInfoTenant[]
+  isPlatformAdministrator: boolean
   roles: GetUserInfoRole[]
 }
 
@@ -34,6 +38,13 @@ export interface GetUserInfoPermission {
   id: string
   name: string
   displayName: string
+}
+
+/** A tenant the caller holds an active membership in, embedded in GetUserInfoResponse so the chrome can name the active tenant and offer the others to switch to. */
+export interface GetUserInfoTenant {
+  id: string
+  name: string
+  identifier: string
 }
 
 /** Public-facing profile of the current user returned by /account/profile (no roles/permissions). */

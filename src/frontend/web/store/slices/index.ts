@@ -1,4 +1,4 @@
-export { authSlice, setUserInfo, signout } from './authSlice'
+export { authSlice, setUserInfo, setTenantError, clearTenantError, signout } from './authSlice'
 export { notificationsSlice, setUnreadCount } from './notificationsSlice'
 export { serviceAvailabilitySlice, showServiceUnavailable, clearServiceUnavailable } from './service-availability-slice'
 export { themeConfigSlice, toggleTheme, setDarkMode, toggleMenu, toggleLayout, toggleRTL, toggleAnimation, toggleNavbar, toggleSemidark, toggleSidebar, resetToggleSidebar } from './themeConfigSlice'

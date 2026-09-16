@@ -4,6 +4,11 @@ namespace Backend.Permissions;
 /// Mutable builder context passed to <see cref="IPermissionDefinitionProvider"/>
 /// implementations while they declare the permissions they contribute.
 /// </summary>
+/// <remarks>
+/// A context is created, handed to a single provider and then discarded by
+/// <see cref="PermissionDefinitionService"/>, so the catalogue it produces is fixed once the
+/// provider returns and cannot be extended at run time.
+/// </remarks>
 public class PermissionDefinitionContext
 {
     private IList<PermissionDefinition> _permissions { get; } = [];
@@ -13,10 +18,14 @@ public class PermissionDefinitionContext
     /// </summary>
     /// <param name="name">Stable permission name (e.g. <c>User.View</c>).</param>
     /// <param name="displayName">Human-readable name shown in the UI.</param>
+    /// <param name="isPlatform">
+    /// Whether the permission belongs to the platform tier, which makes it - and every permission
+    /// added beneath it - impossible to grant through a tenant role.
+    /// </param>
     /// <returns>The created <see cref="PermissionDefinition"/> which can be used to add child permissions.</returns>
-    public PermissionDefinition AddPermission(string name, string displayName)
+    public PermissionDefinition AddPermission(string name, string displayName, bool isPlatform = false)
     {
-        var permission = new PermissionDefinition(name, displayName);
+        var permission = new PermissionDefinition(name, displayName, isPlatform);
         _permissions.Add(permission);
         return permission;
     }

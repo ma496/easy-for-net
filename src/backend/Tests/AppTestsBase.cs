@@ -1,5 +1,6 @@
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Tenancy;
 
 namespace Backend.Tests;
 
@@ -13,11 +14,30 @@ public abstract class AppTestsBase(App app) : TestBase<App>
     protected AppDbContext DbContext => App.Services.GetRequiredService<AppDbContext>();
 
     /// <summary>
-    /// Authenticates the HTTP client by setting a Bearer token obtained from the token endpoint.
+    /// The tenant scope the current unit of work acts in. Establishing one is what lets a test
+    /// arrange tenant-scoped rows directly through <see cref="DbContext"/>, standing in for the
+    /// scope a request would have opened.
     /// </summary>
-    protected async Task SetAuthTokenAsync(string username = "admin", string password = "Admin#123")
+    protected ITenantContext TenantContext => App.Services.GetRequiredService<ITenantContext>();
+
+    /// <summary>
+    /// Authenticates the HTTP client by setting a Bearer token obtained from the token endpoint,
+    /// optionally selecting a tenant first. Sign-in resolves an active tenant on its own only when
+    /// exactly one membership stands, so a tenant is named here whenever the account holds several.
+    /// </summary>
+    protected async Task SetAuthTokenAsync(string username = "admin", string password = "Admin#123", Guid? tenantId = null)
     {
-        await TestsHelper.SetNewAuthTokenAsync(App.Client, username, password);
+        await TestsHelper.SetNewAuthTokenAsync(App.Client, username, password, tenantId);
+    }
+
+    /// <summary>
+    /// Re-establishes the signed-in caller's session in the tenant named, leaving the client
+    /// presenting the token that session issued. The account is unchanged - this is the same caller
+    /// acting in another tenant, not a second sign-in.
+    /// </summary>
+    protected async Task SwitchTenantAsync(Guid tenantId)
+    {
+        await TestsHelper.SwitchTenantAsync(App.Client, tenantId);
     }
 
     /// <summary>
@@ -31,6 +51,12 @@ public abstract class AppTestsBase(App app) : TestBase<App>
     /// <summary>
     /// Creates a new admin user with the specified credentials, assigning the Admin role.
     /// </summary>
+    /// <remarks>
+    /// The account is created inside the bootstrap tenant's scope, so the role it is granted is that
+    /// tenant's administrator role - the one a caller acting there actually holds - and it joins the
+    /// bootstrap tenant as its only membership, which keeps sign-in resolving an active tenant for it
+    /// exactly as it does for every other seeded account.
+    /// </remarks>
     /// <exception cref="Exception">Thrown when the admin role does not exist or the user already exists.</exception>
     protected async Task<User> CreateAdminUserAsync(string username, string password)
     {
@@ -39,6 +65,8 @@ public abstract class AppTestsBase(App app) : TestBase<App>
         var user = await userService.GetByUsernameAsync(username);
         if (user == null)
         {
+            using var bootstrapTenant = TenantContext.BeginTenant(TestTenants.BootstrapTenantId);
+
             user = await userService.CreateAsync(new User
             {
                 SystemCreated = true,

@@ -12,10 +12,15 @@ npx vitest run lib/utils/redirect.test.ts
 npx vitest            # watch mode while iterating
 ```
 
-There is no `vitest.config.ts` — the defaults plus the TypeScript path aliases are enough, because
-the suite covers **pure logic**, not rendered components. Keep it that way unless a task genuinely
-requires a DOM environment; adding one means adding `jsdom` and a config file, which is a
-deliberate decision, not a side effect.
+`vitest.config.mts` exists only to map the `@/` alias from `tsconfig.json`; everything else is the
+defaults. The suite covers **pure logic**, not rendered components: there is no DOM environment and
+no test setup file. Keep it that way unless a task genuinely requires a browser, where adding
+`jsdom` and an environment is a deliberate decision, not a side effect.
+
+Note that Vitest does not read `tsconfig.json` paths, and TypeScript erases an import used only as a
+type. So an import of a *value* through `@/` — `import { setUserInfo } from '@/store/slices'` — is
+resolved by the config, while a type-only one would silently need nothing; a module whose own
+imports go through the alias therefore loads in a test only because of it.
 
 ## Layout
 
@@ -28,8 +33,8 @@ lib/utils/authentication-and-authorization.ts
 lib/utils/authentication-and-authorization.test.ts
 ```
 
-Import the unit under test by relative path (`from './redirect'`), everything else through the
-`@/` alias.
+Import the unit under test by relative path (`from './redirect'`), everything else through the `@/`
+alias — both resolve, in the test file and in the modules it pulls in.
 
 ## Shape
 

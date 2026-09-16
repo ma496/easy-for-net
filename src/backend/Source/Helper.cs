@@ -34,13 +34,26 @@ public static class Helper
     /// <summary>
     /// Builds the <see cref="Claim"/> list for an authenticated user, including
     /// identity, email, role, and permission claims derived from the supplied
-    /// user, roles, and permissions.
+    /// user, roles, and permissions, plus the tenant the session acts in when one is active.
     /// </summary>
     /// <param name="user">The authenticated user to source identity claims from.</param>
-    /// <param name="roles">The role names to emit as <see cref="ClaimTypes.Role"/> claims.</param>
-    /// <param name="permissions">The permission names to emit as application permission claims.</param>
-    /// <returns>The list of claims representing the user's identity, roles, and permissions.</returns>
-    public static List<Claim> CreateClaims(User user, List<string> roles, List<string> permissions)
+    /// <param name="roles">
+    /// The role names to emit as <see cref="ClaimTypes.Role"/> claims. When <paramref name="tenantId"/>
+    /// is supplied these must be the roles the user holds in that tenant, so that the session never
+    /// carries authorization established for another tenant.
+    /// </param>
+    /// <param name="permissions">
+    /// The permission names to emit as application permission claims. When <paramref name="tenantId"/>
+    /// is supplied these must be the permissions the user's roles in that tenant grant.
+    /// </param>
+    /// <param name="tenantId">
+    /// The tenant the session acts in, emitted as a single <see cref="ClaimConstants.TenantId"/> claim.
+    /// Pass <see langword="null"/> when no tenant is active - the user holds no active membership, or
+    /// holds several and has not chosen between them - in which case no tenant claim is issued and
+    /// tenant-scoped work is refused until a tenant is selected.
+    /// </param>
+    /// <returns>The list of claims representing the user's identity, active tenant, roles, and permissions.</returns>
+    public static List<Claim> CreateClaims(User user, List<string> roles, List<string> permissions, Guid? tenantId = null)
     {
         var claims = new List<Claim>
         {
@@ -49,6 +62,8 @@ public static class Helper
             new (ClaimTypes.Email, user.Email),
             new (ClaimConstants.SessionVersion, CreateSessionVersion(user.PasswordHash)),
         };
+        if (tenantId.HasValue)
+            claims.Add(new (ClaimConstants.TenantId, tenantId.Value.ToString()));
         claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
         claims.AddRange(permissions.Select(p => new Claim(ClaimConstants.Permission, p)));
         return claims;

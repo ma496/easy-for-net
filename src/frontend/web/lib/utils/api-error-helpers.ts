@@ -66,6 +66,60 @@ function getErrorMessage(error: unknown): string | null {
 }
 
 /**
+ * Extracts the machine-readable error code a failed response carries, or `null` when it
+ * carries none.
+ *
+ * A response the application raised itself names its reason twice: once in prose, and once
+ * as a code from the API's catalogue. The code is what the web side can translate, and
+ * FastEndpoints reports it inside `errors`, alongside the property it belongs to — an empty
+ * name for a refusal that belongs to the request as a whole (`tenantSuspended`), the
+ * property name for one that belongs to a field, and the FluentValidation rule name
+ * (`NotEmptyValidator`) for a rule that failed. A body that names its reason at the top
+ * level instead is read too, since a hand-shaped response has no `errors` to read.
+ */
+function getErrorCode(data: unknown): string | null {
+  if (!data || typeof data !== 'object') return null
+
+  const body = data as Record<string, unknown>
+
+  if (Array.isArray(body.errors)) {
+    for (const error of body.errors) {
+      if (error && typeof error === 'object') {
+        const code = (error as Record<string, unknown>).code
+        if (typeof code === 'string' && code.length > 0) return code
+      }
+    }
+  }
+
+  if (typeof body.errorCode === 'string' && body.errorCode.length > 0) return body.errorCode
+
+  return null
+}
+
+/**
+ * The translated message for the error code a response carries, or `null` when it carries no
+ * code or the code has no message of its own.
+ *
+ * The dictionary lookup is the same one validation errors go through, so a code means the
+ * same thing wherever it arrives. A key that is missing comes back as the key itself, which
+ * is how a code with a message is told from one without — a code the dictionary has never
+ * heard of must not be shown to the user as `error.server.somethingNew`.
+ */
+function getTranslatedErrorCode(
+  data: unknown,
+  t: (key: string, vars?: Record<string, string | number>) => string,
+): string | null {
+  const code = getErrorCode(data)
+
+  if (!code) return null
+
+  const key = `error.server.${code}`
+  const translated = t(key)
+
+  return translated !== key ? translated : null
+}
+
+/**
  * Maps a backend `ValidationError.name` to the corresponding Formik field name.
  *
  * The backend returns `PascalCase` names, optionally with a `Normalized` suffix
@@ -132,32 +186,45 @@ export function getApiErrorMessages(
         const msgs = validationErrors.map((e: ValidationError) => getFieldErrorMessage(e, t))
         return { title: t('error.400.title'), messages: msgs }
       }
-      // 400 without structured errors — try to show the data as-is
+      // 400 without structured errors — a coded refusal is translated, anything else is
+      // shown as the data reports it
+      const coded = getTranslatedErrorCode(data, t)
+      if (coded) {
+        return { title: t('error.400.title'), messages: [coded] }
+      }
       const msg = getErrorMessage(error)
       return {
         title: t('error.400.title'),
         messages: msg ? [msg] : [JSON.stringify(data)],
       }
     }
+    // Every other status is answered with the message for that status unless the body names
+    // a reason the dictionary knows. A bare status says what went wrong with the request; a
+    // code says why, which is the part a user can act on — "this tenant is suspended" rather
+    // than "Forbidden".
     if (status === 401) {
-      return { title: t('error.401.title'), messages: [t('error.401.message')] }
+      return { title: t('error.401.title'), messages: [getTranslatedErrorCode(data, t) ?? t('error.401.message')] }
     }
     if (status === 403) {
-      return { title: t('error.403.title'), messages: [t('error.403.message')] }
+      return { title: t('error.403.title'), messages: [getTranslatedErrorCode(data, t) ?? t('error.403.message')] }
     }
     if (status === 404) {
-      return { title: t('error.404.title'), messages: [t('error.404.message')] }
+      return { title: t('error.404.title'), messages: [getTranslatedErrorCode(data, t) ?? t('error.404.message')] }
     }
     if (status === 413) {
-      return { title: t('error.413.title'), messages: [t('error.413.message')] }
+      return { title: t('error.413.title'), messages: [getTranslatedErrorCode(data, t) ?? t('error.413.message')] }
     }
     if (status === 415) {
-      return { title: t('error.415.title'), messages: [t('error.415.message')] }
+      return { title: t('error.415.title'), messages: [getTranslatedErrorCode(data, t) ?? t('error.415.message')] }
     }
     if (status === 500) {
-      return { title: t('error.500.title'), messages: [t('error.500.message')] }
+      return { title: t('error.500.title'), messages: [getTranslatedErrorCode(data, t) ?? t('error.500.message')] }
     }
-    // Unknown status — try to get a message from data
+    // Unknown status — a coded reason, else whatever message the data carries
+    const unknownCoded = getTranslatedErrorCode(data, t)
+    if (unknownCoded) {
+      return { title: t('common.error'), messages: [unknownCoded] }
+    }
     const msg = getErrorMessage(error)
     return {
       title: t('common.error'),
@@ -173,7 +240,13 @@ export function getApiErrorMessages(
     }
   }
 
-  // SerializedError or other unknown shapes
+  // SerializedError or other unknown shapes — consulted for a code the same way, so a reason
+  // arriving without a status is translated exactly as one arriving with it
+  const transientCoded = getTranslatedErrorCode(error, t)
+  if (transientCoded) {
+    return { title: t('common.error'), messages: [transientCoded] }
+  }
+
   const msg = getErrorMessage(error)
   return {
     title: t('common.error'),

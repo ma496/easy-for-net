@@ -35,7 +35,8 @@
     "allRightsReserved": "Tous droits réservés.",
     "deleteConfirm": "Oui, supprimer",
     "notifications": "Notifications",
-    "viewAll": "Voir tout"
+    "viewAll": "Voir tout",
+    "close": "Fermer"
   },
   "navigation": {
     "home": "Accueil",
@@ -64,7 +65,14 @@
     "usersUpdate": "Mettre à jour",
     "notifications": "Notifications",
     "notificationsList": "Liste",
-    "notificationsDetail": "Détails"
+    "notificationsDetail": "Détails",
+    "tenants": "Locataires",
+    "tenantsList": "Liste",
+    "tenantsCreate": "Créer",
+    "tenantsUpdate": "Mettre à jour",
+    "tenantsMembers": "Membres",
+    "selectTenant": "Sélectionner un locataire",
+    "noTenant": "Aucun locataire"
   },
   "search": {
     "dashboard": "Tableau de bord",
@@ -82,7 +90,9 @@
     "notifications": "Notifications",
     "uiFormElements": "Éléments de formulaire UI",
     "uiFileUpload": "Téléchargement de fichiers UI",
-    "uiTooltips": "Info-bulles UI"
+    "uiTooltips": "Info-bulles UI",
+    "tenants": "Locataires",
+    "tenantsCreate": "Créer un locataire"
   },
   "form": {
     "label": {
@@ -98,7 +108,10 @@
       "roleDescription": "Description",
       "roles": "Rôles",
       "isActive": "Actif",
-      "name": "Nom"
+      "name": "Nom",
+      "tenantName": "Nom du locataire",
+      "tenantIdentifier": "Identifiant",
+      "user": "Utilisateur"
     },
     "placeholder": {
       "username": "Entrez le nom d'utilisateur",
@@ -111,7 +124,10 @@
       "confirmPassword": "Confirmez le mot de passe",
       "roleName": "Entrez le nom du rôle",
       "roleDescription": "Entrez la description du rôle",
-      "roles": "Sélectionnez les rôles"
+      "roles": "Sélectionnez les rôles",
+      "tenantName": "Entrez le nom du locataire",
+      "tenantIdentifier": "Entrez l'identifiant (par exemple acme)",
+      "user": "Sélectionnez un utilisateur"
     }
   },
   "validation": {
@@ -121,7 +137,8 @@
     "email": "Format d'email invalide",
     "invalidEmail": "Email invalide",
     "mustMatch": "Le champ doit correspondre à ${otherField}",
-    "atLeastOneSelected": "Au moins un élément doit être sélectionné"
+    "atLeastOneSelected": "Au moins un élément doit être sélectionné",
+    "tenantIdentifier": "Utilisez des lettres minuscules, des chiffres et des traits d'union simples, en commençant et en terminant par une lettre ou un chiffre"
   },
   "error": {
     "400": {
@@ -169,6 +186,8 @@
       "referencedRecordNotFound": "Enregistrement référencé non trouvé",
       "invalidValueProvided": "Valeur fournie invalide",
       "databaseError": "Erreur de base de données",
+      "authenticationRequired": "Cette opération nécessite une connexion.",
+      "permissionDenied": "Vos rôles n'accordent pas l'autorisation requise par cette opération.",
       "invalidCurrentPassword": "Mot de passe actuel invalide",
       "invalidToken": "Jeton invalide",
       "tokenExpired": "Jeton expiré",
@@ -186,7 +205,19 @@
       "systemCreatedRoleCannotBeDeleted": "Le rôle créé par le système ne peut pas être supprimé",
       "systemCreatedRoleCannotBeUpdated": "Le rôle créé par le système ne peut pas être mis à jour",
       "systemCreatedUserCannotBeDeleted": "L'utilisateur créé par le système ne peut pas être supprimé",
-      "systemCreatedUserCannotBeUpdated": "L'utilisateur créé par le système ne peut pas être mis à jour"
+      "systemCreatedUserCannotBeUpdated": "L'utilisateur créé par le système ne peut pas être mis à jour",
+      "tenantNotFound": "Locataire non trouvé",
+      "tenantSuspended": "Ce locataire est suspendu",
+      "notTenantMember": "Vous n'êtes pas membre de ce locataire",
+      "noActiveTenant": "Aucun locataire actif n'est sélectionné",
+      "tenantIdentifierAlreadyExists": "L'identifiant du locataire existe déjà",
+      "duplicateTenantMembership": "Cet utilisateur est déjà membre de ce locataire",
+      "lastTenantAdministrator": "Le dernier administrateur du locataire ne peut pas être retiré",
+      "systemCreatedTenantCannotBeModified": "Le locataire créé par le système ne peut pas être modifié",
+      "crossTenantFileAccess": "Ce fichier appartient à un autre locataire",
+      "tenantMembershipRevoked": "Votre adhésion à ce locataire a été révoquée",
+      "platformPermissionNotGrantable": "Les permissions de plateforme ne peuvent pas être accordées à un rôle de locataire",
+      "concurrentModification": "Cet enregistrement a été modifié par quelqu'un d'autre. Rechargez et réessayez."
     }
   },
   "table": {
@@ -206,7 +237,8 @@
       "status": "Statut",
       "date": "Date",
       "group": "Groupe",
-      "updated": "Mis à jour"
+      "updated": "Mis à jour",
+      "identifier": "Identifiant"
     },
     "pagination": {
       "showingEntries": "Affichage de ${from} à ${to} sur ${totalRecords} entrées"
@@ -232,7 +264,10 @@
       "role": "Rôle",
       "selectRole": "Sélectionner un rôle",
       "search": "Rechercher",
-      "clear": "Effacer"
+      "clear": "Effacer",
+      "tenantStatus": "Statut du locataire",
+      "allStatuses": "Tous les statuts",
+      "suspended": "Suspendu"
     }
   },
   "file": {
@@ -451,6 +486,68 @@
         "title": "Détails de la notification"
       },
       "viewAll": "Voir toutes les notifications"
+    },
+    "tenants": {
+      "title": "Locataires",
+      "notFound": "Locataire non trouvé",
+      "systemCreated": "Créé par le système",
+      "createSuccess": "Locataire créé avec succès",
+      "updateSuccess": "Locataire mis à jour avec succès",
+      "deleteTitle": "Supprimer le locataire",
+      "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce locataire ?",
+      "deleteSuccess": "Locataire supprimé avec succès",
+      "suspendTitle": "Suspendre le locataire",
+      "suspendConfirm": "Êtes-vous sûr de vouloir suspendre ce locataire ? Ses membres perdront l'accès jusqu'à sa réactivation.",
+      "suspendSuccess": "Locataire suspendu avec succès",
+      "reactivateTitle": "Réactiver le locataire",
+      "reactivateConfirm": "Êtes-vous sûr de vouloir réactiver ce locataire ?",
+      "reactivateSuccess": "Locataire réactivé avec succès",
+      "list": {
+        "title": "Liste des locataires"
+      },
+      "create": {
+        "title": "Créer un locataire"
+      },
+      "update": {
+        "title": "Mettre à jour le locataire"
+      },
+      "status": {
+        "active": "Actif",
+        "suspended": "Suspendu"
+      },
+      "members": {
+        "title": "Membres du locataire",
+        "addTitle": "Ajouter un membre",
+        "addButton": "Ajouter un membre",
+        "addSuccess": "Membre ajouté avec succès",
+        "rolesTitle": "Modifier les rôles du membre",
+        "rolesButton": "Modifier les rôles",
+        "rolesSuccess": "Rôles du membre mis à jour avec succès",
+        "removeTitle": "Retirer le membre",
+        "removeConfirm": "Êtes-vous sûr de vouloir retirer ce membre du locataire ?",
+        "removeSuccess": "Membre retiré avec succès"
+      },
+      "switcher": {
+        "label": "Locataire",
+        "switchTo": "Changer de locataire",
+        "switchSuccess": "Vous travaillez maintenant dans ${tenant}",
+        "noTenant": "Aucun locataire sélectionné"
+      }
+    },
+    "selectTenant": {
+      "title": "Sélectionner un locataire",
+      "description": "Choisissez le locataire dans lequel vous souhaitez travailler.",
+      "suspendedReason": "Le locataire dans lequel vous travailliez a été suspendu. Choisissez un autre locataire pour continuer.",
+      "revokedReason": "Votre adhésion à ce locataire a été révoquée. Choisissez un autre locataire pour continuer.",
+      "unavailableReason": "Ce locataire n'est plus disponible. Choisissez un autre locataire pour continuer.",
+      "noSelectionReason": "Choisissez un locataire avant d'ouvrir cet écran."
+    },
+    "noTenant": {
+      "title": "Aucun locataire",
+      "description": "Vous n'appartenez pas encore à un locataire actif. Créez votre propre locataire ou demandez à un administrateur de vous ajouter au sien.",
+      "createTitle": "Créez votre locataire",
+      "createButton": "Créer un locataire",
+      "createSuccess": "Locataire créé. Vous en êtes maintenant l'administrateur."
     }
   },
   "notifications": {

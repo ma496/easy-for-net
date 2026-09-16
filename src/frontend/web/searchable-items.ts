@@ -31,6 +31,14 @@ export const searchableItems: SearchableItem[] = [
 
   },
   {
+    title: 'search.tenants',
+    url: '/admin/tenants/list',
+  },
+  {
+    title: 'search.tenantsCreate',
+    url: '/admin/tenants/create',
+  },
+  {
     title: 'search.profile',
     url: '/profile',
   },

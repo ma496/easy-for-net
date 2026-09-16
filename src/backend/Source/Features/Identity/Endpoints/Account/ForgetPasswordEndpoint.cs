@@ -10,6 +10,12 @@ using Microsoft.Extensions.Options;
 /// Anonymous POST endpoint that initiates the password-reset flow by emailing a reset
 /// token to the requesting user.
 /// </summary>
+/// <remarks>
+/// Marked <see cref="AllowNoTenantAttribute"/> because starting password recovery is one of the
+/// account self-service flows that has to work with no tenant established: it names no tenant's
+/// data, and the account asking for it may hold no usable membership in any tenant.
+/// </remarks>
+[AllowNoTenant]
 sealed class ForgetPasswordEndpoint(ITokenService tokenService,
                                     IUserService userService,
                                     IEmailBackgroundJobs emailBackgroundJobs,

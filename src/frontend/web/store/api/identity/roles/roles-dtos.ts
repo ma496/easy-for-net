@@ -45,8 +45,10 @@ export interface RoleGetResponse extends GenericAuditableDto<string> {
   userCount: number
 }
 
-/** Request parameters for the list-roles endpoint, combining standard list/search/sort options with the request base. */
-export interface RoleListRequest extends ListRequestDto<string>, RequestBase { }
+/** Request parameters for the list-roles endpoint, combining standard list/search/sort options with the request base, plus an optional tenant filter honoured only for a platform administrator. */
+export interface RoleListRequest extends ListRequestDto<string>, RequestBase {
+  tenantId?: string
+}
 
 /** Paged response of roles returned by the list-roles endpoint. */
 export interface RoleListResponse extends ListDto<RoleListDto> { }

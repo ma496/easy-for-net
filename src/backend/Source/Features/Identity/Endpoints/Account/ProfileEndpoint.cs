@@ -6,6 +6,12 @@ using Backend.Features.Identity.Core;
 /// Authenticated GET endpoint that returns the current user's basic profile data
 /// (id, username, email, name, and profile image).
 /// </summary>
+/// <remarks>
+/// Marked <see cref="AllowNoTenantAttribute"/> because reading one's own profile is account
+/// self-service. The profile - the profile image included - belongs to the account rather than to a
+/// tenant's data, so it stays readable while the caller acts in any tenant or in none.
+/// </remarks>
+[AllowNoTenant]
 sealed class ProfileEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService)
     : EndpointWithoutRequest<UserProfileResponse>
 {
