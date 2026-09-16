@@ -2,12 +2,11 @@ namespace Backend.Tests.Features.Tenancy.Core;
 
 using Backend.Data.Entities;
 using Backend.Features.Identity.Core.Entities;
-using Backend.Features.Identity.Endpoints.Account;
 using Backend.Tenancy;
 
 /// <summary>
 /// Tests for the state a freshly seeded database is in, and for what running the seeder again leaves
-/// alone (AC-082, AC-083, AC-084, AC-121, AC-145).
+/// alone (AC-082, AC-083, AC-084, AC-121).
 /// </summary>
 /// <remarks>
 /// <para>
@@ -28,18 +27,6 @@ using Backend.Tenancy;
 /// </remarks>
 public class TenantSeedingTests(App app) : TenancyTestsBase(app)
 {
-    /// <summary>
-    /// The soft-delete query filter's registered key, named so a read that has to see a retained row can
-    /// relax that one filter and leave every other in force.
-    /// </summary>
-    private const string SoftDeleteFilterKey = "SoftDelete";
-
-    /// <summary>
-    /// The normalized name of the role earlier versions granted to self-service sign-ups, which the
-    /// seeder removes rather than reconciles.
-    /// </summary>
-    private const string PublicRoleNameNormalized = "public";
-
     /// <summary>
     /// The account the seeder creates, and the only account these tests name.
     /// </summary>
@@ -222,61 +209,6 @@ public class TenantSeedingTests(App app) : TenancyTestsBase(app)
                 permissionName => platformPermissionNames.Contains(permissionName),
                 $"the platform role '{platformRole.Name}' is what a platform grant is held through, so it has to hold at least one");
         }
-    }
-
-    /// <summary>
-    /// Verifies that the role earlier versions granted to self-service sign-ups is gone, at every scope
-    /// and retained rows included, and that signing up today grants no role at all - so nothing is handed
-    /// to an account for the bare act of creating one (AC-145).
-    /// </summary>
-    /// <remarks>
-    /// Both filters are relaxed for the retained read: the seeder removes the role with a hard delete
-    /// precisely so that neither a live row nor a soft-deleted one goes on occupying the name.
-    /// </remarks>
-    [Fact]
-    public async Task No_Public_Role_Is_Seeded()
-    {
-        var publicRoles = await DbContext.Roles
-            .AcrossAllTenants()
-            .IgnoreQueryFilters([SoftDeleteFilterKey])
-            .AsNoTracking()
-            .Where(role => role.NameNormalized == PublicRoleNameNormalized)
-            .Select(role => new { role.Id, role.TenantId, role.IsDeleted })
-            .ToListAsync(TestContext.Current.CancellationToken);
-
-        publicRoles.Should().BeEmpty(
-            "no role of that name exists at any scope, and the seeder removed it outright rather than merely retiring it");
-
-        // The name being gone says nothing about the act, so the act is exercised: an account created
-        // through sign-up has to come out holding no role and belonging to no tenant.
-        var username = $"signedup-{Guid.NewGuid():N}";
-        var (response, _) = await App.Client
-            .POSTAsync<SignupEndpoint, SignupRequest, SignupResponse>(new()
-            {
-                Username = username,
-                Email = $"{username}@example.com",
-                Password = "Signup#123",
-                ConfirmPassword = "Signup#123"
-            });
-
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        var signedUp = await DbContext.Users
-            .AsNoTracking()
-            .SingleAsync(user => user.UsernameNormalized == username, TestContext.Current.CancellationToken);
-
-        var heldRoles = await DbContext.UserRoles
-            .AsNoTracking()
-            .CountAsync(assignment => assignment.UserId == signedUp.Id, TestContext.Current.CancellationToken);
-
-        heldRoles.Should().Be(0, "signing up grants an authenticated identity and nothing else");
-
-        var memberships = await DbContext.TenantMemberships
-            .AcrossAllTenants()
-            .AsNoTracking()
-            .CountAsync(membership => membership.UserId == signedUp.Id, TestContext.Current.CancellationToken);
-
-        memberships.Should().Be(0, "and it places the account inside no tenant");
     }
 
     /// <summary>

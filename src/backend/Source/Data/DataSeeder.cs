@@ -36,12 +36,6 @@ public class DataSeeder(IUserService userService,
     private const string PlatformAdminRoleDescription = "Admin Role";
     private const string TenantAdminRoleDescription = "Tenant Admin Role";
 
-    /// <summary>
-    /// Name of the role earlier versions granted to self-service sign-ups. It belongs to no tenant and
-    /// is no platform role either, so it is removed rather than reconciled.
-    /// </summary>
-    private const string PublicRoleNameNormalized = "public";
-
     private const string AdminUsername = "admin";
     private const string AdminEmail = "admin@example.com";
     private const string AdminPassword = "Admin#123";
@@ -59,7 +53,6 @@ public class DataSeeder(IUserService userService,
 
         await ReconcilePlatformAdminRoleAsync(permissions, adminUser);
         await ReconcileBootstrapTenantAdministrationAsync(permissions, adminUser);
-        await RemovePublicRoleAsync();
         await SeedSampleNotificationsAsync(adminUser);
     }
 
@@ -234,33 +227,6 @@ public class DataSeeder(IUserService userService,
         {
             await userService.AssignRoleAsync(userId, roleId);
         }
-    }
-
-    /// <summary>
-    /// Removes the platform-scoped Public role and its assignments. Earlier versions seeded it for
-    /// self-service sign-ups, so a database seeded by one still carries the row: it belongs to no
-    /// tenant and is no platform role either, and leaving it would leave a role with no scope behind.
-    /// A role of the same name created inside a tenant is that tenant's own and is left alone.
-    /// </summary>
-    private async Task RemovePublicRoleAsync()
-    {
-        var publicRoleIds = await dbContext.Roles
-            .AcrossAllTenants()
-            .Where(r => r.TenantId == null && r.NameNormalized == PublicRoleNameNormalized)
-            .Select(r => r.Id)
-            .ToListAsync();
-
-        if (publicRoleIds.Count == 0)
-        {
-            return;
-        }
-
-        // The assignments go first and the role last, so nothing is ever left pointing at a role that
-        // is gone. These are deliberately hard deletes: soft-deleting the role would retain the very
-        // row this is removing.
-        await dbContext.UserRoles.Where(ur => publicRoleIds.Contains(ur.RoleId)).ExecuteDeleteAsync();
-        await dbContext.RolePermissions.Where(rp => publicRoleIds.Contains(rp.RoleId)).ExecuteDeleteAsync();
-        await dbContext.Roles.AcrossAllTenants().Where(r => publicRoleIds.Contains(r.Id)).ExecuteDeleteAsync();
     }
 
     /// <summary>
