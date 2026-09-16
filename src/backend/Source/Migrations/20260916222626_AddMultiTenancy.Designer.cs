@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260910194314_AddMultiTenancy")]
+    [Migration("20260916222626_AddMultiTenancy")]
     partial class AddMultiTenancy
     {
         /// <inheritdoc />

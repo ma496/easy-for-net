@@ -45,7 +45,7 @@ public class NotificationTenancyTests(App app) : NotificationsTestsBase(app)
         using (TenantContext.BeginTenant(raised.Id))
         {
             await NotificationService.NewTenantNotificationAsync(
-                NotificationType.Info, titleKey, $"{titleKey}.message");
+                NotificationType.Info, titleKey, $"{titleKey}.message", cancellationToken: TestContext.Current.CancellationToken);
         }
 
         var whileActingInRaised = await SearchIdsAsync(await ClientForAsync(recipient.Username, raised.Id), titleKey);
@@ -80,7 +80,7 @@ public class NotificationTenancyTests(App app) : NotificationsTestsBase(app)
         var titleKey = NewTitleKey();
 
         await NotificationService.NewGlobalNotificationAsync(
-            NotificationType.Info, titleKey, $"{titleKey}.message");
+            NotificationType.Info, titleKey, $"{titleKey}.message", cancellationToken: TestContext.Current.CancellationToken);
 
         var inFirst = await SearchIdsAsync(await ClientForAsync(recipient.Username, first.Id), titleKey);
         var inSecond = await SearchIdsAsync(await ClientForAsync(recipient.Username, second.Id), titleKey);
@@ -118,11 +118,11 @@ public class NotificationTenancyTests(App app) : NotificationsTestsBase(app)
         using (TenantContext.BeginTenant(raised.Id))
         {
             await NotificationService.NewTenantNotificationAsync(
-                NotificationType.Info, tenantKey, $"{tenantKey}.message");
+                NotificationType.Info, tenantKey, $"{tenantKey}.message", cancellationToken: TestContext.Current.CancellationToken);
         }
 
         await NotificationService.NewGlobalNotificationAsync(
-            NotificationType.Info, platformKey, $"{platformKey}.message");
+            NotificationType.Info, platformKey, $"{platformKey}.message", cancellationToken: TestContext.Current.CancellationToken);
 
         var actedClient = await ClientForAsync(recipient.Username, raised.Id);
         var otherClient = await ClientForAsync(recipient.Username, other.Id);
@@ -148,7 +148,7 @@ public class NotificationTenancyTests(App app) : NotificationsTestsBase(app)
         using (TenantContext.BeginTenant(raised.Id))
         {
             await NotificationService.NewTenantNotificationAsync(
-                NotificationType.Info, NewTitleKey(), $"test.message.tenancy.{Guid.NewGuid()}");
+                NotificationType.Info, NewTitleKey(), $"test.message.tenancy.{Guid.NewGuid()}", cancellationToken: TestContext.Current.CancellationToken);
         }
 
         var (actedAfterRsp, actedAfter) = await actedClient

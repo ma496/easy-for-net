@@ -44,7 +44,7 @@ public class NotificationServiceTests(App app) : NotificationsTestsBase(app)
         using (TenantContext.BeginTenant(tenant.Id))
         {
             await NotificationService.NewUserNotificationAsync(
-                recipient.Id, NotificationType.Info, titleKey, $"{titleKey}.message");
+                recipient.Id, NotificationType.Info, titleKey, $"{titleKey}.message", cancellationToken: TestContext.Current.CancellationToken);
         }
 
         var stored = await NotificationByTitleAsync(titleKey);
@@ -84,7 +84,7 @@ public class NotificationServiceTests(App app) : NotificationsTestsBase(app)
         using (TenantContext.BeginTenant(tenant.Id))
         {
             await NotificationService.NewTenantNotificationAsync(
-                NotificationType.Info, titleKey, $"{titleKey}.message");
+                NotificationType.Info, titleKey, $"{titleKey}.message", cancellationToken: TestContext.Current.CancellationToken);
         }
 
         var stored = await NotificationByTitleAsync(titleKey);
@@ -122,12 +122,12 @@ public class NotificationServiceTests(App app) : NotificationsTestsBase(app)
         var tenantKey = NewTitleKey();
 
         await NotificationService.NewGlobalNotificationAsync(
-            NotificationType.Info, platformKey, $"{platformKey}.message");
+            NotificationType.Info, platformKey, $"{platformKey}.message", cancellationToken: TestContext.Current.CancellationToken);
 
         using (TenantContext.BeginTenant(tenant.Id))
         {
             await NotificationService.NewTenantNotificationAsync(
-                NotificationType.Info, tenantKey, $"{tenantKey}.message");
+                NotificationType.Info, tenantKey, $"{tenantKey}.message", cancellationToken: TestContext.Current.CancellationToken);
         }
 
         var platformWide = await NotificationByTitleAsync(platformKey);
