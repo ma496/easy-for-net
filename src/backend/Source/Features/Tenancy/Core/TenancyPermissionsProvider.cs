@@ -20,6 +20,10 @@ public class TenancyPermissionsProvider : IPermissionDefinitionProvider
 
     public void Define(PermissionDefinitionContext context)
     {
+        // This permission is used to identify the platform administrator.
+        var platformPermissions = context.AddPermission("Platform", "Platform");
+        platformPermissions.AddChild(Allow.Platform_Administration, "Administration", isPlatform: true);
+
         var tenantsPermissions = context.AddPermission("Tenants", "Tenants");
         tenantsPermissions.AddChild(Allow.Tenant_View, "View");
         tenantsPermissions.AddChild(Allow.Tenant_Create, "Create", isPlatform: true);
@@ -33,8 +37,5 @@ public class TenancyPermissionsProvider : IPermissionDefinitionProvider
         tenantMembersPermissions.AddChild(Allow.TenantMember_Add, "Add");
         tenantMembersPermissions.AddChild(Allow.TenantMember_UpdateRoles, "UpdateRoles");
         tenantMembersPermissions.AddChild(Allow.TenantMember_Remove, "Remove");
-
-        var platformPermissions = context.AddPermission("Platform", "Platform");
-        platformPermissions.AddChild(Allow.Platform_Administration, "Administration", isPlatform: true);
     }
 }
