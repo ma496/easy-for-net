@@ -161,6 +161,33 @@ const TreeViewItem = ({
 }
 
 /**
+ * Builds the selection state for the given ids, marking every parent whose children are all selected as selected too.
+ */
+const buildSelectionState = (nodes: TreeNode[], selectedIds: string[]): SelectionState => {
+  const state: SelectionState = {}
+  selectedIds.forEach((id) => {
+    state[id] = true
+  })
+
+  const calculateParentStates = (currentNodes: TreeNode[]) => {
+    currentNodes.forEach((node) => {
+      if (node.children && node.children.length > 0) {
+        calculateParentStates(node.children)
+        if (node.children.every((child) => state[child.id] === true)) {
+          state[node.id] = true
+        }
+      }
+    })
+  }
+
+  if (selectedIds.length > 0) {
+    calculateParentStates(nodes)
+  }
+
+  return state
+}
+
+/**
  * TreeView is a client component that renders a hierarchical list of TreeNode data with support for parent/child checkbox selection state, expand/collapse, and selection/click callbacks.
  */
 export const TreeView = ({
@@ -174,47 +201,16 @@ export const TreeView = ({
   enableSelection = false,
   expandAll = false,
 }: TreeViewProps) => {
-  // Simplified state management
-  const [selectedState, setSelectedState] = React.useState<SelectionState>(() => {
-    const state: SelectionState = {}
-    defaultSelectedIds.forEach((id) => {
-      state[id] = true
-    })
-    return state
-  })
+  const [selectedState, setSelectedState] = React.useState<SelectionState>(() => buildSelectionState(data, defaultSelectedIds))
   const [intermediateState, setIntermediateState] = React.useState<Set<string>>(new Set())
 
-  // Track defaultSelectedIds changes but prevent infinite loops
+  // Re-derive the selection when the selected ids change, and also when the nodes change: a parent's
+  // checked state depends on the children in `data`, so a new set of nodes (e.g. another permission
+  // group) must be recalculated or its parents render unchecked with every child checked.
   React.useEffect(() => {
-    const newState: SelectionState = {}
-    defaultSelectedIds.forEach((id) => {
-      newState[id] = true
-    })
-
-    // Calculate parent states based on children selections
-    const calculateParentStates = (nodes: TreeNode[]) => {
-      nodes.forEach((node) => {
-        if (node.children && node.children.length > 0) {
-          // First, process children recursively
-          calculateParentStates(node.children)
-
-          // Then check if all children are selected
-          const allChildrenSelected = node.children.every((child) => newState[child.id] === true)
-          if (allChildrenSelected) {
-            newState[node.id] = true
-          }
-        }
-      })
-    }
-
-    // Only calculate parent states if we have data and selected IDs
-    if (data.length > 0 && defaultSelectedIds.length > 0) {
-      calculateParentStates(data)
-    }
-
-    setSelectedState(newState)
+    setSelectedState(buildSelectionState(data, defaultSelectedIds))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(defaultSelectedIds)])
+  }, [JSON.stringify(defaultSelectedIds), data])
 
   // Simplified node mapping
   const nodeMap = React.useMemo(() => {
