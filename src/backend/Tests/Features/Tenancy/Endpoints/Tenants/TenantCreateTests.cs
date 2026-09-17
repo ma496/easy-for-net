@@ -32,7 +32,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Valid_Input()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var identifier = NewTenantIdentifier();
         var (response, created) = await App.Client
@@ -59,7 +59,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
     public async Task Duplicate_Identifier_Is_Refused()
     {
         var incumbent = await CreateTenantAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, ProblemDetails>(
@@ -97,7 +97,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
     public async Task Identifier_Differing_Only_In_Case_Is_Refused()
     {
         var incumbent = await CreateTenantAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, ProblemDetails>(
@@ -123,7 +123,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Invalid_Input()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, ProblemDetails>(
@@ -151,7 +151,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
     [MemberData(nameof(NameCases))]
     public async Task Name_Length_Rules(string name, bool accepted)
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var identifier = NewTenantIdentifier();
         var request = new TenantCreateRequest { Name = name, Identifier = identifier };
@@ -200,7 +200,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
     [MemberData(nameof(IdentifierCases))]
     public async Task Identifier_Format_Rules(string identifier, bool accepted)
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var request = new TenantCreateRequest { Name = "Acme Incorporated", Identifier = identifier };
 
@@ -234,7 +234,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Records_Audit_Fields()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var before = DateTime.UtcNow;
         var identifier = NewTenantIdentifier();
@@ -248,7 +248,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
         var afterCreate = DateTime.UtcNow;
         var stored = await ReloadTenantAsync(created.Id);
 
-        stored.CreatedBy.Should().Be(TestUsers.AdminUserId, "the creating account is the caller that asked for the tenant");
+        stored.CreatedBy.Should().Be(TestUsers.PlatformAdminUserId, "the creating account is the caller that asked for the tenant");
         stored.CreatedAt.Should().BeOnOrAfter(before).And.BeOnOrBefore(afterCreate, "the creation time is the time of the request");
         stored.UpdatedBy.Should().BeNull("nothing has changed the tenant since it was made");
         stored.UpdatedAt.Should().BeOnOrAfter(before).And.BeOnOrBefore(
@@ -266,7 +266,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
         var updated = await ReloadTenantAsync(created.Id);
 
         updated.Name.Should().Be("Acme Holdings");
-        updated.UpdatedBy.Should().Be(TestUsers.AdminUserId, "the updating account is the caller that asked for the rename");
+        updated.UpdatedBy.Should().Be(TestUsers.PlatformAdminUserId, "the updating account is the caller that asked for the rename");
         updated.UpdatedAt.Should().NotBeNull();
         updated.UpdatedAt!.Value.Should().BeOnOrAfter(stored.CreatedAt).And.BeOnOrBefore(afterUpdate);
     }
@@ -284,7 +284,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Provisions_A_System_Created_Administrator_Role()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, created) = await App.Client
             .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, TenantCreateResponse>(

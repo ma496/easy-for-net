@@ -18,8 +18,9 @@ using Backend.Tenancy;
 /// <c>dual</c> holds exactly one active membership</b>. Sign-in auto-selects the active tenant only
 /// when exactly one stands (<c>TokenEndpoint.ResolveSingleActiveTenantAsync</c>), so one membership
 /// each is what keeps <c>SetAuthTokenAsync()</c> working unchanged for the existing test methods
-/// across <c>Users</c>, <c>Roles</c>, <c>Account</c> and <c>Notifications</c>. Giving <c>admin</c>,
+/// across <c>Users</c>, <c>Roles</c>, <c>Account</c> and <c>Notifications</c>. Giving <c>tenantadmin</c>,
 /// <c>test</c>, <c>testone</c> or <c>testtwo</c> a second membership breaks the whole existing suite.
+/// The platform administrator <c>admin</c> holds no membership at all, and must keep holding none.
 /// </para>
 /// <para>
 /// <c>dual</c> is the deliberate exception and the only account that exercises the "no active tenant
@@ -93,7 +94,12 @@ public class TestsDataSeeder(IUserService userService,
 
         await SeedStoredFilesForProfileImagesAsync();
 
-        TestUsers.SetUserIds(adminUserId: await ReadUserIdAsync("admin"), testUserId, testOneUserId, testTwoUserId);
+        TestUsers.SetUserIds(
+            platformAdminUserId: await ReadUserIdAsync(TestUsers.PlatformAdminUsername),
+            tenantAdminUserId: await ReadUserIdAsync(TestUsers.TenantAdminUsername),
+            testUserId,
+            testOneUserId,
+            testTwoUserId);
         TestUsers.SetTenantUserIds(limitedUserId, noMembershipUserId, dualTenantUserId);
         TestRoles.SetRoleIds(adminRoleId, testRoleId, testOneRoleId, testTwoRoleId);
         TestRoles.SetTenantRoleIds(limitedTenantRoleId, secondTenantAdminRoleId, await ReadPlatformAdministratorRoleIdAsync());

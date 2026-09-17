@@ -12,6 +12,7 @@ using Backend.Features.Identity.Core.Entities;
 /// name, not its permissions, not its existence - can be learned from this endpoint. A caller holding
 /// platform administration reads any tenant's role, which is the one widening the read allows.
 /// </remarks>
+[AllowPlatformNoTenant]
 sealed class RoleGetEndpoint(IRoleService roleService) : Endpoint<RoleGetRequest, RoleGetResponse>
 {
     public override void Configure()

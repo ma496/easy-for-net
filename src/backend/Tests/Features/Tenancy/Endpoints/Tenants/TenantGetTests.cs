@@ -30,7 +30,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
     public async Task Platform_Administrator_Reads_A_Tenant_It_Is_Not_A_Member_Of()
     {
         var tenant = await CreateTenantAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, read) = await App.Client
             .GETAsync<TenantGetEndpoint, TenantGetRequest, TenantGetResponse>(new() { Id = tenant.Id });
@@ -100,7 +100,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
     {
         var deleted = await CreateTenantAsync();
         await DeleteTenantAsync(deleted.Id);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (deletedResponse, deletedProblem) = await App.Client
             .GETAsync<TenantGetEndpoint, TenantGetRequest, ProblemDetails>(new() { Id = deleted.Id });
@@ -128,7 +128,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Unknown_Tenant_Is_Not_Found()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .GETAsync<TenantGetEndpoint, TenantGetRequest, ProblemDetails>(new() { Id = Guid.NewGuid() });
@@ -145,7 +145,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Bootstrap_Tenant_Is_System_Created()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, read) = await App.Client
             .GETAsync<TenantGetEndpoint, TenantGetRequest, TenantGetResponse>(
@@ -162,7 +162,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Missing_Tenant_Is_Rejected()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .GETAsync<TenantGetEndpoint, TenantGetRequest, ProblemDetails>(new() { Id = Guid.Empty });

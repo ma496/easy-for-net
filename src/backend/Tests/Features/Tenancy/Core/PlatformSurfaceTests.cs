@@ -2,6 +2,7 @@ namespace Backend.Tests.Features.Tenancy.Core;
 
 using Backend.Data.Entities;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Identity.Endpoints.Roles;
 using Backend.Features.Tenancy.Endpoints.Tenants;
 
 /// <summary>
@@ -30,9 +31,9 @@ public class PlatformSurfaceTests(App app) : TenancyTestsBase(app)
         var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.Role_View);
         var administrator = await ReadSeededAdministratorAsync();
 
-        // The seeded platform administrator, signed in as itself: it holds the platform role and one
-        // membership - in the bootstrap tenant - so it is not a member of the tenant below.
-        await SetAuthTokenAsync();
+        // The seeded platform administrator, signed in as itself: it holds the platform role and no
+        // membership at all, so it is not a member of the tenant below.
+        await SetPlatformAdminAuthTokenAsync();
 
         var (addResponse, added) = await App.Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, TenantMemberAddResponse>(new()
@@ -82,7 +83,7 @@ public class PlatformSurfaceTests(App app) : TenancyTestsBase(app)
         var member = await CreateAccountWithoutMembershipAsync();
         var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.Role_View);
 
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (addResponse, _) = await App.Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, TenantMemberAddResponse>(new()
@@ -105,11 +106,30 @@ public class PlatformSurfaceTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
+    /// Verifies that an endpoint marked for platform administrators grants no exemption to any other
+    /// caller: an account with no membership and no platform administration is still told it has no
+    /// active tenant.
+    /// </summary>
+    [Fact]
+    public async Task Platform_Exemption_Does_Not_Reach_A_Caller_Without_Platform_Administration()
+    {
+        var account = await CreateAccountWithoutMembershipAsync();
+        var client = await ClientForAsync(account.Username);
+
+        var (response, refusal) = await client
+            .GETAsync<RoleListEndpoint, RoleListRequest, ProblemDetails>(new() { All = true });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        refusal.Errors.Should().ContainSingle();
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.NoActiveTenant, "the caller is refused for want of a tenant, as on any tenant-scoped endpoint");
+    }
+
+    /// <summary>
     /// Reads the account the seeder creates, which is the platform administrator these tests act as.
     /// </summary>
     /// <returns>The seeded administrator account.</returns>
     private async Task<User> ReadSeededAdministratorAsync()
         => await DbContext.Users
             .AsNoTracking()
-            .SingleAsync(user => user.UsernameNormalized == "admin", TestContext.Current.CancellationToken);
+            .SingleAsync(user => user.UsernameNormalized == TestUsers.PlatformAdminUsername, TestContext.Current.CancellationToken);
 }

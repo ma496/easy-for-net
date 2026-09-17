@@ -8,6 +8,11 @@ using Backend.Features.Identity.Core.Entities;
 /// make that account a member of the tenant the caller is acting in. The sign-in identifiers are kept
 /// unique across every tenant, while the roles the account may start with are the acting tenant's own.
 /// </summary>
+/// <remarks>
+/// A platform administrator acting in no tenant runs in platform scope: the account is created with no
+/// membership, and the roles it may start with are the platform roles - the ones belonging to no tenant.
+/// </remarks>
+[AllowPlatformNoTenant]
 sealed class UserCreateEndpoint(IUserService userService, AppDbContext dbContext) : Endpoint<UserCreateRequest, UserCreateResponse>
 {
     public override void Configure()
@@ -59,9 +64,8 @@ sealed class UserCreateEndpoint(IUserService userService, AppDbContext dbContext
         // in the same transaction by the service, so an administrator never creates an account that
         // the very next list or read refuses to show them. The membership is attributed centrally from
         // the active tenant rather than from anything the caller sent, so the request cannot name the
-        // tenant the new account lands in. This endpoint claims no exemption from the active-tenant
-        // requirement, so a tenant is always established by the time it runs and an account created
-        // here always joins one.
+        // tenant the new account lands in. Only a platform administrator reaches this with no tenant
+        // established, and then the account joins none.
         await userService.CreateAsync(entity, request.Password);
         var responseMapper = new UserCreateResponseMapper();
         await Send.ResponseAsync(responseMapper.Map(entity), cancellation: cancellationToken);

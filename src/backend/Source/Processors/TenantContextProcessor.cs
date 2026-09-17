@@ -8,7 +8,8 @@ using FluentValidation.Results;
 /// <summary>
 /// Global FastEndpoints pre-processor that establishes the tenant a request acts in, and refuses the
 /// request when it may not act in one. It is the single place the rule lives: every endpoint that
-/// does not carry <see cref="AllowNoTenantAttribute"/> requires an established tenant that exists,
+/// does not carry <see cref="AllowNoTenantAttribute"/> - or <see cref="AllowPlatformNoTenantAttribute"/>
+/// for a caller holding platform administration - requires an established tenant that exists,
 /// is not suspended, and that the caller still holds an active membership in, so no endpoint repeats
 /// the check and none can forget it.
 /// </summary>
@@ -74,12 +75,14 @@ public sealed class TenantContextProcessor : IGlobalPreProcessor
             return;
         }
 
-        if (IsExemptFromTenantRequirement(httpContext))
+        if (TenantRequirement.IsExempt(httpContext))
         {
             // Account self-service, tenant selection and onboarding have to keep working for a caller
             // with no usable tenant - that is how such a caller gets one - so the scope is resolved
             // to the platform rather than left unresolved: they read and write the rows that belong
-            // to no tenant instead of failing on a scope that was never established.
+            // to no tenant instead of failing on a scope that was never established. A platform
+            // administrator reaching a platform-exempt endpoint lands here too, and reads across every
+            // tenant through the widening that endpoint already applies to the platform tier.
             _ = tenantContext.BeginPlatformScope();
             return;
         }
@@ -101,20 +104,4 @@ public sealed class TenantContextProcessor : IGlobalPreProcessor
         => Guid.TryParse(principal.FindFirstValue(ClaimConstants.TenantId), out var tenantId)
             ? tenantId
             : null;
-
-    /// <summary>
-    /// Reports whether the endpoint being called is exempt from the active tenant requirement, by
-    /// reading <see cref="AllowNoTenantAttribute"/> off the endpoint's own type. A request whose
-    /// endpoint cannot be identified is treated as not exempt, so an operation whose tenant rule
-    /// cannot be established is refused rather than allowed to run unrestricted.
-    /// </summary>
-    /// <param name="httpContext">The request being handled.</param>
-    /// <returns><see langword="true"/> when the endpoint runs with no tenant established.</returns>
-    private static bool IsExemptFromTenantRequirement(HttpContext httpContext)
-    {
-        var definition = httpContext.GetEndpoint()?.Metadata.GetMetadata<EndpointDefinition>();
-
-        return definition is not null
-               && definition.EndpointType.IsDefined(typeof(AllowNoTenantAttribute), inherit: false);
-    }
 }

@@ -81,7 +81,7 @@ dotnet test tool/EasyForNetTool.Tests/EasyForNetTool.Tests.csproj
 
 ## Backend tests
 
-xUnit v3 + `FastEndpoints.Testing`. `App : AppFixture<Program>` runs the host with environment `Testing`; `AppTestsBase` (in the `SharedContext` collection) exposes `App.Client`, `DbContext`, `SetAuthTokenAsync()` (defaults to `admin` / `Admin#123`), and `CreateAdminUserAsync`. Tests call endpoints type-safely — `App.Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request)` — assert with FluentAssertions, and build payloads with Bogus `Faker<T>`. Shared fixtures live in `Tests/Seeder` (`TestRoles`, `TestUsers`, `TestsDataSeeder`); reuse them instead of creating ad-hoc roles. Collections run in parallel, so a test must not depend on global database state it did not create.
+xUnit v3 + `FastEndpoints.Testing`. `App : AppFixture<Program>` runs the host with environment `Testing`; `AppTestsBase` (in the `SharedContext` collection) exposes `App.Client`, `DbContext`, `SetAuthTokenAsync()` (defaults to the default tenant's administrator `tenantadmin` / `Admin#123`; `SetPlatformAdminAuthTokenAsync()` signs in as the platform administrator `admin`), and `CreateAdminUserAsync`. Tests call endpoints type-safely — `App.Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request)` — assert with FluentAssertions, and build payloads with Bogus `Faker<T>`. Shared fixtures live in `Tests/Seeder` (`TestRoles`, `TestUsers`, `TestsDataSeeder`); reuse them instead of creating ad-hoc roles. Collections run in parallel, so a test must not depend on global database state it did not create.
 
 ## Frontend architecture
 

@@ -79,7 +79,7 @@ public class SessionValidationMiddlewareTenantTests(App app) : TenancyTestsBase(
 
         var passwordHash = await PasswordHashAsync(member.Id);
 
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (removed, _) = await App.Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, TenantMemberRemoveResponse>(
@@ -263,7 +263,7 @@ public class SessionValidationMiddlewareTenantTests(App app) : TenancyTestsBase(
 
         // Suspended through the platform's own surface, so the tenant is in exactly the state a real
         // suspension leaves it in - and the member's token is left untouched throughout.
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (suspended, _) = await App.Client
             .POSTAsync<TenantSuspendEndpoint, TenantSuspendRequest, TenantSuspendResponse>(new() { Id = tenant.Id });

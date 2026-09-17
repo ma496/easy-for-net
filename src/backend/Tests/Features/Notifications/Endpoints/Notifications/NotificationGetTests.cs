@@ -15,7 +15,7 @@ public class NotificationGetTests(App app) : NotificationsTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var userId = TestUsers.AdminUserId;
+        var userId = TestUsers.TenantAdminUserId;
         var notification = await CreateUserNotificationAsync(userId);
 
         var (rsp, res) = await App.Client.GETAsync<NotificationGetEndpoint, NotificationGetRequest, NotificationGetResponse>(
@@ -100,7 +100,7 @@ public class NotificationGetTests(App app) : NotificationsTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var userId = TestUsers.AdminUserId;
+        var userId = TestUsers.TenantAdminUserId;
         var notification = await CreateGlobalNotificationAsync();
         await MarkNotificationVisitedAsync(notification.Id, userId);
 

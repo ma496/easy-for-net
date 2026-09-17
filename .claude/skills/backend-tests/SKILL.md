@@ -72,7 +72,8 @@ public class UserCreateTests(App app) : AppTestsBase(app)
 | `App.Client` | typed HTTP client |
 | `App.Services` | resolve services (`App.Services.GetRequiredService<IRoleService>()`) |
 | `DbContext` | direct EF access for arranging/asserting state |
-| `SetAuthTokenAsync(username, password)` | sets the Bearer header; defaults to `admin` / `Admin#123` |
+| `SetAuthTokenAsync(username, password)` | sets the Bearer header; defaults to the default tenant's administrator `tenantadmin` / `Admin#123` |
+| `SetPlatformAdminAuthTokenAsync()` | signs in as the platform administrator `admin`, who belongs to no tenant |
 | `ClearAuthToken()` | test the unauthenticated path |
 | `CreateAdminUserAsync(username, password)` | a fresh admin-role user (throws if it already exists) |
 
@@ -113,7 +114,7 @@ Test collections run in parallel against one database. Therefore:
 - Never assert on absolute counts or "the first row" of a global list — assert
   `Should().Contain(...)` / `BeGreaterThanOrEqualTo(...)`, or filter to data the test created.
 - Make fixture data unique: Bogus `f.UniqueIndex`, `Guid.NewGuid()` in title/message keys.
-- Never mutate or delete the seeded `admin` user, the `Admin` role, or the shared test roles.
+- Never mutate or delete the seeded `admin` or `tenantadmin` users, the `Admin` roles, or the shared test roles.
 - Do not depend on ordering between test classes.
 
 ## Architecture tests

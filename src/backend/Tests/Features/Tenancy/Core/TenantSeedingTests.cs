@@ -11,8 +11,8 @@ using Backend.Tenancy;
 /// <remarks>
 /// <para>
 /// Every assertion here is about the baseline the seeder establishes rather than about anything a test
-/// arranged: the bootstrap tenant, the account that administers both the platform and that tenant, and
-/// the fact that a second run changes none of them. The suite runs against a database seeded once by
+/// arranged: the bootstrap tenant, the account that administers that tenant, the separate account that
+/// administers the platform, and the fact that a second run changes none of them. The suite runs against a database seeded once by
 /// the shared fixture, so these are the only tests that may read rows they did not create - and they
 /// read them, never write them.
 /// </para>
@@ -28,14 +28,9 @@ using Backend.Tenancy;
 public class TenantSeedingTests(App app) : TenancyTestsBase(app)
 {
     /// <summary>
-    /// The account the seeder creates, and the only account these tests name.
-    /// </summary>
-    private const string SeededAdministratorUsername = "admin";
-
-    /// <summary>
     /// Verifies that exactly one system-created tenant exists, that it is the bootstrap tenant the
-    /// migration and the seeder both name, and that the seeded administrator holds an active membership
-    /// of it carrying tenant administration (AC-082).
+    /// migration and the seeder both name, and that the seeded tenant administrator holds an active
+    /// membership of it carrying tenant administration (AC-082).
     /// </summary>
     [Fact]
     public async Task Bootstrap_Tenant_Exists_With_The_Seeded_Administrator()
@@ -54,7 +49,7 @@ public class TenantSeedingTests(App app) : TenancyTestsBase(app)
         systemCreatedTenants[0].Identifier.Should().Be(TenancyConstants.BootstrapTenantIdentifier);
         systemCreatedTenants[0].Status.Should().Be(TenantStatus.Active);
 
-        var administrator = await ReadSeededAdministratorAsync();
+        var administrator = await ReadSeededAccountAsync(TestUsers.TenantAdminUsername);
 
         var membership = await DbContext.TenantMemberships
             .AcrossAllTenants()
@@ -75,14 +70,15 @@ public class TenantSeedingTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that the seeded administrator is a platform administrator - that it holds
+    /// Verifies that the seeded platform administrator is a platform administrator - that it holds
     /// <c>Platform.Administration</c>, and that the role granting it belongs to no tenant, so no tenant
-    /// role could ever have conferred it (AC-083).
+    /// role could ever have conferred it (AC-083) - and that it belongs to no tenant itself, the
+    /// bootstrap tenant being administered by an account of its own.
     /// </summary>
     [Fact]
     public async Task Seeded_Administrator_Is_A_Platform_Administrator()
     {
-        var administrator = await ReadSeededAdministratorAsync();
+        var administrator = await ReadSeededAccountAsync(TestUsers.PlatformAdminUsername);
 
         var platformRoleIds = await DbContext.Roles
             .AcrossAllTenants()
@@ -113,6 +109,16 @@ public class TenantSeedingTests(App app) : TenancyTestsBase(app)
         grantingRoles.Should().OnlyContain(
             role => role.TenantId == null,
             "platform administration is granted only at platform scope, so no tenant role can confer it");
+
+        var memberships = await DbContext.TenantMemberships
+            .AcrossAllTenants()
+            .AsNoTracking()
+            .Where(membership => membership.UserId == administrator.Id)
+            .Select(membership => membership.TenantId)
+            .ToListAsync(TestContext.Current.CancellationToken);
+
+        memberships.Should().BeEmpty(
+            "the platform administrator is not the bootstrap tenant's administrator - that tenant is seeded with an account of its own");
     }
 
     /// <summary>
@@ -173,15 +179,16 @@ public class TenantSeedingTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that every role in the database declares a scope - either it belongs to a tenant, or it
-    /// is a system-created platform role holding at least one platform permission - so there is no role
-    /// that belongs nowhere and could be reached from anywhere (AC-121).
+    /// Verifies that every role in the database declares a scope - it belongs to a tenant, or it is a
+    /// platform role - and that every system-created platform role holds at least one platform
+    /// permission, so no role left behind by a legacy seed survives (AC-121).
     /// </summary>
     /// <remarks>
-    /// A role belonging to no tenant is exactly what a platform role is, and the only thing that makes
-    /// one legitimate is holding authority that exists at platform scope alone. A role with no tenant and
-    /// no platform permission is the shape a legacy seed left behind, and reading it would be neither
-    /// restricted by a tenant nor justified by a platform grant.
+    /// A role belonging to no tenant is exactly what a platform role is. A platform administrator acting
+    /// in no tenant creates such roles on purpose, so a caller-created one is legitimate whatever it
+    /// holds. A system-created role with no tenant and no platform permission is the shape a legacy seed
+    /// left behind, and reading it would be neither restricted by a tenant nor justified by a platform
+    /// grant.
     /// </remarks>
     [Fact]
     public async Task Every_Role_Has_A_Declared_Scope()
@@ -198,11 +205,8 @@ public class TenantSeedingTests(App app) : TenancyTestsBase(app)
             .GetRequiredService<IPermissionDefinitionService>()
             .GetPlatformPermissionNames();
 
-        foreach (var platformRole in roles.Where(role => role.TenantId is null))
+        foreach (var platformRole in roles.Where(role => role.TenantId is null && role.SystemCreated))
         {
-            platformRole.SystemCreated.Should().BeTrue(
-                $"the platform-scoped role '{platformRole.Name}' is declared by code, and a caller-created role belongs to the tenant it was made in");
-
             var heldPermissions = await ReadPermissionsHeldInRoleAsync(platformRole.Id);
 
             heldPermissions.Should().Contain(
@@ -212,14 +216,15 @@ public class TenantSeedingTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Reads the account the seeder creates, which every test here names by the username it is seeded
+    /// Reads an account the seeder creates, which every test here names by the username it is seeded
     /// under rather than by an identifier the suite would have to have captured first.
     /// </summary>
-    /// <returns>The seeded administrator account.</returns>
-    private async Task<User> ReadSeededAdministratorAsync()
+    /// <param name="username">The username the account is seeded under.</param>
+    /// <returns>The seeded account.</returns>
+    private async Task<User> ReadSeededAccountAsync(string username)
         => await DbContext.Users
             .AsNoTracking()
-            .SingleAsync(user => user.UsernameNormalized == SeededAdministratorUsername, TestContext.Current.CancellationToken);
+            .SingleAsync(user => user.UsernameNormalized == username, TestContext.Current.CancellationToken);
 
     /// <summary>
     /// Reads the permissions one account holds through the roles that belong to one tenant, so what is

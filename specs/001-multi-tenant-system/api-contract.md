@@ -189,7 +189,7 @@ pre-processor attached in `Program.cs` beside `ToLargePayloadProcessor` in the e
 AC-029, AC-037, AC-050 and AC-099, so no endpoint repeats the check.
 
 Behaviour, in order, for an **authenticated** request whose endpoint type does **not** carry
-`[AllowNoTenant]`:
+`[AllowNoTenant]` - nor `[AllowPlatformNoTenant]` when the caller holds `Platform.Administration`:
 
 | Condition | Response |
 | --- | --- |
@@ -217,8 +217,24 @@ these endpoint types, and to no others:
 | all thirteen `tenants/*` endpoints | the tenant they act on is addressed by route id or is being chosen; each performs its own visibility check (see §5.0) |
 | `FileUploadEndpoint`, `FileGetEndpoint`, `FileDeleteEndpoint` | account-owned files must work with no tenant (AC-097); these three enforce tenant attribution themselves (AC-058, AC-099) |
 
-Every other endpoint in the application - users, roles, permissions, notifications - requires an
-established, existing, unsuspended tenant with a live membership.
+`[AllowPlatformNoTenant]` (`src/backend/Source/Attributes/AllowPlatformNoTenantAttribute.cs`) exempts an
+endpoint for a caller holding `Platform.Administration` only; any other caller is refused as above. The
+seeded platform administrator belongs to no tenant, and in platform scope these endpoints answer about the
+platform's own data. A platform administrator acting inside a tenant keeps the cross-tenant widening
+(AC-095, AC-113) instead.
+
+| Endpoint | Behaviour for a platform administrator in platform scope |
+| --- | --- |
+| `RoleListEndpoint` | platform roles only; a named `TenantId` lists that tenant's roles (the member screens' picker) |
+| `RoleGetEndpoint`, `RoleUpdateEndpoint`, `RoleDeleteEndpoint`, `ChangePermissionsEndpoint` | platform roles only; a tenant's role answers 404 |
+| `RoleCreateEndpoint` | the role is attributed to no tenant - a caller-created platform role |
+| `UserListEndpoint`, `UserGetEndpoint`, `UserDeleteEndpoint` | accounts holding at least one platform role; the roles reported are their platform roles |
+| `UserCreateEndpoint`, `UserUpdateEndpoint` | only platform roles may be granted; creating writes no membership, and updating never touches tenant-role assignments |
+| `GetDefinePermissionsEndpoint`, `GetPermissionsEndpoint` | the whole catalogue for the role-permission editor (AC-115) |
+| all eight `notifications/*` endpoints | notifications belonging to no tenant - addressed to the caller or to everyone |
+
+Every other endpoint in the application
+requires an established, existing, unsuspended tenant with a live membership.
 
 ---
 

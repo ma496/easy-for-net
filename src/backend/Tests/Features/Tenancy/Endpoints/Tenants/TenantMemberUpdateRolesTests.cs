@@ -49,7 +49,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
         var roleB = await CreateTenantRoleAsync(tenant.Id, Allow.Role_View);
         var roleC = await CreateTenantRoleAsync(tenant.Id, Allow.User_View);
         var member = await CreateTenantUserAsync(tenant.Id, roleA, roleB);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var before = (await MembershipRowsAsync(tenant.Id, member.Id)).Should().ContainSingle().Subject;
 
@@ -69,7 +69,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
         var after = (await MembershipRowsAsync(tenant.Id, member.Id)).Should().ContainSingle().Subject;
 
         after.CreatedAt.Should().Be(before.CreatedAt, "a replacement changes the membership rather than making a new one");
-        after.UpdatedBy.Should().Be(TestUsers.AdminUserId, "the caller that made the change is recorded against the membership it changed");
+        after.UpdatedBy.Should().Be(TestUsers.PlatformAdminUserId, "the caller that made the change is recorded against the membership it changed");
         after.UpdatedAt!.Value.Should().BeAfter(before.UpdatedAt!.Value, "and it is recorded with the time it happened");
     }
 
@@ -86,7 +86,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
         var administrator = await CreateFirstMemberAsync(tenant.Id);
         var administratorRoleId = await TenantAdministratorRoleIdAsync(tenant.Id);
         var ordinaryRoleId = await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_View);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .PUTAsync<TenantMemberUpdateRolesEndpoint, TenantMemberUpdateRolesRequest, ProblemDetails>(
@@ -111,7 +111,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         await CreateFirstMemberAsync(tenant.Id);
         var member = await CreateTenantUserAsync(tenant.Id, await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_View));
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, updated) = await App.Client
             .PUTAsync<TenantMemberUpdateRolesEndpoint, TenantMemberUpdateRolesRequest, TenantMemberUpdateRolesResponse>(
@@ -138,7 +138,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
         await CreateFirstMemberAsync(tenant.Id);
         var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_View);
         var member = await CreateTenantUserAsync(tenant.Id);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, updated) = await App.Client
             .PUTAsync<TenantMemberUpdateRolesEndpoint, TenantMemberUpdateRolesRequest, TenantMemberUpdateRolesResponse>(
@@ -167,7 +167,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
         var member = await CreateTenantUserAsync(tenantA.Id, roleInA);
         var cancellationToken = TestContext.Current.CancellationToken;
         await MembershipService.AddAsync(tenantB.Id, member.Id, [roleInB], cancellationToken);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, _) = await App.Client
             .PUTAsync<TenantMemberUpdateRolesEndpoint, TenantMemberUpdateRolesRequest, TenantMemberUpdateRolesResponse>(
@@ -196,7 +196,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
 
         before.StatusCode.Should().Be(HttpStatusCode.OK, "the member holds the permission the endpoint requires");
 
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (replaced, _) = await App.Client
             .PUTAsync<TenantMemberUpdateRolesEndpoint, TenantMemberUpdateRolesRequest, TenantMemberUpdateRolesResponse>(
@@ -227,7 +227,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
         var member = await CreateTenantUserAsync(tenant.Id, heldRoleId);
         var foreignTenant = await CreateTenantAsync();
         var foreignRoleId = await CreateTenantRoleAsync(foreignTenant.Id, Allow.Role_View);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .PUTAsync<TenantMemberUpdateRolesEndpoint, TenantMemberUpdateRolesRequest, ProblemDetails>(
@@ -282,7 +282,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         await CreateFirstMemberAsync(tenant.Id);
         var account = await CreateAccountWithoutMembershipAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, _) = await App.Client
             .PUTAsync<TenantMemberUpdateRolesEndpoint, TenantMemberUpdateRolesRequest, TenantMemberUpdateRolesResponse>(
@@ -301,7 +301,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync(TenantStatus.Suspended);
         var heldRoleId = await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_View);
         var member = await CreateTenantUserAsync(tenant.Id, heldRoleId);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .PUTAsync<TenantMemberUpdateRolesEndpoint, TenantMemberUpdateRolesRequest, ProblemDetails>(
@@ -321,7 +321,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Tenant_Not_Found()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .PUTAsync<TenantMemberUpdateRolesEndpoint, TenantMemberUpdateRolesRequest, ProblemDetails>(
@@ -339,7 +339,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Missing_Fields_Are_Rejected()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (missingTenant, tenantProblem) = await App.Client
             .PUTAsync<TenantMemberUpdateRolesEndpoint, TenantMemberUpdateRolesRequest, ProblemDetails>(
@@ -377,7 +377,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
         var ordinaryMember = await CreateTenantUserAsync(tenant.Id);
         var administratorRoleId = await TenantAdministratorRoleIdAsync(tenant.Id);
         var ordinaryRoleId = await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_View);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         (await GrantedRolesAsync(tenant.Id, ordinaryMember.Id))
             .Should().BeEmpty("the member the tenant keeps holds no role in it, and so administers nothing");

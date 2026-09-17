@@ -79,7 +79,7 @@ public class UserDeleteTests(App app) : TenancyTestsBase(app)
 
         // Get the system-created user (admin from seeder)
         var userService = App.Services.GetRequiredService<IUserService>();
-        var systemCreatedUser = await userService.GetByUsernameAsync("admin");
+        var systemCreatedUser = await userService.GetByUsernameAsync(TestUsers.TenantAdminUsername);
         systemCreatedUser.Should().NotBeNull();
 
         // Try to delete the system-created user

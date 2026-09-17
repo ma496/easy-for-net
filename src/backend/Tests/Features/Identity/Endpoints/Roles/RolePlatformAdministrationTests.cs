@@ -141,16 +141,16 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Signs in as the seeded platform administrator and proves the premise every test here rests on:
-    /// that the tenant named is one the caller holds no membership of, so what the requests below reach
-    /// is reached by the platform standing rather than by belonging there.
+    /// Signs in as a platform administrator acting in a tenant of its own and proves the premise every
+    /// test here rests on: that the tenant named is one the caller holds no membership of, so what the
+    /// requests below reach is reached by the platform standing rather than by belonging there.
     /// </summary>
     /// <param name="tenantId">The tenant the caller must not belong to.</param>
     private async Task SignInAsPlatformAdministratorAsync(Guid tenantId)
     {
-        await SetAuthTokenAsync();
+        var administrator = await SignInAsPlatformAdministratorActingInATenantAsync();
 
-        (await MembershipService.IsMemberAsync(tenantId, TestUsers.AdminUserId, TestContext.Current.CancellationToken))
+        (await MembershipService.IsMemberAsync(tenantId, administrator.Id, TestContext.Current.CancellationToken))
             .Should().BeFalse("the caller administers a tenant it does not belong to, which is the standing these tests are stated over");
     }
 

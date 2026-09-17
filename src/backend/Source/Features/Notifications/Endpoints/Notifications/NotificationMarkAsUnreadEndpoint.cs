@@ -13,6 +13,7 @@ using Backend.Features.Notifications.Core;
 /// is reachable from whichever tenant the caller acts in - which is what lets a recipient put a broadcast
 /// back among their unread ones.
 /// </remarks>
+[AllowPlatformNoTenant]
 sealed class NotificationMarkAsUnreadEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext) : Endpoint<NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>
 {
     public override void Configure()

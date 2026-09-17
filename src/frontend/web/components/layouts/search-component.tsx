@@ -7,7 +7,7 @@ import { LocalizedLink } from '@/components/ui'
 import { useTranslation } from '@/i18n'
 import { useAppSelector } from '@/store/hooks'
 import { Search } from 'lucide-react'
-import { isAllowed } from '@/lib/utils'
+import { isAllowed, isPathAvailable } from '@/lib/utils'
 
 /**
  * Header search input that fuzzy-matches the list of searchable (and authorized) navigation items, exposes a keyboard-navigable result list, and routes to the selected item on Enter.
@@ -30,7 +30,7 @@ export const SearchComponent = () => {
       .filter((item) => {
         const authUrl = authUrls.find((a) => a.url === item.url)
         const isAuthorized = authUrl?.permissions ? isAllowed(authState, authUrl.permissions) : true
-        return t(item.title).toLowerCase().includes(query.trim().toLowerCase()) && isAuthorized
+        return t(item.title).toLowerCase().includes(query.trim().toLowerCase()) && isAuthorized && isPathAvailable(authState.user, item.url)
       })
       .slice(0, 5)
   }

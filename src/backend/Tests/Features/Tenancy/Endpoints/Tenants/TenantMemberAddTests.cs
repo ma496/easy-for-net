@@ -44,7 +44,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         var roleA = await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_View);
         var roleB = await CreateTenantRoleAsync(tenant.Id, Allow.TenantMember_View);
         var account = await CreateAccountWithoutMembershipAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, added) = await App.Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, TenantMemberAddResponse>(new()
@@ -81,7 +81,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
     {
         var tenant = await CreateTenantAsync();
         var account = await CreateAccountWithoutMembershipAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, added) = await App.Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, TenantMemberAddResponse>(new()
@@ -115,7 +115,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         await GiveTenantItsFirstMemberAsync(tenant.Id);
         var account = await CreateAccountWithoutMembershipAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (first, _) = await App.Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, TenantMemberAddResponse>(new()
@@ -154,7 +154,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         await GiveTenantItsFirstMemberAsync(tenant.Id);
         var unknownUserId = Guid.NewGuid();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, ProblemDetails>(new()
@@ -258,7 +258,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         await GiveTenantItsFirstMemberAsync(tenant.Id);
         var firstRoleId = await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_View);
         var account = await CreateAccountWithoutMembershipAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (_, first) = await App.Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, TenantMemberAddResponse>(new()
@@ -304,7 +304,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         await GiveTenantItsFirstMemberAsync(tenant.Id);
         var account = await CreateAccountWithoutMembershipAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (_, _) = await App.Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, TenantMemberAddResponse>(new()
@@ -354,7 +354,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         await GiveTenantItsFirstMemberAsync(tenant.Id);
         var account = await CreateAccountWithoutMembershipAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var before = DateTime.UtcNow;
         var (response, added) = await App.Client
@@ -371,7 +371,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         var membership = (await MembershipRowsAsync(tenant.Id, account.Id)).Should().ContainSingle().Subject;
 
         membership.Id.Should().Be(added.Id);
-        membership.CreatedBy.Should().Be(TestUsers.AdminUserId, "the caller that made the member is recorded on the membership it made");
+        membership.CreatedBy.Should().Be(TestUsers.PlatformAdminUserId, "the caller that made the member is recorded on the membership it made");
         membership.CreatedAt.Should().BeOnOrAfter(before.AddSeconds(-1)).And.BeOnOrBefore(after.AddSeconds(1));
         membership.UpdatedBy.Should().BeNull("nothing has updated it since it was created");
         membership.UpdatedAt.Should().NotBeNull("a row carries its creation as its last change until something changes it");
@@ -385,7 +385,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
     public async Task Tenant_Not_Found()
     {
         var account = await CreateAccountWithoutMembershipAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, ProblemDetails>(new()
@@ -410,7 +410,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
     {
         var tenant = await CreateTenantAsync(TenantStatus.Suspended);
         var account = await CreateAccountWithoutMembershipAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, ProblemDetails>(new()
@@ -440,7 +440,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         var foreignTenant = await CreateTenantAsync();
         var foreignRoleId = await CreateTenantRoleAsync(foreignTenant.Id, Allow.Tenant_View);
         var account = await CreateAccountWithoutMembershipAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, ProblemDetails>(new()
@@ -465,7 +465,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Missing_Fields_Are_Rejected()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (missingTenant, tenantProblem) = await App.Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, ProblemDetails>(new()

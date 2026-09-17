@@ -24,10 +24,20 @@ public abstract class AppTestsBase(App app) : TestBase<App>
     /// Authenticates the HTTP client by setting a Bearer token obtained from the token endpoint,
     /// optionally selecting a tenant first. Sign-in resolves an active tenant on its own only when
     /// exactly one membership stands, so a tenant is named here whenever the account holds several.
+    /// With no arguments the caller is the bootstrap tenant's administrator, acting in that tenant.
     /// </summary>
-    protected async Task SetAuthTokenAsync(string username = "admin", string password = "Admin#123", Guid? tenantId = null)
+    protected async Task SetAuthTokenAsync(string username = TestUsers.TenantAdminUsername, string password = TestUsers.AdminPassword, Guid? tenantId = null)
     {
         await TestsHelper.SetNewAuthTokenAsync(App.Client, username, password, tenantId);
+    }
+
+    /// <summary>
+    /// Authenticates the HTTP client as the seeded platform administrator. The account holds no
+    /// membership, so its session acts in no tenant and reaches only what platform administration does.
+    /// </summary>
+    protected async Task SetPlatformAdminAuthTokenAsync()
+    {
+        await TestsHelper.SetNewAuthTokenAsync(App.Client, TestUsers.PlatformAdminUsername, TestUsers.AdminPassword);
     }
 
     /// <summary>

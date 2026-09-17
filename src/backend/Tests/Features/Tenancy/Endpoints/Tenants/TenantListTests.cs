@@ -33,7 +33,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
     {
         var token = NewSearchToken();
         var created = await CreateTenantsAsync(token, count: 2);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, page) = await App.Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(new() { Search = token, All = true });
@@ -150,7 +150,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
     {
         var token = NewSearchToken();
         var created = await CreateTenantsAsync(token, count: 3);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (first, firstPage) = await App.Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(
@@ -179,7 +179,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Page_Size_Beyond_The_Maximum_Is_Refused()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .GETAsync<TenantListEndpoint, TenantListRequest, ProblemDetails>(new() { PageSize = 101 });
@@ -198,7 +198,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
     {
         var token = NewSearchToken();
         var created = await CreateTenantsAsync(token, count: 3);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (ascending, ascendingPage) = await App.Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(
@@ -225,7 +225,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Invalid_Sort_Field()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .GETAsync<TenantListEndpoint, TenantListRequest, ProblemDetails>(new() { SortField = "PasswordHash" });
@@ -246,7 +246,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
     {
         var token = NewSearchToken();
         var created = await CreateTenantsAsync(token, count: 1);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         // The name carries the token whole and the identifier only carries it as a prefix, so a search
         // that matched one and not the other would be missing from one of these results.
@@ -280,7 +280,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
         var token = NewSearchToken();
         var active = await CreateTenantsAsync(token, count: 1);
         var suspended = await CreateTenantsAsync(token, count: 1, status: TenantStatus.Suspended);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, page) = await App.Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(
@@ -302,7 +302,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
     {
         var token = NewSearchToken();
         var created = await CreateTenantsAsync(token, count: 1, status: TenantStatus.Suspended);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, page) = await App.Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(new() { Search = token, All = true });

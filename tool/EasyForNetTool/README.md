@@ -125,8 +125,8 @@ npm run dev
 
 Default credentials:
 
-- Username: admin
-- Password: Admin#123
+- Platform administrator (manages tenants, belongs to no tenant): `admin` / `Admin#123`
+- Default tenant administrator: `tenantadmin` / `Admin#123`
 
 ## Run the Tests
 

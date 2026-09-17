@@ -45,7 +45,7 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
     {
         var tenant = await CreateTenantAsync();
         var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_View);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, deleted) = await App.Client
             .DELETEAsync<TenantDeleteEndpoint, TenantDeleteRequest, TenantDeleteResponse>(new() { Id = tenant.Id });
@@ -123,7 +123,7 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
 
         var storageProvider = App.Services.GetRequiredService<IStorageProvider>();
 
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, deleted) = await App.Client
             .DELETEAsync<TenantDeleteEndpoint, TenantDeleteRequest, TenantDeleteResponse>(new() { Id = tenant.Id });
@@ -148,7 +148,7 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Cannot_Delete_System_Created_Tenant()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .DELETEAsync<TenantDeleteEndpoint, TenantDeleteRequest, ProblemDetails>(
@@ -173,7 +173,7 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
     public async Task Deleting_An_Already_Deleted_Tenant_Is_Not_Found()
     {
         var tenant = await CreateTenantAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (firstResponse, _) = await App.Client
             .DELETEAsync<TenantDeleteEndpoint, TenantDeleteRequest, TenantDeleteResponse>(new() { Id = tenant.Id });
@@ -199,7 +199,7 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Unknown_And_Missing_Tenant_Are_Rejected()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (unknownResponse, unknownProblem) = await App.Client
             .DELETEAsync<TenantDeleteEndpoint, TenantDeleteRequest, ProblemDetails>(new() { Id = Guid.NewGuid() });

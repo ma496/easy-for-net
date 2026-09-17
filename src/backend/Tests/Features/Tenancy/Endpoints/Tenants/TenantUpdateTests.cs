@@ -39,7 +39,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
     public async Task Valid_Input()
     {
         var tenant = await CreateTenantAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var identifier = NewTenantIdentifier();
         var (response, renamed) = await App.Client
@@ -63,7 +63,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
         stored.Status.Should().Be(TenantStatus.Active, "a rename changes what a tenant is called, not what it is");
         stored.SystemCreated.Should().BeFalse();
 
-        stored.UpdatedBy.Should().Be(TestUsers.AdminUserId, "the updating account is the caller that asked for the rename");
+        stored.UpdatedBy.Should().Be(TestUsers.PlatformAdminUserId, "the updating account is the caller that asked for the rename");
         stored.UpdatedAt.Should().NotBeNull("a rename is recorded with the time it happened");
         stored.UpdatedAt!.Value.Should().BeOnOrAfter(
             stored.CreatedAt,
@@ -80,7 +80,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
     {
         var incumbent = await CreateTenantAsync();
         var tenant = await CreateTenantAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, ProblemDetails>(new()
@@ -109,7 +109,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
     public async Task Keeping_Its_Own_Identifier_Is_Not_A_Duplicate()
     {
         var tenant = await CreateTenantAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, renamed) = await App.Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, TenantUpdateResponse>(new()
@@ -137,7 +137,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
     {
         var tenant = await CreateTenantAsync();
         var before = await ReloadTenantAsync(tenant.Id);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, ProblemDetails>(new()
@@ -168,7 +168,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Missing_Tenant_Is_Rejected()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, ProblemDetails>(new()
@@ -194,7 +194,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
     public async Task Cannot_Update_System_Created_Tenant()
     {
         var before = await ReloadTenantAsync(TestTenants.BootstrapTenantId);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, ProblemDetails>(new()
@@ -225,7 +225,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
     {
         var deleted = await CreateTenantAsync();
         await DeleteTenantAsync(deleted.Id);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (deletedResponse, deletedProblem) = await App.Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, ProblemDetails>(new()

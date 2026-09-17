@@ -101,7 +101,7 @@ public interface IRoleService
 /// seeder works on roles it has just created inside the scope they belong to.
 /// </remarks>
 [NoDirectUse]
-public class RoleService(AppDbContext dbContext, ICurrentUserService currentUserService) : IRoleService
+public class RoleService(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext) : IRoleService
 {
     /// <inheritdoc />
     public async Task<Role?> GetByIdAsync(Guid id)
@@ -126,8 +126,10 @@ public class RoleService(AppDbContext dbContext, ICurrentUserService currentUser
         // claims, which the session check has already recomputed from current data. A holder of it
         // administers roles irrespective of the tenant those roles belong to, so tenant restriction is
         // relaxed by name and nothing else is: the soft-delete filter stays in force, so a deleted
-        // role is no more visible to them than to anybody else.
-        if (currentUserService.HasPermission(Allow.Platform_Administration))
+        // role is no more visible to them than to anybody else. Acting in no tenant is the exception:
+        // platform scope is about the platform's own roles, which the Tenant query filter already
+        // narrows the set to there.
+        if (currentUserService.HasPermission(Allow.Platform_Administration) && !IsPlatformScope())
         {
             return dbContext.Roles.AcrossAllTenants();
         }
@@ -137,6 +139,11 @@ public class RoleService(AppDbContext dbContext, ICurrentUserService currentUser
         // tenant or from none.
         return dbContext.Roles;
     }
+
+    /// <summary>
+    /// Whether the request is running in platform scope - resolved, but acting in no tenant.
+    /// </summary>
+    private bool IsPlatformScope() => tenantContext is { IsResolved: true, CurrentTenantId: null };
 
     /// <inheritdoc />
     public async Task<Role> CreateAsync(Role role)

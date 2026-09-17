@@ -125,7 +125,7 @@ public sealed class TenantRefusalResultHandler : IAuthorizationMiddlewareResultH
         // in the platform scope for exactly the callers whose tenant is unusable, which is how such a
         // caller reaches the surfaces that give them one. Whatever it refused, it refused as a
         // permission.
-        if (!IsExemptFromTenantRequirement(context))
+        if (!TenantRequirement.IsExempt(context))
         {
             var status = TenantSessionState.Read(context);
 
@@ -140,21 +140,5 @@ public sealed class TenantRefusalResultHandler : IAuthorizationMiddlewareResultH
         // Signed in, acting in a tenant it can use, and still refused: the caller does not hold what the
         // endpoint declared. Saying so is the error-code half of AC-045.
         return (StatusCodes.Status403Forbidden, PermissionDeniedMessage, ErrorCodes.PermissionDenied);
-    }
-
-    /// <summary>
-    /// Reports whether the endpoint being called is exempt from the active tenant requirement, by
-    /// reading <see cref="AllowNoTenantAttribute"/> off the endpoint's own type. A request whose
-    /// endpoint cannot be identified is treated as not exempt, so an operation whose tenant rule cannot
-    /// be established is refused rather than allowed to run unrestricted.
-    /// </summary>
-    /// <param name="context">The request being handled.</param>
-    /// <returns><see langword="true"/> when the endpoint runs with no tenant established.</returns>
-    private static bool IsExemptFromTenantRequirement(HttpContext context)
-    {
-        var definition = context.GetEndpoint()?.Metadata.GetMetadata<EndpointDefinition>();
-
-        return definition is not null
-               && definition.EndpointType.IsDefined(typeof(AllowNoTenantAttribute), inherit: false);
     }
 }

@@ -14,6 +14,7 @@ using Backend.Features.Identity.Core;
 /// platform-tier definition carrying <see cref="PermissionDefinition.IsPlatform"/> so the two tiers
 /// stay distinguishable.
 /// </remarks>
+[AllowPlatformNoTenant]
 sealed class GetDefinePermissionsEndpoint(
     IPermissionDefinitionService permissionDefinitionService,
     ICurrentUserService currentUserService) : EndpointWithoutRequest<GetDefinePermissionsResponse>

@@ -11,6 +11,7 @@ using Backend.Features.Notifications.Core;
 /// Notifications raised in the caller's other tenants are never counted, so the badge cannot advertise a
 /// notification the list will not show.
 /// </summary>
+[AllowPlatformNoTenant]
 sealed class NotificationGetUnreadCountEndpoint(ICurrentUserService currentUserService, INotificationService notificationService) : EndpointWithoutRequest<NotificationGetUnreadCountResponse>
 {
     public override void Configure()

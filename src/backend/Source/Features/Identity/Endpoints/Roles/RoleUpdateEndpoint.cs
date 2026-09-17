@@ -16,6 +16,7 @@ using Backend.Features.Identity.Core.Entities;
 /// surrounding whitespace, and counts the tenant's deleted roles too, because deleting a role does not
 /// release its name; the composite unique index enforces the same rule in the database.
 /// </remarks>
+[AllowPlatformNoTenant]
 sealed class RoleUpdateEndpoint(IRoleService roleService, AppDbContext dbContext)
     : Endpoint<RoleUpdateRequest, RoleUpdateResponse>
 {

@@ -35,7 +35,7 @@ public class TenantReactivateTests(App app) : TenancyTestsBase(app)
     public async Task Reactivate_Suspended_Tenant()
     {
         var tenant = await CreateTenantAsync(TenantStatus.Suspended);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, reactivated) = await App.Client
             .POSTAsync<TenantReactivateEndpoint, TenantReactivateRequest, TenantReactivateResponse>(new() { Id = tenant.Id });
@@ -59,7 +59,7 @@ public class TenantReactivateTests(App app) : TenancyTestsBase(app)
     {
         var tenant = await CreateTenantAsync();
         var before = await ReloadTenantAsync(tenant.Id);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, reactivated) = await App.Client
             .POSTAsync<TenantReactivateEndpoint, TenantReactivateRequest, TenantReactivateResponse>(new() { Id = tenant.Id });
@@ -81,7 +81,7 @@ public class TenantReactivateTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Reactivating_The_System_Created_Tenant_Is_Accepted()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, reactivated) = await App.Client
             .POSTAsync<TenantReactivateEndpoint, TenantReactivateRequest, TenantReactivateResponse>(
@@ -106,7 +106,7 @@ public class TenantReactivateTests(App app) : TenancyTestsBase(app)
     {
         var deleted = await CreateTenantAsync();
         await DeleteTenantAsync(deleted.Id);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (deletedResponse, deletedProblem) = await App.Client
             .POSTAsync<TenantReactivateEndpoint, TenantReactivateRequest, ProblemDetails>(new() { Id = deleted.Id });
@@ -135,7 +135,7 @@ public class TenantReactivateTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Missing_Tenant_Is_Rejected()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .POSTAsync<TenantReactivateEndpoint, TenantReactivateRequest, ProblemDetails>(new() { Id = Guid.Empty });

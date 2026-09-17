@@ -6,6 +6,7 @@ using Backend.Features.Identity.Core;
 /// GET endpoint that returns the list of permissions currently stored in the database,
 /// used by administrative UIs to manage role/permission assignments.
 /// </summary>
+[AllowPlatformNoTenant]
 sealed class GetPermissionsEndpoint(IPermissionService permissionService) : EndpointWithoutRequest<GetPermissionsResponse>
 {
     public override void Configure()

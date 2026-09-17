@@ -6,6 +6,7 @@ using Backend.Features.Identity.Core.Entities;
 /// <summary>
 /// This endpoint that handles <c>PUT /users/{id}</c> to update a user's profile, active state, and role memberships.
 /// </summary>
+[AllowPlatformNoTenant]
 sealed class UserUpdateEndpoint(IUserService userService, AppDbContext dbContext)
     : Endpoint<UserUpdateRequest, UserUpdateResponse>
 {

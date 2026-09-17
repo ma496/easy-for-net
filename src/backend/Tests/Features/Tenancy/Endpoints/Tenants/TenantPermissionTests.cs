@@ -209,7 +209,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
             }
         }
 
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var admitted = await call.Send(App.Client);
 

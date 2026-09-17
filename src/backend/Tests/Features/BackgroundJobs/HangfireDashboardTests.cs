@@ -56,7 +56,7 @@ public class HangfireDashboardTests(App app) : AppTestsBase(app)
             HttpStatusCode.Forbidden,
             "a tenant's own authority is authenticated and still not enough, because the dashboard is on the platform tier");
 
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var platformAdministrator = await App.Client.GetAsync(DashboardPath, TestContext.Current.CancellationToken);
 

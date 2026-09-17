@@ -81,7 +81,7 @@ public class UserUpdateTests(App app) : TenancyTestsBase(app)
         // Get the system-created user
         var systemCreatedUser = await App.Services.GetRequiredService<IUserService>()
             .Users()
-            .FirstAsync(u => u.Username == "admin", cancellationToken: TestContext.Current.CancellationToken);
+            .FirstAsync(u => u.Username == TestUsers.TenantAdminUsername, cancellationToken: TestContext.Current.CancellationToken);
 
         var roleService = App.Services.GetRequiredService<IRoleService>();
         var (updateRsp, res) = await App.Client.PUTAsync<UserUpdateEndpoint, UserUpdateRequest, ProblemDetails>(

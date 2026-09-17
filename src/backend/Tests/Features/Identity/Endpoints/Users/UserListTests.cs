@@ -218,10 +218,9 @@ public class UserListTests(App app) : TenancyTestsBase(app)
     /// it belongs to (AC-095).
     /// </summary>
     /// <remarks>
-    /// The account used here is the seeded administrator, which holds platform administration in a
-    /// role belonging to no tenant and acts in the bootstrap tenant while it holds it - so this is a
-    /// caller acting in a tenant and reading across every one, which is exactly the widening the two
-    /// asserts describe. That the tenant-tier caller is refused the same accounts is stated by
+    /// The account used here holds platform administration in a role belonging to no tenant and acts in
+    /// a tenant of its own - so this is a caller acting in a tenant and reading across every one, which
+    /// is exactly the widening the two asserts describe. That the tenant-tier caller is refused the same accounts is stated by
     /// <see cref="Users_Are_Restricted_To_The_Active_Tenant"/>; read together, the two say the
     /// platform tier is what makes the difference.
     /// </remarks>
@@ -235,7 +234,7 @@ public class UserListTests(App app) : TenancyTestsBase(app)
         var inSecond = await CreateTenantUserAsync(
             second.Id, await CreateTenantRoleAsync(second.Id, Allow.User_View));
 
-        await SetAuthTokenAsync();
+        await SignInAsPlatformAdministratorActingInATenantAsync();
 
         var (firstRsp, firstPage) = await App.Client
             .GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(

@@ -15,8 +15,11 @@ using Backend.Features.Identity.Core.Entities;
 /// because it is made on the normalized column. Deleted roles count: deleting a role retains its row,
 /// so its name stays reserved within that tenant and cannot be taken by a role created afterwards. The
 /// composite unique index over the tenant and the normalized name enforces the same rule in the
-/// database, so two creations racing each other cannot both get past the check below.
+/// database, so two creations racing each other cannot both get past the check below. A platform
+/// administrator acting in no tenant runs in platform scope, so the role they create belongs to no
+/// tenant: it is a platform role, whose name is unique among the platform roles.
 /// </remarks>
+[AllowPlatformNoTenant]
 sealed class RoleCreateEndpoint(IRoleService roleService, AppDbContext dbContext)
     : Endpoint<RoleCreateRequest, RoleCreateResponse>
 {

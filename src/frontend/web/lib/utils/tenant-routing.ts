@@ -80,6 +80,55 @@ export const resolveTenantLanding = (user: GetUserInfoResponse | undefined): Ten
 }
 
 /**
+ * The screens under `/admin` a platform administrator acting in no tenant can use, besides the
+ * dashboard itself: users, roles and notifications answer there about the platform's own - platform
+ * users, platform roles, notifications belonging to no tenant - and the UI showcase and the tenancy
+ * screens read no tenant data. Any feature added later stays tenant-only until it is listed here.
+ */
+const platformAccessiblePathPrefixes = ['/admin/users', '/admin/roles', '/admin/notifications', '/admin/ui', platformScopedPathPrefix]
+
+/**
+ * Returns true when the (locale-stripped) path names a screen a platform
+ * administrator can use while acting in no tenant.
+ */
+export const isPlatformAccessiblePath = (pathname: string): boolean => {
+  const path = normalizePath(pathname)
+  if (path === '/admin') return true
+  return platformAccessiblePathPrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
+}
+
+/**
+ * Returns true when the caller is a platform administrator acting in no tenant,
+ * whose requests the API answers in platform scope.
+ */
+export const isPlatformAdministratorWithoutTenant = (user: GetUserInfoResponse | undefined): boolean =>
+  !!user?.isPlatformAdministrator && !user.activeTenant
+
+/**
+ * Returns true when the caller may open the screen at this path: always, unless
+ * they are a platform administrator acting in no tenant and the screen needs one.
+ * Navigation and search use it to leave out what would only redirect.
+ */
+export const isPathAvailable = (user: GetUserInfoResponse | undefined, pathname: string): boolean =>
+  !isPlatformAdministratorWithoutTenant(user) || !isTenantScopedPath(pathname) || isPlatformAccessiblePath(pathname)
+
+/**
+ * Decides where a platform administrator acting in no tenant goes after signing
+ * in: the dashboard, rather than the no-tenant screen or the chooser, because
+ * they need no tenant. A `redirect` they were sent back with is honoured when
+ * they can use that screen. Returns `null` for anyone else, whose landing
+ * `resolveTenantLanding` decides.
+ */
+export const resolvePlatformAdministratorLanding = (
+  user: GetUserInfoResponse | undefined,
+  redirectTo?: string | null,
+): string | null => {
+  if (!isPlatformAdministratorWithoutTenant(user)) return null
+  if (redirectTo && isPathAvailable(user, redirectTo)) return redirectTo
+  return '/admin'
+}
+
+/**
  * One entry per code the caller can be sent to the chooser with, keyed by the
  * code the API answered with: a suspension, a membership that ended and a tenant
  * that no longer exists each read differently.

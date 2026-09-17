@@ -7,7 +7,25 @@ public static class TestUsers
 {
     public const string DefaultPassword = "Test#123";
 
-    public static Guid AdminUserId { get; private set; } = default;
+    /// <summary>
+    /// <c>admin</c> - the platform administrator <c>DataSeeder</c> creates. Holds the platform role
+    /// and no membership, so its session acts in no tenant.
+    /// </summary>
+    public const string PlatformAdminUsername = "admin";
+
+    /// <summary>
+    /// <c>tenantadmin</c> - the bootstrap tenant's administrator <c>DataSeeder</c> creates. Its one
+    /// membership is the bootstrap tenant, so sign-in makes that tenant active.
+    /// </summary>
+    public const string TenantAdminUsername = "tenantadmin";
+
+    /// <summary>
+    /// The password <c>DataSeeder</c> gives both seeded administrators.
+    /// </summary>
+    public const string AdminPassword = "Admin#123";
+
+    public static Guid PlatformAdminUserId { get; private set; } = default;
+    public static Guid TenantAdminUserId { get; private set; } = default;
     public static Guid TestUserId { get; private set; } = default;
     public static Guid TestOneUserId { get; private set; } = default;
     public static Guid TestTwoUserId { get; private set; } = default;
@@ -36,9 +54,10 @@ public static class TestUsers
     /// <summary>
     /// Sets the user IDs after they have been created in the database during seeding.
     /// </summary>
-    public static void SetUserIds(Guid adminUserId, Guid testUserId, Guid testOneUserId, Guid testTwoUserId)
+    public static void SetUserIds(Guid platformAdminUserId, Guid tenantAdminUserId, Guid testUserId, Guid testOneUserId, Guid testTwoUserId)
     {
-        AdminUserId = adminUserId;
+        PlatformAdminUserId = platformAdminUserId;
+        TenantAdminUserId = tenantAdminUserId;
         TestUserId = testUserId;
         TestOneUserId = testOneUserId;
         TestTwoUserId = testTwoUserId;

@@ -56,7 +56,7 @@ public class UserGetTests(App app) : TenancyTestsBase(app)
         var (getRsp, getRes) = await App.Client.GETAsync<UserGetEndpoint, UserGetRequest, UserGetResponse>(
             new()
             {
-                Id = TestUsers.AdminUserId
+                Id = TestUsers.TenantAdminUserId
             });
 
         getRsp.StatusCode.Should().Be(HttpStatusCode.OK);

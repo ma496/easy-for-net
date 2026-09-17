@@ -148,7 +148,7 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
         // The comparison is proved by asking in a form the stored text does not literally contain: the
         // lower-case identifier is refused even though the trimmed, mixed-case original is nothing a
         // string comparison would match it against.
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
         var (response, problem) = await App.Client
             .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, ProblemDetails>(new()
             {
@@ -277,7 +277,7 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
     /// <param name="tenantId">The tenant to delete.</param>
     private async Task DeleteTenantAsync(Guid tenantId)
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, _) = await App.Client
             .DELETEAsync<TenantDeleteEndpoint, TenantDeleteRequest, TenantDeleteResponse>(new() { Id = tenantId });

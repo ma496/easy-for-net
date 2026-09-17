@@ -16,7 +16,7 @@ public class NotificationMarkAsUnreadTests(App app) : NotificationsTestsBase(app
     {
         await SetAuthTokenAsync();
 
-        var userId = TestUsers.AdminUserId;
+        var userId = TestUsers.TenantAdminUserId;
         var notification = await CreateUserNotificationAsync(userId);
         notification.IsRead = true;
         await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
@@ -45,7 +45,7 @@ public class NotificationMarkAsUnreadTests(App app) : NotificationsTestsBase(app
     {
         await SetAuthTokenAsync();
 
-        var userId = TestUsers.AdminUserId;
+        var userId = TestUsers.TenantAdminUserId;
         var notification = await CreateGlobalNotificationAsync();
         await MarkNotificationVisitedAsync(notification.Id, userId);
 
@@ -68,7 +68,7 @@ public class NotificationMarkAsUnreadTests(App app) : NotificationsTestsBase(app
     {
         await SetAuthTokenAsync();
 
-        var userId = TestUsers.AdminUserId;
+        var userId = TestUsers.TenantAdminUserId;
         var notification = await CreateUserNotificationAsync(userId);
         notification.IsRead = false;
         await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);

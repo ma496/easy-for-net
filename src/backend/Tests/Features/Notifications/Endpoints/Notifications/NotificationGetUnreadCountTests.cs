@@ -22,7 +22,7 @@ public class NotificationGetUnreadCountTests(App app) : NotificationsTestsBase(a
     {
         await SetAuthTokenAsync();
 
-        var userId = TestUsers.AdminUserId;
+        var userId = TestUsers.TenantAdminUserId;
         await CreateUserNotificationAsync(userId);
         await CreateUserNotificationAsync(userId);
 

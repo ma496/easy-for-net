@@ -460,9 +460,11 @@ mirrored in the web client so that unauthorized screens and navigation entries a
 ### Bootstrap and seeding
 
 - **AC-082** When the system starts against an empty database, it shall create one system-created
-  bootstrap tenant and place the seeded administrator account in it with tenant administration.
-- **AC-083** The system shall make the seeded administrator account a platform administrator, distinct
-  from and not implied by tenant administration.
+  bootstrap tenant and a seeded tenant administrator account holding an active membership in it with
+  tenant administration.
+- **AC-083** The system shall seed a platform administrator account, separate from the bootstrap
+  tenant's administrator and holding no membership, whose platform administration is distinct from
+  and not implied by tenant administration.
 - **AC-084** On every start, the system shall reconcile the global permission catalogue without
   deleting tenants, memberships or tenant-scoped roles.
 - **AC-085** The system shall be reproducible from a first-time schema creation, so a newly generated

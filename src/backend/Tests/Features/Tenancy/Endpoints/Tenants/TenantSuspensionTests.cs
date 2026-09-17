@@ -54,7 +54,7 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
         before.StatusCode.Should().Be(HttpStatusCode.OK, "the member holds the permission the endpoint requires, and the tenant is in service");
         page.Should().NotBeNull();
 
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
         await SuspendTenantAsync(tenant.Id);
 
         var (after, refusal) = await memberClient.GETAsync<UserListEndpoint, UserListRequest, ProblemDetails>(new());
@@ -81,7 +81,7 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
 
         var memberClient = await ClientForAsync(member.Username, suspended.Id);
 
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
         await SuspendTenantAsync(suspended.Id);
 
         var (refused, refusal) = await memberClient.GETAsync<UserListEndpoint, UserListRequest, ProblemDetails>(new());
@@ -130,7 +130,7 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
         var suspendedClient = await ClientForAsync(suspendedMember.Username, suspendedTenant.Id);
         var revokedClient = await ClientForAsync(revokedMember.Username, revokedTenant.Id);
 
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
         await SuspendTenantAsync(suspendedTenant.Id);
         await RevokeMembershipAsync(revokedTenant.Id, revokedMember.Id);
 
@@ -194,7 +194,7 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
         var storageProvider = App.Services.GetRequiredService<IStorageProvider>();
         storageProvider.Exists(uploaded.FileName).Should().BeTrue("the content reached storage");
 
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
         await SuspendTenantAsync(tenant.Id);
 
         var (downloadResponse, refusal) = await memberClient
@@ -229,7 +229,7 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
         var member = await CreateTenantUserAsync(tenant.Id, roleId);
         var memberClient = await ClientForAsync(member.Username, tenant.Id);
 
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
         await SuspendTenantAsync(tenant.Id);
 
         var (refused, _) = await memberClient.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());

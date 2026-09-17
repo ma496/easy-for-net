@@ -519,7 +519,7 @@ cross-tenant read still works while unresolved. `BeginPlatformScope()` is *resol
 tenant* and reads platform rows - a different state from unresolved, which is exactly D6's point.
 
 Callers this obliges (each is a task elsewhere, listed so nobody is surprised): `DataSeeder` - opens
-`BeginTenant(TenancyConstants.BootstrapTenantId)` for the admin membership and reads across tenants
+`BeginTenant(TenancyConstants.BootstrapTenantId)` for the tenant administrator's membership and reads across tenants
 for permission reconciliation; the Hangfire recurring jobs; the tests' non-HTTP fixture; and the
 session-plus-tenant middleware, which reads `TenantMemberships` *before* a tenant is established and
 therefore must use `AcrossAllTenants()`.
@@ -624,8 +624,9 @@ carry them (AC-085). Reconcile idempotently on every start:
    seeder runs outside a tenant.
 4. **The bootstrap tenant's system-created administrator role** - a tenant role
    (`TenantId = BootstrapTenantId`, `SystemCreated = true`) holding every **non-platform** permission
-   (AC-042), assigned to the seeded `admin` account.
-5. **The seeded `admin` account's membership** in the bootstrap tenant, written inside
+   (AC-042), assigned to the seeded `tenantadmin` account. The platform `admin` account holds the
+   platform role only and no membership (AC-083).
+5. **The seeded `tenantadmin` account's membership** in the bootstrap tenant, written inside
    `BeginTenant(BootstrapTenantId)` (AC-082).
 6. **Delete the `Public` role and its assignments, idempotently** (AC-145, AC-121). The seeder creates
    that role today, and after this feature every role must either belong to a tenant or carry platform

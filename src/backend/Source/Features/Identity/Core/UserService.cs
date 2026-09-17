@@ -142,10 +142,23 @@ public class UserService(AppDbContext dbContext,
     {
         // Platform administration is the tier test, and it is read from the request's live permission
         // claims, which the session check has already recomputed from current data. A holder of it
-        // administers accounts irrespective of membership, so the set is not narrowed at all for them.
+        // administers accounts irrespective of membership, so the set is not narrowed by tenant for them.
         if (currentUserService.HasPermission(Allow.Platform_Administration))
         {
-            return Users();
+            if (tenantContext is not { IsResolved: true, CurrentTenantId: null })
+            {
+                return Users();
+            }
+
+            // Acting in no tenant, the accounts administered are the platform's own: those holding a
+            // role that belongs to no tenant. The soft-delete filter stays on the roles, so a deleted
+            // platform role makes nobody a platform account.
+            var platformRoles = dbContext.Roles
+                .AcrossAllTenants()
+                .Where(role => role.TenantId == null);
+
+            return Users().Where(account => dbContext.UserRoles.Any(assignment =>
+                assignment.UserId == account.Id && platformRoles.Any(role => role.Id == assignment.RoleId)));
         }
 
         // Read once, outside the expression, so the tenant the restriction means is fixed here rather

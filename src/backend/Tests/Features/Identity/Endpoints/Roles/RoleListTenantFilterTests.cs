@@ -34,7 +34,7 @@ public class RoleListTenantFilterTests(App app) : TenancyTestsBase(app)
         var inFirst = await CreateTenantRoleAsync(first.Id, Allow.Role_View);
         var inSecond = await CreateTenantRoleAsync(second.Id, Allow.Role_View);
 
-        await SetAuthTokenAsync();
+        await SignInAsPlatformAdministratorActingInATenantAsync();
 
         var (wideRsp, wide) = await App.Client
             .GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(new() { All = true });

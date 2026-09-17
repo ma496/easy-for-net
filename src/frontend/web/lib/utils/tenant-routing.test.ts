@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import type { GetUserInfoResponse, GetUserInfoTenant } from '@/store/api/identity'
-import { isActiveTenantStale, isTenantScopedPath, resolveTenantLanding, tenantRefusalReasonKey } from './tenant-routing'
+import {
+  isActiveTenantStale,
+  isPathAvailable,
+  isPlatformAccessiblePath,
+  isTenantScopedPath,
+  resolvePlatformAdministratorLanding,
+  resolveTenantLanding,
+  tenantRefusalReasonKey,
+} from './tenant-routing'
 
 /** A tenant the caller holds an active membership in, as the account info endpoint reports it. */
 const tenant = (id: string): GetUserInfoTenant => ({ id, name: `Tenant ${id}`, identifier: `t-${id}` })
@@ -100,6 +108,58 @@ describe('isActiveTenantStale', () => {
     })
 
     expect(isActiveTenantStale(user)).toBe(true)
+  })
+})
+
+describe('isPlatformAccessiblePath', () => {
+  it.each(['/admin', '/admin/users/list', '/admin/roles/update/abc', '/admin/notifications/list', '/admin/ui/buttons', '/admin/tenants/list'])(
+    'lets a platform administrator with no tenant use %s',
+    (pathname) => {
+      expect(isPlatformAccessiblePath(pathname)).toBe(true)
+    },
+  )
+
+  it.each(['/admin/users-report', '/admin/some-new-feature'])('keeps %s tenant-only', (pathname) => {
+    expect(isPlatformAccessiblePath(pathname)).toBe(false)
+  })
+})
+
+describe('isPathAvailable', () => {
+  const platformAdmin = userInfo({ isPlatformAdministrator: true })
+
+  it('hides tenant-only screens from a platform administrator acting in no tenant', () => {
+    expect(isPathAvailable(platformAdmin, '/admin/some-new-feature')).toBe(false)
+    expect(isPathAvailable(platformAdmin, '/admin/users/list')).toBe(true)
+    expect(isPathAvailable(platformAdmin, '/profile')).toBe(true)
+  })
+
+  it('hides nothing from anyone acting in a tenant or without platform administration', () => {
+    const acting = userInfo({ isPlatformAdministrator: true, tenants: [tenant('a')], activeTenant: tenant('a') })
+
+    expect(isPathAvailable(acting, '/admin/some-new-feature')).toBe(true)
+    expect(isPathAvailable(userInfo(), '/admin/some-new-feature')).toBe(true)
+  })
+})
+
+describe('resolvePlatformAdministratorLanding', () => {
+  it('sends a platform administrator acting in no tenant to the dashboard', () => {
+    expect(resolvePlatformAdministratorLanding(userInfo({ isPlatformAdministrator: true }))).toBe('/admin')
+    expect(resolvePlatformAdministratorLanding(userInfo({ isPlatformAdministrator: true, tenants: [tenant('a'), tenant('b')] }))).toBe('/admin')
+  })
+
+  it('honours a redirect they can use and ignores one that needs a tenant', () => {
+    const user = userInfo({ isPlatformAdministrator: true })
+
+    expect(resolvePlatformAdministratorLanding(user, '/admin/users/list')).toBe('/admin/users/list')
+    expect(resolvePlatformAdministratorLanding(user, '/admin/some-new-feature')).toBe('/admin')
+  })
+
+  it('leaves everyone else to the tenant landing decision', () => {
+    expect(resolvePlatformAdministratorLanding(undefined)).toBeNull()
+    expect(resolvePlatformAdministratorLanding(userInfo())).toBeNull()
+    expect(
+      resolvePlatformAdministratorLanding(userInfo({ isPlatformAdministrator: true, tenants: [tenant('a')], activeTenant: tenant('a') })),
+    ).toBeNull()
   })
 })
 

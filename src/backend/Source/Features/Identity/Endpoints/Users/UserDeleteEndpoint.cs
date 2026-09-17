@@ -5,6 +5,7 @@ using Backend.Features.Identity.Core;
 /// <summary>
 /// This endpoint that handles <c>DELETE /users/{id}</c> to remove an existing user (refusing to delete a system-created user).
 /// </summary>
+[AllowPlatformNoTenant]
 sealed class UserDeleteEndpoint(IUserService userService) : Endpoint<UserDeleteRequest, UserDeleteResponse>
 {
     public override void Configure()

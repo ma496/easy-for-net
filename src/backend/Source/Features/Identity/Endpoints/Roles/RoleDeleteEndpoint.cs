@@ -14,6 +14,7 @@ using Backend.Features.Identity.Core;
 /// being read anywhere, so the role grants nothing from the next request on while its name stays
 /// reserved within its tenant and cannot be taken by a role created afterwards.
 /// </remarks>
+[AllowPlatformNoTenant]
 sealed class RoleDeleteEndpoint(IRoleService roleService) : Endpoint<RoleDeleteRequest, RoleDeleteResponse>
 {
     private const string SystemCreatedMessage = "System-created role cannot be deleted";

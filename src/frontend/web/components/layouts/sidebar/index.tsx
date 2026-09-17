@@ -11,7 +11,7 @@ import { useTranslation } from '@/i18n'
 import { navItems, NavItem, NavItemGroup } from '@/nav-items'
 import { authUrls } from '@/auth-urls'
 import { SidebarNavGroup } from './nav-group'
-import { isAllowed } from '@/lib/utils'
+import { isAllowed, isPathAvailable } from '@/lib/utils'
 import Image from 'next/image'
 
 /**
@@ -51,6 +51,11 @@ export const Sidebar = () => {
       // Check permissions from authUrls
       const authUrl = authUrls.find((u) => u.url === item.url)
       if (authUrl?.permissions && !isAllowed(authState, authUrl.permissions)) {
+        return undefined
+      }
+
+      // A platform administrator acting in no tenant is not offered screens that need one
+      if (!isPathAvailable(authState.user, item.url)) {
         return undefined
       }
 

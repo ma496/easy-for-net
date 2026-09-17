@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 /// <summary>
 /// GET endpoint that returns the distinct set of notification group names used for filtering in the UI.
 /// </summary>
+[AllowPlatformNoTenant]
 sealed class NotificationGetGroupsEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService)
     : EndpointWithoutRequest<NotificationGetGroupsResponse>
 {

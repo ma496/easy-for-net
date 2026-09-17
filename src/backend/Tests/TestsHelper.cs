@@ -12,7 +12,7 @@ public static class TestsHelper
     /// so a tenant is named here whenever the account holds several - or none - and the caller needs
     /// to act in a particular one.
     /// </summary>
-    public static async Task<string> GetNewAuthTokenAsync(HttpClient client, string username = "admin", string password = "Admin#123", Guid? tenantId = null)
+    public static async Task<string> GetNewAuthTokenAsync(HttpClient client, string username = TestUsers.TenantAdminUsername, string password = TestUsers.AdminPassword, Guid? tenantId = null)
     {
         var (_, res) = await client.POSTAsync<TokenEndpoint, TokenRequest, TokenResponse>(
             new() { Username = username, Password = password });
@@ -40,7 +40,7 @@ public static class TestsHelper
     /// <summary>
     /// Signs in, optionally selects a tenant, and leaves the client presenting the resulting token.
     /// </summary>
-    public static async Task SetNewAuthTokenAsync(HttpClient client, string username = "admin", string password = "Admin#123", Guid? tenantId = null)
+    public static async Task SetNewAuthTokenAsync(HttpClient client, string username = TestUsers.TenantAdminUsername, string password = TestUsers.AdminPassword, Guid? tenantId = null)
         => SetAuthToken(client, await GetNewAuthTokenAsync(client, username, password, tenantId));
 
     /// <summary>

@@ -33,7 +33,7 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
     {
         var tenant = await CreateTenantAsync();
         var members = await CreateMembersAsync(tenant.Id, count: 3);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (first, firstPage) = await App.Client
             .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(
@@ -67,7 +67,7 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
     {
         var tenant = await CreateTenantAsync();
         var members = await CreateMembersAsync(tenant.Id, count: 3);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var expected = members
             .OrderBy(member => member.Username, StringComparer.Ordinal)
@@ -96,7 +96,7 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
     public async Task Invalid_Sort_Field()
     {
         var tenant = await CreateTenantAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, ProblemDetails>(
@@ -119,7 +119,7 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
         var members = await CreateMembersAsync(tenant.Id, count: 2);
         var sought = members[0];
         var other = members[1];
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (byUsername, byUsernamePage) = await App.Client
             .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(
@@ -149,7 +149,7 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
         var otherRoleId = await CreateTenantRoleAsync(tenant.Id, Allow.TenantMember_View);
         var holder = await CreateTenantUserAsync(tenant.Id, holderRoleId);
         var other = await CreateTenantUserAsync(tenant.Id, otherRoleId);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, page) = await App.Client
             .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(
@@ -172,7 +172,7 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_View);
         var member = await CreateTenantUserAsync(tenant.Id, roleId);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, page) = await App.Client
             .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(

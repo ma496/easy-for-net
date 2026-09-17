@@ -156,6 +156,24 @@ public abstract class TenancyTestsBase(App app) : AppTestsBase(app)
     }
 
     /// <summary>
+    /// Creates a platform administrator that acts inside a tenant of its own, and signs the fixture's
+    /// client in as it. Acting in a tenant is what widens the user and role endpoints across every
+    /// tenant for a platform administrator; the seeded one acts in no tenant, where those endpoints
+    /// answer about the platform's own users and roles instead.
+    /// </summary>
+    /// <returns>The created account.</returns>
+    protected async Task<User> SignInAsPlatformAdministratorActingInATenantAsync()
+    {
+        var tenant = await CreateTenantAsync();
+        var account = await CreateTenantUserAsync(tenant.Id);
+
+        await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
+        await SignInAsAsync(account.Username);
+
+        return account;
+    }
+
+    /// <summary>
     /// Signs the fixture's client in as an account, optionally selecting a tenant first, so that
     /// later requests on it are made by that caller. Leaves the client authenticated as that account.
     /// </summary>

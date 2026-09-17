@@ -61,8 +61,8 @@ name.
    dotnet run --project src/backend/Source/<Name>.csproj
    ```
 
-   Startup seeds the permission catalog, the `Admin` role and the `admin` user
-   (`admin` / `Admin#123`). Swagger is served in Development; Hangfire's dashboard is at `/hangfire`;
+   Startup seeds the permission catalog, the default tenant, the platform administrator
+   (`admin` / `Admin#123`) and the default tenant's administrator (`tenantadmin` / `Admin#123`). Swagger is served in Development; Hangfire's dashboard is at `/hangfire`;
    health at `/health`.
 4. **Run the web app.**
 

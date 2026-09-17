@@ -104,7 +104,7 @@ public class TenantOnboardTests(App app) : TenancyTestsBase(app)
         var (refused, refusedProblem) = await client
             .POSTAsync<TenantOnboardEndpoint, TenantOnboardRequest, ProblemDetails>(invalid);
 
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (platformDuplicate, platformDuplicateProblem) = await App.Client
             .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, ProblemDetails>(
@@ -167,7 +167,7 @@ public class TenantOnboardTests(App app) : TenancyTestsBase(app)
 
         // The control: the very same request, against the very same tenant, answered for the caller
         // that does hold platform administration.
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (suspended, _) = await App.Client
             .POSTAsync<TenantSuspendEndpoint, TenantSuspendRequest, TenantSuspendResponse>(new() { Id = foreign.Id });
@@ -250,7 +250,7 @@ public class TenantOnboardTests(App app) : TenancyTestsBase(app)
 
         // Read before the onboarding, through the platform surface, so the comparison afterwards is
         // against what the other tenant looked like rather than against an assumption about it.
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
         var foreignMembersBefore = await LiveMemberIdsAsync(foreign.Id);
 
         var (onboardResponse, onboarded) = await OnboardAsync(client);

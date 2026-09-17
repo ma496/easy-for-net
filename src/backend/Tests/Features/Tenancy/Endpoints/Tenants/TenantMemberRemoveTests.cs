@@ -57,7 +57,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         var removedClient = await ClientForAsync(member.Username, removedTenant.Id);
         var remainingClient = await ClientForAsync(member.Username, remainingTenant.Id);
 
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (admitted, _) = await removedClient.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
 
@@ -99,7 +99,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         var administrator = await CreateFirstMemberAsync(tenant.Id);
         var administratorRoleId = await TenantAdministratorRoleIdAsync(tenant.Id);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, ProblemDetails>(
@@ -127,7 +127,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         var firstAdministrator = await CreateFirstMemberAsync(tenant.Id);
         var secondAdministrator = await CreateTenantUserAsync(tenant.Id, await TenantAdministratorRoleIdAsync(tenant.Id));
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, removed) = await App.Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, TenantMemberRemoveResponse>(
@@ -154,7 +154,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         var administrator = await CreateFirstMemberAsync(tenant.Id);
         var member = await CreateTenantUserAsync(tenant.Id, await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_View));
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, removed) = await App.Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, TenantMemberRemoveResponse>(
@@ -204,7 +204,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         await CreateFirstMemberAsync(tenant.Id);
         var member = await CreateTenantUserAsync(tenant.Id);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (suspendResponse, _) = await App.Client
             .POSTAsync<TenantSuspendEndpoint, TenantSuspendRequest, TenantSuspendResponse>(new() { Id = tenant.Id });
@@ -261,7 +261,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         await CreateFirstMemberAsync(tenant.Id);
         var account = await CreateAccountWithoutMembershipAsync();
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (neverAMember, _) = await App.Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, TenantMemberRemoveResponse>(
@@ -288,7 +288,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Tenant_Not_Found()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, problem) = await App.Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, ProblemDetails>(
@@ -306,7 +306,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Missing_Fields_Are_Rejected()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (missingTenant, tenantProblem) = await App.Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, ProblemDetails>(
@@ -336,7 +336,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         var administrator = await CreateFirstMemberAsync(tenant.Id);
         var ordinaryMember = await CreateTenantUserAsync(tenant.Id);
         var administratorRoleId = await TenantAdministratorRoleIdAsync(tenant.Id);
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         (await GrantedRolesAsync(tenant.Id, ordinaryMember.Id))
             .Should().BeEmpty("the member the tenant keeps holds no role in it, and so administers nothing");

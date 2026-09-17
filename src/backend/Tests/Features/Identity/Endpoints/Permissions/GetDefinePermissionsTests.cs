@@ -94,7 +94,7 @@ public class GetDefinePermissionsTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Platform_Caller_Receives_The_Whole_Catalogue()
     {
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, catalogue) = await App.Client
             .GETAsync<GetDefinePermissionsEndpoint, GetDefinePermissionsResponse>();

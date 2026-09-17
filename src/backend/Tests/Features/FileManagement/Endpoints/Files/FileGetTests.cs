@@ -133,7 +133,7 @@ public class FileGetTests(App app) : FileTestsBase(app)
         served.StatusCode.Should().Be(HttpStatusCode.OK, "the tenant is in service and the file belongs to it");
         (await served.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).Should().Be(content);
 
-        await SetAuthTokenAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (deleteResponse, _) = await App.Client
             .DELETEAsync<TenantDeleteEndpoint, TenantDeleteRequest, TenantDeleteResponse>(new() { Id = tenant.Id });

@@ -9,7 +9,8 @@ using Backend.Features.Notifications.Core.Entities;
 /// <summary>
 /// Populates the database with baseline data on first run and keeps the permission catalogue, the
 /// bootstrap tenant, the platform administrator role, the bootstrap tenant's administrator role, the
-/// admin account and that account's membership in sync with the definitions declared in code.
+/// platform administrator account, the bootstrap tenant's administrator account and that account's
+/// membership in sync with the definitions declared in code.
 /// </summary>
 /// <remarks>
 /// Every baseline row lives here rather than in a migration, and every step is written so that
@@ -36,24 +37,38 @@ public class DataSeeder(IUserService userService,
     private const string PlatformAdminRoleDescription = "Admin Role";
     private const string TenantAdminRoleDescription = "Tenant Admin Role";
 
-    private const string AdminUsername = "admin";
-    private const string AdminEmail = "admin@example.com";
-    private const string AdminPassword = "Admin#123";
+    /// <summary>
+    /// The platform administrator account. It holds the platform role only and belongs to no tenant,
+    /// so administering the platform never depends on a membership anywhere.
+    /// </summary>
+    private const string PlatformAdminUsername = "admin";
+    private const string PlatformAdminEmail = "admin@example.com";
+    private const string PlatformAdminPassword = "Admin#123";
+
+    /// <summary>
+    /// The bootstrap tenant's administrator account - an identity separate from the platform
+    /// administrator, so the tenant is administered from inside it the way every later tenant is.
+    /// </summary>
+    private const string TenantAdminUsername = "tenantadmin";
+    private const string TenantAdminEmail = "tenantadmin@example.com";
+    private const string TenantAdminPassword = "Admin#123";
 
     /// <summary>
     /// Reconciles persisted permissions, tenants, roles, users and memberships with the definitions
-    /// declared in code and inserts sample notification data for the admin user when none exists.
+    /// declared in code and inserts sample notification data for the bootstrap tenant's administrator
+    /// when none exists.
     /// </summary>
     public async Task SeedAsync()
     {
         await SeedBootstrapTenantAsync();
 
         var permissions = await ReconcilePermissionsAsync();
-        var adminUser = await SeedAdminUserAsync();
+        var platformAdminUser = await SeedUserAsync(PlatformAdminUsername, PlatformAdminEmail, PlatformAdminPassword);
+        var tenantAdminUser = await SeedUserAsync(TenantAdminUsername, TenantAdminEmail, TenantAdminPassword);
 
-        await ReconcilePlatformAdminRoleAsync(permissions, adminUser);
-        await ReconcileBootstrapTenantAdministrationAsync(permissions, adminUser);
-        await SeedSampleNotificationsAsync(adminUser);
+        await ReconcilePlatformAdminRoleAsync(permissions, platformAdminUser);
+        await ReconcileBootstrapTenantAdministrationAsync(permissions, tenantAdminUser);
+        await SeedSampleNotificationsAsync(tenantAdminUser);
     }
 
     /// <summary>
@@ -117,26 +132,29 @@ public class DataSeeder(IUserService userService,
     }
 
     /// <summary>
-    /// Creates the seeded administrator account when it is absent. The account itself belongs to no
-    /// tenant - one account is one identity across every tenant - and what places it inside the
-    /// bootstrap tenant is the membership row written further down.
+    /// Creates a seeded account when it is absent. The account itself belongs to no tenant - one
+    /// account is one identity across every tenant - so the tenant it works in, if any, is decided by
+    /// a membership row written further down rather than by creating it.
     /// </summary>
-    /// <returns>The seeded administrator account.</returns>
-    private async Task<User> SeedAdminUserAsync()
+    /// <param name="username">The account's username.</param>
+    /// <param name="email">The account's email address.</param>
+    /// <param name="password">The account's initial password.</param>
+    /// <returns>The seeded account.</returns>
+    private async Task<User> SeedUserAsync(string username, string email, string password)
     {
-        return await userService.GetByUsernameAsync(AdminUsername) ??
-            await userService.CreateAsync(new User { SystemCreated = true, Username = AdminUsername, Email = AdminEmail, IsEmailVerified = true }, AdminPassword);
+        return await userService.GetByUsernameAsync(username) ??
+            await userService.CreateAsync(new User { SystemCreated = true, Username = username, Email = email, IsEmailVerified = true }, password);
     }
 
     /// <summary>
     /// Keeps the platform administrator role holding the whole catalogue, the platform-tier
-    /// permissions included, and keeps the seeded administrator account in it. The role names no
-    /// tenant, which is what platform scope is, so administering the platform is a grant of its own
-    /// that administering a tenant never implies.
+    /// permissions included, and keeps the seeded platform administrator account in it. The role
+    /// names no tenant, which is what platform scope is, so administering the platform is a grant of
+    /// its own that administering a tenant never implies.
     /// </summary>
     /// <param name="permissions">Every permission the catalogue holds.</param>
-    /// <param name="adminUser">The seeded administrator account.</param>
-    private async Task ReconcilePlatformAdminRoleAsync(List<Permission> permissions, User adminUser)
+    /// <param name="platformAdminUser">The seeded platform administrator account.</param>
+    private async Task ReconcilePlatformAdminRoleAsync(List<Permission> permissions, User platformAdminUser)
     {
         var platformAdminRole = await dbContext.Roles
             .AcrossAllTenants()
@@ -158,17 +176,17 @@ public class DataSeeder(IUserService userService,
         }
 
         await ReconcileRolePermissionsAsync(platformAdminRole.Id, permissions);
-        await AssignRoleIfMissingAsync(adminUser.Id, platformAdminRole.Id);
+        await AssignRoleIfMissingAsync(platformAdminUser.Id, platformAdminRole.Id);
     }
 
     /// <summary>
     /// Provisions the bootstrap tenant with its own system-created administrator role holding every
-    /// tenant-tier permission, places the seeded administrator account in the tenant, and grants that
-    /// first member the role - the same provisioning every tenant created later receives.
+    /// tenant-tier permission, places the seeded tenant administrator account in the tenant, and grants
+    /// that first member the role - the same provisioning every tenant created later receives.
     /// </summary>
     /// <param name="permissions">Every permission the catalogue holds.</param>
-    /// <param name="adminUser">The seeded administrator account.</param>
-    private async Task ReconcileBootstrapTenantAdministrationAsync(List<Permission> permissions, User adminUser)
+    /// <param name="tenantAdminUser">The seeded account that administers the bootstrap tenant.</param>
+    private async Task ReconcileBootstrapTenantAdministrationAsync(List<Permission> permissions, User tenantAdminUser)
     {
         // A tenant role may hold no platform-tier permission, so the platform tier is subtracted here
         // rather than filtered out wherever the role is read.
@@ -189,13 +207,13 @@ public class DataSeeder(IUserService userService,
 
             await ReconcileRolePermissionsAsync(tenantAdminRole.Id, tenantPermissions);
 
-            if (!await dbContext.TenantMemberships.AnyAsync(m => m.UserId == adminUser.Id))
+            if (!await dbContext.TenantMemberships.AnyAsync(m => m.UserId == tenantAdminUser.Id))
             {
-                dbContext.TenantMemberships.Add(new TenantMembership { UserId = adminUser.Id });
+                dbContext.TenantMemberships.Add(new TenantMembership { UserId = tenantAdminUser.Id });
                 await dbContext.SaveChangesAsync();
             }
 
-            await AssignRoleIfMissingAsync(adminUser.Id, tenantAdminRole.Id);
+            await AssignRoleIfMissingAsync(tenantAdminUser.Id, tenantAdminRole.Id);
         }
     }
 
@@ -230,21 +248,21 @@ public class DataSeeder(IUserService userService,
     }
 
     /// <summary>
-    /// Inserts the sample notifications when none exist. The ones addressed to the seeded
-    /// administrator belong to the bootstrap tenant, while the welcome notification addresses nobody in
+    /// Inserts the sample notifications when none exist. The ones addressed to the bootstrap tenant's
+    /// administrator belong to that tenant, while the welcome notification addresses nobody in
     /// particular and belongs to no tenant, so it stays visible from inside every tenant.
     /// </summary>
-    /// <param name="adminUser">The seeded administrator account.</param>
-    private async Task SeedSampleNotificationsAsync(User adminUser)
+    /// <param name="tenantAdminUser">The seeded account that administers the bootstrap tenant.</param>
+    private async Task SeedSampleNotificationsAsync(User tenantAdminUser)
     {
         using (tenantContext.BeginTenant(TenancyConstants.BootstrapTenantId))
         {
-            if (!await dbContext.Notifications.AnyAsync(x => x.UserId == adminUser.Id))
+            if (!await dbContext.Notifications.AnyAsync(x => x.UserId == tenantAdminUser.Id))
             {
                 dbContext.Notifications.AddRange(
                     new Notification
                     {
-                        UserId = adminUser.Id,
+                        UserId = tenantAdminUser.Id,
                         Type = NotificationType.Warning,
                         TitleKey = "notifications.inventoryBelowLimit.title",
                         MessageKey = "notifications.inventoryBelowLimit.message",
@@ -254,7 +272,7 @@ public class DataSeeder(IUserService userService,
                     },
                     new Notification
                     {
-                        UserId = adminUser.Id,
+                        UserId = tenantAdminUser.Id,
                         Type = NotificationType.Info,
                         TitleKey = "notifications.systemUpdate.title",
                         MessageKey = "notifications.systemUpdate.message",
@@ -264,7 +282,7 @@ public class DataSeeder(IUserService userService,
                     },
                     new Notification
                     {
-                        UserId = adminUser.Id,
+                        UserId = tenantAdminUser.Id,
                         Type = NotificationType.Success,
                         TitleKey = "notifications.orderCompleted.title",
                         MessageKey = "notifications.orderCompleted.message",
@@ -274,7 +292,7 @@ public class DataSeeder(IUserService userService,
                     },
                     new Notification
                     {
-                        UserId = adminUser.Id,
+                        UserId = tenantAdminUser.Id,
                         Type = NotificationType.Error,
                         TitleKey = "notifications.paymentFailed.title",
                         MessageKey = "notifications.paymentFailed.message",
