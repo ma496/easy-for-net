@@ -20,8 +20,16 @@ using Backend.Features.Tenancy.Core;
 /// <para>
 /// Marked <see cref="AllowNoTenantAttribute"/> for the same reason: this is the endpoint that
 /// establishes a tenant, so requiring one would leave an account with several memberships unable to
-/// pick any of them. It declares no permission either - which tenants a caller may act in is decided
-/// by their memberships, not by anything a role grants them.
+/// pick any of them. It declares no permission either - which tenants an ordinary caller may act in
+/// is decided by their memberships, not by anything a role grants them.
+/// </para>
+/// <para>
+/// The single exception is platform administration, which belongs to no tenant and holds in all of
+/// them: a platform administrator may enter any tenant that exists and is not suspended, holding no
+/// membership in it. That is what makes it possible to answer a tenant reporting that something is
+/// broken by acting inside that very tenant and reproducing it, rather than reasoning about it from
+/// outside. They leave the same way they arrived, through <c>POST /tenants/exit</c>, which puts the
+/// session back into platform scope.
 /// </para>
 /// <para>
 /// The guards run in a fixed order, and the order is part of the contract. The tenant is read off the
@@ -56,7 +64,8 @@ sealed class TenantSwitchEndpoint(AppDbContext dbContext,
 
     /// <summary>
     /// The refusal reported when the caller holds no active membership in the tenant selected. Holding
-    /// permissions - even every permission - in another tenant is not standing in this one.
+    /// permissions - even every permission - in another tenant is not standing in this one; only
+    /// platform administration, which belongs to no tenant at all, is.
     /// </summary>
     private const string NotTenantMemberMessage = "Caller is not a member of this tenant";
 
@@ -97,10 +106,19 @@ sealed class TenantSwitchEndpoint(AppDbContext dbContext,
         // Asked of the membership rows as they stand now, and of nothing the caller's current session
         // carries: a membership that has been removed is soft-deleted and so keeps nobody inside a
         // tenant, and no permission granted anywhere else is standing here.
-        var isMember = await tenantMembershipService.IsMemberAsync(tenant.Id, userId, cancellationToken);
-        if (!isMember)
+        //
+        // Platform administration is the one standing that does not come from a membership. It is a
+        // claim test rather than a role-name test, because any tenant may name a role "Admin", and it
+        // is deliberately checked before the membership read rather than after it: a platform
+        // administrator holds no membership anywhere, so the read would refuse every tenant to the one
+        // caller who is meant to be able to enter any of them.
+        if (!currentUserService.HasPermission(Allow.Platform_Administration))
         {
-            ThrowError(NotTenantMemberMessage, ErrorCodes.NotTenantMember);
+            var isMember = await tenantMembershipService.IsMemberAsync(tenant.Id, userId, cancellationToken);
+            if (!isMember)
+            {
+                ThrowError(NotTenantMemberMessage, ErrorCodes.NotTenantMember);
+            }
         }
 
         if (tenant.Status == TenantStatus.Suspended)

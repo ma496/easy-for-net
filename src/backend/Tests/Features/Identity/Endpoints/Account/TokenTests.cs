@@ -8,17 +8,19 @@ using Backend.Features.Identity.Endpoints.Users;
 using Backend.Tests.Features.Tenancy;
 
 /// <summary>
-/// Tests that authenticating is a platform-wide act that names no tenant, and that a globally
-/// deactivated account is refused it without its memberships being touched - so that deactivating an
-/// account withholds access to every tenant at once while reactivating it restores exactly what the
-/// account already held (AC-048, AC-049, AC-104, AC-105).
+/// Tests that authenticating is a platform-wide act needing no tenant, that a tenant may be named
+/// beside the credentials and is then honoured or refused rather than silently ignored, and that a
+/// globally deactivated account is refused authentication without its memberships being touched - so
+/// that deactivating an account withholds access to every tenant at once while reactivating it
+/// restores exactly what the account already held (AC-048, AC-049, AC-104, AC-105).
 /// </summary>
 /// <remarks>
 /// <para>
-/// One account is one identity across the whole platform, so the credentials carry no tenant and the
-/// tenant a session starts in is resolved from the account's memberships after the credentials are
-/// accepted. That is what makes global deactivation expressible at all: there is exactly one place
-/// authentication is refused, and a membership is never the thing that decides it.
+/// One account is one identity across the whole platform, so the credentials name no tenant and the
+/// tenant a session starts in is decided after they are accepted - from the account's memberships, or
+/// from the tenant the request named. That is what makes global deactivation expressible at all:
+/// there is exactly one place authentication is refused, and a membership is never the thing that
+/// decides it.
 /// </para>
 /// <para>
 /// The refusal is answered as a bad request carrying <c>userNotActive</c>, exactly as every other
@@ -120,21 +122,22 @@ public class TokenTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that authentication asks for the account's own credentials and nothing else, so that
-    /// a person signs in once however many tenants they belong to (AC-048, AC-049).
+    /// Verifies that authentication needs the account's own credentials and nothing else, so that a
+    /// person signs in once however many tenants they belong to (AC-048, AC-049). Naming a tenant is
+    /// available but never required, and the field carrying it is the only one that has been added to
+    /// what a caller may state.
     /// </summary>
     [Fact]
-    public async Task Sign_In_Does_Not_Name_A_Tenant()
+    public async Task Sign_In_Needs_No_Tenant()
     {
         var declared = typeof(TokenRequest)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
             .Select(property => property.Name)
             .ToList();
 
-        declared.Should().NotContain(name => name.Contains("tenant", StringComparison.OrdinalIgnoreCase),
-            "the tenant a session acts in is resolved from the account's memberships, never supplied alongside the credentials");
-        declared.Should().BeEquivalentTo([nameof(TokenRequest.IsEmail), nameof(TokenRequest.Username), nameof(TokenRequest.Email), nameof(TokenRequest.Password)],
-            "these four are the whole of what a caller states to authenticate, and no fifth field has appeared to carry a tenant");
+        declared.Should().BeEquivalentTo(
+            [nameof(TokenRequest.IsEmail), nameof(TokenRequest.Username), nameof(TokenRequest.Email), nameof(TokenRequest.Password), nameof(TokenRequest.TenantIdentifier)],
+            "the credentials are what they were, and the one field beside them names a tenant to start in rather than a second credential");
 
         // The account holds one membership, so the tenant the session starts in is settled without the
         // caller having said anything about it: what the credentials state is who they are.
@@ -143,6 +146,8 @@ public class TokenTests(App app) : TenancyTestsBase(app)
             tenant.Id, await CreateTenantRoleAsync(tenant.Id, Allow.User_View));
 
         var request = new TokenRequest { Username = account.Username, Password = TestUsers.DefaultPassword };
+
+        request.TenantIdentifier.Should().BeNull("naming a tenant is the caller's option, not something they must supply");
 
         typeof(TokenRequest).GetProperties()
             .Where(property => property.GetValue(request) is not null && property.Name != nameof(TokenRequest.IsEmail))
@@ -172,6 +177,150 @@ public class TokenTests(App app) : TenancyTestsBase(app)
         info.ActiveTenantId.Should().Be(tenant.Id,
             "the session starts in the account's only tenant without the caller having named it");
     }
+
+    /// <summary>
+    /// Verifies that an account belonging to several tenants starts its session inside the one it
+    /// named, rather than in none of them - which is the point of naming one, since an account with
+    /// several memberships otherwise has every tenant-scoped operation refused until it selects.
+    /// </summary>
+    [Fact]
+    public async Task Naming_A_Tenant_Starts_The_Session_In_It()
+    {
+        var (account, firstTenantId) = await CreateAccountOfTwoTenantsAsync();
+        var identifier = await IdentifierOfAsync(firstTenantId);
+
+        ClearAuthToken();
+
+        var unnamed = await AuthenticatedTenantAsync(account.Username, tenantIdentifier: null);
+
+        unnamed.Should().BeNull(
+            "two memberships and no choice made leaves the session acting in no tenant, which is what naming one avoids");
+
+        var named = await AuthenticatedTenantAsync(account.Username, identifier);
+
+        named.Should().Be(firstTenantId, "the session starts in the tenant the caller named");
+    }
+
+    /// <summary>
+    /// Verifies that the identifier is matched the way it is stored rather than the way it was typed,
+    /// so that a person who capitalised it or left a space around it is signed in rather than told
+    /// their tenant does not exist.
+    /// </summary>
+    [Fact]
+    public async Task Named_Tenant_Is_Found_However_It_Was_Typed()
+    {
+        var (account, firstTenantId) = await CreateAccountOfTwoTenantsAsync();
+        var identifier = await IdentifierOfAsync(firstTenantId);
+
+        ClearAuthToken();
+
+        var typedLoosely = "  " + identifier.ToUpperInvariant() + "  ";
+
+        (await AuthenticatedTenantAsync(account.Username, typedLoosely))
+            .Should().Be(firstTenantId, "the identifier is compared in its normalized form, which is how it is stored");
+    }
+
+    /// <summary>
+    /// Verifies that a tenant the account cannot start a session in refuses the sign-in outright,
+    /// rather than quietly starting a session somewhere else or nowhere: a person who named a tenant
+    /// asked for that tenant, and each way it can fail is answered with its own code.
+    /// </summary>
+    [Fact]
+    public async Task Named_Tenant_That_Cannot_Be_Entered_Refuses_The_Sign_In()
+    {
+        var (account, _) = await CreateAccountOfTwoTenantsAsync();
+
+        var stranger = await CreateTenantAsync();
+        var suspended = await CreateTenantAsync(TenantStatus.Suspended);
+        await MembershipService.AddAsync(suspended.Id, account.Id, [], TestContext.Current.CancellationToken);
+
+        ClearAuthToken();
+
+        (await RefusalCodeAsync(account.Username, "no-tenant-is-called-this"))
+            .Should().Be(ErrorCodes.TenantNotFound, "an identifier that names nothing names nothing, and says no more than that");
+
+        (await RefusalCodeAsync(account.Username, stranger.Identifier))
+            .Should().Be(ErrorCodes.NotTenantMember, "the tenant exists and the account has no standing in it");
+
+        (await RefusalCodeAsync(account.Username, suspended.Identifier))
+            .Should().Be(ErrorCodes.TenantSuspended, "a suspended tenant is out of service, so there is nothing to sign in and do there");
+    }
+
+    /// <summary>
+    /// Verifies that a platform administrator may name any active tenant and start inside it holding
+    /// no membership there - which is how they reach a tenant that has reported a problem, without one
+    /// of its own members having to sign in for them.
+    /// </summary>
+    [Fact]
+    public async Task Platform_Administrator_May_Name_A_Tenant_They_Do_Not_Belong_To()
+    {
+        var tenant = await CreateTenantAsync();
+        var account = await CreateAccountWithoutMembershipAsync();
+        await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
+
+        ClearAuthToken();
+
+        (await AuthenticatedTenantAsync(account.Username, tenant.Identifier))
+            .Should().Be(tenant.Id, "platform administration belongs to no tenant and so holds in all of them");
+
+        var suspended = await CreateTenantAsync(TenantStatus.Suspended);
+
+        (await RefusalCodeAsync(account.Username, suspended.Identifier))
+            .Should().Be(ErrorCodes.TenantSuspended,
+                "a suspended tenant is out of service for everybody - reaching every tenant is not reaching one that is not in service");
+    }
+
+    /// <summary>
+    /// Signs in, optionally naming a tenant, and reports the tenant the session ended up acting in.
+    /// </summary>
+    /// <param name="username">The account to authenticate as.</param>
+    /// <param name="tenantIdentifier">The tenant to name, or <see langword="null"/> to name none.</param>
+    /// <returns>The tenant the session acts in, or <see langword="null"/> for none.</returns>
+    private async Task<Guid?> AuthenticatedTenantAsync(string username, string? tenantIdentifier)
+    {
+        var (response, result) = await App.Client
+            .POSTAsync<TokenEndpoint, TokenRequest, TokenResponse>(
+                new() { Username = username, Password = TestUsers.DefaultPassword, TenantIdentifier = tenantIdentifier });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var client = App.CreateClient(new ClientOptions { HandleCookies = false });
+        TestsHelper.SetAuthToken(client, result.AccessToken);
+
+        var (_, info) = await client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
+        return info.ActiveTenantId;
+    }
+
+    /// <summary>
+    /// Signs in naming a tenant that is expected to be refused, and reports the single error code the
+    /// refusal carries.
+    /// </summary>
+    /// <param name="username">The account to authenticate as.</param>
+    /// <param name="tenantIdentifier">The tenant to name.</param>
+    /// <returns>The code the refusal was reported with.</returns>
+    private async Task<string?> RefusalCodeAsync(string username, string tenantIdentifier)
+    {
+        var (response, refusal) = await App.Client
+            .POSTAsync<TokenEndpoint, TokenRequest, ProblemDetails>(
+                new() { Username = username, Password = TestUsers.DefaultPassword, TenantIdentifier = tenantIdentifier });
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        refusal.Errors.Should().ContainSingle();
+        return refusal.Errors.First().Code;
+    }
+
+    /// <summary>
+    /// The identifier a tenant is addressed by, read back so a test can name the tenant the way a
+    /// person signing in would.
+    /// </summary>
+    /// <param name="tenantId">The tenant whose identifier is read.</param>
+    /// <returns>The tenant's identifier.</returns>
+    private async Task<string> IdentifierOfAsync(Guid tenantId)
+        => await DbContext.Tenants
+            .AsNoTracking()
+            .Where(tenant => tenant.Id == tenantId)
+            .Select(tenant => tenant.Identifier)
+            .SingleAsync(TestContext.Current.CancellationToken);
 
     /// <summary>
     /// Authenticates with the credentials alone, read as a status so that both the accepted and the

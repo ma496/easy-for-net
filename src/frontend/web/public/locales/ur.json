@@ -72,7 +72,8 @@
     "tenantsUpdate": "اپ ڈیٹ",
     "tenantsMembers": "اراکین",
     "selectTenant": "ٹیننٹ منتخب کریں",
-    "noTenant": "کوئی ٹیننٹ نہیں"
+    "noTenant": "کوئی ٹیننٹ نہیں",
+    "tenantsDetail": "تفصیل"
   },
   "search": {
     "dashboard": "ڈیش بورڈ",
@@ -111,7 +112,8 @@
       "name": "نام",
       "tenantName": "ٹیننٹ کا نام",
       "tenantIdentifier": "شناخت کنندہ",
-      "user": "صارف"
+      "user": "صارف",
+      "tenant": "ٹیننٹ"
     },
     "placeholder": {
       "username": "صارف کا نام درج کریں",
@@ -127,7 +129,8 @@
       "roles": "کردار منتخب کریں",
       "tenantName": "ٹیننٹ کا نام درج کریں",
       "tenantIdentifier": "شناخت کنندہ درج کریں (مثال کے طور پر acme)",
-      "user": "صارف منتخب کریں"
+      "user": "صارف منتخب کریں",
+      "tenant": "ٹیننٹ شناخت کنندہ"
     }
   },
   "validation": {
@@ -532,8 +535,18 @@
         "label": "ٹیننٹ",
         "switchTo": "ٹیننٹ تبدیل کریں",
         "switchSuccess": "اب آپ ${tenant} میں کام کر رہے ہیں",
-        "noTenant": "کوئی ٹیننٹ منتخب نہیں"
-      }
+        "noTenant": "کوئی ٹیننٹ منتخب نہیں",
+        "viewDetail": "ٹیننٹ کی تفصیل دیکھیں",
+        "exitTenant": "ٹیننٹ سے باہر نکلیں",
+        "exitSuccess": "آپ دوبارہ پلیٹ فارم صارف کے طور پر کام کر رہے ہیں"
+      },
+      "detail": {
+        "title": "ٹیننٹ کی تفصیل",
+        "information": "ٹیننٹ کی معلومات",
+        "membersTitle": "اراکین"
+      },
+      "enterButton": "داخل ہوں",
+      "enterCurrent": "موجودہ"
     },
     "selectTenant": {
       "title": "ٹیننٹ منتخب کریں",

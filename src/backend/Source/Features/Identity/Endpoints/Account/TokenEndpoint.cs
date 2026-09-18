@@ -12,11 +12,23 @@ using Backend.Features.Identity.Core.Entities;
 /// <remarks>
 /// The credentials name no tenant: one account is one identity across the whole platform, so the
 /// person authenticates once whatever number of tenants they belong to. Which tenant the session
-/// starts in is decided here, after authentication, from the memberships the account holds at that
-/// moment - exactly one active membership starts the session inside that tenant with nothing for the
-/// user to choose, while none and several alike start a session that acts in no tenant, leaving every
-/// tenant-scoped operation refused until a tenant is selected. The endpoint is therefore exempt from
-/// the active-tenant requirement itself: it is one of the places a tenant is established.
+/// starts in is decided here, after authentication, and never from the credentials themselves. The
+/// endpoint is therefore exempt from the active-tenant requirement itself: it is one of the places a
+/// tenant is established.
+/// <para>
+/// The request may name a tenant beside the credentials, and that is a convenience rather than a
+/// second credential: it saves a person who belongs to several tenants the detour through the chooser
+/// by stating up front which one they came to work in. It is authorized here on exactly the standing
+/// that <c>POST /tenants/switch</c> would authorize it on a moment later, and a tenant the account
+/// cannot act in refuses the sign-in outright rather than quietly starting a session somewhere else:
+/// a person who named a tenant is told why they did not get it.
+/// </para>
+/// <para>
+/// With no tenant named the session starts where it always has - from the memberships the account
+/// holds at that moment. Exactly one active membership starts the session inside that tenant with
+/// nothing for the user to choose, while none and several alike start a session that acts in no
+/// tenant, leaving every tenant-scoped operation refused until a tenant is selected.
+/// </para>
 /// </remarks>
 [AllowNoTenant]
 sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IOptions<SigninSetting> signinSetting, IOptions<AuthSetting> authSetting) : Endpoint<TokenRequest, TokenResponse>
@@ -26,6 +38,26 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IOp
     /// authenticates a request; it only names the identity built to ask what this session is entitled to.
     /// </summary>
     private const string SigninAuthenticationType = "Signin";
+
+    /// <summary>
+    /// The refusal reported for a tenant identifier that names no tenant, or names a deleted one. It
+    /// carries no detail, so the answer for a tenant that never existed and the answer for one that is
+    /// gone are the same answer.
+    /// </summary>
+    private const string TenantNotFoundMessage = "Tenant not found";
+
+    /// <summary>
+    /// The refusal reported when the account holds no active membership in the tenant it named.
+    /// Holding permissions - even every permission - in another tenant is not standing in this one;
+    /// only platform administration, which belongs to no tenant at all, is.
+    /// </summary>
+    private const string NotTenantMemberMessage = "You are not a member of this tenant";
+
+    /// <summary>
+    /// The refusal reported when the tenant named is suspended. A suspended tenant is out of service
+    /// rather than gone, so signing in to work inside it is refused while it is.
+    /// </summary>
+    private const string TenantSuspendedMessage = "The tenant is suspended";
 
     public override void Configure()
     {
@@ -54,7 +86,9 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IOp
         if (signinSetting.Value?.IsEmailVerificationRequired == true && !user.IsEmailVerified)
             ThrowError("Email is not verified", ErrorCodes.EmailNotVerified);
 
-        var tenantId = await ResolveSingleActiveTenantAsync(user.Id, c);
+        var tenantId = string.IsNullOrWhiteSpace(req.TenantIdentifier)
+            ? await ResolveSingleActiveTenantAsync(user.Id, c)
+            : await ResolveNamedTenantAsync(user, req.TenantIdentifier, c);
 
         // Recorded before the token pair is asked for, because the refresh-token row written for this
         // session is all a later refresh has to go on: recording the tenant here is what makes a refresh
@@ -128,6 +162,84 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IOp
     }
 
     /// <summary>
+    /// The tenant named on the request, once it is established that this account may start a session
+    /// inside it. Every way it cannot is a refusal rather than a silent fallback: a person who named a
+    /// tenant asked for that tenant, and starting them somewhere else - or nowhere - would be a worse
+    /// answer than telling them what went wrong.
+    /// </summary>
+    /// <param name="user">The account that has just authenticated.</param>
+    /// <param name="identifier">The tenant's url-safe identifier, as it was typed.</param>
+    /// <param name="cancellationToken">Token used to cancel the reads.</param>
+    /// <returns>The tenant to start the session in.</returns>
+    /// <remarks>
+    /// The guards run in a fixed order, and the order is part of the contract: existence first, then
+    /// the caller's own standing, then the tenant's lifecycle - the same order
+    /// <c>POST /tenants/switch</c> settles the same question in, so naming a tenant here and selecting
+    /// it a moment later are refused for the same reasons with the same codes.
+    /// <para>
+    /// The identifier is matched against the normalized form, so it is found however it was typed -
+    /// the normalization repeated here is the one <see cref="Tenant.NormalizeProperties"/> performs
+    /// when the tenant is stored. The read relaxes tenant restriction by name because it runs before
+    /// any tenant is established; the soft-delete filter stays in force, so a deleted tenant is not a
+    /// tenant to start in and reads as absent.
+    /// </para>
+    /// </remarks>
+    private async Task<Guid?> ResolveNamedTenantAsync(User user, string identifier, CancellationToken cancellationToken)
+    {
+        var normalizedIdentifier = identifier.Trim().ToLowerInvariant();
+
+        var tenant = await dbContext.Tenants
+            .AsNoTracking()
+            .AcrossAllTenants()
+            .FirstOrDefaultAsync(candidate => candidate.IdentifierNormalized == normalizedIdentifier, cancellationToken);
+        if (tenant == null)
+        {
+            ThrowError(TenantNotFoundMessage, ErrorCodes.TenantNotFound);
+        }
+
+        // Read from the membership rows rather than from anything the account carries. Platform
+        // administration is the one standing that comes from no membership: it belongs to no tenant and
+        // holds in all of them, so a platform administrator may name any tenant here and start inside
+        // it - which is how they reach a tenant that has reported a problem, without one of its members
+        // having to sign in for them. It is read from the account's platform-scoped roles, because at
+        // this point in the request there are no permission claims to ask: the session being
+        // authorized is the one about to be established.
+        var holdsMembership = await dbContext.TenantMemberships
+            .AsNoTracking()
+            .AcrossAllTenants()
+            .AnyAsync(membership => membership.TenantId == tenant.Id && membership.UserId == user.Id, cancellationToken);
+        if (!holdsMembership && !await HoldsPlatformAdministrationAsync(user.Id, cancellationToken))
+        {
+            ThrowError(NotTenantMemberMessage, ErrorCodes.NotTenantMember);
+        }
+
+        if (tenant.Status == TenantStatus.Suspended)
+        {
+            ThrowError(TenantSuspendedMessage, ErrorCodes.TenantSuspended);
+        }
+
+        return tenant.Id;
+    }
+
+    /// <summary>
+    /// Whether the account holds platform administration through a platform-scoped role - one
+    /// belonging to no tenant. Asked of the roles rather than of a permission the account holds
+    /// anywhere, because a role belonging to a tenant can never confer this, and so no tenant can mint
+    /// for itself the authority to be signed into from outside.
+    /// </summary>
+    /// <param name="userId">The account that has just authenticated.</param>
+    /// <param name="cancellationToken">Token used to cancel the read.</param>
+    /// <returns><see langword="true"/> when the account is a platform administrator.</returns>
+    private async Task<bool> HoldsPlatformAdministrationAsync(Guid userId, CancellationToken cancellationToken)
+        => await dbContext.Roles
+            .AsNoTracking()
+            .AcrossAllTenants()
+            .AnyAsync(role => role.TenantId == null
+                              && role.RolePermissions.Any(rolePermission => rolePermission.Permission.Name == Allow.Platform_Administration)
+                              && dbContext.UserRoles.Any(assignment => assignment.UserId == userId && assignment.RoleId == role.Id),
+                      cancellationToken);
+
+    /// <summary>
     /// Builds the principal the session being established is evaluated as, holding the account's identity
     /// and the tenant it acts in and nothing else, so that the roles and permissions it starts with are
     /// read from current data for that tenant rather than assembled separately at sign-in.
@@ -144,8 +256,10 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IOp
 /// or email (selected via <see cref="IsEmail"/>) together with the user's password.
 /// </summary>
 /// <remarks>
-/// No tenant is named anywhere in it: the tenant a session acts in is resolved from the account's
-/// memberships once the credentials are accepted, never supplied alongside them.
+/// <see cref="TenantIdentifier"/> is optional and is the tenant's url-safe identifier, never its
+/// primary key: it is what the person signing in knows and can type. Left empty - which is how every
+/// sign-in that does not care arrives - the tenant is resolved from the account's memberships once
+/// the credentials are accepted, exactly as it always was.
 /// </remarks>
 sealed class TokenRequest
 {
@@ -153,6 +267,7 @@ sealed class TokenRequest
     public string Username { get; set; } = null!;
     public string Email { get; set; } = null!;
     public string Password { get; set; } = null!;
+    public string? TenantIdentifier { get; set; }
 }
 
 /// <summary>
@@ -173,5 +288,13 @@ sealed class TokenRequestValidator : Validator<TokenRequest>
             RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(100);
         });
         RuleFor(x => x.Password).NotEmpty().MinimumLength(8).MaximumLength(50);
+        // Only the length is checked. The shape an identifier must have belongs to the tenancy feature
+        // and is not reachable from here, and enforcing it again would buy nothing: an identifier of
+        // the wrong shape simply matches no tenant and is refused by the lookup like any other name
+        // that names nothing.
+        When(x => !string.IsNullOrWhiteSpace(x.TenantIdentifier), () =>
+        {
+            RuleFor(x => x.TenantIdentifier).MaximumLength(50);
+        });
     }
 }

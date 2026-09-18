@@ -151,6 +151,11 @@ export interface TenantSessionDto {
   refreshTokenExpiry: string
 }
 
+/** Response from the exit-tenant endpoint, carrying the session material for a session that now acts in no tenant. */
+export interface TenantExitResponse {
+  session: TenantSessionDto
+}
+
 /** Request parameters for suspending an active tenant by id. */
 export interface TenantSuspendRequest extends BaseDto<string>, RequestBase {}
 

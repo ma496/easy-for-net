@@ -16,6 +16,13 @@ using Backend.Features.Tenancy.Core;
 /// tenant for a caller holding platform administration, and otherwise only the tenants the caller
 /// holds an active membership in - so this endpoint cannot disagree with the list about what is
 /// visible.
+/// <para>
+/// Either permission admits the caller. <see cref="Allow.Tenant_View"/> is the grant the tenant list
+/// is read with, while <see cref="Allow.Tenant_Detail"/> is the narrower one a tenant administrator
+/// is given to open their own tenant's detail screen without being admitted to the platform's list of
+/// every tenant. Widening who may ask changes nothing about what comes back: the service above still
+/// answers only with tenants the caller has standing in.
+/// </para>
 /// </remarks>
 [AllowNoTenant]
 sealed class TenantGetEndpoint(ITenantService tenantService) : Endpoint<TenantGetRequest, TenantGetResponse>
@@ -31,7 +38,7 @@ sealed class TenantGetEndpoint(ITenantService tenantService) : Endpoint<TenantGe
     {
         Get("{id}");
         Group<TenantsGroup>();
-        Permissions(Allow.Tenant_View);
+        Permissions(Allow.Tenant_View, Allow.Tenant_Detail);
     }
 
     public override async Task HandleAsync(TenantGetRequest request, CancellationToken cancellationToken)

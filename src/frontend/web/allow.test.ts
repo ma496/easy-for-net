@@ -8,6 +8,7 @@ import { Allow } from './allow'
  */
 const tenancyPermissions = {
   Tenant_View: 'Tenant.View',
+  Tenant_Detail: 'Tenant.Detail',
   Tenant_Create: 'Tenant.Create',
   Tenant_Update: 'Tenant.Update',
   Tenant_Suspend: 'Tenant.Suspend',

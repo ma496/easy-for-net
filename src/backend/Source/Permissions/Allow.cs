@@ -24,6 +24,7 @@ public partial class Allow
     public const string Platform_Administration = "Platform.Administration";
 
     public const string Tenant_View = "Tenant.View";
+    public const string Tenant_Detail = "Tenant.Detail";
     public const string Tenant_Create = "Tenant.Create";
     public const string Tenant_Update = "Tenant.Update";
     public const string Tenant_Suspend = "Tenant.Suspend";

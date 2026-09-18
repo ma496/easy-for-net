@@ -58,19 +58,33 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
 
         user.Tenants = await TenantsOfAsync(userId, cancellationToken);
 
+        // Platform administration belongs to no tenant, so it is reported on its own rather than
+        // read out of the roles below: it survives a tenant switch and it is held by a caller acting
+        // in no tenant at all. It is read from the request's live permission claims, which the
+        // session check has already recomputed from current data. It is settled before the active
+        // tenant because it decides how that question is answered.
+        user.IsPlatformAdministrator = currentUserService.HasPermission(Allow.Platform_Administration);
+
         // The active tenant is reported only when it is one of the tenants just listed, so what the
         // caller is told they are working in is always one of the tenants they may work in. The two
         // can only disagree for a selection that has just stopped being usable, and that one is
         // discarded here rather than sent back for the caller to keep using.
         var activeTenant = user.Tenants.FirstOrDefault(tenant => tenant.Id == scopedTenantId);
+
+        // A platform administrator is the exception, because the two disagree for them by design: they
+        // enter a tenant on their platform-scoped role and hold no membership in it, so it is never
+        // among the tenants listed above and would otherwise be reported as no active tenant at all -
+        // leaving the web app to send them straight back out of the tenant they just entered. The
+        // tenant is read here rather than added to the list, which keeps its meaning intact: the
+        // tenants a caller may select by membership. A platform administrator picks from the tenants
+        // table instead.
+        if (activeTenant is null && user.IsPlatformAdministrator && scopedTenantId is { } enteredTenantId)
+        {
+            activeTenant = await EnteredTenantAsync(enteredTenantId, cancellationToken);
+        }
+
         user.ActiveTenant = activeTenant;
         user.ActiveTenantId = activeTenant?.Id;
-
-        // Platform administration belongs to no tenant, so it is reported on its own rather than
-        // read out of the roles below: it survives a tenant switch and it is held by a caller acting
-        // in no tenant at all. It is read from the request's live permission claims, which the
-        // session check has already recomputed from current data.
-        user.IsPlatformAdministrator = currentUserService.HasPermission(Allow.Platform_Administration);
 
         // The grants reported are those of the tenant just reported as active, together with the
         // caller's platform-scoped roles - exactly the set the session check computes a request's
@@ -122,6 +136,35 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
                 Status = tenant.Status
             })
             .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// The tenant a platform administrator has entered, read by identity alone. Membership is not
+    /// asked about, because the whole point of the read is a caller who holds none; the tenant's
+    /// lifecycle is not asked about either, because the session check has already settled it - a
+    /// suspended or deleted tenant leaves the request acting in no tenant, so nothing reaches here to
+    /// report.
+    /// </summary>
+    /// <param name="tenantId">The tenant the request is acting in.</param>
+    /// <param name="cancellationToken">Token used to cancel the read.</param>
+    /// <returns>The tenant being acted in, or <see langword="null"/> if it cannot be read.</returns>
+    private async Task<UserGetInfoResponse.TenantInfoDto?> EnteredTenantAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        // Tenants carry no tenant restriction of their own, but the restriction is relaxed by name all
+        // the same, exactly as the read above does it, so the query is unaffected by whichever scope
+        // happens to be established. The soft-delete filter stays in force.
+        return await dbContext.Tenants
+            .AsNoTracking()
+            .AcrossAllTenants()
+            .Where(tenant => tenant.Id == tenantId)
+            .Select(tenant => new UserGetInfoResponse.TenantInfoDto
+            {
+                Id = tenant.Id,
+                Name = tenant.Name,
+                Identifier = tenant.Identifier,
+                Status = tenant.Status
+            })
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     /// <summary>

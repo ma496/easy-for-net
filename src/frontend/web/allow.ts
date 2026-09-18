@@ -17,6 +17,7 @@ export const Allow = {
   File_Delete: 'File.Delete',
 
   Tenant_View: 'Tenant.View',
+  Tenant_Detail: 'Tenant.Detail',
   Tenant_Create: 'Tenant.Create',
   Tenant_Update: 'Tenant.Update',
   Tenant_Suspend: 'Tenant.Suspend',

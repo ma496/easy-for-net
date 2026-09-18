@@ -10,7 +10,7 @@ import {
   TenantStatus,
 } from '@/store/api/tenancy'
 import { SortDirection } from '@/store/api'
-import { Download, Loader2, Trash2, Plus, Pencil, PauseCircle, PlayCircle, Users } from 'lucide-react'
+import { Download, Loader2, Trash2, Plus, Pencil, PauseCircle, PlayCircle, Users, Eye, LogIn } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { ExportFormat, successToast, exportData, isAllowed, apiErrorAlert, confirmDeleteAlert, confirmAlert, errorAlert } from '@/lib/utils'
 import { Dropdown, LocalizedLink, ApiErrorMessages, Badge } from '@/components/ui'
@@ -20,7 +20,7 @@ import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
 import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable } from '@/components/ui/data-table'
 import { TenantFilterPanel, TenantFilters } from './tenant-filter-panel'
 import { TenantFilterButton } from './tenant-filter-button'
-import { useTableUrlState } from '@/hooks'
+import { useTableUrlState, useTenantSwitch } from '@/hooks'
 import { parseAsStringEnum } from 'nuqs'
 
 /**
@@ -85,6 +85,14 @@ export const TenantTable = () => {
   const canReactivate = isAllowed(authState, [Allow.Tenant_Reactivate])
   const canDelete = isAllowed(authState, [Allow.Tenant_Delete])
   const canViewMembers = isAllowed(authState, [Allow.TenantMember_View])
+  const canViewDetail = isAllowed(authState, [Allow.Tenant_Detail])
+  // A platform user holds no membership anywhere, so this table is how they reach a tenant at all:
+  // entering one puts their session inside it, which is what lets them reproduce something a tenant
+  // has reported rather than reason about it from outside.
+  const canEnter = isAllowed(authState, [Allow.Platform_Administration])
+  const activeTenantId = authState.activeTenant?.id
+
+  const { enterTenant, isBusy: isSwitchingTenant } = useTenantSwitch()
 
   const handleSearch = () => {
     url.filters.setMany({
@@ -235,10 +243,30 @@ export const TenantTable = () => {
                 <Pencil className="h-3 w-3" />
               </LocalizedLink>
             )}
+            {canViewDetail && (
+              <LocalizedLink href={`/admin/tenants/detail/${tenant.id}`} className="btn btn-secondary btn-sm" title={t('page.tenants.detail.title')}>
+                <Eye className="h-3 w-3" />
+              </LocalizedLink>
+            )}
             {canViewMembers && (
-              <LocalizedLink href={`/admin/tenants/members/${tenant.id}`} className="btn btn-secondary btn-sm">
+              <LocalizedLink href={`/admin/tenants/members/${tenant.id}`} className="btn btn-secondary btn-sm" title={t('page.tenants.members.title')}>
                 <Users className="h-3 w-3" />
               </LocalizedLink>
+            )}
+            {canEnter && tenant.status === TenantStatus.Active && (
+              tenant.id === activeTenantId ? (
+                <Badge variant="info">{t('page.tenants.enterCurrent')}</Badge>
+              ) : (
+                <button
+                  type="button"
+                  className="btn cursor-pointer btn-primary btn-sm"
+                  onClick={() => enterTenant(tenant.id, tenant.name)}
+                  disabled={isSwitchingTenant}
+                  title={t('page.tenants.enterButton')}
+                >
+                  <LogIn className="h-3 w-3" />
+                </button>
+              )
             )}
             {canSuspend && canChangeLifecycle && tenant.status === TenantStatus.Active && (
               <button

@@ -100,6 +100,8 @@ export interface TokenRequest extends RequestBase {
   isEmail?: boolean
   email?: string
   password: string
+  /** The url-safe identifier of the tenant to start the session in. Optional: left out, the server resolves the tenant from the account's memberships. */
+  tenantIdentifier?: string
 }
 
 /** Response from the login endpoint, returning the issued access/refresh tokens and the user id. */

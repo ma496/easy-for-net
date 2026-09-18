@@ -196,6 +196,124 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
+    /// Verifies that a platform administrator enters a tenant they hold no membership in, and that
+    /// the session they are left with really acts inside it: their platform-scoped role holds in every
+    /// tenant, so they carry that tenant's permissions there and read its rows rather than another
+    /// tenant's. This is what lets a tenant reporting that something is broken be answered from inside
+    /// that tenant.
+    /// </summary>
+    [Fact]
+    public async Task Platform_Administrator_Enters_A_Tenant_They_Do_Not_Belong_To()
+    {
+        var (tenant, _) = await PrepareTenantAsync();
+        var roleInTenant = await CreateTenantRoleAsync(tenant.Id, Allow.Role_View);
+
+        var account = await CreateAccountWithoutMembershipAsync();
+        await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
+
+        var client = await ClientForAsync(account.Username);
+
+        var (entered, selection) = await client
+            .POSTAsync<TenantSwitchEndpoint, TenantSwitchRequest, TenantSwitchResponse>(new() { TenantId = tenant.Id });
+
+        entered.StatusCode.Should().Be(HttpStatusCode.OK,
+            "platform administration belongs to no tenant and so is standing in all of them");
+        selection.TenantId.Should().Be(tenant.Id);
+
+        TestsHelper.SetAuthToken(client, selection.Session.AccessToken);
+
+        // The roles of the tenant entered are what comes back, so the session is acting inside it
+        // rather than merely naming it.
+        var (listed, roles) = await client
+            .GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(new() { All = true });
+
+        listed.StatusCode.Should().Be(HttpStatusCode.OK,
+            "the platform role holds in every tenant, so its permissions are the ones carried inside this one");
+        roles.Items.Select(role => role.Id).Should().Contain(roleInTenant,
+            "the request acts in the tenant just entered, so that tenant's own roles are what it reads");
+
+        (await MembershipCountAsync(account.Id)).Should().Be(0,
+            "entering a tenant is not joining it: nothing was written to the membership rows");
+    }
+
+    /// <summary>
+    /// Verifies that a platform administrator is refused a suspended tenant exactly as anyone else is.
+    /// Reaching every tenant is not reaching one that is out of service: a suspended tenant is
+    /// reactivated before it is worked in, never entered around the suspension.
+    /// </summary>
+    [Fact]
+    public async Task Platform_Administrator_Cannot_Enter_A_Suspended_Tenant()
+    {
+        var (suspended, _) = await PrepareTenantAsync(TenantStatus.Suspended);
+
+        var account = await CreateAccountWithoutMembershipAsync();
+        await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
+
+        var client = await ClientForAsync(account.Username);
+
+        var (refused, problem) = await client
+            .POSTAsync<TenantSwitchEndpoint, TenantSwitchRequest, ProblemDetails>(new() { TenantId = suspended.Id });
+
+        refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        problem.Errors.Should().ContainSingle();
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantSuspended);
+    }
+
+    /// <summary>
+    /// Verifies that a platform administrator who has entered a tenant can leave it and is put back
+    /// into platform scope, and that an ordinary member is not offered the same way out. Leaving is
+    /// what keeps entering from being one-way: a platform administrator holds no membership anywhere,
+    /// so there is no other tenant of theirs to select their way out through.
+    /// </summary>
+    [Fact]
+    public async Task Platform_Administrator_Leaves_A_Tenant_Through_Exit()
+    {
+        var (tenant, _) = await PrepareTenantAsync();
+
+        var account = await CreateAccountWithoutMembershipAsync();
+        await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
+
+        var client = await ClientForAsync(account.Username);
+        await TestsHelper.SwitchTenantAsync(client, tenant.Id);
+
+        var (inside, insideInfo) = await client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
+
+        inside.StatusCode.Should().Be(HttpStatusCode.OK);
+        insideInfo.ActiveTenantId.Should().Be(tenant.Id,
+            "a platform administrator is told which tenant they are working in, though they are a member of none");
+
+        var (left, exit) = await client.POSTAsync<TenantExitEndpoint, TenantExitResponse>();
+
+        left.StatusCode.Should().Be(HttpStatusCode.OK);
+        TestsHelper.SetAuthToken(client, exit.Session.AccessToken);
+
+        var (outside, outsideInfo) = await client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
+
+        outside.StatusCode.Should().Be(HttpStatusCode.OK);
+        outsideInfo.ActiveTenantId.Should().BeNull("the session was re-established naming no tenant at all");
+        outsideInfo.IsPlatformAdministrator.Should().BeTrue("leaving a tenant does not touch what the account is");
+    }
+
+    /// <summary>
+    /// Verifies that leaving is closed to a caller who is not a platform administrator. For a member
+    /// acting in no tenant is not a place to work but a state to leave, so it is not offered to them
+    /// and then regretted.
+    /// </summary>
+    [Fact]
+    public async Task Ordinary_Member_Cannot_Exit_To_Platform_Scope()
+    {
+        var (tenant, _) = await PrepareTenantAsync();
+        var member = await CreateTenantUserAsync(tenant.Id);
+
+        var client = await ClientForAsync(member.Username, tenant.Id);
+
+        var (refused, _) = await client.POSTAsync<TenantExitEndpoint, TenantExitResponse>();
+
+        refused.StatusCode.Should().Be(HttpStatusCode.Forbidden,
+            "the way out of a tenant for a member is selecting another one, not acting in none");
+    }
+
+    /// <summary>
     /// Verifies that the authority a token carries is not what the request is authorized on: a token
     /// issued while the caller was a member stops working the moment that membership is withdrawn - the
     /// very same token, with its role and permission claims still inside it, is refused with the
@@ -506,6 +624,18 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     /// </summary>
     /// <param name="status">The state to leave the tenant in, for the tests that select one that is not in service.</param>
     /// <returns>The created tenant, and the identity of its system-created administrator role.</returns>
+    /// <summary>
+    /// How many live memberships an account holds, so a test can state that entering a tenant wrote
+    /// none rather than merely that the call succeeded.
+    /// </summary>
+    /// <param name="userId">The account whose memberships are counted.</param>
+    /// <returns>The number of memberships the account holds.</returns>
+    private async Task<int> MembershipCountAsync(Guid userId)
+        => await DbContext.TenantMemberships
+            .AcrossAllTenants()
+            .AsNoTracking()
+            .CountAsync(membership => membership.UserId == userId, TestContext.Current.CancellationToken);
+
     private async Task<(Tenant Tenant, Guid AdministratorRoleId)> PrepareTenantAsync(TenantStatus status = TenantStatus.Active)
     {
         var tenant = await CreateTenantAsync(status);

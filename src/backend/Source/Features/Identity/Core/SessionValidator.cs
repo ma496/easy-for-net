@@ -59,7 +59,15 @@ public static class SessionValidator
                     .FirstOrDefault(),
                 HoldsMembership = dbContext.TenantMemberships
                     .AcrossAllTenants()
-                    .Any(membership => membership.TenantId == tenantId && membership.UserId == userId)
+                    .Any(membership => membership.TenantId == tenantId && membership.UserId == userId),
+                // Read as a platform-scoped role rather than as a permission the account holds
+                // anywhere: a role belonging to a tenant can never confer this, so no tenant can mint
+                // for itself the authority to be entered from outside.
+                HoldsPlatformAdministration = dbContext.Roles
+                    .AcrossAllTenants()
+                    .Any(role => role.TenantId == null
+                                 && role.RolePermissions.Any(rolePermission => rolePermission.Permission.Name == Allow.Platform_Administration)
+                                 && dbContext.UserRoles.Any(assignment => assignment.UserId == userId && assignment.RoleId == role.Id))
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -71,13 +79,19 @@ public static class SessionValidator
         // Order matters and mirrors the order the refusal is reported in: a tenant that is gone is
         // reported as absent rather than as one the caller was removed from, and a suspended tenant
         // is reported as suspended whether or not the membership survived the suspension.
+        //
+        // Membership is what places an ordinary account inside a tenant, and a platform administrator
+        // holds none anywhere: they enter a tenant to work inside it - to reproduce what one of them
+        // reports - and are therefore admitted on their platform-scoped role instead. A suspended or
+        // deleted tenant is refused to them exactly as it is to everyone, because those arms are
+        // settled before this one.
         var tenantStatus = tenantId is null
             ? TenantSessionStatus.NoActiveTenant
             : account.Status switch
             {
                 null => TenantSessionStatus.TenantNotFound,
                 TenantStatus.Suspended => TenantSessionStatus.TenantSuspended,
-                _ when !account.HoldsMembership => TenantSessionStatus.MembershipRevoked,
+                _ when !account.HoldsMembership && !account.HoldsPlatformAdministration => TenantSessionStatus.MembershipRevoked,
                 _ => TenantSessionStatus.Active
             };
 

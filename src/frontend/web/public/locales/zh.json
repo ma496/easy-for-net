@@ -72,7 +72,8 @@
     "tenantsUpdate": "更新",
     "tenantsMembers": "成员",
     "selectTenant": "选择租户",
-    "noTenant": "无租户"
+    "noTenant": "无租户",
+    "tenantsDetail": "详情"
   },
   "search": {
     "dashboard": "仪表板",
@@ -111,7 +112,8 @@
       "name": "名称",
       "tenantName": "租户名称",
       "tenantIdentifier": "标识符",
-      "user": "用户"
+      "user": "用户",
+      "tenant": "租户"
     },
     "placeholder": {
       "username": "输入用户名",
@@ -127,7 +129,8 @@
       "roles": "选择角色",
       "tenantName": "输入租户名称",
       "tenantIdentifier": "输入标识符（例如 acme）",
-      "user": "选择用户"
+      "user": "选择用户",
+      "tenant": "租户标识符"
     }
   },
   "validation": {
@@ -532,8 +535,18 @@
         "label": "租户",
         "switchTo": "切换租户",
         "switchSuccess": "您现在正在 ${tenant} 中工作",
-        "noTenant": "未选择租户"
-      }
+        "noTenant": "未选择租户",
+        "viewDetail": "查看租户详情",
+        "exitTenant": "退出租户",
+        "exitSuccess": "您已重新以平台用户身份工作"
+      },
+      "detail": {
+        "title": "租户详情",
+        "information": "租户信息",
+        "membersTitle": "成员"
+      },
+      "enterButton": "进入",
+      "enterCurrent": "当前"
     },
     "selectTenant": {
       "title": "选择租户",

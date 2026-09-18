@@ -1,5 +1,5 @@
 import { getServerTranslation } from '@/i18n'
-import { TenantMemberTable } from './_components/tenant-member-table'
+import { TenantMemberTable } from '../../_components/tenant-member-table'
 import { AdminPageContent } from '@/components/layouts'
 
 /**

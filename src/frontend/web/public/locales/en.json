@@ -72,7 +72,8 @@
     "tenantsUpdate": "Update",
     "tenantsMembers": "Members",
     "selectTenant": "Select Tenant",
-    "noTenant": "No Tenant"
+    "noTenant": "No Tenant",
+    "tenantsDetail": "Detail"
   },
   "search": {
     "dashboard": "Dashboard",
@@ -111,7 +112,8 @@
       "name": "Name",
       "tenantName": "Tenant Name",
       "tenantIdentifier": "Identifier",
-      "user": "User"
+      "user": "User",
+      "tenant": "Tenant"
     },
     "placeholder": {
       "username": "Enter username",
@@ -127,7 +129,8 @@
       "roles": "Select roles",
       "tenantName": "Enter tenant name",
       "tenantIdentifier": "Enter identifier (for example acme)",
-      "user": "Select user"
+      "user": "Select user",
+      "tenant": "Tenant identifier"
     }
   },
   "validation": {
@@ -532,8 +535,18 @@
         "label": "Tenant",
         "switchTo": "Switch tenant",
         "switchSuccess": "You are now working in ${tenant}",
-        "noTenant": "No tenant selected"
-      }
+        "noTenant": "No tenant selected",
+        "viewDetail": "View tenant detail",
+        "exitTenant": "Exit tenant",
+        "exitSuccess": "You are working as a platform user again"
+      },
+      "detail": {
+        "title": "Tenant Detail",
+        "information": "Tenant Information",
+        "membersTitle": "Members"
+      },
+      "enterButton": "Enter",
+      "enterCurrent": "Current"
     },
     "selectTenant": {
       "title": "Select Tenant",

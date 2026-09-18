@@ -3,13 +3,10 @@
 import { useSearchParams } from 'next/navigation'
 import { Building2, Check, Loader2 } from 'lucide-react'
 import { useTranslation } from '@/i18n'
-import { useLocalizedRouter } from '@/hooks'
-import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { useTenantSwitchMutation } from '@/store/api/tenancy'
-import { GetUserInfoTenant, useLazyGetUserInfoQuery } from '@/store/api/identity'
-import { appApi } from '@/store/api/_app-api'
-import { dispatchTenantChanged } from '@/store/tenant-cache'
-import { apiErrorAlert, successToast, cn } from '@/lib/utils'
+import { useTenantSwitch } from '@/hooks'
+import { useAppSelector } from '@/store/hooks'
+import { GetUserInfoTenant } from '@/store/api/identity'
+import { cn } from '@/lib/utils'
 import { tenantRefusalReasonKey } from '@/lib/utils/tenant-routing'
 import { LocalizedLink } from '@/components/ui'
 
@@ -21,46 +18,21 @@ import { LocalizedLink } from '@/components/ui'
  */
 export const SelectTenantView = () => {
   const { t } = useTranslation()
-  const router = useLocalizedRouter()
   const searchParams = useSearchParams()
-  const dispatch = useAppDispatch()
   const tenants = useAppSelector((state) => state.auth.tenants)
   const activeTenant = useAppSelector((state) => state.auth.activeTenant)
 
-  const [tenantSwitch, { isLoading: isSwitching }] = useTenantSwitchMutation()
-  const [getUserInfo, { isLoading: isLoadingUserInfo }] = useLazyGetUserInfoQuery()
+  const { enterTenant, isBusy } = useTenantSwitch()
 
-  const isBusy = isSwitching || isLoadingUserInfo
   const reason = searchParams.get('reason')
   const reasonKey = tenantRefusalReasonKey(reason)
 
   const switchTenant = async (tenant: GetUserInfoTenant) => {
-    if (isBusy || tenant.id === activeTenant?.id) {
+    if (tenant.id === activeTenant?.id) {
       return
     }
 
-    const switchResult = await tenantSwitch({ tenantId: tenant.id })
-    if (switchResult.error) {
-      apiErrorAlert(switchResult.error)
-      return
-    }
-
-    // The session now carries the new tenant, so every record cached for the previous one is dropped before the
-    // fresh user info is read - the order the switch flow prescribes. tenantChangedActions repeats the reset as
-    // the first step of its ordered sequence, which is idempotent.
-    dispatch(appApi.util.resetApiState())
-
-    const userInfoResult = await getUserInfo()
-    if (userInfoResult.error) {
-      apiErrorAlert(userInfoResult.error)
-      return
-    }
-
-    dispatchTenantChanged(dispatch, userInfoResult.data)
-    successToast.fire({
-      text: t('page.tenants.switcher.switchSuccess', { tenant: userInfoResult.data?.activeTenant?.name ?? tenant.name }),
-    })
-    router.push('/admin')
+    await enterTenant(tenant.id, tenant.name)
   }
 
   return (

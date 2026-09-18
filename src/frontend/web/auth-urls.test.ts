@@ -4,7 +4,9 @@ import { authUrls, getMatchedAuthUrl, isAuthRequired, type AuthUrl } from './aut
 
 describe('getMatchedAuthUrl', () => {
   it.each([
-    ['/admin/tenants/list', Allow.Tenant_View],
+    // The list answers about every tenant there is, so it is the platform's screen rather than one a
+    // tenant administrator reaches with the tenant-tier Tenant.View.
+    ['/admin/tenants/list', Allow.Platform_Administration],
     ['/admin/tenants/create', Allow.Tenant_Create],
   ])('guards %s with the permission the screen requires', (url, permission) => {
     expect(getMatchedAuthUrl(url)?.permissions).toEqual([permission])
@@ -13,11 +15,12 @@ describe('getMatchedAuthUrl', () => {
   it.each([
     ['/admin/tenants/update/6f5c1f1e-0000-0000-0000-000000000000', Allow.Tenant_Update],
     ['/admin/tenants/members/6f5c1f1e-0000-0000-0000-000000000000', Allow.TenantMember_View],
+    ['/admin/tenants/detail/6f5c1f1e-0000-0000-0000-000000000000', Allow.Tenant_Detail],
   ])('guards %s with the permission the screen requires', (url, permission) => {
     expect(getMatchedAuthUrl(url)?.permissions).toEqual([permission])
   })
 
-  it.each(['/admin/tenants/update', '/admin/tenants/members'])(
+  it.each(['/admin/tenants/update', '/admin/tenants/members', '/admin/tenants/detail'])(
     'does not match %s, which names no tenant to work with',
     (url) => {
       expect(getMatchedAuthUrl(url)).toBeUndefined()
@@ -32,7 +35,7 @@ describe('getMatchedAuthUrl', () => {
   })
 
   it('matches a path whatever query string it is reached with', () => {
-    expect(getMatchedAuthUrl('/admin/tenants/list?page=2&search=acme')?.permissions).toEqual([Allow.Tenant_View])
+    expect(getMatchedAuthUrl('/admin/tenants/list?page=2&search=acme')?.permissions).toEqual([Allow.Platform_Administration])
   })
 
   it('matches nothing outside the registry', () => {

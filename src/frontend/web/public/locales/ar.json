@@ -72,7 +72,8 @@
     "tenantsUpdate": "تحديث",
     "tenantsMembers": "الأعضاء",
     "selectTenant": "اختيار المستأجر",
-    "noTenant": "لا يوجد مستأجر"
+    "noTenant": "لا يوجد مستأجر",
+    "tenantsDetail": "التفاصيل"
   },
   "search": {
     "dashboard": "لوحة القيادة",
@@ -111,7 +112,8 @@
       "name": "الاسم",
       "tenantName": "اسم المستأجر",
       "tenantIdentifier": "المعرّف",
-      "user": "المستخدم"
+      "user": "المستخدم",
+      "tenant": "المستأجر"
     },
     "placeholder": {
       "username": "أدخل اسم المستخدم",
@@ -127,7 +129,8 @@
       "roles": "اختر الأدوار",
       "tenantName": "أدخل اسم المستأجر",
       "tenantIdentifier": "أدخل المعرّف (مثال acme)",
-      "user": "اختر المستخدم"
+      "user": "اختر المستخدم",
+      "tenant": "معرف المستأجر"
     }
   },
   "validation": {
@@ -532,8 +535,18 @@
         "label": "المستأجر",
         "switchTo": "تبديل المستأجر",
         "switchSuccess": "أنت تعمل الآن في ${tenant}",
-        "noTenant": "لم يتم اختيار مستأجر"
-      }
+        "noTenant": "لم يتم اختيار مستأجر",
+        "viewDetail": "عرض تفاصيل المستأجر",
+        "exitTenant": "الخروج من المستأجر",
+        "exitSuccess": "أنت تعمل الآن كمستخدم للمنصة مرة أخرى"
+      },
+      "detail": {
+        "title": "تفاصيل المستأجر",
+        "information": "معلومات المستأجر",
+        "membersTitle": "الأعضاء"
+      },
+      "enterButton": "دخول",
+      "enterCurrent": "الحالي"
     },
     "selectTenant": {
       "title": "اختيار المستأجر",

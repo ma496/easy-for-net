@@ -3,7 +3,7 @@ import * as Yup from 'yup'
 import { useTranslation } from '@/i18n'
 import { Formik, Form } from 'formik'
 import { FormInput, FormPasswordInput } from '@/components/ui/form'
-import { Mail, Lock, AlertCircle } from 'lucide-react'
+import { Mail, Lock, AlertCircle, Building2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useTokenMutation, useLazyGetUserInfoQuery, useResendVerifyEmailMutation } from '@/store/api/identity'
@@ -18,7 +18,9 @@ import { isValidRedirectPath } from '@/lib/utils/redirect'
  * Interactive client-side form that authenticates a user with username/password and routes them to the appropriate landing page.
  * Where that is depends on the tenants the account may work in: straight on to the intended screen when the server already made a
  * tenant active, to the chooser when no selection stands but there are tenants to pick from, and to the no-tenant screen
- * when the account belongs to none.
+ * when the account belongs to none. Naming a tenant on the form settles it up front, so a person who belongs to several and
+ * knows which one they came to work in skips the chooser; naming one they cannot act in refuses the sign-in rather than
+ * quietly starting them somewhere else.
  * Manages a verification-message sub-state with a resend-email countdown for accounts whose email is not yet verified.
  */
 export const SigninForm = () => {
@@ -36,6 +38,9 @@ export const SigninForm = () => {
       .required(t('validation.required'))
       .min(8, t('validation.minLength', { min: 8 }))
       .max(50, t('validation.maxLength', { max: 50 })),
+    // Optional, and only bounded here: which tenants this account may start a session in is the
+    // server's question, and an identifier of the wrong shape simply names no tenant.
+    tenantIdentifier: Yup.string().max(50, t('validation.maxLength', { max: 50 })),
   })
 
   type SigninFormValues = Yup.InferType<typeof validationSchema>
@@ -62,7 +67,9 @@ export const SigninForm = () => {
   }, [countdown])
 
   const submitForm = async (values: SigninFormValues) => {
-    const tokenRes = await tokenApi(values)
+    // Sent only when it was actually filled in, so an untouched field produces exactly the request a
+    // sign-in has always made rather than one naming an empty tenant.
+    const tokenRes = await tokenApi({ ...values, tenantIdentifier: values.tenantIdentifier?.trim() || undefined })
     if (tokenRes.error) {
       console.log('tokenRes.error', tokenRes.error)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -130,11 +137,12 @@ export const SigninForm = () => {
   }
 
   return (
-    <Formik initialValues={{ username: '', password: '' }} validationSchema={validationSchema} onSubmit={submitForm}>
+    <Formik initialValues={{ username: '', password: '', tenantIdentifier: '' }} validationSchema={validationSchema} onSubmit={submitForm}>
       {() => (
         <Form className="space-y-5 dark:text-white">
           <FormInput label={t('form.label.username')} name="username" placeholder={t('form.placeholder.username')} icon={<Mail size={16} />} autoFocus={true} required={true} />
           <FormPasswordInput label={t('form.label.password')} name="password" placeholder={t('form.placeholder.password')} icon={<Lock size={16} />} required={true} />
+          <FormInput label={t('form.label.tenant')} name="tenantIdentifier" placeholder={t('form.placeholder.tenant')} icon={<Building2 size={16} />} />
 
           {showResendLink && (
             <div role="alert" className="relative flex items-start gap-3 rounded-lg border border-danger/30 bg-danger-light p-4 text-sm dark:border-danger/40 dark:bg-danger/10">

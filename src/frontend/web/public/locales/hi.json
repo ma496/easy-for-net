@@ -72,7 +72,8 @@
     "tenantsUpdate": "अपडेट करें",
     "tenantsMembers": "सदस्य",
     "selectTenant": "टेनेंट चुनें",
-    "noTenant": "कोई टेनेंट नहीं"
+    "noTenant": "कोई टेनेंट नहीं",
+    "tenantsDetail": "विवरण"
   },
   "search": {
     "dashboard": "डैशबोर्ड",
@@ -111,7 +112,8 @@
       "name": "नाम",
       "tenantName": "टेनेंट नाम",
       "tenantIdentifier": "पहचानकर्ता",
-      "user": "उपयोगकर्ता"
+      "user": "उपयोगकर्ता",
+      "tenant": "टेनेंट"
     },
     "placeholder": {
       "username": "उपयोगकर्ता नाम दर्ज करें",
@@ -127,7 +129,8 @@
       "roles": "भूमिकाएं चुनें",
       "tenantName": "टेनेंट नाम दर्ज करें",
       "tenantIdentifier": "पहचानकर्ता दर्ज करें (उदाहरण के लिए acme)",
-      "user": "उपयोगकर्ता चुनें"
+      "user": "उपयोगकर्ता चुनें",
+      "tenant": "टेनेंट पहचानकर्ता"
     }
   },
   "validation": {
@@ -532,8 +535,18 @@
         "label": "टेनेंट",
         "switchTo": "टेनेंट बदलें",
         "switchSuccess": "अब आप ${tenant} में कार्य कर रहे हैं",
-        "noTenant": "कोई टेनेंट चयनित नहीं"
-      }
+        "noTenant": "कोई टेनेंट चयनित नहीं",
+        "viewDetail": "टेनेंट विवरण देखें",
+        "exitTenant": "टेनेंट से बाहर निकलें",
+        "exitSuccess": "आप फिर से प्लेटफ़ॉर्म उपयोगकर्ता के रूप में कार्य कर रहे हैं"
+      },
+      "detail": {
+        "title": "टेनेंट विवरण",
+        "information": "टेनेंट जानकारी",
+        "membersTitle": "सदस्य"
+      },
+      "enterButton": "प्रवेश करें",
+      "enterCurrent": "वर्तमान"
     },
     "selectTenant": {
       "title": "टेनेंट चुनें",

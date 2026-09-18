@@ -145,12 +145,20 @@ describe('the dispatch helpers', () => {
 /** The web root, so a screen can be read by the path it is written under. */
 const webDirectory = fileURLToPath(new URL('..', import.meta.url))
 
-/** A screen that changes which tenant the session acts in. */
+/**
+ * A screen that changes which tenant the session acts in. Most of them reach the reset through
+ * `useTenantSwitch`, which is the one place entering and leaving a tenant is carried out; the
+ * onboarding form establishes a tenant by creating one and so dispatches the sequence itself.
+ */
 const tenantChangedSites = [
   'components/custom/tenant-switcher.tsx',
   'app/[lang]/(auth)/select-tenant/_components/select-tenant-view.tsx',
   'app/[lang]/(auth)/no-tenant/_components/tenant-onboard-form.tsx',
+  'app/[lang]/admin/(tenancy)/tenants/list/_components/tenant-table.tsx',
 ]
+
+/** The hook every screen above but the onboarding form changes the acting tenant through. */
+const tenantSwitchHook = 'hooks/use-tenant-switch.ts'
 
 /** A screen that ends the session, after which no tenant stands to cache anything for. */
 const signedOutSites = [
@@ -160,11 +168,24 @@ const signedOutSites = [
 ]
 
 describe('the screens that change or end the tenant', () => {
-  it.each(tenantChangedSites)('%s resets the cache through the helper when the tenant changes', (file) => {
+  it.each(tenantChangedSites)('%s resets the cache when the tenant changes', (file) => {
     const source = readFileSync(join(webDirectory, file), 'utf8')
+
+    // Either way of reaching the reset counts, and nothing else does: a screen that dispatched the
+    // sequence itself and a screen that drives the hook both leave nothing of the previous tenant on
+    // display, while a screen that has quietly stopped doing either fails here.
+    const dispatchesItself = source.includes("from '@/store/tenant-cache'") && source.includes('dispatchTenantChanged(dispatch')
+    const goesThroughTheHook = source.includes('useTenantSwitch')
+
+    expect(dispatchesItself || goesThroughTheHook).toBe(true)
+  })
+
+  it('changes the acting tenant in one place, which resets the cache through the helper', () => {
+    const source = readFileSync(join(webDirectory, tenantSwitchHook), 'utf8')
 
     expect(source).toContain("from '@/store/tenant-cache'")
     expect(source).toContain('dispatchTenantChanged(dispatch')
+    expect(source).toContain('appApi.util.resetApiState()')
   })
 
   it.each(signedOutSites)('%s resets the cache through the helper when the session ends', (file) => {

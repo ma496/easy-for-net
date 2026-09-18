@@ -62,36 +62,46 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
     private const string LimitedUsername = "limited";
 
     /// <summary>
-    /// The permission every endpoint of the tenancy surface declares, or <see langword="null"/> for the
-    /// two that declare none. One entry per endpoint, and one endpoint per entry: the reflection test
-    /// fails as loudly on an endpoint missing from this map as on a permission whose value changed.
+    /// The permissions every endpoint of the tenancy surface declares, empty for the two that declare
+    /// none. One entry per endpoint, and one endpoint per entry: the reflection test fails as loudly on
+    /// an endpoint missing from this map as on a permission whose value changed. An entry naming more
+    /// than one permission is an endpoint any one of them admits a caller to, which is what
+    /// FastEndpoints' <c>Permissions(...)</c> means.
     /// </summary>
-    private static readonly Dictionary<Type, string?> DeclaredPermissions = new()
+    private static readonly Dictionary<Type, string[]> DeclaredPermissions = new()
     {
-        // The platform tier: creating, renaming, reading, suspending, reactivating and deleting a
-        // tenant are acts on the tenant itself, so no tenant role can carry them.
-        [typeof(TenantCreateEndpoint)] = Allow.Tenant_Create,
-        [typeof(TenantUpdateEndpoint)] = Allow.Tenant_Update,
-        [typeof(TenantDeleteEndpoint)] = Allow.Tenant_Delete,
-        [typeof(TenantSuspendEndpoint)] = Allow.Tenant_Suspend,
-        [typeof(TenantReactivateEndpoint)] = Allow.Tenant_Reactivate,
+        // The platform tier: creating, renaming, suspending, reactivating and deleting a tenant are
+        // acts on the tenant itself, so no tenant role can carry them.
+        [typeof(TenantCreateEndpoint)] = [Allow.Tenant_Create],
+        [typeof(TenantUpdateEndpoint)] = [Allow.Tenant_Update],
+        [typeof(TenantDeleteEndpoint)] = [Allow.Tenant_Delete],
+        [typeof(TenantSuspendEndpoint)] = [Allow.Tenant_Suspend],
+        [typeof(TenantReactivateEndpoint)] = [Allow.Tenant_Reactivate],
 
-        // Reading is the one thing a caller inside a tenant is granted without administering it.
-        [typeof(TenantGetEndpoint)] = Allow.Tenant_View,
-        [typeof(TenantListEndpoint)] = Allow.Tenant_View,
+        // Reading is the one thing a caller inside a tenant is granted without administering it. The
+        // read of a single tenant takes either grant: Tenant.View is what the platform's list of every
+        // tenant is read with, and Tenant.Detail is the narrower one a tenant administrator is given to
+        // open their own tenant without being admitted to that list.
+        [typeof(TenantGetEndpoint)] = [Allow.Tenant_View, Allow.Tenant_Detail],
+        [typeof(TenantListEndpoint)] = [Allow.Tenant_View],
 
         // The membership tier: administering who belongs to a tenant, which a tenant's own
         // administrator holds and the platform administrator holds over every tenant.
-        [typeof(TenantMemberListEndpoint)] = Allow.TenantMember_View,
-        [typeof(TenantMemberAddEndpoint)] = Allow.TenantMember_Add,
-        [typeof(TenantMemberRemoveEndpoint)] = Allow.TenantMember_Remove,
-        [typeof(TenantMemberUpdateRolesEndpoint)] = Allow.TenantMember_UpdateRoles,
+        [typeof(TenantMemberListEndpoint)] = [Allow.TenantMember_View],
+        [typeof(TenantMemberAddEndpoint)] = [Allow.TenantMember_Add],
+        [typeof(TenantMemberRemoveEndpoint)] = [Allow.TenantMember_Remove],
+        [typeof(TenantMemberUpdateRolesEndpoint)] = [Allow.TenantMember_UpdateRoles],
+
+        // Leaving a tenant for platform scope is the platform administrator's own way back out of a
+        // tenant they entered, and nobody else's: for a member, acting in no tenant is a state to leave
+        // rather than a place to work.
+        [typeof(TenantExitEndpoint)] = [Allow.Platform_Administration],
 
         // No permission at all, and deliberately so: these two are how a caller acquires a tenant to
         // act in, so gating them behind a permission held inside a tenant would be circular. They are
         // gated by authentication instead, which is the whole of what they require.
-        [typeof(TenantOnboardEndpoint)] = null,
-        [typeof(TenantSwitchEndpoint)] = null
+        [typeof(TenantOnboardEndpoint)] = [],
+        [typeof(TenantSwitchEndpoint)] = []
     };
 
     /// <summary>
@@ -102,7 +112,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
         get
         {
             var names = new TheoryData<string>();
-            foreach (var declared in DeclaredPermissions.Where(entry => entry.Value is not null))
+            foreach (var declared in DeclaredPermissions.Where(entry => entry.Value.Length > 0))
             {
                 names.Add(declared.Key.Name);
             }
@@ -145,7 +155,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
 
             var declared = DeclaredPermissions[endpointType];
 
-            if (declared is null)
+            if (declared.Length == 0)
             {
                 routed[endpointType].AllowedPermissions.Should().BeNullOrEmpty(
                     "{0} is how a caller acquires the tenant it acts in, so authentication is its gate and it declares no permission",
@@ -153,9 +163,9 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
             }
             else
             {
-                routed[endpointType].AllowedPermissions.Should().Equal([declared],
+                routed[endpointType].AllowedPermissions.Should().BeEquivalentTo(declared,
                     "{0} must require exactly {1}",
-                    endpointType.Name, declared);
+                    endpointType.Name, string.Join(" or ", declared));
             }
         }
     }
@@ -183,7 +193,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
 
         var refused = await call.Send(limited);
 
-        if (Declaration(endpoint) == Allow.Tenant_View)
+        if (Declaration(endpoint).Contains(Allow.Tenant_View))
         {
             refused.Status.Should().NotBe(HttpStatusCode.Forbidden,
                 "{0} requires the one permission the purpose-built role holds, so this caller is inside its gate rather than outside it",
@@ -308,11 +318,11 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
         => DeclaredPermissions.Keys.Single(type => type.Name == endpoint);
 
     /// <summary>
-    /// The permission one endpoint declares, read from the single map this test is written around.
+    /// The permissions one endpoint declares, read from the single map this test is written around.
     /// </summary>
     /// <param name="endpoint">The endpoint type's name.</param>
-    /// <returns>The permission it declares, or <see langword="null"/> when it declares none.</returns>
-    private static string? Declaration(string endpoint) => DeclaredPermissions[EndpointNamed(endpoint)];
+    /// <returns>The permissions any one of which admits a caller, empty when it declares none.</returns>
+    private static string[] Declaration(string endpoint) => DeclaredPermissions[EndpointNamed(endpoint)];
 
     /// <summary>
     /// Whether a type is one of the tenancy surface's endpoints: a concrete class in the feature's
@@ -409,6 +419,13 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
 
         return endpoint switch
         {
+            // Nothing is written by a refused exit, so there is nothing to assert did not happen: the
+            // session the caller arrived with is the session they leave with.
+            nameof(TenantExitEndpoint) => new(
+                async client => await StatusOf(client
+                    .POSTAsync<TenantExitEndpoint, TenantExitResponse>()),
+                null),
+
             nameof(TenantCreateEndpoint) => new(
                 async client => await StatusOf(client
                     .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, TenantCreateResponse>(

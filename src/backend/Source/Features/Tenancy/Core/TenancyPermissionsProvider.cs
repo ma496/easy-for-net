@@ -12,7 +12,8 @@ namespace Backend.Features.Tenancy.Core;
 /// platform administration widens to every tenant, and the only caller admitted to platform-wide
 /// surfaces such as the background-job dashboard. Viewing a tenant and managing its members are
 /// tenant-tier, so they are offered on the role-permission surface and belong to the system-created
-/// administrator role provisioned with each new tenant.
+/// administrator role provisioned with each new tenant. Reading one tenant in detail is tenant-tier for
+/// the same reason: it answers about the tenant the caller already belongs to, not about the platform.
 /// </remarks>
 public class TenancyPermissionsProvider : IPermissionDefinitionProvider
 {
@@ -26,6 +27,7 @@ public class TenancyPermissionsProvider : IPermissionDefinitionProvider
 
         var tenantsPermissions = context.AddPermission("Tenants", "Tenants");
         tenantsPermissions.AddChild(Allow.Tenant_View, "View");
+        tenantsPermissions.AddChild(Allow.Tenant_Detail, "Detail");
         tenantsPermissions.AddChild(Allow.Tenant_Create, "Create", isPlatform: true);
         tenantsPermissions.AddChild(Allow.Tenant_Update, "Update", isPlatform: true);
         tenantsPermissions.AddChild(Allow.Tenant_Suspend, "Suspend", isPlatform: true);

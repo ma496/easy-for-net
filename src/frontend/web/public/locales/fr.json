@@ -72,7 +72,8 @@
     "tenantsUpdate": "Mettre à jour",
     "tenantsMembers": "Membres",
     "selectTenant": "Sélectionner un locataire",
-    "noTenant": "Aucun locataire"
+    "noTenant": "Aucun locataire",
+    "tenantsDetail": "Détail"
   },
   "search": {
     "dashboard": "Tableau de bord",
@@ -111,7 +112,8 @@
       "name": "Nom",
       "tenantName": "Nom du locataire",
       "tenantIdentifier": "Identifiant",
-      "user": "Utilisateur"
+      "user": "Utilisateur",
+      "tenant": "Locataire"
     },
     "placeholder": {
       "username": "Entrez le nom d'utilisateur",
@@ -127,7 +129,8 @@
       "roles": "Sélectionnez les rôles",
       "tenantName": "Entrez le nom du locataire",
       "tenantIdentifier": "Entrez l'identifiant (par exemple acme)",
-      "user": "Sélectionnez un utilisateur"
+      "user": "Sélectionnez un utilisateur",
+      "tenant": "Identifiant du locataire"
     }
   },
   "validation": {
@@ -532,8 +535,18 @@
         "label": "Locataire",
         "switchTo": "Changer de locataire",
         "switchSuccess": "Vous travaillez maintenant dans ${tenant}",
-        "noTenant": "Aucun locataire sélectionné"
-      }
+        "noTenant": "Aucun locataire sélectionné",
+        "viewDetail": "Voir le détail du locataire",
+        "exitTenant": "Quitter le locataire",
+        "exitSuccess": "Vous travaillez de nouveau en tant qu’utilisateur de la plateforme"
+      },
+      "detail": {
+        "title": "Détail du locataire",
+        "information": "Informations du locataire",
+        "membersTitle": "Membres"
+      },
+      "enterButton": "Entrer",
+      "enterCurrent": "Actuel"
     },
     "selectTenant": {
       "title": "Sélectionner un locataire",

@@ -46,8 +46,12 @@ export const authUrls: AuthUrl[] = [
     permissions: [Allow.Role_ChangePermissions],
   },
   {
+    // The tenants list is the platform's own screen - it answers about every tenant there is - so it
+    // is gated on platform administration rather than on Tenant.View, which is tenant-tier and which
+    // every tenant administrator holds. A tenant administrator reaches their own tenant through the
+    // detail screen below instead.
     url: '/admin/tenants/list',
-    permissions: [Allow.Tenant_View],
+    permissions: [Allow.Platform_Administration],
   },
   {
     url: '/admin/tenants/create',
@@ -60,6 +64,10 @@ export const authUrls: AuthUrl[] = [
   {
     url: '/admin/tenants/members/{id}',
     permissions: [Allow.TenantMember_View],
+  },
+  {
+    url: '/admin/tenants/detail/{id}',
+    permissions: [Allow.Tenant_Detail],
   },
   {
     url: '/select-tenant',

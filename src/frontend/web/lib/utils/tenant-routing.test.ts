@@ -47,7 +47,7 @@ describe('isTenantScopedPath', () => {
     expect(isTenantScopedPath(pathname)).toBe(false)
   })
 
-  it.each(['/admin/tenants', '/admin/tenants/list', '/admin/tenants/create', '/admin/tenants/members/abc'])(
+  it.each(['/admin/tenants', '/admin/tenants/list', '/admin/tenants/create', '/admin/tenants/members/abc', '/admin/tenants/detail/abc'])(
     'treats the platform tenancy screen %s as reachable with no tenant at all',
     (pathname) => {
       expect(isTenantScopedPath(pathname)).toBe(false)
@@ -109,10 +109,24 @@ describe('isActiveTenantStale', () => {
 
     expect(isActiveTenantStale(user)).toBe(true)
   })
+
+  it('is false for a platform administrator inside a tenant they hold no membership in', () => {
+    // The shape that would read as stale for anyone else - a selection absent from the tenants
+    // listed - is the ordinary shape for a platform administrator, who enters a tenant on a
+    // platform-scoped role and belongs to none.
+    const platformAdmin = userInfo({
+      isPlatformAdministrator: true,
+      tenants: [],
+      activeTenantId: 'a',
+      activeTenant: tenant('a'),
+    })
+
+    expect(isActiveTenantStale(platformAdmin)).toBe(false)
+  })
 })
 
 describe('isPlatformAccessiblePath', () => {
-  it.each(['/admin', '/admin/users/list', '/admin/roles/update/abc', '/admin/notifications/list', '/admin/ui/buttons', '/admin/tenants/list'])(
+  it.each(['/admin', '/admin/users/list', '/admin/roles/update/abc', '/admin/notifications/list', '/admin/ui/buttons', '/admin/tenants/list', '/admin/tenants/detail/abc'])(
     'lets a platform administrator with no tenant use %s',
     (pathname) => {
       expect(isPlatformAccessiblePath(pathname)).toBe(true)
@@ -200,6 +214,27 @@ describe('resolveTenantLanding', () => {
     })
 
     expect(resolveTenantLanding(user)).toBeNull()
+  })
+
+  it('lands a platform administrator nowhere, with a tenant entered or without one', () => {
+    // They hold no membership, so the tenants listed for them are empty either way: the no-tenant
+    // screen would tell them something true and beside the point, and the chooser would be empty.
+    const outside = userInfo({ isPlatformAdministrator: true, tenants: [] })
+    const inside = userInfo({
+      isPlatformAdministrator: true,
+      tenants: [],
+      activeTenantId: 'a',
+      activeTenant: tenant('a'),
+    })
+
+    expect(resolveTenantLanding(outside)).toBeNull()
+    expect(resolveTenantLanding(inside)).toBeNull()
+  })
+
+  it('still sends an ordinary caller in the same shape to the chooser', () => {
+    const member = userInfo({ tenants: [tenant('b')], activeTenantId: 'a', activeTenant: tenant('a') })
+
+    expect(resolveTenantLanding(member)).toBe('/select-tenant')
   })
 })
 

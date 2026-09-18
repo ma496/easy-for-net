@@ -17,12 +17,14 @@ export {
   useTenantMemberRemoveMutation,
   useTenantOnboardMutation,
   useTenantSwitchMutation,
+  useTenantExitMutation,
 } from './tenants/tenants-api'
 export type {
   TenantCreateRequest,
   TenantCreateResponse,
   TenantDeleteRequest,
   TenantDeleteResponse,
+  TenantExitResponse,
   TenantGetRequest,
   TenantGetResponse,
   TenantListRequest,

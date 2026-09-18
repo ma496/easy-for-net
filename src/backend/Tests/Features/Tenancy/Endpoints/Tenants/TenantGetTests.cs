@@ -63,6 +63,51 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
+    /// Verifies that the narrower grant admits a caller on its own: a member holding
+    /// <see cref="Allow.Tenant_Detail"/> and not <see cref="Allow.Tenant_View"/> reads their own
+    /// tenant, which is what lets a tenant administrator open their tenant's detail screen without
+    /// being admitted to the platform's list of every tenant.
+    /// </summary>
+    [Fact]
+    public async Task Detail_Grant_Alone_Reads_The_Callers_Own_Tenant()
+    {
+        var tenant = await CreateTenantAsync();
+        var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_Detail);
+        var member = await CreateTenantUserAsync(tenant.Id, roleId);
+        await SignInAsAsync(member.Username, tenant.Id);
+
+        var (response, read) = await App.Client
+            .GETAsync<TenantGetEndpoint, TenantGetRequest, TenantGetResponse>(new() { Id = tenant.Id });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK,
+            "either grant admits the caller, and this one is the grant a tenant administrator is given");
+        read.Id.Should().Be(tenant.Id);
+    }
+
+    /// <summary>
+    /// Verifies that the narrower grant widens who may ask and nothing else: a caller holding
+    /// <see cref="Allow.Tenant_Detail"/> is still refused a tenant they have no standing in, with the
+    /// same answer an absent tenant gets.
+    /// </summary>
+    [Fact]
+    public async Task Detail_Grant_Does_Not_Reach_Another_Tenant()
+    {
+        var joined = await CreateTenantAsync();
+        var stranger = await CreateTenantAsync();
+        var roleId = await CreateTenantRoleAsync(joined.Id, Allow.Tenant_Detail);
+        var member = await CreateTenantUserAsync(joined.Id, roleId);
+        await SignInAsAsync(member.Username, joined.Id);
+
+        var (refused, problem) = await App.Client
+            .GETAsync<TenantGetEndpoint, TenantGetRequest, ProblemDetails>(new() { Id = stranger.Id });
+
+        refused.StatusCode.Should().Be(HttpStatusCode.BadRequest,
+            "what a caller may read is decided by their standing in the tenant, never by which of the two grants admitted them");
+        problem.Errors.Should().ContainSingle();
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound);
+    }
+
+    /// <summary>
     /// Verifies that a caller that is a member of one tenant and not of another is refused the other
     /// exactly as it is refused a tenant that is not there, so membership standing cannot be probed
     /// through this route (AC-021, AC-010).

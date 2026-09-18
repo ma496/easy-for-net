@@ -111,6 +111,11 @@ export const navItems: (NavItem | NavItemGroup)[] = [
             url: '/admin/tenants/members/{id}',
             show: false,
           },
+          {
+            title: 'navigation.tenantsDetail',
+            url: '/admin/tenants/detail/{id}',
+            show: false,
+          },
         ],
       },
       {

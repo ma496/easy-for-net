@@ -4,6 +4,7 @@ import {
   TenantCreateResponse,
   TenantDeleteRequest,
   TenantDeleteResponse,
+  TenantExitResponse,
   TenantGetRequest,
   TenantGetResponse,
   TenantListRequest,
@@ -33,7 +34,7 @@ import {
  * reactivate, delete), tenant membership (list, add, replace roles, remove), self-service
  * onboarding and tenant switching. Uses the 'Tenants' and 'TenantMembers' tag types, and
  * re-declares 'Users' so member mutations can refresh the tenant-scoped user surfaces.
- * `tenantSwitch` deliberately carries no tags: the caller drops the whole cache with
+ * `tenantSwitch` and `tenantExit` deliberately carry no tags: the caller drops the whole cache with
  * `appApi.util.resetApiState()` instead, so nothing from the previous tenant is refetched.
  */
 export const tenantsApi = appApi
@@ -174,6 +175,14 @@ export const tenantsApi = appApi
           body: input,
         }),
       }),
+      // Untagged for the same reason as tenantSwitch: leaving a tenant changes what every cached
+      // query would answer, so the caller drops the whole cache rather than refreshing parts of it.
+      tenantExit: builder.mutation<TenantExitResponse, void>({
+        query: () => ({
+          url: '/tenants/exit',
+          method: 'POST',
+        }),
+      }),
     }),
   })
 
@@ -193,5 +202,6 @@ export const {
   useTenantMemberUpdateRolesMutation,
   useTenantMemberRemoveMutation,
   useTenantOnboardMutation,
-  useTenantSwitchMutation
+  useTenantSwitchMutation,
+  useTenantExitMutation
 } = tenantsApi

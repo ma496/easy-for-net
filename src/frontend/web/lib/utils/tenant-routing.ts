@@ -41,9 +41,16 @@ export const isTenantScopedPath = (pathname: string): boolean => {
  * and is caught by the `activeTenant` check in `resolveTenantLanding`. The test
  * plan asks for the predicate all the same, and it keeps the decision right if a
  * later server ever answers with the two disagreeing.
+ *
+ * A platform administrator is exempt, because for them the two disagree by
+ * design: they enter a tenant on their platform-scoped role and hold no
+ * membership in it, so the tenant they are acting in is never among the tenants
+ * listed. Reading that as stale would send them straight back out of the tenant
+ * they entered to look into a problem.
  */
 export const isActiveTenantStale = (user: GetUserInfoResponse | undefined): boolean => {
   if (!user) return false
+  if (user.isPlatformAdministrator) return false
 
   const selectedTenantId = user.activeTenantId ?? user.activeTenant?.id
   if (!selectedTenantId) return false
@@ -71,9 +78,17 @@ export const isActiveTenantStale = (user: GetUserInfoResponse | undefined): bool
  * The first case is checked first on purpose: a caller with no tenant at all and
  * a stale selection is sent to `/no-tenant`, never to a chooser with nothing to
  * choose from.
+ *
+ * A platform administrator is ahead of both, and lands nowhere: they need no
+ * tenant to work, they hold no membership to be offered a choice from, and the
+ * tenant they enter is chosen from the tenants table rather than from either of
+ * these screens. Sent to the no-tenant screen they would be told they belong to
+ * no tenant, which is true and beside the point; sent to the chooser they would
+ * be shown an empty one.
  */
 export const resolveTenantLanding = (user: GetUserInfoResponse | undefined): TenantLandingRoute | null => {
   if (!user) return null
+  if (user.isPlatformAdministrator) return null
   if ((user.tenants ?? []).length === 0) return '/no-tenant'
   if (!user.activeTenant || isActiveTenantStale(user)) return '/select-tenant'
   return null
