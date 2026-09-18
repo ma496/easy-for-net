@@ -72,10 +72,13 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
         // session check has already recomputed from current data.
         user.IsPlatformAdministrator = currentUserService.HasPermission(Allow.Platform_Administration);
 
-        // The grants reported are those of the tenant just reported as active and of no other, so a
-        // switch answers with the newly active tenant's authority and authority held in the tenant
-        // left behind is not carried into it. With no active tenant these are the caller's
-        // platform-scoped roles, which for an ordinary account is an empty list.
+        // The grants reported are those of the tenant just reported as active, together with the
+        // caller's platform-scoped roles - exactly the set the session check computes a request's
+        // permissions from, so what the web app believes the caller may do matches what the API will
+        // actually allow. Authority held in the tenant left behind by a switch is not among them; a
+        // platform-scoped role is, because it belongs to no tenant and survives every switch. With no
+        // active tenant only the platform-scoped roles remain, which for an ordinary account is an
+        // empty list.
         user.Roles = await RolesInAsync(userId, activeTenant?.Id, cancellationToken);
 
         await Send.ResponseAsync(user, cancellation: cancellationToken);
@@ -122,7 +125,8 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
     }
 
     /// <summary>
-    /// The roles the caller holds inside one named tenant, with the permissions those roles grant.
+    /// The roles the caller holds inside one named tenant, together with the platform-scoped roles it
+    /// holds in every tenant, each with the permissions it grants.
     /// </summary>
     /// <param name="userId">The account whose role assignments are read.</param>
     /// <param name="tenantId">
@@ -137,13 +141,20 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
     /// running in - a stale selection leaves the request in platform scope - and because the same
     /// read has to answer for the roles belonging to no tenant. Relaxing tenant restriction by name
     /// leaves the soft-delete filter applied, so a deleted role stops granting what it granted.
+    /// <para>
+    /// The platform-scoped roles are included whichever tenant is named, because that is how a request
+    /// is authorized: the session check grants a platform-scoped role's permissions in every tenant.
+    /// Leaving them out here would hide a platform administrator's own permissions from the web app
+    /// the moment they started working inside one of their tenants, and the screens those permissions
+    /// unlock would be refused by a client that the API would have admitted.
+    /// </para>
     /// </remarks>
     private async Task<List<UserGetInfoResponse.RoleDto>> RolesInAsync(Guid? userId, Guid? tenantId, CancellationToken cancellationToken)
     {
         return await dbContext.Roles
             .AsNoTracking()
             .AcrossAllTenants()
-            .Where(role => role.TenantId == tenantId
+            .Where(role => (role.TenantId == tenantId || role.TenantId == null)
                            && dbContext.UserRoles.Any(assignment => assignment.UserId == userId && assignment.RoleId == role.Id))
             .OrderBy(role => role.Name)
             .Select(role => new UserGetInfoResponse.RoleDto

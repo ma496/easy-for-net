@@ -79,4 +79,28 @@ public class NotificationGetGroupsTests(App app) : NotificationsTestsBase(app)
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
         res.Groups.Should().BeInAscendingOrder();
     }
+
+    /// <summary>
+    /// Verifies that the group of a platform-wide notification is offered as a filter while the caller
+    /// is acting in a tenant. Such a notification names no tenant, so a read left to the tenant query
+    /// filter can never match it - and the list shows it, which would leave a group visible in the rows
+    /// but missing from the filter that is supposed to narrow them.
+    /// </summary>
+    [Fact]
+    public async Task GetGroups_IncludesPlatformWideGroups()
+    {
+        await SetAuthTokenAsync();
+
+        // Named uniquely, because the collections run in parallel against one database and a group
+        // every other test could also have raised would not be evidence of anything.
+        var group = $"platform-{Guid.NewGuid():N}";
+        var platformWide = await CreateGlobalNotificationAsync();
+        platformWide.Group = group;
+        await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        var (rsp, res) = await App.Client.GETAsync<NotificationGetGroupsEndpoint, NotificationGetGroupsResponse>();
+
+        rsp.StatusCode.Should().Be(HttpStatusCode.OK);
+        res.Groups.Should().Contain(group, "the filter offers the groups of the notifications the list shows, platform-wide ones included");
+    }
 }

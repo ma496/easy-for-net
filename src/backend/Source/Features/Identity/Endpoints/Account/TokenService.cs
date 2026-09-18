@@ -29,6 +29,14 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
     private const string SessionTenantItemKey = "Backend.Tenancy.SessionTenant";
 
     /// <summary>
+    /// Name of the cookie a browser client carries its refresh token in, as <c>UserId:RefreshToken</c>.
+    /// It is named here once because three places read or write it: the issuance that sets it, the
+    /// pre-processor that recovers a refresh request from it, and the tenant switch that revokes the
+    /// pair it names before issuing the one that replaces it.
+    /// </summary>
+    public const string RefreshTokenCookieName = "refreshToken";
+
+    /// <summary>
     /// Key under which the claims built for a renewal are carried, so that the cookie principal is re-signed
     /// with exactly the claims the new access token carries.
     /// </summary>
@@ -129,7 +137,7 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
                 Expires = DateTime.UtcNow.AddHours(_refreshTokenValidity)
             };
             // Embed UserId in the cookie so we can recover it when the session expires
-            _httpContextAccessor.HttpContext?.Response.Cookies.Append("refreshToken", $"{response.UserId}:{response.RefreshToken}", cookieOptions);
+            _httpContextAccessor.HttpContext?.Response.Cookies.Append(RefreshTokenCookieName, $"{response.UserId}:{response.RefreshToken}", cookieOptions);
         }
     }
 
@@ -238,7 +246,7 @@ public class RefreshTokenPreProcessor : IGlobalPreProcessor
 
         var httpContext = context.HttpContext;
 
-        if (string.IsNullOrEmpty(req.RefreshToken) && httpContext?.Request.Cookies.TryGetValue("refreshToken", out var cookieValue) == true)
+        if (string.IsNullOrEmpty(req.RefreshToken) && httpContext?.Request.Cookies.TryGetValue(TokenService.RefreshTokenCookieName, out var cookieValue) == true)
         {
             // Try to parse "UserId:RefreshToken" format
             var parts = cookieValue!.Split(':');

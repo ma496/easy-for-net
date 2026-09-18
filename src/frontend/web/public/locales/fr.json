@@ -217,7 +217,8 @@
       "crossTenantFileAccess": "Ce fichier appartient à un autre locataire",
       "tenantMembershipRevoked": "Votre adhésion à ce locataire a été révoquée",
       "platformPermissionNotGrantable": "Les permissions de plateforme ne peuvent pas être accordées à un rôle de locataire",
-      "concurrentModification": "Cet enregistrement a été modifié par quelqu'un d'autre. Rechargez et réessayez."
+      "concurrentModification": "Cet enregistrement a été modifié par quelqu'un d'autre. Rechargez et réessayez.",
+      "userSharedAcrossTenants": "Cet utilisateur appartient à d'autres locataires et ne peut être modifié que par un administrateur de la plateforme"
     }
   },
   "table": {

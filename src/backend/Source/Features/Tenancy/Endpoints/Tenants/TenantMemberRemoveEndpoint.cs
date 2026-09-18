@@ -11,8 +11,9 @@ using Backend.Features.Tenancy.Core;
 /// <remarks>
 /// The tenant being administered is addressed by route rather than taken from the session, so this
 /// endpoint needs no active tenant and authorizes that tenant itself: a caller who neither holds
-/// platform administration nor belongs to the tenant is refused before the tenant is so much as
-/// looked for, so this surface cannot be used to discover which tenants exist.
+/// platform administration nor holds this permission inside the tenant addressed is refused before
+/// the tenant is so much as looked for, so this surface cannot be used to discover which tenants
+/// exist. Standing in the tenant the session happens to be acting in confers nothing here.
 /// <para>
 /// Only this one membership is revoked. The user account survives, and so do its memberships of every
 /// other tenant and the roles it holds in them - which is what lets an account belong to several
@@ -36,6 +37,7 @@ using Backend.Features.Tenancy.Core;
 [AllowNoTenant]
 sealed class TenantMemberRemoveEndpoint(ITenantService tenantService,
                                         ITenantMembershipService tenantMembershipService,
+                                        ITenantAuthorizationService tenantAuthorizationService,
                                         ICurrentUserService currentUserService)
     : Endpoint<TenantMemberRemoveRequest, TenantMemberRemoveResponse>
 {
@@ -43,7 +45,7 @@ sealed class TenantMemberRemoveEndpoint(ITenantService tenantService,
     /// The refusal reported to a caller with no standing in the tenant addressed. It is raised before
     /// the tenant is read, so an absent tenant and somebody else's tenant read the same way here.
     /// </summary>
-    private const string NotTenantMemberMessage = "Caller is not a member of this tenant";
+    private const string NotTenantMemberMessage = "Caller may not administer the members of this tenant";
 
     /// <summary>
     /// The refusal reported for a tenant the caller may not act on. Absent, deleted and invisible are
@@ -60,15 +62,20 @@ sealed class TenantMemberRemoveEndpoint(ITenantService tenantService,
 
     public override async Task HandleAsync(TenantMemberRemoveRequest request, CancellationToken cancellationToken)
     {
-        // Standing first, before the tenant is looked for at all. A caller who is neither a platform
-        // administrator nor a member of the tenant addressed gets the same answer whether that tenant
-        // exists or not, so this surface discloses nothing about tenants they have no part in.
-        // Platform administration is a claim test rather than a role-name test: any tenant may define
-        // a role of any name, so only the permission the request actually carries can decide it.
+        // Standing first, before the tenant is looked for at all. A caller who may not administer the
+        // tenant addressed gets the same answer whether that tenant exists or not, so this surface
+        // discloses nothing about tenants they have no part in.
+        //
+        // Membership of the tenant is not what authorizes this: the permission claims the request
+        // carries were minted for the tenant the session is acting in, and the tenant being
+        // administered is the one in the route, which may be another one entirely. The permission is
+        // therefore read for the tenant named in the route. Platform administration is a claim test
+        // rather than a role-name test: any tenant may define a role of any name, so only the
+        // permission the request actually carries can decide it.
         var callerId = currentUserService.GetCurrentUserId();
         if (!currentUserService.HasPermission(Allow.Platform_Administration) &&
             (callerId is not { } callerUserId ||
-             !await tenantMembershipService.IsMemberAsync(request.TenantId, callerUserId, cancellationToken)))
+             !await tenantAuthorizationService.HoldsTenantPermissionAsync(callerUserId, request.TenantId, Allow.TenantMember_Remove, cancellationToken)))
         {
             ThrowError(NotTenantMemberMessage, ErrorCodes.NotTenantMember);
         }

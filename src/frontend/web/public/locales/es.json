@@ -217,7 +217,8 @@
       "crossTenantFileAccess": "Este archivo pertenece a otro inquilino",
       "tenantMembershipRevoked": "Su membresía en este inquilino ha sido revocada",
       "platformPermissionNotGrantable": "Los permisos de plataforma no se pueden otorgar a un rol de inquilino",
-      "concurrentModification": "Otra persona modificó este registro. Recargue e inténtelo de nuevo."
+      "concurrentModification": "Otra persona modificó este registro. Recargue e inténtelo de nuevo.",
+      "userSharedAcrossTenants": "Este usuario pertenece a otros inquilinos y solo puede ser modificado por un administrador de la plataforma"
     }
   },
   "table": {

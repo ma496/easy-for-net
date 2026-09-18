@@ -90,6 +90,39 @@ public interface ITenantAuthorizationService
     Task<bool> AnyOtherMemberHoldsTenantAdministrationAsync(Guid tenantId, Guid excludedUserId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Tells whether an account may exercise one named permission inside one named tenant: it holds a
+    /// live membership there, and a role it holds there - or a platform-scoped role, which belongs to
+    /// no tenant and so applies in all of them - grants that permission.
+    /// </summary>
+    /// <param name="userId">The account whose standing is examined.</param>
+    /// <param name="tenantId">The tenant the permission must be held in.</param>
+    /// <param name="permission">The permission being asked about, from <see cref="Allow"/>.</param>
+    /// <param name="cancellationToken">Token used to cancel the read.</param>
+    /// <returns><see langword="true"/> when the account may exercise that permission in that tenant.</returns>
+    /// <remarks>
+    /// This exists because a request's permission claims describe the tenant its session is acting in,
+    /// while a surface that takes the tenant from its route acts on a tenant that may be another one
+    /// entirely. Membership of the route's tenant is not enough to authorize such a request: an account
+    /// can be an administrator of one tenant and an ordinary member of the next, so the permission has
+    /// to be read for the tenant actually being administered rather than for the one the claims were
+    /// minted in. Holders of <see cref="Allow.Platform_Administration"/> are authorized by their claim
+    /// and never reach this question.
+    /// </remarks>
+    Task<bool> HoldsTenantPermissionAsync(Guid userId, Guid tenantId, string permission, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Tells whether an account's standing reaches beyond the tenant being acted in: it holds a
+    /// membership of some other tenant, or a platform-scoped role. Such an account is a shared
+    /// identity, so changes that would follow it everywhere - its name, whether it is active at all,
+    /// its deletion - are not one tenant's to make.
+    /// </summary>
+    /// <param name="userId">The account being examined.</param>
+    /// <param name="tenantId">The tenant being acted in, which is left out of the comparison.</param>
+    /// <param name="cancellationToken">Token used to cancel the read.</param>
+    /// <returns><see langword="true"/> when the account belongs to more than this one tenant.</returns>
+    Task<bool> ReachesBeyondTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Returns one page of the accounts holding an active membership of a tenant, each carrying the
     /// roles it holds in that tenant alone, sorted, searched and paged as the request asks.
     /// </summary>
@@ -117,7 +150,10 @@ public interface ITenantAuthorizationService
     /// recomputed from the membership and role assignments as they stand at this moment for that
     /// tenant alone, the cookie principal is re-signed with them, a fresh access/refresh pair is
     /// issued, and the tenant is recorded on the refresh-token row so that a later refresh
-    /// re-establishes this tenant rather than the one the account was acting in before.
+    /// re-establishes this tenant rather than the one the account was acting in before. The pair the
+    /// request arrived with is revoked as the new one is issued, so the refresh token the caller held a
+    /// moment ago cannot afterwards be redeemed for a session back in the previous tenant; the
+    /// account's sessions on other devices are untouched.
     /// </summary>
     /// <param name="userId">The account whose session is re-established.</param>
     /// <param name="tenantId">The tenant the session is to act in, or <see langword="null"/> for none.</param>
@@ -141,6 +177,7 @@ public class TenantAuthorizationService(AppDbContext dbContext,
                                         IPermissionDefinitionService permissionDefinitionService,
                                         ITenantContext tenantContext,
                                         IHttpContextAccessor httpContextAccessor,
+                                        IAuthTokenService authTokenService,
                                         RefreshTokenIssuer refreshTokenIssuer) : ITenantAuthorizationService
 {
     /// <summary>
@@ -282,14 +319,67 @@ public class TenantAuthorizationService(AppDbContext dbContext,
                            && role.RolePermissions.Any(rolePermission => rolePermission.Permission.Name == TenantAdministrationPermission))
             .Select(role => role.Id);
 
-        // Removed memberships are soft deleted, so only members who still hold one are counted.
+        // Removed memberships are soft deleted, so only members who still hold one are counted, and a
+        // deactivated account is not counted at all: it cannot sign in, so administration it holds is
+        // administration nobody can exercise, and a tenant left with only such members is exactly the
+        // unadministrable state this guard exists to prevent.
         return await dbContext.TenantMemberships
             .AsNoTracking()
             .AcrossAllTenants()
             .AnyAsync(membership => membership.TenantId == tenantId
                                     && membership.UserId != excludedUserId
+                                    && dbContext.Users.Any(account => account.Id == membership.UserId && account.IsActive)
                                     && dbContext.UserRoles.Any(assignment => assignment.UserId == membership.UserId
                                                                              && administratorRoleIds.Contains(assignment.RoleId)),
+                cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<bool> HoldsTenantPermissionAsync(Guid userId, Guid tenantId, string permission, CancellationToken cancellationToken = default)
+    {
+        // The membership and the grant are asked as one query rather than two, because both are read on
+        // every request that administers a tenant named by its route and neither answer is useful
+        // without the other.
+        //
+        // The roles that count are this tenant's own and the platform-scoped ones, which is exactly the
+        // set the session check computes a request's permissions from, so a caller is authorized here
+        // for a tenant precisely when a session acting in that tenant would be. The soft-delete filter
+        // stays in force on all three sets, so a deleted role grants nothing and a removed membership
+        // places nobody.
+        return dbContext.Roles
+            .AsNoTracking()
+            .AcrossAllTenants()
+            .AnyAsync(role => (role.TenantId == tenantId || role.TenantId == null)
+                              && role.RolePermissions.Any(rolePermission => rolePermission.Permission.Name == permission)
+                              && dbContext.UserRoles.Any(assignment => assignment.UserId == userId && assignment.RoleId == role.Id)
+                              && dbContext.TenantMemberships.AcrossAllTenants()
+                                  .Any(membership => membership.TenantId == tenantId && membership.UserId == userId),
+                cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> ReachesBeyondTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        // A membership of another tenant makes the account that tenant's member too. The read relaxes
+        // tenant restriction by name, because the rows being looked for deliberately belong to tenants
+        // other than the one being acted in.
+        var belongsElsewhere = await dbContext.TenantMemberships
+            .AsNoTracking()
+            .AcrossAllTenants()
+            .AnyAsync(membership => membership.UserId == userId && membership.TenantId != tenantId, cancellationToken);
+
+        if (belongsElsewhere)
+        {
+            return true;
+        }
+
+        // A platform-scoped role belongs to no tenant and confers its permissions in every one, so an
+        // account holding it is the platform's rather than any single tenant's.
+        return await dbContext.Roles
+            .AsNoTracking()
+            .AcrossAllTenants()
+            .AnyAsync(role => role.TenantId == null
+                              && dbContext.UserRoles.Any(assignment => assignment.UserId == userId && assignment.RoleId == role.Id),
                 cancellationToken);
     }
 
@@ -421,6 +511,12 @@ public class TenantAuthorizationService(AppDbContext dbContext,
 
         if (httpContextAccessor.HttpContext is { } httpContext)
         {
+            // The session being replaced is ended before its successor is issued. Its refresh-token row
+            // carries the tenant the account was acting in a moment ago, so leaving the row in place
+            // would leave that tenant redeemable: whoever held the old refresh token could refresh back
+            // into it until it expired, and every switch would leave another such row behind.
+            await RevokeSupersededSessionAsync(userId, httpContext, cancellationToken);
+
             // Recorded before the pair is issued, because the row written for the new refresh token is
             // the only record a later refresh has of the tenant this session acts in - and it is what
             // stops that refresh from resurrecting the tenant the account acted in before.
@@ -441,6 +537,34 @@ public class TenantAuthorizationService(AppDbContext dbContext,
                 RefreshToken = response.RefreshToken,
                 RefreshTokenExpiry = response.RefreshExpiry
             });
+    }
+
+    /// <summary>
+    /// Revokes the stored token pair the request arrived with, so that the session being replaced
+    /// cannot be refreshed after its successor has been issued.
+    /// </summary>
+    /// <param name="userId">The account whose session is being replaced.</param>
+    /// <param name="httpContext">The request the replacement is being issued on.</param>
+    /// <param name="cancellationToken">Token used to cancel the delete.</param>
+    /// <remarks>
+    /// The refresh token is read from the cookie the browser carries it in, which holds it as
+    /// <c>UserId:RefreshToken</c>. A request that carries no such cookie - a client holding its token
+    /// pair itself rather than in cookies - leaves nothing to revoke here, and its old pair stays
+    /// valid until it expires or is next refreshed. The delete names the account as well as the token,
+    /// so a cookie belonging to somebody else revokes nothing.
+    /// </remarks>
+    private async Task RevokeSupersededSessionAsync(Guid userId, HttpContext httpContext, CancellationToken cancellationToken)
+    {
+        if (!httpContext.Request.Cookies.TryGetValue(RefreshTokenIssuer.RefreshTokenCookieName, out var cookieValue)
+            || string.IsNullOrWhiteSpace(cookieValue))
+        {
+            return;
+        }
+
+        var separatorIndex = cookieValue.IndexOf(':');
+        var refreshToken = separatorIndex >= 0 ? cookieValue[(separatorIndex + 1)..] : cookieValue;
+
+        await authTokenService.RevokeRefreshTokenAsync(userId, refreshToken, cancellationToken);
     }
 
     /// <summary>

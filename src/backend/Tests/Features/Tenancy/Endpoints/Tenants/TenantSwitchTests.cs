@@ -95,7 +95,8 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
 
         sessions.Should().NotBeEmpty("every session established for the account is recorded");
         sessions[0].TenantId.Should().Be(tenantB.Id, "the newest row is the session the switch established, and the row a later refresh reads is what carries the selection forward");
-        sessions.Should().Contain(row => row.TenantId == tenantA.Id, "while the session it replaced stays recorded against the tenant it was established for");
+        sessions.Should().Contain(row => row.TenantId == tenantA.Id,
+            "while the session it replaced is still recorded against the tenant it was established for - this client carries no cookie, so it presents no refresh token for the switch to revoke; the client that does is covered below");
     }
 
     /// <summary>
@@ -602,4 +603,70 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     /// </summary>
     /// <returns>The request.</returns>
     private static RoleCreateRequest NewRole() => new() { Name = $"Role {Guid.NewGuid():N}" };
+
+    /// <summary>
+    /// Verifies that switching tenant ends the session it replaces rather than leaving it redeemable:
+    /// the stored pair the request arrived with is gone afterwards, so the refresh token the caller
+    /// held a moment ago cannot be exchanged for a session back in the tenant they left, and the rows
+    /// do not accumulate one per switch.
+    /// </summary>
+    /// <remarks>
+    /// The client here carries cookies, which is what a browser does and what
+    /// <see cref="TenancyTestsBase.ClientForAsync"/> deliberately does not: the refresh token travels
+    /// in a cookie, so only a client that sends it can have the pair it names revoked.
+    /// </remarks>
+    [Fact]
+    public async Task Switching_Revokes_The_Replaced_Sessions_Stored_Pair()
+    {
+        var (tenantA, _) = await PrepareTenantAsync();
+        var (tenantB, _) = await PrepareTenantAsync();
+        var user = await CreateAccountWithoutMembershipAsync();
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        await JoinAsync(tenantA.Id, user.Id);
+        await JoinAsync(tenantB.Id, user.Id);
+
+        var client = App.CreateClient();
+        var (signedIn, session) = await client.POSTAsync<TokenEndpoint, TokenRequest, TokenResponse>(
+            new() { Username = user.Username, Password = TestUsers.DefaultPassword });
+
+        signedIn.StatusCode.Should().Be(HttpStatusCode.OK);
+        TestsHelper.SetAuthToken(client, session.AccessToken);
+
+        var beforeSwitch = await StoredSessionIdsAsync(user.Id);
+
+        beforeSwitch.Should().ContainSingle("signing in stored the one pair the session carries");
+
+        var (response, _) = await client
+            .POSTAsync<TenantSwitchEndpoint, TenantSwitchRequest, TenantSwitchResponse>(new() { TenantId = tenantA.Id });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var afterSwitch = await StoredSessionIdsAsync(user.Id);
+
+        afterSwitch.Should().NotIntersectWith(beforeSwitch,
+            "the pair the switch replaced is revoked, so the refresh token it was issued with can no longer be redeemed");
+        afterSwitch.Should().ContainSingle("the switch leaves one live session rather than one more than it found");
+
+        var stored = await DbContext.AuthTokens
+            .AsNoTracking()
+            .Where(row => row.UserId == user.Id)
+            .ToListAsync(cancellationToken);
+
+        stored.Should().ContainSingle().Which.TenantId.Should().Be(tenantA.Id,
+            "and the session that survives is the one the switch established");
+    }
+
+    /// <summary>
+    /// The identities of the token pairs stored for one account, which is how a test tells a session
+    /// that was replaced from one that is still redeemable.
+    /// </summary>
+    /// <param name="userId">The account whose stored pairs are read.</param>
+    /// <returns>The identifiers of the rows standing for that account.</returns>
+    private async Task<List<Guid>> StoredSessionIdsAsync(Guid userId)
+        => await DbContext.AuthTokens
+            .AsNoTracking()
+            .Where(row => row.UserId == userId)
+            .Select(row => row.Id)
+            .ToListAsync(TestContext.Current.CancellationToken);
 }

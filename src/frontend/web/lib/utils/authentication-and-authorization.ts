@@ -21,7 +21,10 @@ export interface AuthState {
  * permissions list is treated as "no permission required".
  *
  * The roles held in state are the ones the API returns for the tenant the
- * user is acting in, so the answer is already scoped to that tenant and no
+ * user is acting in, together with their platform-scoped roles, which belong
+ * to no tenant and are granted in every one - the same set the API authorizes
+ * a request from, so a screen is offered here exactly when the call behind it
+ * would be allowed. The answer is already scoped to the active tenant and no
  * tenant argument is needed. The check deliberately does not require an
  * active tenant: platform-tier permissions must keep evaluating while the
  * user is acting in no tenant at all.

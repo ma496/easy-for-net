@@ -96,4 +96,30 @@ public class GetInfoTests(App app) : TenancyTestsBase(app)
         againResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         again.ActiveTenantId.Should().Be(TestTenants.SecondTenantId);
     }
+
+    /// <summary>
+    /// Verifies that the roles reported while acting in a tenant include the caller's platform-scoped
+    /// roles, not just that tenant's own. A platform-scoped role belongs to no tenant and the session
+    /// check grants its permissions in every one, so leaving it out here would have the web
+    /// application hide screens - and refuse navigation to them - that the API would have admitted.
+    /// </summary>
+    [Fact]
+    public async Task Reports_Platform_Roles_While_Acting_In_A_Tenant()
+    {
+        var administrator = await SignInAsPlatformAdministratorActingInATenantAsync();
+
+        var (response, info) = await App.Client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        info.Id.Should().Be(administrator.Id);
+        info.ActiveTenantId.Should().NotBeNull("the account was signed in acting inside a tenant of its own");
+
+        info.Roles.Select(role => role.Id).Should().Contain(
+            TestRoles.PlatformAdminRoleId,
+            "a platform-scoped role is held in every tenant, so acting in one does not hide it");
+
+        info.Roles.SelectMany(role => role.Permissions).Select(permission => permission.Name).Should().Contain(
+            Allow.Platform_Administration,
+            "and what the web application computes from those roles is what the API will actually allow");
+    }
 }

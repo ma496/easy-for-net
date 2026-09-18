@@ -7,9 +7,21 @@ using Backend.Features.Identity.Core.Entities;
 /// This endpoint that handles <c>PUT /users/{id}</c> to update a user's profile, active state, and role memberships.
 /// </summary>
 [AllowPlatformNoTenant]
-sealed class UserUpdateEndpoint(IUserService userService, AppDbContext dbContext)
+sealed class UserUpdateEndpoint(IUserService userService,
+                                AppDbContext dbContext,
+                                ICurrentUserService currentUserService,
+                                ITenantAuthorizationService tenantAuthorizationService,
+                                ITenantContext tenantContext)
     : Endpoint<UserUpdateRequest, UserUpdateResponse>
 {
+    /// <summary>
+    /// The refusal reported when the account named is a shared identity: it belongs to another tenant
+    /// as well, or holds a platform-scoped role. What this endpoint writes - the names, and whether the
+    /// account is active at all - follows the account into every tenant it belongs to, so a tenant may
+    /// write it only for an account that is its own.
+    /// </summary>
+    private const string SharedAccountMessage = "User belongs to other tenants and can only be updated by a platform administrator";
+
     public override void Configure()
     {
         Put("{id}");
@@ -32,6 +44,16 @@ sealed class UserUpdateEndpoint(IUserService userService, AppDbContext dbContext
         }
         if (entity.SystemCreated)
             ThrowError("System-created user cannot be updated", ErrorCodes.SystemCreatedUserCannotBeUpdated);
+
+        // An account is one identity across every tenant it belongs to, and the fields written below are
+        // the account's own rather than this tenant's view of it: deactivating it locks it out
+        // everywhere, and renaming it renames it everywhere. Administering one tenant is therefore not
+        // standing enough to write them for an account that also belongs to another tenant or holds a
+        // platform-scoped role - otherwise anyone who can create a tenant could add a member of somebody
+        // else's tenant to it and lock them out of theirs. Such an account is administered by its owner
+        // or by a platform administrator; what it may do *inside this tenant* stays administrable here,
+        // through the tenant's own membership surface.
+        await GuardSharedAccountAsync(entity.Id, cancellationToken);
 
         // The roles this endpoint may hand out and take away are the roles of the tenant being acted in
         // and no others, so they are read straight through the tenant query filter rather than through
@@ -80,6 +102,29 @@ sealed class UserUpdateEndpoint(IUserService userService, AppDbContext dbContext
         // assignment the account holds, so the response never names another tenant's role.
         response.Roles = requestedRoleIds;
         await Send.ResponseAsync(response, cancellation: cancellationToken);
+    }
+
+    /// <summary>
+    /// Refuses the request when the account reaches beyond the tenant being acted in. A platform
+    /// administrator administers every account and is never refused here.
+    /// </summary>
+    /// <param name="userId">The account being written.</param>
+    /// <param name="cancellationToken">Token used to cancel the read.</param>
+    private async Task GuardSharedAccountAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        if (currentUserService.HasPermission(Allow.Platform_Administration))
+        {
+            return;
+        }
+
+        // A caller acting in no tenant and holding no platform administration administers no accounts at
+        // all - the set this account was read from is empty for them - so reaching this with no tenant
+        // means something above changed; it is refused rather than waved through.
+        if (tenantContext.CurrentTenantId is not { } activeTenantId
+            || await tenantAuthorizationService.ReachesBeyondTenantAsync(userId, activeTenantId, cancellationToken))
+        {
+            ThrowError(SharedAccountMessage, ErrorCodes.UserSharedAcrossTenants);
+        }
     }
 }
 

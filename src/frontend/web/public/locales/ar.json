@@ -217,7 +217,8 @@
       "crossTenantFileAccess": "هذا الملف يخص مستأجرًا آخر",
       "tenantMembershipRevoked": "تم إلغاء عضويتك في هذا المستأجر",
       "platformPermissionNotGrantable": "لا يمكن منح أذونات المنصة لدور مستأجر",
-      "concurrentModification": "تم تغيير هذا السجل بواسطة شخص آخر. أعد التحميل وحاول مرة أخرى."
+      "concurrentModification": "تم تغيير هذا السجل بواسطة شخص آخر. أعد التحميل وحاول مرة أخرى.",
+      "userSharedAcrossTenants": "ينتمي هذا المستخدم إلى مستأجرين آخرين ولا يمكن تغييره إلا بواسطة مسؤول المنصة"
     }
   },
   "table": {

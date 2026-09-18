@@ -1,13 +1,16 @@
 namespace Backend.Features.Notifications.Endpoints.Notifications;
 
 using Backend.Features.Identity.Core;
+using Backend.Features.Notifications.Core;
 using Microsoft.EntityFrameworkCore;
 
 /// <summary>
 /// GET endpoint that returns the distinct set of notification group names used for filtering in the UI.
 /// </summary>
 [AllowPlatformNoTenant]
-sealed class NotificationGetGroupsEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService)
+sealed class NotificationGetGroupsEndpoint(AppDbContext dbContext,
+                                           ICurrentUserService currentUserService,
+                                           ITenantContext tenantContext)
     : EndpointWithoutRequest<NotificationGetGroupsResponse>
 {
     public override void Configure()
@@ -25,9 +28,18 @@ sealed class NotificationGetGroupsEndpoint(AppDbContext dbContext, ICurrentUserS
             return;
         }
 
+        // The filter options have to be drawn from the very set the list shows, so the visibility rule
+        // is the same one every other notification surface uses: relax the tenant restriction by name
+        // and narrow straight back down with VisibleTo. Reading through the tenant filter instead would
+        // leave out every platform-wide notification - those name no tenant, so the filter can never
+        // match them - and the list would show a group the filter did not offer.
+        var activeTenantId = tenantContext.CurrentTenantId;
+
         var groups = await dbContext.Notifications
             .AsNoTracking()
-            .Where(x => x.Group != null && (x.UserId == null || x.UserId == userId.Value))
+            .AcrossAllTenants()
+            .VisibleTo(userId.Value, activeTenantId)
+            .Where(x => x.Group != null)
             .Select(x => x.Group!)
             .Distinct()
             .OrderBy(x => x)

@@ -217,7 +217,8 @@
       "crossTenantFileAccess": "此文件属于其他租户",
       "tenantMembershipRevoked": "您在此租户中的成员资格已被撤销",
       "platformPermissionNotGrantable": "平台权限无法授予租户角色",
-      "concurrentModification": "此记录已被他人修改。请重新加载后重试。"
+      "concurrentModification": "此记录已被他人修改。请重新加载后重试。",
+      "userSharedAcrossTenants": "该用户同时属于其他租户，只能由平台管理员更改"
     }
   },
   "table": {

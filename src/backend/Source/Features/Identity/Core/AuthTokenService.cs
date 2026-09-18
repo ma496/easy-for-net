@@ -44,6 +44,21 @@ public interface IAuthTokenService
     /// <param name="userId">The user whose tokens are revoked.</param>
     /// <param name="cancellationToken">Token used to cancel the delete.</param>
     Task RevokeAllAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes the one stored pair a refresh token belongs to, ending that session and no other. This
+    /// is how a session that is being replaced in place - the tenant it acts in has changed, so a new
+    /// pair is issued for the same signed-in account - stops the pair it replaces from being refreshed
+    /// afterwards, while the account's sessions on other devices carry on untouched.
+    /// </summary>
+    /// <param name="userId">The account the token belongs to.</param>
+    /// <param name="refreshToken">The refresh token whose stored pair is revoked.</param>
+    /// <param name="cancellationToken">Token used to cancel the delete.</param>
+    /// <remarks>
+    /// A token that names no stored pair - already consumed, already expired and cleaned, or never
+    /// issued - is not an error: there is simply nothing left to revoke.
+    /// </remarks>
+    Task RevokeRefreshTokenAsync(Guid userId, string refreshToken, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -133,6 +148,22 @@ public class AuthTokenService(AppDbContext dbContext) : IAuthTokenService
     {
         await dbContext.AuthTokens
             .Where(token => token.UserId == userId)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task RevokeRefreshTokenAsync(Guid userId, string refreshToken, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            return;
+        }
+
+        // Matched on the stored hash, exactly as consuming one is: the token itself is never stored, so
+        // the row can only be found by hashing what the caller presented.
+        var refreshTokenHash = HashToken(refreshToken);
+
+        await dbContext.AuthTokens
+            .Where(token => token.UserId == userId && token.RefreshToken == refreshTokenHash)
             .ExecuteDeleteAsync(cancellationToken);
     }
 

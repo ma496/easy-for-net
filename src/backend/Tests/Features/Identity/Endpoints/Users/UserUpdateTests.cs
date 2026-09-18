@@ -164,4 +164,64 @@ public class UserUpdateTests(App app) : TenancyTestsBase(app)
         (after.Username, after.Email, after.FirstName, after.LastName, after.IsActive).Should().Be(before,
             "no part of the update was applied to the account of another tenant");
     }
+
+    /// <summary>
+    /// Verifies that an account belonging to another tenant as well is not one tenant's to change:
+    /// the refusal names the shared standing, and the account is left active. An account is one
+    /// identity across every tenant it belongs to, so deactivating it here would lock it out of the
+    /// other tenant too - and anybody can reach this standing unaided, by creating a tenant of their
+    /// own and adding somebody else's member to it.
+    /// </summary>
+    [Fact]
+    public async Task Account_Shared_With_Another_Tenant_Cannot_Be_Updated()
+    {
+        var acted = await CreateTenantAsync();
+        var other = await CreateTenantAsync();
+        var administrator = await CreateTenantUserAsync(
+            acted.Id, await CreateTenantRoleAsync(acted.Id, Allow.User_Update));
+        var ordinaryRoleId = await CreateTenantRoleAsync(acted.Id, Allow.User_View);
+        var shared = await CreateTenantUserAsync(acted.Id, ordinaryRoleId);
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        await MembershipService.AddAsync(other.Id, shared.Id, [], cancellationToken);
+
+        var client = await ClientForAsync(administrator.Username, acted.Id);
+
+        var (response, problem) = await client.PUTAsync<UserUpdateEndpoint, UserUpdateRequest, ProblemDetails>(
+            new() { Id = shared.Id, FirstName = "Locked", LastName = "Out", IsActive = false, Roles = [ordinaryRoleId] });
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        problem.Errors.Should().ContainSingle();
+        problem.Errors.First().Code.Should().Be(ErrorCodes.UserSharedAcrossTenants);
+
+        var stored = await DbContext.Users
+            .AsNoTracking()
+            .SingleAsync(account => account.Id == shared.Id, cancellationToken);
+
+        stored.IsActive.Should().BeTrue("nothing of the request was applied, so the account is still usable in the tenant it also belongs to");
+        stored.FirstName.Should().NotBe("Locked");
+    }
+
+    /// <summary>
+    /// Verifies the other half of that rule: an account that belongs to this tenant alone is
+    /// administered here exactly as before, so the refusal above is about the account being shared
+    /// rather than about the surface being closed.
+    /// </summary>
+    [Fact]
+    public async Task Account_Of_This_Tenant_Alone_Is_Still_Updated()
+    {
+        var acted = await CreateTenantAsync();
+        var administrator = await CreateTenantUserAsync(
+            acted.Id, await CreateTenantRoleAsync(acted.Id, Allow.User_Update));
+        var ordinaryRoleId = await CreateTenantRoleAsync(acted.Id, Allow.User_View);
+        var member = await CreateTenantUserAsync(acted.Id, ordinaryRoleId);
+
+        var client = await ClientForAsync(administrator.Username, acted.Id);
+
+        var (response, updated) = await client.PUTAsync<UserUpdateEndpoint, UserUpdateRequest, UserUpdateResponse>(
+            new() { Id = member.Id, FirstName = "Still", LastName = "Administered", IsActive = true, Roles = [ordinaryRoleId] });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        updated.FirstName.Should().Be("Still");
+    }
 }

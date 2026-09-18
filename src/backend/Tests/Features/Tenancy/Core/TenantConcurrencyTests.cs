@@ -230,4 +230,64 @@ public class TenantConcurrencyTests(App app) : TenancyTestsBase(app)
     /// <param name="Member">The member whose roles the two requests replace.</param>
     /// <param name="Roles">The four roles each request chooses its set from.</param>
     private sealed record ConcurrencyArrangement(Guid TenantId, User Administrator, User Member, List<Role> Roles);
+
+    /// <summary>
+    /// Verifies that two concurrent removals, each taking away one of a tenant's two administrators,
+    /// cannot between them leave the tenant with none: one of them is refused, and the tenant is still
+    /// administered afterwards.
+    /// </summary>
+    /// <remarks>
+    /// The last-administrator guard is a count followed by a write, so without the tenant being locked
+    /// for the duration of each transaction the two counts would both run before either write committed,
+    /// each would see the other administrator, and both removals would be allowed. The membership row's
+    /// concurrency token cannot catch this one: the two requests write different rows.
+    /// </remarks>
+    [Fact]
+    public async Task Concurrent_Removals_Cannot_Leave_A_Tenant_Unadministered()
+    {
+        var tenant = await CreateTenantAsync();
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        var firstAdministrator = await CreateAccountWithoutMembershipAsync();
+        await MembershipService.AddAsync(tenant.Id, firstAdministrator.Id, [], cancellationToken);
+
+        var administratorRoleId = await DbContext.Roles
+            .AcrossAllTenants()
+            .AsNoTracking()
+            .Where(role => role.TenantId == tenant.Id && role.SystemCreated)
+            .Select(role => role.Id)
+            .SingleAsync(cancellationToken);
+
+        var secondAdministrator = await CreateTenantUserAsync(tenant.Id, administratorRoleId);
+
+        // Two clients, because one bearer token cannot carry two requests at once. Both act as the
+        // platform administrator, so what differs between the calls is only the member each names.
+        var callerA = await PlatformAdministratorClientAsync();
+        var callerB = await PlatformAdministratorClientAsync();
+
+        var removals = await Task.WhenAll(
+            callerA.DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, TenantMemberRemoveResponse>(
+                new() { TenantId = tenant.Id, UserId = firstAdministrator.Id }),
+            callerB.DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, TenantMemberRemoveResponse>(
+                new() { TenantId = tenant.Id, UserId = secondAdministrator.Id }));
+
+        removals.Count(removal => removal.Response.StatusCode == HttpStatusCode.OK).Should().Be(
+            1,
+            "the two removals are decided one after the other, so the second one is the one that would leave the tenant unadministered and is refused");
+
+        (await TenantAuthorizationService.AnyOtherMemberHoldsTenantAdministrationAsync(tenant.Id, Guid.Empty, cancellationToken))
+            .Should().BeTrue("whichever removal survived, the tenant still has a member who can administer it");
+    }
+
+    /// <summary>
+    /// A client signed in as the seeded platform administrator, which administers every tenant's
+    /// membership from outside it. It carries no cookies, so its identity is exactly the token set here.
+    /// </summary>
+    /// <returns>A client acting as the platform administrator.</returns>
+    private async Task<HttpClient> PlatformAdministratorClientAsync()
+    {
+        var client = App.CreateClient(new ClientOptions { HandleCookies = false });
+        await TestsHelper.SetNewAuthTokenAsync(client, TestUsers.PlatformAdminUsername, TestUsers.AdminPassword);
+        return client;
+    }
 }

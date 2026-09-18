@@ -144,4 +144,34 @@ public class UserDeleteTests(App app) : TenancyTestsBase(app)
         (after!.Username, after.Email, after.FirstName, after.LastName, after.IsActive).Should().Be(before,
             "nothing about the account of another tenant was changed on the way to refusing the request");
     }
+
+    /// <summary>
+    /// Verifies that an account belonging to another tenant as well cannot be deleted from inside this
+    /// one: deleting an account ends it everywhere, so the tenant that shares it would lose a member it
+    /// never gave up. The refusal names the shared standing and the account survives.
+    /// </summary>
+    [Fact]
+    public async Task Account_Shared_With_Another_Tenant_Cannot_Be_Deleted()
+    {
+        var acted = await CreateTenantAsync();
+        var other = await CreateTenantAsync();
+        var administrator = await CreateTenantUserAsync(
+            acted.Id, await CreateTenantRoleAsync(acted.Id, Allow.User_Delete));
+        var shared = await CreateTenantUserAsync(acted.Id);
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        await MembershipService.AddAsync(other.Id, shared.Id, [], cancellationToken);
+
+        var client = await ClientForAsync(administrator.Username, acted.Id);
+
+        var (response, problem) = await client.DELETEAsync<UserDeleteEndpoint, UserDeleteRequest, ProblemDetails>(
+            new() { Id = shared.Id });
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        problem.Errors.Should().ContainSingle();
+        problem.Errors.First().Code.Should().Be(ErrorCodes.UserSharedAcrossTenants);
+
+        (await DbContext.Users.AsNoTracking().AnyAsync(account => account.Id == shared.Id, cancellationToken))
+            .Should().BeTrue("the account the other tenant also relies on is left in place");
+    }
 }

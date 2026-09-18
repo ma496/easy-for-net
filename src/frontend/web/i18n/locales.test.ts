@@ -46,6 +46,7 @@ const tenantErrorCodes = [
   'tenantMembershipRevoked',
   'platformPermissionNotGrantable',
   'concurrentModification',
+  'userSharedAcrossTenants',
 ]
 
 /** The keys the tenant screens render from, one per string a person reads on them (AC-075). */

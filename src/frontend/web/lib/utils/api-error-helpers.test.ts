@@ -19,6 +19,7 @@ const tenantErrorCodes = [
   'tenantMembershipRevoked',
   'platformPermissionNotGrantable',
   'concurrentModification',
+  'userSharedAcrossTenants',
 ] as const
 
 /** The dictionary keys the fake below knows: the tenant codes, and the status titles and messages. */

@@ -13,8 +13,10 @@ using Backend.Features.Tenancy.Core;
 /// Marked <see cref="AllowNoTenantAttribute"/> because the tenant being administered travels in the
 /// route rather than in the session: a platform administrator acting in no tenant, and a member whose
 /// session is active in one of their tenants while they read the members of another, both reach this
-/// surface. The route segment names the tenant being administered and never the tenant the request
-/// acts in, which is why it is authorized explicitly below instead of being trusted.
+/// surface. The route segment names the tenant being read and never the tenant the request acts in,
+/// which is why it is authorized explicitly below instead of being trusted: the permission is read
+/// for that tenant rather than taken from claims minted for whichever tenant the session happens to
+/// be acting in.
 /// <para>
 /// The rows are produced by <see cref="ITenantAuthorizationService.GetTenantMembersAsync"/> rather
 /// than by a query written here: a member's username, email and profile are user-account data owned
@@ -24,7 +26,6 @@ using Backend.Features.Tenancy.Core;
 /// </remarks>
 [AllowNoTenant]
 sealed class TenantMemberListEndpoint(ICurrentUserService currentUserService,
-                                      ITenantMembershipService tenantMembershipService,
                                       ITenantAuthorizationService tenantAuthorizationService) : Endpoint<TenantMemberListRequest, TenantMemberListResponse>
 {
     /// <summary>
@@ -32,7 +33,7 @@ sealed class TenantMemberListEndpoint(ICurrentUserService currentUserService,
     /// the same answer whether that tenant exists or not, so this surface discloses nothing about
     /// tenants the caller has nothing to do with.
     /// </summary>
-    private const string NotTenantMemberMessage = "Caller is not a member of this tenant";
+    private const string NotTenantMemberMessage = "Caller may not view the members of this tenant";
 
     public override void Configure()
     {
@@ -44,16 +45,17 @@ sealed class TenantMemberListEndpoint(ICurrentUserService currentUserService,
     public override async Task HandleAsync(TenantMemberListRequest request, CancellationToken cancellationToken)
     {
         // Standing is checked before the tenant is read at all, and before anything about it reaches
-        // the response: a caller who is neither a platform administrator nor an active member of the
-        // tenant addressed is refused identically for a tenant that exists and one that does not.
+        // the response: a caller who may not view the members of the tenant addressed is refused
+        // identically for a tenant that exists and one that does not.
         if (!currentUserService.HasPermission(Allow.Platform_Administration))
         {
             // Platform administration is a claim test rather than a role-name test, because any tenant
-            // may define a role of any name; everyone else is admitted only by a live membership of the
-            // tenant named in the route, which a removed membership is not.
+            // may define a role of any name; everyone else is admitted only by holding this permission
+            // inside the tenant named in the route - which takes a live membership of it, and which
+            // standing in the tenant the session is acting in does not confer.
             var callerId = currentUserService.GetCurrentUserId();
             if (callerId is not { } caller
-                || !await tenantMembershipService.IsMemberAsync(request.TenantId, caller, cancellationToken))
+                || !await tenantAuthorizationService.HoldsTenantPermissionAsync(caller, request.TenantId, Allow.TenantMember_View, cancellationToken))
             {
                 ThrowError(NotTenantMemberMessage, ErrorCodes.NotTenantMember);
             }

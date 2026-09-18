@@ -444,4 +444,39 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
             .AsNoTracking()
             .Where(membership => membership.TenantId == tenantId && membership.UserId == userId)
             .ToListAsync(TestContext.Current.CancellationToken);
+
+    /// <summary>
+    /// Verifies that the last-administrator guard counts only administrators who could actually
+    /// administer: a member holding the administrator role whose account has been deactivated cannot
+    /// sign in, so leaving the tenant to them alone would leave it administrable by nobody. The removal
+    /// that would do so is refused.
+    /// </summary>
+    [Fact]
+    public async Task Deactivated_Administrator_Does_Not_Keep_The_Tenant_Administered()
+    {
+        var tenant = await CreateTenantAsync();
+        var deactivated = await CreateFirstMemberAsync(tenant.Id);
+        var administratorRoleId = await TenantAdministratorRoleIdAsync(tenant.Id);
+        var remaining = await CreateTenantUserAsync(tenant.Id, administratorRoleId);
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        var account = await DbContext.Users.SingleAsync(user => user.Id == deactivated.Id, cancellationToken);
+        account.IsActive = false;
+        await DbContext.SaveChangesAsync(cancellationToken);
+
+        await SetPlatformAdminAuthTokenAsync();
+
+        var (response, problem) = await App.Client
+            .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, ProblemDetails>(
+                new() { TenantId = tenant.Id, UserId = remaining.Id });
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        problem.Errors.Should().ContainSingle();
+        problem.Errors.First().Code.Should().Be(
+            ErrorCodes.LastTenantAdministrator,
+            "the only other holder of tenant administration cannot sign in, so removing this member would leave nobody able to administer the tenant");
+
+        (await MembershipService.IsMemberAsync(tenant.Id, remaining.Id, cancellationToken))
+            .Should().BeTrue("the removal was refused rather than corrected, so the member stays");
+    }
 }

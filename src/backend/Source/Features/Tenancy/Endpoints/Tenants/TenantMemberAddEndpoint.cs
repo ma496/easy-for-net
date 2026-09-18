@@ -15,11 +15,12 @@ using Backend.Features.Tenancy.Core;
 /// reaches the same surface. The route id is therefore never a way to choose the acting tenant - it
 /// is authorized here, explicitly, before anything is read.
 /// <para>
-/// The guards run in a fixed order, and the order is part of the contract. Membership is settled
-/// first, so a caller who is neither a platform administrator nor a member of the tenant named is
-/// refused identically whether that tenant exists or not, and the surface discloses nothing about
-/// tenants that are none of their business. Only then is the tenant looked up, then its lifecycle
-/// state, then the account, then the account's standing in the tenant, then the roles asked for.
+/// The guards run in a fixed order, and the order is part of the contract. Standing is settled
+/// first, so a caller who neither holds platform administration nor holds this permission inside the
+/// tenant named is refused identically whether that tenant exists or not, and the surface discloses
+/// nothing about tenants that are none of their business. Only then is the tenant looked up, then its
+/// lifecycle state, then the account, then the account's standing in the tenant, then the roles asked
+/// for.
 /// </para>
 /// <para>
 /// Whether the account was ever a member of this tenant before is not asked: a removed membership is
@@ -40,7 +41,7 @@ sealed class TenantMemberAddEndpoint(ITenantService tenantService,
     /// same answer for a tenant that does not exist, so the membership surface cannot be used to
     /// discover which tenants there are.
     /// </summary>
-    private const string NotTenantMemberMessage = "Caller is not a member of this tenant";
+    private const string NotTenantMemberMessage = "Caller may not administer the members of this tenant";
 
     /// <summary>
     /// The refusal reported for a tenant the caller may not act on. Absent, deleted and invisible are
@@ -76,13 +77,17 @@ sealed class TenantMemberAddEndpoint(ITenantService tenantService,
 
     public override async Task HandleAsync(TenantMemberAddRequest request, CancellationToken cancellationToken)
     {
-        // Asked before the tenant is looked up at all. Platform administration is a claim test rather
-        // than a role-name test, because any tenant may define a role of any name.
+        // Asked before the tenant is looked up at all. Membership of the tenant is not what authorizes
+        // this: the permission claims the request carries were minted for the tenant the session is
+        // acting in, and the tenant being administered is the one in the route, which may be another one
+        // entirely - so the permission is read for the tenant named in the route instead. Platform
+        // administration is a claim test rather than a role-name test, because any tenant may define a
+        // role of any name.
         if (!currentUserService.HasPermission(Allow.Platform_Administration))
         {
             var callerId = currentUserService.GetCurrentUserId();
             if (callerId is not { } callerUserId
-                || !await tenantMembershipService.IsMemberAsync(request.TenantId, callerUserId, cancellationToken))
+                || !await tenantAuthorizationService.HoldsTenantPermissionAsync(callerUserId, request.TenantId, Allow.TenantMember_Add, cancellationToken))
             {
                 ThrowError(NotTenantMemberMessage, ErrorCodes.NotTenantMember);
             }

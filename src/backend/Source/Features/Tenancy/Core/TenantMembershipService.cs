@@ -19,7 +19,9 @@ using Backend.Features.Identity.Core;
 /// The last-administrator guard lives here rather than in the endpoints, so that the one rule - a
 /// tenant is never left with no member holding tenant administration - cannot be applied by one
 /// write path and forgotten by another. Removal and role replacement need it asked at different
-/// moments, and it is asked correctly for each here, once.
+/// moments, and it is asked correctly for each here, once. Each write path also locks the tenant for
+/// the duration of its transaction, because a guard that counts administrators has to count them
+/// against a tenant nobody else is changing at the same moment.
 /// </para>
 /// <para>
 /// A tenant's own lifecycle is not this service's question. An active membership is a live membership
@@ -190,11 +192,15 @@ public class TenantMembershipService(AppDbContext dbContext,
     {
         var grantedRoleIds = roleIds.Distinct().ToList();
 
-        // Asked before the new row exists, so "the tenant has no member" describes the tenant as it
-        // stands rather than a state this very membership has already ended.
-        var tenantHasNoMember = !await Memberships(tenantId).AsNoTracking().AnyAsync(cancellationToken);
-
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        // Every membership change of a tenant is serialized against the tenant's own row, so two
+        // accounts joining an empty tenant at the same moment cannot both be its first member.
+        await LockTenantAsync(tenantId, cancellationToken);
+
+        // Asked inside the lock and before the new row exists, so "the tenant has no member" describes
+        // the tenant as it stands rather than a state this very membership has already ended.
+        var tenantHasNoMember = !await Memberships(tenantId).AsNoTracking().AnyAsync(cancellationToken);
 
         if (tenantHasNoMember)
         {
@@ -241,6 +247,12 @@ public class TenantMembershipService(AppDbContext dbContext,
 
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
+        // Taken before anything is read or written, so the administrator count below is made against a
+        // tenant no other membership change can be altering at the same moment. Without it two requests
+        // demoting two different administrators would each see the other's administration and leave the
+        // tenant with none.
+        await LockTenantAsync(tenantId, cancellationToken);
+
         await tenantAuthorizationService.ReplaceTenantRoleAssignmentsAsync(tenantId, userId, roleIds, cancellationToken);
 
         // The membership row is written with the assignments rather than left alone: it is what the
@@ -277,6 +289,10 @@ public class TenantMembershipService(AppDbContext dbContext,
         }
 
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        // Taken before the count below, so two requests removing two different administrators are
+        // decided one after the other rather than both against the state before either of them.
+        await LockTenantAsync(tenantId, cancellationToken);
 
         // Asked before anything is written and naming the member on their way out, because
         // administration held by somebody who is leaving must not count towards what survives their
@@ -315,6 +331,33 @@ public class TenantMembershipService(AppDbContext dbContext,
         => dbContext.TenantMemberships
             .AcrossAllTenants()
             .Where(membership => membership.TenantId == tenantId);
+
+    /// <summary>
+    /// Takes an exclusive lock on the tenant's own row for the rest of the transaction in progress, so
+    /// that the membership changes of one tenant happen one at a time.
+    /// </summary>
+    /// <param name="tenantId">The tenant whose row is locked.</param>
+    /// <param name="cancellationToken">Token used to cancel the statement.</param>
+    /// <remarks>
+    /// The last-administrator guard is a read followed by a write, and under the read-committed
+    /// isolation the database runs at, two such sequences can interleave: each demotes or removes a
+    /// different administrator, each still sees the other's administration standing while it counts,
+    /// and the tenant ends up with none. The membership row's <c>xmin</c> concurrency token cannot
+    /// catch that, because the two requests write different rows. Locking the tenant itself is what
+    /// serializes them, so the second request counts the administrators only once the first has
+    /// committed or rolled back and sees the state its own decision has to be made against.
+    /// <para>
+    /// The lock is held until the transaction ends and is taken on the tenant rather than on anything
+    /// finer, because what is being protected is a count over the whole tenant rather than any one
+    /// row of it. It blocks only concurrent membership writes in the same tenant; reads, and every
+    /// other tenant, are unaffected. A tenant row that is absent locks nothing and the caller's own
+    /// lookup reports it missing, exactly as it would have without this.
+    /// </para>
+    /// </remarks>
+    private Task LockTenantAsync(Guid tenantId, CancellationToken cancellationToken)
+        => dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"""SELECT 1 FROM tenancy."Tenants" WHERE "Id" = {tenantId} FOR UPDATE""",
+            cancellationToken);
 }
 
 /// <summary>

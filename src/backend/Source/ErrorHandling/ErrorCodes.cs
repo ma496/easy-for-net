@@ -46,4 +46,5 @@ public static class ErrorCodes
     public const string TenantMembershipRevoked = "tenantMembershipRevoked";
     public const string PlatformPermissionNotGrantable = "platformPermissionNotGrantable";
     public const string ConcurrentModification = "concurrentModification";
+    public const string UserSharedAcrossTenants = "userSharedAcrossTenants";
 }

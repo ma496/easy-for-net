@@ -217,7 +217,8 @@
       "crossTenantFileAccess": "This file belongs to another tenant",
       "tenantMembershipRevoked": "Your membership in this tenant has been revoked",
       "platformPermissionNotGrantable": "Platform permissions cannot be granted to a tenant role",
-      "concurrentModification": "This record was changed by someone else. Reload and try again."
+      "concurrentModification": "This record was changed by someone else. Reload and try again.",
+      "userSharedAcrossTenants": "This user belongs to other tenants and can only be changed by a platform administrator"
     }
   },
   "table": {

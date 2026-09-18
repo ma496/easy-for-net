@@ -6,8 +6,18 @@ using Backend.Features.Identity.Core;
 /// This endpoint that handles <c>DELETE /users/{id}</c> to remove an existing user (refusing to delete a system-created user).
 /// </summary>
 [AllowPlatformNoTenant]
-sealed class UserDeleteEndpoint(IUserService userService) : Endpoint<UserDeleteRequest, UserDeleteResponse>
+sealed class UserDeleteEndpoint(IUserService userService,
+                                ICurrentUserService currentUserService,
+                                ITenantAuthorizationService tenantAuthorizationService,
+                                ITenantContext tenantContext) : Endpoint<UserDeleteRequest, UserDeleteResponse>
 {
+    /// <summary>
+    /// The refusal reported when the account named is a shared identity: it belongs to another tenant
+    /// as well, or holds a platform-scoped role. Deleting an account ends it everywhere, so a tenant
+    /// may delete only an account that is its own.
+    /// </summary>
+    private const string SharedAccountMessage = "User belongs to other tenants and can only be deleted by a platform administrator";
+
     public override void Configure()
     {
         Delete("{id}");
@@ -29,6 +39,19 @@ sealed class UserDeleteEndpoint(IUserService userService) : Endpoint<UserDeleteR
         }
         if (entity.SystemCreated)
             ThrowError("System-created user cannot be deleted", ErrorCodes.SystemCreatedUserCannotBeDeleted);
+
+        // An account is one identity across every tenant it belongs to, and deleting it ends it in all
+        // of them. Administering one tenant is therefore not standing enough to delete an account that
+        // also belongs to another tenant or holds a platform-scoped role: that account is deleted by a
+        // platform administrator, while this tenant removes it from its own membership instead.
+        if (!currentUserService.HasPermission(Allow.Platform_Administration))
+        {
+            if (tenantContext.CurrentTenantId is not { } activeTenantId
+                || await tenantAuthorizationService.ReachesBeyondTenantAsync(entity.Id, activeTenantId, cancellationToken))
+            {
+                ThrowError(SharedAccountMessage, ErrorCodes.UserSharedAcrossTenants);
+            }
+        }
 
         // Delete the entity from the db - the account already read above, so the deletion cannot reach
         // one the caller may not administer.
