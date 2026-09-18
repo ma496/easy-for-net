@@ -241,6 +241,7 @@
       "status": "Estado",
       "date": "Fecha",
       "group": "Grupo",
+      "created": "Creado",
       "updated": "Actualizado",
       "identifier": "Identificador"
     },

@@ -93,10 +93,14 @@ export const TenantDetailView = ({ tenantId }: TenantDetailViewProps) => {
               <Badge variant="danger">{t('page.tenants.status.suspended')}</Badge>
             )}
           </DetailRow>
-          <DetailRow label={t('table.columns.type')}>
-            {tenant.systemCreated ? <Badge variant="info">{t('page.tenants.systemCreated')}</Badge> : '-'}
-          </DetailRow>
-          <DetailRow label={t('table.columns.date')}>{formatMoment(tenant.createdAt)}</DetailRow>
+          {/* Only the system-created tenant has a type worth naming, so the row is left out entirely rather than
+              shown holding a dash for every ordinary tenant. */}
+          {tenant.systemCreated && (
+            <DetailRow label={t('table.columns.type')}>
+              <Badge variant="info">{t('page.tenants.systemCreated')}</Badge>
+            </DetailRow>
+          )}
+          <DetailRow label={t('table.columns.created')}>{formatMoment(tenant.createdAt)}</DetailRow>
           <DetailRow label={t('table.columns.updated')}>{formatMoment(tenant.updatedAt)}</DetailRow>
         </div>
       </div>

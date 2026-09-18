@@ -241,6 +241,7 @@
       "status": "Status",
       "date": "Date",
       "group": "Group",
+      "created": "Created",
       "updated": "Updated",
       "identifier": "Identifier"
     },

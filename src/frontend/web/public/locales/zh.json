@@ -241,6 +241,7 @@
       "status": "状态",
       "date": "日期",
       "group": "组",
+      "created": "已创建",
       "updated": "已更新",
       "identifier": "标识符"
     },
