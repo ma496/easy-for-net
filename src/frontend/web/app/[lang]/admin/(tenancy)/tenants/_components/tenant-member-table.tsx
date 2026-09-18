@@ -10,7 +10,7 @@ import { SortDirection } from '@/store/api'
 import { Loader2, Plus, Trash2, UserCog } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { successToast, isAllowed, apiErrorAlert, confirmDeleteAlert } from '@/lib/utils'
-import { ApiErrorMessages, Badge } from '@/components/ui'
+import { ApiErrorMessages, Badge, Button } from '@/components/ui'
 import { useAppSelector } from '@/store/hooks'
 import { Allow } from '@/allow'
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
@@ -175,14 +175,13 @@ export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
       >
         <DataTableToolbar>
           {canAdd && (
-            <button
+            <Button
               type="button"
-              className="btn flex items-center gap-2 btn-primary"
+              icon={<Plus size={16} />}
               onClick={() => setIsAddOpen(true)}
             >
-              <Plus size={16} />
               <span className="hidden sm:inline">{t('page.tenants.members.addButton')}</span>
-            </button>
+            </Button>
           )}
         </DataTableToolbar>
 
