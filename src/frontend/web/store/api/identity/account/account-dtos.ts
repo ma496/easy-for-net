@@ -22,7 +22,7 @@ export interface GetUserInfoResponse {
   activeTenantId?: string
   activeTenant?: GetUserInfoTenant
   tenants: GetUserInfoTenant[]
-  isPlatformAdministrator: boolean
+  isPlatform: boolean
   roles: GetUserInfoRole[]
 }
 

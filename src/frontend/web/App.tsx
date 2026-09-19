@@ -5,7 +5,7 @@ import { toggleRTL, toggleTheme, setDarkMode, toggleMenu, toggleLayout, toggleAn
 import { AppLoading, ServiceUnavailableView } from '@/components/layouts'
 import { i18nConfig, Locale } from '@/i18n'
 import { useLazyGetUserInfoQuery } from './store/api/identity'
-import { isAllowed, isPathAvailable, isTenantScopedPath, resolvePlatformAdministratorLanding, resolveTenantLanding } from './lib/utils'
+import { isAllowed, isPathAvailable, isTenantScopedPath, resolvePlatformLanding, resolveTenantLanding } from './lib/utils'
 import { usePathname, useRouter } from 'next/navigation'
 import { getMatchedAuthUrl } from './auth-urls'
 import { CookieConsentDialog } from '@/components/custom'
@@ -56,7 +56,7 @@ function App({ children }: PropsWithChildren) {
     // A platform administrator acting in no tenant needs none: users, roles and notifications answer about the platform's own, and the tenants screens and the dashboard read no tenant data, so
     // neither a tenant refusal nor the lack of a selection sends them to the no-tenant screen or the chooser. A refusal is dropped while they stay where they are; only a screen that genuinely needs a
     // tenant - one not listed in tenant-routing, or the no-tenant screen - lands them on the dashboard instead. They can still pick a tenant from the header's switcher.
-    const platformLanding = resolvePlatformAdministratorLanding(authState.user)
+    const platformLanding = resolvePlatformLanding(authState.user)
     if (platformLanding) {
       if (authState.tenantError) {
         dispatch(clearTenantError())
@@ -93,6 +93,14 @@ function App({ children }: PropsWithChildren) {
         go(tenantLanding)
         return
       }
+    }
+
+    // A screen belonging to the other scope is not a refusal but a wrong turn, so it lands on the dashboard rather than on /unauthorized: the permissions the platform's own screens declare are
+    // platform-scoped and a tenant session never carries them, so a caller acting in a tenant is not short of a grant anybody could give them. It is also the moment a platform account enters a tenant
+    // from the tenants table - the page it entered from belongs to the scope it has just left - and answering that with a refusal would make a successful switch read as a failure.
+    if (!platformLanding && !isPathAvailable(authState.user, pathToCheck)) {
+      go('/admin')
+      return
     }
 
     const matchedUrl = getMatchedAuthUrl(pathToCheck)

@@ -71,7 +71,7 @@ public class TenantSeedingTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that the seeded platform administrator is a platform administrator - that it holds
-    /// <c>Platform.Administration</c>, and that the role granting it belongs to no tenant, so no tenant
+    /// the platform tier, and that the role granting its platform-scoped permissions belongs to no tenant, so no tenant
     /// role could ever have conferred it (AC-083) - and that it belongs to no tenant itself, the
     /// bootstrap tenant being administered by an account of its own.
     /// </summary>
@@ -97,18 +97,21 @@ public class TenantSeedingTests(App app) : TenancyTestsBase(app)
             TestRoles.PlatformAdminRoleId,
             "the seeded administrator holds the platform's own administrator role, which is the one belonging to no tenant");
 
+        administrator.IsPlatform.Should().BeTrue(
+            "the seeded platform account is marked as belonging to the platform tier, which is what admits it to platform scope");
+
         var grantingRoles = await DbContext.Roles
             .AcrossAllTenants()
             .AsNoTracking()
             .Where(role => role.UserRoles.Any(assignment => assignment.UserId == administrator.Id)
-                           && role.RolePermissions.Any(rolePermission => rolePermission.Permission.Name == Allow.Platform_Administration))
+                           && role.RolePermissions.Any(rolePermission => rolePermission.Permission.Scope == PermissionScope.Platform))
             .Select(role => new { role.Id, role.Name, role.TenantId })
             .ToListAsync(TestContext.Current.CancellationToken);
 
-        grantingRoles.Should().NotBeEmpty("the administrator holds platform administration and some role has to grant it");
+        grantingRoles.Should().NotBeEmpty("the administrator holds platform-scoped permissions and some role has to grant them");
         grantingRoles.Should().OnlyContain(
             role => role.TenantId == null,
-            "platform administration is granted only at platform scope, so no tenant role can confer it");
+            "a platform-scoped permission is granted only at platform scope, so no tenant role can confer it");
 
         var memberships = await DbContext.TenantMemberships
             .AcrossAllTenants()
@@ -201,9 +204,7 @@ public class TenantSeedingTests(App app) : TenancyTestsBase(app)
 
         roles.Should().NotBeEmpty("the seeder reconciles an administrator role at each scope, so the database holds roles");
 
-        var platformPermissionNames = App.Services
-            .GetRequiredService<IPermissionDefinitionService>()
-            .GetPlatformPermissionNames();
+        var platformPermissionNames = PlatformOnlyPermissionNames();
 
         foreach (var platformRole in roles.Where(role => role.TenantId is null && role.SystemCreated))
         {

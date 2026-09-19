@@ -6,16 +6,23 @@ using Backend.Features.Identity.Endpoints.Roles;
 using Backend.Tests.Features.Tenancy;
 
 /// <summary>
-/// Tests for the widening platform administration gives the role endpoints: the reader, the rename,
-/// the permission change and the delete all reach a role belonging to a tenant the caller holds no
-/// membership of (AC-113).
+/// Tests for the reach the platform tier gives the role endpoints: the reader, the rename, the
+/// permission change and the delete all act on a role belonging to a tenant the caller holds no
+/// membership of, once it has entered that tenant (AC-113).
 /// </summary>
 /// <remarks>
 /// <para>
-/// Every test here signs in as the seeded platform administrator and then acts on a tenant it has just
-/// been shown not to belong to, through <see cref="SignInAsPlatformAdministratorAsync"/>. That premise
-/// is asserted rather than assumed, because it is the whole of what these tests are about: a caller who
-/// happened to be a member would be reaching the role as a member, and the widening would be untested.
+/// Entering is how the reach is exercised, and the only way: a session carries the permissions of the
+/// scope it acts in, so a platform caller inside tenant A is an actor of tenant A and reaches nothing of
+/// tenant B - the last test here states that directly. What the tier gives is admission to any tenant
+/// without a membership, and inside it the tenant's own authority; it is not a standing that spans
+/// tenants at once.
+/// </para>
+/// <para>
+/// Every test here signs in as a platform account and enters the tenant it is about to act on, through
+/// <see cref="SignInAsPlatformAdministratorAsync"/>. The premise that it belongs to no tenant at all is
+/// asserted rather than assumed, because it is the whole of what these tests are about: a caller who
+/// happened to be a member would be reaching the role as a member, and the reach would be untested.
 /// </para>
 /// <para>
 /// The role acted on is one the test made, so it is not system-created and each of the four operations
@@ -141,17 +148,44 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Signs in as a platform administrator acting in a tenant of its own and proves the premise every
-    /// test here rests on: that the tenant named is one the caller holds no membership of, so what the
-    /// requests below reach is reached by the platform standing rather than by belonging there.
+    /// Signs in as a platform account, has it enter the tenant named, and proves the premise every test
+    /// here rests on: that the tenant is one the caller holds no membership of, so what the requests
+    /// below reach is reached by the tier that admitted it rather than by belonging there.
     /// </summary>
-    /// <param name="tenantId">The tenant the caller must not belong to.</param>
+    /// <param name="tenantId">The tenant the caller enters and must not belong to.</param>
     private async Task SignInAsPlatformAdministratorAsync(Guid tenantId)
     {
-        var administrator = await SignInAsPlatformAdministratorActingInATenantAsync();
+        var administrator = await SignInAsPlatformAdministratorEnteringAsync(tenantId);
 
         (await MembershipService.IsMemberAsync(tenantId, administrator.Id, TestContext.Current.CancellationToken))
-            .Should().BeFalse("the caller administers a tenant it does not belong to, which is the standing these tests are stated over");
+            .Should().BeFalse("the caller works inside a tenant it does not belong to, which is the standing these tests are stated over");
+    }
+
+    /// <summary>
+    /// Verifies that the reach stops at the tenant entered: a platform caller acting inside one tenant
+    /// is answered about a role of another exactly as it would be about a role that does not exist
+    /// (AC-111, AC-113).
+    /// </summary>
+    /// <remarks>
+    /// This is the other half of the four tests above, and it is what makes them say something. A
+    /// standing that spanned every tenant at once would pass all four and this one too by simply never
+    /// narrowing; what is actually being shown is that entering a tenant is what opens it, so a caller
+    /// that entered somewhere else is outside.
+    /// </remarks>
+    [Fact]
+    public async Task Does_Not_Reach_A_Role_Of_A_Tenant_It_Has_Not_Entered()
+    {
+        var entered = await CreateTenantAsync();
+        var other = await CreateTenantAsync();
+        var roleId = await CreateTenantRoleAsync(other.Id, Allow.Role_View);
+
+        await SignInAsPlatformAdministratorAsync(entered.Id);
+
+        var (response, _) = await App.Client
+            .GETAsync<RoleGetEndpoint, RoleGetRequest, RoleGetResponse>(new() { Id = roleId });
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound,
+            "acting inside a tenant is acting inside that tenant, so another tenant's role is absent exactly as a role that never existed is");
     }
 
     /// <summary>
@@ -197,19 +231,17 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
             .ToListAsync(TestContext.Current.CancellationToken);
 
     /// <summary>
-    /// Identifiers of permissions a tenant's own role may hold - the tenant tier of the catalogue, drawn
-    /// in a stable order so a test can name a set without depending on what happens to be stored first.
+    /// Identifiers of permissions a tenant's own role may hold - everything but the platform scope,
+    /// drawn in a stable order so a test can name a set without depending on what happens to be stored
+    /// first.
     /// </summary>
     /// <param name="take">How many to read.</param>
     /// <returns>The permission identifiers.</returns>
     private async Task<List<Guid>> TenantPermissionIdsAsync(int take)
     {
-        var platformPermissionNames = App.Services.GetRequiredService<IPermissionDefinitionService>()
-            .GetPlatformPermissionNames();
-
         return await DbContext.Permissions
             .AsNoTracking()
-            .Where(permission => !platformPermissionNames.Contains(permission.Name))
+            .Where(permission => permission.Scope != PermissionScope.Platform)
             .OrderBy(permission => permission.Name)
             .Take(take)
             .Select(permission => permission.Id)

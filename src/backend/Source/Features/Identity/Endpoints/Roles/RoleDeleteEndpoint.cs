@@ -8,7 +8,7 @@ using Backend.Features.Identity.Core;
 /// <remarks>
 /// Only the roles of the tenant being acted in can be deleted here: the lookup answers for that tenant
 /// alone, so a role belonging to another tenant is reported missing and is left untouched, exactly as
-/// an identifier naming no role at all would be. A caller holding platform administration is the one
+/// an identifier naming no role at all would be. A platform account that has entered the tenant is the one
 /// exception and reaches any tenant's role. A tenant's system-created administrator role is refused
 /// outright, so a tenant cannot be left without one. Deletion is soft: the row is retained and stops
 /// being read anywhere, so the role grants nothing from the next request on while its name stays

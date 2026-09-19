@@ -17,7 +17,7 @@ const userInfo: GetUserInfoResponse = {
   id: 'user-1',
   username: 'someone',
   email: 'someone@example.com',
-  isPlatformAdministrator: false,
+  isPlatform: false,
   activeTenantId: 'b',
   activeTenant: { id: 'b', name: 'Tenant b', identifier: 't-b' },
   tenants: [

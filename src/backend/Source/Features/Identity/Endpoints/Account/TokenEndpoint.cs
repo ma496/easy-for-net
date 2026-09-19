@@ -27,7 +27,9 @@ using Backend.Features.Identity.Core.Entities;
 /// With no tenant named the session starts where it always has - from the memberships the account
 /// holds at that moment. Exactly one active membership starts the session inside that tenant with
 /// nothing for the user to choose, while none and several alike start a session that acts in no
-/// tenant, leaving every tenant-scoped operation refused until a tenant is selected.
+/// tenant, leaving every tenant-scoped operation refused until a tenant is selected. That is not a
+/// refusal to sign in: an account with no tenant yet still reaches account self-service and the
+/// self-service onboarding that gives it one, and a platform account works there by design.
 /// </para>
 /// </remarks>
 [AllowNoTenant]
@@ -49,7 +51,7 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IOp
     /// <summary>
     /// The refusal reported when the account holds no active membership in the tenant it named.
     /// Holding permissions - even every permission - in another tenant is not standing in this one;
-    /// only platform administration, which belongs to no tenant at all, is.
+    /// only the platform tier, which belongs to no tenant at all, is.
     /// </summary>
     private const string NotTenantMemberMessage = "You are not a member of this tenant";
 
@@ -197,18 +199,17 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IOp
             ThrowError(TenantNotFoundMessage, ErrorCodes.TenantNotFound);
         }
 
-        // Read from the membership rows rather than from anything the account carries. Platform
-        // administration is the one standing that comes from no membership: it belongs to no tenant and
-        // holds in all of them, so a platform administrator may name any tenant here and start inside
-        // it - which is how they reach a tenant that has reported a problem, without one of its members
-        // having to sign in for them. It is read from the account's platform-scoped roles, because at
-        // this point in the request there are no permission claims to ask: the session being
-        // authorized is the one about to be established.
+        // Read from the membership rows rather than from anything the request carries. The platform
+        // tier is the one standing that comes from no membership: it belongs to no tenant and holds in
+        // all of them, so a platform account may name any tenant here and start inside it - which is how
+        // it reaches a tenant that has reported a problem, without one of that tenant's members having
+        // to sign in for it. It is read off the account, because at this point in the request there are
+        // no claims to ask: the session being authorized is the one about to be established.
         var holdsMembership = await dbContext.TenantMemberships
             .AsNoTracking()
             .AcrossAllTenants()
             .AnyAsync(membership => membership.TenantId == tenant.Id && membership.UserId == user.Id, cancellationToken);
-        if (!holdsMembership && !await HoldsPlatformAdministrationAsync(user.Id, cancellationToken))
+        if (!holdsMembership && !user.IsPlatform)
         {
             ThrowError(NotTenantMemberMessage, ErrorCodes.NotTenantMember);
         }
@@ -220,24 +221,6 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IOp
 
         return tenant.Id;
     }
-
-    /// <summary>
-    /// Whether the account holds platform administration through a platform-scoped role - one
-    /// belonging to no tenant. Asked of the roles rather than of a permission the account holds
-    /// anywhere, because a role belonging to a tenant can never confer this, and so no tenant can mint
-    /// for itself the authority to be signed into from outside.
-    /// </summary>
-    /// <param name="userId">The account that has just authenticated.</param>
-    /// <param name="cancellationToken">Token used to cancel the read.</param>
-    /// <returns><see langword="true"/> when the account is a platform administrator.</returns>
-    private async Task<bool> HoldsPlatformAdministrationAsync(Guid userId, CancellationToken cancellationToken)
-        => await dbContext.Roles
-            .AsNoTracking()
-            .AcrossAllTenants()
-            .AnyAsync(role => role.TenantId == null
-                              && role.RolePermissions.Any(rolePermission => rolePermission.Permission.Name == Allow.Platform_Administration)
-                              && dbContext.UserRoles.Any(assignment => assignment.UserId == userId && assignment.RoleId == role.Id),
-                      cancellationToken);
 
     /// <summary>
     /// Builds the principal the session being established is evaluated as, holding the account's identity

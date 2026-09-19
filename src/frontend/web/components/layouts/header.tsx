@@ -10,7 +10,7 @@ import { Menu } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { NotificationBell } from '@/components/notifications'
 import { useNotificationHub } from '@/hooks'
-import { isPlatformAdministratorWithoutTenant } from '@/lib/utils'
+import { isPlatformWithoutTenant } from '@/lib/utils'
 import Image from 'next/image'
 
 /**
@@ -21,7 +21,7 @@ export const Header = () => {
   const dispatch = useAppDispatch()
   const themeConfig = useAppSelector((state) => state.theme)
   // Notifications are read in the tenant being acted in, or in platform scope by a platform administrator acting in none; anybody else has none to show.
-  const canReadNotifications = useAppSelector((state) => state.auth.activeTenant != null || isPlatformAdministratorWithoutTenant(state.auth.user))
+  const canReadNotifications = useAppSelector((state) => state.auth.activeTenant != null || isPlatformWithoutTenant(state.auth.user))
   const { t } = useTranslation()
 
   useNotificationHub()

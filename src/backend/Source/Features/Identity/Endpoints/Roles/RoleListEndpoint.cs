@@ -7,16 +7,19 @@ using Backend.Features.Identity.Core.Entities;
 /// This endpoint that handles <c>GET /roles</c> to return a paginated, searchable list of roles with their permissions and user counts.
 /// </summary>
 /// <remarks>
-/// The rows are the roles of the tenant being acted in and no other, so two tenants may each define a
-/// role of the same name without either one appearing in the other's list, search or total. A caller
-/// holding platform administration is the single exception: acting in a tenant they list roles across
-/// every tenant, acting in no tenant they list the platform roles, and either way they may name one
-/// tenant with the optional tenant filter, which is what lets a role picker offer the roles of the
-/// tenant whose members are being administered. For every other caller
-/// the filter is ignored rather than honoured, so naming a tenant can never widen a caller's own view.
+/// The rows are the roles of the scope being acted in and no other: the tenant's own inside a tenant,
+/// so two tenants may each define a role of the same name without either one appearing in the other's
+/// list, search or total, and the platform's own - those belonging to no tenant - in platform scope.
+/// A platform account acting in no tenant may additionally name one tenant with the optional tenant
+/// filter, which is what lets a role picker offer the roles of the tenant whose members are being
+/// administered from the tenants table. For every other caller the filter is ignored rather than
+/// honoured, so naming a tenant can never widen a caller's own view.
 /// </remarks>
 [AllowPlatformNoTenant]
-sealed class RoleListEndpoint(IRoleService roleService, ICurrentUserService currentUserService, AppDbContext dbContext) : Endpoint<RoleListRequest, RoleListResponse>
+sealed class RoleListEndpoint(IRoleService roleService,
+                              ICurrentUserService currentUserService,
+                              ITenantContext tenantContext,
+                              AppDbContext dbContext) : Endpoint<RoleListRequest, RoleListResponse>
 {
     public override void Configure()
     {
@@ -27,16 +30,16 @@ sealed class RoleListEndpoint(IRoleService roleService, ICurrentUserService curr
 
     public override async Task HandleAsync(RoleListRequest request, CancellationToken cancellationToken)
     {
-        // The roles the caller may see: the tenant's own, widened to every tenant's for a platform
-        // administrator. The search, the tenant filter and the total below all narrow from this one
+        // The roles the caller may see: the scope's own - the tenant's inside a tenant, the platform's
+        // in platform scope. The search, the tenant filter and the total below all narrow from this one
         // query, so none of them can report a role the caller is not entitled to see.
-        // The tenant filter is honoured only for a platform administrator, and names the tenant whose
-        // roles are wanted directly - including from platform scope, where the unfiltered list holds the
-        // platform roles alone and a tenant's member administration still needs that tenant's roles. The
-        // tier is read from the caller's live permission claims rather than from anything in the request,
-        // so a caller acting in a tenant who names a tenant is answered from the tenant they are acting
-        // in, exactly as if they had named none.
-        var roles = request.TenantId is { } tenantId && currentUserService.HasPermission(Allow.Platform_Administration)
+        // The tenant filter is honoured only for a platform account acting in no tenant, and names the
+        // tenant whose roles are wanted directly: the unfiltered list holds the platform roles alone
+        // there, while administering a tenant's members from the tenants table still needs that tenant's
+        // roles. The tier and the scope are read from the request's own session rather than from
+        // anything in the payload, so a caller acting in a tenant who names a tenant is answered from
+        // the tenant they are acting in, exactly as if they had named none.
+        var roles = request.TenantId is { } tenantId && currentUserService.IsPlatform() && tenantContext.IsPlatformScope()
             ? dbContext.Roles.AcrossAllTenants().Where(x => x.TenantId == tenantId)
             : roleService.Roles();
 

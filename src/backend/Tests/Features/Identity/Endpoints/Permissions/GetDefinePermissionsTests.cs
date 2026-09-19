@@ -7,8 +7,9 @@ using Backend.Tests.Features.Tenancy;
 /// <summary>
 /// Tests for the <see cref="GetDefinePermissionsEndpoint"/> covering the catalogue a caller is offered:
 /// the one declared in code, identical in every tenant and the same on every read (AC-040), narrowed to
-/// the tenant tier for a caller who could not grant a platform permission (AC-114), and returned whole
-/// with the two tiers distinguishable for a platform administrator (AC-115).
+/// what a tenant role can hold for a caller acting inside a tenant (AC-114), and narrowed to the
+/// platform scope, with each leaf carrying the scope it was declared with, for a platform account
+/// acting in none (AC-115).
 /// </summary>
 public class GetDefinePermissionsTests(App app) : TenancyTestsBase(app)
 {
@@ -20,8 +21,8 @@ public class GetDefinePermissionsTests(App app) : TenancyTestsBase(app)
         App.Services.GetRequiredService<IPermissionDefinitionService>();
 
     /// <summary>
-    /// Verifies that the catalogue a platform administrator is offered is the same set in each of two
-    /// tenants, and is the set the code declares (AC-040).
+    /// Verifies that the catalogue a caller is offered is the same set in each of two tenants, and is
+    /// the set the code declares for a caller acting inside one (AC-040).
     /// </summary>
     /// <remarks>
     /// The same caller acts in both tenants, so what is compared is one identity's view of the catalogue
@@ -45,23 +46,23 @@ public class GetDefinePermissionsTests(App app) : TenancyTestsBase(app)
             "the catalogue is the same for every tenant, so the tenant a caller is acting in cannot be read off it");
 
         inFirst.Should().BeEquivalentTo(
-            [.. DefinitionService.GetFlattenedPermissions().Select(permission => permission.Name)],
-            "and it is the catalogue the code declares: the same leaves, no more and no fewer");
+            [.. DefinitionService.GetPermissionNamesInScope(PermissionScope.Tenant)],
+            "and it is the catalogue the code declares, narrowed to what can be exercised inside a tenant: the same leaves, no more and no fewer");
     }
 
     /// <summary>
-    /// Verifies that a caller without platform administration is offered tenant-tier permissions alone,
+    /// Verifies that a caller acting inside a tenant is offered the permissions exercisable there alone,
     /// so no permission it could never grant through a tenant role is put in front of it (AC-114).
     /// </summary>
     /// <remarks>
     /// The caller administers a tenant of its own, which is what makes the filter meaningful: it is
     /// exactly the caller the role-permission surface is meant for. The set is compared against the
-    /// tenant tier of the declaration rather than merely examined for the platform one, because both
+    /// tenant scope of the declaration rather than merely examined for the platform one, because both
     /// halves matter - a platform permission leaking in would offer the caller something it cannot grant,
     /// and a tenant permission dropped would hide one it can.
     /// </remarks>
     [Fact]
-    public async Task Tenant_Caller_Receives_Only_Tenant_Permissions()
+    public async Task Tenant_Caller_Receives_Only_Tenant_Scoped_Permissions()
     {
         var tenant = await CreateTenantAsync();
         var administrator = await CreateTenantUserAsync(
@@ -69,30 +70,31 @@ public class GetDefinePermissionsTests(App app) : TenancyTestsBase(app)
 
         var names = await CatalogueNamesAsync(await ClientForAsync(administrator.Username));
 
-        var platformNames = DefinitionService.GetPlatformPermissionNames();
-        platformNames.Should().NotBeEmpty("the catalogue declares a platform tier, which is what this test is about");
+        var platformNames = PlatformOnlyPermissionNames();
+        platformNames.Should().NotBeEmpty("the catalogue declares a platform scope, which is what this test is about");
 
         names.Should().NotIntersectWith(
             platformNames,
             "a permission that governs the installation cannot be granted through a tenant role, so offering it would be offering what the caller cannot do");
 
         names.Should().BeEquivalentTo(
-            [.. Flatten(DefinitionService.GetPermissionGroups(includePlatformPermissions: false)).Select(permission => permission.Name)],
-            "the caller is offered the tenant tier of the catalogue, whole");
+            [.. Flatten(DefinitionService.GetPermissionGroups(PermissionScope.Tenant)).Select(permission => permission.Name)],
+            "the caller is offered what a tenant role can exercise - the tenant scope and the permissions declared for both - whole");
     }
 
     /// <summary>
-    /// Verifies that a platform administrator is offered the whole catalogue, with the platform tier
-    /// flagged so the two tiers stay apart (AC-115).
+    /// Verifies that a platform account acting in no tenant is offered the platform scope of the
+    /// catalogue, each leaf carrying the scope it was declared with so the tiers stay apart (AC-115).
     /// </summary>
     /// <remarks>
-    /// The flag is asserted leaf by leaf rather than only for the platform ones: a catalogue that flagged
-    /// everything, or nothing, would leave the tiers indistinguishable just as surely as one that left the
-    /// platform permissions out. The set is compared against the declaration on top of that, so the
-    /// widening is the same catalogue rather than a differently shaped one.
+    /// The scope is asserted leaf by leaf rather than only for the platform ones: a catalogue that
+    /// reported one scope for everything would leave the tiers indistinguishable just as surely as one
+    /// that left the platform permissions out. The set is compared against the declaration on top of
+    /// that, so what the caller sees is the same catalogue narrowed rather than a differently shaped one.
+    /// The tenant-only scope is what such a caller does not see: it cannot be exercised where they are.
     /// </remarks>
     [Fact]
-    public async Task Platform_Caller_Receives_The_Whole_Catalogue()
+    public async Task Platform_Caller_Receives_The_Platform_Scope_Of_The_Catalogue()
     {
         await SetPlatformAdminAuthTokenAsync();
 
@@ -102,21 +104,24 @@ public class GetDefinePermissionsTests(App app) : TenancyTestsBase(app)
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var leaves = Flatten(catalogue.Groups);
-        var platformNames = DefinitionService.GetPlatformPermissionNames();
+        var platformNames = PlatformOnlyPermissionNames();
 
-        platformNames.Should().NotBeEmpty("the catalogue declares a platform tier, which is what the caller is being widened to");
+        platformNames.Should().NotBeEmpty("the catalogue declares a platform scope, which is what this caller is offered");
 
         leaves.Select(permission => permission.Name).Should().BeEquivalentTo(
-            [.. DefinitionService.GetFlattenedPermissions().Select(permission => permission.Name)],
-            "a platform administrator is offered the catalogue whole");
+            [.. DefinitionService.GetPermissionNamesInScope(PermissionScope.Platform)],
+            "a platform account acting in no tenant is offered what it can exercise there - the platform scope and the permissions declared for both");
+
+        leaves.Select(permission => permission.Name).Should().Contain(platformNames,
+            "including every permission only a platform role can hold, which is the half a tenant caller never sees");
 
         leaves.Where(permission => platformNames.Contains(permission.Name))
-            .Should().OnlyContain(permission => permission.IsPlatform,
-                "every permission of the platform tier is flagged as such, so a caller reading the answer can tell what a tenant role can be given");
+            .Should().OnlyContain(permission => permission.Scope == PermissionScope.Platform,
+                "every platform-scoped permission reports that scope, so a caller reading the answer can tell what a tenant role can be given");
 
         leaves.Where(permission => !platformNames.Contains(permission.Name))
-            .Should().OnlyContain(permission => !permission.IsPlatform,
-                "and no tenant permission is flagged as platform-tier, which would keep it off every tenant role in the editor");
+            .Should().OnlyContain(permission => permission.Scope == PermissionScope.Both,
+                "and everything else it is offered is exercisable in either scope, which is why it appears here at all");
     }
 
     /// <summary>
@@ -137,6 +142,7 @@ public class GetDefinePermissionsTests(App app) : TenancyTestsBase(app)
         // rather than granted through a membership: a tenant's role cannot carry it, and a tenant's
         // membership is not where platform authority lives.
         await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
+        await MarkAsPlatformAccountAsync(account.Id);
 
         // The memberships are what the account switches by, and they are held through a role of the
         // tenant it is joining - platform authority is not what admits it to either.
@@ -204,7 +210,7 @@ public class GetDefinePermissionsTests(App app) : TenancyTestsBase(app)
             {
                 Name = definition.Name,
                 DisplayName = definition.DisplayName,
-                IsPlatform = definition.IsPlatform
+                Scope = definition.Scope
             });
             return;
         }

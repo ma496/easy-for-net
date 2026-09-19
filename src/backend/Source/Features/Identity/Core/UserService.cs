@@ -31,7 +31,7 @@ public interface IUserService
 
     /// <summary>
     /// The accounts the caller may administer right now: those holding an active membership of the
-    /// tenant being acted in, widened to every account when the caller holds platform administration.
+    /// tenant being acted in, or the platform's own accounts while acting in no tenant.
     /// Lists, searches and counts all narrow from this one query, so none of them can forget the
     /// restriction and none of them can disagree about it.
     /// </summary>
@@ -108,8 +108,7 @@ public interface IUserService
 [NoDirectUse]
 public class UserService(AppDbContext dbContext,
                          IPasswordHasher passwordHasher,
-                         ITenantContext tenantContext,
-                         ICurrentUserService currentUserService) : IUserService
+                         ITenantContext tenantContext) : IUserService
 {
     public async Task<User?> GetByIdAsync(Guid id)
     {
@@ -140,25 +139,13 @@ public class UserService(AppDbContext dbContext,
     /// <inheritdoc />
     public IQueryable<User> TenantUsers()
     {
-        // Platform administration is the tier test, and it is read from the request's live permission
-        // claims, which the session check has already recomputed from current data. A holder of it
-        // administers accounts irrespective of membership, so the set is not narrowed by tenant for them.
-        if (currentUserService.HasPermission(Allow.Platform_Administration))
+        // Acting in no tenant, the accounts administered are the platform's own - the ones the account
+        // tier marks as such. It is a scope test rather than a question about the caller: what reaches
+        // this point in platform scope is already a caller the tenant requirement admitted there, and
+        // which accounts platform scope is about does not depend on who is asking.
+        if (tenantContext.IsPlatformScope())
         {
-            if (tenantContext is not { IsResolved: true, CurrentTenantId: null })
-            {
-                return Users();
-            }
-
-            // Acting in no tenant, the accounts administered are the platform's own: those holding a
-            // role that belongs to no tenant. The soft-delete filter stays on the roles, so a deleted
-            // platform role makes nobody a platform account.
-            var platformRoles = dbContext.Roles
-                .AcrossAllTenants()
-                .Where(role => role.TenantId == null);
-
-            return Users().Where(account => dbContext.UserRoles.Any(assignment =>
-                assignment.UserId == account.Id && platformRoles.Any(role => role.Id == assignment.RoleId)));
+            return Users().Where(account => account.IsPlatform);
         }
 
         // Read once, outside the expression, so the tenant the restriction means is fixed here rather

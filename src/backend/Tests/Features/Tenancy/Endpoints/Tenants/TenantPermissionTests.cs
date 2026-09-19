@@ -17,7 +17,7 @@ using System.Net.Http.Json;
 /// The three methods answer three different questions. <see cref="Every_Tenant_Endpoint_Declares_Its_Permission"/>
 /// reads the live routing table, so what it asserts is the map the framework enforces rather than a
 /// copy of the source it was written from. <see cref="Missing_Permission_Is_Forbidden"/> sends every
-/// gated endpoint its own valid request as a caller holding only <see cref="Allow.Tenant_View"/>, and
+/// gated endpoint its own valid request as a caller holding only <see cref="Allow.Tenant_Detail"/>, and
 /// asserts both halves of the answer: a 403 where the caller's authority falls short, and - through
 /// the permission-holding caller sending the very same request - that the request was otherwise one
 /// that would have been carried out. A refused operation must also have left no trace, which is what
@@ -92,14 +92,13 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
         [typeof(TenantMemberRemoveEndpoint)] = [Allow.TenantMember_Remove],
         [typeof(TenantMemberUpdateRolesEndpoint)] = [Allow.TenantMember_UpdateRoles],
 
-        // Leaving a tenant for platform scope is the platform administrator's own way back out of a
-        // tenant they entered, and nobody else's: for a member, acting in no tenant is a state to leave
-        // rather than a place to work.
-        [typeof(TenantExitEndpoint)] = [Allow.Platform_Administration],
-
-        // No permission at all, and deliberately so: these two are how a caller acquires a tenant to
-        // act in, so gating them behind a permission held inside a tenant would be circular. They are
-        // gated by authentication instead, which is the whole of what they require.
+        // No permission at all, and deliberately so: these three are how a caller acquires or leaves a
+        // tenant to act in, so gating them behind a permission held inside a tenant would be circular -
+        // and for exit it would be impossible, since a session inside a tenant carries the tenant scope
+        // alone and any platform-scoped permission has been narrowed away. Exit is gated by the account
+        // tier in its handler instead; the other two by authentication, which is the whole of what they
+        // require.
+        [typeof(TenantExitEndpoint)] = [],
         [typeof(TenantOnboardEndpoint)] = [],
         [typeof(TenantSwitchEndpoint)] = []
     };
@@ -171,7 +170,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that a caller holding only <see cref="Allow.Tenant_View"/> is refused every operation
+    /// Verifies that a caller holding only <see cref="Allow.Tenant_Detail"/> is refused every operation
     /// that requires anything else, and admitted the two that require exactly that - while the same
     /// request from a caller holding the permission is carried out, so the refusal is the caller's
     /// authority rather than the request (AC-045).
@@ -193,7 +192,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
 
         var refused = await call.Send(limited);
 
-        if (Declaration(endpoint).Contains(Allow.Tenant_View))
+        if (Declaration(endpoint).Contains(Allow.Tenant_Detail))
         {
             refused.Status.Should().NotBe(HttpStatusCode.Forbidden,
                 "{0} requires the one permission the purpose-built role holds, so this caller is inside its gate rather than outside it",
@@ -239,41 +238,42 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
     /// role that had grown a second permission would make every refusal below read the same whether the
     /// endpoint declared anything or not. The caller and the tenant are made here rather than seeded, so
     /// the authority under test is one the test put in place and can change.
+    /// <para>
+    /// Both permissions the role is moved through are ones a tenant role can exercise. The lifecycle
+    /// permissions are not: they belong to the platform scope, so granting one to a tenant role would
+    /// prove nothing about the gate - the caller would be refused for the scope it is in rather than for
+    /// the declaration it falls short of. That refusal is asserted too, over the tenants list, because
+    /// it is a second rule worth pinning down beside the first.
+    /// </para>
     /// </remarks>
     [Fact]
     public async Task Purpose_Built_Role_Proves_The_Gate()
     {
         var gateRoleId = TestRoles.LimitedTenantRoleId;
 
-        (await GrantedPermissionsAsync(gateRoleId)).Should().Equal([Allow.Tenant_View],
+        (await GrantedPermissionsAsync(gateRoleId)).Should().Equal([Allow.Tenant_Detail],
             "the gate is only as good as the role proving it: it must hold exactly the one permission whose endpoints are expected to admit its holder");
 
         var tenant = await CreateTenantAsync();
-        var viewRoleId = await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_View);
-        var member = await CreateTenantUserAsync(tenant.Id, viewRoleId);
+        var detailRoleId = await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_Detail);
+        var member = await CreateTenantUserAsync(tenant.Id, detailRoleId);
 
         await SignInAsAsync(member.Username, tenant.Id);
 
         // Admitted: precisely what the role's one permission declares.
-        var (listed, _) = await App.Client
-            .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(new() { All = true });
-
-        listed.StatusCode.Should().Be(HttpStatusCode.OK,
-            "the list declares Tenant.View, which is what the purpose-built role was given it for");
-
         var (read, _) = await App.Client
             .GETAsync<TenantGetEndpoint, TenantGetRequest, TenantGetResponse>(new() { Id = tenant.Id });
 
-        read.StatusCode.Should().Be(HttpStatusCode.OK, "as does the read");
+        read.StatusCode.Should().Be(HttpStatusCode.OK,
+            "the read declares Tenant.Detail, which is what the purpose-built role was given it for");
 
-        // Refused: and refused at the gate, so the tenant is exactly as it stood before the request.
-        var (suspended, _) = await App.Client
-            .POSTAsync<TenantSuspendEndpoint, TenantSuspendRequest, TenantSuspendResponse>(new() { Id = tenant.Id });
+        // Refused: and refused at the gate, so nothing about the tenant changed.
+        var (members, _) = await App.Client
+            .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(
+                new() { TenantId = tenant.Id });
 
-        suspended.StatusCode.Should().Be(HttpStatusCode.Forbidden,
-            "suspending declares Tenant.Suspend, which the role does not hold");
-        (await LiveTenantAsync(tenant.Id)).Status.Should().Be(TenantStatus.Active,
-            "a caller outside the gate never reaches the handler, so nothing was written");
+        members.StatusCode.Should().Be(HttpStatusCode.Forbidden,
+            "the member list declares TenantMember.View, which the role does not hold");
 
         var (renamed, _) = await App.Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, TenantUpdateResponse>(
@@ -282,30 +282,38 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
         renamed.StatusCode.Should().Be(HttpStatusCode.Forbidden, "renaming declares Tenant.Update, which the role does not hold");
         (await LiveTenantAsync(tenant.Id)).Name.Should().Be(tenant.Name, "so the rename never happened");
 
+        // The list is refused for a second reason worth stating on its own: Tenant.View belongs to the
+        // platform scope, so it is not a permission a tenant role could be given to open this with.
+        var (listed, _) = await App.Client
+            .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(new() { All = true });
+
+        listed.StatusCode.Should().Be(HttpStatusCode.Forbidden,
+            "the list declares Tenant.View, which belongs to the platform scope and is not a tenant role's to hold");
+
         // The proof itself: one permission added to the caller's roles, and the endpoint that permission
         // declares answers - while the one before it still does not.
-        var updateRoleId = await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_Update);
+        var memberViewRoleId = await CreateTenantRoleAsync(tenant.Id, Allow.TenantMember_View);
         await TenantAuthorizationService.ReplaceTenantRoleAssignmentsAsync(
-            tenant.Id, member.Id, [viewRoleId, updateRoleId], TestContext.Current.CancellationToken);
+            tenant.Id, member.Id, [detailRoleId, memberViewRoleId], TestContext.Current.CancellationToken);
 
         // Signed in again so the session is rebuilt around the roles as they now stand, rather than
         // resting on when a permission recomputation happens to fall.
         await SignInAsAsync(member.Username, tenant.Id);
 
-        var (nowRenamed, _) = await App.Client
+        var (nowListed, _) = await App.Client
+            .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(
+                new() { TenantId = tenant.Id });
+
+        nowListed.StatusCode.Should().Be(HttpStatusCode.OK,
+            "the request refused a moment ago is answered the moment the caller holds TenantMember.View, and by nothing else");
+
+        var (stillRefused, _) = await App.Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, TenantUpdateResponse>(
                 new() { Id = tenant.Id, Name = "Renamed By A Gate Test", Identifier = tenant.Identifier });
 
-        nowRenamed.StatusCode.Should().Be(HttpStatusCode.OK,
-            "the request refused a moment ago is answered the moment the caller holds Tenant.Update, and by nothing else");
-
-        (await LiveTenantAsync(tenant.Id)).Name.Should().Be("Renamed By A Gate Test", "and the handler did run this time");
-
-        var (stillRefused, _) = await App.Client
-            .POSTAsync<TenantSuspendEndpoint, TenantSuspendRequest, TenantSuspendResponse>(new() { Id = tenant.Id });
-
         stillRefused.StatusCode.Should().Be(HttpStatusCode.Forbidden,
-            "while Tenant.Suspend is still not held: the gate opens one endpoint at a time, following the declarations");
+            "while Tenant.Update is still not held: the gate opens one endpoint at a time, following the declarations");
+        (await LiveTenantAsync(tenant.Id)).Name.Should().Be(tenant.Name, "so the rename still never happened");
     }
 
     /// <summary>

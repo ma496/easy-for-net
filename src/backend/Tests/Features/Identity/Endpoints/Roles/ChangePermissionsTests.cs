@@ -94,7 +94,7 @@ public class ChangePermissionsTests(App app) : TenancyTestsBase(app)
     /// and that the refusal leaves the role's permission set exactly as it was (AC-041).
     /// </summary>
     /// <remarks>
-    /// The permission is declared platform-tier in code, which is asserted here as the premise the refusal
+    /// The permission is declared platform-scoped in code, which is asserted here as the premise the refusal
     /// rests on rather than assumed: it governs the installation rather than any one tenant, so granting it
     /// through a tenant's own role would be a tenant promoting itself to platform authority. The refusal is
     /// raised over the whole requested set rather than the additions alone, so the role keeps the set it
@@ -109,12 +109,11 @@ public class ChangePermissionsTests(App app) : TenancyTestsBase(app)
             tenant.Id, await CreateTenantRoleAsync(tenant.Id, Allow.Role_ChangePermissions));
         var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.Role_View);
 
-        App.Services.GetRequiredService<IPermissionDefinitionService>()
-            .GetPlatformPermissionNames()
+        PlatformOnlyPermissionNames()
             .Should()
-            .Contain(Allow.Platform_Administration, "the premise of this test is that this permission governs the installation rather than a tenant");
+            .Contain(Allow.Tenant_Create, "the premise of this test is that this permission governs the installation rather than a tenant");
 
-        var platformPermissionId = await PermissionIdAsync(Allow.Platform_Administration);
+        var platformPermissionId = await PermissionIdAsync(Allow.Tenant_Create);
         var before = await RolePermissionIdsAsync(roleId);
         before.Should().NotContain(platformPermissionId, "the role does not hold it to begin with");
 
@@ -227,22 +226,19 @@ public class ChangePermissionsTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// A page of the catalogue's tenant-tier permissions, ordered by name so that two calls with
+    /// A page of the permissions a tenant role may hold, ordered by name so that two calls with
     /// different offsets never return the same permission - which is what lets a test keep one and
-    /// replace the rest. Platform-tier permissions are left out because a tenant's role can never be
+    /// replace the rest. Platform-scoped permissions are left out because a tenant's role can never be
     /// granted one (AC-041), so they are not part of any set this endpoint would accept.
     /// </summary>
-    /// <param name="skip">How many of the tier's permissions to pass over.</param>
+    /// <param name="skip">How many of the scope's permissions to pass over.</param>
     /// <param name="take">How many to take.</param>
     /// <returns>The identifiers of the permissions.</returns>
     private async Task<List<Guid>> TenantPermissionIdsAsync(int skip, int take)
     {
-        var platformPermissionNames = App.Services.GetRequiredService<IPermissionDefinitionService>()
-            .GetPlatformPermissionNames();
-
         return await DbContext.Permissions
             .AsNoTracking()
-            .Where(permission => !platformPermissionNames.Contains(permission.Name))
+            .Where(permission => permission.Scope != PermissionScope.Platform)
             .OrderBy(permission => permission.Name)
             .Skip(skip)
             .Take(take)

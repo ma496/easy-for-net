@@ -5,31 +5,32 @@ using Backend.Features.Identity.Core;
 
 /// <summary>
 /// Tests that the background-job dashboard is a platform-tier surface: an unauthenticated caller and a
-/// caller holding only a tenant's own authority are both refused, and the permission that opens it is
-/// the platform one and nothing else - a tenant-defined role named <c>Admin</c> included
-/// (AC-047).
+/// caller holding only a tenant's own authority are both refused, and what opens it is the account tier
+/// and nothing else - a tenant-defined role named <c>Admin</c> and any permission a tenant could grant
+/// included (AC-047).
 /// </summary>
 /// <remarks>
 /// The rule is exercised over principals rather than through a fabricated dashboard request, which is
 /// what makes the case that matters - a tenant administrator whose role happens to be called
 /// <c>Admin</c> - expressible at all: the point of the gate is that a role name is never what opens a
 /// platform-wide operational surface, because every tenant may define a role of any name inside its own
-/// scope.
+/// scope. The tier is read rather than a permission for a second reason: a permission would be narrowed
+/// away the moment a platform account entered a tenant, and the dashboard is not a tenant's to grant.
 /// </remarks>
 public class HangfireAuthorizationFilterTests
 {
     /// <summary>
-    /// Verifies that the dashboard is open to an authenticated caller holding platform administration
-    /// and to nobody else (AC-047).
+    /// Verifies that the dashboard is open to an authenticated platform account and to nobody else
+    /// (AC-047).
     /// </summary>
     [Fact]
-    public void Dashboard_Requires_Platform_Administration()
+    public void Dashboard_Requires_Platform_Account()
     {
         HangfireAuthorizationFilter.IsAuthorized(Principal(authenticated: false))
-            .Should().BeFalse("an unauthenticated caller holds no permission at all");
+            .Should().BeFalse("an unauthenticated caller carries no claim at all");
 
         HangfireAuthorizationFilter.IsAuthorized(
-                Principal(authenticated: false, Permission(Allow.Platform_Administration)))
+                Principal(authenticated: false, PlatformTier()))
             .Should().BeFalse("the claim is not what authenticates a caller: an unauthenticated principal opens nothing");
 
         HangfireAuthorizationFilter.IsAuthorized(
@@ -38,11 +39,11 @@ public class HangfireAuthorizationFilterTests
 
         HangfireAuthorizationFilter.IsAuthorized(
                 Principal(authenticated: true, Permission(Allow.Tenant_View), new Claim(ClaimTypes.Role, "Admin")))
-            .Should().BeFalse("a tenant-tier permission and an Administrator role inside a tenant are both the same answer");
+            .Should().BeFalse("no permission opens the dashboard, whatever tier it belongs to, and an Administrator role inside a tenant is the same answer");
 
         HangfireAuthorizationFilter.IsAuthorized(
-                Principal(authenticated: true, Permission(Allow.Platform_Administration)))
-            .Should().BeTrue("platform administration is the one authority the dashboard is gated on");
+                Principal(authenticated: true, PlatformTier()))
+            .Should().BeTrue("the platform tier is the one standing the dashboard is gated on");
     }
 
     /// <summary>
@@ -62,4 +63,10 @@ public class HangfireAuthorizationFilterTests
     /// <param name="permission">The permission name.</param>
     /// <returns>The claim.</returns>
     private static Claim Permission(string permission) => new(ClaimConstants.Permission, permission);
+
+    /// <summary>
+    /// The account-tier claim in the shape the application issues it.
+    /// </summary>
+    /// <returns>The claim.</returns>
+    private static Claim PlatformTier() => new(ClaimConstants.IsPlatform, bool.TrueString);
 }

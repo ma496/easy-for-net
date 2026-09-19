@@ -10,9 +10,11 @@ using Backend.Features.Identity.Core.Entities;
 /// A role belongs to at most one tenant, so every lookup here answers for the tenant being acted in
 /// and for no other: a role of another tenant is simply not found, which is what makes reading,
 /// updating, deleting and re-permissioning one behave exactly as they do for a role that never
-/// existed. A caller holding platform administration is the single exception, and the widening that
-/// grants it lives in <see cref="Roles"/> alone, so no list, search or count can disagree with the
-/// lookups about which roles the caller may touch. Deletion is soft: the row is retained, so a
+/// existed. The scope being acted in is the whole of it, and the one query that
+/// narrows to it lives in <see cref="Roles"/> alone, so no list, search or count can disagree with the
+/// lookups about which roles the caller may touch. A platform account reaches a tenant's roles by
+/// entering that tenant, which makes it one of that tenant's actors rather than a caller reading
+/// across every tenant at once. Deletion is soft: the row is retained, so a
 /// deleted role's name stays reserved within its tenant and the database's uniqueness constraint
 /// keeps refusing it.
 /// </remarks>
@@ -30,7 +32,7 @@ public interface IRoleService
     /// The role of this name that the caller may see, or <see langword="null"/> when there is none.
     /// Names are unique within a tenant rather than across the installation, so this answers with the
     /// tenant's own role of that name. It narrows from the same set as every other read here, so for a
-    /// caller holding platform administration it answers from every tenant's roles at once - where a
+    /// caller acting in platform scope it answers from the roles belonging to no tenant - where a
     /// name is no longer unique and any one tenant's role of that name may come back. Where it matters
     /// which tenant's role is meant, read it through <see cref="Roles"/> with a predicate that says so.
     /// </summary>
@@ -39,15 +41,15 @@ public interface IRoleService
     Task<Role?> GetByNameAsync(string name);
 
     /// <summary>
-    /// The roles the caller may see and administer: the roles of the tenant being acted in, widened to
-    /// every tenant's roles when the caller holds platform administration. Lists, searches and counts
+    /// The roles the caller may see and administer: the roles of the tenant being acted in, or the
+    /// platform's own - those belonging to no tenant - while acting in none. Lists, searches and counts
     /// all narrow from this one query, so none of them can forget the restriction and none of them can
     /// disagree about it.
     /// </summary>
     /// <returns>A composable query over the roles the caller may see.</returns>
     /// <remarks>
-    /// Deleted roles are excluded here as everywhere else - the soft-delete filter is untouched by the
-    /// widening - so a deleted role is listed by nobody and grants nothing, while its row goes on
+    /// Deleted roles are excluded here as everywhere else - the soft-delete filter is a separate,
+    /// named one - so a deleted role is listed by nobody and grants nothing, while its row goes on
     /// reserving its name. Work with no scope established at all, such as a job that never named the
     /// tenant it acts for, fails with <see cref="TenantScopeNotEstablishedException"/> when the query
     /// runs, rather than quietly reading every tenant's roles or none - the widened set is the one
@@ -101,7 +103,7 @@ public interface IRoleService
 /// seeder works on roles it has just created inside the scope they belong to.
 /// </remarks>
 [NoDirectUse]
-public class RoleService(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext) : IRoleService
+public class RoleService(AppDbContext dbContext) : IRoleService
 {
     /// <inheritdoc />
     public async Task<Role?> GetByIdAsync(Guid id)
@@ -122,28 +124,14 @@ public class RoleService(AppDbContext dbContext, ICurrentUserService currentUser
     /// <inheritdoc />
     public IQueryable<Role> Roles()
     {
-        // Platform administration is the tier test, and it is read from the request's live permission
-        // claims, which the session check has already recomputed from current data. A holder of it
-        // administers roles irrespective of the tenant those roles belong to, so tenant restriction is
-        // relaxed by name and nothing else is: the soft-delete filter stays in force, so a deleted
-        // role is no more visible to them than to anybody else. Acting in no tenant is the exception:
-        // platform scope is about the platform's own roles, which the Tenant query filter already
-        // narrows the set to there.
-        if (currentUserService.HasPermission(Allow.Platform_Administration) && !IsPlatformScope())
-        {
-            return dbContext.Roles.AcrossAllTenants();
-        }
-
-        // Everybody else reads through the Tenant query filter, which restricts the set to the tenant
-        // being acted in - and throws where no scope was established, rather than answering from every
-        // tenant or from none.
+        // Every caller reads through the Tenant query filter, which restricts the set to the scope
+        // being acted in - the tenant's own roles inside a tenant, the platform's own in platform
+        // scope - and throws where no scope was established, rather than answering from every tenant
+        // or from none. A platform account is not widened here: entering a tenant makes it that
+        // tenant's actor and nothing more, and administering another tenant's roles is done from
+        // platform scope, where the surfaces that need it name the tenant themselves.
         return dbContext.Roles;
     }
-
-    /// <summary>
-    /// Whether the request is running in platform scope - resolved, but acting in no tenant.
-    /// </summary>
-    private bool IsPlatformScope() => tenantContext is { IsResolved: true, CurrentTenantId: null };
 
     /// <inheritdoc />
     public async Task<Role> CreateAsync(Role role)

@@ -52,6 +52,8 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
 
         public bool HasPermission(string permission) => false;
 
+        public bool IsPlatform() => false;
+
         public IEnumerable<string> GetCurrentUserRoles() => [];
 
         public IEnumerable<string> GetCurrentUserPermissions() => [];

@@ -111,7 +111,7 @@ public class PlatformSurfaceTests(App app) : TenancyTestsBase(app)
     /// active tenant.
     /// </summary>
     [Fact]
-    public async Task Platform_Exemption_Does_Not_Reach_A_Caller_Without_Platform_Administration()
+    public async Task Platform_Exemption_Does_Not_Reach_A_Caller_Outside_The_Platform_Tier()
     {
         var account = await CreateAccountWithoutMembershipAsync();
         var client = await ClientForAsync(account.Username);

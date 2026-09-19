@@ -4,20 +4,22 @@ using Backend.Features.Identity.Core;
 
 /// <summary>
 /// GET endpoint that returns the set of permission groups defined in code via the
-/// permission-definition service (used to drive role/permission editors), narrowed to the tier the
-/// caller is able to grant.
+/// permission-definition service (used to drive role/permission editors), narrowed to the scope the
+/// caller is acting in.
 /// </summary>
 /// <remarks>
-/// A caller without <see cref="Allow.Platform_Administration"/> only ever sees tenant-tier
-/// definitions, so the role-permission surface never offers a permission that could not be granted
-/// through a tenant role. A platform administrator receives the whole catalogue, with every
-/// platform-tier definition carrying <see cref="PermissionDefinition.IsPlatform"/> so the two tiers
-/// stay distinguishable.
+/// The scope decides what is offered: a platform account acting in no tenant sees the platform tier
+/// and the permissions declared for both scopes, and every other caller - including a platform account
+/// that has entered a tenant - sees the tenant tier and those same both-scope permissions. So the
+/// role-permission surface never offers a permission the caller could not exercise where they are, nor
+/// one that could not be granted through the role being edited. Each definition carries its
+/// <see cref="PermissionDefinition.Scope"/>, so the tiers stay distinguishable in the response.
 /// </remarks>
 [AllowPlatformNoTenant]
 sealed class GetDefinePermissionsEndpoint(
     IPermissionDefinitionService permissionDefinitionService,
-    ICurrentUserService currentUserService) : EndpointWithoutRequest<GetDefinePermissionsResponse>
+    ICurrentUserService currentUserService,
+    ITenantContext tenantContext) : EndpointWithoutRequest<GetDefinePermissionsResponse>
 {
     public override void Configure()
     {
@@ -27,8 +29,10 @@ sealed class GetDefinePermissionsEndpoint(
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
     {
-        var includePlatformPermissions = currentUserService.HasPermission(Allow.Platform_Administration);
-        var groups = permissionDefinitionService.GetPermissionGroups(includePlatformPermissions);
+        var viewScope = currentUserService.IsPlatform() && tenantContext.IsPlatformScope()
+            ? PermissionScope.Platform
+            : PermissionScope.Tenant;
+        var groups = permissionDefinitionService.GetPermissionGroups(viewScope);
 
         await Send.ResponseAsync(new()
         {

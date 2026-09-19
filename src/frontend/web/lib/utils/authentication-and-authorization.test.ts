@@ -12,7 +12,7 @@ const stateWithPermissions = (...permissions: string[]): AuthState => ({
     username: 'user',
     email: 'user@example.com',
     tenants: [],
-    isPlatformAdministrator: false,
+    isPlatform: false,
     roles: [
       {
         id: 'role-id',
@@ -47,7 +47,7 @@ const stateActingIn = (activeTenant: GetUserInfoTenant | undefined, ...permissio
     activeTenantId: activeTenant?.id,
     activeTenant,
     tenants: activeTenant ? [firstTenant, secondTenant] : [],
-    isPlatformAdministrator: false,
+    isPlatform: false,
     roles: [
       {
         id: 'role-id',

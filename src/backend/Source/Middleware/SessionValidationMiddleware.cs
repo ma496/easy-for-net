@@ -53,8 +53,8 @@ public sealed class SessionValidationMiddleware(RequestDelegate next)
     }
 
     /// <summary>
-    /// Returns the principal with every role and permission claim it arrived with replaced by the
-    /// ones the session is entitled to now. Identity claims are carried over untouched - the account,
+    /// Returns the principal with every role, permission and tier claim it arrived with replaced by
+    /// the ones the session is entitled to now. Identity claims are carried over untouched - the account,
     /// its name, its session version and the tenant its session names - so the caller stays exactly
     /// who they were and only what they may do is recomputed.
     /// </summary>
@@ -69,10 +69,19 @@ public sealed class SessionValidationMiddleware(RequestDelegate next)
         var claims = principal.Claims
             .Where(claim => claim.Type != incomingRoleClaimType
                             && claim.Type != ClaimTypes.Role
-                            && claim.Type != ClaimConstants.Permission)
+                            && claim.Type != ClaimConstants.Permission
+                            && claim.Type != ClaimConstants.IsPlatform)
             .ToList();
         claims.AddRange(session.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
         claims.AddRange(session.Permissions.Select(permission => new Claim(ClaimConstants.Permission, permission)));
+
+        // The tier is rebuilt from current data alongside the grants rather than carried over from
+        // the session, so an account that has stopped being a platform account stops being treated as
+        // one on its very next request instead of when its token expires.
+        if (session.IsPlatform)
+        {
+            claims.Add(new Claim(ClaimConstants.IsPlatform, bool.TrueString));
+        }
 
         // The authentication type is carried over because it is what keeps the rebuilt identity
         // authenticated, and it is read off the identity itself rather than off its claims-based

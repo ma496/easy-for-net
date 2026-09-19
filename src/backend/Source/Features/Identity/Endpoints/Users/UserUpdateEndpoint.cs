@@ -106,20 +106,21 @@ sealed class UserUpdateEndpoint(IUserService userService,
 
     /// <summary>
     /// Refuses the request when the account reaches beyond the tenant being acted in. A platform
-    /// administrator administers every account and is never refused here.
+    /// account acting in no tenant administers the platform's own accounts and is never refused here;
+    /// inside a tenant it is an actor of that tenant and is refused exactly as its administrators are.
     /// </summary>
     /// <param name="userId">The account being written.</param>
     /// <param name="cancellationToken">Token used to cancel the read.</param>
     private async Task GuardSharedAccountAsync(Guid userId, CancellationToken cancellationToken)
     {
-        if (currentUserService.HasPermission(Allow.Platform_Administration))
+        if (currentUserService.IsPlatform() && tenantContext.IsPlatformScope())
         {
             return;
         }
 
-        // A caller acting in no tenant and holding no platform administration administers no accounts at
-        // all - the set this account was read from is empty for them - so reaching this with no tenant
-        // means something above changed; it is refused rather than waved through.
+        // A caller acting in no tenant who is not a platform account administers no accounts at all -
+        // the set this account was read from is empty for them - so reaching this with no tenant means
+        // something above changed; it is refused rather than waved through.
         if (tenantContext.CurrentTenantId is not { } activeTenantId
             || await tenantAuthorizationService.ReachesBeyondTenantAsync(userId, activeTenantId, cancellationToken))
         {

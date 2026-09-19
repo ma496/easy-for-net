@@ -11,7 +11,7 @@ import { useAppDispatch } from '@/store/hooks'
 import { setUserInfo } from '@/store/slices'
 import { Button, LocalizedLink } from '@/components/ui'
 import { useLocalizedRouter } from '@/hooks'
-import { apiErrorAlert, resolvePlatformAdministratorLanding, resolveTenantLanding, successToast } from '@/lib/utils'
+import { apiErrorAlert, resolvePlatformLanding, resolveTenantLanding, successToast } from '@/lib/utils'
 import { isValidRedirectPath } from '@/lib/utils/redirect'
 
 /**
@@ -100,7 +100,7 @@ export const SigninForm = () => {
       // parameter, since honouring it would open a tenant-scoped screen with no tenant behind it.
       // A platform administrator acting in no tenant is the exception: they work platform-wide and need none.
       const validRedirect = redirectTo && isValidRedirectPath(redirectTo) ? redirectTo : null
-      const platformLanding = resolvePlatformAdministratorLanding(userInfoRes.data, validRedirect)
+      const platformLanding = resolvePlatformLanding(userInfoRes.data, validRedirect)
       if (platformLanding) {
         router.push(platformLanding, { scroll: false })
         return

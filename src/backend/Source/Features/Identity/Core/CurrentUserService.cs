@@ -15,6 +15,17 @@ public interface ICurrentUserService
     bool IsAuthenticated();
     bool IsInRole(string role);
     bool HasPermission(string permission);
+
+    /// <summary>
+    /// Whether the caller's account belongs to the platform tier. This answers which tier the caller
+    /// works in, never what they may do - that stays a question for <see cref="HasPermission"/>, whose
+    /// answers are already narrowed to the scope the request is acting in. Use it only where the tier
+    /// itself is the question: exempting an endpoint from the active-tenant requirement, entering a
+    /// tenant without a membership, leaving one again, and deciding what a newly created account
+    /// becomes.
+    /// </summary>
+    /// <returns><see langword="true"/> when the caller is a platform account.</returns>
+    bool IsPlatform();
     IEnumerable<string> GetCurrentUserRoles();
     IEnumerable<string> GetCurrentUserPermissions();
 }
@@ -58,6 +69,11 @@ public class CurrentUserService(IHttpContextAccessor httpContextAccessor) : ICur
     {
         var permissions = GetCurrentUserPermissions();
         return permissions.Contains(permission);
+    }
+
+    public bool IsPlatform()
+    {
+        return _user?.HasClaim(ClaimConstants.IsPlatform, bool.TrueString) ?? false;
     }
 
     public IEnumerable<string> GetCurrentUserRoles()

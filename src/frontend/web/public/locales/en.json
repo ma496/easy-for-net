@@ -555,11 +555,11 @@
       "suspendedReason": "The tenant you were working in has been suspended. Choose another tenant to continue.",
       "revokedReason": "Your membership in that tenant has been revoked. Choose another tenant to continue.",
       "unavailableReason": "That tenant is no longer available. Choose another tenant to continue.",
-      "noSelectionReason": "Choose a tenant before opening this screen."
+      "noSelectionReason": "Please provide a tenant before opening this screen."
     },
     "noTenant": {
       "title": "No Tenant",
-      "description": "You do not belong to an active tenant yet. Create your own tenant, or ask an administrator to add you to theirs.",
+      "description": "Please provide a tenant to continue: you do not belong to an active tenant yet. Create your own tenant, or ask an administrator to add you to theirs.",
       "createTitle": "Create Your Tenant",
       "createButton": "Create Tenant",
       "createSuccess": "Tenant created. You are now its administrator."

@@ -1,6 +1,7 @@
 namespace Backend.Tests.Features.Identity.Endpoints.Account;
 
 using Backend.Features.Identity.Endpoints.Account;
+using Backend.Features.Tenancy.Core;
 using Backend.Tests.Features.Tenancy;
 
 /// <summary>
@@ -98,6 +99,70 @@ public class GetInfoTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
+    /// Verifies that a tenant the caller's membership of has been removed stops being offered, while
+    /// the tenants it still belongs to go on being offered - so what this call reports is the
+    /// memberships the caller holds now rather than the ones it held (AC-066).
+    /// </summary>
+    /// <remarks>
+    /// This is where the question lives now that reading every tenant there is belongs to the platform
+    /// scope: the tenants a caller may work in are the ones this call lists, and the chooser and the
+    /// header switcher are built from nothing else.
+    /// <para>
+    /// The tenant is reported before the membership is removed, in the same session that asks again
+    /// afterwards, so the change in the answer can only be the removal: a caller that never saw the
+    /// tenant would satisfy the assertion without the removal having done anything. The removal itself
+    /// is asserted to have been applied, because a removal the last-administrator guard refused would
+    /// leave the membership standing and the tenant rightly still offered.
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public async Task A_Removed_Membership_Stops_Being_Offered()
+    {
+        var keptTenant = await CreateTenantAsync();
+        var removedTenant = await CreateTenantAsync();
+        var keptRoleId = await CreateTenantRoleAsync(keptTenant.Id, Allow.Tenant_Detail);
+        var member = await CreateTenantUserAsync(keptTenant.Id, keptRoleId);
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        await MembershipService.AddAsync(removedTenant.Id, member.Id, [], cancellationToken);
+
+        // Somebody else who administers the tenant the membership is about to be removed from: without
+        // them the removal would be refused for leaving nobody to administer it, which is a different
+        // question from the one this test asks.
+        var administratorRoleId = await DbContext.Roles
+            .AcrossAllTenants()
+            .AsNoTracking()
+            .Where(role => role.TenantId == removedTenant.Id && role.SystemCreated)
+            .Select(role => role.Id)
+            .SingleAsync(cancellationToken);
+        var administrator = await CreateAccountWithoutMembershipAsync();
+        await MembershipService.AddAsync(removedTenant.Id, administrator.Id, [administratorRoleId], cancellationToken);
+
+        // The account belongs to two tenants, so the one it acts in is named rather than resolved.
+        await SignInAsAsync(member.Username, keptTenant.Id);
+
+        var (beforeResponse, before) = await App.Client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
+
+        beforeResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        before.Tenants.Select(tenant => tenant.Id).Should().BeEquivalentTo(
+            [keptTenant.Id, removedTenant.Id],
+            "the premise is that both memberships are offered while both stand");
+
+        var outcome = await MembershipService.RemoveAsync(removedTenant.Id, member.Id, cancellationToken);
+
+        outcome.Should().Be(
+            TenantMembershipChangeOutcome.Applied,
+            "somebody else administers the tenant, so the removal is the change being tested rather than a refusal");
+
+        var (afterResponse, after) = await App.Client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
+
+        afterResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        after.Tenants.Select(tenant => tenant.Id).Should().Equal(
+            [keptTenant.Id],
+            "the tenant the membership was removed from is no longer one the caller is offered");
+    }
+
+    /// <summary>
     /// Verifies that the roles reported while acting in a tenant include the caller's platform-scoped
     /// roles, not just that tenant's own. A platform-scoped role belongs to no tenant and the session
     /// check grants its permissions in every one, so leaving it out here would have the web
@@ -118,8 +183,10 @@ public class GetInfoTests(App app) : TenancyTestsBase(app)
             TestRoles.PlatformAdminRoleId,
             "a platform-scoped role is held in every tenant, so acting in one does not hide it");
 
-        info.Roles.SelectMany(role => role.Permissions).Select(permission => permission.Name).Should().Contain(
-            Allow.Platform_Administration,
-            "and what the web application computes from those roles is what the API will actually allow");
+        info.Roles.SelectMany(role => role.Permissions).Select(permission => permission.Name).Should()
+            .Contain(Allow.TenantMember_View,
+                "and what the platform role grants inside a tenant is what the web application is told it has")
+            .And.NotContain(Allow.Tenant_Create,
+                "while what it grants only in platform scope is narrowed away, so the web application offers exactly what the API will allow");
     }
 }

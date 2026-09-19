@@ -16,25 +16,25 @@ using Backend.Tests.Features.Tenancy;
 public class RoleListTenantFilterTests(App app) : TenancyTestsBase(app)
 {
     /// <summary>
-    /// Verifies that a platform administrator listing roles sees every tenant's, and may narrow that
-    /// view to one tenant by naming it (AC-046).
+    /// Verifies that a platform account acting in no tenant lists the platform's own roles, and reaches
+    /// one tenant's by naming it (AC-046).
     /// </summary>
     /// <remarks>
-    /// The unfiltered call is made first so that the narrowing is read as the filter's doing: both roles
-    /// are in the wide view, and the same two roles become one tenant's. The filter is what the web
-    /// client uses to offer the roles of the tenant whose members are being administered, so a filter
-    /// that did nothing would leave that picker offering every tenant's roles and a role of the wrong
-    /// tenant assignable from it.
+    /// The unfiltered call is made first so that what the filter does is legible: without it the list is
+    /// the platform's own roles and holds neither tenant's, and naming a tenant is what brings that
+    /// tenant's - and only that tenant's - into view. The filter is what the web client uses to offer
+    /// the roles of the tenant whose members are being administered from the tenants table, so a filter
+    /// that did nothing would leave that picker with nothing to offer at all.
     /// </remarks>
     [Fact]
-    public async Task Platform_Administrator_Narrows_The_List_To_A_Named_Tenant()
+    public async Task Platform_Account_Reaches_A_Named_Tenants_Roles()
     {
         var first = await CreateTenantAsync();
         var second = await CreateTenantAsync();
         var inFirst = await CreateTenantRoleAsync(first.Id, Allow.Role_View);
         var inSecond = await CreateTenantRoleAsync(second.Id, Allow.Role_View);
 
-        await SignInAsPlatformAdministratorActingInATenantAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (wideRsp, wide) = await App.Client
             .GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(new() { All = true });
@@ -42,8 +42,8 @@ public class RoleListTenantFilterTests(App app) : TenancyTestsBase(app)
         wideRsp.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var wideIds = wide.Items.Select(item => item.Id).ToList();
-        wideIds.Should().Contain(inFirst).And.Contain(inSecond,
-            "a platform administrator lists roles across every tenant - the filter is a narrowing of that view, not the reason it exists");
+        wideIds.Should().NotContain(inFirst).And.NotContain(inSecond,
+            "platform scope is about the roles belonging to no tenant, so naming a tenant is what reaches one's roles rather than narrowing a view that already held them");
 
         var (narrowedRsp, narrowed) = await App.Client
             .GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(new() { All = true, TenantId = second.Id });

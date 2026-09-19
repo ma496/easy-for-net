@@ -51,7 +51,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
     public async Task Member_Reads_Its_Own_Tenant()
     {
         var tenant = await CreateTenantAsync();
-        var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_View);
+        var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_Detail);
         var member = await CreateTenantUserAsync(tenant.Id, roleId);
         await SignInAsAsync(member.Username, tenant.Id);
 
@@ -117,7 +117,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
     {
         var joined = await CreateTenantAsync();
         var stranger = await CreateTenantAsync();
-        var roleId = await CreateTenantRoleAsync(joined.Id, Allow.Tenant_View);
+        var roleId = await CreateTenantRoleAsync(joined.Id, Allow.Tenant_Detail);
         var member = await CreateTenantUserAsync(joined.Id, roleId);
         await SignInAsAsync(member.Username, joined.Id);
 

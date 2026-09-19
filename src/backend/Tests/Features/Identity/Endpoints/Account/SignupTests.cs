@@ -115,8 +115,8 @@ public class SignupTests(App app) : TenancyTestsBase(app)
         beforeResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         before.Tenants.Should().BeEmpty("the account belongs to no tenant, so there is nothing to act in");
         before.Roles.Should().BeEmpty("and no role is held at any scope");
-        before.IsPlatformAdministrator.Should().BeFalse(
-            "platform administration is never handed out by signing up, which is anonymous and self-service");
+        before.IsPlatform.Should().BeFalse(
+            "the platform tier is never handed out by signing up, which is anonymous and self-service");
 
         PermissionClaimsOf(AccessTokenOf(client)).Should().BeEmpty(
             "the session sign-up leads to carries no permission claim at all");
@@ -134,9 +134,7 @@ public class SignupTests(App app) : TenancyTestsBase(app)
         onboardResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         onboarded.Identifier.Should().Be(identifier);
 
-        var platformPermissions = App.Services
-            .GetRequiredService<IPermissionDefinitionService>()
-            .GetPlatformPermissionNames();
+        var platformPermissions = PlatformOnlyPermissionNames();
 
         platformPermissions.Should().NotBeEmpty("the catalogue declares which permissions are platform level, and the comparison below is only meaningful if it declares some");
 
@@ -149,8 +147,8 @@ public class SignupTests(App app) : TenancyTestsBase(app)
 
         afterResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         after.ActiveTenantId.Should().Be(onboarded.Id, "the tenant just created is the one the caller now acts in");
-        after.IsPlatformAdministrator.Should().BeFalse(
-            "the caller administers a tenant, which is not the same standing as administering the platform");
+        after.IsPlatform.Should().BeFalse(
+            "the caller administers a tenant, which is not the same standing as belonging to the platform tier");
         after.Roles.SelectMany(role => role.Permissions).Select(permission => permission.Name)
             .Should().NotIntersectWith(platformPermissions,
                 "every permission held comes through the new tenant's own role, and a tenant-tier role carries no platform permission");

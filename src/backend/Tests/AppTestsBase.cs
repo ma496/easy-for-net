@@ -51,6 +51,33 @@ public abstract class AppTestsBase(App app) : TestBase<App>
     }
 
     /// <summary>
+    /// Marks an account as belonging to the platform tier, which is what admits it to platform scope
+    /// and lets it enter a tenant it holds no membership of. The tier is a column on the account
+    /// rather than anything a role grants, so a test that wants a platform caller sets it here as well
+    /// as assigning the platform-scoped role that carries the permissions.
+    /// </summary>
+    /// <param name="userId">The account to mark.</param>
+    protected async Task MarkAsPlatformAccountAsync(Guid userId)
+    {
+        var account = await DbContext.Users.SingleAsync(candidate => candidate.Id == userId, TestContext.Current.CancellationToken);
+        account.IsPlatform = true;
+        await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>
+    /// The names of the permissions the code-declared catalogue makes exercisable only in platform
+    /// scope - the ones a tenant role may never hold and a session acting inside a tenant never
+    /// carries. Permissions declared for both scopes are deliberately left out: they are exercisable
+    /// in a tenant too, so finding one there proves nothing went wrong.
+    /// </summary>
+    protected IReadOnlyCollection<string> PlatformOnlyPermissionNames()
+        => [.. App.Services
+            .GetRequiredService<IPermissionDefinitionService>()
+            .GetFlattenedPermissions()
+            .Where(permission => permission.Scope == PermissionScope.Platform)
+            .Select(permission => permission.Name)];
+
+    /// <summary>
     /// Clears the current authentication token from the HTTP client.
     /// </summary>
     protected void ClearAuthToken()

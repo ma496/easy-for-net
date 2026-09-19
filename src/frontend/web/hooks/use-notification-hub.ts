@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { setUnreadCount } from '@/store/slices'
 import { useNotificationGetUnreadCountQuery } from '@/store/api/notifications'
-import { isPlatformAdministratorWithoutTenant } from '@/lib/utils'
+import { isPlatformWithoutTenant } from '@/lib/utils'
 
 const POLL_INTERVAL_MS = 30_000
 
@@ -17,7 +17,7 @@ const POLL_INTERVAL_MS = 30_000
  */
 export function useNotificationHub() {
   const dispatch = useAppDispatch()
-  const canReadNotifications = useAppSelector((state) => state.auth.activeTenant != null || isPlatformAdministratorWithoutTenant(state.auth.user))
+  const canReadNotifications = useAppSelector((state) => state.auth.activeTenant != null || isPlatformWithoutTenant(state.auth.user))
   const { data } = useNotificationGetUnreadCountQuery({}, {
     pollingInterval: POLL_INTERVAL_MS,
     skip: !canReadNotifications,

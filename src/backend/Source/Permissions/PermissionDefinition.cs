@@ -12,17 +12,16 @@ using System.Text.Json.Serialization;
 /// same for every tenant and is rebuilt from those providers on every read, so it can neither be
 /// extended nor varied per tenant at run time.
 /// </remarks>
-public class PermissionDefinition(string name, string displayName, bool isPlatform = false)
+public class PermissionDefinition(string name, string displayName, PermissionScope scope = PermissionScope.Tenant)
 {
     public string Name { get; set; } = name;
     public string DisplayName { get; set; } = displayName;
 
     /// <summary>
-    /// Marks the permission as belonging to the platform tier, which means it can never be granted
-    /// through a tenant role. The flag lives in memory only - it is derived from the code-declared
-    /// catalogue and is never persisted alongside the permission.
+    /// The scope this permission may be exercised in. Only leaves carry a meaningful scope: a parent
+    /// node is a display grouping, and is kept or pruned according to the leaves beneath it.
     /// </summary>
-    public bool IsPlatform { get; } = isPlatform;
+    public PermissionScope Scope { get; } = scope;
 
     [JsonIgnore]
     public PermissionDefinition? Parent { get; set; }
@@ -33,14 +32,14 @@ public class PermissionDefinition(string name, string displayName, bool isPlatfo
     /// </summary>
     /// <param name="name">Stable name of the child permission.</param>
     /// <param name="displayName">Display name of the child permission.</param>
-    /// <param name="isPlatform">
-    /// Whether the child belongs to the platform tier. A child of a platform-tier permission is
-    /// always platform-tier itself, whatever is passed here.
+    /// <param name="scope">
+    /// The scope the child may be exercised in. Left unstated the child takes its parent's scope, so
+    /// a group declared for one tier does not quietly acquire a child of another.
     /// </param>
     /// <returns>The newly created child <see cref="PermissionDefinition"/>.</returns>
-    public PermissionDefinition AddChild(string name, string displayName, bool isPlatform = false)
+    public PermissionDefinition AddChild(string name, string displayName, PermissionScope? scope = null)
     {
-        var child = new PermissionDefinition(name, displayName, isPlatform || IsPlatform)
+        var child = new PermissionDefinition(name, displayName, scope ?? Scope)
         {
             Parent = this
         };

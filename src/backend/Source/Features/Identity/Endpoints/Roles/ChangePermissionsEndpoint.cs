@@ -7,20 +7,19 @@ using Backend.Features.Identity.Core.Entities;
 /// This endpoint that handles <c>PUT /roles/change-permissions/{id}</c> to replace a role's permission set in a single operation.
 /// </summary>
 /// <remarks>
-/// Only the roles of the tenant being acted in can be re-permissioned here: a role belonging to another
-/// tenant is answered with the same 404 as an identifier naming no role at all and keeps the
-/// permissions it had, so nothing about it can be learned or changed from outside its tenant. A caller
-/// holding platform administration is the one exception and reaches any tenant's role. A tenant's
-/// system-created administrator role refuses permission changes outright. Beyond that, the catalogue is
-/// split in two tiers: a platform-tier permission governs the installation rather than any one tenant
-/// and can never be granted through a role that belongs to a tenant, so no tenant can promote itself to
+/// Only the roles of the scope being acted in can be re-permissioned here - a tenant's own inside a
+/// tenant, the platform's own in platform scope. A role belonging to another tenant is answered with
+/// the same 404 as an identifier naming no role at all and keeps the permissions it had, so nothing
+/// about it can be learned or changed from outside its tenant. A tenant's system-created administrator
+/// role refuses permission changes outright. Beyond that, a permission declares the scope it may be
+/// exercised in: a platform-scoped permission governs the installation rather than any one tenant and
+/// can never be granted through a role that belongs to a tenant, so no tenant can promote itself to
 /// platform authority by re-permissioning one of its own roles.
 /// </remarks>
 [AllowPlatformNoTenant]
 sealed class ChangePermissionsEndpoint(
     IRoleService roleService,
-    IPermissionService permissionService,
-    IPermissionDefinitionService permissionDefinitionService)
+    IPermissionService permissionService)
     : Endpoint<ChangePermissionsRequest, ChangePermissionsResponse>
 {
     private const string SystemCreatedMessage = "System-created role permissions cannot be changed";
@@ -74,18 +73,16 @@ sealed class ChangePermissionsEndpoint(
     }
 
     /// <summary>
-    /// Refuses the change when it would leave a tenant's role holding a platform-tier permission.
+    /// Refuses the change when it would leave a tenant's role holding a platform-scoped permission.
     /// </summary>
     /// <param name="role">The role whose permission set is being replaced.</param>
     /// <param name="permissionIds">The complete set of permissions the role is asked to end up with.</param>
     /// <param name="cancellationToken">Token that cancels the lookup.</param>
     /// <remarks>
-    /// A role that belongs to no tenant is platform scoped and may hold either tier; only a tenant's own
-    /// role is held to the tenant tier. The tier is a property of the code-declared catalogue rather
-    /// than of any stored row, so it is read from the catalogue and matched against the permission names
-    /// behind the identifiers supplied. The whole requested set is examined rather than only the
-    /// additions, so a platform permission cannot survive on a tenant role by being resubmitted along
-    /// with the rest.
+    /// A role that belongs to no tenant is platform scoped and may hold any scope; only a tenant's own
+    /// role is held to the permissions exercisable inside a tenant. The whole requested set is examined
+    /// rather than only the additions, so a platform permission cannot survive on a tenant role by being
+    /// resubmitted along with the rest.
     /// </remarks>
     private async Task RefusePlatformPermissionsAsync(Role role, List<Guid> permissionIds, CancellationToken cancellationToken)
     {
@@ -94,16 +91,10 @@ sealed class ChangePermissionsEndpoint(
             return;
         }
 
-        var platformPermissionNames = permissionDefinitionService.GetPlatformPermissionNames().ToList();
-        if (platformPermissionNames.Count == 0)
-        {
-            return;
-        }
-
         var grantsPlatformPermission = await permissionService.Permissions()
             .AsNoTracking()
             .AnyAsync(permission => permissionIds.Contains(permission.Id)
-                                    && platformPermissionNames.Contains(permission.Name), cancellationToken);
+                                    && permission.Scope == PermissionScope.Platform, cancellationToken);
         if (grantsPlatformPermission)
         {
             // Attributed to the permissions field so the web form can attach the message to the

@@ -174,7 +174,9 @@ public class PlatformScopeIdentityTests(App app) : TenancyTestsBase(app)
         var firstPlatformRoleId = await CreatePlatformRoleAsync();
         var secondPlatformRoleId = await CreatePlatformRoleAsync();
 
-        // Holding a platform role is what makes the member one of the platform's users at all.
+        // The tier is what makes the account one of the platform's users at all; the platform role is
+        // what it holds there, and is the set this update replaces.
+        await MarkAsPlatformAccountAsync(member.Id);
         await UserService.AssignRoleAsync(member.Id, firstPlatformRoleId);
 
         var (response, _) = await App.Client

@@ -47,11 +47,11 @@ export const authUrls: AuthUrl[] = [
   },
   {
     // The tenants list is the platform's own screen - it answers about every tenant there is - so it
-    // is gated on platform administration rather than on Tenant.View, which is tenant-tier and which
-    // every tenant administrator holds. A tenant administrator reaches their own tenant through the
-    // detail screen below instead.
+    // is gated on Tenant.View, which the API declares platform-scoped: a session carries it only
+    // while acting in no tenant, so a tenant administrator never holds it however their roles are
+    // granted. They reach their own tenant through the detail screen below instead.
     url: '/admin/tenants/list',
-    permissions: [Allow.Platform_Administration],
+    permissions: [Allow.Tenant_View],
   },
   {
     url: '/admin/tenants/create',

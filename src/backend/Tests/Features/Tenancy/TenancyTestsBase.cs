@@ -156,10 +156,11 @@ public abstract class TenancyTestsBase(App app) : AppTestsBase(app)
     }
 
     /// <summary>
-    /// Creates a platform administrator that acts inside a tenant of its own, and signs the fixture's
-    /// client in as it. Acting in a tenant is what widens the user and role endpoints across every
-    /// tenant for a platform administrator; the seeded one acts in no tenant, where those endpoints
-    /// answer about the platform's own users and roles instead.
+    /// Creates a platform account that acts inside a tenant it belongs to, and signs the fixture's
+    /// client in as it. Inside a tenant its session carries the tenant scope alone, so this is the
+    /// caller that shows what the platform tier does and does not widen once a tenant is active; the
+    /// seeded platform account acts in no tenant, where the same endpoints answer about the platform's
+    /// own users and roles instead.
     /// </summary>
     /// <returns>The created account.</returns>
     protected async Task<User> SignInAsPlatformAdministratorActingInATenantAsync()
@@ -168,7 +169,28 @@ public abstract class TenancyTestsBase(App app) : AppTestsBase(app)
         var account = await CreateTenantUserAsync(tenant.Id);
 
         await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
+        await MarkAsPlatformAccountAsync(account.Id);
         await SignInAsAsync(account.Username);
+
+        return account;
+    }
+
+    /// <summary>
+    /// Creates a platform account holding no membership anywhere, signs the fixture's client in as it
+    /// and has it enter the tenant named - the way the tenants table puts a platform caller inside a
+    /// tenant it does not belong to. Its session then carries that tenant's scope, so it works there as
+    /// the tenant's own administrator would.
+    /// </summary>
+    /// <param name="tenantId">The tenant to enter.</param>
+    /// <returns>The created account.</returns>
+    protected async Task<User> SignInAsPlatformAdministratorEnteringAsync(Guid tenantId)
+    {
+        var account = await CreateAccountWithoutMembershipAsync();
+
+        await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
+        await MarkAsPlatformAccountAsync(account.Id);
+        await SignInAsAsync(account.Username);
+        await SwitchTenantAsync(tenantId);
 
         return account;
     }

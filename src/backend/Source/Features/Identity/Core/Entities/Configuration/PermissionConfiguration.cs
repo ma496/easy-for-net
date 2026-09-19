@@ -18,5 +18,11 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
 
         builder.HasIndex(p => p.Name)
             .IsUnique();
+
+        // Stored as the underlying integer so the per-request scope narrowing is a plain comparison
+        // the provider can translate.
+        builder.Property(p => p.Scope)
+            .HasConversion<int>()
+            .HasDefaultValue(PermissionScope.Tenant);
     }
 }

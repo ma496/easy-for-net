@@ -9,7 +9,7 @@ using FluentValidation.Results;
 /// Global FastEndpoints pre-processor that establishes the tenant a request acts in, and refuses the
 /// request when it may not act in one. It is the single place the rule lives: every endpoint that
 /// does not carry <see cref="AllowNoTenantAttribute"/> - or <see cref="AllowPlatformNoTenantAttribute"/>
-/// for a caller holding platform administration - requires an established tenant that exists,
+/// for a platform account - requires an established tenant that exists,
 /// is not suspended, and that the caller still holds an active membership in, so no endpoint repeats
 /// the check and none can forget it.
 /// </summary>

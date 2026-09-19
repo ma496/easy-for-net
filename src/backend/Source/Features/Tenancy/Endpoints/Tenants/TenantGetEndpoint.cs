@@ -13,7 +13,7 @@ using Backend.Features.Tenancy.Core;
 /// inside one: a platform administrator acting in no tenant, and a member who has not yet chosen
 /// between the tenants they belong to, both have to be able to read one.
 /// Which tenants the caller may read is <see cref="ITenantService.Tenants"/>'s decision alone - every
-/// tenant for a caller holding platform administration, and otherwise only the tenants the caller
+/// tenant for a platform account acting in no tenant, and otherwise only the tenants the caller
 /// holds an active membership in - so this endpoint cannot disagree with the list about what is
 /// visible.
 /// <para>

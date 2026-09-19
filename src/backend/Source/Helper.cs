@@ -62,6 +62,8 @@ public static class Helper
             new (ClaimTypes.Email, user.Email),
             new (ClaimConstants.SessionVersion, CreateSessionVersion(user.PasswordHash)),
         };
+        if (user.IsPlatform)
+            claims.Add(new (ClaimConstants.IsPlatform, bool.TrueString));
         if (tenantId.HasValue)
             claims.Add(new (ClaimConstants.TenantId, tenantId.Value.ToString()));
         claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));

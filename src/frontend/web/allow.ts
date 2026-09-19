@@ -28,6 +28,4 @@ export const Allow = {
   TenantMember_Add: 'TenantMember.Add',
   TenantMember_UpdateRoles: 'TenantMember.UpdateRoles',
   TenantMember_Remove: 'TenantMember.Remove',
-
-  Platform_Administration: 'Platform.Administration',
 } as const

@@ -4,9 +4,10 @@ import { authUrls, getMatchedAuthUrl, isAuthRequired, type AuthUrl } from './aut
 
 describe('getMatchedAuthUrl', () => {
   it.each([
-    // The list answers about every tenant there is, so it is the platform's screen rather than one a
-    // tenant administrator reaches with the tenant-tier Tenant.View.
-    ['/admin/tenants/list', Allow.Platform_Administration],
+    // The list answers about every tenant there is, so Tenant.View is platform-scoped on the API: a
+    // session carries it only while acting in no tenant, which is what keeps this the platform's
+    // screen rather than one a tenant administrator reaches.
+    ['/admin/tenants/list', Allow.Tenant_View],
     ['/admin/tenants/create', Allow.Tenant_Create],
   ])('guards %s with the permission the screen requires', (url, permission) => {
     expect(getMatchedAuthUrl(url)?.permissions).toEqual([permission])
@@ -35,7 +36,7 @@ describe('getMatchedAuthUrl', () => {
   })
 
   it('matches a path whatever query string it is reached with', () => {
-    expect(getMatchedAuthUrl('/admin/tenants/list?page=2&search=acme')?.permissions).toEqual([Allow.Platform_Administration])
+    expect(getMatchedAuthUrl('/admin/tenants/list?page=2&search=acme')?.permissions).toEqual([Allow.Tenant_View])
   })
 
   it('matches nothing outside the registry', () => {
@@ -44,7 +45,7 @@ describe('getMatchedAuthUrl', () => {
   })
 
   it('refuses to answer when two entries match the same path', () => {
-    const duplicate: AuthUrl = { url: '/admin/tenants/list', permissions: [Allow.Tenant_View] }
+    const duplicate: AuthUrl = { url: '/admin/tenants/list', permissions: [Allow.Tenant_Detail] }
     authUrls.push(duplicate)
 
     try {

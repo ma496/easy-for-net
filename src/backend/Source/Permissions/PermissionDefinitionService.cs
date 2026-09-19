@@ -12,24 +12,29 @@ public interface IPermissionDefinitionService
     /// organized by their owning group. The catalogue is code-declared and identical for every
     /// tenant.
     /// </summary>
-    /// <param name="includePlatformPermissions">
-    /// When <c>false</c>, platform-tier permissions are left out, along with any parent node whose
-    /// whole subtree is platform-tier - so a caller without platform authority is never offered a
-    /// permission it could not grant through a tenant role.
+    /// <param name="viewScope">
+    /// The scope the caller is acting in. Only leaves declared for that scope or for
+    /// <see cref="PermissionScope.Both"/> are returned, along with the parents that still have one -
+    /// so a caller is never offered a permission that could not be exercised where they are. Left
+    /// unstated the whole catalogue is returned, both tiers included, which is what seeding wants.
     /// </param>
     /// <returns>The list of permission groups with their permissions.</returns>
-    IReadOnlyList<PermissionGroupDefinition> GetPermissionGroups(bool includePlatformPermissions = true);
+    IReadOnlyList<PermissionGroupDefinition> GetPermissionGroups(PermissionScope? viewScope = null);
+
     /// <summary>
-    /// Returns every leaf permission across all groups, regardless of nesting, both tiers included.
+    /// Returns every leaf permission across all groups, regardless of nesting and of scope.
     /// </summary>
     /// <returns>The flattened list of leaf permissions.</returns>
     IReadOnlyList<FlattenedPermission> GetFlattenedPermissions();
+
     /// <summary>
-    /// Returns the names of every platform-tier leaf permission, for callers that need to refuse
-    /// granting one through a tenant role.
+    /// Returns the names of every leaf permission exercisable in one scope - those declared for it
+    /// and those declared for <see cref="PermissionScope.Both"/>. This is the set a role confined to
+    /// that scope may hold.
     /// </summary>
-    /// <returns>The set of platform-tier permission names.</returns>
-    IReadOnlySet<string> GetPlatformPermissionNames();
+    /// <param name="viewScope">The scope the names are wanted for.</param>
+    /// <returns>The set of permission names exercisable in that scope.</returns>
+    IReadOnlySet<string> GetPermissionNamesInScope(PermissionScope viewScope);
 }
 
 /// <summary>
@@ -41,7 +46,7 @@ public interface IPermissionDefinitionService
 public class PermissionDefinitionService(IEnumerable<IPermissionDefinitionProvider> providers) : IPermissionDefinitionService
 {
     /// <inheritdoc/>
-    public IReadOnlyList<PermissionGroupDefinition> GetPermissionGroups(bool includePlatformPermissions = true)
+    public IReadOnlyList<PermissionGroupDefinition> GetPermissionGroups(PermissionScope? viewScope = null)
     {
         var groups = new List<PermissionGroupDefinition>();
         foreach (var provider in providers)
@@ -49,9 +54,10 @@ public class PermissionDefinitionService(IEnumerable<IPermissionDefinitionProvid
             var context = new PermissionDefinitionContext();
             provider.Define(context);
 
-            IReadOnlyList<PermissionDefinition> permissions = includePlatformPermissions
+            IReadOnlyList<PermissionDefinition> permissions = viewScope is not { } scope
                 ? context.GetPermissions()
-                : [.. context.GetPermissions().Where(HasTenantPermission).Select(CopyTenantPermissions)];
+                : [.. context.GetPermissions().Where(permission => HasLeafInScope(permission, scope))
+                                              .Select(permission => CopyLeavesInScope(permission, scope))];
             if (permissions.Count == 0)
             {
                 continue;
@@ -74,10 +80,10 @@ public class PermissionDefinitionService(IEnumerable<IPermissionDefinitionProvid
     }
 
     /// <inheritdoc/>
-    public IReadOnlySet<string> GetPlatformPermissionNames()
+    public IReadOnlySet<string> GetPermissionNamesInScope(PermissionScope viewScope)
     {
         return GetFlattenedPermissions()
-            .Where(p => p.IsPlatform)
+            .Where(p => IsInScope(p.Scope, viewScope))
             .Select(p => p.Name)
             .ToHashSet(StringComparer.Ordinal);
     }
@@ -92,7 +98,7 @@ public class PermissionDefinitionService(IEnumerable<IPermissionDefinitionProvid
             {
                 Name = permission.Name,
                 DisplayName = permission.DisplayName,
-                IsPlatform = permission.IsPlatform
+                Scope = permission.Scope
             };
             yield break;
         }
@@ -107,32 +113,40 @@ public class PermissionDefinitionService(IEnumerable<IPermissionDefinitionProvid
     }
 
     /// <summary>
-    /// Tells whether a definition still yields a tenant-tier leaf once the platform tier is removed.
+    /// Whether a permission is exercisable in a scope: one declared for that scope, or one declared
+    /// for both.
     /// </summary>
-    private static bool HasTenantPermission(PermissionDefinition permission)
+    private static bool IsInScope(PermissionScope scope, PermissionScope viewScope)
+        => scope == viewScope || scope == PermissionScope.Both;
+
+    /// <summary>
+    /// Tells whether a definition still yields a leaf exercisable in the scope asked about.
+    /// </summary>
+    private static bool HasLeafInScope(PermissionDefinition permission, PermissionScope viewScope)
     {
-        if (permission.IsPlatform)
+        if (permission.Children.Count == 0)
         {
-            return false;
+            return IsInScope(permission.Scope, viewScope);
         }
-        return permission.Children.Count == 0 || permission.Children.Any(HasTenantPermission);
+        return permission.Children.Any(child => HasLeafInScope(child, viewScope));
     }
 
     /// <summary>
-    /// Rebuilds a definition subtree keeping only the branches that end in a tenant-tier leaf.
+    /// Rebuilds a definition subtree keeping only the branches that end in a leaf exercisable in the
+    /// scope asked about.
     /// </summary>
-    private static PermissionDefinition CopyTenantPermissions(PermissionDefinition permission)
+    private static PermissionDefinition CopyLeavesInScope(PermissionDefinition permission, PermissionScope viewScope)
     {
-        var copy = new PermissionDefinition(permission.Name, permission.DisplayName);
-        CopyTenantChildren(permission, copy);
+        var copy = new PermissionDefinition(permission.Name, permission.DisplayName, permission.Scope);
+        CopyChildrenInScope(permission, copy, viewScope);
         return copy;
     }
 
-    private static void CopyTenantChildren(PermissionDefinition source, PermissionDefinition target)
+    private static void CopyChildrenInScope(PermissionDefinition source, PermissionDefinition target, PermissionScope viewScope)
     {
-        foreach (var child in source.Children.Where(HasTenantPermission))
+        foreach (var child in source.Children.Where(candidate => HasLeafInScope(candidate, viewScope)))
         {
-            CopyTenantChildren(child, target.AddChild(child.Name, child.DisplayName));
+            CopyChildrenInScope(child, target.AddChild(child.Name, child.DisplayName, child.Scope), viewScope);
         }
     }
 
@@ -141,7 +155,7 @@ public class PermissionDefinitionService(IEnumerable<IPermissionDefinitionProvid
 
 /// <summary>
 /// Lightweight representation of a permission leaf, used when only the
-/// name, display name and tier are needed (for example for seeding).
+/// name, display name and scope are needed (for example for seeding).
 /// </summary>
 public class FlattenedPermission
 {
@@ -149,8 +163,7 @@ public class FlattenedPermission
     public string DisplayName { get; init; } = string.Empty;
 
     /// <summary>
-    /// Whether the permission belongs to the platform tier and so can never be granted through a
-    /// tenant role. Derived from the code-declared catalogue; never persisted.
+    /// The scope the permission may be exercised in.
     /// </summary>
-    public bool IsPlatform { get; init; }
+    public PermissionScope Scope { get; init; }
 }

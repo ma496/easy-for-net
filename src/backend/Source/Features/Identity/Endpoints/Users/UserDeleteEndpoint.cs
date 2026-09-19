@@ -42,9 +42,9 @@ sealed class UserDeleteEndpoint(IUserService userService,
 
         // An account is one identity across every tenant it belongs to, and deleting it ends it in all
         // of them. Administering one tenant is therefore not standing enough to delete an account that
-        // also belongs to another tenant or holds a platform-scoped role: that account is deleted by a
-        // platform administrator, while this tenant removes it from its own membership instead.
-        if (!currentUserService.HasPermission(Allow.Platform_Administration))
+        // also belongs to another tenant or holds a platform-scoped role: that account is deleted from
+        // platform scope, while this tenant removes it from its own membership instead.
+        if (!(currentUserService.IsPlatform() && tenantContext.IsPlatformScope()))
         {
             if (tenantContext.CurrentTenantId is not { } activeTenantId
                 || await tenantAuthorizationService.ReachesBeyondTenantAsync(entity.Id, activeTenantId, cancellationToken))

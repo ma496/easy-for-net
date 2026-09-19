@@ -109,7 +109,9 @@ public class TestsDataSeeder(IUserService userService,
     /// <summary>
     /// Creates a role inside the bootstrap tenant holding exactly one permission, so that a
     /// per-endpoint <c>Permissions(...)</c> declaration can be proved to be what turns a caller away:
-    /// every other seeded role holds every permission, which would make the refusal unprovable.
+    /// every other seeded role holds every permission, which would make the refusal unprovable. The
+    /// permission has to be one a tenant role can actually exercise, or every endpoint would refuse the
+    /// holder and the gate would be unprovable for the opposite reason.
     /// </summary>
     private async Task<Guid> CreateLimitedTenantRoleAsync(List<Permission> permissions)
     {
@@ -124,10 +126,10 @@ public class TestsDataSeeder(IUserService userService,
                        });
 
             var grantedPermissionNames = await roleService.GetRolePermissionsAsync(role.Id);
-            if (!grantedPermissionNames.Contains(Allow.Tenant_View))
+            if (!grantedPermissionNames.Contains(Allow.Tenant_Detail))
             {
-                var tenantViewPermission = permissions.Single(permission => permission.Name == Allow.Tenant_View);
-                await roleService.AssignPermissionAsync(role.Id, tenantViewPermission.Id);
+                var tenantDetailPermission = permissions.Single(permission => permission.Name == Allow.Tenant_Detail);
+                await roleService.AssignPermissionAsync(role.Id, tenantDetailPermission.Id);
             }
 
             return role.Id;

@@ -36,7 +36,7 @@ public class HangfireDashboardTests(App app) : AppTestsBase(app)
     /// dashboard, and that a platform administrator is served it (AC-047).
     /// </summary>
     [Fact]
-    public async Task Refuses_Every_Caller_Without_Platform_Administration()
+    public async Task Refuses_Every_Caller_Outside_The_Platform_Tier()
     {
         ClearAuthToken();
 

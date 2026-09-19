@@ -18,7 +18,6 @@ const tenancyPermissions = {
   TenantMember_Add: 'TenantMember.Add',
   TenantMember_UpdateRoles: 'TenantMember.UpdateRoles',
   TenantMember_Remove: 'TenantMember.Remove',
-  Platform_Administration: 'Platform.Administration',
 } as const
 
 describe('Allow', () => {
@@ -29,7 +28,7 @@ describe('Allow', () => {
   it('carries every tenancy permission the API enforces, and no others', () => {
     const tenancyNames = Object.keys(tenancyPermissions).sort()
     const carried = Object.keys(Allow)
-      .filter((name) => name.startsWith('Tenant') || name.startsWith('Platform_'))
+      .filter((name) => name.startsWith('Tenant'))
       .sort()
 
     expect(carried).toEqual(tenancyNames)

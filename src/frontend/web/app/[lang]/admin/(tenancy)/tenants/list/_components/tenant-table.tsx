@@ -86,10 +86,12 @@ export const TenantTable = () => {
   const canDelete = isAllowed(authState, [Allow.Tenant_Delete])
   const canViewMembers = isAllowed(authState, [Allow.TenantMember_View])
   const canViewDetail = isAllowed(authState, [Allow.Tenant_Detail])
-  // A platform user holds no membership anywhere, so this table is how they reach a tenant at all:
-  // entering one puts their session inside it, which is what lets them reproduce something a tenant
-  // has reported rather than reason about it from outside.
-  const canEnter = isAllowed(authState, [Allow.Platform_Administration])
+  // A platform account holds no membership anywhere, so this table is how it reaches a tenant at all:
+  // entering one puts its session inside it, which is what lets it reproduce something a tenant has
+  // reported rather than reason about it from outside. This is the account tier rather than a
+  // permission - entering a tenant is not something a tenant grants - so it is read off the user
+  // rather than through isAllowed.
+  const canEnter = !!authState.user?.isPlatform
   const activeTenantId = authState.activeTenant?.id
 
   const { enterTenant, isBusy: isSwitchingTenant } = useTenantSwitch()

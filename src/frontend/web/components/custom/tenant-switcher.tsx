@@ -55,10 +55,12 @@ export const TenantSwitcher = ({ className = '' }: TenantSwitcherProps) => {
   // both a user who belongs to several tenants and a user left without an active tenant, who must
   // still be able to pick one of the tenants they belong to.
   const canSwitch = tenants.some((tenant) => tenant.id !== activeTenant?.id)
-  // A platform user holds no membership anywhere, so the list is empty for them while they are inside
-  // a tenant they entered. Leaving is how they get back out, and it is the only way back: there is no
-  // other tenant of theirs to select their way out through.
-  const canExit = !!user?.isPlatformAdministrator && !!activeTenant
+  // A platform account holds no membership anywhere, so the list is empty for it while it is inside a
+  // tenant it entered. Leaving is how it gets back out, and it is the only way back: there is no other
+  // tenant of its own to select its way out through. The account tier is the test rather than a
+  // permission, because inside a tenant the session carries that tenant's permissions and none of the
+  // platform's.
+  const canExit = !!user?.isPlatform && !!activeTenant
 
   if (tenants.length === 0 && !activeTenant) {
     return null

@@ -10,10 +10,12 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The class is built around one question - which tenants does this caller see - asked of the two
-/// answers that exist. A caller holding platform administration sees every tenant, including the ones
-/// it has never joined (AC-046); every other caller sees exactly the tenants it holds an active
-/// membership in, and nothing else (AC-066).
+/// The class is built around one question - which tenants does this caller see - and the answer now
+/// begins before the list: reading every tenant there is belongs to the platform scope, so the
+/// permission that opens this surface can only be exercised by a platform account acting in no tenant
+/// (AC-046). A caller acting inside a tenant is refused it outright and learns which tenants it
+/// belongs to from the account-info call instead, which reports exactly its active memberships
+/// (AC-066).
 /// </para>
 /// <para>
 /// Isolation is by search rather than by reading the whole list, because the suite shares one database
@@ -44,102 +46,33 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that a caller without platform administration sees the tenants it holds an active
-    /// membership in and no others, so the list cannot be used to discover a tenant the caller has no
-    /// standing in (AC-066).
+    /// Verifies that a caller acting inside a tenant is refused this surface altogether, whatever its
+    /// own role names: the permission that opens it is exercisable only in platform scope, so a tenant
+    /// role granting it grants nothing and the list cannot be used to discover a tenant the caller has
+    /// no standing in (AC-066).
     /// </summary>
+    /// <remarks>
+    /// The role is deliberately given the permission the endpoint asks for. That is what makes the
+    /// refusal say something: the caller is not short of a grant, it is in the wrong scope to exercise
+    /// the one it has, and a session carries only the permissions of the scope it acts in.
+    /// </remarks>
     [Fact]
-    public async Task Non_Platform_Caller_Sees_Only_Own_Tenants()
+    public async Task Caller_Acting_In_A_Tenant_Is_Refused_The_List()
     {
         var token = NewSearchToken();
         var joined = await CreateTenantsAsync(token, count: 1);
-        var other = await CreateTenantsAsync(token, count: 1);
         var roleId = await CreateTenantRoleAsync(joined[0].Id, Allow.Tenant_View);
         var member = await CreateTenantUserAsync(joined[0].Id, roleId);
 
         await SignInAsAsync(member.Username, joined[0].Id);
 
-        var (response, page) = await App.Client
+        var (refused, _) = await App.Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(new() { Search = token, All = true });
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        page.Items.Select(item => item.Id).Should().Equal(
-            [joined[0].Id],
-            "a member sees the tenant it belongs to, and the search does not reveal the one it does not");
-        page.Items.Should().NotContain(item => item.Id == other[0].Id);
+        refused.StatusCode.Should().Be(
+            HttpStatusCode.Forbidden,
+            "the tenants list is the platform's own surface, so a caller acting inside a tenant cannot exercise the permission that opens it");
     }
-
-    /// <summary>
-    /// Verifies that a tenant the caller's membership of has been removed stops being listed, while the
-    /// tenants it still belongs to go on being listed - so what the list reports is the memberships the
-    /// caller holds now rather than the ones it held (AC-066).
-    /// </summary>
-    /// <remarks>
-    /// The tenant is listed before the membership is removed, in the same session that lists it
-    /// afterwards, so the change in the answer can only be the removal: a caller that never saw the
-    /// tenant would satisfy the assertion without the removal having done anything. The removal itself is
-    /// asserted to have been applied, because a removal the last-administrator guard refused would leave
-    /// the membership standing and the tenant rightly still listed.
-    /// </remarks>
-    [Fact]
-    public async Task A_Removed_Membership_Stops_Being_Listed()
-    {
-        var token = NewSearchToken();
-        var keptTenant = (await CreateTenantsAsync(token, count: 1))[0];
-        var removedTenant = (await CreateTenantsAsync(token, count: 1))[0];
-        var keptRoleId = await CreateTenantRoleAsync(keptTenant.Id, Allow.Tenant_View);
-        var member = await CreateTenantUserAsync(keptTenant.Id, keptRoleId);
-        var cancellationToken = TestContext.Current.CancellationToken;
-
-        await MembershipService.AddAsync(removedTenant.Id, member.Id, [], cancellationToken);
-
-        // Somebody else who administers the tenant the membership is about to be removed from: without
-        // them the removal would be refused for leaving nobody to administer it, which is a different
-        // question from the one this test asks.
-        var administratorRoleId = await TenantAdministratorRoleIdAsync(removedTenant.Id);
-        var administrator = await CreateAccountWithoutMembershipAsync();
-        await MembershipService.AddAsync(removedTenant.Id, administrator.Id, [administratorRoleId], cancellationToken);
-
-        // The account belongs to two tenants, so the one it acts in is named rather than resolved.
-        await SignInAsAsync(member.Username, keptTenant.Id);
-
-        var (beforeResponse, before) = await App.Client
-            .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(new() { Search = token, All = true });
-
-        beforeResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        before.Items.Select(item => item.Id).Should().BeEquivalentTo(
-            [keptTenant.Id, removedTenant.Id],
-            "the premise is that both memberships are listed while both stand");
-
-        var outcome = await MembershipService.RemoveAsync(removedTenant.Id, member.Id, cancellationToken);
-
-        outcome.Should().Be(
-            TenantMembershipChangeOutcome.Applied,
-            "somebody else administers the tenant, so the removal is the change being tested rather than a refusal");
-
-        var (afterResponse, after) = await App.Client
-            .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(new() { Search = token, All = true });
-
-        afterResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        after.Items.Select(item => item.Id).Should().Equal(
-            [keptTenant.Id],
-            "the tenant the membership was removed from is no longer one the caller is shown");
-        after.Total.Should().Be(1, "and the count describes the memberships that stand rather than the ones that once did");
-    }
-
-    /// <summary>
-    /// The identity of the role a tenant was provisioned with - the one holding tenant administration -
-    /// read from the tenant's own system-created role rather than from a name.
-    /// </summary>
-    /// <param name="tenantId">The tenant whose administrator role is read.</param>
-    /// <returns>The identifier of that role.</returns>
-    private async Task<Guid> TenantAdministratorRoleIdAsync(Guid tenantId)
-        => await DbContext.Roles
-            .AcrossAllTenants()
-            .AsNoTracking()
-            .Where(role => role.TenantId == tenantId && role.SystemCreated)
-            .Select(role => role.Id)
-            .SingleAsync(TestContext.Current.CancellationToken);
 
     /// <summary>
     /// Verifies that the list is paged and that the total describes the whole matching set rather than

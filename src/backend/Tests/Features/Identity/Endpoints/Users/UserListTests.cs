@@ -214,18 +214,20 @@ public class UserListTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that a platform administrator administers every account irrespective of which tenant
-    /// it belongs to (AC-095).
+    /// Verifies that a platform account administers every tenant's accounts by entering the tenant it
+    /// means, and administers the platform's own while it is acting in none (AC-095).
     /// </summary>
     /// <remarks>
-    /// The account used here holds platform administration in a role belonging to no tenant and acts in
-    /// a tenant of its own - so this is a caller acting in a tenant and reading across every one, which
-    /// is exactly the widening the two asserts describe. That the tenant-tier caller is refused the same accounts is stated by
-    /// <see cref="Users_Are_Restricted_To_The_Active_Tenant"/>; read together, the two say the
-    /// platform tier is what makes the difference.
+    /// The two halves are the whole of what the tier gives. Acting in no tenant, the accounts the list
+    /// is about are the platform's own, so a tenant's member is not among them; entering a tenant, they
+    /// are that tenant's members and no other tenant's. What the tier confers is admission to any
+    /// tenant without a membership, not a view across all of them at once - which is why the caller
+    /// below reaches both tenants' accounts in turn and never both together. That an ordinary caller is
+    /// restricted the same way is stated by
+    /// <see cref="Users_Are_Restricted_To_The_Active_Tenant"/>.
     /// </remarks>
     [Fact]
-    public async Task Platform_Administrator_Sees_Every_Account()
+    public async Task Platform_Account_Administers_Each_Tenants_Accounts_By_Entering_It()
     {
         var first = await CreateTenantAsync();
         var second = await CreateTenantAsync();
@@ -234,7 +236,17 @@ public class UserListTests(App app) : TenancyTestsBase(app)
         var inSecond = await CreateTenantUserAsync(
             second.Id, await CreateTenantRoleAsync(second.Id, Allow.User_View));
 
-        await SignInAsPlatformAdministratorActingInATenantAsync();
+        await SetPlatformAdminAuthTokenAsync();
+
+        var (platformRsp, platformPage) = await App.Client
+            .GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
+                new() { Page = 1, PageSize = 100, Search = inFirst.Username });
+
+        platformRsp.StatusCode.Should().Be(HttpStatusCode.OK);
+        platformPage.Items.Should().BeEmpty(
+            "acting in no tenant the list is about the platform's own accounts, and this one belongs to a tenant");
+
+        await SwitchTenantAsync(first.Id);
 
         var (firstRsp, firstPage) = await App.Client
             .GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
@@ -242,7 +254,17 @@ public class UserListTests(App app) : TenancyTestsBase(app)
 
         firstRsp.StatusCode.Should().Be(HttpStatusCode.OK);
         firstPage.Items.Select(item => item.Id).Should().Equal([inFirst.Id],
-            "the caller holds platform administration, which is standing in every tenant rather than in the one it happens to be acting in");
+            "entering a tenant it holds no membership of is what puts the caller among that tenant's administrators");
+
+        var (strangerRsp, strangerPage) = await App.Client
+            .GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
+                new() { Page = 1, PageSize = 100, Search = inSecond.Username });
+
+        strangerRsp.StatusCode.Should().Be(HttpStatusCode.OK);
+        strangerPage.Items.Should().BeEmpty(
+            "and inside that tenant it is that tenant's actor, so another tenant's accounts are as absent as they are to anybody there");
+
+        await SwitchTenantAsync(second.Id);
 
         var (secondRsp, secondPage) = await App.Client
             .GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
@@ -250,6 +272,6 @@ public class UserListTests(App app) : TenancyTestsBase(app)
 
         secondRsp.StatusCode.Should().Be(HttpStatusCode.OK);
         secondPage.Items.Select(item => item.Id).Should().Equal([inSecond.Id],
-            "the widening is the platform tier and not membership in any particular tenant: this account belongs to neither tenant the caller is a member of");
+            "the second tenant is reached the same way, which is the reach the tier actually gives");
     }
 }

@@ -26,7 +26,7 @@ sealed class TenantListEndpoint(ITenantService tenantService) : Endpoint<TenantL
     public override async Task HandleAsync(TenantListRequest request, CancellationToken cancellationToken)
     {
         // Which tenants the caller may see is decided in one place: every tenant that is not deleted
-        // for a caller holding platform administration, and otherwise only the tenants the caller
+        // for a platform account acting in no tenant, and otherwise only the tenants the caller
         // holds an active membership in. The search, the filter and the total below all narrow from
         // that query, so no request can widen the set it returns.
         var query = tenantService.Tenants().AsNoTracking();

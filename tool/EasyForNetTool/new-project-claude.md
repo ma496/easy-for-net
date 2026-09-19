@@ -39,7 +39,7 @@ npm run test                        # vitest run
 npx vitest run lib/utils/redirect.test.ts
 ```
 
-Default credentials seeded on first run: `admin` / `Admin#123` (platform administrator, no tenant) and `tenantadmin` / `Admin#123` (default tenant administrator).
+Default credentials seeded on first run: `admin` / `Admin#123` (the platform account — `IsPlatform`, no tenant) and `tenantadmin` / `Admin#123` (default tenant administrator).
 
 ## Backend architecture
 
@@ -56,6 +56,8 @@ Default credentials seeded on first run: `admin` / `Admin#123` (platform adminis
 **Feature isolation is enforced by tests.** `Tests/Architect/FeatureDependencyTests` fails if a type under `<RootNamespace>.Features.X` depends on a type under `<RootNamespace>.Features.Y` unless that type is marked `[AllowOutside]`. `[NoDirectUse]` (with `[BypassNoDirectUse]` as the escape hatch) enforces consuming a class through its interface. `Tests/Architect/Features/Feature{A,B}` are fixtures that exercise the rules themselves — not real features.
 
 **Permissions** are string constants in `Permissions/Allow.cs`, declared as a hierarchy by each feature's `IPermissionDefinitionProvider`, enforced on endpoints via `Permissions(Allow.X)`, and reconciled into the database by `Data/DataSeeder` on every startup (adds/renames/deletes rows and strips deleted permissions from roles). Adding a permission means: constant in `Allow.cs` → definition in the provider → mirror the constant in `src/frontend/web/allow.ts`.
+
+Each definition also carries a `PermissionScope` — `Tenant` (the default), `Platform` or `Both` — and `SessionValidator` narrows a session's permission claims to the scope of the request: `Platform` + `Both` for a platform account acting in no tenant, `Tenant` + `Both` for anyone acting inside one, nothing for an ordinary account with no active tenant. Permissions are the only authorization input. The separate `User.IsPlatform` column names the account's tier, travels as the `is_platform` claim, and is read only where the tier itself is the question — the `[AllowPlatformNoTenant]` exemption, the Hangfire dashboard, entering and leaving a tenant, and what tier a newly created account gets.
 
 **Data access.** `AppDbContext` applies entity configurations from the assembly, installs a global soft-delete query filter for `ISoftDelete`, and fills audit/normalized properties on save. List endpoints take a `ListRequestDto<TId>` and call `IQueryableExtension.Process(request)` for sorting/paging; sortable fields must be whitelisted in the request validator.
 

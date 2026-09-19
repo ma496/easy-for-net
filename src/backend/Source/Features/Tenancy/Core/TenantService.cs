@@ -6,7 +6,7 @@ using Backend.Features.Identity.Core;
 /// <summary>
 /// Reads and creates tenant records. A tenant is the scope rather than something inside one, so
 /// nothing here is restricted by the active tenant: which tenants a caller may see is decided by the
-/// caller's own standing - platform administration, or an active membership - and that decision lives
+/// caller's own standing - the platform tier in platform scope, or an active membership - and that decision lives
 /// in <see cref="Tenants"/> alone, so no lookup, list or search can disagree with another about it.
 /// </summary>
 /// <remarks>
@@ -119,9 +119,10 @@ public class TenantService(AppDbContext dbContext,
     /// <inheritdoc />
     public IQueryable<Tenant> Tenants()
     {
-        // Platform administration is a claim test rather than a role-name test: any tenant may define
-        // a role of any name, so only the permission the request actually carries can decide this.
-        if (currentUserService.HasPermission(Allow.Platform_Administration))
+        // A platform account acting in no tenant sees every tenant there is - that is what the tenants
+        // table is. Inside a tenant it sees what its membership would show it, because entering a tenant
+        // makes it that tenant's actor; the tier alone is not the test, the scope is part of it.
+        if (currentUserService.IsPlatform() && tenantContext.IsPlatformScope())
         {
             return dbContext.Tenants;
         }

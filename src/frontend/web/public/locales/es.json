@@ -555,11 +555,11 @@
       "suspendedReason": "El inquilino en el que trabajaba ha sido suspendido. Elija otro inquilino para continuar.",
       "revokedReason": "Su membresía en ese inquilino ha sido revocada. Elija otro inquilino para continuar.",
       "unavailableReason": "Ese inquilino ya no está disponible. Elija otro inquilino para continuar.",
-      "noSelectionReason": "Elija un inquilino antes de abrir esta pantalla."
+      "noSelectionReason": "Indique un inquilino antes de abrir esta pantalla."
     },
     "noTenant": {
       "title": "Sin inquilino",
-      "description": "Todavía no pertenece a un inquilino activo. Cree su propio inquilino o pida a un administrador que lo agregue al suyo.",
+      "description": "Indique un inquilino para continuar: todavía no pertenece a un inquilino activo. Cree su propio inquilino o pida a un administrador que lo agregue al suyo.",
       "createTitle": "Cree su inquilino",
       "createButton": "Crear inquilino",
       "createSuccess": "Inquilino creado. Ahora usted es su administrador."

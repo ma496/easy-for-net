@@ -20,9 +20,6 @@ public partial class Allow
 
     public const string File_Delete = "File.Delete";
 
-    // This permission is used to identify the platform administrator.
-    public const string Platform_Administration = "Platform.Administration";
-
     public const string Tenant_View = "Tenant.View";
     public const string Tenant_Detail = "Tenant.Detail";
     public const string Tenant_Create = "Tenant.Create";

@@ -705,3 +705,43 @@ existing mechanisms to extend rather than duplicate:
 
 None. Every question raised during specification has been answered with the requester; the decisions
 are recorded under `## Assumptions` and in the criteria they changed.
+
+## Amendment: the platform tier becomes an account property, permissions gain a scope
+
+This amendment records a change made after the criteria above were verified. It supersedes the
+mechanism several of them describe; the criteria themselves still hold and are still met.
+
+**What changed.** The `Platform.Administration` permission is gone. Two things replace it:
+
+- `User.IsPlatform` — a column on the account naming the tier it belongs to, and nothing it may do.
+  It travels as the `is_platform` claim, recomputed from the account on every request.
+- `PermissionScope` — every permission declares `Tenant` (the default), `Platform` or `Both`. A
+  session's permission claims are narrowed to the scope of the request: `Platform` + `Both` for a
+  platform account acting in no tenant, `Tenant` + `Both` for anyone acting inside one, and nothing
+  for an ordinary account with no active tenant.
+
+**Criteria the mechanism changed, all still satisfied:**
+
+- **AC-041** — a platform-level permission is now one declared `PermissionScope.Platform`; it cannot
+  be granted through a tenant role, and cannot be exercised from inside a tenant even if it were.
+- **AC-046, AC-095, AC-113** — a platform account still administers every tenant, but it does so by
+  entering the tenant, which its tier admits it to without a membership. Inside a tenant it carries
+  that tenant's scope, so it is that tenant's actor rather than a caller standing above every tenant
+  at once. From platform scope it administers the platform's own accounts and roles, and reaches one
+  tenant's roles by naming it on the role list.
+- **AC-047** — the background-job dashboard is gated on the account tier rather than on a permission,
+  because a permission would be narrowed away the moment a platform account entered a tenant.
+- **AC-114, AC-115** — the permission-definition catalogue is narrowed to the scope the caller is
+  acting in, and each definition reports its scope so the tiers stay distinguishable.
+
+**Also decided with this change:**
+
+- `Tenant.View` is platform-scoped, so the tenants list is the platform's own screen. A tenant
+  administrator reaches their own tenant through `Tenant.Detail`, which is `Both`.
+- An account created while acting in platform scope is a platform account holding no membership; one
+  created inside a tenant — by a platform account that entered it just as by that tenant's own
+  administrator — is an ordinary account of that tenant. Self-service sign-up creates an ordinary
+  account, so AC-118 and AC-133 are unchanged.
+- Sign-in is still not refused for an account holding no membership, which is what keeps the
+  self-service onboarding of AC-133 reachable; the "please provide a tenant" message is carried by
+  the `/no-tenant` and `/select-tenant` screens.

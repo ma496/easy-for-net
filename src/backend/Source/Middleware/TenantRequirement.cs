@@ -12,9 +12,8 @@ internal static class TenantRequirement
 {
     /// <summary>
     /// Reports whether the endpoint being called runs with no tenant established for this caller:
-    /// every caller when it carries <see cref="AllowNoTenantAttribute"/>, and a caller holding
-    /// <see cref="Allow.Platform_Administration"/> when it carries
-    /// <see cref="AllowPlatformNoTenantAttribute"/>. A request whose endpoint cannot be identified is
+    /// every caller when it carries <see cref="AllowNoTenantAttribute"/>, and a platform account when
+    /// it carries <see cref="AllowPlatformNoTenantAttribute"/>. A request whose endpoint cannot be identified is
     /// treated as not exempt, so an operation whose tenant rule cannot be established is refused
     /// rather than allowed to run unrestricted.
     /// </summary>
@@ -33,9 +32,9 @@ internal static class TenantRequirement
             return true;
         }
 
-        // The platform tier is read from the permission claims the session check has just recomputed,
+        // The tier is read from the claim the session check has just recomputed from the account,
         // never from the request, so naming a tenant or omitting one cannot earn the exemption.
         return definition.EndpointType.IsDefined(typeof(AllowPlatformNoTenantAttribute), inherit: false)
-               && httpContext.User.HasClaim(ClaimConstants.Permission, Allow.Platform_Administration);
+               && httpContext.User.HasClaim(ClaimConstants.IsPlatform, bool.TrueString);
     }
 }

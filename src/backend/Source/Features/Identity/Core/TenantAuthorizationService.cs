@@ -32,8 +32,8 @@ public interface ITenantAuthorizationService
 
     /// <summary>
     /// Provisions a tenant with its system-created administrator role - the role holding every
-    /// tenant-tier permission the code-declared catalogue contains and no platform-tier one - and
-    /// returns its identifier so the caller can grant it to the tenant's first member. Running this
+    /// permission the code-declared catalogue makes exercisable inside a tenant, and no platform-scoped
+    /// one - and returns its identifier so the caller can grant it to the tenant's first member. Running this
     /// again for a tenant that already has the role reconciles that role's permissions instead of
     /// creating a second one, so provisioning is safe to repeat.
     /// </summary>
@@ -92,7 +92,9 @@ public interface ITenantAuthorizationService
     /// <summary>
     /// Tells whether an account may exercise one named permission inside one named tenant: it holds a
     /// live membership there, and a role it holds there - or a platform-scoped role, which belongs to
-    /// no tenant and so applies in all of them - grants that permission.
+    /// no tenant and so applies in all of them - grants that permission. Every permission asked about
+    /// here is one exercisable inside a tenant, so the scope narrowing the session applies would change
+    /// nothing and is not repeated.
     /// </summary>
     /// <param name="userId">The account whose standing is examined.</param>
     /// <param name="tenantId">The tenant the permission must be held in.</param>
@@ -105,8 +107,8 @@ public interface ITenantAuthorizationService
     /// entirely. Membership of the route's tenant is not enough to authorize such a request: an account
     /// can be an administrator of one tenant and an ordinary member of the next, so the permission has
     /// to be read for the tenant actually being administered rather than for the one the claims were
-    /// minted in. Holders of <see cref="Allow.Platform_Administration"/> are authorized by their claim
-    /// and never reach this question.
+    /// minted in. A platform account acting in platform scope is authorized by its tier and never
+    /// reaches this question.
     /// </remarks>
     Task<bool> HoldsTenantPermissionAsync(Guid userId, Guid tenantId, string permission, CancellationToken cancellationToken = default);
 
@@ -218,9 +220,9 @@ public class TenantAuthorizationService(AppDbContext dbContext,
     /// <inheritdoc />
     public async Task<Guid> ProvisionTenantAdministratorRoleAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
-        // A tenant role may hold no platform-tier permission, so the platform tier is subtracted from
-        // the catalogue here rather than filtered out wherever the role is later read.
-        var platformPermissionNames = permissionDefinitionService.GetPlatformPermissionNames().ToList();
+        // A tenant role may hold only what can be exercised inside a tenant, so the catalogue is
+        // narrowed here rather than filtered out wherever the role is later read.
+        var tenantPermissionNames = permissionDefinitionService.GetPermissionNamesInScope(PermissionScope.Tenant).ToList();
 
         // Inside the tenant's own scope the role lookup is restricted to that tenant and the save
         // attributes the new row to it, so neither has to name the tenant a second time - and a role
@@ -238,7 +240,7 @@ public class TenantAuthorizationService(AppDbContext dbContext,
 
             var tenantPermissionIds = await dbContext.Permissions
                 .AsNoTracking()
-                .Where(permission => !platformPermissionNames.Contains(permission.Name))
+                .Where(permission => tenantPermissionNames.Contains(permission.Name))
                 .Select(permission => permission.Id)
                 .ToListAsync(cancellationToken);
 
@@ -253,9 +255,9 @@ public class TenantAuthorizationService(AppDbContext dbContext,
             }
 
             // Reconciliation runs both ways, exactly as the seeder reconciles the bootstrap tenant's
-            // role: a permission the catalogue has since moved to the platform tier, or stopped
+            // role: a permission the catalogue has since moved to the platform scope, or stopped
             // declaring at all, comes off the role rather than being left behind, so a tenant role can
-            // never end up holding a platform-tier permission.
+            // never end up holding a platform-scoped permission.
             var withdrawnPermissionIds = heldPermissionIds.Except(tenantPermissionIds).ToList();
             if (withdrawnPermissionIds.Count > 0)
             {

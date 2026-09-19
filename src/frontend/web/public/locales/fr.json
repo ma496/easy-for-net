@@ -555,11 +555,11 @@
       "suspendedReason": "Le locataire dans lequel vous travailliez a été suspendu. Choisissez un autre locataire pour continuer.",
       "revokedReason": "Votre adhésion à ce locataire a été révoquée. Choisissez un autre locataire pour continuer.",
       "unavailableReason": "Ce locataire n'est plus disponible. Choisissez un autre locataire pour continuer.",
-      "noSelectionReason": "Choisissez un locataire avant d'ouvrir cet écran."
+      "noSelectionReason": "Veuillez indiquer un locataire avant d'ouvrir cet écran."
     },
     "noTenant": {
       "title": "Aucun locataire",
-      "description": "Vous n'appartenez pas encore à un locataire actif. Créez votre propre locataire ou demandez à un administrateur de vous ajouter au sien.",
+      "description": "Veuillez indiquer un locataire pour continuer : vous n'appartenez pas encore à un locataire actif. Créez votre propre locataire ou demandez à un administrateur de vous ajouter au sien.",
       "createTitle": "Créez votre locataire",
       "createButton": "Créer un locataire",
       "createSuccess": "Locataire créé. Vous en êtes maintenant l'administrateur."

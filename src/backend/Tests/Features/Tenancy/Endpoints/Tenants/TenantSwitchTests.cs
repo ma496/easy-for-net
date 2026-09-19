@@ -210,6 +210,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
 
         var account = await CreateAccountWithoutMembershipAsync();
         await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
+        await MarkAsPlatformAccountAsync(account.Id);
 
         var client = await ClientForAsync(account.Username);
 
@@ -248,6 +249,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
 
         var account = await CreateAccountWithoutMembershipAsync();
         await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
+        await MarkAsPlatformAccountAsync(account.Id);
 
         var client = await ClientForAsync(account.Username);
 
@@ -272,6 +274,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
 
         var account = await CreateAccountWithoutMembershipAsync();
         await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
+        await MarkAsPlatformAccountAsync(account.Id);
 
         var client = await ClientForAsync(account.Username);
         await TestsHelper.SwitchTenantAsync(client, tenant.Id);
@@ -291,7 +294,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
 
         outside.StatusCode.Should().Be(HttpStatusCode.OK);
         outsideInfo.ActiveTenantId.Should().BeNull("the session was re-established naming no tenant at all");
-        outsideInfo.IsPlatformAdministrator.Should().BeTrue("leaving a tenant does not touch what the account is");
+        outsideInfo.IsPlatform.Should().BeTrue("leaving a tenant does not touch what the account is");
     }
 
     /// <summary>

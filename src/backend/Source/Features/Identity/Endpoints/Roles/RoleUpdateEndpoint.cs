@@ -10,7 +10,7 @@ using Backend.Features.Identity.Core.Entities;
 /// Only the roles of the tenant being acted in are reachable here: a role belonging to another tenant
 /// is answered with the same 404 as an identifier naming no role at all, and is left exactly as it was,
 /// so neither its existence nor its name can be learned by trying to rename it. A caller holding
-/// platform administration is the one exception and reads any tenant's role - which is why the
+/// platform account that has entered the tenant reads that tenant's role - which is why the
 /// duplicate-name comparison below is made against the tenant the role already belongs to rather than
 /// the tenant the caller happens to be acting in. Uniqueness is per tenant, ignores case and
 /// surrounding whitespace, and counts the tenant's deleted roles too, because deleting a role does not

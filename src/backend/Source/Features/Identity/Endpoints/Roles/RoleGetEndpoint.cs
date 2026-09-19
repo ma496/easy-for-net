@@ -10,7 +10,7 @@ using Backend.Features.Identity.Core.Entities;
 /// Only the roles of the tenant being acted in are readable here: a role belonging to another tenant
 /// is answered with the same 404 as an identifier naming no role at all, so nothing about it - not its
 /// name, not its permissions, not its existence - can be learned from this endpoint. A caller holding
-/// platform administration reads any tenant's role, which is the one widening the read allows.
+/// platform account reads any tenant's role by entering that tenant, which is how it reaches one at all.
 /// </remarks>
 [AllowPlatformNoTenant]
 sealed class RoleGetEndpoint(IRoleService roleService) : Endpoint<RoleGetRequest, RoleGetResponse>

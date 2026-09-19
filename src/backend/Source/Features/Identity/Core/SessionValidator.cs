@@ -53,21 +53,16 @@ public static class SessionValidator
             .Select(candidate => new
             {
                 candidate.PasswordHash,
+                // The tier is read off the account itself. It is what admits a platform account into a
+                // tenant it holds no membership of, and no tenant can mint it for itself.
+                candidate.IsPlatform,
                 Status = dbContext.Tenants
                     .Where(tenant => tenant.Id == tenantId)
                     .Select(tenant => (TenantStatus?)tenant.Status)
                     .FirstOrDefault(),
                 HoldsMembership = dbContext.TenantMemberships
                     .AcrossAllTenants()
-                    .Any(membership => membership.TenantId == tenantId && membership.UserId == userId),
-                // Read as a platform-scoped role rather than as a permission the account holds
-                // anywhere: a role belonging to a tenant can never confer this, so no tenant can mint
-                // for itself the authority to be entered from outside.
-                HoldsPlatformAdministration = dbContext.Roles
-                    .AcrossAllTenants()
-                    .Any(role => role.TenantId == null
-                                 && role.RolePermissions.Any(rolePermission => rolePermission.Permission.Name == Allow.Platform_Administration)
-                                 && dbContext.UserRoles.Any(assignment => assignment.UserId == userId && assignment.RoleId == role.Id))
+                    .Any(membership => membership.TenantId == tenantId && membership.UserId == userId)
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -80,18 +75,17 @@ public static class SessionValidator
         // reported as absent rather than as one the caller was removed from, and a suspended tenant
         // is reported as suspended whether or not the membership survived the suspension.
         //
-        // Membership is what places an ordinary account inside a tenant, and a platform administrator
-        // holds none anywhere: they enter a tenant to work inside it - to reproduce what one of them
-        // reports - and are therefore admitted on their platform-scoped role instead. A suspended or
-        // deleted tenant is refused to them exactly as it is to everyone, because those arms are
-        // settled before this one.
+        // Membership is what places an ordinary account inside a tenant, and a platform account holds
+        // none anywhere: it enters a tenant to work inside it - to reproduce what one of them reports -
+        // and is therefore admitted on its tier instead. A suspended or deleted tenant is refused to it
+        // exactly as it is to everyone, because those arms are settled before this one.
         var tenantStatus = tenantId is null
             ? TenantSessionStatus.NoActiveTenant
             : account.Status switch
             {
                 null => TenantSessionStatus.TenantNotFound,
                 TenantStatus.Suspended => TenantSessionStatus.TenantSuspended,
-                _ when !account.HoldsMembership && !account.HoldsPlatformAdministration => TenantSessionStatus.MembershipRevoked,
+                _ when !account.HoldsMembership && !account.IsPlatform => TenantSessionStatus.MembershipRevoked,
                 _ => TenantSessionStatus.Active
             };
 
@@ -99,6 +93,14 @@ public static class SessionValidator
         // grants below are recomputed as if no tenant were active, so the stale selection carries no
         // authority into the request and the caller is left to choose again.
         var actingTenantId = tenantStatus == TenantSessionStatus.Active ? tenantId : null;
+
+        // The scope the session acts in, and with it the permissions it may exercise: acting inside a
+        // tenant it holds the tenant tier, acting in no tenant it holds the platform tier, and a
+        // permission declared for both is held either way. This is the whole of the rule that hands a
+        // platform account the tenant's own authority when it enters one and gives its platform
+        // authority back when it leaves - applied here, once, so sign-in, refresh, a tenant switch and
+        // every ordinary request all narrow the same way.
+        var viewScope = actingTenantId is null ? PermissionScope.Platform : PermissionScope.Tenant;
 
         // The grants of the tenant being acted in, together with the account's platform-scoped roles,
         // which belong to no tenant and are therefore neither conferred nor withdrawn by one. With no
@@ -112,16 +114,29 @@ public static class SessionValidator
             .Select(role => new
             {
                 role.Name,
-                Permissions = role.RolePermissions.Select(rolePermission => rolePermission.Permission.Name).ToList()
+                Permissions = role.RolePermissions
+                    .Where(rolePermission => rolePermission.Permission.Scope == viewScope
+                                             || rolePermission.Permission.Scope == PermissionScope.Both)
+                    .Select(rolePermission => rolePermission.Permission.Name)
+                    .ToList()
             })
             .ToListAsync(cancellationToken);
+
+        // The platform scope belongs to platform accounts alone. An ordinary account acting in no
+        // tenant has not chosen one yet, or has lost the one it had; it is not thereby working on the
+        // platform, so it exercises nothing until it selects a tenant. It keeps its role names, which
+        // describe who it is rather than what it may do here.
+        var exercisesPermissions = account.IsPlatform || actingTenantId is not null;
 
         return new SessionState
         {
             IsCurrent = true,
+            IsPlatform = account.IsPlatform,
             TenantStatus = tenantStatus,
             Roles = [.. grants.Select(grant => grant.Name).Distinct(StringComparer.Ordinal)],
-            Permissions = [.. grants.SelectMany(grant => grant.Permissions).Distinct(StringComparer.Ordinal)]
+            Permissions = exercisesPermissions
+                ? [.. grants.SelectMany(grant => grant.Permissions).Distinct(StringComparer.Ordinal)]
+                : []
         };
     }
 
@@ -169,6 +184,14 @@ public sealed class SessionState
     public bool IsCurrent { get; init; }
 
     /// <summary>
+    /// Gets a value indicating whether the account belongs to the platform tier. It says which tier
+    /// the session works in and nothing about what it may do there, and it is unaffected by the tenant
+    /// the session is acting in: a platform account that has entered a tenant is still a platform
+    /// account, which is what lets it leave again.
+    /// </summary>
+    public bool IsPlatform { get; init; }
+
+    /// <summary>
     /// Gets whether the tenant the session names may still be acted in, and when it may not, why.
     /// The caller stays authenticated in every case: a tenant that is gone, suspended or no longer
     /// joined is a refusal of tenant-scoped work with an explanation, never a sign-out.
@@ -182,7 +205,9 @@ public sealed class SessionState
     public IReadOnlyList<string> Roles { get; init; } = [];
 
     /// <summary>
-    /// Gets the names of the permissions those roles grant right now, without duplicates.
+    /// Gets the names of the permissions those roles grant right now, narrowed to the scope the
+    /// session is acting in and without duplicates. Empty for an ordinary account acting in no tenant,
+    /// which exercises nothing until it selects one.
     /// </summary>
     public IReadOnlyList<string> Permissions { get; init; } = [];
 }

@@ -13,7 +13,7 @@ using Backend.Features.Tenancy.Core;
 /// <remarks>
 /// The tenant being administered is addressed by route rather than taken from the session, so this
 /// endpoint needs no active tenant and authorizes that tenant itself: a caller who neither holds
-/// platform administration nor holds this permission inside the tenant addressed is refused before
+/// a platform account in platform scope nor holds this permission inside the tenant addressed is refused before
 /// the tenant is so much as looked for, so this surface cannot be used to discover which tenants
 /// exist. Standing in the tenant the session happens to be acting in confers nothing here.
 /// <para>
@@ -35,7 +35,8 @@ using Backend.Features.Tenancy.Core;
 sealed class TenantMemberUpdateRolesEndpoint(ITenantService tenantService,
                                              ITenantMembershipService tenantMembershipService,
                                              ITenantAuthorizationService tenantAuthorizationService,
-                                             ICurrentUserService currentUserService)
+                                             ICurrentUserService currentUserService,
+                                             ITenantContext tenantContext)
     : Endpoint<TenantMemberUpdateRolesRequest, TenantMemberUpdateRolesResponse>
 {
     /// <summary>
@@ -86,11 +87,11 @@ sealed class TenantMemberUpdateRolesEndpoint(ITenantService tenantService,
         // carries were minted for the tenant the session is acting in, and the tenant being
         // administered is the one in the route, which may be another one entirely. An account can be
         // an administrator of one tenant and an ordinary member of the next, so the permission is read
-        // for the tenant named in the route rather than taken from the claims. Platform administration
-        // is a claim test rather than a role-name test: any tenant may define a role of any name, so
-        // only the permission the request actually carries can decide it.
+        // for the tenant named in the route rather than taken from the claims. Administering any tenant
+        // belongs to platform scope, so a platform account that has entered a tenant is read for that
+        // route tenant like anybody else.
         var callerId = currentUserService.GetCurrentUserId();
-        if (!currentUserService.HasPermission(Allow.Platform_Administration) &&
+        if (!(currentUserService.IsPlatform() && tenantContext.IsPlatformScope()) &&
             (callerId is not { } callerUserId ||
              !await tenantAuthorizationService.HoldsTenantPermissionAsync(callerUserId, request.TenantId, Allow.TenantMember_UpdateRoles, cancellationToken)))
         {

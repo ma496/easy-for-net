@@ -555,11 +555,11 @@
       "suspendedReason": "您之前使用的租户已被暂停。请选择其他租户以继续。",
       "revokedReason": "您在该租户中的成员资格已被撤销。请选择其他租户以继续。",
       "unavailableReason": "该租户已不可用。请选择其他租户以继续。",
-      "noSelectionReason": "打开此页面前请先选择一个租户。"
+      "noSelectionReason": "打开此页面前，请先指定一个租户。"
     },
     "noTenant": {
       "title": "无租户",
-      "description": "您尚未加入任何启用的租户。请创建您自己的租户，或请管理员将您加入其租户。",
+      "description": "请先指定一个租户以继续：您尚未加入任何启用的租户。请创建您自己的租户，或请管理员将您加入其租户。",
       "createTitle": "创建您的租户",
       "createButton": "创建租户",
       "createSuccess": "租户已创建。您现在是其管理员。"

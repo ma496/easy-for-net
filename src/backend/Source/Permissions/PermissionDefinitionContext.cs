@@ -18,14 +18,14 @@ public class PermissionDefinitionContext
     /// </summary>
     /// <param name="name">Stable permission name (e.g. <c>User.View</c>).</param>
     /// <param name="displayName">Human-readable name shown in the UI.</param>
-    /// <param name="isPlatform">
-    /// Whether the permission belongs to the platform tier, which makes it - and every permission
-    /// added beneath it - impossible to grant through a tenant role.
+    /// <param name="scope">
+    /// The scope the permission - and, unless they state otherwise, every permission added beneath
+    /// it - may be exercised in. Tenant tier unless stated.
     /// </param>
     /// <returns>The created <see cref="PermissionDefinition"/> which can be used to add child permissions.</returns>
-    public PermissionDefinition AddPermission(string name, string displayName, bool isPlatform = false)
+    public PermissionDefinition AddPermission(string name, string displayName, PermissionScope scope = PermissionScope.Tenant)
     {
-        var permission = new PermissionDefinition(name, displayName, isPlatform);
+        var permission = new PermissionDefinition(name, displayName, scope);
         _permissions.Add(permission);
         return permission;
     }

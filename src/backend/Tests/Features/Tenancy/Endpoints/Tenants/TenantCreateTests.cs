@@ -308,13 +308,11 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
         var held = await ReadPermissionsHeldInRoleAsync(administrator.Id);
         var tenantPermissionNames = App.Services
             .GetRequiredService<IPermissionDefinitionService>()
-            .GetFlattenedPermissions()
-            .Where(permission => !permission.IsPlatform)
-            .Select(permission => permission.Name);
+            .GetPermissionNamesInScope(PermissionScope.Tenant);
 
         held.Should().BeEquivalentTo(
             tenantPermissionNames,
-            "the tenant's administrator holds every permission a tenant role may carry and no platform-tier one -"
+            "the tenant's administrator holds every permission exercisable inside a tenant and no platform-scoped one -"
             + " those are held through a role of the platform's own, so a tenant's administrator cannot grant them");
 
         var members = await DbContext.TenantMemberships

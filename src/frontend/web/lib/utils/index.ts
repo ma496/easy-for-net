@@ -11,7 +11,7 @@ export {
   isActiveTenantStale,
   resolveTenantLanding,
   isPlatformAccessiblePath,
-  isPlatformAdministratorWithoutTenant,
+  isPlatformWithoutTenant,
   isPathAvailable,
-  resolvePlatformAdministratorLanding,
+  resolvePlatformLanding,
 } from './tenant-routing'

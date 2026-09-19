@@ -5,8 +5,8 @@ using Backend.Features.Identity.Core;
 
 /// <summary>
 /// Authenticated GET endpoint that returns the current user's profile information together with the
-/// tenants they hold an active membership in, the tenant they are acting in right now, whether they
-/// hold platform administration, and the roles and permissions that tenant grants them. It is the
+/// tenants they hold an active membership in, the tenant they are acting in right now, whether their
+/// account belongs to the platform tier, and the roles and permissions that tenant grants them. It is the
 /// one call the web app makes to learn who the caller is and where they may work, so signing in,
 /// reloading a page and switching tenant all read the same answer from the same place.
 /// </summary>
@@ -41,7 +41,8 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
                 Email = x.Email,
                 FirstName = x.FirstName,
                 LastName = x.LastName,
-                Image = x.Image
+                Image = x.Image,
+                IsPlatform = x.IsPlatform
             })
             .FirstOrDefaultAsync(cancellationToken);
         if (user is null)
@@ -58,27 +59,19 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
 
         user.Tenants = await TenantsOfAsync(userId, cancellationToken);
 
-        // Platform administration belongs to no tenant, so it is reported on its own rather than
-        // read out of the roles below: it survives a tenant switch and it is held by a caller acting
-        // in no tenant at all. It is read from the request's live permission claims, which the
-        // session check has already recomputed from current data. It is settled before the active
-        // tenant because it decides how that question is answered.
-        user.IsPlatformAdministrator = currentUserService.HasPermission(Allow.Platform_Administration);
-
         // The active tenant is reported only when it is one of the tenants just listed, so what the
         // caller is told they are working in is always one of the tenants they may work in. The two
         // can only disagree for a selection that has just stopped being usable, and that one is
         // discarded here rather than sent back for the caller to keep using.
         var activeTenant = user.Tenants.FirstOrDefault(tenant => tenant.Id == scopedTenantId);
 
-        // A platform administrator is the exception, because the two disagree for them by design: they
-        // enter a tenant on their platform-scoped role and hold no membership in it, so it is never
-        // among the tenants listed above and would otherwise be reported as no active tenant at all -
-        // leaving the web app to send them straight back out of the tenant they just entered. The
-        // tenant is read here rather than added to the list, which keeps its meaning intact: the
-        // tenants a caller may select by membership. A platform administrator picks from the tenants
-        // table instead.
-        if (activeTenant is null && user.IsPlatformAdministrator && scopedTenantId is { } enteredTenantId)
+        // A platform account is the exception, because the two disagree for it by design: it enters a
+        // tenant on its tier and holds no membership in it, so that tenant is never among the ones
+        // listed above and would otherwise be reported as no active tenant at all - leaving the web app
+        // to send it straight back out of the tenant it just entered. The tenant is read here rather
+        // than added to the list, which keeps the list's meaning intact: the tenants a caller may select
+        // by membership. A platform account picks from the tenants table instead.
+        if (activeTenant is null && user.IsPlatform && scopedTenantId is { } enteredTenantId)
         {
             activeTenant = await EnteredTenantAsync(enteredTenantId, cancellationToken);
         }
@@ -93,7 +86,7 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
         // platform-scoped role is, because it belongs to no tenant and survives every switch. With no
         // active tenant only the platform-scoped roles remain, which for an ordinary account is an
         // empty list.
-        user.Roles = await RolesInAsync(userId, activeTenant?.Id, cancellationToken);
+        user.Roles = await RolesInAsync(userId, activeTenant?.Id, user.IsPlatform, cancellationToken);
 
         await Send.ResponseAsync(user, cancellation: cancellationToken);
     }
@@ -176,6 +169,7 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
     /// The tenant the roles are read for, or <see langword="null"/> for the caller's platform-scoped
     /// roles - the ones belonging to no tenant.
     /// </param>
+    /// <param name="isPlatform">Whether the account belongs to the platform tier.</param>
     /// <param name="cancellationToken">Token used to cancel the read.</param>
     /// <returns>The roles held there, ordered by name, each with the permissions it grants.</returns>
     /// <remarks>
@@ -186,14 +180,23 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
     /// leaves the soft-delete filter applied, so a deleted role stops granting what it granted.
     /// <para>
     /// The platform-scoped roles are included whichever tenant is named, because that is how a request
-    /// is authorized: the session check grants a platform-scoped role's permissions in every tenant.
-    /// Leaving them out here would hide a platform administrator's own permissions from the web app
-    /// the moment they started working inside one of their tenants, and the screens those permissions
-    /// unlock would be refused by a client that the API would have admitted.
+    /// is authorized: the session check grants a platform-scoped role's permissions in every tenant,
+    /// narrowed to the scope being acted in. Leaving them out here would hide a platform account's own
+    /// permissions from the web app the moment it started working inside one of its tenants, and the
+    /// screens those permissions unlock would be refused by a client that the API would have admitted.
+    /// </para>
+    /// <para>
+    /// The permissions are narrowed by scope exactly as <see cref="SessionValidator"/> narrows them, so
+    /// what the web app believes the caller may do is what the API will actually allow: the tenant tier
+    /// inside a tenant, the platform tier in platform scope, and nothing at all for an ordinary account
+    /// that has no tenant active.
     /// </para>
     /// </remarks>
-    private async Task<List<UserGetInfoResponse.RoleDto>> RolesInAsync(Guid? userId, Guid? tenantId, CancellationToken cancellationToken)
+    private async Task<List<UserGetInfoResponse.RoleDto>> RolesInAsync(Guid? userId, Guid? tenantId, bool isPlatform, CancellationToken cancellationToken)
     {
+        var viewScope = tenantId is null ? PermissionScope.Platform : PermissionScope.Tenant;
+        var exercisesPermissions = isPlatform || tenantId is not null;
+
         return await dbContext.Roles
             .AsNoTracking()
             .AcrossAllTenants()
@@ -204,12 +207,16 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
             {
                 Id = role.Id,
                 Name = role.Name,
-                Permissions = role.RolePermissions.Select(rolePermission => new UserGetInfoResponse.PermissionDto
-                {
-                    Id = rolePermission.PermissionId,
-                    Name = rolePermission.Permission.Name,
-                    DisplayName = rolePermission.Permission.DisplayName
-                }).ToList()
+                Permissions = role.RolePermissions
+                    .Where(rolePermission => exercisesPermissions
+                                             && (rolePermission.Permission.Scope == viewScope
+                                                 || rolePermission.Permission.Scope == PermissionScope.Both))
+                    .Select(rolePermission => new UserGetInfoResponse.PermissionDto
+                    {
+                        Id = rolePermission.PermissionId,
+                        Name = rolePermission.Permission.Name,
+                        DisplayName = rolePermission.Permission.DisplayName
+                    }).ToList()
             })
             .ToListAsync(cancellationToken);
     }
@@ -217,8 +224,8 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
 
 /// <summary>
 /// Response payload for the account info endpoint, exposing the user's identity fields together
-/// with the tenants they belong to, the tenant they are acting in, whether they hold platform
-/// administration, and the roles and permissions the active tenant grants them.
+/// with the tenants they belong to, the tenant they are acting in, whether their account belongs to
+/// the platform tier, and the roles and permissions the active tenant grants them.
 /// </summary>
 sealed class UserGetInfoResponse
 {
@@ -251,11 +258,11 @@ sealed class UserGetInfoResponse
     public List<TenantInfoDto> Tenants { get; set; } = [];
 
     /// <summary>
-    /// Gets or sets a value indicating whether the caller holds platform administration, which
-    /// belongs to no tenant and is therefore neither conferred nor withdrawn by switching between
-    /// them.
+    /// Gets or sets a value indicating whether the account belongs to the platform tier. It belongs to
+    /// no tenant and is therefore neither conferred nor withdrawn by switching between them, which is
+    /// what lets the web app offer the way back out of a tenant the account entered.
     /// </summary>
-    public bool IsPlatformAdministrator { get; set; }
+    public bool IsPlatform { get; set; }
 
     /// <summary>
     /// Gets or sets the roles the caller holds in the active tenant, with the permissions those

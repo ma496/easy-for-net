@@ -3,19 +3,21 @@ namespace Backend.Features.Tenancy.Endpoints.Tenants;
 using Backend.Features.Identity.Core;
 
 /// <summary>
-/// This endpoint that handles <c>POST /tenants/exit</c> to put a platform administrator's session
-/// back into platform scope, leaving them authenticated and asking for no credentials.
+/// This endpoint that handles <c>POST /tenants/exit</c> to put a platform account's session back into
+/// platform scope, leaving it authenticated and asking for no credentials.
 /// </summary>
 /// <remarks>
 /// It is the counterpart of <c>POST /tenants/switch</c>, and exists because entering a tenant would
-/// otherwise be one-way: a platform administrator holds no membership anywhere, so once their session
-/// names a tenant there is no other tenant for them to select their way out through, and they would be
-/// left inside it until they signed in again.
+/// otherwise be one-way: a platform account holds no membership anywhere, so once its session names a
+/// tenant there is no other tenant for it to select its way out through, and it would be left inside
+/// that one until it signed in again.
 /// <para>
-/// Only platform administration may ask. For anyone else acting in no tenant is not a place to work
-/// but a state to leave: an account with memberships would simply have every tenant-scoped request
-/// refused until it selected one again, so the surface is closed to it rather than offered and then
-/// regretted.
+/// Only a platform account may ask, and the tier is the test rather than a permission: inside a
+/// tenant the session carries the tenant tier alone, so a platform-scoped permission would have been
+/// narrowed away by the very act of entering and nothing would ever be able to leave. For anyone else
+/// acting in no tenant is not a place to work but a state to leave: an account with memberships would
+/// simply have every tenant-scoped request refused until it selected one again, so the surface is
+/// closed to it rather than offered and then regretted.
 /// </para>
 /// <para>
 /// Marked <see cref="AllowNoTenantAttribute"/> because it is one of the places a tenant is
@@ -32,7 +34,6 @@ sealed class TenantExitEndpoint(ITenantAuthorizationService tenantAuthorizationS
     {
         Post("exit");
         Group<TenantsGroup>();
-        Permissions(Allow.Platform_Administration);
     }
 
     public override async Task HandleAsync(CancellationToken cancellationToken)
@@ -41,6 +42,12 @@ sealed class TenantExitEndpoint(ITenantAuthorizationService tenantAuthorizationS
         if (callerId is not { } userId)
         {
             await Send.UnauthorizedAsync(cancellationToken);
+            return;
+        }
+
+        if (!currentUserService.IsPlatform())
+        {
+            await Send.ForbiddenAsync(cancellationToken);
             return;
         }
 

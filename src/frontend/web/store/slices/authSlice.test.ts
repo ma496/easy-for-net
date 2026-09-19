@@ -10,7 +10,7 @@ const userInfo = (overrides: Partial<GetUserInfoResponse> = {}): GetUserInfoResp
   id: 'user-1',
   username: 'someone',
   email: 'someone@example.com',
-  isPlatformAdministrator: false,
+  isPlatform: false,
   tenants: [],
   roles: [],
   ...overrides,

@@ -257,6 +257,7 @@ public class TokenTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         var account = await CreateAccountWithoutMembershipAsync();
         await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
+        await MarkAsPlatformAccountAsync(account.Id);
 
         ClearAuthToken();
 

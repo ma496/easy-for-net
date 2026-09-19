@@ -26,6 +26,7 @@ using Backend.Features.Tenancy.Core;
 /// </remarks>
 [AllowNoTenant]
 sealed class TenantMemberListEndpoint(ICurrentUserService currentUserService,
+                                      ITenantContext tenantContext,
                                       ITenantAuthorizationService tenantAuthorizationService) : Endpoint<TenantMemberListRequest, TenantMemberListResponse>
 {
     /// <summary>
@@ -47,12 +48,14 @@ sealed class TenantMemberListEndpoint(ICurrentUserService currentUserService,
         // Standing is checked before the tenant is read at all, and before anything about it reaches
         // the response: a caller who may not view the members of the tenant addressed is refused
         // identically for a tenant that exists and one that does not.
-        if (!currentUserService.HasPermission(Allow.Platform_Administration))
+        if (!(currentUserService.IsPlatform() && tenantContext.IsPlatformScope()))
         {
-            // Platform administration is a claim test rather than a role-name test, because any tenant
-            // may define a role of any name; everyone else is admitted only by holding this permission
-            // inside the tenant named in the route - which takes a live membership of it, and which
-            // standing in the tenant the session is acting in does not confer.
+            // Administering any tenant belongs to platform scope, which is where the tenants table is
+            // worked from; a platform account that has entered a tenant is an actor of that tenant and
+            // is admitted here on the same terms as anybody else. Everyone else is admitted only by
+            // holding this permission inside the tenant named in the route - which takes a live
+            // membership of it, and which standing in the tenant the session is acting in does not
+            // confer.
             var callerId = currentUserService.GetCurrentUserId();
             if (callerId is not { } caller
                 || !await tenantAuthorizationService.HoldsTenantPermissionAsync(caller, request.TenantId, Allow.TenantMember_View, cancellationToken))

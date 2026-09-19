@@ -52,6 +52,9 @@ sealed class SignupEndpoint(IUserService userService,
 
         using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
+        // Self-service sign-up runs in platform scope because it belongs to no tenant, but the account
+        // it creates is an ordinary one: it joins no tenant yet and is not a platform account. It gains
+        // a tenant by being added to one, or by creating its own through self-service onboarding.
         var user = new User
         {
             Email = request.Email,

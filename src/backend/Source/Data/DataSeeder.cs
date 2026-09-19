@@ -38,8 +38,8 @@ public class DataSeeder(IUserService userService,
     private const string TenantAdminRoleDescription = "Tenant Admin Role";
 
     /// <summary>
-    /// The platform administrator account. It holds the platform role only and belongs to no tenant,
-    /// so administering the platform never depends on a membership anywhere.
+    /// The platform account. It holds the platform role only and belongs to no tenant, so
+    /// administering the platform never depends on a membership anywhere.
     /// </summary>
     private const string PlatformAdminUsername = "admin";
     private const string PlatformAdminEmail = "admin@example.com";
@@ -63,8 +63,8 @@ public class DataSeeder(IUserService userService,
         await SeedBootstrapTenantAsync();
 
         var permissions = await ReconcilePermissionsAsync();
-        var platformAdminUser = await SeedUserAsync(PlatformAdminUsername, PlatformAdminEmail, PlatformAdminPassword);
-        var tenantAdminUser = await SeedUserAsync(TenantAdminUsername, TenantAdminEmail, TenantAdminPassword);
+        var platformAdminUser = await SeedUserAsync(PlatformAdminUsername, PlatformAdminEmail, PlatformAdminPassword, isPlatform: true);
+        var tenantAdminUser = await SeedUserAsync(TenantAdminUsername, TenantAdminEmail, TenantAdminPassword, isPlatform: false);
 
         await ReconcilePlatformAdminRoleAsync(permissions, platformAdminUser);
         await ReconcileBootstrapTenantAdministrationAsync(permissions, tenantAdminUser);
@@ -112,16 +112,22 @@ public class DataSeeder(IUserService userService,
         var flattenedPermissions = permissionDefinitionService.GetFlattenedPermissions();
         var savedPermissions = await permissionService.Permissions().AsNoTracking().ToListAsync();
         var permissionsToAdd = flattenedPermissions.Where(p => !savedPermissions.Any(sp => sp.Name == p.Name)).ToList();
-        var permissionsToUpdate = flattenedPermissions.Where(p => savedPermissions.Any(sp => sp.Name == p.Name && sp.DisplayName != p.DisplayName)).ToList();
+        // The scope is reconciled beside the display name, because it is persisted only so that the
+        // per-request narrowing can run in the database: the definitions stay the single source of it,
+        // and this pass is what keeps the stored copy from ever disagreeing with them.
+        var permissionsToUpdate = flattenedPermissions
+            .Where(p => savedPermissions.Any(sp => sp.Name == p.Name && (sp.DisplayName != p.DisplayName || sp.Scope != p.Scope)))
+            .ToList();
         var permissionsToDelete = savedPermissions.Where(sp => flattenedPermissions.All(p => p.Name != sp.Name)).ToList();
 
-        await permissionService.CreateAsync([.. permissionsToAdd.Select(p => new Permission { Name = p.Name, DisplayName = p.DisplayName })]);
+        await permissionService.CreateAsync([.. permissionsToAdd.Select(p => new Permission { Name = p.Name, DisplayName = p.DisplayName, Scope = p.Scope })]);
         foreach (var permission in permissionsToUpdate)
         {
             var savedPermission = savedPermissions.FirstOrDefault(sp => sp.Name == permission.Name);
             if (savedPermission != null)
             {
                 savedPermission.DisplayName = permission.DisplayName;
+                savedPermission.Scope = permission.Scope;
                 await permissionService.UpdateAsync(savedPermission);
             }
         }
@@ -132,25 +138,47 @@ public class DataSeeder(IUserService userService,
     }
 
     /// <summary>
-    /// Creates a seeded account when it is absent. The account itself belongs to no tenant - one
-    /// account is one identity across every tenant - so the tenant it works in, if any, is decided by
-    /// a membership row written further down rather than by creating it.
+    /// Creates a seeded account when it is absent, and keeps its tier in line with what it is seeded
+    /// to be. The account itself belongs to no tenant - one account is one identity across every
+    /// tenant - so the tenant it works in, if any, is decided by a membership row written further down
+    /// rather than by creating it.
     /// </summary>
     /// <param name="username">The account's username.</param>
     /// <param name="email">The account's email address.</param>
     /// <param name="password">The account's initial password.</param>
+    /// <param name="isPlatform">Whether the account belongs to the platform tier.</param>
     /// <returns>The seeded account.</returns>
-    private async Task<User> SeedUserAsync(string username, string email, string password)
+    /// <remarks>
+    /// The tier is reconciled rather than only set on creation, so a database seeded before the tier
+    /// existed - or one whose platform account was changed by hand - is corrected on the next start
+    /// instead of quietly staying wrong.
+    /// </remarks>
+    private async Task<User> SeedUserAsync(string username, string email, string password, bool isPlatform)
     {
-        return await userService.GetByUsernameAsync(username) ??
-            await userService.CreateAsync(new User { SystemCreated = true, Username = username, Email = email, IsEmailVerified = true }, password);
+        var account = await userService.GetByUsernameAsync(username);
+        if (account is null)
+        {
+            return await userService.CreateAsync(
+                new User { SystemCreated = true, Username = username, Email = email, IsEmailVerified = true, IsPlatform = isPlatform },
+                password);
+        }
+
+        if (account.IsPlatform != isPlatform)
+        {
+            account.IsPlatform = isPlatform;
+            await userService.UpdateAsync(account);
+        }
+
+        return account;
     }
 
     /// <summary>
-    /// Keeps the platform administrator role holding the whole catalogue, the platform-tier
-    /// permissions included, and keeps the seeded platform administrator account in it. The role
-    /// names no tenant, which is what platform scope is, so administering the platform is a grant of
-    /// its own that administering a tenant never implies.
+    /// Keeps the platform administrator role holding the whole catalogue, every scope included, and
+    /// keeps the seeded platform account in it. The role names no tenant, which is what platform scope
+    /// is, so administering the platform is a grant of its own that administering a tenant never
+    /// implies. Holding the whole catalogue is also what gives a platform account the tenant's own
+    /// authority when it enters one: the session narrows the role's permissions to the scope being
+    /// acted in, so inside a tenant it exercises exactly the tenant tier.
     /// </summary>
     /// <param name="permissions">Every permission the catalogue holds.</param>
     /// <param name="platformAdminUser">The seeded platform administrator account.</param>
@@ -181,17 +209,17 @@ public class DataSeeder(IUserService userService,
 
     /// <summary>
     /// Provisions the bootstrap tenant with its own system-created administrator role holding every
-    /// tenant-tier permission, places the seeded tenant administrator account in the tenant, and grants
+    /// permission exercisable inside a tenant, places the seeded tenant administrator account in it, and grants
     /// that first member the role - the same provisioning every tenant created later receives.
     /// </summary>
     /// <param name="permissions">Every permission the catalogue holds.</param>
     /// <param name="tenantAdminUser">The seeded account that administers the bootstrap tenant.</param>
     private async Task ReconcileBootstrapTenantAdministrationAsync(List<Permission> permissions, User tenantAdminUser)
     {
-        // A tenant role may hold no platform-tier permission, so the platform tier is subtracted here
-        // rather than filtered out wherever the role is read.
-        var platformPermissionNames = permissionDefinitionService.GetPlatformPermissionNames();
-        var tenantPermissions = permissions.Where(p => !platformPermissionNames.Contains(p.Name)).ToList();
+        // A tenant role may hold only what can be exercised inside a tenant, so the set is narrowed
+        // here rather than filtered out wherever the role is read.
+        var tenantPermissionNames = permissionDefinitionService.GetPermissionNamesInScope(PermissionScope.Tenant);
+        var tenantPermissions = permissions.Where(p => tenantPermissionNames.Contains(p.Name)).ToList();
 
         using (tenantContext.BeginTenant(TenancyConstants.BootstrapTenantId))
         {

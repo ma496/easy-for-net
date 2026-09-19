@@ -7,8 +7,9 @@ using Backend.Tests.Seeder;
 
 /// <summary>
 /// Tests for the <see cref="UserCreateEndpoint"/> covering validation and successful user creation,
-/// the sign-in identifiers that are unique across the whole platform (AC-048), and the membership an
-/// account created inside a tenant is granted in it (AC-096).
+/// the sign-in identifiers that are unique across the whole platform (AC-048), the membership an
+/// account created inside a tenant is granted in it (AC-096), and the account tier that follows the
+/// scope it was created in.
 /// </summary>
 public class UserCreateTests(App app) : TenancyTestsBase(app)
 {
@@ -192,6 +193,93 @@ public class UserCreateTests(App app) : TenancyTestsBase(app)
         page.Items.Select(item => item.Id).Should().Equal([created.Id],
             "the account is in the set the tenant's own administrator administers, which is what makes the membership of use to the caller that wrote it");
     }
+
+    /// <summary>
+    /// Verifies that the tier a new account gets follows the scope it was created in: created while
+    /// acting in no tenant it is one of the platform's own accounts and joins no tenant, and created
+    /// inside a tenant - by a platform account that entered one just as by that tenant's own
+    /// administrator - it is an ordinary account of that tenant.
+    /// </summary>
+    /// <remarks>
+    /// The same caller creates both accounts, which is the whole point: the tier follows the scope the
+    /// request runs in and never the caller who made it, so nothing a platform account does inside a
+    /// tenant can mint another platform account there. Both halves are asserted from the stored row,
+    /// because the tier is not something the request carries or the response echoes.
+    /// </remarks>
+    [Fact]
+    public async Task Created_Accounts_Take_Their_Tier_From_The_Scope_They_Are_Created_In()
+    {
+        var tenant = await CreateTenantAsync();
+        var tenantRoleId = await CreateTenantRoleAsync(tenant.Id, Allow.User_Create);
+
+        await SetPlatformAdminAuthTokenAsync();
+
+        var platformUsername = NewUsername();
+        var (platformResponse, platformAccount) = await App.Client
+            .POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(new()
+            {
+                Username = platformUsername,
+                Email = EmailOf(platformUsername),
+                Password = TestUsers.DefaultPassword,
+                IsActive = true,
+                Roles = [TestRoles.PlatformAdminRoleId]
+            });
+
+        platformResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        (await TierOfAsync(platformAccount.Id)).Should().BeTrue(
+            "creating an account while acting in no tenant is how the platform's own accounts come into being");
+        (await MembershipTenantIdsAsync(platformAccount.Id)).Should().BeEmpty(
+            "and it belongs to no tenant, which is what platform scope means");
+
+        // The very same caller, now inside a tenant it holds no membership of.
+        await SwitchTenantAsync(tenant.Id);
+
+        var tenantUsername = NewUsername();
+        var (tenantResponse, tenantAccount) = await App.Client
+            .POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(new()
+            {
+                Username = tenantUsername,
+                Email = EmailOf(tenantUsername),
+                Password = TestUsers.DefaultPassword,
+                IsActive = true,
+                Roles = [tenantRoleId]
+            });
+
+        tenantResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        (await TierOfAsync(tenantAccount.Id)).Should().BeFalse(
+            "an account created inside a tenant is that tenant's, whoever created it");
+        (await MembershipTenantIdsAsync(tenantAccount.Id)).Should().Equal([tenant.Id],
+            "and it joins the tenant it was created in, so the caller that wrote it can administer it next");
+    }
+
+    /// <summary>
+    /// Whether a stored account belongs to the platform tier, read from the row rather than from
+    /// anything the request or the response carried.
+    /// </summary>
+    /// <param name="userId">The account to read.</param>
+    /// <returns>The account's tier.</returns>
+    private async Task<bool> TierOfAsync(Guid userId)
+        => await DbContext.Users
+            .AsNoTracking()
+            .Where(account => account.Id == userId)
+            .Select(account => account.IsPlatform)
+            .SingleAsync(TestContext.Current.CancellationToken);
+
+    /// <summary>
+    /// The tenants an account holds a membership in, read across every tenant because the question is
+    /// which ones it landed in rather than what one of them can see.
+    /// </summary>
+    /// <param name="userId">The account to read.</param>
+    /// <returns>The tenants it belongs to.</returns>
+    private async Task<List<Guid?>> MembershipTenantIdsAsync(Guid userId)
+        => await DbContext.TenantMemberships
+            .AcrossAllTenants()
+            .AsNoTracking()
+            .Where(membership => membership.UserId == userId)
+            .Select(membership => membership.TenantId)
+            .ToListAsync(TestContext.Current.CancellationToken);
 
     /// <summary>
     /// A username no other account holds and no run of the suite can collide with: account names are

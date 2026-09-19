@@ -3,7 +3,7 @@ import { GetUserInfoResponse } from '@/store/api/identity'
 /** The screens an authenticated caller is sent to while no usable tenant selection stands: the chooser when they may pick one, the no-tenant screen when they may not. */
 export type TenantLandingRoute = '/select-tenant' | '/no-tenant'
 
-/** Paths outside `/admin` are never tenant-scoped, and these ones under it are the platform-tier tenancy screens, which a platform administrator works with while acting in no tenant at all. */
+/** Paths outside `/admin` are never tenant-scoped, and these ones under it are the platform-tier tenancy screens, which a platform account works with while acting in no tenant at all. */
 const platformScopedPathPrefix = '/admin/tenants'
 
 /** Strips the query string, the fragment and a trailing slash so a path can be compared as a plain prefix. The locale prefix is expected to be gone already: callers read it off `usePathname` and remove it before asking. */
@@ -42,15 +42,15 @@ export const isTenantScopedPath = (pathname: string): boolean => {
  * plan asks for the predicate all the same, and it keeps the decision right if a
  * later server ever answers with the two disagreeing.
  *
- * A platform administrator is exempt, because for them the two disagree by
- * design: they enter a tenant on their platform-scoped role and hold no
- * membership in it, so the tenant they are acting in is never among the tenants
- * listed. Reading that as stale would send them straight back out of the tenant
- * they entered to look into a problem.
+ * A platform account is exempt, because for it the two disagree by design: it
+ * enters a tenant on its account tier and holds no membership in it, so the
+ * tenant it is acting in is never among the tenants listed. Reading that as
+ * stale would send it straight back out of the tenant it entered to look into a
+ * problem.
  */
 export const isActiveTenantStale = (user: GetUserInfoResponse | undefined): boolean => {
   if (!user) return false
-  if (user.isPlatformAdministrator) return false
+  if (user.isPlatform) return false
 
   const selectedTenantId = user.activeTenantId ?? user.activeTenant?.id
   if (!selectedTenantId) return false
@@ -79,16 +79,16 @@ export const isActiveTenantStale = (user: GetUserInfoResponse | undefined): bool
  * a stale selection is sent to `/no-tenant`, never to a chooser with nothing to
  * choose from.
  *
- * A platform administrator is ahead of both, and lands nowhere: they need no
- * tenant to work, they hold no membership to be offered a choice from, and the
- * tenant they enter is chosen from the tenants table rather than from either of
- * these screens. Sent to the no-tenant screen they would be told they belong to
- * no tenant, which is true and beside the point; sent to the chooser they would
- * be shown an empty one.
+ * A platform account is ahead of both, and lands nowhere: it needs no tenant to
+ * work, it holds no membership to be offered a choice from, and the tenant it
+ * enters is chosen from the tenants table rather than from either of these
+ * screens. Sent to the no-tenant screen it would be told it belongs to no
+ * tenant, which is true and beside the point; sent to the chooser it would be
+ * shown an empty one.
  */
 export const resolveTenantLanding = (user: GetUserInfoResponse | undefined): TenantLandingRoute | null => {
   if (!user) return null
-  if (user.isPlatformAdministrator) return null
+  if (user.isPlatform) return null
   if ((user.tenants ?? []).length === 0) return '/no-tenant'
   if (!user.activeTenant || isActiveTenantStale(user)) return '/select-tenant'
   return null
@@ -113,32 +113,64 @@ export const isPlatformAccessiblePath = (pathname: string): boolean => {
 }
 
 /**
- * Returns true when the caller is a platform administrator acting in no tenant,
- * whose requests the API answers in platform scope.
+ * Returns true when the caller is a platform account acting in no tenant, whose
+ * requests the API answers in platform scope - and whose session therefore
+ * carries the platform-scoped permissions rather than a tenant's.
  */
-export const isPlatformAdministratorWithoutTenant = (user: GetUserInfoResponse | undefined): boolean =>
-  !!user?.isPlatformAdministrator && !user.activeTenant
+export const isPlatformWithoutTenant = (user: GetUserInfoResponse | undefined): boolean =>
+  !!user?.isPlatform && !user.activeTenant
 
 /**
- * Returns true when the caller may open the screen at this path: always, unless
- * they are a platform administrator acting in no tenant and the screen needs one.
- * Navigation and search use it to leave out what would only redirect.
+ * The screens under `/admin` that answer about every tenant there is, so they belong to platform
+ * scope alone: listing the tenants and creating one. Reading a single tenant and administering its
+ * members are not here, because those are exercisable in either scope - a tenant administrator opens
+ * its own tenant's detail and members from inside it.
  */
-export const isPathAvailable = (user: GetUserInfoResponse | undefined, pathname: string): boolean =>
-  !isPlatformAdministratorWithoutTenant(user) || !isTenantScopedPath(pathname) || isPlatformAccessiblePath(pathname)
+const platformOnlyPathPrefixes = ['/admin/tenants/list', '/admin/tenants/create']
 
 /**
- * Decides where a platform administrator acting in no tenant goes after signing
- * in: the dashboard, rather than the no-tenant screen or the chooser, because
- * they need no tenant. A `redirect` they were sent back with is honoured when
- * they can use that screen. Returns `null` for anyone else, whose landing
+ * Returns true when the (locale-stripped) path names one of the platform's own screens, which a
+ * caller acting inside a tenant cannot open.
+ */
+export const isPlatformOnlyPath = (pathname: string): boolean => {
+  const path = normalizePath(pathname)
+  return platformOnlyPathPrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
+}
+
+/**
+ * Returns true when the caller may open the screen at this path. Two scopes, two
+ * ways to be in the wrong one:
+ *
+ * - a platform account acting in no tenant cannot open a screen that needs one;
+ * - anyone acting inside a tenant cannot open the platform's own screens, whose
+ *   permissions are platform-scoped and so are never carried by a tenant
+ *   session, however the caller's roles are granted.
+ *
+ * Neither is a caller short of a grant somebody could give them, so both are
+ * answered with the dashboard rather than a refusal. Navigation and search use
+ * this to leave out what would only redirect, and the route guard uses it to
+ * land a caller whose scope has just changed under them - which is what entering
+ * a tenant from the tenants table does.
+ */
+export const isPathAvailable = (user: GetUserInfoResponse | undefined, pathname: string): boolean => {
+  if (isPlatformWithoutTenant(user)) {
+    return !isTenantScopedPath(pathname) || isPlatformAccessiblePath(pathname)
+  }
+  return !user?.activeTenant || !isPlatformOnlyPath(pathname)
+}
+
+/**
+ * Decides where a platform account acting in no tenant goes after signing in:
+ * the dashboard, rather than the no-tenant screen or the chooser, because it
+ * needs no tenant. A `redirect` it was sent back with is honoured when it can
+ * use that screen. Returns `null` for anyone else, whose landing
  * `resolveTenantLanding` decides.
  */
-export const resolvePlatformAdministratorLanding = (
+export const resolvePlatformLanding = (
   user: GetUserInfoResponse | undefined,
   redirectTo?: string | null,
 ): string | null => {
-  if (!isPlatformAdministratorWithoutTenant(user)) return null
+  if (!isPlatformWithoutTenant(user)) return null
   if (redirectTo && isPathAvailable(user, redirectTo)) return redirectTo
   return '/admin'
 }

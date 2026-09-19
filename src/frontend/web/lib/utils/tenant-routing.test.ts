@@ -5,7 +5,7 @@ import {
   isPathAvailable,
   isPlatformAccessiblePath,
   isTenantScopedPath,
-  resolvePlatformAdministratorLanding,
+  resolvePlatformLanding,
   resolveTenantLanding,
   tenantRefusalReasonKey,
 } from './tenant-routing'
@@ -18,7 +18,7 @@ const userInfo = (overrides: Partial<GetUserInfoResponse> = {}): GetUserInfoResp
   id: 'user-1',
   username: 'someone',
   email: 'someone@example.com',
-  isPlatformAdministrator: false,
+  isPlatform: false,
   tenants: [],
   roles: [],
   ...overrides,
@@ -115,7 +115,7 @@ describe('isActiveTenantStale', () => {
     // listed - is the ordinary shape for a platform administrator, who enters a tenant on a
     // platform-scoped role and belongs to none.
     const platformAdmin = userInfo({
-      isPlatformAdministrator: true,
+      isPlatform: true,
       tenants: [],
       activeTenantId: 'a',
       activeTenant: tenant('a'),
@@ -139,7 +139,7 @@ describe('isPlatformAccessiblePath', () => {
 })
 
 describe('isPathAvailable', () => {
-  const platformAdmin = userInfo({ isPlatformAdministrator: true })
+  const platformAdmin = userInfo({ isPlatform: true })
 
   it('hides tenant-only screens from a platform administrator acting in no tenant', () => {
     expect(isPathAvailable(platformAdmin, '/admin/some-new-feature')).toBe(false)
@@ -147,32 +147,53 @@ describe('isPathAvailable', () => {
     expect(isPathAvailable(platformAdmin, '/profile')).toBe(true)
   })
 
-  it('hides nothing from anyone acting in a tenant or without platform administration', () => {
-    const acting = userInfo({ isPlatformAdministrator: true, tenants: [tenant('a')], activeTenant: tenant('a') })
+  it('hides nothing tenant-scoped from anyone acting in a tenant or without the platform tier', () => {
+    const acting = userInfo({ isPlatform: true, tenants: [tenant('a')], activeTenant: tenant('a') })
 
     expect(isPathAvailable(acting, '/admin/some-new-feature')).toBe(true)
     expect(isPathAvailable(userInfo(), '/admin/some-new-feature')).toBe(true)
   })
+
+  it("hides the platform's own screens from a caller acting in a tenant, whatever their tier", () => {
+    const platformInside = userInfo({ isPlatform: true, tenants: [], activeTenant: tenant('a') })
+    const memberInside = userInfo({ tenants: [tenant('a')], activeTenant: tenant('a') })
+
+    // The permissions these declare are platform-scoped, so a tenant session never carries them:
+    // the caller is in the other scope rather than short of a grant.
+    expect(isPathAvailable(platformInside, '/admin/tenants/list')).toBe(false)
+    expect(isPathAvailable(platformInside, '/admin/tenants/create')).toBe(false)
+    expect(isPathAvailable(memberInside, '/admin/tenants/list')).toBe(false)
+
+    // Reading one tenant and administering its members are exercisable in either scope, so they stay
+    // open to a caller inside the tenant they are about.
+    expect(isPathAvailable(memberInside, '/admin/tenants/detail/a')).toBe(true)
+    expect(isPathAvailable(memberInside, '/admin/tenants/members/a')).toBe(true)
+  })
+
+  it("leaves the platform's own screens open to a caller acting in no tenant", () => {
+    expect(isPathAvailable(platformAdmin, '/admin/tenants/list')).toBe(true)
+    expect(isPathAvailable(userInfo(), '/admin/tenants/list')).toBe(true)
+  })
 })
 
-describe('resolvePlatformAdministratorLanding', () => {
+describe('resolvePlatformLanding', () => {
   it('sends a platform administrator acting in no tenant to the dashboard', () => {
-    expect(resolvePlatformAdministratorLanding(userInfo({ isPlatformAdministrator: true }))).toBe('/admin')
-    expect(resolvePlatformAdministratorLanding(userInfo({ isPlatformAdministrator: true, tenants: [tenant('a'), tenant('b')] }))).toBe('/admin')
+    expect(resolvePlatformLanding(userInfo({ isPlatform: true }))).toBe('/admin')
+    expect(resolvePlatformLanding(userInfo({ isPlatform: true, tenants: [tenant('a'), tenant('b')] }))).toBe('/admin')
   })
 
   it('honours a redirect they can use and ignores one that needs a tenant', () => {
-    const user = userInfo({ isPlatformAdministrator: true })
+    const user = userInfo({ isPlatform: true })
 
-    expect(resolvePlatformAdministratorLanding(user, '/admin/users/list')).toBe('/admin/users/list')
-    expect(resolvePlatformAdministratorLanding(user, '/admin/some-new-feature')).toBe('/admin')
+    expect(resolvePlatformLanding(user, '/admin/users/list')).toBe('/admin/users/list')
+    expect(resolvePlatformLanding(user, '/admin/some-new-feature')).toBe('/admin')
   })
 
   it('leaves everyone else to the tenant landing decision', () => {
-    expect(resolvePlatformAdministratorLanding(undefined)).toBeNull()
-    expect(resolvePlatformAdministratorLanding(userInfo())).toBeNull()
+    expect(resolvePlatformLanding(undefined)).toBeNull()
+    expect(resolvePlatformLanding(userInfo())).toBeNull()
     expect(
-      resolvePlatformAdministratorLanding(userInfo({ isPlatformAdministrator: true, tenants: [tenant('a')], activeTenant: tenant('a') })),
+      resolvePlatformLanding(userInfo({ isPlatform: true, tenants: [tenant('a')], activeTenant: tenant('a') })),
     ).toBeNull()
   })
 })
@@ -219,9 +240,9 @@ describe('resolveTenantLanding', () => {
   it('lands a platform administrator nowhere, with a tenant entered or without one', () => {
     // They hold no membership, so the tenants listed for them are empty either way: the no-tenant
     // screen would tell them something true and beside the point, and the chooser would be empty.
-    const outside = userInfo({ isPlatformAdministrator: true, tenants: [] })
+    const outside = userInfo({ isPlatform: true, tenants: [] })
     const inside = userInfo({
-      isPlatformAdministrator: true,
+      isPlatform: true,
       tenants: [],
       activeTenantId: 'a',
       activeTenant: tenant('a'),

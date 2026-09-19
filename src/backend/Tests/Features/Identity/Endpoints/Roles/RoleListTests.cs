@@ -150,25 +150,26 @@ public class RoleListTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that a caller holding platform administration lists the roles of every tenant, without
-    /// being a member of any of them (AC-113).
+    /// Verifies that a platform account acting in no tenant lists the platform's own roles and no
+    /// tenant's, so the list follows the scope the caller is in rather than the tier it belongs to
+    /// (AC-113).
     /// </summary>
     /// <remarks>
-    /// The two tenants are made by the test and the seeded administrator is a member of neither, so what
-    /// the two ids appearing together proves is the platform tier itself rather than an account that
-    /// happens to belong to both. Every other assertion in this class is the same list read by a caller
-    /// who is not a platform administrator, which is what makes this one a widening rather than a
-    /// property of the endpoint.
+    /// The two tenants are made by the test and the caller is a member of neither, which is what makes
+    /// the absence of their roles mean something: a list that spanned every tenant would show both.
+    /// Reaching a particular tenant's roles from platform scope is done by naming it, which
+    /// <see cref="RoleListTenantFilterTests"/> covers; administering them is done by entering the
+    /// tenant, which <see cref="RolePlatformAdministrationTests"/> covers.
     /// </remarks>
     [Fact]
-    public async Task Platform_Administrator_Sees_Roles_Across_Tenants()
+    public async Task Platform_Account_Sees_The_Platforms_Own_Roles()
     {
         var first = await CreateTenantAsync();
         var second = await CreateTenantAsync();
         var inFirst = await CreateTenantRoleAsync(first.Id, Allow.Role_View);
         var inSecond = await CreateTenantRoleAsync(second.Id, Allow.Role_View);
 
-        await SignInAsPlatformAdministratorActingInATenantAsync();
+        await SetPlatformAdminAuthTokenAsync();
 
         var (response, page) = await App.Client
             .GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(new() { All = true });
@@ -177,9 +178,9 @@ public class RoleListTests(App app) : TenancyTestsBase(app)
 
         var ids = page.Items.Select(item => item.Id).ToList();
 
-        ids.Should().Contain(inFirst, "the caller administers roles irrespective of the tenant they belong to");
-        ids.Should().Contain(
-            inSecond,
-            "and irrespective of membership: the caller belongs to neither of these tenants, and reads both");
+        ids.Should().Contain(TestRoles.PlatformAdminRoleId,
+            "platform scope is about the roles that belong to no tenant, and this is one of them");
+        ids.Should().NotContain(inFirst).And.NotContain(inSecond,
+            "a tenant's roles are that tenant's, and are reached by naming or entering it rather than by being on the platform");
     }
 }

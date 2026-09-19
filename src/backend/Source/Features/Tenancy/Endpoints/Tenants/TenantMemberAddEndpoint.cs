@@ -16,7 +16,7 @@ using Backend.Features.Tenancy.Core;
 /// is authorized here, explicitly, before anything is read.
 /// <para>
 /// The guards run in a fixed order, and the order is part of the contract. Standing is settled
-/// first, so a caller who neither holds platform administration nor holds this permission inside the
+/// first, so a caller who is neither a platform account in platform scope nor holds this permission inside the
 /// tenant named is refused identically whether that tenant exists or not, and the surface discloses
 /// nothing about tenants that are none of their business. Only then is the tenant looked up, then its
 /// lifecycle state, then the account, then the account's standing in the tenant, then the roles asked
@@ -34,7 +34,8 @@ using Backend.Features.Tenancy.Core;
 sealed class TenantMemberAddEndpoint(ITenantService tenantService,
                                      ITenantMembershipService tenantMembershipService,
                                      ITenantAuthorizationService tenantAuthorizationService,
-                                     ICurrentUserService currentUserService) : Endpoint<TenantMemberAddRequest, TenantMemberAddResponse>
+                                     ICurrentUserService currentUserService,
+                                     ITenantContext tenantContext) : Endpoint<TenantMemberAddRequest, TenantMemberAddResponse>
 {
     /// <summary>
     /// The refusal reported to a caller with no standing in the tenant named. It is deliberately the
@@ -80,10 +81,10 @@ sealed class TenantMemberAddEndpoint(ITenantService tenantService,
         // Asked before the tenant is looked up at all. Membership of the tenant is not what authorizes
         // this: the permission claims the request carries were minted for the tenant the session is
         // acting in, and the tenant being administered is the one in the route, which may be another one
-        // entirely - so the permission is read for the tenant named in the route instead. Platform
-        // administration is a claim test rather than a role-name test, because any tenant may define a
-        // role of any name.
-        if (!currentUserService.HasPermission(Allow.Platform_Administration))
+        // entirely - so the permission is read for the tenant named in the route instead. Administering
+        // any tenant belongs to platform scope, so a platform account that has entered a tenant is read
+        // for that route tenant like anybody else.
+        if (!(currentUserService.IsPlatform() && tenantContext.IsPlatformScope()))
         {
             var callerId = currentUserService.GetCurrentUserId();
             if (callerId is not { } callerUserId

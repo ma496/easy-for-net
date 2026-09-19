@@ -9,11 +9,15 @@ using Backend.Features.Identity.Core.Entities;
 /// unique across every tenant, while the roles the account may start with are the acting tenant's own.
 /// </summary>
 /// <remarks>
-/// A platform administrator acting in no tenant runs in platform scope: the account is created with no
-/// membership, and the roles it may start with are the platform roles - the ones belonging to no tenant.
+/// A caller acting in no tenant runs in platform scope: the account is created as a platform account
+/// with no membership, and the roles it may start with are the platform roles - the ones belonging to
+/// no tenant. Created from inside a tenant - by a platform account that has entered one just as by that
+/// tenant's own administrator - it is an ordinary account of that tenant instead.
 /// </remarks>
 [AllowPlatformNoTenant]
-sealed class UserCreateEndpoint(IUserService userService, AppDbContext dbContext) : Endpoint<UserCreateRequest, UserCreateResponse>
+sealed class UserCreateEndpoint(IUserService userService,
+                                ITenantContext tenantContext,
+                                AppDbContext dbContext) : Endpoint<UserCreateRequest, UserCreateResponse>
 {
     public override void Configure()
     {
@@ -60,6 +64,12 @@ sealed class UserCreateEndpoint(IUserService userService, AppDbContext dbContext
         var requestMapper = new UserCreateRequestMapper();
         var entity = requestMapper.Map(request);
         entity.IsEmailVerified = true;
+
+        // The tier follows the scope the account is created in, and is never taken from the request:
+        // creating an account in platform scope is how the platform's own accounts come into being,
+        // while one created inside a tenant belongs to that tenant and joins it below. Nothing the
+        // caller sends can decide this, so no tenant can mint a platform account for itself.
+        entity.IsPlatform = tenantContext.IsPlatformScope();
         // Saving the account also grants it an active membership of the tenant being acted in, written
         // in the same transaction by the service, so an administrator never creates an account that
         // the very next list or read refuses to show them. The membership is attributed centrally from
