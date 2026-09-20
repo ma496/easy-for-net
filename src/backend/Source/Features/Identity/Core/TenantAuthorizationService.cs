@@ -135,6 +135,21 @@ public interface ITenantAuthorizationService
     Task<TenantMemberPageDto> GetTenantMembersAsync(Guid tenantId, ListRequestDto<Guid> request, Guid? roleId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Counts how many accounts hold an active membership of each of the tenants named, so a list of
+    /// tenants can report the size of each without reading a page of members for every row.
+    /// </summary>
+    /// <param name="tenantIds">The tenants being counted - in practice the page being listed, not every tenant there is.</param>
+    /// <param name="cancellationToken">Token used to cancel the read.</param>
+    /// <returns>A count per tenant. A tenant with no members is absent from the result rather than present with zero.</returns>
+    /// <remarks>
+    /// The members counted are the same ones <see cref="GetTenantMembersAsync"/> lists: accounts that
+    /// still exist and hold a membership that has not been removed. Membership rows are deliberately
+    /// not counted on their own, because deleting an account leaves its membership row behind and
+    /// counting rows would report a member the members screen does not show.
+    /// </remarks>
+    Task<Dictionary<Guid, int>> GetTenantMemberCountsAsync(IReadOnlyCollection<Guid> tenantIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Tells whether every role named belongs to one tenant, so that a request assigning a role of
     /// another tenant - or a role that belongs to none - is refused before anything is written. An
     /// empty set belongs to every tenant trivially.
@@ -375,6 +390,34 @@ public class TenantAuthorizationService(AppDbContext dbContext,
             .AnyAsync(role => role.TenantId == null
                               && dbContext.UserRoles.Any(assignment => assignment.UserId == userId && assignment.RoleId == role.Id),
                 cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<Dictionary<Guid, int>> GetTenantMemberCountsAsync(IReadOnlyCollection<Guid> tenantIds, CancellationToken cancellationToken = default)
+    {
+        // Nothing to ask the database when the page is empty, and an empty IN list is not a query worth
+        // sending.
+        if (tenantIds.Count == 0)
+        {
+            return [];
+        }
+
+        // One grouped read for the whole page rather than one count per row. Tenant restriction is
+        // relaxed by name because the memberships being counted belong to the tenants named here and
+        // not to whichever tenant the caller is acting in; the soft-delete filter stays in force on
+        // both sets, so a removed membership counts nobody and a deleted account is not counted at
+        // all - which is what keeps this number equal to the total GetTenantMembersAsync reports.
+        var counts = await dbContext.TenantMemberships
+            .AsNoTracking()
+            .AcrossAllTenants()
+            .Where(membership => membership.TenantId != null
+                                 && tenantIds.Contains(membership.TenantId.Value)
+                                 && dbContext.Users.Any(account => account.Id == membership.UserId))
+            .GroupBy(membership => membership.TenantId)
+            .Select(group => new { TenantId = group.Key, Count = group.Count() })
+            .ToListAsync(cancellationToken);
+
+        return counts.ToDictionary(row => row.TenantId!.Value, row => row.Count);
     }
 
     /// <inheritdoc />

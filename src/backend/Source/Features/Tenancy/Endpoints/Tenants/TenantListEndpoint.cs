@@ -1,6 +1,7 @@
 namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
 using Backend.Data.Entities;
+using Backend.Features.Identity.Core;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
@@ -13,7 +14,8 @@ using Backend.Features.Tenancy.Core;
 /// of them, so requiring an established tenant here would hide the list from the accounts that most
 /// need it.
 /// </remarks>
-sealed class TenantListEndpoint(ITenantService tenantService) : Endpoint<TenantListRequest, TenantListResponse>
+sealed class TenantListEndpoint(ITenantService tenantService,
+                                ITenantAuthorizationService tenantAuthorizationService) : Endpoint<TenantListRequest, TenantListResponse>
 {
     public override void Configure()
     {
@@ -52,10 +54,22 @@ sealed class TenantListEndpoint(ITenantService tenantService) : Endpoint<TenantL
             .Process(request)
             .ToListAsync(cancellationToken);
 
+        // How many accounts a tenant holds is user-account data owned by the identity slice, so it is
+        // asked of that slice's contract rather than counted here, and asked once for the whole page
+        // rather than row by row. A tenant nobody belongs to is absent from the result, which reads as
+        // the zero the row shows.
+        var memberCounts = await tenantAuthorizationService.GetTenantMemberCountsAsync(
+            [.. items.Select(tenant => tenant.Id)], cancellationToken);
+
         var dtoMapper = new TenantListDtoMapper();
         var response = new TenantListResponse
         {
-            Items = [.. items.Select(dtoMapper.Map)],
+            Items = [.. items.Select(tenant =>
+            {
+                var dto = dtoMapper.Map(tenant);
+                dto.UserCount = memberCounts.GetValueOrDefault(tenant.Id);
+                return dto;
+            })],
             Total = total
         };
 
@@ -105,7 +119,7 @@ public sealed class TenantListResponse : ListDto<TenantListDto>
 
 /// <summary>
 /// Per-row DTO representing a tenant in list responses, carrying its display name, its identifier in
-/// both the entered and the normalized form, and its lifecycle status.
+/// both the entered and the normalized form, its lifecycle status and how many accounts belong to it.
 /// </summary>
 public sealed class TenantListDto : AuditableDto<Guid>
 {
@@ -114,6 +128,13 @@ public sealed class TenantListDto : AuditableDto<Guid>
     public string Identifier { get; set; } = null!;
     public string IdentifierNormalized { get; set; } = null!;
     public TenantStatus Status { get; set; }
+
+    /// <summary>
+    /// The number of accounts holding an active membership of the tenant. It is filled by the endpoint
+    /// from the identity slice's count rather than by the mapper, because the tenant row itself knows
+    /// nothing about its members.
+    /// </summary>
+    public int UserCount { get; set; }
 }
 
 /// <summary>
@@ -122,5 +143,6 @@ public sealed class TenantListDto : AuditableDto<Guid>
 [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
 public partial class TenantListDtoMapper
 {
+    [MapperIgnoreTarget(nameof(TenantListDto.UserCount))]
     public partial TenantListDto Map(Tenant entity);
 }

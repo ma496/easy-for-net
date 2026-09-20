@@ -142,6 +142,7 @@ export const TenantTable = () => {
         [t('table.columns.name')]: tenant.name,
         [t('table.columns.identifier')]: tenant.identifier,
         [t('table.columns.status')]: tenant.status === TenantStatus.Active ? t('page.tenants.status.active') : t('page.tenants.status.suspended'),
+        [t('table.columns.userCount')]: tenant.userCount,
       }))
       exportData(format, rows, t('page.tenants.title'), 'tenants')
     } finally {
@@ -213,6 +214,16 @@ export const TenantTable = () => {
     columnHelper.accessor('identifier', {
       header: t('table.columns.identifier'),
       cell: (info) => info.getValue(),
+    }),
+    // The count is computed per page by the API and is not a column of the tenants table, so it
+    // cannot be sorted on.
+    columnHelper.accessor('userCount', {
+      header: t('table.columns.userCount'),
+      cell: (info) => (
+        <div className="w-10 flex items-center justify-center">
+          <Badge variant="primary">{info.getValue()}</Badge>
+        </div>),
+      enableSorting: false,
     }),
     columnHelper.accessor('status', {
       header: t('table.columns.status'),

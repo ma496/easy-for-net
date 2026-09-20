@@ -249,6 +249,39 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
+    /// Verifies that each row reports how many accounts belong to that tenant: a tenant nobody has
+    /// joined reports nothing, a tenant's members are counted for that tenant alone, and an account
+    /// that has been deleted stops counting although its membership row remains.
+    /// </summary>
+    /// <remarks>
+    /// The deleted account is the part worth pinning down. Deleting an account does not remove the
+    /// membership rows that placed it in its tenants, so a count taken over membership rows would keep
+    /// reporting a member that the members screen no longer lists.
+    /// </remarks>
+    [Fact]
+    public async Task List_Tenants_Reports_The_Member_Count_Of_Each_Tenant()
+    {
+        var token = NewSearchToken();
+        var created = await CreateTenantsAsync(token, count: 2);
+
+        await CreateTenantUserAsync(created[0].Id);
+        await CreateTenantUserAsync(created[0].Id);
+        var deletedAccount = await CreateTenantUserAsync(created[1].Id);
+        await UserService.DeleteAsync(deletedAccount);
+
+        await SetPlatformAdminAuthTokenAsync();
+
+        var (response, page) = await Client
+            .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(new() { Search = token, All = true });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        page.Items.Single(item => item.Id == created[0].Id).UserCount
+            .Should().Be(2, "both accounts created inside that tenant belong to it");
+        page.Items.Single(item => item.Id == created[1].Id).UserCount
+            .Should().Be(0, "its only member has been deleted, and the membership row it left behind places nobody");
+    }
+
+    /// <summary>
     /// A token no other test and no other run of the suite can collide with, used as the shared prefix
     /// of every tenant a single test creates.
     /// </summary>

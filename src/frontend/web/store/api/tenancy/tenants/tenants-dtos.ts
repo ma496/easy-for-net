@@ -45,13 +45,14 @@ export interface TenantListRequest extends ListRequestDto<string>, RequestBase {
 /** Paged response of tenants returned by the list-tenants endpoint. */
 export interface TenantListResponse extends ListDto<TenantListDto> {}
 
-/** Summary representation of a tenant in list responses, carrying its identifiers, lifecycle status and audit fields. */
+/** Summary representation of a tenant in list responses, carrying its identifiers, lifecycle status, the number of accounts belonging to it and audit fields. */
 export interface TenantListDto extends GenericAuditableDto<string> {
   systemCreated: boolean
   name: string
   identifier: string
   identifierNormalized: string
   status: TenantStatus
+  userCount: number
 }
 
 /** Request body for adding an existing user account to a tenant with exactly the supplied tenant roles; the tenant id travels as a path segment. */
