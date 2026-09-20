@@ -1,8 +1,6 @@
-using Backend.Features.Tenancy.Core.Entities;
-
 namespace Backend.Tests.Features.Identity.Core;
 
-using Backend.Data.Entities;
+using Backend.Features.Tenancy.Core;
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Tenancy.Endpoints.Tenants;
 using Backend.Tests.Features.Tenancy;

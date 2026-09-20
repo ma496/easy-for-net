@@ -6,7 +6,7 @@ using Backend.Features.Tenancy.Core;
 /// Feature module that registers the tenancy services with the DI container.
 /// </summary>
 /// <remarks>
-/// Both services are registered scoped, matching the scoped <c>AppDbContext</c> and
+/// Every service here is registered scoped, matching the scoped <c>AppDbContext</c> and
 /// <c>ITenantContext</c> they depend on: an HTTP request and a background job each resolve their own
 /// instance, so neither can carry the other's tenant scope into its work.
 /// </remarks>
@@ -18,5 +18,6 @@ public class TenancyFeature : IFeature
         // configure services
         services.AddScoped<ITenantService, TenantService>();
         services.AddScoped<ITenantMembershipService, TenantMembershipService>();
+        services.AddScoped<ITenantMembershipQuery, TenantMembershipQuery>();
     }
 }

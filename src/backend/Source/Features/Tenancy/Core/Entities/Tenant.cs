@@ -25,13 +25,3 @@ public class Tenant : AuditableEntity<Guid>, ISoftDelete, IHasNormalizedProperti
         IdentifierNormalized = Identifier.Trim().ToLowerInvariant();
     }
 }
-
-/// <summary>
-/// Lifecycle state of a <see cref="Tenant"/>. Deletion is not a status: a deleted tenant is a
-/// soft-deleted row (<see cref="Tenant.IsDeleted"/>).
-/// </summary>
-public enum TenantStatus
-{
-    Active = 1,
-    Suspended = 2
-}

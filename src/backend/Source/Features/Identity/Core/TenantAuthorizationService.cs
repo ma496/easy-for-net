@@ -1,6 +1,7 @@
 namespace Backend.Features.Identity.Core;
 
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Tenancy.Core;
 using RefreshTokenIssuer = Backend.Features.Identity.Endpoints.Account.TokenService;
 
 /// <summary>
@@ -194,7 +195,8 @@ public class TenantAuthorizationService(AppDbContext dbContext,
                                         ITenantContext tenantContext,
                                         IHttpContextAccessor httpContextAccessor,
                                         IAuthTokenService authTokenService,
-                                        RefreshTokenIssuer refreshTokenIssuer) : ITenantAuthorizationService
+                                        RefreshTokenIssuer refreshTokenIssuer,
+                                        ITenantMembershipQuery tenantMembershipQuery) : ITenantAuthorizationService
 {
     /// <summary>
     /// Name every tenant's system-created administrator role carries. A role name is unique within
@@ -346,6 +348,12 @@ public class TenantAuthorizationService(AppDbContext dbContext,
     /// <inheritdoc />
     public Task<bool> HoldsTenantPermissionAsync(Guid userId, Guid tenantId, string permission, CancellationToken cancellationToken = default)
     {
+        // Whether the caller belongs to the tenant is the tenancy slice's question, asked through the
+        // contract it publishes: what comes back is an unexecuted query over identifiers, so the
+        // membership row stays inside that slice while the condition below still reaches the database
+        // as one statement.
+        var memberTenantIds = tenantMembershipQuery.MemberTenantIds(userId);
+
         // The membership and the grant are asked as one query rather than two, because both are read on
         // every request that administers a tenant named by its route and neither answer is useful
         // without the other.
@@ -361,8 +369,7 @@ public class TenantAuthorizationService(AppDbContext dbContext,
             .AnyAsync(role => (role.TenantId == tenantId || role.TenantId == null)
                               && role.RolePermissions.Any(rolePermission => rolePermission.Permission.Name == permission)
                               && dbContext.UserRoles.Any(assignment => assignment.UserId == userId && assignment.RoleId == role.Id)
-                              && dbContext.TenantMemberships.AcrossAllTenants()
-                                  .Any(membership => membership.TenantId == tenantId && membership.UserId == userId),
+                              && memberTenantIds.Contains(tenantId),
                 cancellationToken);
     }
 

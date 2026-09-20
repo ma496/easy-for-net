@@ -3,6 +3,7 @@ namespace Backend.Features.Identity.Core;
 using Backend.Attributes;
 using Backend.Data.Entities;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// Defines CRUD and lookup operations for <see cref="User"/> entities, including password management and role assignment.
@@ -108,7 +109,8 @@ public interface IUserService
 [NoDirectUse]
 public class UserService(AppDbContext dbContext,
                          IPasswordHasher passwordHasher,
-                         ITenantContext tenantContext) : IUserService
+                         ITenantContext tenantContext,
+                         ITenantMembershipQuery tenantMembershipQuery) : IUserService
 {
     public async Task<User?> GetByIdAsync(Guid id)
     {
@@ -153,14 +155,14 @@ public class UserService(AppDbContext dbContext,
         // at the call rather than somewhere inside a deferred query.
         var activeTenantId = tenantContext.CurrentTenantId;
 
-        // Memberships are themselves tenant-restricted, but the restriction is relaxed and rewritten
-        // as an explicit predicate: this reads exactly the same way for the tenant being acted in and
-        // for platform scope, where it names no tenant and therefore matches no membership at all.
-        var memberships = dbContext.TenantMemberships
-            .AcrossAllTenants()
-            .Where(membership => membership.TenantId == activeTenantId);
+        // Who belongs to a tenant is the tenancy slice's question, asked here through the contract it
+        // publishes rather than by reading its rows: the membership row never crosses into identity,
+        // only the identifiers. The answer is still an unexecuted query, so it composes into the one
+        // below and the database settles both halves at once - and platform scope, which names no
+        // tenant, matches no membership at all.
+        var memberUserIds = tenantMembershipQuery.MemberUserIds(activeTenantId);
 
-        return Users().Where(account => memberships.Any(membership => membership.UserId == account.Id));
+        return Users().Where(account => memberUserIds.Contains(account.Id));
     }
 
     /// <inheritdoc />

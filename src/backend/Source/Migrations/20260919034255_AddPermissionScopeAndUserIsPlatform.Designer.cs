@@ -25,7 +25,7 @@ namespace Backend.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Backend.Data.Entities.Tenant", b =>
+            modelBuilder.Entity("Backend.Features.Tenancy.Core.Entities.Tenant", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -86,7 +86,7 @@ namespace Backend.Migrations
                     b.ToTable("Tenants", "tenancy");
                 });
 
-            modelBuilder.Entity("Backend.Data.Entities.TenantMembership", b =>
+            modelBuilder.Entity("Backend.Features.Tenancy.Core.Entities.TenantMembership", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()

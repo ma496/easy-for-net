@@ -1,9 +1,7 @@
-using Backend.Features.Tenancy.Core.Entities;
-
 namespace Backend.Tests.Features.Tenancy.Endpoints.Tenants;
 
-using Backend.Data.Entities;
-using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Tenancy.Core;
+using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Endpoints.Tenants;
 using Microsoft.AspNetCore.Routing;
 using System.Net.Http.Json;
@@ -70,7 +68,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
     /// than one permission is an endpoint any one of them admits a caller to, which is what
     /// FastEndpoints' <c>Permissions(...)</c> means.
     /// </summary>
-    private static readonly Dictionary<Type, string[]> DeclaredPermissions = new()
+    private static readonly Dictionary<Type, string[]> _declaredPermissions = new()
     {
         // The platform tier: creating, renaming, suspending, reactivating and deleting a tenant are
         // acts on the tenant itself, so no tenant role can carry them.
@@ -112,7 +110,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
         get
         {
             var names = new TheoryData<string>();
-            foreach (var declared in DeclaredPermissions.Where(entry => entry.Value.Length > 0))
+            foreach (var declared in _declaredPermissions.Where(entry => entry.Value.Length > 0))
             {
                 names.Add(declared.Key.Name);
             }
@@ -144,7 +142,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
             .Where(IsTenancyEndpoint)
             .ToList();
 
-        tenancyEndpoints.Should().BeEquivalentTo(DeclaredPermissions.Keys,
+        tenancyEndpoints.Should().BeEquivalentTo(_declaredPermissions.Keys,
             "the endpoint types reflection finds and the ones this test accounts for must be one and the same set, or an endpoint could be added to the tenancy surface with no permission pinned to it");
 
         foreach (var endpointType in tenancyEndpoints)
@@ -153,7 +151,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
                 "{0} must be routed for the permission it declares to be enforced at all",
                 endpointType.Name);
 
-            var declared = DeclaredPermissions[endpointType];
+            var declared = _declaredPermissions[endpointType];
 
             if (declared.Length == 0)
             {
@@ -324,14 +322,14 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
     /// <param name="endpoint">The endpoint type's name.</param>
     /// <returns>The endpoint type.</returns>
     private static Type EndpointNamed(string endpoint)
-        => DeclaredPermissions.Keys.Single(type => type.Name == endpoint);
+        => _declaredPermissions.Keys.Single(type => type.Name == endpoint);
 
     /// <summary>
     /// The permissions one endpoint declares, read from the single map this test is written around.
     /// </summary>
     /// <param name="endpoint">The endpoint type's name.</param>
     /// <returns>The permissions any one of which admits a caller, empty when it declares none.</returns>
-    private static string[] Declaration(string endpoint) => DeclaredPermissions[EndpointNamed(endpoint)];
+    private static string[] Declaration(string endpoint) => _declaredPermissions[EndpointNamed(endpoint)];
 
     /// <summary>
     /// Whether a type is one of the tenancy surface's endpoints: a concrete class in the feature's

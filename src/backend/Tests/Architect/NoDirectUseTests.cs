@@ -108,7 +108,9 @@ public class NoDirectUseTests()
         var failingTypesDetails = result.FailingTypes.Select(failingType =>
         {
             var module = ModuleDefinition.ReadModule(failingType.Module.FullyQualifiedName);
-            var cecilType = module.GetType(failingType.FullName);
+            // Reflection spells a nested type Outer+Nested where Cecil expects Outer/Nested, so a
+            // failing nested type would otherwise be reported as unanalyzable.
+            var cecilType = module.GetType(failingType.FullName?.Replace('+', '/') ?? string.Empty);
 
             if (cecilType == null) return $"{failingType.FullName} (could not analyze dependencies)";
 

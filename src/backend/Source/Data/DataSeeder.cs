@@ -1,8 +1,7 @@
-using Backend.Features.Tenancy.Core.Entities;
-
 namespace Backend.Data;
 
-using Backend.Data.Entities;
+using Backend.Features.Tenancy.Core;
+using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Notifications.Core;

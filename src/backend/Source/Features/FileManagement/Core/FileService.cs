@@ -1,8 +1,6 @@
-using Backend.Features.Tenancy.Core.Entities;
-
 namespace Backend.Features.FileManagement.Core;
 
-using Backend.Data.Entities;
+using Backend.Features.Tenancy.Core;
 using Backend.Features.FileManagement.Core.Entities;
 using Backend.Features.Identity.Core;
 using Microsoft.AspNetCore.StaticFiles;

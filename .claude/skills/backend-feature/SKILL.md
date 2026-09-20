@@ -128,6 +128,17 @@ So when a new feature needs something from `Identity`:
 2. If it genuinely belongs to the other feature and is meant to be shared, mark that type
    `[AllowOutside]` and keep the surface minimal (interface + DTO, not the implementation).
 
+Entities are never published this way. A feature's entities stay behind its services: publish an
+interface that answers in ids, DTOs or enums, and mark those answer types `[AllowOutside]` too — the
+attribute applies to classes, interfaces and enums. When another feature needs a composable query
+rather than a materialized answer, return `IQueryable<Guid>` (or a DTO projection) so the caller can
+still fold it into its own query without naming the row type.
+
+Watch the container while you do it. If the service you would publish depends on the feature that
+wants to call it, taking it there closes a DI cycle and the container refuses to build. Publish a
+second, narrower contract instead — one whose implementation takes `AppDbContext` and nothing else —
+rather than merging the read into the service that administers the thing.
+
 `Tests/Architect/Features/FeatureA` and `FeatureB` are fixtures that prove the rule works — they
 are not real features, so do not model new code on them or "fix" their intentional violations.
 

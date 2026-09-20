@@ -1,9 +1,7 @@
-using Backend.Features.Tenancy.Core.Entities;
-
 namespace Backend.Tests.Features.Identity.Endpoints.Account;
 
 using System.Text.Json;
-using Backend.Data.Entities;
+using Backend.Features.Tenancy.Core;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Account;

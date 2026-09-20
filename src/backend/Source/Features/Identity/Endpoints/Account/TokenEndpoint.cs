@@ -1,8 +1,6 @@
-using Backend.Features.Tenancy.Core.Entities;
-
 namespace Backend.Features.Identity.Endpoints.Account;
 
-using Backend.Data.Entities;
+using Backend.Features.Tenancy.Core;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 
@@ -200,9 +198,8 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IOp
     /// <c>POST /tenants/switch</c> settles the same question in, so naming a tenant here and selecting
     /// it a moment later are refused for the same reasons with the same codes.
     /// <para>
-    /// The identifier is matched against the normalized form, so it is found however it was typed -
-    /// the normalization repeated here is the one <see cref="Tenant.NormalizeProperties"/> performs
-    /// when the tenant is stored. The read relaxes tenant restriction by name because it runs before
+    /// The identifier is matched against the normalized form, so it is found however it was typed.
+    /// The read relaxes tenant restriction by name because it runs before
     /// any tenant is established; the soft-delete filter stays in force, so a deleted tenant is not a
     /// tenant to start in and reads as absent.
     /// </para>
