@@ -16,7 +16,6 @@ using Backend.Features.Tenancy.Core;
 /// - which is also why the system-created bootstrap tenant, a tenant that can never be suspended, is
 /// simply a no-op here rather than a refusal.
 /// </remarks>
-[AllowNoTenant]
 sealed class TenantReactivateEndpoint(ITenantService tenantService, AppDbContext dbContext) : Endpoint<TenantReactivateRequest, TenantReactivateResponse>
 {
     /// <summary>

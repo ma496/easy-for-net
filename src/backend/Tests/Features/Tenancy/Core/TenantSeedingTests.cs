@@ -217,6 +217,36 @@ public class TenantSeedingTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
+    /// Verifies that the seeded tenant administrator holds exactly one active membership, which is what
+    /// lets sign-in resolve a tenant for it without being told which one.
+    /// </summary>
+    /// <remarks>
+    /// This was a convenience and is now a requirement. An ordinary account holding anything other than
+    /// one active membership is refused at sign-in and asked to name a tenant, so a seeder that gave
+    /// this account a second membership would not fail here alone - it would fail every test in the
+    /// suite that signs in with the default credentials, with a refusal that says nothing about the
+    /// seed. Asserting it here is what turns that into one legible failure.
+    /// </remarks>
+    [Fact]
+    public async Task Seeded_Tenant_Administrator_Holds_Exactly_One_Membership()
+    {
+        var administrator = await ReadSeededAccountAsync(TestUsers.TenantAdminUsername);
+
+        var tenantIds = await DbContext.TenantMemberships
+            .AcrossAllTenants()
+            .AsNoTracking()
+            .Where(membership => membership.UserId == administrator.Id
+                                 && DbContext.Tenants.Any(tenant => tenant.Id == membership.TenantId && tenant.Status == TenantStatus.Active))
+            .Select(membership => membership.TenantId)
+            .Distinct()
+            .ToListAsync(TestContext.Current.CancellationToken);
+
+        tenantIds.Should().ContainSingle(
+            "sign-in resolves a tenant for an ordinary account only when exactly one active membership stands, and every test signing in with the default credentials depends on it")
+            .Which.Should().Be(TestTenants.BootstrapTenantId, "and it is the tenant the seeder puts this account in");
+    }
+
+    /// <summary>
     /// Reads an account the seeder creates, which every test here names by the username it is seeded
     /// under rather than by an identifier the suite would have to have captured first.
     /// </summary>

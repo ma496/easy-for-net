@@ -1,13 +1,11 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
 import { Building2, Check, Loader2 } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { useTenantSwitch } from '@/hooks'
 import { useAppSelector } from '@/store/hooks'
 import { GetUserInfoTenant } from '@/store/api/identity'
 import { cn } from '@/lib/utils'
-import { tenantRefusalReasonKey } from '@/lib/utils/tenant-routing'
 import { LocalizedLink } from '@/components/ui'
 
 /**
@@ -18,14 +16,10 @@ import { LocalizedLink } from '@/components/ui'
  */
 export const SelectTenantView = () => {
   const { t } = useTranslation()
-  const searchParams = useSearchParams()
   const tenants = useAppSelector((state) => state.auth.tenants)
   const activeTenant = useAppSelector((state) => state.auth.activeTenant)
 
   const { enterTenant, isBusy } = useTenantSwitch()
-
-  const reason = searchParams.get('reason')
-  const reasonKey = tenantRefusalReasonKey(reason)
 
   const switchTenant = async (tenant: GetUserInfoTenant) => {
     if (tenant.id === activeTenant?.id) {
@@ -45,17 +39,14 @@ export const SelectTenantView = () => {
           <p className="text-base font-bold text-white-dark">{t('page.selectTenant.description')}</p>
         </div>
 
-        {reasonKey && (
-          <div className="mb-6 rounded-md border border-warning/40 bg-warning/10 px-4 py-3 text-sm font-medium text-warning">
-            {t(reasonKey)}
-          </div>
-        )}
-
         {tenants.length === 0 ? (
+          // Nothing left to choose from: every tenant this account belonged to is gone, suspended, or has
+          // removed it. Signing up creates a tenant, so the way back is a new account rather than a screen
+          // here - what this offers is the account's own profile and the door out.
           <div className="rounded-md bg-white p-6 text-center shadow-sm dark:bg-black/20">
-            <p className="mb-4 font-medium text-gray-500 dark:text-gray-400">{t('page.noTenant.description')}</p>
-            <LocalizedLink href="/no-tenant" className="btn btn-primary">
-              {t('page.noTenant.createButton')}
+            <p className="mb-4 font-medium text-gray-500 dark:text-gray-400">{t('page.selectTenant.emptyDescription')}</p>
+            <LocalizedLink href="/profile" className="btn btn-primary">
+              {t('page.selectTenant.emptyAction')}
             </LocalizedLink>
           </div>
         ) : (

@@ -1,7 +1,7 @@
 'use client'
 import { PropsWithChildren, useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { toggleRTL, toggleTheme, setDarkMode, toggleMenu, toggleLayout, toggleAnimation, toggleNavbar, toggleSemidark, setUserInfo, clearTenantError } from '@/store/slices'
+import { toggleRTL, toggleTheme, setDarkMode, toggleMenu, toggleLayout, toggleAnimation, toggleNavbar, toggleSemidark, setUserInfo } from '@/store/slices'
 import { AppLoading, ServiceUnavailableView } from '@/components/layouts'
 import { i18nConfig, Locale } from '@/i18n'
 import { useLazyGetUserInfoQuery } from './store/api/identity'
@@ -14,7 +14,7 @@ import defaultThemeConfig from '@/theme.config'
 
 /**
  * Interactive client-side root component that loads the authenticated user, applies the persisted theme/menu/layout preferences, keeps the caller off screens they may not open - whether for want of a
- * permission or of a usable tenant - reacts to a tenant that goes away mid-session, and conditionally renders the cookie consent dialog.
+ * permission or of a usable tenant - and conditionally renders the cookie consent dialog.
  */
 function App({ children }: PropsWithChildren) {
   const themeConfig = useAppSelector((state) => state.theme)
@@ -53,39 +53,17 @@ function App({ children }: PropsWithChildren) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const go = (target: string) => router.replace(localized(target) as any)
 
-    // A platform administrator acting in no tenant needs none: users, roles and notifications answer about the platform's own, and the tenants screens and the dashboard read no tenant data, so
-    // neither a tenant refusal nor the lack of a selection sends them to the no-tenant screen or the chooser. A refusal is dropped while they stay where they are; only a screen that genuinely needs a
-    // tenant - one not listed in tenant-routing, or the no-tenant screen - lands them on the dashboard instead. They can still pick a tenant from the header's switcher.
+    // A platform administrator acting in no tenant needs none: users, roles and notifications answer about the platform's own, and the tenants screens and the dashboard read no tenant data, so the
+    // lack of a selection never sends them to the chooser. Only a screen that genuinely needs a tenant - one not listed in tenant-routing - lands them on the dashboard instead. They can still pick a
+    // tenant from the header's switcher.
     const platformLanding = resolvePlatformLanding(authState.user)
-    if (platformLanding) {
-      if (authState.tenantError) {
-        dispatch(clearTenantError())
-      }
-      if (pathToCheck === '/no-tenant' || !isPathAvailable(authState.user, pathToCheck)) {
-        go(platformLanding)
-        return
-      }
-    }
-
-    // A tenant-scoped request the API refused because the session's own tenant went away - it was suspended or deleted, or the membership in it was revoked - is reported by the error middleware as a
-    // code on the auth slice rather than by the calling screen. The session stays valid and every other tenant the user holds stays reachable: the user is sent to the chooser, carrying the reason so
-    // the screen can say what happened instead of leaving them staring at a failure, or to the no-tenant screen when there is nothing left to choose. Signing them out is never the answer here.
-    //
-    // The code is held until they have arrived and only cleared there: clearing it while the replace is still in flight would let the rule below run once more on the path being left and decide a
-    // plainer destination, dropping the reason. The banner keeps showing after the clear because it is driven by the query string, not by this code.
-    if (authState.tenantError && !platformLanding) {
-      if (pathToCheck === '/select-tenant' || pathToCheck === '/no-tenant') {
-        dispatch(clearTenantError())
-        return
-      }
-
-      const failureLanding = authState.tenants.length > 0 ? `/select-tenant?reason=${encodeURIComponent(authState.tenantError)}` : '/no-tenant'
-      go(failureLanding)
+    if (platformLanding && !isPathAvailable(authState.user, pathToCheck)) {
+      go(platformLanding)
       return
     }
 
-    // Opening a screen that only means anything inside a tenant while no usable selection stands - an account that belongs to none, several memberships with no choice made yet, or a stored selection
-    // naming a tenant that has since been suspended, deleted or lost its membership - lands on the no-tenant screen or the chooser instead of a tenant-scoped screen with no tenant behind it. Account
+    // Opening a screen that only means anything inside a tenant while the session names none - because the tenant it was working in was suspended, deleted or left, and the last renewal dropped it -
+    // lands on the chooser instead of a tenant-scoped screen with no tenant behind it. The renewal re-reads the account info, which is how the state below comes to be seen at all. Account
     // self-service, the platform tenancy screens, /unauthorized and the public routes are not tenant-scoped, so they stay reachable throughout.
     if (isTenantScopedPath(pathToCheck) && !platformLanding) {
       const tenantLanding = resolveTenantLanding(authState.user)

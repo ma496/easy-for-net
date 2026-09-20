@@ -6,21 +6,17 @@ using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Identity.Endpoints.Users;
-using Backend.Features.Tenancy.Endpoints.Tenants;
 using Backend.Tests.Features.Tenancy;
 
 /// <summary>
-/// Tests what self-service sign-up produces: a global account that belongs to no tenant, that reaches
-/// the self-service surfaces without one, that is granted no role and no platform permission, and
-/// that is treated afterwards as an authenticated user with no usable membership
-/// (AC-118, AC-119, AC-120, AC-122).
+/// Tests what self-service sign-up produces: an account, the tenant it works in, and the standing of
+/// that tenant's administrator - created as one act, so that neither survives the other's failure.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Sign-up is the one door into the application that is opened from outside every tenant, so what it
-/// hands out is a bare authenticated identity: an account, and nothing attached to it. Creating a
-/// tenant is a separate act the new account performs afterwards, which is what makes the authority it
-/// ends up with something it obtained deliberately rather than something sign-up conferred.
+/// Sign-up is the one door into the application that is opened from outside every tenant, and what it
+/// hands out is a tenant of one's own. The authority that comes with it is that tenant's alone: the
+/// platform tier belongs to the platform's own administrators and no anonymous surface can confer it.
 /// </para>
 /// <para>
 /// The invented accounts here are named from a fresh identifier rather than a counter, because
@@ -37,32 +33,43 @@ public class SignupTests(App app) : TenancyTestsBase(app)
     private const string SignupPassword = "Signup#123";
 
     /// <summary>
-    /// Verifies that self-service sign-up creates a global account holding no membership and joining
-    /// no existing tenant (AC-118).
+    /// Verifies that signing up creates the tenant alongside the account and places the account
+    /// inside it as its only membership.
     /// </summary>
     [Fact]
-    public async Task Creates_A_Global_Account_With_No_Membership()
+    public async Task Creates_The_Account_And_Its_Tenant()
     {
-        var (account, username, _) = await SignUpAsync();
+        var signup = await SignUpAsync();
 
-        account.Username.Should().Be(username);
-        account.Email.Should().Be($"{username}@example.com");
-        account.IsActive.Should().BeTrue("the account is created in service, which is what lets it sign in at once");
+        signup.Account.Username.Should().Be(signup.Username);
+        signup.Account.Email.Should().Be($"{signup.Username}@example.com");
+        signup.Account.IsActive.Should().BeTrue("the account is created in service, which is what lets it sign in at once");
+        signup.Account.IsPlatform.Should().BeFalse(
+            "the platform tier is never handed out by signing up, which is anonymous and self-service");
+
+        var tenant = await DbContext.Tenants
+            .AsNoTracking()
+            .AcrossAllTenants()
+            .SingleAsync(candidate => candidate.IdentifierNormalized == signup.TenantIdentifier, TestContext.Current.CancellationToken);
+
+        tenant.Name.Should().Be(signup.TenantName);
+        tenant.Status.Should().Be(TenantStatus.Active, "a tenant is born in service");
+        tenant.SystemCreated.Should().BeFalse("only the seeder's bootstrap tenant is system-created");
 
         var memberships = await DbContext.TenantMemberships
             .AcrossAllTenants()
             .AsNoTracking()
-            .Where(membership => membership.UserId == account.Id)
+            .Where(membership => membership.UserId == signup.Account.Id)
             .Select(membership => membership.TenantId)
             .ToListAsync(TestContext.Current.CancellationToken);
 
-        memberships.Should().BeEmpty(
-            "signing up joins no tenant - not the bootstrap tenant, not any other - so the account starts outside every one of them");
+        memberships.Should().ContainSingle().Which.Should().Be(tenant.Id,
+            "signing up joins the tenant it created and no other - not the bootstrap tenant, not anybody else's");
     }
 
     /// <summary>
     /// Verifies that self-service sign-up completes normally when no tenant context is established,
-    /// which is the only state an anonymous visitor can arrive in (AC-119).
+    /// which is the only state an anonymous visitor can arrive in.
     /// </summary>
     [Fact]
     public async Task Works_With_No_Tenant_Context()
@@ -79,11 +86,13 @@ public class SignupTests(App app) : TenancyTestsBase(app)
                 Username = username,
                 Email = $"{username}@example.com",
                 Password = SignupPassword,
-                ConfirmPassword = SignupPassword
+                ConfirmPassword = SignupPassword,
+                TenantName = $"Tenant {Guid.NewGuid():N}",
+                TenantIdentifier = NewTenantIdentifier()
             });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK,
-            "sign-up is account self-service, so the one answer it must never give is the noActiveTenant refusal a tenant-scoped call makes");
+            "sign-up is account self-service, so the one answer it must never give is a refusal for want of a tenant");
 
         var created = await DbContext.Users
             .AsNoTracking()
@@ -93,126 +102,144 @@ public class SignupTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that an account created by self-service sign-up is granted no tenant-scoped role and
-    /// no platform permission, at sign-up and through the self-service onboarding that can follow it
-    /// (AC-120).
+    /// Verifies that the account signing up administers the tenant it created, and that the authority
+    /// it gains reaches nothing platform-wide.
     /// </summary>
     [Fact]
-    public async Task Grants_No_Role_And_No_Platform_Permission()
+    public async Task Administers_Its_Own_Tenant_And_Holds_No_Platform_Permission()
     {
-        var (account, username, password) = await SignUpAsync();
+        var signup = await SignUpAsync();
+        var client = await SignedInClientAsync(signup.Username, signup.Password);
 
-        var heldAssignments = await DbContext.UserRoles
-            .AsNoTracking()
-            .CountAsync(assignment => assignment.UserId == account.Id, TestContext.Current.CancellationToken);
+        var (infoResponse, info) = await client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
 
-        heldAssignments.Should().Be(0, "sign-up grants an authenticated identity and nothing else");
-
-        var client = await SignedInClientAsync(username, password);
-
-        var (beforeResponse, before) = await client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
-
-        beforeResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        before.Tenants.Should().BeEmpty("the account belongs to no tenant, so there is nothing to act in");
-        before.Roles.Should().BeEmpty("and no role is held at any scope");
-        before.IsPlatform.Should().BeFalse(
-            "the platform tier is never handed out by signing up, which is anonymous and self-service");
-
-        PermissionClaimsOf(AccessTokenOf(client)).Should().BeEmpty(
-            "the session sign-up leads to carries no permission claim at all");
-
-        // The second half of the criterion: the self-service onboarding that an account with no tenant
-        // may perform gives it authority inside the tenant it creates and never at platform level.
-        var identifier = NewTenantIdentifier();
-        var (onboardResponse, onboarded) = await client
-            .POSTAsync<TenantOnboardEndpoint, TenantOnboardRequest, TenantOnboardResponse>(new()
-            {
-                Name = $"Tenant {Guid.NewGuid():N}",
-                Identifier = identifier
-            });
-
-        onboardResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        onboarded.Identifier.Should().Be(identifier);
+        infoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        info.Tenants.Should().ContainSingle("the account belongs to the one tenant it created");
+        info.ActiveTenant!.Identifier.Should().Be(signup.TenantIdentifier,
+            "sign-in resolves that single membership without being told which tenant is meant");
+        info.IsPlatform.Should().BeFalse(
+            "administering a tenant is not the same standing as belonging to the platform tier");
 
         var platformPermissions = PlatformOnlyPermissionNames();
 
-        platformPermissions.Should().NotBeEmpty("the catalogue declares which permissions are platform level, and the comparison below is only meaningful if it declares some");
+        platformPermissions.Should().NotBeEmpty(
+            "the catalogue declares which permissions are platform level, and the comparison below is only meaningful if it declares some");
 
-        PermissionClaimsOf(onboarded.Session.AccessToken).Should().NotIntersectWith(platformPermissions,
-            "onboarding creates a tenant and makes the caller its first administrator; the authority that comes with it is that tenant's and reaches nothing platform-wide");
+        PermissionClaimsOf(AccessTokenOf(client)).Should().NotBeEmpty(
+                "the account administers the tenant it created, so its session carries that tenant's authority")
+            .And.NotIntersectWith(platformPermissions,
+                "the authority sign-up confers is the new tenant's own and reaches nothing platform-wide");
 
-        TestsHelper.SetAuthToken(client, onboarded.Session.AccessToken);
-
-        var (afterResponse, after) = await client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
-
-        afterResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        after.ActiveTenantId.Should().Be(onboarded.Id, "the tenant just created is the one the caller now acts in");
-        after.IsPlatform.Should().BeFalse(
-            "the caller administers a tenant, which is not the same standing as belonging to the platform tier");
-        after.Roles.SelectMany(role => role.Permissions).Select(permission => permission.Name)
+        info.Roles.SelectMany(role => role.Permissions).Select(permission => permission.Name)
             .Should().NotIntersectWith(platformPermissions,
                 "every permission held comes through the new tenant's own role, and a tenant-tier role carries no platform permission");
-    }
 
-    /// <summary>
-    /// Verifies that an account created by self-service sign-up is, until it joins a tenant, an
-    /// authenticated user with no usable membership: account self-service and self-service tenant
-    /// creation answer it while every other tenant-scoped operation is refused (AC-122).
-    /// </summary>
-    [Fact]
-    public async Task New_Account_Is_An_Authenticated_User_With_No_Usable_Membership()
-    {
-        var (account, username, password) = await SignUpAsync();
-        var client = await SignedInClientAsync(username, password);
-
-        // Authenticated, and therefore told which tenant it is missing rather than asked who it is.
-        var (refused, refusal) = await client
-            .GETAsync<UserListEndpoint, UserListRequest, ProblemDetails>(new());
-
-        refused.StatusCode.Should().Be(HttpStatusCode.Forbidden,
-            "the account belongs to no active tenant, and reading accounts is tenant-scoped work");
-        refused.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized, "the account is authenticated; it is the tenant that is missing");
-        refusal.Errors.Should().ContainSingle();
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.NoActiveTenant);
-
-        // Account self-service answers it: reading one's own profile is about the person, not a tenant.
-        var (profileResponse, profile) = await client.GETAsync<ProfileEndpoint, UserProfileResponse>();
-
-        profileResponse.StatusCode.Should().Be(HttpStatusCode.OK, "the caller is still who they are");
-        profile.Id.Should().Be(account.Id);
-
-        // And self-service tenant creation is the door out of the state, exactly as it is for any other
-        // account holding no usable membership.
-        var identifier = NewTenantIdentifier();
-        var (onboardResponse, onboarded) = await client
-            .POSTAsync<TenantOnboardEndpoint, TenantOnboardRequest, TenantOnboardResponse>(new()
-            {
-                Name = $"Tenant {Guid.NewGuid():N}",
-                Identifier = identifier
-            });
-
-        onboardResponse.StatusCode.Should().Be(HttpStatusCode.OK, "creating a tenant is available to a caller with no tenant");
-        onboarded.Identifier.Should().Be(identifier);
-
-        // The membership created by onboarding is usable at once: the tenant-scoped call refused above
-        // is answered for the same caller, in the tenant it just created.
-        TestsHelper.SetAuthToken(client, onboarded.Session.AccessToken);
-
+        // The standing is usable rather than merely reported: a tenant-scoped call the account would
+        // have been refused without a tenant is answered inside the one it just created.
         var (admitted, _) = await client
             .GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
 
         admitted.StatusCode.Should().Be(HttpStatusCode.OK,
-            "the account is now a member of a tenant and administers it, which is what the refusal above said it lacked");
+            "the account is a member of its tenant and administers it from its very first request");
     }
 
     /// <summary>
-    /// Signs a visitor up through the endpoint, so the account under test is the one the production
-    /// path creates rather than one assembled by the test.
+    /// Verifies that a tenant identifier already in use is refused against the field that carries it,
+    /// rather than surfacing as a database error from the unique index behind it.
     /// </summary>
-    /// <returns>The stored account, and the credentials it signed up with.</returns>
-    private async Task<(User Account, string Username, string Password)> SignUpAsync()
+    [Fact]
+    public async Task Refuses_A_Tenant_Identifier_Already_In_Use()
+    {
+        var taken = await SignUpAsync();
+
+        var username = $"signup-{Guid.NewGuid():N}";
+        var visitor = App.CreateClient(new ClientOptions { HandleCookies = false });
+
+        var (response, problem) = await visitor
+            .POSTAsync<SignupEndpoint, SignupRequest, ProblemDetails>(new()
+            {
+                Username = username,
+                Email = $"{username}@example.com",
+                Password = SignupPassword,
+                ConfirmPassword = SignupPassword,
+                TenantName = $"Tenant {Guid.NewGuid():N}",
+                TenantIdentifier = taken.TenantIdentifier
+            });
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        problem.Errors.Should().ContainSingle()
+            .Which.Code.Should().Be(ErrorCodes.TenantIdentifierAlreadyExists);
+
+        var created = await DbContext.Users
+            .AsNoTracking()
+            .AnyAsync(user => user.UsernameNormalized == username, TestContext.Current.CancellationToken);
+
+        created.Should().BeFalse("nothing is persisted when the tenant cannot be created");
+    }
+
+    /// <summary>
+    /// Verifies that the account and the tenant are created as one act: a sign-up refused for the
+    /// tenant leaves no account behind for the person to be stuck with.
+    /// </summary>
+    /// <remarks>
+    /// The tenant is refused here for a reason the endpoint cannot see coming - a name that passes
+    /// validation and an identifier taken between the check and the write - which is arranged by
+    /// reusing an identifier that already exists. What is asserted is the absence of the account: the
+    /// endpoint's own guard and the unique index behind it both roll the whole transaction back.
+    /// </remarks>
+    [Fact]
+    public async Task A_Refused_Tenant_Leaves_No_Account_Behind()
+    {
+        var taken = await SignUpAsync();
+
+        var username = $"signup-{Guid.NewGuid():N}";
+        var email = $"{username}@example.com";
+        var visitor = App.CreateClient(new ClientOptions { HandleCookies = false });
+
+        await visitor.POSTAsync<SignupEndpoint, SignupRequest, ProblemDetails>(new()
+        {
+            Username = username,
+            Email = email,
+            Password = SignupPassword,
+            ConfirmPassword = SignupPassword,
+            TenantName = $"Tenant {Guid.NewGuid():N}",
+            TenantIdentifier = taken.TenantIdentifier
+        });
+
+        var accountExists = await DbContext.Users
+            .AsNoTracking()
+            .AnyAsync(user => user.UsernameNormalized == username, TestContext.Current.CancellationToken);
+
+        accountExists.Should().BeFalse(
+            "the account and its tenant are one act, so a failure that costs the tenant costs the account too");
+
+        // And the name is still free, which is the point of rolling back rather than leaving a
+        // half-created account: the person can sign up again with the same details.
+        var retryIdentifier = NewTenantIdentifier();
+        var (retry, _) = await visitor
+            .POSTAsync<SignupEndpoint, SignupRequest, SignupResponse>(new()
+            {
+                Username = username,
+                Email = email,
+                Password = SignupPassword,
+                ConfirmPassword = SignupPassword,
+                TenantName = $"Tenant {Guid.NewGuid():N}",
+                TenantIdentifier = retryIdentifier
+            });
+
+        retry.StatusCode.Should().Be(HttpStatusCode.OK, "the failed attempt reserved neither the username nor the email");
+    }
+
+    /// <summary>
+    /// Signs a visitor up through the endpoint, so the account and tenant under test are the ones the
+    /// production path creates rather than rows assembled by the test.
+    /// </summary>
+    /// <returns>The stored account, the credentials it signed up with, and the tenant it created.</returns>
+    private async Task<(User Account, string Username, string Password, string TenantName, string TenantIdentifier)> SignUpAsync()
     {
         var username = $"signup-{Guid.NewGuid():N}";
+        var tenantName = $"Tenant {Guid.NewGuid():N}";
+        var tenantIdentifier = NewTenantIdentifier();
         var visitor = App.CreateClient(new ClientOptions { HandleCookies = false });
 
         var (response, _) = await visitor
@@ -221,7 +248,9 @@ public class SignupTests(App app) : TenancyTestsBase(app)
                 Username = username,
                 Email = $"{username}@example.com",
                 Password = SignupPassword,
-                ConfirmPassword = SignupPassword
+                ConfirmPassword = SignupPassword,
+                TenantName = tenantName,
+                TenantIdentifier = tenantIdentifier
             });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK, "sign-up is answered without a tenant");
@@ -230,12 +259,13 @@ public class SignupTests(App app) : TenancyTestsBase(app)
             .AsNoTracking()
             .SingleAsync(user => user.UsernameNormalized == username, TestContext.Current.CancellationToken);
 
-        return (account, username, SignupPassword);
+        return (account, username, SignupPassword, tenantName, tenantIdentifier);
     }
 
     /// <summary>
     /// A client presenting the signed-up account's own credentials, for the cases that go on to ask
-    /// what that account may do.
+    /// what that account may do. No tenant is named: the account holds exactly one membership, so
+    /// sign-in resolves it without being told.
     /// </summary>
     /// <param name="username">The account to sign in as.</param>
     /// <param name="password">The password it signed up with.</param>

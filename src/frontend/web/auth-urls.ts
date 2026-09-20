@@ -72,9 +72,6 @@ export const authUrls: AuthUrl[] = [
   {
     url: '/select-tenant',
   },
-  {
-    url: '/no-tenant',
-  },
 ]
 
 /**

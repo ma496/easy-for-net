@@ -7,41 +7,24 @@ using System.Net.Http.Headers;
 public static class TestsHelper
 {
     /// <summary>
-    /// Signs in and returns the access token the caller was issued, optionally selecting a tenant
-    /// first. Sign-in resolves an active tenant on its own only when exactly one membership stands,
-    /// so a tenant is named here whenever the account holds several - or none - and the caller needs
-    /// to act in a particular one.
+    /// Signs in and returns the access token the caller was issued, naming the tenant to start the
+    /// session in when one is given. Sign-in resolves a tenant by itself only when exactly one active
+    /// membership stands, and refuses an ordinary account outright when none or several do, so an
+    /// account holding anything other than one membership has to name the tenant it means here.
     /// </summary>
-    public static async Task<string> GetNewAuthTokenAsync(HttpClient client, string username = TestUsers.TenantAdminUsername, string password = TestUsers.AdminPassword, Guid? tenantId = null)
+    public static async Task<string> GetNewAuthTokenAsync(HttpClient client, string username = TestUsers.TenantAdminUsername, string password = TestUsers.AdminPassword, string? tenantIdentifier = null)
     {
         var (_, res) = await client.POSTAsync<TokenEndpoint, TokenRequest, TokenResponse>(
-            new() { Username = username, Password = password });
+            new() { Username = username, Password = password, TenantIdentifier = tenantIdentifier });
 
-        if (tenantId is not { } activeTenantId)
-        {
-            return res.AccessToken;
-        }
-
-        // Switching is an authenticated call, so the token just issued has to be presented to make
-        // it. The client's own header is restored afterwards: resolving a token for an account must
-        // not sign the client in as that account.
-        var previous = client.DefaultRequestHeaders.Authorization;
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", res.AccessToken);
-        try
-        {
-            return await SwitchTenantAsync(client, activeTenantId);
-        }
-        finally
-        {
-            client.DefaultRequestHeaders.Authorization = previous;
-        }
+        return res.AccessToken;
     }
 
     /// <summary>
-    /// Signs in, optionally selects a tenant, and leaves the client presenting the resulting token.
+    /// Signs in, naming a tenant when one is given, and leaves the client presenting the resulting token.
     /// </summary>
-    public static async Task SetNewAuthTokenAsync(HttpClient client, string username = TestUsers.TenantAdminUsername, string password = TestUsers.AdminPassword, Guid? tenantId = null)
-        => SetAuthToken(client, await GetNewAuthTokenAsync(client, username, password, tenantId));
+    public static async Task SetNewAuthTokenAsync(HttpClient client, string username = TestUsers.TenantAdminUsername, string password = TestUsers.AdminPassword, string? tenantIdentifier = null)
+        => SetAuthToken(client, await GetNewAuthTokenAsync(client, username, password, tenantIdentifier));
 
     /// <summary>
     /// Leaves the client presenting this token on every later request.

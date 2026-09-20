@@ -10,8 +10,8 @@ export type TenantCacheAction =
   | ReturnType<typeof signout>
 
 /**
- * Actions to dispatch, in order, once the active tenant has changed - on a switch and on
- * onboarding. The RTK Query cache is discarded first, so no record cached for the previous
+ * Actions to dispatch, in order, once the active tenant has changed - on a switch from the header,
+ * the chooser or the tenants table. The RTK Query cache is discarded first, so no record cached for the previous
  * tenant is displayed afterwards; the freshly read user info then replaces the session state
  * and the unread notification badge starts again from zero for the new tenant.
  */
@@ -44,7 +44,7 @@ export type TenantCacheDispatcher = (action: TenantCacheAction) => unknown
 /**
  * Dispatches the tenant-changed sequence, so every screen that changes the active
  * tenant drops the previous tenant's cached records through one call rather than
- * repeating the sequence: the switch, the chooser and the onboarding form all
+ * repeating the sequence: the switcher, the chooser and the tenants table all
  * reach the reset only this way.
  */
 export const dispatchTenantChanged = (
@@ -56,7 +56,7 @@ export const dispatchTenantChanged = (
 
 /**
  * Dispatches the signed-out sequence. Every way out of the session goes through
- * it - the sign-out control, the no-tenant screen, and changing the password,
+ * it - the sign-out control and changing the password,
  * which ends every session the account had - so no path out of the app can leave
  * a previous tenant's records behind for the next user of this browser.
  */

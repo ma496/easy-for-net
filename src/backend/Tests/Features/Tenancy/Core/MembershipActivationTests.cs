@@ -10,14 +10,21 @@ using Backend.Features.Identity.Endpoints.Roles;
 /// <para>
 /// "Active membership" is the only thing a tenant-scoped operation is ever allowed to rest on, so it
 /// has to mean exactly one thing in exactly one place. It does: the membership row exists, is not
-/// soft-deleted, and its tenant is neither suspended nor deleted - and every request recomputes that
-/// from current data, which is what lets a suspension, a removal or a deletion take effect on the very
-/// next request rather than when a session expires.
+/// soft-deleted, and its tenant is neither suspended nor deleted. That is asked wherever a session is
+/// minted - at sign-in and at every renewal - so a suspension, a removal or a deletion reaches a live
+/// session at its next renewal rather than when the session expires.
 /// </para>
 /// <para>
-/// Each case below establishes the session first and changes the state afterwards, because that is the
-/// only way the state being tested ever arises in practice: a session names a tenant only if the
-/// account held an active membership in it at the moment the session was established.
+/// Each case below establishes the session first, changes the state, and then renews, because that is
+/// how the state being tested arises in practice: a session names a tenant only if the account held an
+/// active membership in it when the session was established, and the renewal is where the change
+/// lands.
+/// </para>
+/// <para>
+/// All four inactive states are answered the same way, and deliberately so: the renewal hands back a
+/// session that names no tenant, so what refuses the next call is the authority it lacks. Reporting
+/// which of the four it was would be describing the row rather than telling the caller what to do,
+/// and where they go next is answered by the account info endpoint listing the tenants still theirs.
 /// </para>
 /// </remarks>
 public class MembershipActivationTests(App app) : TenancyTestsBase(app)
@@ -25,9 +32,10 @@ public class MembershipActivationTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a membership counts as active only while the row stands, is not removed, and belongs
     /// to a tenant that is neither suspended nor deleted: the one state that lets a tenant-scoped call
-    /// through, and the four that are refused with the code naming what actually happened (AC-103).
+    /// through once the session is renewed, and the four that leave the renewed session with no tenant
+    /// and therefore no authority (AC-103).
     /// </summary>
-    /// <param name="state">The state the membership is left in before the tenant-scoped call.</param>
+    /// <param name="state">The state the membership is left in before the session is renewed.</param>
     [Theory]
     [InlineData(MembershipState.Standing)]
     [InlineData(MembershipState.Removed)]
@@ -40,30 +48,32 @@ public class MembershipActivationTests(App app) : TenancyTestsBase(app)
         var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.Role_View);
         var member = await CreateTenantUserAsync(tenant.Id, roleId);
 
-        // Signed in while the membership is active, and acting in the tenant. The token is deliberately
-        // kept: nothing below signs in again, so the refusal - when there is one - is decided by the
-        // state the request found, not by the state sign-in found.
-        var memberClient = await ClientForAsync(member.Username, tenant.Id);
+        // Signed in while the membership is active, and acting in the tenant. Nothing below signs in
+        // again: the session is renewed instead, so what decides the outcome is the state the renewal
+        // found and never the state sign-in found.
+        var session = await SessionForAsync(member.Username, tenant.Id);
 
         await ArrangeAsync(state, tenant.Id, member.Id);
 
+        await session.RenewAsync();
+
         if (state == MembershipState.Standing)
         {
-            var (standing, _) = await memberClient
+            var (standing, _) = await session.Client
                 .GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(new() { All = true });
 
             standing.StatusCode.Should().Be(HttpStatusCode.OK, "a standing membership is what lets tenant-scoped work proceed");
             return;
         }
 
-        var (refused, problem) = await memberClient
+        var (refused, problem) = await session.Client
             .GETAsync<RoleListEndpoint, RoleListRequest, ProblemDetails>(new() { All = true });
 
         refused.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         problem.Errors.Should().ContainSingle();
         problem.Errors.First().Code.Should().Be(
-            ExpectedCodeFor(state),
-            "the refusal names the state the membership was found in, so the client can say what happened rather than only that something did");
+            ErrorCodes.PermissionDenied,
+            "the renewal left the session naming no tenant, so it holds no permission and is refused for the authority it lacks");
     }
 
     /// <summary>
@@ -165,25 +175,6 @@ public class MembershipActivationTests(App app) : TenancyTestsBase(app)
         DbContext.Tenants.Remove(tenant);
         await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
     }
-
-    /// <summary>
-    /// The code a state's refusal is reported under.
-    /// </summary>
-    /// <param name="state">The state the membership was left in.</param>
-    /// <returns>The error code the caller is told about.</returns>
-    /// <remarks>
-    /// A removed membership and an erased one are one code, not two: both are the session naming a live
-    /// tenant its account no longer belongs to, and telling them apart would report how the row went
-    /// missing rather than what the caller has to do about it.
-    /// </remarks>
-    private static string ExpectedCodeFor(MembershipState state)
-        => state switch
-        {
-            MembershipState.Removed or MembershipState.Erased => ErrorCodes.TenantMembershipRevoked,
-            MembershipState.TenantSuspended => ErrorCodes.TenantSuspended,
-            MembershipState.TenantDeleted => ErrorCodes.TenantNotFound,
-            _ => throw new ArgumentOutOfRangeException(nameof(state), state, "the standing state is not a refusal")
-        };
 
     /// <summary>
     /// The states a membership can be found in when a tenant-scoped request is made.

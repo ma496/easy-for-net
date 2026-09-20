@@ -317,13 +317,13 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that the authority a token carries is not what the request is authorized on: a token
-    /// issued while the caller was a member stops working the moment that membership is withdrawn - the
-    /// very same token, with its role and permission claims still inside it, is refused with the
-    /// membership-removed code - and the identical request succeeded a moment earlier (AC-109).
+    /// Verifies that a withdrawn membership costs the caller the tenant at their session's next
+    /// renewal: the renewal succeeds and hands back a session naming no tenant, so the request that
+    /// the membership admitted a moment earlier is refused for the authority the session no longer
+    /// carries (AC-109).
     /// </summary>
     [Fact]
-    public async Task Stale_Tenant_Authorization_Is_Refused()
+    public async Task Withdrawn_Membership_Is_Dropped_At_The_Next_Renewal()
     {
         var (tenant, _) = await PrepareTenantAsync();
         var roleHoldingView = await CreateTenantRoleAsync(tenant.Id, Allow.Role_View);
@@ -331,10 +331,9 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
 
         await JoinAsync(tenant.Id, user.Id, roleHoldingView);
 
-        var client = await ClientForAsync(user.Username, tenant.Id);
-        var presented = client.DefaultRequestHeaders.Authorization!.Parameter;
+        var session = await SessionForAsync(user.Username, tenant.Id);
 
-        var (admitted, _) = await client
+        var (admitted, _) = await session.Client
             .GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(new() { All = true });
 
         admitted.StatusCode.Should().Be(HttpStatusCode.OK, "the role the membership granted is what admits this call");
@@ -343,15 +342,16 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
 
         membershipRevoked.Should().Be(TenantMembershipChangeOutcome.Applied);
 
-        var (refused, problem) = await client
-            .GETAsync<RoleListEndpoint, RoleListRequest, ProblemDetails>(new() { All = true });
+        await session.RenewAsync();
 
-        client.DefaultRequestHeaders.Authorization!.Parameter.Should().Be(presented, "no new token was obtained, so what is refused is the authority this one carries");
+        var (refused, problem) = await session.Client
+            .GETAsync<RoleListEndpoint, RoleListRequest, ProblemDetails>(new() { All = true });
 
         refused.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         refused.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized, "the caller is still authenticated and is offered another tenant rather than signed out");
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantMembershipRevoked);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied,
+            "the renewed session names no tenant, so it holds nothing the endpoint requires");
     }
 
     /// <summary>
@@ -392,8 +392,8 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies both halves of the rule at once: a tenant named by the request is ignored while the
     /// session is good, and the tenant the session names is what governs the request afterwards - so a
-    /// session naming a tenant the caller no longer belongs to is refused with the
-    /// membership-removed code, whatever the request itself names (AC-148).
+    /// session that has lost its tenant is refused whatever the request itself names, even when it
+    /// names a tenant the caller does still belong to (AC-148).
     /// </summary>
     [Fact]
     public async Task Session_Tenant_Governs_The_Request()
@@ -407,59 +407,66 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
         await JoinAsync(tenantA.Id, user.Id, roleInA);
         await JoinAsync(tenantB.Id, user.Id, roleInB);
 
-        var client = await ClientForAsync(user.Username, tenantA.Id);
+        var session = await SessionForAsync(user.Username, tenantA.Id);
 
-        client.DefaultRequestHeaders.Add(SuppliedTenantHeader, tenantB.Id.ToString());
+        session.Client.DefaultRequestHeaders.Add(SuppliedTenantHeader, tenantB.Id.ToString());
 
-        var (before, visibleBefore) = await VisibleRoleNamesAsync(client, tenantB.Id);
+        var (before, visibleBefore) = await VisibleRoleNamesAsync(session.Client, tenantB.Id);
 
         before.StatusCode.Should().Be(HttpStatusCode.OK);
         visibleBefore.Should().Contain(await ReadRoleNameAsync(roleInA)).And.NotContain(await ReadRoleNameAsync(roleInB));
 
         // The session still names tenant A, and the membership it was established on is withdrawn. The
         // request keeps naming tenant B, which the caller is still a member of - and that is exactly
-        // what does not help it: the session is what governs.
+        // what does not help it: the session is what governs, so the renewal leaves it with no tenant
+        // rather than moving it to the one the request asked for.
         (await MembershipService.RemoveAsync(tenantA.Id, user.Id, TestContext.Current.CancellationToken))
             .Should().Be(TenantMembershipChangeOutcome.Applied);
 
-        var (refused, problem) = await client
+        await session.RenewAsync();
+
+        var (refused, problem) = await session.Client
             .GETAsync<RoleListEndpoint, RoleListRequest, ProblemDetails>(new() { TenantId = tenantB.Id, All = true });
 
         refused.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantMembershipRevoked);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied);
     }
 
     /// <summary>
-    /// Verifies that an account holding more than one membership is given no active tenant at sign-in -
-    /// it is not asked to work in one it never chose - and that every tenant-scoped call is refused
-    /// with the no-active-tenant code until it selects one (AC-140).
+    /// Verifies that an account holding more than one membership is asked which tenant it means rather
+    /// than signed in without one: nothing is chosen on its behalf, and nothing signs it in to a
+    /// session in which none of its memberships apply (AC-140).
     /// </summary>
     [Fact]
-    public async Task No_Active_Tenant_When_Multiple_Memberships()
+    public async Task Several_Memberships_Must_Name_A_Tenant()
     {
-        var client = await ClientForAsync("dual");
+        var visitor = App.CreateClient(new ClientOptions { HandleCookies = false });
+
+        var (refused, problem) = await visitor
+            .POSTAsync<TokenEndpoint, TokenRequest, ProblemDetails>(
+                new() { Username = "dual", Password = TestUsers.DefaultPassword });
+
+        refused.StatusCode.Should().Be(HttpStatusCode.BadRequest,
+            "nothing is chosen on the caller's behalf when there is a choice to make");
+        problem.Errors.Should().ContainSingle();
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantRequired);
+
+        // Naming one is what the refusal asks for, and the answer then reports the whole choice - so
+        // the caller can switch to the other without signing in again.
+        var client = await ClientForAsync("dual", TestTenants.SecondTenantId);
 
         var (infoResponse, info) = await client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
 
-        infoResponse.StatusCode.Should().Be(HttpStatusCode.OK, "being without a tenant is a state to be read and acted on, not a failure");
-        info.ActiveTenantId.Should().BeNull("nothing is chosen on the caller's behalf when there is a choice to make");
-        info.ActiveTenant.Should().BeNull();
+        infoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        info.ActiveTenantId.Should().Be(TestTenants.SecondTenantId);
         info.Tenants.Should().HaveCountGreaterThanOrEqualTo(2, "the memberships it holds are all available to choose from");
-
-        var (refused, problem) = await client
-            .GETAsync<RoleListEndpoint, RoleListRequest, ProblemDetails>(new() { All = true });
-
-        refused.StatusCode.Should().Be(HttpStatusCode.Forbidden);
-        refused.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized, "the caller is signed in and is being asked to choose, not turned away");
-        problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.NoActiveTenant);
     }
 
     /// <summary>
     /// Verifies that selecting one of several tenants grants access to exactly that tenant's data: the
-    /// call is refused before a selection is made, and afterwards it answers with the chosen tenant's
-    /// row and not the other one's (AC-149).
+    /// caller starts in the other tenant, switches, and is then answered with the chosen tenant's row
+    /// and not the one it left (AC-149).
     /// </summary>
     [Fact]
     public async Task Selection_Grants_Exactly_That_Tenants_Data()
@@ -473,15 +480,14 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
         await JoinAsync(tenantA.Id, user.Id, roleInA);
         await JoinAsync(tenantB.Id, user.Id, roleInB);
 
-        // Sign-in resolves no tenant for an account holding two memberships, so the client starts in the
-        // very state the selection is meant to end.
-        var client = await ClientForAsync(user.Username);
+        // The caller starts in tenant B, so what the switch below has to produce is the other tenant's
+        // data rather than merely some data.
+        var client = await ClientForAsync(user.Username, tenantB.Id);
 
-        var (refused, problem) = await client
-            .GETAsync<RoleListEndpoint, RoleListRequest, ProblemDetails>(new() { All = true });
+        var (started, visibleAtStart) = await VisibleRoleNamesAsync(client);
 
-        refused.StatusCode.Should().Be(HttpStatusCode.Forbidden);
-        problem.Errors.First().Code.Should().Be(ErrorCodes.NoActiveTenant);
+        started.StatusCode.Should().Be(HttpStatusCode.OK);
+        visibleAtStart.Should().Contain(await ReadRoleNameAsync(roleInB));
 
         await TestsHelper.SwitchTenantAsync(client, tenantA.Id);
 
@@ -759,9 +765,11 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
         await JoinAsync(tenantA.Id, user.Id);
         await JoinAsync(tenantB.Id, user.Id);
 
+        // The account belongs to two tenants, so it signs in to tenant B and switches to tenant A: what
+        // is under test is the pair the switch replaces, and naming a tenant is what sign-in requires.
         var client = App.CreateClient();
         var (signedIn, session) = await client.POSTAsync<TokenEndpoint, TokenRequest, TokenResponse>(
-            new() { Username = user.Username, Password = TestUsers.DefaultPassword });
+            new() { Username = user.Username, Password = TestUsers.DefaultPassword, TenantIdentifier = tenantB.Identifier });
 
         signedIn.StatusCode.Should().Be(HttpStatusCode.OK);
         TestsHelper.SetAuthToken(client, session.AccessToken);

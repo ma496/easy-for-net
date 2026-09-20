@@ -72,7 +72,6 @@
     "tenantsUpdate": "تحديث",
     "tenantsMembers": "الأعضاء",
     "selectTenant": "اختيار المستأجر",
-    "noTenant": "لا يوجد مستأجر",
     "tenantsDetail": "التفاصيل"
   },
   "search": {
@@ -213,12 +212,12 @@
       "tenantSuspended": "هذا المستأجر معلّق",
       "notTenantMember": "أنت لست عضوًا في هذا المستأجر",
       "noActiveTenant": "لم يتم اختيار مستأجر نشط",
+      "tenantRequired": "يرجى تحديد المستأجر لتسجيل الدخول.",
       "tenantIdentifierAlreadyExists": "معرّف المستأجر موجود بالفعل",
       "duplicateTenantMembership": "هذا المستخدم عضو بالفعل في هذا المستأجر",
       "lastTenantAdministrator": "لا يمكن إزالة آخر مسؤول للمستأجر",
       "systemCreatedTenantCannotBeModified": "لا يمكن تعديل المستأجر الذي أنشأه النظام",
       "crossTenantFileAccess": "هذا الملف يخص مستأجرًا آخر",
-      "tenantMembershipRevoked": "تم إلغاء عضويتك في هذا المستأجر",
       "platformPermissionNotGrantable": "لا يمكن منح أذونات المنصة لدور مستأجر",
       "concurrentModification": "تم تغيير هذا السجل بواسطة شخص آخر. أعد التحميل وحاول مرة أخرى.",
       "userSharedAcrossTenants": "ينتمي هذا المستخدم إلى مستأجرين آخرين ولا يمكن تغييره إلا بواسطة مسؤول المنصة"
@@ -434,7 +433,8 @@
         "alreadyHaveAccount": "لديك حساب بالفعل؟",
         "successTitle": "نجاح!",
         "successVerifyEmail": "تم التسجيل بنجاح! يرجى التحقق من بريدك الإلكتروني لتفعيل حسابك.",
-        "successMessage": "تم التسجيل بنجاح! اذهب لصفحة تسجيل الدخول."
+        "successMessage": "تم التسجيل بنجاح! اذهب لصفحة تسجيل الدخول.",
+        "tenantSectionTitle": "المستأجر الخاص بك"
       },
       "forgotPassword": {
         "title": "نسيت كلمة المرور",
@@ -552,17 +552,8 @@
     "selectTenant": {
       "title": "اختيار المستأجر",
       "description": "اختر المستأجر الذي تريد العمل فيه.",
-      "suspendedReason": "تم تعليق المستأجر الذي كنت تعمل فيه. اختر مستأجرًا آخر للمتابعة.",
-      "revokedReason": "تم إلغاء عضويتك في ذلك المستأجر. اختر مستأجرًا آخر للمتابعة.",
-      "unavailableReason": "لم يعد ذلك المستأجر متاحًا. اختر مستأجرًا آخر للمتابعة.",
-      "noSelectionReason": "يرجى تحديد مستأجر قبل فتح هذه الشاشة."
-    },
-    "noTenant": {
-      "title": "لا يوجد مستأجر",
-      "description": "يرجى تحديد مستأجر للمتابعة: أنت لا تنتمي إلى مستأجر نشط بعد. أنشئ مستأجرك الخاص، أو اطلب من المسؤول إضافتك إلى مستأجره.",
-      "createTitle": "أنشئ مستأجرك",
-      "createButton": "إنشاء مستأجر",
-      "createSuccess": "تم إنشاء المستأجر. أنت الآن المسؤول عنه."
+      "emptyDescription": "أنت لا تنتمي إلى أي مستأجر نشط. اطلب من المسؤول إضافتك إلى مستأجره، أو سجّل حسابًا جديدًا لإنشاء مستأجر خاص بك.",
+      "emptyAction": "الذهاب إلى ملفك الشخصي"
     }
   },
   "notifications": {

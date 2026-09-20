@@ -8,12 +8,11 @@ using Backend.Features.Tenancy.Core;
 /// status-filterable list of the tenants the caller may see.
 /// </summary>
 /// <remarks>
-/// Marked <see cref="AllowNoTenantAttribute"/> because a tenant is the scope rather than something
+/// Usable with no tenant established, because a tenant is the scope rather than something
 /// inside one: a caller asks which tenants they may reach before - or without ever - acting in any
 /// of them, so requiring an established tenant here would hide the list from the accounts that most
 /// need it.
 /// </remarks>
-[AllowNoTenant]
 sealed class TenantListEndpoint(ITenantService tenantService) : Endpoint<TenantListRequest, TenantListResponse>
 {
     public override void Configure()

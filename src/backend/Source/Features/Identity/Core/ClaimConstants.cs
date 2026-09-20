@@ -1,4 +1,4 @@
-namespace Backend.Features.Identity.Core;
+﻿namespace Backend.Features.Identity.Core;
 
 /// <summary>
 /// Centralized string constants for the claim type names used by the identity system.
@@ -6,7 +6,6 @@ namespace Backend.Features.Identity.Core;
 public static class ClaimConstants
 {
     public const string Permission = "permission";
-    public const string SessionVersion = "session_version";
 
     /// <summary>
     /// Claim type carrying the identifier of the tenant the session is currently acting in. A
@@ -19,8 +18,7 @@ public static class ClaimConstants
     /// <summary>
     /// Claim type marking the session as belonging to a platform account. It carries the account's
     /// tier and never a grant: what the session may do is decided by its permission claims, which are
-    /// already narrowed to the scope it is acting in. It is present only for a platform account, is
-    /// recomputed from current data on every request alongside the role and permission claims, and
+    /// already narrowed to the scope it is acting in. It is present only for a platform account and
     /// survives entering a tenant - a platform account inside a tenant is still a platform account,
     /// which is how it finds its way back out.
     /// </summary>

@@ -1,6 +1,7 @@
 namespace Backend.Tests.Features.Identity.Endpoints.Account;
 
 using System.Text;
+using Backend.Data.Entities;
 using Backend.Features.FileManagement.Core.Entities;
 using Backend.Features.FileManagement.Endpoints.Files;
 using Backend.Features.Identity.Core.Entities;
@@ -22,17 +23,18 @@ using Microsoft.AspNetCore.Http;
 /// cannot reach.
 /// </para>
 /// <para>
-/// Every row is stated by a caller that genuinely has no tenant - a purpose-built account holding no
-/// membership at all, which is the AC-050/AC-122 standing - and each row proves that standing before
-/// it exercises its flow, by taking the refusal a tenant-scoped call gives that same caller. The
-/// flows are then asserted to answer successfully, so a 403 carrying <c>noActiveTenant</c> is exactly
-/// what none of them may return.
+/// Every row is stated by a caller that genuinely has no tenant, and reaches that state the way it
+/// actually arises: the account signs in to the one tenant it belongs to, that tenant is put out of
+/// service, and its session is renewed - which hands back a session naming no tenant. An ordinary
+/// account cannot sign in without one, so this is the state, not an account that never had a tenant.
+/// Each row proves the standing before it exercises its flow, by taking the refusal a tenant-scoped
+/// call gives that same caller.
 /// </para>
 /// <para>
-/// A purpose-built account is used rather than the seeded <c>nomember</c> because two of these flows
-/// change the account they run against - the password change and the profile edit - and a seeded
-/// account is shared with the rest of the suite and outlives the run. A fresh account per row keeps
-/// every write the test makes its own, which is what the suite's parallel-safety rules require.
+/// A purpose-built account and tenant are used rather than seeded ones because two of these flows
+/// change the account they run against - the password change and the profile edit - and the tenant is
+/// suspended, which no seeded tenant may be. A fresh pair per row keeps every write the test makes its
+/// own, which is what the suite's parallel-safety rules require.
 /// </para>
 /// </remarks>
 public class AccountSelfServiceTests(App app) : TenancyTestsBase(app)
@@ -67,25 +69,48 @@ public class AccountSelfServiceTests(App app) : TenancyTestsBase(app)
     [MemberData(nameof(SelfServiceFlows))]
     public async Task Self_Service_Flows_Work_Without_A_Tenant(string flow)
     {
-        var account = await CreateAccountWithoutMembershipAsync();
-        var client = await ClientForAsync(account.Username);
+        var (account, client) = await CallerWithNoTenantAsync();
 
         // The standing, taken first so the flow below is read against a caller that really is in it.
         var (refused, refusal) = await client
             .GETAsync<UserListEndpoint, UserListRequest, ProblemDetails>(new());
 
         refused.StatusCode.Should().Be(HttpStatusCode.Forbidden,
-            "this caller holds no membership in any active tenant, which is the state the flow below has to survive");
+            "this caller acts in no tenant and so holds no permission at all, which is the state the flow below has to survive");
         refusal.Errors.Should().ContainSingle();
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.NoActiveTenant);
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied);
 
         var statuses = await RunFlowAsync(flow, client, account);
 
         statuses.Should().NotBeEmpty();
 
         statuses.Where(status => status != HttpStatusCode.OK).Should().BeEmpty(
-            "{0} is account self-service, so every call it makes is answered for a caller acting in no tenant - the noActiveTenant refusal above is the one answer none of them may give",
+            "{0} is account self-service, so every call it makes is answered for a caller acting in no tenant - the refusal above is the one answer none of them may give",
             flow);
+    }
+
+    /// <summary>
+    /// An authenticated caller acting in no tenant, reached the way that state actually arises: the
+    /// account signs in to its only tenant, the tenant is suspended, and the session is renewed - which
+    /// drops the tenant while leaving the caller signed in.
+    /// </summary>
+    /// <returns>The account, and a client presenting its tenant-less session.</returns>
+    private async Task<(User Account, HttpClient Client)> CallerWithNoTenantAsync()
+    {
+        var tenant = await CreateTenantAsync();
+        var account = await CreateTenantUserAsync(tenant.Id, await CreateTenantRoleAsync(tenant.Id, Allow.User_View));
+        var session = await SessionForAsync(account.Username, tenant.Id);
+
+        await TenantScopedAsync(tenant.Id, async () =>
+        {
+            var row = await DbContext.Tenants.SingleAsync(candidate => candidate.Id == tenant.Id, TestContext.Current.CancellationToken);
+            row.Status = TenantStatus.Suspended;
+            await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+        });
+
+        await session.RenewAsync();
+
+        return (account, session.Client);
     }
 
     /// <summary>
@@ -125,7 +150,9 @@ public class AccountSelfServiceTests(App app) : TenancyTestsBase(app)
                 Username = username,
                 Email = $"{username}@example.com",
                 Password = "Signup#123",
-                ConfirmPassword = "Signup#123"
+                ConfirmPassword = "Signup#123",
+                TenantName = $"Tenant {Guid.NewGuid():N}",
+                TenantIdentifier = NewTenantIdentifier()
             });
 
         return [response.StatusCode];

@@ -72,7 +72,6 @@
     "tenantsUpdate": "Actualizar",
     "tenantsMembers": "Miembros",
     "selectTenant": "Seleccionar inquilino",
-    "noTenant": "Sin inquilino",
     "tenantsDetail": "Detalle"
   },
   "search": {
@@ -213,12 +212,12 @@
       "tenantSuspended": "Este inquilino está suspendido",
       "notTenantMember": "No es miembro de este inquilino",
       "noActiveTenant": "No hay ningún inquilino activo seleccionado",
+      "tenantRequired": "Indica un inquilino para iniciar sesión.",
       "tenantIdentifierAlreadyExists": "El identificador del inquilino ya existe",
       "duplicateTenantMembership": "Este usuario ya es miembro de este inquilino",
       "lastTenantAdministrator": "No se puede quitar al último administrador del inquilino",
       "systemCreatedTenantCannotBeModified": "El inquilino creado por el sistema no se puede modificar",
       "crossTenantFileAccess": "Este archivo pertenece a otro inquilino",
-      "tenantMembershipRevoked": "Su membresía en este inquilino ha sido revocada",
       "platformPermissionNotGrantable": "Los permisos de plataforma no se pueden otorgar a un rol de inquilino",
       "concurrentModification": "Otra persona modificó este registro. Recargue e inténtelo de nuevo.",
       "userSharedAcrossTenants": "Este usuario pertenece a otros inquilinos y solo puede ser modificado por un administrador de la plataforma"
@@ -434,7 +433,8 @@
         "alreadyHaveAccount": "¿Ya tiene una cuenta?",
         "successTitle": "¡Éxito!",
         "successVerifyEmail": "¡Registro exitoso! Por favor verifique su correo electrónico.",
-        "successMessage": "¡Registro exitoso! Vaya a la página de inicio de sesión."
+        "successMessage": "¡Registro exitoso! Vaya a la página de inicio de sesión.",
+        "tenantSectionTitle": "Tu inquilino"
       },
       "forgotPassword": {
         "title": "Olvidé mi Contraseña",
@@ -552,17 +552,8 @@
     "selectTenant": {
       "title": "Seleccionar inquilino",
       "description": "Elija el inquilino en el que desea trabajar.",
-      "suspendedReason": "El inquilino en el que trabajaba ha sido suspendido. Elija otro inquilino para continuar.",
-      "revokedReason": "Su membresía en ese inquilino ha sido revocada. Elija otro inquilino para continuar.",
-      "unavailableReason": "Ese inquilino ya no está disponible. Elija otro inquilino para continuar.",
-      "noSelectionReason": "Indique un inquilino antes de abrir esta pantalla."
-    },
-    "noTenant": {
-      "title": "Sin inquilino",
-      "description": "Indique un inquilino para continuar: todavía no pertenece a un inquilino activo. Cree su propio inquilino o pida a un administrador que lo agregue al suyo.",
-      "createTitle": "Cree su inquilino",
-      "createButton": "Crear inquilino",
-      "createSuccess": "Inquilino creado. Ahora usted es su administrador."
+      "emptyDescription": "No perteneces a ningún inquilino activo. Pide a un administrador que te añada al suyo, o regístrate para crear el tuyo.",
+      "emptyAction": "Ir a tu perfil"
     }
   },
   "notifications": {

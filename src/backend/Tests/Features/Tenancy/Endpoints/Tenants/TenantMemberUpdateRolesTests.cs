@@ -179,20 +179,26 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that a replacement reaches the member's working session on its next request: the same
-    /// token stops being admitted to the operation the withdrawn role conferred, with no sign-in, no
+    /// Verifies that a replacement reaches the member's working session at its next renewal: the
+    /// session stops being admitted to the operation the withdrawn role conferred, with no sign-in, no
     /// password change and no session ended (AC-020).
     /// </summary>
+    /// <remarks>
+    /// The renewal is the point at which the change lands. What a session may do is decided when its
+    /// token is minted and trusted until that token is replaced, so the access token the member holds
+    /// goes on carrying the withdrawn role's permissions for the rest of its validity - and the
+    /// renewal, which reads the assignments as they stand, is what stops it.
+    /// </remarks>
     [Fact]
-    public async Task Replacement_Reaches_The_Member_On_Their_Next_Request()
+    public async Task Replacement_Reaches_The_Member_On_Their_Next_Renewal()
     {
         var tenant = await CreateTenantAsync();
         await CreateFirstMemberAsync(tenant.Id);
         var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.User_View);
         var member = await CreateTenantUserAsync(tenant.Id, roleId);
-        var memberClient = await ClientForAsync(member.Username, tenant.Id);
+        var session = await SessionForAsync(member.Username, tenant.Id);
 
-        var (before, _) = await memberClient.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
+        var (before, _) = await session.Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
 
         before.StatusCode.Should().Be(HttpStatusCode.OK, "the member holds the permission the endpoint requires");
 
@@ -204,13 +210,15 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
 
         replaced.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var (after, _) = await memberClient.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
+        await session.RenewAsync();
+
+        var (after, _) = await session.Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
 
         // A bare 403 from endpoint authorization: the member is still a member acting in a healthy
         // tenant, so what they are owed is the plain answer that they no longer hold the permission the
         // role conferred - not a statement about their session or their tenant.
-        after.StatusCode.Should().Be(HttpStatusCode.Forbidden, "the withdrawn role stops being held on the member's very next request");
-        after.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized, "the session is neither ended nor re-established for the change to take effect");
+        after.StatusCode.Should().Be(HttpStatusCode.Forbidden, "the withdrawn role stops being held once the session is renewed");
+        after.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized, "the session is renewed rather than ended for the change to take effect");
     }
 
     /// <summary>

@@ -1,8 +1,6 @@
-namespace Backend;
+﻿namespace Backend;
 
 using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 
@@ -48,9 +46,9 @@ public static class Helper
     /// </param>
     /// <param name="tenantId">
     /// The tenant the session acts in, emitted as a single <see cref="ClaimConstants.TenantId"/> claim.
-    /// Pass <see langword="null"/> when no tenant is active - the user holds no active membership, or
-    /// holds several and has not chosen between them - in which case no tenant claim is issued and
-    /// tenant-scoped work is refused until a tenant is selected.
+    /// Pass <see langword="null"/> when no tenant is active, in which case no tenant claim is issued
+    /// and the session acts in the platform scope - which for an ordinary account is no authority at
+    /// all, since its permissions are narrowed to that scope when they are read.
     /// </param>
     /// <returns>The list of claims representing the user's identity, active tenant, roles, and permissions.</returns>
     public static List<Claim> CreateClaims(User user, List<string> roles, List<string> permissions, Guid? tenantId = null)
@@ -60,7 +58,6 @@ public static class Helper
             new (ClaimTypes.NameIdentifier, user.Id.ToString()),
             new (ClaimTypes.Name, user.Username),
             new (ClaimTypes.Email, user.Email),
-            new (ClaimConstants.SessionVersion, CreateSessionVersion(user.PasswordHash)),
         };
         if (user.IsPlatform)
             claims.Add(new (ClaimConstants.IsPlatform, bool.TrueString));
@@ -69,13 +66,5 @@ public static class Helper
         claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
         claims.AddRange(permissions.Select(p => new Claim(ClaimConstants.Permission, p)));
         return claims;
-    }
-
-    /// <summary>
-    /// Creates a non-sensitive version identifier that changes whenever the password hash changes.
-    /// </summary>
-    public static string CreateSessionVersion(string passwordHash)
-    {
-        return Convert.ToBase64String(SHA256.HashData(Encoding.UTF8.GetBytes(passwordHash)));
     }
 }

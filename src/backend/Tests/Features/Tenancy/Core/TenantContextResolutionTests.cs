@@ -1,25 +1,23 @@
 namespace Backend.Tests.Features.Tenancy.Core;
 
+using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Identity.Endpoints.Roles;
-using Backend.Features.Identity.Endpoints.Users;
-using Backend.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// Tests for which tenant a request acts in - exactly one, and never a guess (AC-022, AC-023, AC-050).
 /// </summary>
 /// <remarks>
 /// <para>
-/// The three cases here are the three ways the question "which tenant is this request for?" can be
-/// answered: a session that has selected one acts in it and in no other, a session that could have
-/// selected one but has not is refused rather than served from whichever came first, and a session whose
-/// account belongs to no tenant at all is refused with an explanation the client can translate.
+/// The question "which tenant is this request for?" is settled before a session exists at all. A
+/// session that names a tenant acts in it and in no other; an ordinary account that cannot be placed
+/// in exactly one - because it belongs to several, or to none - is refused at sign-in and told to name
+/// the tenant it means, rather than being signed in to a session in which nothing it tries can work.
 /// </para>
 /// <para>
 /// The seeded accounts are named rather than built, because these are the states only seeding can
 /// produce: <c>dual</c> holds an active membership in two tenants - the bootstrap tenant and the second
-/// one - which is what a session with no selection looks like, and <c>nomember</c> holds none at all. A
-/// test-built account can reach neither state without first breaking the one-membership invariant the
-/// rest of the suite signs in on.
+/// one - and <c>nomember</c> holds none at all. A test-built account can reach neither state without
+/// first breaking the one-membership invariant the rest of the suite signs in on.
 /// </para>
 /// </remarks>
 public class TenantContextResolutionTests(App app) : TenancyTestsBase(app)
@@ -75,80 +73,83 @@ public class TenantContextResolutionTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that a request made by an account that belongs to two tenants and has selected neither is
-    /// refused with a named error code, and that the refusal is a refusal rather than an answer taken from
-    /// whichever tenant the account happened to belong to first (AC-023).
+    /// Verifies that an account belonging to two tenants and naming neither is refused at sign-in and
+    /// asked which tenant it means, rather than signed in to a session that has selected none (AC-023).
     /// </summary>
     [Fact]
-    public async Task No_Active_Tenant_Is_Refused()
+    public async Task Several_Memberships_And_No_Tenant_Named_Is_Refused_At_Sign_In()
     {
-        // One role in each tenant the account belongs to, under a name nothing else can collide with, so
-        // a response that leaked either tenant's rows would be recognisable as such rather than merely
-        // non-empty.
-        var inBootstrap = await CreateTenantRoleAsync(TestTenants.BootstrapTenantId, Allow.Role_View);
-        var inSecondTenant = await CreateTenantRoleAsync(TestTenants.SecondTenantId, Allow.Role_View);
-        var leakedNames = await DbContext.Roles
-            .AcrossAllTenants()
-            .AsNoTracking()
-            .Where(role => role.Id == inBootstrap || role.Id == inSecondTenant)
-            .Select(role => role.Name)
-            .ToListAsync(TestContext.Current.CancellationToken);
+        var visitor = App.CreateClient(new ClientOptions { HandleCookies = false });
 
+        var (response, problem) = await visitor
+            .POSTAsync<TokenEndpoint, TokenRequest, ProblemDetails>(new()
+            {
+                Username = DualMembershipUsername,
+                Password = TestUsers.DefaultPassword
+            });
 
-        // No tenant named, so none is selected: the account holds more than one membership and sign-in
-        // deliberately selects none of them.
-        await SetAuthTokenAsync(DualMembershipUsername, TestUsers.DefaultPassword);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest,
+            "the account belongs to two tenants, so which one it came to work in is a question only it can answer");
+        problem.Errors.Should().ContainSingle()
+            .Which.Code.Should().Be(ErrorCodes.TenantRequired,
+                "the caller is told what is missing so the sign-in screen can ask for the tenant rather than show a bare failure");
 
-        var (response, problem) = await App.Client
-            .GETAsync<RoleListEndpoint, RoleListRequest, ProblemDetails>(new() { All = true });
+        // Naming one settles it, which is the point of the refusal: it is a question, not a lock-out.
+        var identifier = await TenantIdentifierOfAsync(TestTenants.SecondTenantId);
 
-        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var (named, session) = await visitor
+            .POSTAsync<TokenEndpoint, TokenRequest, TokenResponse>(new()
+            {
+                Username = DualMembershipUsername,
+                Password = TestUsers.DefaultPassword,
+                TenantIdentifier = identifier
+            });
 
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
-        problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(
-            ErrorCodes.NoActiveTenant,
-            "the caller is told which of the four things went wrong so the web app can offer them the tenants they belong to");
-
-        leakedNames.Should().NotBeEmpty("the arrangement has to have produced rows for their absence to mean anything");
-        foreach (var leakedName in leakedNames)
-        {
-            body.Should().NotContain(leakedName, "the refusal is an explanation, not a page of rows from a tenant nobody selected");
-        }
+        named.StatusCode.Should().Be(HttpStatusCode.OK);
+        session.AccessToken.Should().NotBeNullOrWhiteSpace();
     }
 
     /// <summary>
-    /// Verifies that an account holding no membership in any active tenant is refused by every
-    /// tenant-scoped call with a code the client can translate into a message saying exactly that
-    /// (AC-050).
+    /// Verifies that an account holding no membership in any active tenant cannot sign in at all, and is
+    /// told that a tenant is what it is missing (AC-050).
     /// </summary>
+    /// <remarks>
+    /// An ordinary account with no tenant could exercise no permission whatever, so a session for it
+    /// would authenticate somebody and then refuse everything they went on to do. The refusal is moved
+    /// to the one place that can say something useful about it.
+    /// </remarks>
     [Fact]
-    public async Task Account_With_No_Membership_Is_Refused_With_An_Explanation()
+    public async Task Account_With_No_Membership_Cannot_Sign_In()
     {
-        await SetAuthTokenAsync(NoMembershipUsername, TestUsers.DefaultPassword);
+        var visitor = App.CreateClient(new ClientOptions { HandleCookies = false });
 
-        // Three surfaces rather than one, so what is proved is the standing of the caller rather than the
-        // guard of a single endpoint.
-        var (roleList, roleListProblem) = await App.Client
-            .GETAsync<RoleListEndpoint, RoleListRequest, ProblemDetails>(new() { All = true });
-        var (userList, userListProblem) = await App.Client
-            .GETAsync<UserListEndpoint, UserListRequest, ProblemDetails>(new());
-        var (notificationList, notificationListProblem) = await App.Client
-            .GETAsync<NotificationListEndpoint, NotificationListRequest, ProblemDetails>(new());
+        var (response, problem) = await visitor
+            .POSTAsync<TokenEndpoint, TokenRequest, ProblemDetails>(new()
+            {
+                Username = NoMembershipUsername,
+                Password = TestUsers.DefaultPassword
+            });
 
-        var refusals = new List<(HttpStatusCode Status, string? Code)>
-        {
-            (roleList.StatusCode, roleListProblem.Errors.FirstOrDefault()?.Code),
-            (userList.StatusCode, userListProblem.Errors.FirstOrDefault()?.Code),
-            (notificationList.StatusCode, notificationListProblem.Errors.FirstOrDefault()?.Code)
-        };
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest,
+            "an account that belongs to no active tenant is turned away at the door rather than signed in to a session in which nothing works");
+        problem.Errors.Should().ContainSingle()
+            .Which.Code.Should().Be(ErrorCodes.TenantRequired);
 
-        refusals.Should().OnlyContain(
-            refusal => refusal.Status == HttpStatusCode.Forbidden,
-            "an account that belongs to no active tenant is refused tenant-scoped work rather than served an empty page");
+        // And naming a tenant it does not belong to does not get it in either: the refusal names the
+        // standing it lacks rather than the field it left empty.
+        var identifier = await TenantIdentifierOfAsync(TestTenants.BootstrapTenantId);
 
-        refusals.Should().OnlyContain(
-            refusal => refusal.Code == ErrorCodes.NoActiveTenant,
-            "the body carries the code, so the client can say that the account belongs to no active tenant instead of showing a bare forbidden");
+        var (named, namedProblem) = await visitor
+            .POSTAsync<TokenEndpoint, TokenRequest, ProblemDetails>(new()
+            {
+                Username = NoMembershipUsername,
+                Password = TestUsers.DefaultPassword,
+                TenantIdentifier = identifier
+            });
+
+        named.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        namedProblem.Errors.Should().ContainSingle()
+            .Which.Code.Should().Be(ErrorCodes.NotTenantMember,
+                "membership is what places an account inside a tenant, and this one holds none anywhere");
     }
 }

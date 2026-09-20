@@ -6,7 +6,6 @@ using Backend.Features.Identity.Core.Entities;
 /// <summary>
 /// This endpoint that handles <c>GET /users</c> to return a paginated, filterable list of the user accounts the caller may administer, with their role assignments.
 /// </summary>
-[AllowPlatformNoTenant]
 sealed class UserListEndpoint(IUserService userService) : Endpoint<UserListRequest, UserListResponse>
 {
     public override void Configure()

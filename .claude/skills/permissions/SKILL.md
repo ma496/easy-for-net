@@ -98,8 +98,9 @@ so a permission declared without one belongs to the tenant tier:
 | `Platform` | only by a platform account acting in no tenant | operations about the installation itself |
 | `Both` | in either scope | an operation that answers about the platform's own data in platform scope and a tenant's inside a tenant |
 
-`SessionValidator` narrows a session's permission claims to the scope of the request on **every**
-request, so the scope decides where a permission exists at all:
+`SessionGrants` narrows the permission claims a session is minted with to the scope it acts in - at
+sign-in, at every token renewal and on a tenant switch - so the scope decides where a permission
+exists at all:
 
 - a platform account acting in no tenant carries `Platform` + `Both`;
 - anyone acting inside a tenant carries `Tenant` + `Both` - a platform account that entered a tenant
@@ -122,7 +123,7 @@ Consequences worth knowing before you choose:
 may do - what it may do is decided, as for every account, by its roles narrowed to the scope it is
 acting in. Authorize on permissions; read the tier only where the tier itself is the question:
 
-- `TenantRequirement` - whether `[AllowPlatformNoTenant]` exempts this caller from needing a tenant;
+- `POST /account/token` - a platform account signs in with no tenant, where an ordinary one is asked to name one;
 - `HangfireAuthorizationFilter` - the background-job dashboard;
 - `POST /tenants/switch` - entering a tenant without a membership;
 - `POST /tenants/exit` - leaving one again (a `Platform` permission could not work here: inside a
@@ -131,8 +132,8 @@ acting in. Authorize on permissions; read the tier only where the tier itself is
   tenant is not;
 - `GET /permissions/define` and `GET /account/get-info` - which scope to answer for.
 
-It reaches a request as the `is_platform` claim, recomputed from the account on every request beside
-the role and permission claims, and reaches the web app as `isPlatform` on the account-info response.
+It reaches a request as the `is_platform` claim, written beside the role and permission claims when
+the session is minted, and reaches the web app as `isPlatform` on the account-info response.
 On the client it gates UX, never authorization: the "enter tenant" action in the tenants table and the
 "exit tenant" control in the header switcher.
 

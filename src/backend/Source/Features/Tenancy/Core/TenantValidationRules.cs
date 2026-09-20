@@ -4,8 +4,8 @@ using System.Text.RegularExpressions;
 
 /// <summary>
 /// The single declaration of the tenant display-name and identifier rules, exposed as
-/// FluentValidation rule-builder extensions so that platform tenant creation, tenant update and
-/// self-service onboarding all enforce one identical rule set instead of restating it three times.
+/// FluentValidation rule-builder extensions so that platform tenant creation, tenant update and the
+/// tenant a self-service sign-up creates all enforce one identical rule set instead of restating it.
 /// </summary>
 /// <remarks>
 /// Both extensions pass a null, empty or white-space value through untouched, leaving the
@@ -19,6 +19,7 @@ using System.Text.RegularExpressions;
 /// the caller is told about both. Every failure is raised against the property itself, so the
 /// response names the offending field.
 /// </remarks>
+[AllowOutside]
 static class TenantValidationRules
 {
     /// <summary>The fewest characters a tenant display name may carry once trimmed.</summary>

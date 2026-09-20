@@ -18,12 +18,19 @@ using Microsoft.AspNetCore.Http;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Suspension is enforced centrally rather than by any endpoint, so this class tests the enforcement
-/// by what a member of a suspended tenant gets back rather than by calling anything of the tenant's:
-/// a tenant-scoped call that was answered before suspension is refused after it, on the token that was
-/// already issued and without a second sign-in. The refusals are 403 and never 401, and each carries
-/// the code naming its own cause - which is what lets the application offer the caller another tenant
-/// rather than a sign-in screen.
+/// Suspension is enforced where a session is minted rather than by any endpoint, so this class tests
+/// the enforcement by what a member of a suspended tenant gets back rather than by calling anything of
+/// the tenant's: a tenant-scoped call that was answered before suspension stops being answered once
+/// the session is renewed. The caller is never signed out - the renewal succeeds and simply hands back
+/// a session that names no tenant - so what they lose is that tenant's authority and not their
+/// identity, which is what lets the application offer them another tenant rather than a sign-in
+/// screen.
+/// </para>
+/// <para>
+/// The renewal is the point. What a session may do is decided when its token is minted and trusted
+/// until that token is replaced, so an access token issued before the suspension keeps working until
+/// it is renewed. Every case below therefore renews before asserting the refusal, which is the moment
+/// the change actually reaches a live session.
 /// </para>
 /// <para>
 /// Every tenant, role, membership, account and file a test asserts on is made by the test itself.
@@ -35,21 +42,22 @@ using Microsoft.AspNetCore.Http;
 public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
 {
     /// <summary>
-    /// Verifies that a tenant-scoped request made by a member of a suspended tenant is refused for the
-    /// tenant being out of service - a 403 naming suspension rather than the 200 it answered before or
-    /// the 401 of a session that ended (AC-007).
+    /// Verifies that a member of a suspended tenant stops being answered once their session is
+    /// renewed: the renewal succeeds, hands back a session naming no tenant, and every tenant-scoped
+    /// call is refused from then on - a 403 rather than the 200 it answered before or the 401 of a
+    /// session that ended (AC-007).
     /// </summary>
     [Fact]
-    public async Task Suspended_Tenant_Refuses_Tenant_Scoped_Requests()
+    public async Task Suspended_Tenant_Stops_Answering_Once_The_Session_Is_Renewed()
     {
         var tenant = await CreateTenantAsync();
         var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.User_View);
         var member = await CreateTenantUserAsync(tenant.Id, roleId);
-        var memberClient = await ClientForAsync(member.Username, tenant.Id);
+        var session = await SessionForAsync(member.Username, tenant.Id);
 
         // Answered while the tenant is in service, so the refusal that follows is provably caused by
         // the suspension rather than by the request never having been admissible.
-        var (before, page) = await memberClient.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
+        var (before, page) = await session.Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
 
         before.StatusCode.Should().Be(HttpStatusCode.OK, "the member holds the permission the endpoint requires, and the tenant is in service");
         page.Should().NotBeNull();
@@ -57,12 +65,17 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
         await SetPlatformAdminAuthTokenAsync();
         await SuspendTenantAsync(tenant.Id);
 
-        var (after, refusal) = await memberClient.GETAsync<UserListEndpoint, UserListRequest, ProblemDetails>(new());
+        // The token issued before the suspension carries the tenant's authority until it is replaced,
+        // which is the bound this design accepts: the change reaches the session at its next renewal.
+        await session.RenewAsync();
+
+        var (after, refusal) = await session.Client.GETAsync<UserListEndpoint, UserListRequest, ProblemDetails>(new());
 
         after.StatusCode.Should().Be(HttpStatusCode.Forbidden, "the tenant being out of service is a refusal of the operation, not of the caller's identity");
         after.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized, "the caller stays signed in and is asked for no credentials");
         refusal.Errors.Should().ContainSingle();
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.TenantSuspended, "the refusal names the tenant being suspended rather than the permission the caller no longer holds there");
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied,
+            "the renewed session carries no tenant and therefore no permission, so what refuses the call is the authority it lacks");
     }
 
     /// <summary>
@@ -79,36 +92,46 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
         var member = await CreateTenantUserAsync(suspended.Id, await CreateTenantRoleAsync(suspended.Id, Allow.User_View));
         await AddMembershipAsync(remaining.Id, member.Id);
 
-        var memberClient = await ClientForAsync(member.Username, suspended.Id);
+        var session = await SessionForAsync(member.Username, suspended.Id);
 
         await SetPlatformAdminAuthTokenAsync();
         await SuspendTenantAsync(suspended.Id);
 
-        var (refused, refusal) = await memberClient.GETAsync<UserListEndpoint, UserListRequest, ProblemDetails>(new());
+        // The renewal is what the suspension reaches, and it succeeds: ending the session would sign
+        // the caller out over something that was not their doing.
+        await session.RenewAsync();
+
+        var (refused, refusal) = await session.Client.GETAsync<UserListEndpoint, UserListRequest, ProblemDetails>(new());
 
         refused.StatusCode.Should().Be(HttpStatusCode.Forbidden);
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.TenantSuspended);
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied);
 
         // The same token, on an endpoint that has to answer a caller with no usable tenant: this is
         // how the application learns which tenant to offer instead, so a refusal here would leave the
         // caller with nowhere to go.
-        var (answered, info) = await memberClient.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
+        var (answered, info) = await session.Client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
 
         answered.StatusCode.Should().Be(HttpStatusCode.OK, "the session survives the tenant being suspended");
         info.Tenants.Select(tenant => tenant.Id).Should().Contain(remaining.Id, "the membership that was not suspended is still offered");
         info.Tenants.Select(tenant => tenant.Id).Should().NotContain(suspended.Id, "a tenant that cannot be worked in is not offered as a choice");
-        info.ActiveTenantId.Should().BeNull("the selection went stale with the suspension and is discarded rather than reported back");
+        info.ActiveTenantId.Should().BeNull("the renewal dropped the suspended tenant, so there is none to report");
         info.ActiveTenant.Should().BeNull();
     }
 
     /// <summary>
-    /// Verifies that each way a session's tenant can stop being usable is reported as its own distinct
-    /// cause with a 403 rather than a 401, while the session itself keeps answering for the tenants the
-    /// caller still belongs to - the difference between a tenant out of service and a membership that
-    /// was removed, told apart by what the caller is told (AC-070).
+    /// Verifies that both ways a session's tenant can stop being usable - the tenant going out of
+    /// service, and the membership being removed - leave the caller signed in with the tenants they
+    /// still belong to, rather than signing them out (AC-070).
     /// </summary>
+    /// <remarks>
+    /// The two causes are no longer told apart by the refusal, and deliberately so: a renewed session
+    /// simply names no tenant, so what refuses the next call is the authority it lacks, the same way it
+    /// would for any caller short of a permission. What tells the caller where to go next is the
+    /// account info endpoint, which names the tenants that are still theirs - and that is asserted
+    /// here for both causes.
+    /// </remarks>
     [Fact]
-    public async Task Refusal_Explains_And_Keeps_The_Session()
+    public async Task Losing_A_Tenant_Keeps_The_Session_And_Offers_What_Remains()
     {
         // Two accounts rather than one, because a single account would have to belong to three tenants
         // to keep an alternative after one is suspended and another is revoked, and the two causes are
@@ -127,33 +150,39 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
             await CreateTenantRoleAsync(revokedTenant.Id, Allow.User_View));
         await AddMembershipAsync(revokedAlternative.Id, revokedMember.Id);
 
-        var suspendedClient = await ClientForAsync(suspendedMember.Username, suspendedTenant.Id);
-        var revokedClient = await ClientForAsync(revokedMember.Username, revokedTenant.Id);
+        var suspendedSession = await SessionForAsync(suspendedMember.Username, suspendedTenant.Id);
+        var revokedSession = await SessionForAsync(revokedMember.Username, revokedTenant.Id);
 
         await SetPlatformAdminAuthTokenAsync();
         await SuspendTenantAsync(suspendedTenant.Id);
         await RevokeMembershipAsync(revokedTenant.Id, revokedMember.Id);
 
-        var (suspendedResponse, suspendedRefusal) = await suspendedClient
+        // Both renewals succeed: neither cause ends a session, and a renewal that failed would sign the
+        // caller out over something that was not their doing.
+        await suspendedSession.RenewAsync();
+        await revokedSession.RenewAsync();
+
+        var (suspendedResponse, suspendedRefusal) = await suspendedSession.Client
             .GETAsync<UserListEndpoint, UserListRequest, ProblemDetails>(new());
-        var (revokedResponse, revokedRefusal) = await revokedClient
+        var (revokedResponse, revokedRefusal) = await revokedSession.Client
             .GETAsync<UserListEndpoint, UserListRequest, ProblemDetails>(new());
 
         suspendedResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden, "a suspended tenant is a refusal, never a sign-out");
         revokedResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden, "so is a membership that was removed");
 
-        suspendedRefusal.Errors.First().Code.Should().Be(ErrorCodes.TenantSuspended);
-        revokedRefusal.Errors.First().Code.Should().Be(ErrorCodes.TenantMembershipRevoked);
+        suspendedRefusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied);
+        revokedRefusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied);
 
-        // The two explanations are different, which is the whole point: the caller who was removed from
-        // a tenant and the caller whose tenant is out of service are told apart by what they are told.
-        revokedRefusal.Errors.First().Reason.Should().NotBe(suspendedRefusal.Errors.First().Reason);
-
-        var (suspendedInfoResponse, suspendedInfo) = await suspendedClient.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
-        var (revokedInfoResponse, revokedInfo) = await revokedClient.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
+        // Where the caller goes next is answered here rather than by the refusal: each is still signed
+        // in, and each is offered the tenant they still belong to.
+        var (suspendedInfoResponse, suspendedInfo) = await suspendedSession.Client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
+        var (revokedInfoResponse, revokedInfo) = await revokedSession.Client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
 
         suspendedInfoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         revokedInfoResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        suspendedInfo.ActiveTenantId.Should().BeNull("the renewal dropped the suspended tenant");
+        revokedInfo.ActiveTenantId.Should().BeNull("and the one whose membership was removed");
 
         suspendedInfo.Tenants.Select(tenant => tenant.Id).Should().Contain(suspendedAlternative.Id);
         revokedInfo.Tenants.Select(tenant => tenant.Id).Should().Contain(revokedAlternative.Id);
@@ -217,33 +246,41 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that reactivating a tenant returns its members to work on the token that was refused,
-    /// with no second sign-in - the other half of the refusal being a refusal of the operation rather
-    /// than of the session (AC-008, AC-089).
+    /// Verifies that reactivating a tenant returns its members to work without a second sign-in - the
+    /// other half of the refusal being a refusal of the operation rather than of the session
+    /// (AC-008, AC-089).
     /// </summary>
+    /// <remarks>
+    /// The member signs in once and never again: the session that lost the tenant at one renewal gets
+    /// it back at the next, because every renewal reads the tenant as it stands rather than remembering
+    /// what the last one decided.
+    /// </remarks>
     [Fact]
     public async Task Reactivation_Restores_Member_Access()
     {
         var tenant = await CreateTenantAsync();
         var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.User_View);
         var member = await CreateTenantUserAsync(tenant.Id, roleId);
-        var memberClient = await ClientForAsync(member.Username, tenant.Id);
+        var session = await SessionForAsync(member.Username, tenant.Id);
 
         await SetPlatformAdminAuthTokenAsync();
         await SuspendTenantAsync(tenant.Id);
+        await session.RenewAsync();
 
-        var (refused, _) = await memberClient.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
+        var (refused, _) = await session.Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
 
         refused.StatusCode.Should().Be(HttpStatusCode.Forbidden);
 
-        // Reactivated by the platform surface, while the member's client goes on presenting the very
-        // token it was refused with.
+        // Reactivated by the platform surface, while the member's session is renewed once more rather
+        // than signed in again.
         await App.Client.POSTAsync<TenantReactivateEndpoint, TenantReactivateRequest, TenantReactivateResponse>(
             new() { Id = tenant.Id });
 
-        var (restored, page) = await memberClient.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
+        await session.RenewAsync();
 
-        restored.StatusCode.Should().Be(HttpStatusCode.OK, "the member is admitted again on the token they never stopped presenting");
+        var (restored, page) = await session.Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
+
+        restored.StatusCode.Should().Be(HttpStatusCode.OK, "the member is admitted again without re-entering credentials");
         page.Should().NotBeNull();
     }
 

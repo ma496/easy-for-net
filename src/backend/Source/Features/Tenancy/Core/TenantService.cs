@@ -11,11 +11,12 @@ using Backend.Features.Identity.Core;
 /// </summary>
 /// <remarks>
 /// <see cref="CreateAsync"/> is the single creation path. A tenant created by a platform
-/// administrator and a tenant created by an account onboarding itself differ only in whether a first
+/// administrator and a tenant created alongside the account that signs itself up differ only in whether a first
 /// member is named: the trimming, the state the row is persisted in, the administrator role the
 /// tenant is provisioned with and the identifier comparison that guards it are the same code for
 /// both, so the two surfaces cannot drift apart.
 /// </remarks>
+[AllowOutside]
 public interface ITenantService
 {
     /// <summary>
@@ -79,7 +80,7 @@ public interface ITenantService
     /// administrator role - the role holding every tenant-tier permission - so that a tenant is never
     /// left without one. When a first member is named, that account is given an active membership of
     /// the new tenant and assigned that role, which is what makes a self-service creator the
-    /// administrator of the tenant they have just created.
+    /// administrator of the tenant created with their account.
     /// </summary>
     /// <param name="tenant">The tenant to create, carrying the display name and identifier alone.</param>
     /// <param name="firstMemberUserId">
@@ -185,7 +186,14 @@ public class TenantService(AppDbContext dbContext,
         tenant.Status = TenantStatus.Active;
         tenant.SystemCreated = false;
 
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        // A caller that has already opened a transaction - self-service sign-up, which creates the
+        // account and its tenant as one act - carries this work inside that transaction, so the two
+        // commit or roll back together. Opening a second transaction while one is in force is refused
+        // by the provider outright, so the ambient one is joined rather than nested, and only the
+        // transaction this call opened is the one this call commits.
+        await using var transaction = dbContext.Database.CurrentTransaction is null
+            ? await dbContext.Database.BeginTransactionAsync(cancellationToken)
+            : null;
 
         // A tenant belongs to no tenant, so this row needs no scope established for it; the creating
         // account and the creation time are stamped centrally on save.
@@ -215,7 +223,12 @@ public class TenantService(AppDbContext dbContext,
             await tenantAuthorizationService.ReplaceTenantRoleAssignmentsAsync(tenant.Id, firstMemberId, [administratorRoleId], cancellationToken);
         }
 
-        await transaction.CommitAsync(cancellationToken);
+        // Nothing to commit when the transaction belongs to the caller: it commits when the whole act
+        // the tenant is part of has succeeded, and rolls this back with it when it has not.
+        if (transaction is not null)
+        {
+            await transaction.CommitAsync(cancellationToken);
+        }
 
         return tenant;
     }

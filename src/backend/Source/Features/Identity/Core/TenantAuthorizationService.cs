@@ -1,6 +1,5 @@
 namespace Backend.Features.Identity.Core;
 
-using System.Security.Claims;
 using Backend.Features.Identity.Core.Entities;
 using RefreshTokenIssuer = Backend.Features.Identity.Endpoints.Account.TokenService;
 
@@ -200,13 +199,6 @@ public class TenantAuthorizationService(AppDbContext dbContext,
     /// </summary>
     private const string TenantAdministrationPermission = Allow.TenantMember_UpdateRoles;
 
-    /// <summary>
-    /// Authentication type of the principal a re-established session is evaluated as. It never
-    /// authenticates a request; it only names the identity built to ask what that session is
-    /// entitled to in the tenant being established.
-    /// </summary>
-    private const string ReissueAuthenticationType = "TenantSessionReissue";
-
     /// <inheritdoc />
     public Task<bool> UserExistsAsync(Guid userId, CancellationToken cancellationToken = default)
         // Read off the set rather than through the user service: an account belongs to no tenant of
@@ -344,7 +336,7 @@ public class TenantAuthorizationService(AppDbContext dbContext,
         // without the other.
         //
         // The roles that count are this tenant's own and the platform-scoped ones, which is exactly the
-        // set the session check computes a request's permissions from, so a caller is authorized here
+        // set a session is minted with for that tenant, so a caller is authorized here
         // for a tenant precisely when a session acting in that tenant would be. The soft-delete filter
         // stays in force on all three sets, so a deleted role grants nothing and a removed membership
         // places nobody.
@@ -501,12 +493,12 @@ public class TenantAuthorizationService(AppDbContext dbContext,
             ?? throw new InvalidOperationException($"A session cannot be re-established for the unknown account '{userId}'.");
 
         // What the re-established session may do is read from current data for the tenant being
-        // established and never copied from the session it replaces: the membership, the role
-        // assignments and the roles' permissions as they stand at this moment decide it, so authority
-        // the caller held in the tenant they acted in a moment ago is not carried into this one.
-        var session = await SessionValidator.EvaluateAsync(ReissuePrincipal(account, tenantId), dbContext, cancellationToken);
+        // established and never copied from the session it replaces: the role assignments and the
+        // roles' permissions as they stand at this moment decide it, so authority the caller held in
+        // the tenant they acted in a moment ago is not carried into this one.
+        var grants = await SessionGrants.ReadAsync(dbContext, userId, tenantId, account.IsPlatform, cancellationToken);
 
-        var claims = Helper.CreateClaims(account, [.. session.Roles], [.. session.Permissions], tenantId);
+        var claims = Helper.CreateClaims(account, grants.Roles, grants.Permissions, tenantId);
 
         // for cookie authentication
         await CookieAuth.SignInAsync(user => user.Claims.AddRange(claims));
@@ -569,14 +561,4 @@ public class TenantAuthorizationService(AppDbContext dbContext,
         await authTokenService.RevokeRefreshTokenAsync(userId, refreshToken, cancellationToken);
     }
 
-    /// <summary>
-    /// Builds the principal the re-established session is evaluated as: the account's identity and
-    /// the tenant being established, and nothing else, so the evaluation answers what this account
-    /// may do in that tenant now rather than echoing the grants the session it replaces carried.
-    /// </summary>
-    /// <param name="account">The account the session belongs to.</param>
-    /// <param name="tenantId">The tenant the session is to act in, or <see langword="null"/> for none.</param>
-    /// <returns>A principal carrying identity and tenant claims only.</returns>
-    private static ClaimsPrincipal ReissuePrincipal(User account, Guid? tenantId)
-        => new(new ClaimsIdentity(Helper.CreateClaims(account, [], [], tenantId), ReissueAuthenticationType));
 }

@@ -8,12 +8,11 @@ using Backend.Features.FileManagement.Core;
 /// and profile image) and cleans up the previously stored image when it changes.
 /// </summary>
 /// <remarks>
-/// Marked <see cref="AllowNoTenantAttribute"/> because editing one's own profile is account
+/// Usable with no tenant established, because editing one's own profile is account
 /// self-service. The profile image is account-owned rather than tenant data and is attributed to no
 /// tenant, so setting, replacing and clearing it works while the caller acts in any tenant or in
 /// none.
 /// </remarks>
-[AllowNoTenant]
 sealed class UpdateProfileEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService,
     IFileService fileService)
     : Endpoint<UserUpdateProfileRequest, UserUpdateProfileResponse>

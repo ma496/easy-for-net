@@ -19,7 +19,6 @@ using Backend.Features.Identity.Core.Entities;
 /// administrator acting in no tenant runs in platform scope, so the role they create belongs to no
 /// tenant: it is a platform role, whose name is unique among the platform roles.
 /// </remarks>
-[AllowPlatformNoTenant]
 sealed class RoleCreateEndpoint(IRoleService roleService, AppDbContext dbContext)
     : Endpoint<RoleCreateRequest, RoleCreateResponse>
 {

@@ -1,5 +1,6 @@
 namespace Backend.Tests.Features.Identity.Core;
 
+using Backend.Data.Entities;
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Tenancy.Endpoints.Tenants;
 using Backend.Tests.Features.Tenancy;
@@ -77,23 +78,39 @@ public class PermissionScopeTests(App app) : TenancyTestsBase(app)
     /// is the platform's and not merely what is left when no tenant is selected (AC-050).
     /// </summary>
     /// <remarks>
-    /// The account is given a role granting a permission before it is signed in, and the role is a
-    /// platform-scoped one - the strongest form of the case. An account holding no role at all would
-    /// have an empty permission set for a reason that has nothing to do with the scope rule, and would
-    /// pass whether the rule existed or not.
+    /// The account is given a platform-scoped role granting a permission - the strongest form of the
+    /// case. An account holding no role at all would have an empty permission set for a reason that has
+    /// nothing to do with the scope rule, and would pass whether the rule existed or not.
+    /// <para>
+    /// The state is reached the way it actually arises: an ordinary account cannot sign in without a
+    /// tenant, so it signs in to its own and loses it - here by suspension - at the next renewal. What
+    /// is left is an ordinary account acting in no tenant, which is the standing under test.
+    /// </para>
     /// </remarks>
     [Fact]
     public async Task Ordinary_Account_With_No_Active_Tenant_Exercises_Nothing()
     {
-        var account = await CreateAccountWithoutMembershipAsync();
+        var tenant = await CreateTenantAsync();
+        var account = await CreateTenantUserAsync(tenant.Id);
 
         await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
-        await SignInAsAsync(account.Username);
 
-        var info = await InfoAsync();
+        var session = await SessionForAsync(account.Username, tenant.Id);
 
-        info.ActiveTenantId.Should().BeNull("the account holds no membership, so there is no tenant to act in");
-        info.IsPlatform.Should().BeFalse("and it was never made one of the platform's own accounts");
+        await TenantScopedAsync(tenant.Id, async () =>
+        {
+            var row = await DbContext.Tenants.SingleAsync(candidate => candidate.Id == tenant.Id, TestContext.Current.CancellationToken);
+            row.Status = TenantStatus.Suspended;
+            await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+        });
+
+        await session.RenewAsync();
+
+        var (response, info) = await session.Client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        info.ActiveTenantId.Should().BeNull("the renewal dropped the suspended tenant, so there is none to act in");
+        info.IsPlatform.Should().BeFalse("and the account was never made one of the platform's own");
 
         info.Roles.Should().NotBeEmpty(
             "the premise is that the account does hold a role: an account holding none would have nothing to narrow away");

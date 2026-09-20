@@ -18,7 +18,7 @@ using Backend.Features.Tenancy.Core;
 /// tenant at all and has every tenant-scoped operation refused until they select one through this
 /// surface.
 /// <para>
-/// Marked <see cref="AllowNoTenantAttribute"/> for the same reason: this is the endpoint that
+/// Usable with no tenant established for the same reason: this is the endpoint that
 /// establishes a tenant, so requiring one would leave an account with several memberships unable to
 /// pick any of them. It declares no permission either - which tenants an ordinary caller may act in
 /// is decided by their memberships, not by anything a role grants them.
@@ -50,7 +50,6 @@ using Backend.Features.Tenancy.Core;
 /// neither this response nor the requests that follow it.
 /// </para>
 /// </remarks>
-[AllowNoTenant]
 sealed class TenantSwitchEndpoint(AppDbContext dbContext,
                                   ITenantMembershipService tenantMembershipService,
                                   ITenantAuthorizationService tenantAuthorizationService,

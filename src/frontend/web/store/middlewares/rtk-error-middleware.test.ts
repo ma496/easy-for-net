@@ -1,15 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { setTenantError, showServiceUnavailable } from '@/store/slices'
+import { showServiceUnavailable } from '@/store/slices'
 import { rtkErrorMiddleware } from './rtk-error-middleware'
 
 /**
  * Tests what the one middleware that reacts to a refused request does with the answer, and - just as
- * importantly - what it leaves alone (AC-070, AC-127).
+ * importantly - what it leaves alone.
  *
- * A request refused because the tenant the session was acting in is gone has to become state the app
- * reacts to once, so the user is told why and offered another tenant. Every other failure has to stay
- * the calling screen's business: a `400` is an input failure the screen reports in place, a permission
- * the caller lacks is not a reason to move them, and none of them is a reason to end the session.
+ * A request that never reached the API is the only failure that becomes state the app reacts to
+ * once. Every other failure stays the calling screen's business: a `400` is an input failure the
+ * screen reports in place, a permission the caller lacks is not a reason to move them, and none of
+ * them is a reason to end the session.
+ *
+ * A tenant that has stopped being usable is deliberately not among them. The API refuses no request
+ * on those grounds any more - the tenant simply drops out of the session at its next renewal, and the
+ * account info read alongside that renewal is what the route guard acts on - so there is no refusal
+ * here to recognise, and no code to guess a reason from.
  */
 
 /** A rejected RTK Query action carrying the given payload, shaped the way the middleware reads it. */
@@ -20,13 +25,13 @@ const rejectedQuery = (payload: unknown) => ({
   meta: { requestId: 'request-1', requestStatus: 'rejected', rejectedWithValue: true, arg: {} },
 })
 
-/** The problem-details body the API answers a tenant-scoped refusal with. */
+/** The problem-details body the API answers a refusal with. */
 const refusal = (code: string, status: number) => ({
   status,
   data: {
     status,
     title: 'One or more errors occurred!',
-    errors: [{ name: '', code, reason: 'The tenant is no longer usable' }],
+    errors: [{ name: '', code, reason: 'The request was refused' }],
   },
 })
 
@@ -50,49 +55,29 @@ const through = (action: unknown): unknown[] => {
   return dispatched
 }
 
-/** The tenant error codes the middleware records, one per way a session's tenant can stop being usable. */
-const tenantRefusalCodes = [
-  'tenantSuspended',
-  'tenantMembershipRevoked',
-  'tenantNotFound',
-  'noActiveTenant',
-  'notTenantMember',
-]
-
 describe('rtkErrorMiddleware', () => {
-  it.each(tenantRefusalCodes)('records %s so the user can be told why and offered another tenant', (code) => {
-    const dispatched = through(rejectedQuery(refusal(code, 403)))
-
-    expect(dispatched).toEqual([setTenantError(code)])
-  })
-
-  it.each(tenantRefusalCodes)('ignores %s when it comes back as an input failure rather than a refusal', (code) => {
-    const dispatched = through(rejectedQuery(refusal(code, 400)))
-
-    expect(dispatched).toEqual([])
-  })
-
-  it('records nothing for a permission the caller merely lacks, which is not a reason to move them', () => {
-    const dispatched = through(rejectedQuery(refusal('permissionDenied', 403)))
-
-    expect(dispatched).toEqual([])
-  })
-
-  it('records nothing for a refusal it does not recognise, so a new code cannot be guessed at', () => {
-    const dispatched = through(rejectedQuery(refusal('somethingAddedLater', 403)))
-
-    expect(dispatched).toEqual([])
-  })
-
   it('marks the service unavailable when the request never reached the API', () => {
     const dispatched = through(rejectedQuery({ status: 'FETCH_ERROR', error: 'Failed to fetch' }))
 
     expect(dispatched).toEqual([showServiceUnavailable()])
   })
 
+  it.each([
+    ['permissionDenied', 403],
+    ['tenantSuspended', 400],
+    ['notTenantMember', 400],
+    ['noActiveTenant', 400],
+    ['tenantRequired', 400],
+    ['somethingAddedLater', 403],
+  ] as const)('leaves a %s refusal to the screen that made the request', (code, status) => {
+    const dispatched = through(rejectedQuery(refusal(code, status)))
+
+    expect(dispatched).toEqual([])
+  })
+
   it('never dispatches a sign-out, whatever was refused', () => {
     const dispatched = [
-      ...through(rejectedQuery(refusal('tenantSuspended', 403))),
+      ...through(rejectedQuery(refusal('permissionDenied', 403))),
       ...through(rejectedQuery({ status: 'FETCH_ERROR' })),
       ...through(rejectedQuery(refusal('tenantSuspended', 400))),
     ]

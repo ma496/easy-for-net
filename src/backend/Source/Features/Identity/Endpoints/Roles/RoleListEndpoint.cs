@@ -15,7 +15,6 @@ using Backend.Features.Identity.Core.Entities;
 /// administered from the tenants table. For every other caller the filter is ignored rather than
 /// honoured, so naming a tenant can never widen a caller's own view.
 /// </remarks>
-[AllowPlatformNoTenant]
 sealed class RoleListEndpoint(IRoleService roleService,
                               ICurrentUserService currentUserService,
                               ITenantContext tenantContext,

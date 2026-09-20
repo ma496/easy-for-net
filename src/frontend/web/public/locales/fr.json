@@ -72,7 +72,6 @@
     "tenantsUpdate": "Mettre à jour",
     "tenantsMembers": "Membres",
     "selectTenant": "Sélectionner un locataire",
-    "noTenant": "Aucun locataire",
     "tenantsDetail": "Détail"
   },
   "search": {
@@ -213,12 +212,12 @@
       "tenantSuspended": "Ce locataire est suspendu",
       "notTenantMember": "Vous n'êtes pas membre de ce locataire",
       "noActiveTenant": "Aucun locataire actif n'est sélectionné",
+      "tenantRequired": "Veuillez indiquer un locataire pour vous connecter.",
       "tenantIdentifierAlreadyExists": "L'identifiant du locataire existe déjà",
       "duplicateTenantMembership": "Cet utilisateur est déjà membre de ce locataire",
       "lastTenantAdministrator": "Le dernier administrateur du locataire ne peut pas être retiré",
       "systemCreatedTenantCannotBeModified": "Le locataire créé par le système ne peut pas être modifié",
       "crossTenantFileAccess": "Ce fichier appartient à un autre locataire",
-      "tenantMembershipRevoked": "Votre adhésion à ce locataire a été révoquée",
       "platformPermissionNotGrantable": "Les permissions de plateforme ne peuvent pas être accordées à un rôle de locataire",
       "concurrentModification": "Cet enregistrement a été modifié par quelqu'un d'autre. Rechargez et réessayez.",
       "userSharedAcrossTenants": "Cet utilisateur appartient à d'autres locataires et ne peut être modifié que par un administrateur de la plateforme"
@@ -434,7 +433,8 @@
         "alreadyHaveAccount": "Vous avez déjà un compte ?",
         "successTitle": "Succès !",
         "successVerifyEmail": "Inscription réussie ! Veuillez vérifier votre email.",
-        "successMessage": "Inscription réussie ! Allez à la page de connexion."
+        "successMessage": "Inscription réussie ! Allez à la page de connexion.",
+        "tenantSectionTitle": "Votre locataire"
       },
       "forgotPassword": {
         "title": "Mot de passe oublié",
@@ -552,17 +552,8 @@
     "selectTenant": {
       "title": "Sélectionner un locataire",
       "description": "Choisissez le locataire dans lequel vous souhaitez travailler.",
-      "suspendedReason": "Le locataire dans lequel vous travailliez a été suspendu. Choisissez un autre locataire pour continuer.",
-      "revokedReason": "Votre adhésion à ce locataire a été révoquée. Choisissez un autre locataire pour continuer.",
-      "unavailableReason": "Ce locataire n'est plus disponible. Choisissez un autre locataire pour continuer.",
-      "noSelectionReason": "Veuillez indiquer un locataire avant d'ouvrir cet écran."
-    },
-    "noTenant": {
-      "title": "Aucun locataire",
-      "description": "Veuillez indiquer un locataire pour continuer : vous n'appartenez pas encore à un locataire actif. Créez votre propre locataire ou demandez à un administrateur de vous ajouter au sien.",
-      "createTitle": "Créez votre locataire",
-      "createButton": "Créer un locataire",
-      "createSuccess": "Locataire créé. Vous en êtes maintenant l'administrateur."
+      "emptyDescription": "Vous n'appartenez à aucun locataire actif. Demandez à un administrateur de vous ajouter au sien, ou inscrivez-vous pour créer le vôtre.",
+      "emptyAction": "Aller à votre profil"
     }
   },
   "notifications": {

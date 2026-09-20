@@ -1,8 +1,8 @@
 namespace Backend.Tenancy;
 
 /// <summary>
-/// Session material returned when an active tenant is selected, switched or established by
-/// onboarding. It carries exactly what the sign-in response carries, so a caller replaces its
+/// Session material returned when an active tenant is selected or switched. It carries exactly
+/// what the sign-in response carries, so a caller replaces its
 /// token pair with a session bound to the newly selected tenant while staying authenticated and
 /// re-entering no credentials. Cookie-authenticated clients ignore it.
 /// The member names are this contract's own: the framework token response spells the two expiries

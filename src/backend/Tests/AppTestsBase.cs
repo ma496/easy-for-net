@@ -22,14 +22,32 @@ public abstract class AppTestsBase(App app) : TestBase<App>
 
     /// <summary>
     /// Authenticates the HTTP client by setting a Bearer token obtained from the token endpoint,
-    /// optionally selecting a tenant first. Sign-in resolves an active tenant on its own only when
-    /// exactly one membership stands, so a tenant is named here whenever the account holds several.
-    /// With no arguments the caller is the bootstrap tenant's administrator, acting in that tenant.
+    /// naming the tenant to sign in to when one is given. Sign-in resolves a tenant by itself only
+    /// when exactly one active membership stands, and refuses an ordinary account holding none or
+    /// several, so a tenant is named here whenever the account holds anything but one. With no
+    /// arguments the caller is the bootstrap tenant's administrator, acting in that tenant.
     /// </summary>
     protected async Task SetAuthTokenAsync(string username = TestUsers.TenantAdminUsername, string password = TestUsers.AdminPassword, Guid? tenantId = null)
     {
-        await TestsHelper.SetNewAuthTokenAsync(App.Client, username, password, tenantId);
+        await TestsHelper.SetNewAuthTokenAsync(App.Client, username, password, await TenantIdentifierOfAsync(tenantId));
     }
+
+    /// <summary>
+    /// The url-safe identifier of a tenant named by its key, which is what sign-in takes. Tests hold
+    /// the tenants they create by identity, so the translation happens here once rather than at every
+    /// call site.
+    /// </summary>
+    /// <param name="tenantId">The tenant to name, or <see langword="null"/> to name none.</param>
+    /// <returns>The tenant's identifier, or <see langword="null"/> when no tenant was named.</returns>
+    protected async Task<string?> TenantIdentifierOfAsync(Guid? tenantId)
+        => tenantId is { } id
+            ? await DbContext.Tenants
+                .AsNoTracking()
+                .AcrossAllTenants()
+                .Where(tenant => tenant.Id == id)
+                .Select(tenant => tenant.Identifier)
+                .SingleAsync(TestContext.Current.CancellationToken)
+            : null;
 
     /// <summary>
     /// Authenticates the HTTP client as the seeded platform administrator. The account holds no

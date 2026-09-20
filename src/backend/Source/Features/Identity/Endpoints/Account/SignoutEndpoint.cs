@@ -7,14 +7,13 @@ using Backend.Features.Identity.Core;
 /// cookie and the refresh-token cookie.
 /// </summary>
 /// <remarks>
-/// Marked <see cref="AllowNoTenantAttribute"/> because signing out is account self-service: a
+/// Usable with no tenant established, because signing out is account self-service: a
 /// caller acting in no tenant - an account that holds no usable membership, or one that has not
 /// chosen between several - must still be able to end its session. Discarding the stored active
 /// tenant selection together with the tenant-scoped data cached beside it is the web app's part of
 /// the same flow, so the next account signing in on that browser inherits no selection and sees no
 /// previous tenant's records.
 /// </remarks>
-[AllowNoTenant]
 sealed class SignoutEndpoint(ICurrentUserService currentUserService, IAuthTokenService authTokenService)
     : EndpointWithoutRequest<EmptyResponse>
 {

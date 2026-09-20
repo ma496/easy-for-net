@@ -10,7 +10,7 @@ using Backend.Features.Tenancy.Core;
 /// belongs to a tenant.
 /// </summary>
 /// <remarks>
-/// Marked <see cref="AllowNoTenantAttribute"/> because the tenant being administered travels in the
+/// Usable with no tenant established, because the tenant being administered travels in the
 /// route rather than in the session: a platform administrator acting in no tenant, and a member whose
 /// session is active in one of their tenants while they read the members of another, both reach this
 /// surface. The route segment names the tenant being read and never the tenant the request acts in,
@@ -24,7 +24,6 @@ using Backend.Features.Tenancy.Core;
 /// publishes.
 /// </para>
 /// </remarks>
-[AllowNoTenant]
 sealed class TenantMemberListEndpoint(ICurrentUserService currentUserService,
                                       ITenantContext tenantContext,
                                       ITenantAuthorizationService tenantAuthorizationService) : Endpoint<TenantMemberListRequest, TenantMemberListResponse>

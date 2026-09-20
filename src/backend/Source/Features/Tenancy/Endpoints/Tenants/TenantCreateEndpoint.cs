@@ -8,17 +8,16 @@ using Backend.Features.Tenancy.Core;
 /// it in the active state and returning its assigned identity.
 /// </summary>
 /// <remarks>
-/// Marked <see cref="AllowNoTenantAttribute"/> because a tenant is the scope rather than something
+/// Usable with no tenant established, because a tenant is the scope rather than something
 /// inside one: a platform administrator creates tenants without acting in any of them. The exemption
 /// covers the tenant requirement alone - the caller is still authenticated and still has to hold
 /// <see cref="Allow.Tenant_Create"/>, which is a platform-tier permission no tenant role can carry.
 /// The creation itself is delegated to <see cref="ITenantService.CreateAsync"/>, the single creation
-/// path this endpoint shares with self-service onboarding, so the trimming, the state the row is
+/// path this endpoint shares with self-service sign-up, so the trimming, the state the row is
 /// persisted in and the system-created administrator role the tenant is provisioned with cannot
 /// differ between the two surfaces. No membership is created here: a tenant created from the
 /// platform has no first member until one is added.
 /// </remarks>
-[AllowNoTenant]
 sealed class TenantCreateEndpoint(ITenantService tenantService) : Endpoint<TenantCreateRequest, TenantCreateResponse>
 {
     public override void Configure()

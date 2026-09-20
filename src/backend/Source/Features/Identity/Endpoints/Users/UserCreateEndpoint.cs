@@ -14,7 +14,6 @@ using Backend.Features.Identity.Core.Entities;
 /// no tenant. Created from inside a tenant - by a platform account that has entered one just as by that
 /// tenant's own administrator - it is an ordinary account of that tenant instead.
 /// </remarks>
-[AllowPlatformNoTenant]
 sealed class UserCreateEndpoint(IUserService userService,
                                 ITenantContext tenantContext,
                                 AppDbContext dbContext) : Endpoint<UserCreateRequest, UserCreateResponse>

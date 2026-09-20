@@ -58,11 +58,11 @@ public class FileUploadTests(App app) : FileTestsBase(app)
     /// stores neither a record nor any bytes (AC-099).
     /// </summary>
     /// <remarks>
-    /// The uploader is an account holding two memberships, which is the standing in which sign-in
-    /// resolves no active tenant: it has to choose between them, and until it does there is no tenant for
-    /// a file to belong to. The refusal is weighed against the storage directory as well as against the
-    /// records, because a stored file whose record was never written would be unreachable content that
-    /// nothing would ever tidy away.
+    /// The uploader belongs to the platform tier, which is the standing that signs in acting in no
+    /// tenant at all: there is then no tenant for a tenant-scoped file to belong to, and this endpoint
+    /// says so rather than storing one that belongs nowhere. The refusal is weighed against the storage
+    /// directory as well as against the records, because a stored file whose record was never written
+    /// would be unreachable content that nothing would ever tidy away.
     /// </remarks>
     [Fact]
     public async Task Upload_Without_An_Active_Tenant_Is_Refused()
@@ -70,6 +70,7 @@ public class FileUploadTests(App app) : FileTestsBase(app)
         var first = await CreateTenantAsync();
         var second = await CreateTenantAsync();
         var unattached = await CreateDualTenantMemberAsync(first.Id, second.Id);
+        await MarkAsPlatformAccountAsync(unattached.Id);
         var client = await ClientForAsync(unattached.Username);
 
         // A name no other run can submit, so "no record names it" is a statement about this upload

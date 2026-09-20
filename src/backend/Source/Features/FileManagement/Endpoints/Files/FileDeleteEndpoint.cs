@@ -12,7 +12,7 @@ using Backend.Features.FileManagement.Core;
 /// caller is refused with the standard 401 - and the <see cref="Allow.File_Delete"/> permission it
 /// has always declared is unchanged.
 /// <para>
-/// Marked <see cref="AllowNoTenantAttribute"/> so that an account-owned file, a profile image above
+/// Usable with no tenant established, so that an account-owned file, a profile image above
 /// all, can be removed by its owner while they act in any tenant or in none. The exemption is from
 /// the global tenant requirement only: the file's own attribution still decides the answer, and it
 /// is resolved exactly as a read resolves it, so a file belonging to another tenant or another
@@ -21,7 +21,6 @@ using Backend.Features.FileManagement.Core;
 /// deletion followed by an upload, so these refusals govern replacement too.
 /// </para>
 /// </remarks>
-[AllowNoTenant]
 sealed class FileDeleteEndpoint(IFileService fileService) : Endpoint<FileDeleteRequest>
 {
     /// <summary>

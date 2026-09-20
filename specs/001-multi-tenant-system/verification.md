@@ -1,5 +1,16 @@
 # Verification — Multi-tenant system
 
+> **Partly superseded.** A later change removed per-request session revalidation and the
+> no-active-tenant state it existed for. Roles, permissions and the tenant are now decided once, when
+> a token is minted, and trusted until it is replaced; the refresh path is the only place a live
+> session is re-examined. Sign-in puts an ordinary account into exactly one tenant or refuses with
+> `tenantRequired`, sign-up creates the tenant alongside the account, and self-service onboarding,
+> `SessionValidator`, `SessionValidationMiddleware`, `TenantRefusal`, `[AllowNoTenant]` and
+> `[AllowPlatformNoTenant]` are gone. The criteria about mid-session revalidation and about an
+> account acting in no tenant — AC-020, AC-023, AC-050, AC-070, AC-103, AC-109, AC-118 to AC-122,
+> AC-136, AC-140, AC-148 among them — describe behaviour the code no longer has. Read
+> `CLAUDE.md` for the current design.
+
 Verified on 2026-09-13 against `spec.md` (149 acceptance criteria), `plan.md` and `tasks.md`
 (147 tasks, `T-001`..`T-147`).
 

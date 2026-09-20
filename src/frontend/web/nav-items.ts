@@ -199,9 +199,4 @@ export const navItems: (NavItem | NavItemGroup)[] = [
     url: '/select-tenant',
     show: false,
   },
-  {
-    title: 'navigation.noTenant',
-    url: '/no-tenant',
-    show: false,
-  },
 ]

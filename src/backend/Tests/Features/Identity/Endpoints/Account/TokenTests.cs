@@ -26,8 +26,9 @@ using Backend.Tests.Features.Tenancy;
 /// The refusal is answered as a bad request carrying <c>userNotActive</c>, exactly as every other
 /// rejection of the credentials on this endpoint is - the account is not out of service because a
 /// session went stale, and a 401 here would tell the web client to go and renew a session the caller
-/// was never given. What a deactivated account's <em>existing</em> session gets is a different
-/// answer, and that one is under test below.
+/// was never given. A session the account already holds keeps working until its token is replaced,
+/// and the renewal is what refuses it: that is where deactivation reaches a live session, and it is
+/// under test below.
 /// </para>
 /// <para>
 /// The account under test is made by the test rather than taken from the seed, because the point of
@@ -53,14 +54,16 @@ public class TokenTests(App app) : TenancyTestsBase(app)
 
         ClearAuthToken();
 
-        (await AuthenticateAsync(account.Username)).Should().Be(HttpStatusCode.OK,
+        var identifier = await IdentifierOfAsync(firstTenantId);
+
+        (await AuthenticateAsync(account.Username, identifier)).Should().Be(HttpStatusCode.OK,
             "the credentials are the account's own and the account is in service");
 
-        // The token is minted while the account is still in service and is never replaced, so what the
-        // tenant-scoped call below is refused with can only be the deactivation.
-        var client = await ClientForAsync(account.Username, firstTenantId);
+        // A live session, so that what deactivation does to one can be shown alongside what it does to
+        // a fresh sign-in.
+        var session = await SessionForAsync(account.Username, firstTenantId);
 
-        var (admitted, _) = await client
+        var (admitted, _) = await session.Client
             .GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
 
         admitted.StatusCode.Should().Be(HttpStatusCode.OK,
@@ -72,21 +75,25 @@ public class TokenTests(App app) : TenancyTestsBase(app)
         // refuses them is the account being out of service.
         var (refused, refusal) = await App.Client
             .POSTAsync<TokenEndpoint, TokenRequest, ProblemDetails>(
-                new() { Username = account.Username, Password = TestUsers.DefaultPassword });
+                new() { Username = account.Username, Password = TestUsers.DefaultPassword, TenantIdentifier = identifier });
 
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest,
             "the caller is anonymous and is told their credentials were not accepted, not sent to renew a session they were never given");
         refusal.Errors.Should().ContainSingle();
         refusal.Errors.First().Code.Should().Be(ErrorCodes.UserNotActive);
 
-        // Every tenant-scoped operation is refused too - including the one the token issued a moment
-        // ago was admitted for. That is the point of deactivating an account globally rather than
-        // tenant by tenant: the memberships are all still there and none of them admits it.
-        var (refusedWork, _) = await client
-            .GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
+        // The session already issued is not ended in flight - it is trusted until its token is
+        // replaced - and the renewal is where deactivation reaches it: the caller cannot get a new
+        // token, so the session ends when the one it holds expires.
+        var (renewal, renewalRefusal) = await App.CreateClient(new ClientOptions { HandleCookies = false })
+            .POSTAsync<FastEndpoints.Security.TokenRequest, ProblemDetails>(
+                "api/account/refresh-token",
+                new() { UserId = account.Id.ToString(), RefreshToken = session.RefreshToken });
 
-        refusedWork.StatusCode.Should().Be(HttpStatusCode.Unauthorized,
-            "the session belongs to an account that is out of service, so the caller is nobody before any tenant is considered");
+        renewal.StatusCode.Should().Be(HttpStatusCode.BadRequest,
+            "an account out of service is given no further tokens, whatever memberships it holds");
+        renewalRefusal.Errors.Should().ContainSingle();
+        renewalRefusal.Errors.First().Code.Should().Be(ErrorCodes.UserNotActive);
 
         (await MembershipIdsAsync(account.Id)).Should().Equal(memberships,
             "deactivating an account withholds its access, it does not take it out of its tenants - the memberships wait untouched for it to be reactivated");
@@ -100,7 +107,7 @@ public class TokenTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Reactivated_Account_Keeps_Exactly_Its_Memberships()
     {
-        var (account, _) = await CreateAccountOfTwoTenantsAsync();
+        var (account, firstTenantId) = await CreateAccountOfTwoTenantsAsync();
         var memberships = await MembershipIdsAsync(account.Id);
 
         memberships.Should().HaveCount(2);
@@ -109,12 +116,14 @@ public class TokenTests(App app) : TenancyTestsBase(app)
 
         ClearAuthToken();
 
-        (await AuthenticateAsync(account.Username)).Should().Be(HttpStatusCode.BadRequest,
+        var identifier = await IdentifierOfAsync(firstTenantId);
+
+        (await AuthenticateAsync(account.Username, identifier)).Should().Be(HttpStatusCode.BadRequest,
             "the account is out of service, whatever memberships it holds");
 
         await SetActiveAsync(account.Id, isActive: true);
 
-        (await AuthenticateAsync(account.Username)).Should().Be(HttpStatusCode.OK,
+        (await AuthenticateAsync(account.Username, identifier)).Should().Be(HttpStatusCode.OK,
             "reactivation restores the account's access - the credentials it already had are accepted again");
 
         (await MembershipIdsAsync(account.Id)).Should().Equal(memberships,
@@ -180,8 +189,8 @@ public class TokenTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that an account belonging to several tenants starts its session inside the one it
-    /// named, rather than in none of them - which is the point of naming one, since an account with
-    /// several memberships otherwise has every tenant-scoped operation refused until it selects.
+    /// named, and that naming one is what it must do: with the field left empty there is nothing to
+    /// resolve, so the sign-in is refused and the caller is asked which tenant they meant.
     /// </summary>
     [Fact]
     public async Task Naming_A_Tenant_Starts_The_Session_In_It()
@@ -191,10 +200,14 @@ public class TokenTests(App app) : TenancyTestsBase(app)
 
         ClearAuthToken();
 
-        var unnamed = await AuthenticatedTenantAsync(account.Username, tenantIdentifier: null);
+        var (unnamed, refusal) = await App.Client
+            .POSTAsync<TokenEndpoint, TokenRequest, ProblemDetails>(
+                new() { Username = account.Username, Password = TestUsers.DefaultPassword });
 
-        unnamed.Should().BeNull(
-            "two memberships and no choice made leaves the session acting in no tenant, which is what naming one avoids");
+        unnamed.StatusCode.Should().Be(HttpStatusCode.BadRequest,
+            "two memberships settle nothing by themselves, so the question is put back to the caller rather than answered by a guess");
+        refusal.Errors.Should().ContainSingle();
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.TenantRequired);
 
         var named = await AuthenticatedTenantAsync(account.Username, identifier);
 
@@ -328,12 +341,13 @@ public class TokenTests(App app) : TenancyTestsBase(app)
     /// refused answer can be asserted on the same call.
     /// </summary>
     /// <param name="username">The account to authenticate as.</param>
+    /// <param name="tenantIdentifier">The tenant to name, or <see langword="null"/> to name none.</param>
     /// <returns>The status the call was answered with.</returns>
-    private async Task<HttpStatusCode> AuthenticateAsync(string username)
+    private async Task<HttpStatusCode> AuthenticateAsync(string username, string? tenantIdentifier = null)
     {
         var (response, _) = await App.Client
             .POSTAsync<TokenEndpoint, TokenRequest, TokenResponse>(
-                new() { Username = username, Password = TestUsers.DefaultPassword });
+                new() { Username = username, Password = TestUsers.DefaultPassword, TenantIdentifier = tenantIdentifier });
 
         return response.StatusCode;
     }

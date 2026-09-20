@@ -6,7 +6,6 @@ const stateWithPermissions = (...permissions: string[]): AuthState => ({
   isAuthenticated: true,
   activeTenant: undefined,
   tenants: [],
-  tenantError: undefined,
   user: {
     id: 'user-id',
     username: 'user',
@@ -39,7 +38,6 @@ const stateActingIn = (activeTenant: GetUserInfoTenant | undefined, ...permissio
   isAuthenticated: true,
   activeTenant,
   tenants: activeTenant ? [firstTenant, secondTenant] : [],
-  tenantError: undefined,
   user: {
     id: 'user-id',
     username: 'user',

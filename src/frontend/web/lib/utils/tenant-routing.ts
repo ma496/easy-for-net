@@ -1,7 +1,7 @@
 import { GetUserInfoResponse } from '@/store/api/identity'
 
-/** The screens an authenticated caller is sent to while no usable tenant selection stands: the chooser when they may pick one, the no-tenant screen when they may not. */
-export type TenantLandingRoute = '/select-tenant' | '/no-tenant'
+/** The screen an authenticated caller is sent to while no usable tenant selection stands: the chooser, which offers the tenants they may work in and a way out when there are none. */
+export type TenantLandingRoute = '/select-tenant'
 
 /** Paths outside `/admin` are never tenant-scoped, and these ones under it are the platform-tier tenancy screens, which a platform account works with while acting in no tenant at all. */
 const platformScopedPathPrefix = '/admin/tenants'
@@ -35,12 +35,15 @@ export const isTenantScopedPath = (pathname: string): boolean => {
  * as the tenants they hold an active membership in that are themselves active.
  * A caller with no selection at all is not stale; there is nothing to discard.
  *
- * This is a guard, not the mechanism AC-127 relies on: the account info endpoint
- * already reports the active tenant only when it is one of the tenants listed,
- * so a selection that has gone stale reaches the browser as no selection at all
- * and is caught by the `activeTenant` check in `resolveTenantLanding`. The test
- * plan asks for the predicate all the same, and it keeps the decision right if a
- * later server ever answers with the two disagreeing.
+ * This is the mechanism rather than a belt-and-braces guard, and that is a change
+ * from how it once worked. The account info endpoint reports the tenant the
+ * session actually names, whether or not the caller still belongs to it, because
+ * that is the tenant every other endpoint will act in for them until their
+ * session is next renewed - hiding it there would have the screen and the API
+ * disagree. So a membership that ended does reach the browser as a selection, and
+ * this predicate is what recognises it: the selected id is missing from the
+ * tenants the caller may work in. Do not simplify it away on the assumption that
+ * the server filters it out.
  *
  * A platform account is exempt, because for it the two disagree by design: it
  * enters a tenant on its account tier and holds no membership in it, so the
@@ -63,33 +66,30 @@ export const isActiveTenantStale = (user: GetUserInfoResponse | undefined): bool
  * Decides where an authenticated caller has to land before any tenant-scoped
  * screen may open, from the user info the server just answered with:
  *
- * - no tenant they may work in - a self-service sign-up that has joined nothing,
- *   or an account whose last membership ended - sends them to `/no-tenant`, the
- *   screen that explains they belong to no active tenant and offers account
- *   self-service, creating their own tenant, and signing out;
- * - a tenant they may work in but no usable selection - several memberships and
- *   no choice made yet, or a choice that has gone stale - sends them to
- *   `/select-tenant` to choose, and never signs them out: the tenant they were
- *   using being suspended is a reason to offer them another, not to end the
- *   session;
+ * - no usable selection - the tenant they were working in was suspended,
+ *   deleted or left them, so their session was renewed without one - sends them
+ *   to `/select-tenant` to choose again, and never signs them out: losing a
+ *   tenant is a reason to offer them another, not to end the session;
+ * - no tenant left to work in at all sends them to the same screen, which says
+ *   so and offers them the way out. It is one screen rather than two because
+ *   there is one thing to tell them: which tenants are theirs, and there may be
+ *   none;
  * - a selection that still stands returns `null`, meaning the caller may go
  *   wherever they were headed.
  *
- * The first case is checked first on purpose: a caller with no tenant at all and
- * a stale selection is sent to `/no-tenant`, never to a chooser with nothing to
- * choose from.
+ * Signing in settles this for almost everybody: an ordinary account signs in to
+ * exactly one tenant or is asked which one it meant, so it arrives here with a
+ * selection already standing. What is left is a selection that stopped being
+ * usable while the session was open.
  *
- * A platform account is ahead of both, and lands nowhere: it needs no tenant to
- * work, it holds no membership to be offered a choice from, and the tenant it
- * enters is chosen from the tenants table rather than from either of these
- * screens. Sent to the no-tenant screen it would be told it belongs to no
- * tenant, which is true and beside the point; sent to the chooser it would be
- * shown an empty one.
+ * A platform account lands nowhere: it needs no tenant to work, it holds no
+ * membership to be offered a choice from, and the tenant it enters is chosen
+ * from the tenants table rather than from this screen - sent to the chooser it
+ * would be shown an empty one.
  */
 export const resolveTenantLanding = (user: GetUserInfoResponse | undefined): TenantLandingRoute | null => {
   if (!user) return null
   if (user.isPlatform) return null
-  if ((user.tenants ?? []).length === 0) return '/no-tenant'
   if (!user.activeTenant || isActiveTenantStale(user)) return '/select-tenant'
   return null
 }
@@ -161,7 +161,7 @@ export const isPathAvailable = (user: GetUserInfoResponse | undefined, pathname:
 
 /**
  * Decides where a platform account acting in no tenant goes after signing in:
- * the dashboard, rather than the no-tenant screen or the chooser, because it
+ * the dashboard, rather than the tenant chooser, because it
  * needs no tenant. A `redirect` it was sent back with is honoured when it can
  * use that screen. Returns `null` for anyone else, whose landing
  * `resolveTenantLanding` decides.
@@ -173,31 +173,4 @@ export const resolvePlatformLanding = (
   if (!isPlatformWithoutTenant(user)) return null
   if (redirectTo && isPathAvailable(user, redirectTo)) return redirectTo
   return '/admin'
-}
-
-/**
- * One entry per code the caller can be sent to the chooser with, keyed by the
- * code the API answered with: a suspension, a membership that ended and a tenant
- * that no longer exists each read differently.
- */
-const tenantRefusalReasonKeys: Record<string, string> = {
-  tenantSuspended: 'page.selectTenant.suspendedReason',
-  tenantMembershipRevoked: 'page.selectTenant.revokedReason',
-  notTenantMember: 'page.selectTenant.revokedReason',
-  tenantNotFound: 'page.selectTenant.unavailableReason',
-  noActiveTenant: 'page.selectTenant.unavailableReason',
-}
-
-/**
- * The translation key of the message that explains, on the chooser, why the
- * caller was sent there, given the tenant error code the API refused their last
- * request with. A code with no explanation of its own - `permissionDenied`, or
- * anything a later feature adds - yields `undefined`, so the chooser shows no
- * reason rather than a raw key to the person reading it (AC-070). A refusal that
- * arrives with no code at all is the plain case of a screen that needs a tenant
- * before it can open.
- */
-export const tenantRefusalReasonKey = (code: string | null | undefined): string | undefined => {
-  if (!code) return undefined
-  return tenantRefusalReasonKeys[code]
 }

@@ -8,12 +8,11 @@ using Backend.Features.Identity.Core.Entities;
 /// verification token delivered to their inbox.
 /// </summary>
 /// <remarks>
-/// Marked <see cref="AllowNoTenantAttribute"/> because email verification is one of the account
+/// Usable with no tenant established, because email verification is one of the account
 /// self-service flows that has to work with no tenant established: it confirms an address on the
 /// account itself, which an account created by self-service sign-up does before it belongs to any
 /// tenant.
 /// </remarks>
-[AllowNoTenant]
 sealed class VerifyEmailEndpoint(ITokenService tokenService, IUserService userService, AppDbContext dbContext)
     : Endpoint<VerifyEmailRequest, EmptyResponse>
 {

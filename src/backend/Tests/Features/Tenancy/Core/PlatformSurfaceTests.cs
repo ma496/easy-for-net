@@ -106,22 +106,33 @@ public class PlatformSurfaceTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that an endpoint marked for platform administrators grants no exemption to any other
-    /// caller: an account with no membership and no platform administration is still told it has no
-    /// active tenant.
+    /// Verifies that the platform's own surface is out of reach of a caller acting inside a tenant,
+    /// however the roles they hold were granted: the permission it declares is platform-scoped, and a
+    /// session acting in a tenant never carries one.
     /// </summary>
+    /// <remarks>
+    /// The account is deliberately given the platform administrator role, so what refuses it is the
+    /// scope its session acts in rather than a grant it was never given. That narrowing is the whole of
+    /// the rule keeping the platform surface out of a tenant's reach - there is no second mechanism
+    /// beside it.
+    /// </remarks>
     [Fact]
-    public async Task Platform_Exemption_Does_Not_Reach_A_Caller_Outside_The_Platform_Tier()
+    public async Task Platform_Surface_Is_Out_Of_Reach_From_Inside_A_Tenant()
     {
-        var account = await CreateAccountWithoutMembershipAsync();
-        var client = await ClientForAsync(account.Username);
+        var tenant = await CreateTenantAsync();
+        var account = await CreateTenantUserAsync(tenant.Id);
+
+        await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
+
+        var client = await ClientForAsync(account.Username, tenant.Id);
 
         var (response, refusal) = await client
-            .GETAsync<RoleListEndpoint, RoleListRequest, ProblemDetails>(new() { All = true });
+            .GETAsync<TenantListEndpoint, TenantListRequest, ProblemDetails>(new());
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         refusal.Errors.Should().ContainSingle();
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.NoActiveTenant, "the caller is refused for want of a tenant, as on any tenant-scoped endpoint");
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied,
+            "listing every tenant is platform-scoped, and a session acting inside a tenant holds no platform-scoped permission");
     }
 
     /// <summary>

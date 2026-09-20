@@ -17,8 +17,6 @@ import {
   TenantMemberRemoveResponse,
   TenantMemberUpdateRolesRequest,
   TenantMemberUpdateRolesResponse,
-  TenantOnboardRequest,
-  TenantOnboardResponse,
   TenantReactivateRequest,
   TenantReactivateResponse,
   TenantSuspendRequest,
@@ -157,14 +155,6 @@ export const tenantsApi = appApi
           { type: 'Users', id: arg.userId },
         ],
       }),
-      tenantOnboard: builder.mutation<TenantOnboardResponse, TenantOnboardRequest>({
-        query: (input) => ({
-          url: '/tenants/onboard',
-          method: 'POST',
-          body: input,
-        }),
-        invalidatesTags: ['Tenants'],
-      }),
       // No tags: switching tenants must drop the whole cache rather than refresh parts of it,
       // so the caller dispatches appApi.util.resetApiState() on success. Invalidating here
       // would refetch the previous tenant's queries during the switch.
@@ -201,7 +191,6 @@ export const {
   useTenantMemberAddMutation,
   useTenantMemberUpdateRolesMutation,
   useTenantMemberRemoveMutation,
-  useTenantOnboardMutation,
   useTenantSwitchMutation,
   useTenantExitMutation
 } = tenantsApi

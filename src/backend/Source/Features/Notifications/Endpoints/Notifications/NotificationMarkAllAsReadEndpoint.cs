@@ -17,7 +17,6 @@ using Backend.Features.Notifications.Core.Entities;
 /// describe exactly the set <c>INotificationService.GetUnreadCountAsync</c> counts, so the unread badge
 /// reads zero afterwards instead of being left standing by a row this endpoint could not see.
 /// </remarks>
-[AllowPlatformNoTenant]
 sealed class NotificationMarkAllAsReadEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext) : EndpointWithoutRequest<NotificationMarkAllAsReadResponse>
 {
     public override void Configure()

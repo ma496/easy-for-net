@@ -147,23 +147,20 @@ const webDirectory = fileURLToPath(new URL('..', import.meta.url))
 
 /**
  * A screen that changes which tenant the session acts in. Most of them reach the reset through
- * `useTenantSwitch`, which is the one place entering and leaving a tenant is carried out; the
- * onboarding form establishes a tenant by creating one and so dispatches the sequence itself.
+ * `useTenantSwitch`, which is the one place entering and leaving a tenant is carried out.
  */
 const tenantChangedSites = [
   'components/custom/tenant-switcher.tsx',
   'app/[lang]/(auth)/select-tenant/_components/select-tenant-view.tsx',
-  'app/[lang]/(auth)/no-tenant/_components/tenant-onboard-form.tsx',
   'app/[lang]/admin/(tenancy)/tenants/list/_components/tenant-table.tsx',
 ]
 
-/** The hook every screen above but the onboarding form changes the acting tenant through. */
+/** The hook every screen above changes the acting tenant through. */
 const tenantSwitchHook = 'hooks/use-tenant-switch.ts'
 
 /** A screen that ends the session, after which no tenant stands to cache anything for. */
 const signedOutSites = [
   'components/custom/nav-user.tsx',
-  'app/[lang]/(auth)/no-tenant/_components/no-tenant-view.tsx',
   'app/[lang]/(auth)/change-password/_components/change-password-form.tsx',
 ]
 

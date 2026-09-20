@@ -40,7 +40,9 @@ public class GetInfoTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task Returns_The_Callers_Tenants()
     {
-        var client = await ClientForAsync(DualUsername);
+        // The account belongs to two tenants, so the one it signs in to is named; what is under test is
+        // that the answer lists both, which is what lets the application offer a switch to the other.
+        var client = await ClientForAsync(DualUsername, TestTenants.BootstrapTenantId);
 
         var (response, info) = await client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
 
@@ -51,8 +53,8 @@ public class GetInfoTests(App app) : TenancyTestsBase(app)
             "these are the tenants this account holds an active membership in, and the set is the whole of them rather than a page of it");
         info.Tenants.Should().OnlyContain(tenant => tenant.Name.Length > 0 && tenant.Identifier.Length > 0,
             "each tenant is named well enough for the application chrome to show it and for a switch to address it");
-        info.ActiveTenantId.Should().BeNull(
-            "two tenants is a choice, and nothing makes it on the caller's behalf");
+        info.ActiveTenantId.Should().Be(TestTenants.BootstrapTenantId,
+            "the tenant named at sign-in is the one being acted in, and it is one of the tenants listed");
     }
 
     /// <summary>

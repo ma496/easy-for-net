@@ -16,7 +16,7 @@ const tenantErrorCodes = [
   'lastTenantAdministrator',
   'systemCreatedTenantCannotBeModified',
   'crossTenantFileAccess',
-  'tenantMembershipRevoked',
+  'tenantRequired',
   'platformPermissionNotGrantable',
   'concurrentModification',
   'userSharedAcrossTenants',
@@ -73,13 +73,13 @@ describe('getApiErrorMessages', () => {
     expect(result!.messages).toEqual([`translated:error.server.${code}`])
   })
 
-  it('explains a suspended tenant and a revoked membership as the distinct reasons they are', () => {
+  it('explains a suspended tenant and a missing one as the distinct reasons they are', () => {
     const suspended = getApiErrorMessages(refusal('tenantSuspended'), t)
-    const revoked = getApiErrorMessages(refusal('tenantMembershipRevoked'), t)
+    const required = getApiErrorMessages(refusal('tenantRequired'), t)
 
     expect(suspended!.messages).toEqual(['translated:error.server.tenantSuspended'])
-    expect(revoked!.messages).toEqual(['translated:error.server.tenantMembershipRevoked'])
-    expect(suspended!.messages).not.toEqual(revoked!.messages)
+    expect(required!.messages).toEqual(['translated:error.server.tenantRequired'])
+    expect(suspended!.messages).not.toEqual(required!.messages)
   })
 
   it('falls back to the message for the status when the body carries no code', () => {

@@ -3,16 +3,14 @@ import { GetUserInfoResponse, GetUserInfoTenant } from '@/store/api/identity'
 /**
  * Authentication slice shape: the current user (with the roles and permissions granted
  * in the tenant being acted in), the active tenant, every tenant the user may act in,
- * the last tenant failure code reported by the API, and an isAuthenticated flag.
- * activeTenant is undefined while the user has not chosen a tenant yet, and tenants is
- * empty for an account that holds no usable membership.
+ * and an isAuthenticated flag. activeTenant is undefined while the session names no
+ * tenant, and tenants is empty for an account that holds no usable membership.
  */
 export interface AuthState {
   user: GetUserInfoResponse | undefined
   isAuthenticated: boolean
   activeTenant: GetUserInfoTenant | undefined
   tenants: GetUserInfoTenant[]
-  tenantError: string | undefined
 }
 
 /**

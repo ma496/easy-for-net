@@ -17,7 +17,6 @@ using Backend.Features.Tenancy.Core;
 /// <c>TenantContextProcessor</c> with the same not-found code, which leaves their access to every
 /// other tenant they belong to intact and lets the web app offer them one of those instead.
 /// </remarks>
-[AllowNoTenant]
 sealed class TenantDeleteEndpoint(ITenantService tenantService, AppDbContext dbContext)
     : Endpoint<TenantDeleteRequest, TenantDeleteResponse>
 {

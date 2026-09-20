@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GetUserInfoResponse, GetUserInfoTenant } from '@/store/api/identity'
-import { authSlice, clearTenantError, setTenantError, setUserInfo, signout } from './authSlice'
+import { authSlice, setUserInfo, signout } from './authSlice'
 
 /** A tenant the caller holds an active membership in, as the account info endpoint reports it. */
 const tenant = (id: string): GetUserInfoTenant => ({ id, name: `Tenant ${id}`, identifier: `t-${id}` })
@@ -26,8 +26,7 @@ describe('authSlice', () => {
       isAuthenticated: false,
       activeTenant: undefined,
       tenants: [],
-      tenantError: undefined,
-    })
+      })
   })
 })
 
@@ -77,48 +76,20 @@ describe('setUserInfo', () => {
     expect(state.tenants).toEqual([tenant('b')])
   })
 
-  it('clears the recorded tenant failure, the session having been re-established elsewhere', () => {
-    const failed = authSlice.reducer(afterSignIn(userInfo({ tenants: [tenant('a')] })), setTenantError('tenantSuspended'))
-    const state = authSlice.reducer(failed, setUserInfo(userInfo({ tenants: [tenant('b')], activeTenant: tenant('b') })))
-
-    expect(state.tenantError).toBeUndefined()
-  })
-})
-
-describe('setTenantError', () => {
-  it('records the code the API refused with', () => {
-    const state = authSlice.reducer(undefined, setTenantError('tenantSuspended'))
-
-    expect(state.tenantError).toBe('tenantSuspended')
-  })
-
-  it('leaves the caller authenticated in the tenant they were acting in', () => {
+  it('drops a tenant the session no longer names, rather than leaving the previous selection standing', () => {
     const signedIn = afterSignIn(userInfo({ tenants: [tenant('a')], activeTenant: tenant('a') }))
-    const state = authSlice.reducer(signedIn, setTenantError('tenantSuspended'))
+    const state = authSlice.reducer(signedIn, setUserInfo(userInfo({ tenants: [] })))
 
+    expect(state.activeTenant).toBeUndefined()
+    expect(state.tenants).toEqual([])
     expect(state.isAuthenticated).toBe(true)
-    expect(state.activeTenant).toEqual(tenant('a'))
-    expect(state.tenantError).toBe('tenantSuspended')
-  })
-})
-
-describe('clearTenantError', () => {
-  it('drops the failure and leaves everything else alone', () => {
-    const signedIn = afterSignIn(userInfo({ tenants: [tenant('a')], activeTenant: tenant('a') }))
-    const failed = authSlice.reducer(signedIn, setTenantError('tenantSuspended'))
-    const state = authSlice.reducer(failed, clearTenantError())
-
-    expect(state.tenantError).toBeUndefined()
-    expect(state.isAuthenticated).toBe(true)
-    expect(state.activeTenant).toEqual(tenant('a'))
   })
 })
 
 describe('signout', () => {
   it('leaves no tenant selection for the next user of the browser', () => {
     const signedIn = afterSignIn(userInfo({ tenants: [tenant('a'), tenant('b')], activeTenantId: 'a', activeTenant: tenant('a') }))
-    const failed = authSlice.reducer(signedIn, setTenantError('tenantSuspended'))
-    const state = authSlice.reducer(failed, signout())
+    const state = authSlice.reducer(signedIn, signout())
 
     expect(state).toEqual(authSlice.getInitialState())
   })

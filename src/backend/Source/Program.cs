@@ -61,6 +61,16 @@ bld.Services
             ? CookieSecurePolicy.SameAsRequest
             : CookieSecurePolicy.Always;
         options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;
+
+        // Load-bearing, and the reason is not the cookie's lifetime but what expiring it forces.
+        // Roles, permissions and the tenant are decided when a session is minted and trusted until it
+        // is replaced, and the refresh is the only place they are read again - so a session that never
+        // expires is a session whose authority is never revisited. Sliding expiration re-issues the
+        // cookie carrying the ticket it already had, which would leave an open browser tab holding a
+        // revoked membership or a suspended tenant's permissions for as long as somebody kept clicking.
+        // Letting the cookie expire on the same clock as the access token is what sends the browser
+        // through the refresh endpoint, where the account and its tenant are re-read.
+        options.SlidingExpiration = false;
     })
     .AddAuthenticationJwtBearer(x => x.SigningKey = bld.Configuration["Auth:Jwt:Key"])
     .AddAuthentication(o =>
@@ -85,7 +95,7 @@ bld.Services.AddAuthorization();
 // Endpoint authorization is evaluated before the tenant enforcement point and against the permissions
 // the request currently holds, so a caller whose tenant selection went stale is refused there - with a
 // bare 403 - before the enforcement point can say why. This gives that refusal its reason.
-bld.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, TenantRefusalResultHandler>();
+bld.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationRefusalResultHandler>();
 bld.Services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
 {
     options.TokenValidationParameters.ValidateIssuer = true;
@@ -190,7 +200,6 @@ if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"
 
 app.UseCors()
    .UseAuthentication()
-   .UseMiddleware<SessionValidationMiddleware>()
    .UseRateLimiter()
    .UseAuthorization();
 

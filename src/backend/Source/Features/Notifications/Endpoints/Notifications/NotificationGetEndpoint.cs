@@ -13,7 +13,6 @@ using Backend.Features.Notifications.Core.Entities;
 /// its whole membership, and the platform-wide ones. Both halves matter here - a notification of another
 /// tenant is not the caller's to read, and a platform-wide one is, whichever tenant they act in.
 /// </remarks>
-[AllowPlatformNoTenant]
 sealed class NotificationGetEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext) : Endpoint<NotificationGetRequest, NotificationGetResponse>
 {
     public override void Configure()

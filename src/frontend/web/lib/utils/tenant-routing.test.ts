@@ -7,7 +7,6 @@ import {
   isTenantScopedPath,
   resolvePlatformLanding,
   resolveTenantLanding,
-  tenantRefusalReasonKey,
 } from './tenant-routing'
 
 /** A tenant the caller holds an active membership in, as the account info endpoint reports it. */
@@ -42,7 +41,6 @@ describe('isTenantScopedPath', () => {
     '/change-password',
     '/unauthorized',
     '/select-tenant',
-    '/no-tenant',
   ])('treats %s as reachable with no tenant at all', (pathname) => {
     expect(isTenantScopedPath(pathname)).toBe(false)
   })
@@ -203,8 +201,8 @@ describe('resolveTenantLanding', () => {
     expect(resolveTenantLanding(undefined)).toBeNull()
   })
 
-  it('sends a caller who belongs to no tenant to the screen that explains it', () => {
-    expect(resolveTenantLanding(userInfo({ tenants: [] }))).toBe('/no-tenant')
+  it('sends a caller who belongs to no tenant to the chooser, which says so and offers the way out', () => {
+    expect(resolveTenantLanding(userInfo({ tenants: [] }))).toBe('/select-tenant')
   })
 
   it('sends a caller with tenants to choose among but none chosen to the chooser', () => {
@@ -224,7 +222,7 @@ describe('resolveTenantLanding', () => {
 
     expect(resolveTenantLanding(suspended)).toBe('/select-tenant')
     expect(resolveTenantLanding(deleted)).toBe('/select-tenant')
-    expect(resolveTenantLanding(revoked)).toBe('/no-tenant')
+    expect(resolveTenantLanding(revoked)).toBe('/select-tenant')
   })
 
   it('lets a caller whose selection still stands go wherever they were headed', () => {
@@ -238,8 +236,8 @@ describe('resolveTenantLanding', () => {
   })
 
   it('lands a platform administrator nowhere, with a tenant entered or without one', () => {
-    // They hold no membership, so the tenants listed for them are empty either way: the no-tenant
-    // screen would tell them something true and beside the point, and the chooser would be empty.
+    // They hold no membership, so the tenants listed for them are empty either way: the chooser
+    // would be empty, and sending them there would say something true and beside the point.
     const outside = userInfo({ isPlatform: true, tenants: [] })
     const inside = userInfo({
       isPlatform: true,
@@ -256,37 +254,5 @@ describe('resolveTenantLanding', () => {
     const member = userInfo({ tenants: [tenant('b')], activeTenantId: 'a', activeTenant: tenant('a') })
 
     expect(resolveTenantLanding(member)).toBe('/select-tenant')
-  })
-})
-
-/**
- * The reason a caller was sent to the chooser travels as the error code the API refused their last
- * request with, so what the chooser explains is decided here rather than in the screen (AC-070).
- */
-describe('tenantRefusalReasonKey', () => {
-  it('explains a suspension in its own words, so a tenant being down reads differently from a choice not made', () => {
-    expect(tenantRefusalReasonKey('tenantSuspended')).toBe('page.selectTenant.suspendedReason')
-  })
-
-  it.each(['tenantMembershipRevoked', 'notTenantMember'])(
-    'explains %s as the membership having ended, however the API reported it',
-    (code) => {
-      expect(tenantRefusalReasonKey(code)).toBe('page.selectTenant.revokedReason')
-    }
-  )
-
-  it.each(['tenantNotFound', 'noActiveTenant'])('explains %s as no usable tenant standing', (code) => {
-    expect(tenantRefusalReasonKey(code)).toBe('page.selectTenant.unavailableReason')
-  })
-
-  it.each(['permissionDenied', 'authenticationRequired', 'somethingAddedLater'])(
-    'shows no reason for %s rather than a raw key, because it is not a tenant going away',
-    (code) => {
-      expect(tenantRefusalReasonKey(code)).toBeUndefined()
-    }
-  )
-
-  it.each([undefined, null, ''])('shows no reason when the caller arrived with none, as on a first gate', (code) => {
-    expect(tenantRefusalReasonKey(code)).toBeUndefined()
   })
 })

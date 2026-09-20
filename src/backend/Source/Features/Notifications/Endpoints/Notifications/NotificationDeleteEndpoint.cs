@@ -6,7 +6,6 @@ using Backend.Features.Identity.Core;
 /// <summary>
 /// DELETE endpoint that removes a user-targeted notification owned by the current user.
 /// </summary>
-[AllowPlatformNoTenant]
 sealed class NotificationDeleteEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService) : Endpoint<NotificationDeleteRequest, NotificationDeleteResponse>
 {
     public override void Configure()

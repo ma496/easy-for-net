@@ -11,7 +11,7 @@ using Backend.Features.FileManagement.Core;
 /// Authentication is required - the endpoint declares no anonymous access, so an unauthenticated
 /// caller is refused with the standard 401 and never reaches a stored file at all.
 /// <para>
-/// Marked <see cref="AllowNoTenantAttribute"/> because an account-owned file, a profile image above
+/// Usable with no tenant established, because an account-owned file, a profile image above
 /// all, has to be readable by its owner while they act in any tenant or in none. The exemption is
 /// from the global tenant requirement only: the file's own attribution still decides the answer, and
 /// this endpoint reports each verdict distinctly - a name no record matches is a 404, a file
@@ -22,7 +22,6 @@ using Backend.Features.FileManagement.Core;
 /// nothing that is not the caller's own tenant's or account's.
 /// </para>
 /// </remarks>
-[AllowNoTenant]
 sealed class FileGetEndpoint(IFileService fileService) : Endpoint<FileGetRequest>
 {
     /// <summary>

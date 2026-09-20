@@ -34,12 +34,12 @@ public class TenantErrorCodesTests
         [nameof(ErrorCodes.TenantSuspended)] = "tenantSuspended",
         [nameof(ErrorCodes.NotTenantMember)] = "notTenantMember",
         [nameof(ErrorCodes.NoActiveTenant)] = "noActiveTenant",
+        [nameof(ErrorCodes.TenantRequired)] = "tenantRequired",
         [nameof(ErrorCodes.TenantIdentifierAlreadyExists)] = "tenantIdentifierAlreadyExists",
         [nameof(ErrorCodes.DuplicateTenantMembership)] = "duplicateTenantMembership",
         [nameof(ErrorCodes.LastTenantAdministrator)] = "lastTenantAdministrator",
         [nameof(ErrorCodes.SystemCreatedTenantCannotBeModified)] = "systemCreatedTenantCannotBeModified",
         [nameof(ErrorCodes.CrossTenantFileAccess)] = "crossTenantFileAccess",
-        [nameof(ErrorCodes.TenantMembershipRevoked)] = "tenantMembershipRevoked",
         [nameof(ErrorCodes.PlatformPermissionNotGrantable)] = "platformPermissionNotGrantable",
         [nameof(ErrorCodes.ConcurrentModification)] = "concurrentModification"
     };

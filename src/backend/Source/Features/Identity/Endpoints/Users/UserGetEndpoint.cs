@@ -6,7 +6,6 @@ using Backend.Features.Identity.Core.Entities;
 /// <summary>
 /// This endpoint that handles <c>GET /users/{id}</c> to return a single user with their role assignments.
 /// </summary>
-[AllowPlatformNoTenant]
 sealed class UserGetEndpoint(IUserService userService) : Endpoint<UserGetRequest, UserGetResponse>
 {
     public override void Configure()

@@ -7,11 +7,11 @@ import { FormInput, FormPasswordInput } from '@/components/ui/form'
 import { useSignupMutation, useResendVerifyEmailMutation } from '@/store/api/identity'
 import { Button, LocalizedLink } from '@/components/ui'
 import { useState, useEffect } from 'react'
-import { Mail, Lock, CheckCircle } from 'lucide-react'
+import { Mail, Lock, CheckCircle, Building2 } from 'lucide-react'
 import { apiErrorAlert, successToast } from '@/lib/utils'
 
 /**
- * Interactive client-side form that registers a new user with username, email, and password.
+ * Interactive client-side form that registers a new user together with the tenant they will work in.
  * Shows a success view after registration and optionally offers a resend-verification-email countdown when email verification is required.
  */
 export const SignupForm = () => {
@@ -51,6 +51,20 @@ export const SignupForm = () => {
     confirmPassword: Yup.string()
       .required(t('validation.required'))
       .oneOf([Yup.ref('password')], t('validation.mustMatch', { otherField: t('form.label.password') })),
+    // Signing up creates the tenant the account will work in: an account belonging to none could
+    // exercise no permission at all, so there is no useful half-way state to leave somebody in. The
+    // bounds mirror the API's own tenant rules, so the form refuses what the server would refuse.
+    tenantName: Yup.string()
+      .trim()
+      .required(t('validation.required'))
+      .min(2, t('validation.minLength', { min: 2 }))
+      .max(100, t('validation.maxLength', { max: 100 })),
+    tenantIdentifier: Yup.string()
+      .trim()
+      .required(t('validation.required'))
+      .min(3, t('validation.minLength', { min: 3 }))
+      .max(50, t('validation.maxLength', { max: 50 }))
+      .matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, t('validation.tenantIdentifier')),
   })
 
   type SignupFormValues = Yup.InferType<typeof validationSchema>
@@ -118,13 +132,25 @@ export const SignupForm = () => {
   }
 
   return (
-    <Formik initialValues={{ username: '', email: '', password: '', confirmPassword: '' }} validationSchema={validationSchema} onSubmit={submitForm}>
+    <Formik
+      initialValues={{ username: '', email: '', password: '', confirmPassword: '', tenantName: '', tenantIdentifier: '' }}
+      validationSchema={validationSchema}
+      onSubmit={submitForm}
+    >
       {() => (
         <Form className="space-y-5 dark:text-white">
           <FormInput label={t('form.label.username')} name="username" placeholder={t('form.placeholder.username')} icon={<Mail size={16} />} autoFocus={true} required={true} />
           <FormInput label={t('form.label.email')} name="email" placeholder={t('form.placeholder.email')} icon={<Mail size={16} />} required={true} />
           <FormPasswordInput label={t('form.label.password')} name="password" placeholder={t('form.placeholder.password')} icon={<Lock size={16} />} required={true} />
           <FormPasswordInput label={t('form.label.confirmPassword')} name="confirmPassword" placeholder={t('form.placeholder.confirmPassword')} icon={<Lock size={16} />} required={true} />
+
+          <div className="border-t border-white-light pt-5 dark:border-[#1b2e4b]">
+            <p className="mb-4 text-sm font-semibold">{t('page.auth.signup.tenantSectionTitle')}</p>
+            <div className="space-y-5">
+              <FormInput label={t('form.label.tenantName')} name="tenantName" placeholder={t('form.placeholder.tenantName')} icon={<Building2 size={16} />} required={true} />
+              <FormInput label={t('form.label.tenantIdentifier')} name="tenantIdentifier" placeholder={t('form.placeholder.tenantIdentifier')} icon={<Building2 size={16} />} required={true} />
+            </div>
+          </div>
 
           <div className="flex justify-end gap-2">
             <span className="text-sm">{t('page.auth.signup.alreadyHaveAccount')}</span>

@@ -15,7 +15,6 @@ using Backend.Features.Tenancy.Core;
 /// else. Nothing is written before all three guards have passed, so a rejected rename persists no
 /// part of itself.
 /// </remarks>
-[AllowNoTenant]
 sealed class TenantUpdateEndpoint(ITenantService tenantService, AppDbContext dbContext)
     : Endpoint<TenantUpdateRequest, TenantUpdateResponse>
 {
@@ -84,7 +83,7 @@ public sealed class TenantUpdateRequest : BaseDto<Guid>
 /// <summary>
 /// FluentValidation rules for a tenant update request. The display-name and identifier rules are the
 /// shared ones, so a rename is held to exactly the bounds and the shape creation and self-service
-/// onboarding are held to, and every failure names the field that broke them.
+/// sign-up are held to, and every failure names the field that broke them.
 /// </summary>
 sealed class TenantUpdateValidator : Validator<TenantUpdateRequest>
 {

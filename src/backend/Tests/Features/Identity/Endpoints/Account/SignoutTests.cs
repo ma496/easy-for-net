@@ -68,14 +68,27 @@ public class SignoutTests(App app) : TenancyTestsBase(app)
         (await SessionTenantsAsync(account.Id)).Should().BeEmpty(
             "signing out discards the session, and with it the tenant the session was acting in");
 
-        // A fresh sign-in on the same browser: the account still belongs to both tenants, so nothing
-        // decides between them, and a selection that had survived would decide it.
-        var afterSignout = await ClientForAsync(account.Username);
+        // A fresh sign-in on the same browser: the account belongs to both tenants, so nothing decides
+        // between them and the caller has to name one. A selection that had survived the sign-out would
+        // decide it instead, and the sign-in would be answered without a tenant being named.
+        var afterSignout = App.CreateClient(new ClientOptions { HandleCookies = false });
+
+        var (unnamed, refusal) = await afterSignout
+            .POSTAsync<TokenEndpoint, TokenRequest, ProblemDetails>(
+                new() { Username = account.Username, Password = TestUsers.DefaultPassword });
+
+        unnamed.StatusCode.Should().Be(HttpStatusCode.BadRequest,
+            "the previous selection was discarded with the session rather than kept for the next one");
+        refusal.Errors.Should().ContainSingle();
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.TenantRequired);
+
+        // And the memberships themselves are untouched: naming either tenant signs the caller in.
+        await TestsHelper.SetNewAuthTokenAsync(afterSignout, account.Username, TestUsers.DefaultPassword, other.Identifier);
 
         var (afterResponse, after) = await afterSignout.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
 
         afterResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        after.ActiveTenantId.Should().BeNull("the previous selection was discarded with the session rather than kept for the next one");
+        after.ActiveTenantId.Should().Be(other.Id, "the tenant named on the fresh sign-in is the one being acted in");
         after.Tenants.Select(tenant => tenant.Id).Should().BeEquivalentTo([acted.Id, other.Id],
             "the memberships are untouched, so the caller is offered the choice again rather than left without one");
     }

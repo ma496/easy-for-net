@@ -35,10 +35,16 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
     private const string SoftDeleteFilterKey = "SoftDelete";
 
     /// <summary>
-    /// Verifies that removing a member revokes their membership and their access to the tenant's data
-    /// on their next request, while leaving the account and its membership of another tenant intact -
-    /// and without a sign-in, a password change or a session being ended (AC-018, AC-020).
+    /// Verifies that removing a member revokes their membership and, at their session's next renewal,
+    /// their access to the tenant's data - while leaving the account and its membership of another
+    /// tenant intact, and without a sign-in, a password change or a session being ended
+    /// (AC-018, AC-020).
     /// </summary>
+    /// <remarks>
+    /// The renewal is where the removal reaches a live session: what a session may do is decided when
+    /// its token is minted and trusted until that token is replaced, so the access token the member
+    /// already holds goes on working for the rest of its validity.
+    /// </remarks>
     [Fact]
     public async Task Valid_Input()
     {
@@ -52,14 +58,14 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         var cancellationToken = TestContext.Current.CancellationToken;
         await MembershipService.AddAsync(remainingTenant.Id, member.Id, [roleInRemaining], cancellationToken);
 
-        // Both clients are made before the removal, because a client's identity is established by
-        // selecting a tenant and the tenant about to be removed can no longer be selected afterwards.
-        var removedClient = await ClientForAsync(member.Username, removedTenant.Id);
-        var remainingClient = await ClientForAsync(member.Username, remainingTenant.Id);
+        // Both sessions are established before the removal, because a session names the tenant it was
+        // signed in to and the tenant about to be removed can no longer be signed in to afterwards.
+        var removedSession = await SessionForAsync(member.Username, removedTenant.Id);
+        var remainingSession = await SessionForAsync(member.Username, remainingTenant.Id);
 
         await SetPlatformAdminAuthTokenAsync();
 
-        var (admitted, _) = await removedClient.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
+        var (admitted, _) = await removedSession.Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
 
         admitted.StatusCode.Should().Be(HttpStatusCode.OK, "the member holds the permission in this tenant, and belongs to it");
 
@@ -70,20 +76,28 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         removed.Success.Should().BeTrue();
 
-        var (refused, refusal) = await removedClient.GETAsync<UserListEndpoint, UserListRequest, ProblemDetails>(new());
+        // The renewal succeeds - the account is still who it was - and hands back a session that no
+        // longer names the tenant the member was removed from.
+        await removedSession.RenewAsync();
+
+        var (refused, refusal) = await removedSession.Client.GETAsync<UserListEndpoint, UserListRequest, ProblemDetails>(new());
 
         refused.StatusCode.Should().Be(HttpStatusCode.Forbidden, "the membership that admitted the member is gone, and the tenant is still in service");
         refused.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized, "the removal ends no session and asks for no credentials");
         refusal.Errors.Should().ContainSingle();
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.TenantMembershipRevoked);
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied,
+            "the renewed session carries no tenant and therefore no permission");
 
         // The other tenant is untouched in every part: the membership stands, the roles held there stand,
-        // and a session acting in it goes on being answered.
+        // and a session acting in it goes on being answered - across a renewal of its own, so that what
+        // is shown is the membership surviving rather than a token that had not yet been re-read.
         (await MembershipService.IsMemberAsync(remainingTenant.Id, member.Id, cancellationToken))
             .Should().BeTrue("a membership of one tenant is not a membership of another");
         (await GrantedRolesAsync(remainingTenant.Id, member.Id)).Should().Equal([roleInRemaining]);
 
-        var (stillAdmitted, _) = await remainingClient.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
+        await remainingSession.RenewAsync();
+
+        var (stillAdmitted, _) = await remainingSession.Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
 
         stillAdmitted.StatusCode.Should().Be(HttpStatusCode.OK, "removing the member from one tenant does not invalidate their access to another");
     }

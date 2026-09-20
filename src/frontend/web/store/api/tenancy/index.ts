@@ -15,7 +15,6 @@ export {
   useTenantMemberAddMutation,
   useTenantMemberUpdateRolesMutation,
   useTenantMemberRemoveMutation,
-  useTenantOnboardMutation,
   useTenantSwitchMutation,
   useTenantExitMutation,
 } from './tenants/tenants-api'
@@ -40,8 +39,6 @@ export type {
   TenantMemberRemoveResponse,
   TenantMemberUpdateRolesRequest,
   TenantMemberUpdateRolesResponse,
-  TenantOnboardRequest,
-  TenantOnboardResponse,
   TenantReactivateRequest,
   TenantReactivateResponse,
   TenantSessionDto,

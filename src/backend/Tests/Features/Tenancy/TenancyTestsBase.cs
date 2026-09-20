@@ -3,6 +3,7 @@ namespace Backend.Tests.Features.Tenancy;
 using Backend.Data.Entities;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Tenancy.Core;
 using Backend.Tenancy;
 
@@ -200,7 +201,7 @@ public abstract class TenancyTestsBase(App app) : AppTestsBase(app)
     /// later requests on it are made by that caller. Leaves the client authenticated as that account.
     /// </summary>
     /// <param name="username">The account to sign in as.</param>
-    /// <param name="tenantId">The tenant to act in, or <see langword="null"/> to leave the account in whatever state sign-in resolved.</param>
+    /// <param name="tenantId">The tenant to sign in to, or <see langword="null"/> to let sign-in resolve it - which it does only for an account holding exactly one active membership, or for a platform account.</param>
     protected async Task SignInAsAsync(string username, Guid? tenantId = null)
         => await SetAuthTokenAsync(username, TestUsers.DefaultPassword, tenantId);
 
@@ -210,14 +211,14 @@ public abstract class TenancyTestsBase(App app) : AppTestsBase(app)
     /// identity has to have a client of its own rather than sharing that one.
     /// </summary>
     /// <param name="username">The account the new client is to act as.</param>
-    /// <param name="tenantId">The tenant that client is to act in, or <see langword="null"/> to leave it in whatever state sign-in resolved.</param>
+    /// <param name="tenantId">The tenant that client is to sign in to, or <see langword="null"/> to let sign-in resolve it.</param>
     /// <returns>A client presenting that account's bearer token and nothing else.</returns>
     protected async Task<HttpClient> ClientForAsync(string username, Guid? tenantId = null)
     {
         // Cookies are not carried, so the client's identity is exactly the bearer token set here and
         // can never drift to whoever last re-established a session through this handler.
         var client = App.CreateClient(new ClientOptions { HandleCookies = false });
-        await TestsHelper.SetNewAuthTokenAsync(client, username, TestUsers.DefaultPassword, tenantId);
+        await TestsHelper.SetNewAuthTokenAsync(client, username, TestUsers.DefaultPassword, await TenantIdentifierOfAsync(tenantId));
         return client;
     }
 
@@ -232,6 +233,88 @@ public abstract class TenancyTestsBase(App app) : AppTestsBase(app)
     {
         using var tenantScope = TenantContext.BeginTenant(tenantId);
         await action();
+    }
+
+    /// <summary>
+    /// The route the refresh-token service registers. A renewal is taken with the refresh token as its
+    /// own credential rather than through a signed-in client, so it is addressed directly.
+    /// </summary>
+    private const string RefreshRoute = "api/account/refresh-token";
+
+    /// <summary>
+    /// Signs an account in on a client of its own and keeps the refresh token beside it, so the test
+    /// can renew that session rather than only make requests with it.
+    /// </summary>
+    /// <remarks>
+    /// What a session may do is decided when its token is minted and trusted until the token is
+    /// replaced, so a change made to a caller's standing - a role replaced, a membership revoked, the
+    /// tenant suspended - reaches a live session at its next renewal. A test that wants to show the
+    /// change taking effect therefore has to renew, which is what this exists for.
+    /// </remarks>
+    /// <param name="username">The account to sign in as.</param>
+    /// <param name="tenantId">The tenant to sign in to, or <see langword="null"/> to let sign-in resolve it.</param>
+    /// <returns>The session, holding the client and the credential its renewal is taken with.</returns>
+    protected async Task<RenewableSession> SessionForAsync(string username, Guid? tenantId = null)
+    {
+        var client = App.CreateClient(new ClientOptions { HandleCookies = false });
+
+        var (response, signedIn) = await client.POSTAsync<TokenEndpoint, TokenRequest, TokenResponse>(new()
+        {
+            Username = username,
+            Password = TestUsers.DefaultPassword,
+            TenantIdentifier = await TenantIdentifierOfAsync(tenantId)
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK, "a test that signs an account in must actually have signed it in");
+
+        TestsHelper.SetAuthToken(client, signedIn.AccessToken);
+
+        return new RenewableSession(App, client, Guid.Parse(signedIn.UserId), signedIn.RefreshToken);
+    }
+
+    /// <summary>
+    /// A signed-in caller together with the refresh token its session was issued, so a test can renew
+    /// the session the way a real client does and observe what the renewal picks up.
+    /// </summary>
+    /// <param name="app">The application fixture, for the anonymous client a renewal is taken on.</param>
+    /// <param name="client">The client presenting this session's access token.</param>
+    /// <param name="userId">The account the session belongs to.</param>
+    /// <param name="refreshToken">The refresh token the session currently holds.</param>
+    protected sealed class RenewableSession(App app, HttpClient client, Guid userId, string refreshToken)
+    {
+        /// <summary>Gets the client presenting this session's access token.</summary>
+        public HttpClient Client { get; } = client;
+
+        /// <summary>Gets the account the session belongs to.</summary>
+        public Guid UserId { get; } = userId;
+
+        /// <summary>Gets the refresh token the session currently holds; a renewal replaces it.</summary>
+        public string RefreshToken { get; private set; } = refreshToken;
+
+        /// <summary>
+        /// Renews the session and leaves the client presenting the token the renewal issued, so later
+        /// requests are made with whatever standing the renewal decided the caller now has.
+        /// </summary>
+        /// <returns>The access token the renewal issued.</returns>
+        public async Task<string> RenewAsync()
+        {
+            // No bearer token: the refresh token is the credential, so the renewal is an anonymous
+            // request and what it re-establishes comes from the stored row rather than from anything
+            // the caller asserts for itself.
+            var anonymous = app.CreateClient(new ClientOptions { HandleCookies = false });
+
+            var (response, renewed) = await anonymous
+                .POSTAsync<FastEndpoints.Security.TokenRequest, TokenResponse>(
+                    RefreshRoute,
+                    new() { UserId = UserId.ToString(), RefreshToken = RefreshToken });
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK, "the session is renewed rather than ended: the account is still who it was");
+
+            RefreshToken = renewed.RefreshToken;
+            TestsHelper.SetAuthToken(Client, renewed.AccessToken);
+
+            return renewed.AccessToken;
+        }
     }
 
     /// <summary>

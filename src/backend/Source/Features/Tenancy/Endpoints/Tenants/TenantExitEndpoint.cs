@@ -20,13 +20,12 @@ using Backend.Features.Identity.Core;
 /// closed to it rather than offered and then regretted.
 /// </para>
 /// <para>
-/// Marked <see cref="AllowNoTenantAttribute"/> because it is one of the places a tenant is
+/// Usable with no tenant established, because it is one of the places a tenant is
 /// established - here by establishing none. Asking for one already active would be redundant, and
 /// calling it while already in platform scope is deliberately not an error: the session is reissued
 /// naming no tenant either way, which is the state the caller asked for.
 /// </para>
 /// </remarks>
-[AllowNoTenant]
 sealed class TenantExitEndpoint(ITenantAuthorizationService tenantAuthorizationService,
                                 ICurrentUserService currentUserService) : EndpointWithoutRequest<TenantExitResponse>
 {

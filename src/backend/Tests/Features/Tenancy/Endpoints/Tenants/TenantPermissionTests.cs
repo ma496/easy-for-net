@@ -33,9 +33,9 @@ using System.Net.Http.Json;
 /// follows the declarations exactly.
 /// </para>
 /// <para>
-/// The endpoints on this surface are all marked <see cref="AllowNoTenantAttribute"/>, which is what
-/// makes the refusals below permission refusals rather than tenant ones: an endpoint exempt from the
-/// tenant requirement runs for a caller whose tenant is unusable, so whatever it turns away, it turns
+/// The endpoints on this surface declare no tenant-scoped permission of their own, which is what
+/// makes the refusals below permission refusals rather than tenant ones: nothing here is refused for
+/// want of a tenant, so whatever one of them turns away, it turns
 /// away for want of authority. Each refusal is therefore asserted on both halves of AC-045 - the
 /// standard forbidden status, and the error code that says the caller's roles are what fell short -
 /// which is the same code a caller acting in a healthy tenant without the permission is refused with.
@@ -92,14 +92,13 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
         [typeof(TenantMemberRemoveEndpoint)] = [Allow.TenantMember_Remove],
         [typeof(TenantMemberUpdateRolesEndpoint)] = [Allow.TenantMember_UpdateRoles],
 
-        // No permission at all, and deliberately so: these three are how a caller acquires or leaves a
+        // No permission at all, and deliberately so: these two are how a caller chooses or leaves a
         // tenant to act in, so gating them behind a permission held inside a tenant would be circular -
         // and for exit it would be impossible, since a session inside a tenant carries the tenant scope
         // alone and any platform-scoped permission has been narrowed away. Exit is gated by the account
-        // tier in its handler instead; the other two by authentication, which is the whole of what they
+        // tier in its handler instead; the switch by authentication, which is the whole of what it
         // require.
         [typeof(TenantExitEndpoint)] = [],
-        [typeof(TenantOnboardEndpoint)] = [],
         [typeof(TenantSwitchEndpoint)] = []
     };
 

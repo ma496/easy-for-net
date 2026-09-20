@@ -9,7 +9,7 @@ using Backend.Features.Tenancy.Core;
 /// so the administration screens can show a single tenant and fill the form that edits it.
 /// </summary>
 /// <remarks>
-/// Marked <see cref="AllowNoTenantAttribute"/> because a tenant is the scope rather than something
+/// Usable with no tenant established, because a tenant is the scope rather than something
 /// inside one: a platform administrator acting in no tenant, and a member who has not yet chosen
 /// between the tenants they belong to, both have to be able to read one.
 /// Which tenants the caller may read is <see cref="ITenantService.Tenants"/>'s decision alone - every
@@ -24,7 +24,6 @@ using Backend.Features.Tenancy.Core;
 /// answers only with tenants the caller has standing in.
 /// </para>
 /// </remarks>
-[AllowNoTenant]
 sealed class TenantGetEndpoint(ITenantService tenantService) : Endpoint<TenantGetRequest, TenantGetResponse>
 {
     /// <summary>

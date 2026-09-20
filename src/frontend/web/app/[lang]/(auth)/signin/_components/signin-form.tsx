@@ -16,11 +16,9 @@ import { isValidRedirectPath } from '@/lib/utils/redirect'
 
 /**
  * Interactive client-side form that authenticates a user with username/password and routes them to the appropriate landing page.
- * Where that is depends on the tenants the account may work in: straight on to the intended screen when the server already made a
- * tenant active, to the chooser when no selection stands but there are tenants to pick from, and to the no-tenant screen
- * when the account belongs to none. Naming a tenant on the form settles it up front, so a person who belongs to several and
- * knows which one they came to work in skips the chooser; naming one they cannot act in refuses the sign-in rather than
- * quietly starting them somewhere else.
+ * An ordinary account signs in to exactly one tenant: the server resolves it when the account belongs to one, and asks for the
+ * tenant field when it belongs to several or to none. Naming a tenant that cannot be acted in refuses the sign-in rather than
+ * quietly starting them somewhere else. A platform administrator needs no tenant and goes straight on.
  * Manages a verification-message sub-state with a resend-email countdown for accounts whose email is not yet verified.
  */
 export const SigninForm = () => {
@@ -93,12 +91,11 @@ export const SigninForm = () => {
     if (userInfoRes.data) {
       dispatch(setUserInfo(userInfoRes.data))
 
-      // Sign-in only establishes an active tenant when the answer is unambiguous: an account with a
-      // single usable membership is put into it by the server, and lands on the screen it asked for.
-      // An account with several and no choice made yet has no active tenant, and one with none at all
-      // never will here, so both are sent to their landing screen instead - ahead of the `redirect`
-      // parameter, since honouring it would open a tenant-scoped screen with no tenant behind it.
-      // A platform administrator acting in no tenant is the exception: they work platform-wide and need none.
+      // An ordinary account arrives here already acting in a tenant - the server resolved its single
+      // membership, or refused the sign-in until one was named - so the landing below is for the case
+      // that survives: a selection that stopped being usable while an earlier session was open. It is
+      // decided ahead of the `redirect` parameter, since honouring that would open a tenant-scoped
+      // screen with no tenant behind it. A platform administrator acting in no tenant needs none.
       const validRedirect = redirectTo && isValidRedirectPath(redirectTo) ? redirectTo : null
       const platformLanding = resolvePlatformLanding(userInfoRes.data, validRedirect)
       if (platformLanding) {

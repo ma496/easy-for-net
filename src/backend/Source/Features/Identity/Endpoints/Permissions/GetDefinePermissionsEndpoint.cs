@@ -15,7 +15,6 @@ using Backend.Features.Identity.Core;
 /// one that could not be granted through the role being edited. Each definition carries its
 /// <see cref="PermissionDefinition.Scope"/>, so the tiers stay distinguishable in the response.
 /// </remarks>
-[AllowPlatformNoTenant]
 sealed class GetDefinePermissionsEndpoint(
     IPermissionDefinitionService permissionDefinitionService,
     ICurrentUserService currentUserService,

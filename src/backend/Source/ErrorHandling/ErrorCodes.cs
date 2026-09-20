@@ -1,4 +1,4 @@
-namespace Backend.ErrorHandling;
+﻿namespace Backend.ErrorHandling;
 
 /// <summary>
 /// Central catalog of stable, machine-readable error codes returned to API
@@ -38,12 +38,12 @@ public static class ErrorCodes
     public const string TenantSuspended = "tenantSuspended";
     public const string NotTenantMember = "notTenantMember";
     public const string NoActiveTenant = "noActiveTenant";
+    public const string TenantRequired = "tenantRequired";
     public const string TenantIdentifierAlreadyExists = "tenantIdentifierAlreadyExists";
     public const string DuplicateTenantMembership = "duplicateTenantMembership";
     public const string LastTenantAdministrator = "lastTenantAdministrator";
     public const string SystemCreatedTenantCannotBeModified = "systemCreatedTenantCannotBeModified";
     public const string CrossTenantFileAccess = "crossTenantFileAccess";
-    public const string TenantMembershipRevoked = "tenantMembershipRevoked";
     public const string PlatformPermissionNotGrantable = "platformPermissionNotGrantable";
     public const string ConcurrentModification = "concurrentModification";
     public const string UserSharedAcrossTenants = "userSharedAcrossTenants";

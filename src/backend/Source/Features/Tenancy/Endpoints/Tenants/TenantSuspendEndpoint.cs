@@ -16,7 +16,6 @@ using Backend.Features.Tenancy.Core;
 /// is already suspended is accepted and changes nothing, because suspension describes a state to
 /// reach rather than a transition to make.
 /// </remarks>
-[AllowNoTenant]
 sealed class TenantSuspendEndpoint(ITenantService tenantService, AppDbContext dbContext) : Endpoint<TenantSuspendRequest, TenantSuspendResponse>
 {
     /// <summary>

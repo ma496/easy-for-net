@@ -14,7 +14,6 @@ using Backend.Features.Notifications.Core.Entities;
 /// is reachable from whichever tenant the caller acts in - which is what lets a broadcast be marked read
 /// by one of its recipients.
 /// </remarks>
-[AllowPlatformNoTenant]
 sealed class NotificationMarkAsReadEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext) : Endpoint<NotificationMarkAsReadRequest, NotificationMarkAsReadResponse>
 {
     public override void Configure()

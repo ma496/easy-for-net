@@ -11,12 +11,11 @@ using Backend.Features.Identity.Core;
 /// reloading a page and switching tenant all read the same answer from the same place.
 /// </summary>
 /// <remarks>
-/// Marked <see cref="AllowNoTenantAttribute"/> because a caller with no usable membership - an
+/// Usable with no tenant established, because a caller with no usable membership - an
 /// account created by self-service sign-up that has joined nothing, or a member of several tenants
 /// who has not chosen between them yet - has to be able to ask this question: this answer is what
 /// tells them they belong to no active tenant, or which tenants they may choose from.
 /// </remarks>
-[AllowNoTenant]
 sealed class GetInfoEndpoint(AppDbContext dbContext,
                              ICurrentUserService currentUserService,
                              ITenantContext tenantContext)
@@ -51,27 +50,24 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
             return;
         }
 
-        // The tenant being acted in is read from the scope established for this request rather than
-        // from the session claim: the claim is only honoured when the tenant still exists, is not
-        // suspended and the caller still holds an active membership in it, so a selection that has
-        // gone stale arrives here as no active tenant at all and the caller is told to choose again.
+        // The tenant being acted in is read from the scope established for this request, which is the
+        // tenant the caller's session names and the one every other endpoint will act in for them. It
+        // is reported exactly as it stands, so what the web app believes the caller is working in is
+        // what the API is actually working in: the two are answered from the same place, and a tenant
+        // that has become unusable leaves the session at its next renewal rather than being hidden
+        // here while the rest of the API still honours it.
         var scopedTenantId = tenantContext.IsResolved ? tenantContext.CurrentTenantId : null;
 
         user.Tenants = await TenantsOfAsync(userId, cancellationToken);
 
-        // The active tenant is reported only when it is one of the tenants just listed, so what the
-        // caller is told they are working in is always one of the tenants they may work in. The two
-        // can only disagree for a selection that has just stopped being usable, and that one is
-        // discarded here rather than sent back for the caller to keep using.
+        // Read from the list where the caller holds a membership of the tenant, and from the tenants
+        // table otherwise. The two differ for a platform account by design: it enters a tenant on its
+        // tier and holds no membership in it, so that tenant is never among the ones listed above and
+        // would otherwise be reported as no active tenant at all - leaving the web app to send it
+        // straight back out of the tenant it just entered. Reading it separately keeps the list's
+        // meaning intact: the tenants a caller may select by membership.
         var activeTenant = user.Tenants.FirstOrDefault(tenant => tenant.Id == scopedTenantId);
-
-        // A platform account is the exception, because the two disagree for it by design: it enters a
-        // tenant on its tier and holds no membership in it, so that tenant is never among the ones
-        // listed above and would otherwise be reported as no active tenant at all - leaving the web app
-        // to send it straight back out of the tenant it just entered. The tenant is read here rather
-        // than added to the list, which keeps the list's meaning intact: the tenants a caller may select
-        // by membership. A platform account picks from the tenants table instead.
-        if (activeTenant is null && user.IsPlatform && scopedTenantId is { } enteredTenantId)
+        if (activeTenant is null && scopedTenantId is { } enteredTenantId)
         {
             activeTenant = await EnteredTenantAsync(enteredTenantId, cancellationToken);
         }
@@ -80,9 +76,9 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
         user.ActiveTenantId = activeTenant?.Id;
 
         // The grants reported are those of the tenant just reported as active, together with the
-        // caller's platform-scoped roles - exactly the set the session check computes a request's
-        // permissions from, so what the web app believes the caller may do matches what the API will
-        // actually allow. Authority held in the tenant left behind by a switch is not among them; a
+        // caller's platform-scoped roles - exactly the set a session acting in that tenant is minted
+        // with, so what the web app believes the caller may do matches what the API will actually
+        // allow. Authority held in the tenant left behind by a switch is not among them; a
         // platform-scoped role is, because it belongs to no tenant and survives every switch. With no
         // active tenant only the platform-scoped roles remain, which for an ordinary account is an
         // empty list.
@@ -132,11 +128,10 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
     }
 
     /// <summary>
-    /// The tenant a platform administrator has entered, read by identity alone. Membership is not
-    /// asked about, because the whole point of the read is a caller who holds none; the tenant's
-    /// lifecycle is not asked about either, because the session check has already settled it - a
-    /// suspended or deleted tenant leaves the request acting in no tenant, so nothing reaches here to
-    /// report.
+    /// The tenant the caller's session names when it is not one they hold a membership of - which is
+    /// what a platform account entering a tenant looks like. Membership is not asked about, because
+    /// the whole point of the read is a caller who holds none, and the lifecycle is reported rather
+    /// than judged: the status travels with the tenant so the web app can say what state it is in.
     /// </summary>
     /// <param name="tenantId">The tenant the request is acting in.</param>
     /// <param name="cancellationToken">Token used to cancel the read.</param>
@@ -173,29 +168,29 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
     /// <param name="cancellationToken">Token used to cancel the read.</param>
     /// <returns>The roles held there, ordered by name, each with the permissions it grants.</returns>
     /// <remarks>
-    /// The tenant is stated in the predicate rather than left to the query filter, because the roles
-    /// are read for the tenant reported as active, which is not always the scope the request is
-    /// running in - a stale selection leaves the request in platform scope - and because the same
-    /// read has to answer for the roles belonging to no tenant. Relaxing tenant restriction by name
-    /// leaves the soft-delete filter applied, so a deleted role stops granting what it granted.
+    /// The tenant is stated in the predicate rather than left to the query filter, because the same
+    /// read has to answer for the roles belonging to no tenant as well as for one tenant's own.
+    /// Relaxing tenant restriction by name leaves the soft-delete filter applied, so a deleted role
+    /// stops granting what it granted.
     /// <para>
-    /// The platform-scoped roles are included whichever tenant is named, because that is how a request
-    /// is authorized: the session check grants a platform-scoped role's permissions in every tenant,
-    /// narrowed to the scope being acted in. Leaving them out here would hide a platform account's own
-    /// permissions from the web app the moment it started working inside one of its tenants, and the
-    /// screens those permissions unlock would be refused by a client that the API would have admitted.
+    /// The platform-scoped roles are included whichever tenant is named, because that is how a session
+    /// is minted: a platform-scoped role's permissions are granted in every tenant, narrowed to the
+    /// scope being acted in. Leaving them out here would hide a platform account's own permissions
+    /// from the web app the moment it started working inside one of its tenants, and the screens those
+    /// permissions unlock would be refused by a client that the API would have admitted.
     /// </para>
     /// <para>
-    /// The permissions are narrowed by scope exactly as <see cref="SessionValidator"/> narrows them, so
-    /// what the web app believes the caller may do is what the API will actually allow: the tenant tier
+    /// The narrowing is <see cref="SessionGrants"/>' own, asked for here rather than restated, so what
+    /// the web app believes the caller may do is what the API will actually allow: the tenant tier
     /// inside a tenant, the platform tier in platform scope, and nothing at all for an ordinary account
-    /// that has no tenant active.
+    /// that has no tenant active. Only the projection differs - this one carries ids and display names
+    /// for the screens to read, where a session carries names alone.
     /// </para>
     /// </remarks>
     private async Task<List<UserGetInfoResponse.RoleDto>> RolesInAsync(Guid? userId, Guid? tenantId, bool isPlatform, CancellationToken cancellationToken)
     {
-        var viewScope = tenantId is null ? PermissionScope.Platform : PermissionScope.Tenant;
-        var exercisesPermissions = isPlatform || tenantId is not null;
+        var viewScope = SessionGrants.ScopeOf(tenantId);
+        var exercisesPermissions = SessionGrants.ExercisesPermissions(isPlatform, tenantId);
 
         return await dbContext.Roles
             .AsNoTracking()

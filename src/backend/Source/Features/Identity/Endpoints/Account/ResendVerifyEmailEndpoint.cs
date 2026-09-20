@@ -11,12 +11,11 @@ using Microsoft.Extensions.Options;
 /// has not yet verified their email address.
 /// </summary>
 /// <remarks>
-/// Marked <see cref="AllowNoTenantAttribute"/> because re-issuing the verification email is one of
+/// Usable with no tenant established, because re-issuing the verification email is one of
 /// the account self-service flows that has to work with no tenant established: it acts on the
 /// account's own email address, which an account created by self-service sign-up confirms before it
 /// belongs to any tenant.
 /// </remarks>
-[AllowNoTenant]
 sealed class ResendVerifyEmailEndpoint(IUserService userService,
                                ITokenService tokenService,
                                IEmailBackgroundJobs emailBackgroundJobs,

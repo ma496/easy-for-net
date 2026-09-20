@@ -9,7 +9,7 @@ using Backend.Features.Tenancy.Core;
 /// already exists a member of a tenant, holding exactly the roles of that tenant the request names.
 /// </summary>
 /// <remarks>
-/// Marked <see cref="AllowNoTenantAttribute"/> because the tenant being administered is the one
+/// Usable with no tenant established, because the tenant being administered is the one
 /// named in the route rather than the one the session acts in: a platform administrator adds members
 /// to a tenant they are not working in, and a tenant administrator whose session is in that tenant
 /// reaches the same surface. The route id is therefore never a way to choose the acting tenant - it
@@ -30,7 +30,6 @@ using Backend.Features.Tenancy.Core;
 /// everywhere else survives untouched.
 /// </para>
 /// </remarks>
-[AllowNoTenant]
 sealed class TenantMemberAddEndpoint(ITenantService tenantService,
                                      ITenantMembershipService tenantMembershipService,
                                      ITenantAuthorizationService tenantAuthorizationService,

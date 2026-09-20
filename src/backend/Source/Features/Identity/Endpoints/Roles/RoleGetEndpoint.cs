@@ -12,7 +12,6 @@ using Backend.Features.Identity.Core.Entities;
 /// name, not its permissions, not its existence - can be learned from this endpoint. A caller holding
 /// platform account reads any tenant's role by entering that tenant, which is how it reaches one at all.
 /// </remarks>
-[AllowPlatformNoTenant]
 sealed class RoleGetEndpoint(IRoleService roleService) : Endpoint<RoleGetRequest, RoleGetResponse>
 {
     public override void Configure()

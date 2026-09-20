@@ -34,7 +34,6 @@ using Backend.Features.Tenancy.Core;
 /// <see cref="ErrorCodes.LastTenantAdministrator"/> and writes nothing at all.
 /// </para>
 /// </remarks>
-[AllowNoTenant]
 sealed class TenantMemberRemoveEndpoint(ITenantService tenantService,
                                         ITenantMembershipService tenantMembershipService,
                                         ITenantAuthorizationService tenantAuthorizationService,

@@ -28,7 +28,7 @@ describe('getMatchedAuthUrl', () => {
     },
   )
 
-  it.each(['/select-tenant', '/no-tenant'])('guards %s without requiring a permission of its own', (url) => {
+  it.each(['/select-tenant'])('guards %s without requiring a permission of its own', (url) => {
     const matched = getMatchedAuthUrl(url)
 
     expect(matched).toBeDefined()
@@ -57,7 +57,7 @@ describe('getMatchedAuthUrl', () => {
 })
 
 describe('isAuthRequired', () => {
-  it.each(['/admin/tenants/list', '/admin/tenants/create', '/select-tenant', '/no-tenant'])(
+  it.each(['/admin/tenants/list', '/admin/tenants/create', '/select-tenant'])(
     'requires a signed-in caller for %s',
     (url) => {
       expect(isAuthRequired(url)).toBe(true)

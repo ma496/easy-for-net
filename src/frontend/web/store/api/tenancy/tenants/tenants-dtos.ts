@@ -119,21 +119,6 @@ export interface TenantMemberUpdateRolesResponse extends BaseDto<string> {
   roles: string[]
 }
 
-/** Request body for self-service onboarding, supplying the display name and identifier of the tenant to create. */
-export interface TenantOnboardRequest extends RequestBase {
-  name: string
-  identifier: string
-}
-
-/** Response from the onboarding endpoint, returning the new tenant and the re-established session bound to it. */
-export interface TenantOnboardResponse extends BaseDto<string> {
-  name: string
-  identifier: string
-  identifierNormalized: string
-  status: TenantStatus
-  session: TenantSessionDto
-}
-
 /** Request parameters for reactivating a suspended tenant by id. */
 export interface TenantReactivateRequest extends BaseDto<string>, RequestBase {}
 
@@ -142,7 +127,7 @@ export interface TenantReactivateResponse extends BaseDto<string> {
   status: TenantStatus
 }
 
-/** Session material returned when a tenant is switched to or established by onboarding, so a token client can carry on without re-entering credentials. */
+/** Session material returned when a tenant is switched to, so a token client can carry on without re-entering credentials. */
 export interface TenantSessionDto {
   userId: string
   accessToken: string

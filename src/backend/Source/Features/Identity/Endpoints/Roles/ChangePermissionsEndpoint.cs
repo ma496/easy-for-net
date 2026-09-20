@@ -16,7 +16,6 @@ using Backend.Features.Identity.Core.Entities;
 /// can never be granted through a role that belongs to a tenant, so no tenant can promote itself to
 /// platform authority by re-permissioning one of its own roles.
 /// </remarks>
-[AllowPlatformNoTenant]
 sealed class ChangePermissionsEndpoint(
     IRoleService roleService,
     IPermissionService permissionService)

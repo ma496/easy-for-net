@@ -13,7 +13,6 @@ using Backend.Features.Notifications.Core.Entities;
 /// platform-wide notifications, which name no tenant and therefore stay visible whichever tenant the caller
 /// is acting in. Notifications raised in the caller's other tenants are not listed.
 /// </summary>
-[AllowPlatformNoTenant]
 sealed class NotificationListEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext) : Endpoint<NotificationListRequest, NotificationListResponse>
 {
     public override void Configure()

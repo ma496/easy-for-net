@@ -38,12 +38,12 @@ const tenantErrorCodes = [
   'tenantSuspended',
   'notTenantMember',
   'noActiveTenant',
+  'tenantRequired',
   'tenantIdentifierAlreadyExists',
   'duplicateTenantMembership',
   'lastTenantAdministrator',
   'systemCreatedTenantCannotBeModified',
   'crossTenantFileAccess',
-  'tenantMembershipRevoked',
   'platformPermissionNotGrantable',
   'concurrentModification',
   'userSharedAcrossTenants',
@@ -57,7 +57,6 @@ const tenantScreenKeys = [
   'navigation.tenantsUpdate',
   'navigation.tenantsMembers',
   'navigation.selectTenant',
-  'navigation.noTenant',
   'search.tenants',
   'search.tenantsCreate',
   'table.filter.tenantStatus',
@@ -84,15 +83,9 @@ const tenantScreenKeys = [
   'page.tenants.switcher.noTenant',
   'page.selectTenant.title',
   'page.selectTenant.description',
-  'page.selectTenant.suspendedReason',
-  'page.selectTenant.revokedReason',
-  'page.selectTenant.unavailableReason',
-  'page.selectTenant.noSelectionReason',
-  'page.noTenant.title',
-  'page.noTenant.description',
-  'page.noTenant.createTitle',
-  'page.noTenant.createButton',
-  'page.noTenant.createSuccess',
+  'page.selectTenant.emptyDescription',
+  'page.selectTenant.emptyAction',
+  'page.auth.signup.tenantSectionTitle',
 ]
 
 describe('locale files', () => {
@@ -165,7 +158,6 @@ describe('locale files', () => {
 const tenantScreenDirectories = [
   'app/[lang]/admin/(tenancy)',
   'app/[lang]/(auth)/select-tenant',
-  'app/[lang]/(auth)/no-tenant',
 ]
 
 /** Shared pieces outside those trees that are part of the tenant experience. */

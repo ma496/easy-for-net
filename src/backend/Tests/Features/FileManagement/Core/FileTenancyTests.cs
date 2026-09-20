@@ -29,10 +29,12 @@ public class FileTenancyTests(App app) : FileTestsBase(app)
     /// account reads it while acting in either of its tenants and while acting in none (AC-097).
     /// </summary>
     /// <remarks>
-    /// The account holds two memberships, which is what gives the test all three standings for one
-    /// identity: it can act in either tenant, and having chosen neither it acts in none - the very standing
-    /// an account with no membership is also in. The content is read back in each of them, because
-    /// "attributed to no tenant" would otherwise be indistinguishable from a file nobody can open.
+    /// The account holds two memberships, which is what lets it act in either tenant, and belongs to the
+    /// platform tier, which is what lets it sign in acting in none at all - an ordinary account cannot,
+    /// since it would then hold no permission whatever. The tier is a way of reaching the third standing
+    /// and nothing more: what is under test is where the file is attributed, which the tier does not
+    /// touch. The content is read back in each standing, because "attributed to no tenant" would
+    /// otherwise be indistinguishable from a file nobody can open.
     /// </remarks>
     [Fact]
     public async Task Account_Owned_File_Is_Readable_In_Any_Tenant_And_In_None()
@@ -40,6 +42,7 @@ public class FileTenancyTests(App app) : FileTestsBase(app)
         var first = await CreateTenantAsync();
         var second = await CreateTenantAsync();
         var owner = await CreateDualTenantMemberAsync(first.Id, second.Id);
+        await MarkAsPlatformAccountAsync(owner.Id);
 
         const string content = "the image this account uses everywhere";
 
@@ -139,7 +142,10 @@ public class FileTenancyTests(App app) : FileTestsBase(app)
         // The account-owned image from AC-097, read in both standings its owner acts in: the endpoint
         // that refuses the other tenant's file answers this caller with the content, so what decided the
         // refusals above was the attribution written at upload and not the file name or the endpoint.
+        // The platform tier is how this account reaches the third standing - acting in no tenant at all,
+        // which an ordinary account cannot sign in to - and touches nothing else the case asserts.
         var imageOwner = await CreateDualTenantMemberAsync(ownerTenant.Id, otherTenant.Id);
+        await MarkAsPlatformAccountAsync(imageOwner.Id);
 
         var imageClient = await ClientForAsync(imageOwner.Username, ownerTenant.Id);
         var imageName = await UploadAsync(imageClient, "the image this account owns", "avatar.png", accountOwned: true);

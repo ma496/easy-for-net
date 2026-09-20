@@ -81,12 +81,14 @@ export interface ResetPasswordRequest extends RequestBase {
   password: string
 }
 
-/** Request body for the signup endpoint, providing the new account credentials and optional confirmation. */
+/** Request body for the signup endpoint, providing the new account credentials and the tenant created alongside the account. */
 export interface SignupRequest extends RequestBase {
   username: string
   email: string
   password: string
   confirmPassword: string
+  tenantName: string
+  tenantIdentifier: string
 }
 
 /** Response from the signup endpoint, indicating whether email verification must be completed before login. */

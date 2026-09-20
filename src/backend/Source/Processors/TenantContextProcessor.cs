@@ -2,96 +2,62 @@ namespace Backend.Processors;
 
 using System.Security.Claims;
 using Backend.Features.Identity.Core;
-using Backend.Middleware;
-using FluentValidation.Results;
 
 /// <summary>
-/// Global FastEndpoints pre-processor that establishes the tenant a request acts in, and refuses the
-/// request when it may not act in one. It is the single place the rule lives: every endpoint that
-/// does not carry <see cref="AllowNoTenantAttribute"/> - or <see cref="AllowPlatformNoTenantAttribute"/>
-/// for a platform account - requires an established tenant that exists,
-/// is not suspended, and that the caller still holds an active membership in, so no endpoint repeats
-/// the check and none can forget it.
+/// Global FastEndpoints pre-processor that establishes the tenant a request acts in, from the tenant
+/// its session names and from nothing else. It is the single place the scope is opened, so no
+/// endpoint repeats it and none can forget it.
 /// </summary>
 /// <remarks>
 /// <para>
-/// It costs no query. The session check that runs earlier in the pipeline has already read the
-/// tenant and the membership to recompute what the request is authorized to do, and left its verdict
-/// on the request; this processor only reads that verdict, reports it, and turns a good one into an
-/// established tenant scope. A refusal never ends the session: the caller stays authenticated, is
-/// told which of the four things went wrong, and can choose another tenant they belong to. Only the
-/// password check in the session middleware still signs anyone out.
+/// It costs no query. The tenant travels in the session's own claims, minted when the session was
+/// established and re-minted whenever it is renewed or switched, so establishing the scope is a claim
+/// lookup rather than a database read.
 /// </para>
 /// <para>
-/// This is the single place the rule is <i>decided</i>, but not the only place it can be what refuses
-/// a request. Endpoint authorization runs before it and reads the permissions the request holds, which
-/// a stale tenant selection leaves empty, so that refusal is produced there rather than here;
-/// <see cref="TenantRefusalResultHandler"/> answers it with the same description this uses. The two
-/// agree because the description is stated once, in <see cref="TenantRefusal"/>.
+/// A session naming no tenant acts in the platform scope: it reads and writes the rows that belong to
+/// no tenant. That is not a privilege - what such a session may do is decided by its permission
+/// claims, which are narrowed to the platform scope when it is minted, and an ordinary account
+/// exercises nothing at all outside a tenant. A tenant-scoped operation is therefore kept out of
+/// platform scope by declaring a <see cref="PermissionScope.Tenant"/> permission, which no
+/// platform-scope session carries, rather than by any rule stated here.
 /// </para>
 /// </remarks>
 public sealed class TenantContextProcessor : IGlobalPreProcessor
 {
     /// <summary>
-    /// Establishes the request's tenant scope, or short-circuits the request with a 403 naming the
-    /// reason the operation is refused.
+    /// Establishes the request's tenant scope: the tenant its session names, or the platform scope
+    /// when it names none.
     /// </summary>
     /// <param name="context">The pre-processor context for the request being handled.</param>
-    /// <param name="ct">Token used to cancel writing the refusal.</param>
-    public async Task PreProcessAsync(IPreProcessorContext context, CancellationToken ct)
+    /// <param name="ct">Token used to cancel the work; nothing here is cancellable.</param>
+    public Task PreProcessAsync(IPreProcessorContext context, CancellationToken ct)
     {
         var httpContext = context.HttpContext;
 
         // An unauthenticated request is not this processor's business: it is either refused by
         // authentication with a 401 or allowed through because the endpoint permits anonymous
         // callers, and in neither case is there a session that could name a tenant. Its scope stays
-        // unresolved, so anything tenant-scoped it were to read or write still fails loudly.
+        // unresolved, so anything tenant-scoped it were to read or write still fails loudly, and the
+        // few anonymous endpoints that do touch data establish the scope they need themselves.
         if (httpContext.User.Identity?.IsAuthenticated != true)
         {
-            return;
+            return Task.CompletedTask;
         }
 
         // The tenant context is resolved from the request's own service scope rather than injected:
         // a global pre-processor is instantiated once for the application, and holding a per-request
         // service in it would hand every request whichever tenant the first one established.
         var tenantContext = httpContext.RequestServices.GetRequiredService<ITenantContext>();
-        var sessionTenantId = ReadSessionTenantId(httpContext.User);
 
-        // A session that names no tenant carries no verdict worth reading: it is the caller who holds
-        // no active membership at all, or who holds several and has not yet chosen between them.
-        var status = sessionTenantId is null
-            ? TenantSessionStatus.NoActiveTenant
-            : TenantSessionState.Read(httpContext);
+        // The scope is opened for the rest of the request and the handle is deliberately dropped:
+        // disposing it here would restore the unresolved state before the endpoint runs, and the
+        // context belongs to the request's own scope, so it ends with the request either way.
+        _ = ReadSessionTenantId(httpContext.User) is { } tenantId
+            ? tenantContext.BeginTenant(tenantId)
+            : tenantContext.BeginPlatformScope();
 
-        if (status == TenantSessionStatus.Active && sessionTenantId is { } tenantId)
-        {
-            // The scope is opened for the rest of the request and the handle is deliberately dropped:
-            // disposing it here would restore the unresolved state before the endpoint runs, and the
-            // context belongs to the request's own scope, so it ends with the request either way.
-            // Endpoints exempt from the requirement get the scope too - an upload attributes its file
-            // to this tenant, and a member listing reads inside it - because they are exempt from the
-            // refusal, not from acting in the tenant their session names.
-            _ = tenantContext.BeginTenant(tenantId);
-            return;
-        }
-
-        if (TenantRequirement.IsExempt(httpContext))
-        {
-            // Account self-service, tenant selection and onboarding have to keep working for a caller
-            // with no usable tenant - that is how such a caller gets one - so the scope is resolved
-            // to the platform rather than left unresolved: they read and write the rows that belong
-            // to no tenant instead of failing on a scope that was never established. A platform
-            // administrator reaching a platform-exempt endpoint lands here too, and reads across every
-            // tenant through the widening that endpoint already applies to the platform tier.
-            _ = tenantContext.BeginPlatformScope();
-            return;
-        }
-
-        var (message, errorCode) = TenantRefusal.Describe(status);
-        await httpContext.Response.SendErrorsAsync(
-            [new ValidationFailure(string.Empty, message) { ErrorCode = errorCode }],
-            StatusCodes.Status403Forbidden,
-            cancellation: ct);
+        return Task.CompletedTask;
     }
 
     /// <summary>

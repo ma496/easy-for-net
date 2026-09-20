@@ -31,7 +31,6 @@ using Backend.Features.Tenancy.Core;
 /// <see cref="ErrorCodes.ConcurrentModification"/> so the loser can re-read and decide again.
 /// </para>
 /// </remarks>
-[AllowNoTenant]
 sealed class TenantMemberUpdateRolesEndpoint(ITenantService tenantService,
                                              ITenantMembershipService tenantMembershipService,
                                              ITenantAuthorizationService tenantAuthorizationService,

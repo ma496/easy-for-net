@@ -22,22 +22,21 @@ public class AuthTokenServiceTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that refreshing a session re-establishes the very tenant it already had: the renewed
     /// access token names that tenant and never none, and never the one the caller acted in before
-    /// selecting, while a session that had selected none stays without one (AC-109).
+    /// selecting (AC-109).
     /// </summary>
     /// <remarks>
     /// <para>
     /// A refresh has nothing but the refresh-token row to go on - the access token it renews has
     /// expired by then - so the tenant is read off that row and written forward onto the one issued in
-    /// its place. Three sessions are established for one account, acting in the first tenant, in the
-    /// second and in neither, so that a tenant which had merely stopped changing would be caught: each
-    /// has to come back naming its own.
+    /// its place. Two sessions are established for one account, acting in the first tenant and in the
+    /// second, so that a tenant which had merely stopped changing would be caught: each has to come
+    /// back naming its own.
     /// </para>
     /// <para>
-    /// The account holds two memberships, which is what leaves sign-in resolving no tenant for it: a
-    /// session acts in a tenant only once one has been selected, so the sessions that act in the first
-    /// and second tenants are established by switching into them. That also means this account's
-    /// sessions are its own - a seeded account's would be shared with whatever else in the suite is
-    /// signed in as it, and refreshing one consumes the row it was read from.
+    /// The account holds two memberships, so each session names the tenant it means when it signs in.
+    /// That also makes this account's sessions its own - a seeded account's would be shared with
+    /// whatever else in the suite is signed in as it, and refreshing one consumes the row it was read
+    /// from.
     /// </para>
     /// </remarks>
     [Fact]
@@ -57,11 +56,9 @@ public class AuthTokenServiceTests(App app) : TenancyTestsBase(app)
 
         var inActed = await EstablishSessionAsync(account.Username, acted.Id);
         var inOther = await EstablishSessionAsync(account.Username, other.Id);
-        var inNone = await EstablishSessionAsync(account.Username);
 
         await AssertRefreshCarriesAsync(account.Id, inActed, acted.Id);
         await AssertRefreshCarriesAsync(account.Id, inOther, other.Id);
-        await AssertRefreshCarriesAsync(account.Id, inNone, expectedTenantId: null);
     }
 
     /// <summary>
@@ -102,27 +99,23 @@ public class AuthTokenServiceTests(App app) : TenancyTestsBase(app)
     /// <param name="username">The account to sign in as.</param>
     /// <param name="tenantId">The tenant to select, or <see langword="null"/> to select none.</param>
     /// <returns>The refresh token the session was issued.</returns>
-    private async Task<string> EstablishSessionAsync(string username, Guid? tenantId = null)
+    private async Task<string> EstablishSessionAsync(string username, Guid tenantId)
     {
         var client = App.CreateClient(new ClientOptions { HandleCookies = false });
 
-        var (_, signedIn) = await client.POSTAsync<TokenEndpoint, TokenRequest, TokenResponse>(
-            new() { Username = username, Password = TestUsers.DefaultPassword });
-
-        if (tenantId is not { } selected)
+        // The tenant is named on the sign-in itself: the account belongs to two, so nothing about its
+        // memberships settles which one it came to work in, and a sign-in that named none would be
+        // refused rather than answered.
+        var (response, signedIn) = await client.POSTAsync<TokenEndpoint, TokenRequest, TokenResponse>(new()
         {
-            return signedIn.RefreshToken;
-        }
+            Username = username,
+            Password = TestUsers.DefaultPassword,
+            TenantIdentifier = await TenantIdentifierOfAsync(tenantId)
+        });
 
-        // Switching is an authenticated call, so the token sign-in issued is what authorises it. The
-        // re-established session is the one whose refresh token is returned, not the sign-in's.
-        TestsHelper.SetAuthToken(client, signedIn.AccessToken);
+        response.StatusCode.Should().Be(HttpStatusCode.OK, "a test that establishes a session must actually have established one");
 
-        var (_, switched) = await client
-            .POSTAsync<TenantSwitchEndpoint, TenantSwitchRequest, TenantSwitchResponse>(
-                new() { TenantId = selected });
-
-        return switched.Session.RefreshToken;
+        return signedIn.RefreshToken;
     }
 
     /// <summary>

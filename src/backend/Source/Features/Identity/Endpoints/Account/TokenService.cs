@@ -1,5 +1,6 @@
 namespace Backend.Features.Identity.Endpoints.Account;
 
+using Backend.Data.Entities;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Microsoft.Extensions.Options;
@@ -41,12 +42,6 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
     /// with exactly the claims the new access token carries.
     /// </summary>
     private const string CurrentClaimsItemKey = "CurrentClaims";
-
-    /// <summary>
-    /// Authentication type of the principal the renewed session is evaluated as. It never authenticates a
-    /// request; it only names the identity built to ask what that session is entitled to.
-    /// </summary>
-    private const string RenewalAuthenticationType = "RefreshTokenRenewal";
 
     private readonly IUserService _userService;
     private readonly IAuthTokenService _authTokenService;
@@ -186,19 +181,22 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
         if (_signinSetting.IsEmailVerificationRequired && !user.IsEmailVerified)
             ThrowError(r => r.UserId, "Email is not verified", ErrorCodes.EmailNotVerified);
 
-        // The tenant of the session being renewed, read off the refresh-token row a moment ago.
-        var tenantId = ReadSessionTenant();
+        // The tenant of the session being renewed, read off the refresh-token row a moment ago, and then
+        // asked whether this account may still act in it. This is the one place a live session's tenant is
+        // re-examined, and it is what makes suspending a tenant or removing a member an eviction at all:
+        // the tenant travels on the refresh-token row and is copied onto its successor, so a renewal that
+        // did not ask would hand the same tenant back for as long as the session was refreshed.
+        var sessionTenantId = ReadSessionTenant();
+        var actingTenantId = await UsableSessionTenantAsync(user, sessionTenantId);
 
-        // What the renewed session may do is read from current data for that tenant alone, never copied from
-        // the session it replaces: a membership revoked, a role assignment replaced or a tenant suspended
-        // since the session began takes effect here, and the grants of a tenant the user acted in earlier are
-        // not carried into the one they act in now.
-        var session = await SessionValidator.EvaluateAsync(RenewalPrincipal(user, tenantId), _dbContext);
+        // Only the claims lose the tenant; the row keeps it, because the recorded tenant is left as it was
+        // and PersistTokenAsync writes that one forward. The row records which tenant this session belongs
+        // to, which is not the same question as whether it may be acted in today - so a tenant that comes
+        // back into service, or a membership that is restored, is picked up by the very next renewal
+        // instead of costing the caller a fresh sign-in.
+        var grants = await SessionGrants.ReadAsync(_dbContext, user.Id, actingTenantId, user.IsPlatform);
 
-        // The tenant claim is issued from the row even when its tenant may no longer be acted in - the grants
-        // above are then empty - so that the refusal the next request meets names that tenant and the reason
-        // for it, rather than reporting that no tenant was ever selected.
-        var claims = Helper.CreateClaims(user, [.. session.Roles], [.. session.Permissions], tenantId);
+        var claims = Helper.CreateClaims(user, grants.Roles, grants.Permissions, actingTenantId);
 
         privileges.Claims.AddRange(claims);
 
@@ -210,15 +208,44 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
     }
 
     /// <summary>
-    /// Builds the principal the renewed session will carry, holding the account's identity and the tenant it
-    /// acts in and nothing else, so that the session check answers what this session is entitled to now
-    /// rather than what the expiring one was granted when it began.
+    /// The tenant the renewed session may act in: the one the expiring session carried, when that tenant
+    /// still exists, is not suspended, and the account still belongs to it - and otherwise none.
     /// </summary>
     /// <param name="user">The account the session belongs to.</param>
-    /// <param name="tenantId">The tenant the session acts in, or <see langword="null"/> for none.</param>
-    /// <returns>A principal carrying identity and tenant claims only.</returns>
-    private static ClaimsPrincipal RenewalPrincipal(User user, Guid? tenantId)
-        => new(new ClaimsIdentity(Helper.CreateClaims(user, [], [], tenantId), RenewalAuthenticationType));
+    /// <param name="tenantId">The tenant the expiring session carried, or <see langword="null"/> for none.</param>
+    /// <returns>The tenant to renew into, or <see langword="null"/> when it may no longer be acted in.</returns>
+    /// <remarks>
+    /// A tenant that may no longer be acted in drops out of the session's claims rather than failing the
+    /// renewal. The account keeps its session and is simply left acting in no tenant, which for an ordinary
+    /// account is no authority at all, so the web app can offer it another tenant instead of signing it out
+    /// over something that was not its doing. The refresh-token row keeps the tenant either way, so a
+    /// suspension lifted or a membership restored is picked up by the next renewal.
+    /// <para>
+    /// Membership is what places an ordinary account inside a tenant, and a platform account holds none
+    /// anywhere: it enters a tenant on its tier, so it is admitted on that instead. A suspended or deleted
+    /// tenant is refused to it exactly as it is to everyone. The read relaxes tenant restriction by name
+    /// because it runs before any scope is established; the soft-delete filter stays in force, which is what
+    /// makes a deleted tenant read as absent.
+    /// </para>
+    /// </remarks>
+    private async Task<Guid?> UsableSessionTenantAsync(User user, Guid? tenantId)
+    {
+        if (tenantId is not { } sessionTenantId)
+        {
+            return null;
+        }
+
+        var isUsable = await _dbContext.Tenants
+            .AsNoTracking()
+            .AcrossAllTenants()
+            .AnyAsync(tenant => tenant.Id == sessionTenantId
+                                && tenant.Status == TenantStatus.Active
+                                && (user.IsPlatform
+                                    || _dbContext.TenantMemberships.AcrossAllTenants()
+                                        .Any(membership => membership.TenantId == sessionTenantId && membership.UserId == user.Id)));
+
+        return isUsable ? sessionTenantId : null;
+    }
 
     /// <summary>
     /// Reads the tenant recorded for the request being handled. A request that recorded none - an ordinary

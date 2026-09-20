@@ -12,14 +12,13 @@ using Backend.Features.FileManagement.Core;
 /// one: every stored file is attributed either to a tenant or to an account, and an anonymous caller
 /// has neither, so there would be nothing to attribute the upload to and nobody entitled to read it.
 /// <para>
-/// Marked <see cref="AllowNoTenantAttribute"/> because it enforces the tenant rule itself rather than
+/// Usable with no tenant established, because it enforces the tenant rule itself rather than
 /// escaping it. An account-owned upload - a profile image and the like - has to work while the caller
 /// acts in any tenant or in none, so it cannot be behind the global requirement; a tenant-scoped
 /// upload is instead refused here with <see cref="ErrorCodes.NoActiveTenant"/> when no tenant is
 /// active, before the content is read, so a refused upload stores nothing.
 /// </para>
 /// </remarks>
-[AllowNoTenant]
 sealed class FileUploadEndpoint(IFileService fileService, ITenantContext tenantContext) : Endpoint<FileUploadRequest, FileUploadResponse>
 {
     /// <summary>
