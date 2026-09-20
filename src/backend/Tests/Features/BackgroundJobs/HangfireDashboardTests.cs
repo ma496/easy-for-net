@@ -40,7 +40,7 @@ public class HangfireDashboardTests(App app) : AppTestsBase(app)
     {
         ClearAuthToken();
 
-        var anonymous = await App.Client.GetAsync(DashboardPath, TestContext.Current.CancellationToken);
+        var anonymous = await Client.GetAsync(DashboardPath, TestContext.Current.CancellationToken);
 
         anonymous.StatusCode.Should().Be(
             HttpStatusCode.Unauthorized,
@@ -50,7 +50,7 @@ public class HangfireDashboardTests(App app) : AppTestsBase(app)
         // standing that must not reach a platform-wide operational surface.
         await SetAuthTokenAsync("limited", TestUsers.DefaultPassword);
 
-        var tenantCaller = await App.Client.GetAsync(DashboardPath, TestContext.Current.CancellationToken);
+        var tenantCaller = await Client.GetAsync(DashboardPath, TestContext.Current.CancellationToken);
 
         tenantCaller.StatusCode.Should().Be(
             HttpStatusCode.Forbidden,
@@ -58,7 +58,7 @@ public class HangfireDashboardTests(App app) : AppTestsBase(app)
 
         await SetPlatformAdminAuthTokenAsync();
 
-        var platformAdministrator = await App.Client.GetAsync(DashboardPath, TestContext.Current.CancellationToken);
+        var platformAdministrator = await Client.GetAsync(DashboardPath, TestContext.Current.CancellationToken);
 
         platformAdministrator.StatusCode.Should().Be(
             HttpStatusCode.OK,

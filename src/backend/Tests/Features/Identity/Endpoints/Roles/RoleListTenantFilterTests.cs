@@ -36,7 +36,7 @@ public class RoleListTenantFilterTests(App app) : TenancyTestsBase(app)
 
         await SetPlatformAdminAuthTokenAsync();
 
-        var (wideRsp, wide) = await App.Client
+        var (wideRsp, wide) = await Client
             .GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(new() { All = true });
 
         wideRsp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -45,7 +45,7 @@ public class RoleListTenantFilterTests(App app) : TenancyTestsBase(app)
         wideIds.Should().NotContain(inFirst).And.NotContain(inSecond,
             "platform scope is about the roles belonging to no tenant, so naming a tenant is what reaches one's roles rather than narrowing a view that already held them");
 
-        var (narrowedRsp, narrowed) = await App.Client
+        var (narrowedRsp, narrowed) = await Client
             .GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(new() { All = true, TenantId = second.Id });
 
         narrowedRsp.StatusCode.Should().Be(HttpStatusCode.OK);

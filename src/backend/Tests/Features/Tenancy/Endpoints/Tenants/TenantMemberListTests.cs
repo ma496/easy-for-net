@@ -35,11 +35,11 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
         var members = await CreateMembersAsync(tenant.Id, count: 3);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (first, firstPage) = await App.Client
+        var (first, firstPage) = await Client
             .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(
                 new() { TenantId = tenant.Id, Page = 1, PageSize = 2, SortField = "Username", SortDirection = SortDirection.Asc });
 
-        var (second, secondPage) = await App.Client
+        var (second, secondPage) = await Client
             .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(
                 new() { TenantId = tenant.Id, Page = 2, PageSize = 2, SortField = "Username", SortDirection = SortDirection.Asc });
 
@@ -74,11 +74,11 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
             .Select(member => member.Id)
             .ToList();
 
-        var (ascending, ascendingPage) = await App.Client
+        var (ascending, ascendingPage) = await Client
             .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(
                 new() { TenantId = tenant.Id, All = true, SortField = "Username", SortDirection = SortDirection.Asc });
 
-        var (descending, descendingPage) = await App.Client
+        var (descending, descendingPage) = await Client
             .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(
                 new() { TenantId = tenant.Id, All = true, SortField = "Username", SortDirection = SortDirection.Desc });
 
@@ -98,7 +98,7 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, ProblemDetails>(
                 new() { TenantId = tenant.Id, SortField = "PasswordHash" });
 
@@ -121,11 +121,11 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
         var other = members[1];
         await SetPlatformAdminAuthTokenAsync();
 
-        var (byUsername, byUsernamePage) = await App.Client
+        var (byUsername, byUsernamePage) = await Client
             .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(
                 new() { TenantId = tenant.Id, Search = sought.Username, All = true });
 
-        var (byEmail, byEmailPage) = await App.Client
+        var (byEmail, byEmailPage) = await Client
             .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(
                 new() { TenantId = tenant.Id, Search = sought.Email, All = true });
 
@@ -151,7 +151,7 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
         var other = await CreateTenantUserAsync(tenant.Id, otherRoleId);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, page) = await App.Client
+        var (response, page) = await Client
             .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(
                 new() { TenantId = tenant.Id, RoleId = holderRoleId, All = true });
 
@@ -174,7 +174,7 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
         var member = await CreateTenantUserAsync(tenant.Id, roleId);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, page) = await App.Client
+        var (response, page) = await Client
             .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(
                 new() { TenantId = tenant.Id, Search = member.Username, All = true });
 

@@ -105,7 +105,7 @@ public class FileUploadTests(App app) : FileTestsBase(app)
     {
         ClearAuthToken();
 
-        var (response, _) = await App.Client
+        var (response, _) = await Client
             .POSTAsync<FileUploadEndpoint, FileUploadRequest, FileUploadResponse>(UploadRequest("anonymous upload"), sendAsFormData: true);
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized,

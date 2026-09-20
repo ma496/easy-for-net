@@ -24,12 +24,12 @@ public class RoleDeleteTests(App app) : TenancyTestsBase(app)
             .RuleFor(u => u.Name, f => f.Internet.UserName() + f.UniqueIndex)
             .RuleFor(u => u.Description, f => f.Lorem.Sentence());
         var request = faker.Generate();
-        var (createRsp, createRes) = await App.Client.POSTAsync<RoleCreateEndpoint, RoleCreateRequest, RoleCreateResponse>(request);
+        var (createRsp, createRes) = await Client.POSTAsync<RoleCreateEndpoint, RoleCreateRequest, RoleCreateResponse>(request);
 
         createRsp.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // Then delete the role
-        var (deleteRsp, deleteRes) = await App.Client.DELETEAsync<RoleDeleteEndpoint, RoleDeleteRequest, RoleDeleteResponse>(
+        var (deleteRsp, deleteRes) = await Client.DELETEAsync<RoleDeleteEndpoint, RoleDeleteRequest, RoleDeleteResponse>(
             new()
             {
                 Id = createRes.Id
@@ -39,7 +39,7 @@ public class RoleDeleteTests(App app) : TenancyTestsBase(app)
         deleteRes.Success.Should().BeTrue();
 
         // Verify the role is deleted by trying to get it
-        var (getRsp, _) = await App.Client.GETAsync<RoleGetEndpoint, RoleGetRequest, RoleGetResponse>(
+        var (getRsp, _) = await Client.GETAsync<RoleGetEndpoint, RoleGetRequest, RoleGetResponse>(
             new()
             {
                 Id = createRes.Id
@@ -56,7 +56,7 @@ public class RoleDeleteTests(App app) : TenancyTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var (deleteRsp, _) = await App.Client.DELETEAsync<RoleDeleteEndpoint, RoleDeleteRequest, RoleDeleteResponse>(
+        var (deleteRsp, _) = await Client.DELETEAsync<RoleDeleteEndpoint, RoleDeleteRequest, RoleDeleteResponse>(
             new()
             {
                 Id = Guid.NewGuid()
@@ -82,7 +82,7 @@ public class RoleDeleteTests(App app) : TenancyTestsBase(app)
         systemCreatedRole.SystemCreated.Should().BeTrue("the premise of this test is that the role is one the seeder made");
 
         // Try to delete the system-created role
-        var (deleteRsp, res) = await App.Client.DELETEAsync<RoleDeleteEndpoint, RoleDeleteRequest, ProblemDetails>(
+        var (deleteRsp, res) = await Client.DELETEAsync<RoleDeleteEndpoint, RoleDeleteRequest, ProblemDetails>(
             new()
             {
                 Id = systemCreatedRole.Id

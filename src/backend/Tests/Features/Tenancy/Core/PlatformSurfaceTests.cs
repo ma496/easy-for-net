@@ -35,7 +35,7 @@ public class PlatformSurfaceTests(App app) : TenancyTestsBase(app)
         // membership at all, so it is not a member of the tenant below.
         await SetPlatformAdminAuthTokenAsync();
 
-        var (addResponse, added) = await App.Client
+        var (addResponse, added) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, TenantMemberAddResponse>(new()
             {
                 TenantId = tenant.Id,
@@ -85,7 +85,7 @@ public class PlatformSurfaceTests(App app) : TenancyTestsBase(app)
 
         await SetPlatformAdminAuthTokenAsync();
 
-        var (addResponse, _) = await App.Client
+        var (addResponse, _) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, TenantMemberAddResponse>(new()
             {
                 TenantId = tenant.Id,
@@ -95,7 +95,7 @@ public class PlatformSurfaceTests(App app) : TenancyTestsBase(app)
 
         addResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var (listResponse, page) = await App.Client
+        var (listResponse, page) = await Client
             .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(
                 new() { TenantId = tenant.Id, All = true });
 

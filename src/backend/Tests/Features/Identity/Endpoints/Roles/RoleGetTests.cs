@@ -22,11 +22,11 @@ public class RoleGetTests(App app) : TenancyTestsBase(app)
             .RuleFor(u => u.Name, f => f.Internet.UserName() + f.UniqueIndex)
             .RuleFor(u => u.Description, f => f.Lorem.Sentence());
         var request = faker.Generate();
-        var (createRsp, createRes) = await App.Client.POSTAsync<RoleCreateEndpoint, RoleCreateRequest, RoleCreateResponse>(request);
+        var (createRsp, createRes) = await Client.POSTAsync<RoleCreateEndpoint, RoleCreateRequest, RoleCreateResponse>(request);
 
         createRsp.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var (getRsp, getRes) = await App.Client.GETAsync<RoleGetEndpoint, RoleGetRequest, RoleGetResponse>(
+        var (getRsp, getRes) = await Client.GETAsync<RoleGetEndpoint, RoleGetRequest, RoleGetResponse>(
             new()
             {
                 Id = createRes.Id
@@ -46,7 +46,7 @@ public class RoleGetTests(App app) : TenancyTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var (getRsp, getRes) = await App.Client.GETAsync<RoleGetEndpoint, RoleGetRequest, RoleGetResponse>(
+        var (getRsp, getRes) = await Client.GETAsync<RoleGetEndpoint, RoleGetRequest, RoleGetResponse>(
             new()
             {
                 Id = TestRoles.AdminRoleId
@@ -64,7 +64,7 @@ public class RoleGetTests(App app) : TenancyTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var (getRsp, _) = await App.Client.GETAsync<RoleGetEndpoint, RoleGetRequest, RoleGetResponse>(
+        var (getRsp, _) = await Client.GETAsync<RoleGetEndpoint, RoleGetRequest, RoleGetResponse>(
             new()
             {
                 Id = Guid.NewGuid()

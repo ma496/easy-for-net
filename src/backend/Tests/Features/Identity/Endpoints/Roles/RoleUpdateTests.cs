@@ -22,7 +22,7 @@ public class RoleUpdateTests(App app) : TenancyTestsBase(app)
             .RuleFor(u => u.Name, f => f.Internet.UserName() + f.UniqueIndex)
             .RuleFor(u => u.Description, f => f.Lorem.Sentence());
         var request = faker.Generate();
-        var (createRsp, createRes) = await App.Client.POSTAsync<RoleCreateEndpoint, RoleCreateRequest, RoleCreateResponse>(request);
+        var (createRsp, createRes) = await Client.POSTAsync<RoleCreateEndpoint, RoleCreateRequest, RoleCreateResponse>(request);
 
         createRsp.StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -31,7 +31,7 @@ public class RoleUpdateTests(App app) : TenancyTestsBase(app)
             .RuleFor(x => x.Name, f => f.Internet.UserName() + f.UniqueIndex)
             .RuleFor(x => x.Description, f => f.Lorem.Sentence());
         var updateRequest = updateFaker.Generate();
-        var (updateRsp, updateRes) = await App.Client.PUTAsync<RoleUpdateEndpoint, RoleUpdateRequest, RoleUpdateResponse>(updateRequest);
+        var (updateRsp, updateRes) = await Client.PUTAsync<RoleUpdateEndpoint, RoleUpdateRequest, RoleUpdateResponse>(updateRequest);
 
         updateRsp.StatusCode.Should().Be(HttpStatusCode.OK);
         updateRes.Name.Should().Be(updateRequest.Name);
@@ -51,7 +51,7 @@ public class RoleUpdateTests(App app) : TenancyTestsBase(app)
             .RuleFor(u => u.Name, f => f.Internet.UserName() + f.UniqueIndex)
             .RuleFor(u => u.Description, f => f.Lorem.Sentence());
         var request = faker.Generate();
-        var (updateRsp, _) = await App.Client.PUTAsync<RoleUpdateEndpoint, RoleUpdateRequest, RoleUpdateResponse>(request);
+        var (updateRsp, _) = await Client.PUTAsync<RoleUpdateEndpoint, RoleUpdateRequest, RoleUpdateResponse>(request);
 
         updateRsp.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
@@ -77,7 +77,7 @@ public class RoleUpdateTests(App app) : TenancyTestsBase(app)
             .RuleFor(u => u.Name, f => f.Internet.UserName() + f.UniqueIndex)
             .RuleFor(u => u.Description, f => f.Lorem.Sentence());
         var request = faker.Generate();
-        var (updateRsp, res) = await App.Client.PUTAsync<RoleUpdateEndpoint, RoleUpdateRequest, ProblemDetails>(request);
+        var (updateRsp, res) = await Client.PUTAsync<RoleUpdateEndpoint, RoleUpdateRequest, ProblemDetails>(request);
 
         updateRsp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         res.Errors.Should().ContainSingle();

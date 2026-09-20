@@ -19,7 +19,7 @@ public class UserGetTests(App app) : TenancyTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var roleService = App.Services.GetRequiredService<IRoleService>();
+        var roleService = Service<IRoleService>();
         var faker = new Faker<UserCreateRequest>()
             .RuleFor(u => u.Username, f => f.Internet.UserName() + f.UniqueIndex)
             .RuleFor(u => u.Email, f => f.Internet.Email() + f.UniqueIndex)
@@ -29,11 +29,11 @@ public class UserGetTests(App app) : TenancyTestsBase(app)
             .RuleFor(u => u.IsActive, f => true);
         var request = faker.Generate();
         request.Roles = [TestRoles.TestRoleId];
-        var (createRsp, createRes) = await App.Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request);
+        var (createRsp, createRes) = await Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request);
 
         createRsp.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var (getRsp, getRes) = await App.Client.GETAsync<UserGetEndpoint, UserGetRequest, UserGetResponse>(
+        var (getRsp, getRes) = await Client.GETAsync<UserGetEndpoint, UserGetRequest, UserGetResponse>(
             new()
             {
                 Id = createRes.Id
@@ -53,7 +53,7 @@ public class UserGetTests(App app) : TenancyTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var (getRsp, getRes) = await App.Client.GETAsync<UserGetEndpoint, UserGetRequest, UserGetResponse>(
+        var (getRsp, getRes) = await Client.GETAsync<UserGetEndpoint, UserGetRequest, UserGetResponse>(
             new()
             {
                 Id = TestUsers.TenantAdminUserId
@@ -71,7 +71,7 @@ public class UserGetTests(App app) : TenancyTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var (getRsp, _) = await App.Client.GETAsync<UserGetEndpoint, UserGetRequest, UserGetResponse>(
+        var (getRsp, _) = await Client.GETAsync<UserGetEndpoint, UserGetRequest, UserGetResponse>(
             new()
             {
                 Id = Guid.NewGuid()

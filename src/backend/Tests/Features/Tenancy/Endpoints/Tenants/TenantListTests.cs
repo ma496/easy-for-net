@@ -37,7 +37,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
         var created = await CreateTenantsAsync(token, count: 2);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, page) = await App.Client
+        var (response, page) = await Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(new() { Search = token, All = true });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -66,7 +66,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
 
         await SignInAsAsync(member.Username, joined[0].Id);
 
-        var (refused, _) = await App.Client
+        var (refused, _) = await Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(new() { Search = token, All = true });
 
         refused.StatusCode.Should().Be(
@@ -85,11 +85,11 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
         var created = await CreateTenantsAsync(token, count: 3);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (first, firstPage) = await App.Client
+        var (first, firstPage) = await Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(
                 new() { Search = token, Page = 1, PageSize = 2, SortField = "Identifier" });
 
-        var (second, secondPage) = await App.Client
+        var (second, secondPage) = await Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(
                 new() { Search = token, Page = 2, PageSize = 2, SortField = "Identifier" });
 
@@ -114,7 +114,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .GETAsync<TenantListEndpoint, TenantListRequest, ProblemDetails>(new() { PageSize = 101 });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -133,11 +133,11 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
         var created = await CreateTenantsAsync(token, count: 3);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (ascending, ascendingPage) = await App.Client
+        var (ascending, ascendingPage) = await Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(
                 new() { Search = token, All = true, SortField = "Name", SortDirection = SortDirection.Asc });
 
-        var (descending, descendingPage) = await App.Client
+        var (descending, descendingPage) = await Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(
                 new() { Search = token, All = true, SortField = "Name", SortDirection = SortDirection.Desc });
 
@@ -160,7 +160,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .GETAsync<TenantListEndpoint, TenantListRequest, ProblemDetails>(new() { SortField = "PasswordHash" });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -183,14 +183,14 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
 
         // The name carries the token whole and the identifier only carries it as a prefix, so a search
         // that matched one and not the other would be missing from one of these results.
-        var (byName, named) = await App.Client
+        var (byName, named) = await Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(new() { Search = token, All = true });
 
-        var (byIdentifier, identified) = await App.Client
+        var (byIdentifier, identified) = await Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(
                 new() { Search = $"{token}-0", All = true });
 
-        var (byUpperCase, upperCased) = await App.Client
+        var (byUpperCase, upperCased) = await Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(
                 new() { Search = $"{token}-0".ToUpperInvariant(), All = true });
 
@@ -215,7 +215,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
         var suspended = await CreateTenantsAsync(token, count: 1, status: TenantStatus.Suspended);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, page) = await App.Client
+        var (response, page) = await Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(
                 new() { Search = token, All = true, Status = TenantStatus.Suspended });
 
@@ -237,7 +237,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
         var created = await CreateTenantsAsync(token, count: 1, status: TenantStatus.Suspended);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, page) = await App.Client
+        var (response, page) = await Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(new() { Search = token, All = true });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);

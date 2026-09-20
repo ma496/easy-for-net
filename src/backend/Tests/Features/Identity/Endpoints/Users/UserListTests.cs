@@ -36,11 +36,11 @@ public class UserListTests(App app) : TenancyTestsBase(app)
         var requests = faker.Generate(3);
         foreach (var request in requests)
         {
-            await App.Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request);
+            await Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request);
         }
 
         // Get list of users
-        var (listRsp, listRes) = await App.Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
+        var (listRsp, listRes) = await Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
             new()
             {
                 Page = 1,
@@ -70,11 +70,11 @@ public class UserListTests(App app) : TenancyTestsBase(app)
         var requests = faker.Generate(5);
         foreach (var request in requests)
         {
-            await App.Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request);
+            await Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request);
         }
 
         // Get first page with 2 users
-        var (page1Rsp, page1Res) = await App.Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
+        var (page1Rsp, page1Res) = await Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
             new()
             {
                 Page = 1,
@@ -85,7 +85,7 @@ public class UserListTests(App app) : TenancyTestsBase(app)
         page1Res.Items.Count.Should().Be(2);
 
         // Get second page
-        var (page2Rsp, page2Res) = await App.Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
+        var (page2Rsp, page2Res) = await Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
             new()
             {
                 Page = 2,
@@ -105,7 +105,7 @@ public class UserListTests(App app) : TenancyTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var roleService = App.Services.GetRequiredService<IRoleService>();
+        var roleService = Service<IRoleService>();
         var testRoleId = TestRoles.TestRoleId;
 
         // Create active users
@@ -120,7 +120,7 @@ public class UserListTests(App app) : TenancyTestsBase(app)
         foreach (var request in activeRequests)
         {
             request.Roles = [testRoleId];
-            await App.Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request);
+            await Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request);
         }
 
         // Create inactive users
@@ -135,11 +135,11 @@ public class UserListTests(App app) : TenancyTestsBase(app)
         foreach (var request in inactiveRequests)
         {
             request.Roles = [testRoleId];
-            await App.Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request);
+            await Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request);
         }
 
         // Get only active users
-        var (activeRsp, activeRes) = await App.Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
+        var (activeRsp, activeRes) = await Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
             new()
             {
                 Page = 1,
@@ -152,7 +152,7 @@ public class UserListTests(App app) : TenancyTestsBase(app)
         activeRes.Items.Should().NotContain(x => !x.IsActive);
 
         // Get only inactive users
-        var (inactiveRsp, inactiveRes) = await App.Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
+        var (inactiveRsp, inactiveRes) = await Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
             new()
             {
                 Page = 1,
@@ -165,7 +165,7 @@ public class UserListTests(App app) : TenancyTestsBase(app)
         inactiveRes.Items.Should().NotContain(x => x.IsActive);
 
         // Get all users (no filter)
-        var (allRsp, allRes) = await App.Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
+        var (allRsp, allRes) = await Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
             new()
             {
                 Page = 1,
@@ -238,7 +238,7 @@ public class UserListTests(App app) : TenancyTestsBase(app)
 
         await SetPlatformAdminAuthTokenAsync();
 
-        var (platformRsp, platformPage) = await App.Client
+        var (platformRsp, platformPage) = await Client
             .GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
                 new() { Page = 1, PageSize = 100, Search = inFirst.Username });
 
@@ -248,7 +248,7 @@ public class UserListTests(App app) : TenancyTestsBase(app)
 
         await SwitchTenantAsync(first.Id);
 
-        var (firstRsp, firstPage) = await App.Client
+        var (firstRsp, firstPage) = await Client
             .GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
                 new() { Page = 1, PageSize = 100, Search = inFirst.Username });
 
@@ -256,7 +256,7 @@ public class UserListTests(App app) : TenancyTestsBase(app)
         firstPage.Items.Select(item => item.Id).Should().Equal([inFirst.Id],
             "entering a tenant it holds no membership of is what puts the caller among that tenant's administrators");
 
-        var (strangerRsp, strangerPage) = await App.Client
+        var (strangerRsp, strangerPage) = await Client
             .GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
                 new() { Page = 1, PageSize = 100, Search = inSecond.Username });
 
@@ -266,7 +266,7 @@ public class UserListTests(App app) : TenancyTestsBase(app)
 
         await SwitchTenantAsync(second.Id);
 
-        var (secondRsp, secondPage) = await App.Client
+        var (secondRsp, secondPage) = await Client
             .GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
                 new() { Page = 1, PageSize = 100, Search = inSecond.Username });
 

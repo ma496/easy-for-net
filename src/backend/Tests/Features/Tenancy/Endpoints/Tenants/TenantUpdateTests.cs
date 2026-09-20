@@ -22,6 +22,9 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 /// seeder owns - is only ever read. Its rename is refused, which is what makes reading it safe.
 /// </para>
 /// </remarks>
+// Shares a collection with TenantReactivateTests: both write the bootstrap tenant's row, and this
+// class reads its UpdatedAt to prove a refused update changed nothing.
+[Collection("BootstrapTenant")]
 public class TenantUpdateTests(App app) : TenancyTestsBase(app)
 {
     /// <summary>
@@ -42,7 +45,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
         await SetPlatformAdminAuthTokenAsync();
 
         var identifier = NewTenantIdentifier();
-        var (response, renamed) = await App.Client
+        var (response, renamed) = await Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, TenantUpdateResponse>(new()
             {
                 Id = tenant.Id,
@@ -82,7 +85,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, ProblemDetails>(new()
             {
                 Id = tenant.Id,
@@ -111,7 +114,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, renamed) = await App.Client
+        var (response, renamed) = await Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, TenantUpdateResponse>(new()
             {
                 Id = tenant.Id,
@@ -139,7 +142,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
         var before = await ReloadTenantAsync(tenant.Id);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, ProblemDetails>(new()
             {
                 Id = tenant.Id,
@@ -170,7 +173,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, ProblemDetails>(new()
             {
                 Id = Guid.Empty,
@@ -196,7 +199,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
         var before = await ReloadTenantAsync(TestTenants.BootstrapTenantId);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, ProblemDetails>(new()
             {
                 Id = TestTenants.BootstrapTenantId,
@@ -227,7 +230,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
         await DeleteTenantAsync(deleted.Id);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (deletedResponse, deletedProblem) = await App.Client
+        var (deletedResponse, deletedProblem) = await Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, ProblemDetails>(new()
             {
                 Id = deleted.Id,
@@ -235,7 +238,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
                 Identifier = NewTenantIdentifier()
             });
 
-        var (unknownResponse, unknownProblem) = await App.Client
+        var (unknownResponse, unknownProblem) = await Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, ProblemDetails>(new()
             {
                 Id = Guid.NewGuid(),

@@ -57,14 +57,14 @@ public class PermissionScopeTests(App app) : TenancyTestsBase(app)
         inside.Should().Contain(Allow.TenantMember_View,
             "and the tenant's own administration is what the caller holds while it is in there");
 
-        var (left, exit) = await App.Client.POSTAsync<TenantExitEndpoint, TenantExitResponse>();
+        var (left, exit) = await Client.POSTAsync<TenantExitEndpoint, TenantExitResponse>();
         left.StatusCode.Should().Be(HttpStatusCode.OK,
             "the account tier survives entering a tenant, which is what keeps the way back out open");
 
         // Leaving re-establishes the session rather than editing the one in hand, so the client presents
         // what it was handed back. A browser does this by itself - the re-signed cookie carries it - and
         // a token client replaces its pair, which is what this stands in for.
-        TestsHelper.SetAuthToken(App.Client, exit.Session.AccessToken);
+        TestsHelper.SetAuthToken(Client, exit.Session.AccessToken);
 
         var back = await PermissionsAsync();
 
@@ -135,7 +135,7 @@ public class PermissionScopeTests(App app) : TenancyTestsBase(app)
     /// <returns>The answer.</returns>
     private async Task<UserGetInfoResponse> InfoAsync()
     {
-        var (response, info) = await App.Client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
+        var (response, info) = await Client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 

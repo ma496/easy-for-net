@@ -35,7 +35,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
         await SetPlatformAdminAuthTokenAsync();
 
         var identifier = NewTenantIdentifier();
-        var (response, created) = await App.Client
+        var (response, created) = await Client
             .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, TenantCreateResponse>(
                 new() { Name = "Acme Incorporated", Identifier = identifier });
 
@@ -61,7 +61,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
         var incumbent = await CreateTenantAsync();
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, ProblemDetails>(
                 new() { Name = "A Second Acme", Identifier = incumbent.Identifier });
 
@@ -99,7 +99,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
         var incumbent = await CreateTenantAsync();
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, ProblemDetails>(
                 new() { Name = "A Second Acme", Identifier = incumbent.Identifier.ToUpperInvariant() });
 
@@ -125,7 +125,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, ProblemDetails>(
                 new() { Name = string.Empty, Identifier = "ab" });
 
@@ -158,7 +158,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
 
         if (!accepted)
         {
-            var (refused, problem) = await App.Client
+            var (refused, problem) = await Client
                 .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, ProblemDetails>(request);
 
             refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -171,7 +171,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
             return;
         }
 
-        var (response, _) = await App.Client
+        var (response, _) = await Client
             .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, TenantCreateResponse>(request);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -206,7 +206,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
 
         if (!accepted)
         {
-            var (refused, problem) = await App.Client
+            var (refused, problem) = await Client
                 .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, ProblemDetails>(request);
 
             refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -219,7 +219,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
             return;
         }
 
-        var (response, _) = await App.Client
+        var (response, _) = await Client
             .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, TenantCreateResponse>(request);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -239,7 +239,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
         var before = DateTime.UtcNow;
         var identifier = NewTenantIdentifier();
 
-        var (createResponse, created) = await App.Client
+        var (createResponse, created) = await Client
             .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, TenantCreateResponse>(
                 new() { Name = "Acme Incorporated", Identifier = identifier });
 
@@ -256,7 +256,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
             "a row carries its creation as its last change until something changes it");
 
         var renamed = $"{NewTenantIdentifier()}-renamed";
-        var (updateResponse, _) = await App.Client
+        var (updateResponse, _) = await Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, TenantUpdateResponse>(
                 new() { Id = created.Id, Name = "Acme Holdings", Identifier = renamed });
 
@@ -286,7 +286,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, created) = await App.Client
+        var (response, created) = await Client
             .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, TenantCreateResponse>(
                 new() { Name = "Acme Incorporated", Identifier = NewTenantIdentifier() });
 
@@ -306,8 +306,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
         administrator.SystemCreated.Should().BeTrue("the tenant's administrator is declared by code, not by a caller");
 
         var held = await ReadPermissionsHeldInRoleAsync(administrator.Id);
-        var tenantPermissionNames = App.Services
-            .GetRequiredService<IPermissionDefinitionService>()
+        var tenantPermissionNames = Service<IPermissionDefinitionService>()
             .GetPermissionNamesInScope(PermissionScope.Tenant);
 
         held.Should().BeEquivalentTo(

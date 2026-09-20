@@ -43,7 +43,7 @@ public class TestsDataSeeder(IUserService userService,
     /// on the static holders. Idempotent: the shared fixture seeds once, but the seeder is written so
     /// that a second pass finds what the first one made rather than duplicating it.
     /// </summary>
-    public async Task SeedAsync(HttpClient _)
+    public async Task SeedAsync()
     {
         var permissions = await permissionService.Permissions().ToListAsync();
 

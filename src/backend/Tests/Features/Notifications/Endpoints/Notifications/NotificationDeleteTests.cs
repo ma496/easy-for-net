@@ -18,7 +18,7 @@ public class NotificationDeleteTests(App app) : NotificationsTestsBase(app)
         var userId = TestUsers.TenantAdminUserId;
         var notification = await CreateUserNotificationAsync(userId);
 
-        var (rsp, res) = await App.Client.DELETEAsync<NotificationDeleteEndpoint, NotificationDeleteRequest, NotificationDeleteResponse>(
+        var (rsp, res) = await Client.DELETEAsync<NotificationDeleteEndpoint, NotificationDeleteRequest, NotificationDeleteResponse>(
             new() { Id = notification.Id });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -44,7 +44,7 @@ public class NotificationDeleteTests(App app) : NotificationsTestsBase(app)
 
         var otherUserNotification = await CreateUserNotificationAsync(TestUsers.TestUserId);
 
-        var (rsp, _) = await App.Client.DELETEAsync<NotificationDeleteEndpoint, NotificationDeleteRequest, NotificationDeleteResponse>(
+        var (rsp, _) = await Client.DELETEAsync<NotificationDeleteEndpoint, NotificationDeleteRequest, NotificationDeleteResponse>(
             new() { Id = otherUserNotification.Id });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -58,7 +58,7 @@ public class NotificationDeleteTests(App app) : NotificationsTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var (rsp, _) = await App.Client.DELETEAsync<NotificationDeleteEndpoint, NotificationDeleteRequest, NotificationDeleteResponse>(
+        var (rsp, _) = await Client.DELETEAsync<NotificationDeleteEndpoint, NotificationDeleteRequest, NotificationDeleteResponse>(
             new() { Id = Guid.NewGuid() });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -74,7 +74,7 @@ public class NotificationDeleteTests(App app) : NotificationsTestsBase(app)
 
         var globalNotification = await CreateGlobalNotificationAsync();
 
-        var (rsp, _) = await App.Client.DELETEAsync<NotificationDeleteEndpoint, NotificationDeleteRequest, NotificationDeleteResponse>(
+        var (rsp, _) = await Client.DELETEAsync<NotificationDeleteEndpoint, NotificationDeleteRequest, NotificationDeleteResponse>(
             new() { Id = globalNotification.Id });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -88,7 +88,7 @@ public class NotificationDeleteTests(App app) : NotificationsTestsBase(app)
     {
         ClearAuthToken();
         
-        var (rsp, _) = await App.Client.DELETEAsync<NotificationDeleteEndpoint, NotificationDeleteRequest, NotificationDeleteResponse>(
+        var (rsp, _) = await Client.DELETEAsync<NotificationDeleteEndpoint, NotificationDeleteRequest, NotificationDeleteResponse>(
             new() { Id = Guid.NewGuid() });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);

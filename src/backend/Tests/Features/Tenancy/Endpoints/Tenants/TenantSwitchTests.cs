@@ -620,7 +620,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     {
         ClearAuthToken();
 
-        var (response, _) = await App.Client
+        var (response, _) = await Client
             .POSTAsync<TenantSwitchEndpoint, TenantSwitchRequest, TenantSwitchResponse>(new() { TenantId = Guid.NewGuid() });
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);

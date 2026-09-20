@@ -219,7 +219,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
 
         await SetPlatformAdminAuthTokenAsync();
 
-        var admitted = await call.Send(App.Client);
+        var admitted = await call.Send(Client);
 
         admitted.Status.Should().NotBe(HttpStatusCode.Forbidden,
             "the very same request to the very same resource is answered for a caller that holds the permission {0} requires",
@@ -260,21 +260,21 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
         await SignInAsAsync(member.Username, tenant.Id);
 
         // Admitted: precisely what the role's one permission declares.
-        var (read, _) = await App.Client
+        var (read, _) = await Client
             .GETAsync<TenantGetEndpoint, TenantGetRequest, TenantGetResponse>(new() { Id = tenant.Id });
 
         read.StatusCode.Should().Be(HttpStatusCode.OK,
             "the read declares Tenant.Detail, which is what the purpose-built role was given it for");
 
         // Refused: and refused at the gate, so nothing about the tenant changed.
-        var (members, _) = await App.Client
+        var (members, _) = await Client
             .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(
                 new() { TenantId = tenant.Id });
 
         members.StatusCode.Should().Be(HttpStatusCode.Forbidden,
             "the member list declares TenantMember.View, which the role does not hold");
 
-        var (renamed, _) = await App.Client
+        var (renamed, _) = await Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, TenantUpdateResponse>(
                 new() { Id = tenant.Id, Name = "Renamed By A Gate Test", Identifier = tenant.Identifier });
 
@@ -283,7 +283,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
 
         // The list is refused for a second reason worth stating on its own: Tenant.View belongs to the
         // platform scope, so it is not a permission a tenant role could be given to open this with.
-        var (listed, _) = await App.Client
+        var (listed, _) = await Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(new() { All = true });
 
         listed.StatusCode.Should().Be(HttpStatusCode.Forbidden,
@@ -299,14 +299,14 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
         // resting on when a permission recomputation happens to fall.
         await SignInAsAsync(member.Username, tenant.Id);
 
-        var (nowListed, _) = await App.Client
+        var (nowListed, _) = await Client
             .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(
                 new() { TenantId = tenant.Id });
 
         nowListed.StatusCode.Should().Be(HttpStatusCode.OK,
             "the request refused a moment ago is answered the moment the caller holds TenantMember.View, and by nothing else");
 
-        var (stillRefused, _) = await App.Client
+        var (stillRefused, _) = await Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, TenantUpdateResponse>(
                 new() { Id = tenant.Id, Name = "Renamed By A Gate Test", Identifier = tenant.Identifier });
 

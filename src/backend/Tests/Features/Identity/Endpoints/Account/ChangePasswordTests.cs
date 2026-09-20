@@ -29,14 +29,14 @@ public class ChangePasswordTests(App app) : TenancyTestsBase(app)
         await CreateAdminUserAsync(username, currentPassword);
         await SetAuthTokenAsync(username, currentPassword);
 
-        var (changeResponse, _) = await App.Client.POSTAsync<ChangePasswordEndpoint, ChangePasswordRequest, EmptyResponse>(new()
+        var (changeResponse, _) = await Client.POSTAsync<ChangePasswordEndpoint, ChangePasswordRequest, EmptyResponse>(new()
         {
             CurrentPassword = currentPassword,
             NewPassword = newPassword
         });
         changeResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var (profileResponse, _) = await App.Client.GETAsync<ProfileEndpoint, UserProfileResponse>();
+        var (profileResponse, _) = await Client.GETAsync<ProfileEndpoint, UserProfileResponse>();
         profileResponse.StatusCode.Should().Be(HttpStatusCode.OK,
             "the token was minted before the change and is trusted until it is replaced");
 
@@ -61,7 +61,7 @@ public class ChangePasswordTests(App app) : TenancyTestsBase(app)
 
         const string newPassword = "Changed#123";
 
-        var (response, _) = await App.Client
+        var (response, _) = await Client
             .POSTAsync<ChangePasswordEndpoint, ChangePasswordRequest, EmptyResponse>(new()
             {
                 CurrentPassword = TestUsers.DefaultPassword,

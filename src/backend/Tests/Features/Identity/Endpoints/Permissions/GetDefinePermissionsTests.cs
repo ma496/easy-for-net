@@ -18,7 +18,7 @@ public class GetDefinePermissionsTests(App app) : TenancyTestsBase(app)
     /// compared against the declaration rather than against another response.
     /// </summary>
     private IPermissionDefinitionService DefinitionService =>
-        App.Services.GetRequiredService<IPermissionDefinitionService>();
+        Service<IPermissionDefinitionService>();
 
     /// <summary>
     /// Verifies that the catalogue a caller is offered is the same set in each of two tenants, and is
@@ -98,7 +98,7 @@ public class GetDefinePermissionsTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, catalogue) = await App.Client
+        var (response, catalogue) = await Client
             .GETAsync<GetDefinePermissionsEndpoint, GetDefinePermissionsResponse>();
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);

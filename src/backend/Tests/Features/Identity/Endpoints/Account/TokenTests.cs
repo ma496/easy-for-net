@@ -73,7 +73,7 @@ public class TokenTests(App app) : TenancyTestsBase(app)
 
         // The credentials are unchanged and would still be accepted by the password check; what
         // refuses them is the account being out of service.
-        var (refused, refusal) = await App.Client
+        var (refused, refusal) = await Client
             .POSTAsync<TokenEndpoint, TokenRequest, ProblemDetails>(
                 new() { Username = account.Username, Password = TestUsers.DefaultPassword, TenantIdentifier = identifier });
 
@@ -166,7 +166,7 @@ public class TokenTests(App app) : TenancyTestsBase(app)
 
         ClearAuthToken();
 
-        var (response, result) = await App.Client
+        var (response, result) = await Client
             .POSTAsync<TokenEndpoint, TokenRequest, TokenResponse>(request);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK,
@@ -200,7 +200,7 @@ public class TokenTests(App app) : TenancyTestsBase(app)
 
         ClearAuthToken();
 
-        var (unnamed, refusal) = await App.Client
+        var (unnamed, refusal) = await Client
             .POSTAsync<TokenEndpoint, TokenRequest, ProblemDetails>(
                 new() { Username = account.Username, Password = TestUsers.DefaultPassword });
 
@@ -292,7 +292,7 @@ public class TokenTests(App app) : TenancyTestsBase(app)
     /// <returns>The tenant the session acts in, or <see langword="null"/> for none.</returns>
     private async Task<Guid?> AuthenticatedTenantAsync(string username, string? tenantIdentifier)
     {
-        var (response, result) = await App.Client
+        var (response, result) = await Client
             .POSTAsync<TokenEndpoint, TokenRequest, TokenResponse>(
                 new() { Username = username, Password = TestUsers.DefaultPassword, TenantIdentifier = tenantIdentifier });
 
@@ -314,7 +314,7 @@ public class TokenTests(App app) : TenancyTestsBase(app)
     /// <returns>The code the refusal was reported with.</returns>
     private async Task<string?> RefusalCodeAsync(string username, string tenantIdentifier)
     {
-        var (response, refusal) = await App.Client
+        var (response, refusal) = await Client
             .POSTAsync<TokenEndpoint, TokenRequest, ProblemDetails>(
                 new() { Username = username, Password = TestUsers.DefaultPassword, TenantIdentifier = tenantIdentifier });
 
@@ -345,7 +345,7 @@ public class TokenTests(App app) : TenancyTestsBase(app)
     /// <returns>The status the call was answered with.</returns>
     private async Task<HttpStatusCode> AuthenticateAsync(string username, string? tenantIdentifier = null)
     {
-        var (response, _) = await App.Client
+        var (response, _) = await Client
             .POSTAsync<TokenEndpoint, TokenRequest, TokenResponse>(
                 new() { Username = username, Password = TestUsers.DefaultPassword, TenantIdentifier = tenantIdentifier });
 

@@ -143,7 +143,7 @@ public class GetInfoTests(App app) : TenancyTestsBase(app)
         // The account belongs to two tenants, so the one it acts in is named rather than resolved.
         await SignInAsAsync(member.Username, keptTenant.Id);
 
-        var (beforeResponse, before) = await App.Client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
+        var (beforeResponse, before) = await Client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
 
         beforeResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         before.Tenants.Select(tenant => tenant.Id).Should().BeEquivalentTo(
@@ -156,7 +156,7 @@ public class GetInfoTests(App app) : TenancyTestsBase(app)
             TenantMembershipChangeOutcome.Applied,
             "somebody else administers the tenant, so the removal is the change being tested rather than a refusal");
 
-        var (afterResponse, after) = await App.Client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
+        var (afterResponse, after) = await Client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
 
         afterResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         after.Tenants.Select(tenant => tenant.Id).Should().Equal(
@@ -175,7 +175,7 @@ public class GetInfoTests(App app) : TenancyTestsBase(app)
     {
         var administrator = await SignInAsPlatformAdministratorActingInATenantAsync();
 
-        var (response, info) = await App.Client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
+        var (response, info) = await Client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         info.Id.Should().Be(administrator.Id);

@@ -26,6 +26,10 @@ using Backend.Tests.Features.Tenancy;
 /// reading as they did.
 /// </para>
 /// </remarks>
+// One collection for the whole notifications suite. A platform-wide notice reaches every account
+// by definition, so a test that reads an unread count as a delta is measuring something any
+// concurrently running notification test can change under it.
+[Collection("Notifications")]
 public abstract class NotificationsTestsBase(App app) : TenancyTestsBase(app)
 {
     /// <summary>

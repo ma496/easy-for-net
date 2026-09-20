@@ -135,7 +135,7 @@ public class FileGetTests(App app) : FileTestsBase(app)
 
         await SetPlatformAdminAuthTokenAsync();
 
-        var (deleteResponse, _) = await App.Client
+        var (deleteResponse, _) = await Client
             .DELETEAsync<TenantDeleteEndpoint, TenantDeleteRequest, TenantDeleteResponse>(new() { Id = tenant.Id });
 
         deleteResponse.StatusCode.Should().Be(HttpStatusCode.OK, "a test that cannot delete the tenant cannot arrange what it asserts on");
@@ -176,7 +176,7 @@ public class FileGetTests(App app) : FileTestsBase(app)
     {
         ClearAuthToken();
 
-        var (response, _) = await App.Client
+        var (response, _) = await Client
             .GETAsync<FileGetEndpoint, FileGetRequest, ProblemDetails>(new() { FileName = $"{Guid.NewGuid():N}.txt" });
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized,

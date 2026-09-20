@@ -220,7 +220,7 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
         uploadResponse.StatusCode.Should().Be(HttpStatusCode.OK, "the upload acts in the tenant the member's session names");
         uploaded.FileName.Should().NotBeNullOrWhiteSpace();
 
-        var storageProvider = App.Services.GetRequiredService<IStorageProvider>();
+        var storageProvider = Service<IStorageProvider>();
         storageProvider.Exists(uploaded.FileName).Should().BeTrue("the content reached storage");
 
         await SetPlatformAdminAuthTokenAsync();
@@ -273,7 +273,7 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
 
         // Reactivated by the platform surface, while the member's session is renewed once more rather
         // than signed in again.
-        await App.Client.POSTAsync<TenantReactivateEndpoint, TenantReactivateRequest, TenantReactivateResponse>(
+        await Client.POSTAsync<TenantReactivateEndpoint, TenantReactivateRequest, TenantReactivateResponse>(
             new() { Id = tenant.Id });
 
         await session.RenewAsync();
@@ -291,7 +291,7 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
     /// <param name="tenantId">The tenant to put out of service.</param>
     private async Task SuspendTenantAsync(Guid tenantId)
     {
-        var (response, _) = await App.Client
+        var (response, _) = await Client
             .POSTAsync<TenantSuspendEndpoint, TenantSuspendRequest, TenantSuspendResponse>(new() { Id = tenantId });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK, "a test suspending a tenant it created must actually have suspended it");

@@ -61,7 +61,7 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
 
         await DeleteTenantAsync(tenant.Id);
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, ProblemDetails>(new()
             {
                 Name = $"Reissued {Faker.GlobalUniqueIndex}",
@@ -149,7 +149,7 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
         // lower-case identifier is refused even though the trimmed, mixed-case original is nothing a
         // string comparison would match it against.
         await SetPlatformAdminAuthTokenAsync();
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, ProblemDetails>(new()
             {
                 Name = $"Duplicate Case {Faker.GlobalUniqueIndex}",
@@ -259,7 +259,7 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
 
         await DeleteTenantAsync(tenant.Id);
 
-        var (identifierResponse, identifierProblem) = await App.Client
+        var (identifierResponse, identifierProblem) = await Client
             .POSTAsync<TenantCreateEndpoint, TenantCreateRequest, ProblemDetails>(new()
             {
                 Name = $"Reissued {Faker.GlobalUniqueIndex}",
@@ -279,7 +279,7 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, _) = await App.Client
+        var (response, _) = await Client
             .DELETEAsync<TenantDeleteEndpoint, TenantDeleteRequest, TenantDeleteResponse>(new() { Id = tenantId });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);

@@ -19,7 +19,7 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
         var userId = TestUsers.TenantAdminUserId;
         var notification = await CreateUserNotificationAsync(userId);
 
-        var (rsp, res) = await App.Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
+        var (rsp, res) = await Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
             new()
             {
                 Page = 1,
@@ -45,7 +45,7 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
 
         var notification = await CreateGlobalNotificationAsync();
 
-        var (rsp, res) = await App.Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
+        var (rsp, res) = await Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
             new()
             {
                 Page = 1,
@@ -77,7 +77,7 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
             await CreateUserNotificationAsync(userId);
         }
 
-        var (rsp, res) = await App.Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
+        var (rsp, res) = await Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
             new()
             {
                 Page = 1,
@@ -87,7 +87,7 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
         res.Items.Count.Should().Be(2);
 
-        var (page2Rsp, page2Res) = await App.Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
+        var (page2Rsp, page2Res) = await Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
             new()
             {
                 Page = 2,
@@ -115,7 +115,7 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
         readNotification.IsRead = true;
         await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        var (unreadRsp, unreadRes) = await App.Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
+        var (unreadRsp, unreadRes) = await Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
             new()
             {
                 Page = 1,
@@ -126,7 +126,7 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
         unreadRsp.StatusCode.Should().Be(HttpStatusCode.OK);
         unreadRes.Items.Should().AllSatisfy(x => x.IsRead.Should().BeFalse());
 
-        var (readRsp, readRes) = await App.Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
+        var (readRsp, readRes) = await Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
             new()
             {
                 Page = 1,
@@ -155,7 +155,7 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
 
         await CreateUserNotificationAsync(userId);
 
-        var (rsp, res) = await App.Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
+        var (rsp, res) = await Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
             new()
             {
                 Page = 1,
@@ -214,7 +214,7 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
     {
         ClearAuthToken();
 
-        var (rsp, _) = await App.Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
+        var (rsp, _) = await Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
             new()
             {
                 Page = 1,

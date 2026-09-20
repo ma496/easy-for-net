@@ -18,7 +18,7 @@ public class UserDeleteTests(App app) : TenancyTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var roleService = App.Services.GetRequiredService<IRoleService>();
+        var roleService = Service<IRoleService>();
         var faker = new Faker<UserCreateRequest>()
                     .RuleFor(u => u.Username, f => f.Internet.UserName() + f.UniqueIndex)
                     .RuleFor(u => u.Email, f => f.Internet.Email() + f.UniqueIndex)
@@ -28,12 +28,12 @@ public class UserDeleteTests(App app) : TenancyTestsBase(app)
                     .RuleFor(u => u.IsActive, f => true);
         var request = faker.Generate();
         request.Roles = [TestRoles.TestRoleId];
-        var (createRsp, createRes) = await App.Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request);
+        var (createRsp, createRes) = await Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request);
 
         createRsp.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // Then delete the user
-        var (deleteRsp, deleteRes) = await App.Client.DELETEAsync<UserDeleteEndpoint, UserDeleteRequest, UserDeleteResponse>(
+        var (deleteRsp, deleteRes) = await Client.DELETEAsync<UserDeleteEndpoint, UserDeleteRequest, UserDeleteResponse>(
             new()
             {
                 Id = createRes.Id
@@ -43,7 +43,7 @@ public class UserDeleteTests(App app) : TenancyTestsBase(app)
         deleteRes.Success.Should().BeTrue();
 
         // Verify user is deleted by trying to get it
-        var (getRsp, _) = await App.Client.GETAsync<UserGetEndpoint, UserGetRequest, UserGetResponse>(
+        var (getRsp, _) = await Client.GETAsync<UserGetEndpoint, UserGetRequest, UserGetResponse>(
             new()
             {
                 Id = createRes.Id
@@ -60,7 +60,7 @@ public class UserDeleteTests(App app) : TenancyTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var (deleteRsp, _) = await App.Client.DELETEAsync<UserDeleteEndpoint, UserDeleteRequest, UserDeleteResponse>(
+        var (deleteRsp, _) = await Client.DELETEAsync<UserDeleteEndpoint, UserDeleteRequest, UserDeleteResponse>(
             new()
             {
                 Id = Guid.NewGuid()
@@ -78,12 +78,12 @@ public class UserDeleteTests(App app) : TenancyTestsBase(app)
         await SetAuthTokenAsync();
 
         // Get the system-created user (admin from seeder)
-        var userService = App.Services.GetRequiredService<IUserService>();
+        var userService = Service<IUserService>();
         var systemCreatedUser = await userService.GetByUsernameAsync(TestUsers.TenantAdminUsername);
         systemCreatedUser.Should().NotBeNull();
 
         // Try to delete the system-created user
-        var (deleteRsp, res) = await App.Client.DELETEAsync<UserDeleteEndpoint, UserDeleteRequest, ProblemDetails>(
+        var (deleteRsp, res) = await Client.DELETEAsync<UserDeleteEndpoint, UserDeleteRequest, ProblemDetails>(
             new()
             {
                 Id = systemCreatedUser!.Id

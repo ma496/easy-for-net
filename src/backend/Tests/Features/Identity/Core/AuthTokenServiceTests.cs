@@ -158,7 +158,7 @@ public class AuthTokenServiceTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task ConsumeRefreshTokenAsync_ShouldReturnTrueOnce_WhenTokenIsValid()
     {
-        var authTokenService = App.Services.GetRequiredService<IAuthTokenService>();
+        var authTokenService = Service<IAuthTokenService>();
         var cancellationToken = TestContext.Current.CancellationToken;
         var token = NewToken(TestUsers.TestUserId, $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(1), $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(1));
         await authTokenService.SaveTokenAsync(token, tenantId: null);
@@ -177,7 +177,7 @@ public class AuthTokenServiceTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task ConsumeRefreshTokenAsync_ShouldReturnFalse_WhenTokenIsInvalid()
     {
-        var authTokenService = App.Services.GetRequiredService<IAuthTokenService>();
+        var authTokenService = Service<IAuthTokenService>();
         var cancellationToken = TestContext.Current.CancellationToken;
         var token = NewToken(TestUsers.TestUserId, $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(-1), $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(-1));
         await authTokenService.SaveTokenAsync(token, tenantId: null);
@@ -193,8 +193,8 @@ public class AuthTokenServiceTests(App app) : TenancyTestsBase(app)
     [Fact]
     public async Task DeleteExpiredTokensAsync_ShouldDeleteExpiredTokens()
     {
-        var authTokenService = App.Services.GetRequiredService<IAuthTokenService>();
-        var authTokenCleanService = App.Services.GetRequiredService<IAuthTokenCleanService>();
+        var authTokenService = Service<IAuthTokenService>();
+        var authTokenCleanService = Service<IAuthTokenCleanService>();
         // create expired token
         var expiredToken = NewToken(TestUsers.TestUserId, $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(-1), $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(-1));
         var token = await authTokenService.SaveTokenAsync(expiredToken, tenantId: null);

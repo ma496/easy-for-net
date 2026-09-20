@@ -21,7 +21,7 @@ public class NotificationServiceTests(App app) : NotificationsTestsBase(app)
     /// The service under test, resolved from the running host so that it writes through the same
     /// <see cref="AppTestsBase.DbContext"/> and the same tenant scope the fixture's own arrangement uses.
     /// </summary>
-    private INotificationService NotificationService => App.Services.GetRequiredService<INotificationService>();
+    private INotificationService NotificationService => Service<INotificationService>();
 
     /// <summary>
     /// Verifies that a notification addressed to a single member of a tenant reaches that member and no

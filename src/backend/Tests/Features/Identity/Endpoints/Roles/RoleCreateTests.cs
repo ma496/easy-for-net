@@ -24,7 +24,7 @@ public class RoleCreateTests(App app) : TenancyTestsBase(app)
             Name = "",
             Description = new string('x', 1025),
         };
-        var (rsp, res) = await App.Client.POSTAsync<RoleCreateEndpoint, RoleCreateRequest, ProblemDetails>(request);
+        var (rsp, res) = await Client.POSTAsync<RoleCreateEndpoint, RoleCreateRequest, ProblemDetails>(request);
 
         rsp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         res.Errors.Count().Should().Be(2);
@@ -43,7 +43,7 @@ public class RoleCreateTests(App app) : TenancyTestsBase(app)
             .RuleFor(u => u.Name, f => f.Internet.UserName() + f.UniqueIndex)
             .RuleFor(u => u.Description, f => f.Lorem.Sentence());
         var request = faker.Generate();
-        var (rsp, res) = await App.Client.POSTAsync<RoleCreateEndpoint, RoleCreateRequest, RoleCreateResponse>(request);
+        var (rsp, res) = await Client.POSTAsync<RoleCreateEndpoint, RoleCreateRequest, RoleCreateResponse>(request);
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
         res.Name.Should().Be(request.Name);

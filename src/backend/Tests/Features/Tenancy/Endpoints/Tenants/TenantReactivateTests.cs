@@ -19,6 +19,8 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 /// <see cref="TenantSuspensionTests"/>, where the token that was refused is the token that is admitted.
 /// </para>
 /// </remarks>
+// Shares a collection with TenantUpdateTests - see the note there.
+[Collection("BootstrapTenant")]
 public class TenantReactivateTests(App app) : TenancyTestsBase(app)
 {
     /// <summary>
@@ -37,7 +39,7 @@ public class TenantReactivateTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync(TenantStatus.Suspended);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, reactivated) = await App.Client
+        var (response, reactivated) = await Client
             .POSTAsync<TenantReactivateEndpoint, TenantReactivateRequest, TenantReactivateResponse>(new() { Id = tenant.Id });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -61,7 +63,7 @@ public class TenantReactivateTests(App app) : TenancyTestsBase(app)
         var before = await ReloadTenantAsync(tenant.Id);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, reactivated) = await App.Client
+        var (response, reactivated) = await Client
             .POSTAsync<TenantReactivateEndpoint, TenantReactivateRequest, TenantReactivateResponse>(new() { Id = tenant.Id });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -83,7 +85,7 @@ public class TenantReactivateTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, reactivated) = await App.Client
+        var (response, reactivated) = await Client
             .POSTAsync<TenantReactivateEndpoint, TenantReactivateRequest, TenantReactivateResponse>(
                 new() { Id = TestTenants.BootstrapTenantId });
 
@@ -108,10 +110,10 @@ public class TenantReactivateTests(App app) : TenancyTestsBase(app)
         await DeleteTenantAsync(deleted.Id);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (deletedResponse, deletedProblem) = await App.Client
+        var (deletedResponse, deletedProblem) = await Client
             .POSTAsync<TenantReactivateEndpoint, TenantReactivateRequest, ProblemDetails>(new() { Id = deleted.Id });
 
-        var (unknownResponse, unknownProblem) = await App.Client
+        var (unknownResponse, unknownProblem) = await Client
             .POSTAsync<TenantReactivateEndpoint, TenantReactivateRequest, ProblemDetails>(new() { Id = Guid.NewGuid() });
 
         deletedResponse.StatusCode.Should().Be(unknownResponse.StatusCode, "the two are one answer, not two");
@@ -137,7 +139,7 @@ public class TenantReactivateTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .POSTAsync<TenantReactivateEndpoint, TenantReactivateRequest, ProblemDetails>(new() { Id = Guid.Empty });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);

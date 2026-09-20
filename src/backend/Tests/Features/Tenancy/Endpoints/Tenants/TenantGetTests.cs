@@ -32,7 +32,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, read) = await App.Client
+        var (response, read) = await Client
             .GETAsync<TenantGetEndpoint, TenantGetRequest, TenantGetResponse>(new() { Id = tenant.Id });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -55,7 +55,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
         var member = await CreateTenantUserAsync(tenant.Id, roleId);
         await SignInAsAsync(member.Username, tenant.Id);
 
-        var (response, read) = await App.Client
+        var (response, read) = await Client
             .GETAsync<TenantGetEndpoint, TenantGetRequest, TenantGetResponse>(new() { Id = tenant.Id });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -76,7 +76,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
         var member = await CreateTenantUserAsync(tenant.Id, roleId);
         await SignInAsAsync(member.Username, tenant.Id);
 
-        var (response, read) = await App.Client
+        var (response, read) = await Client
             .GETAsync<TenantGetEndpoint, TenantGetRequest, TenantGetResponse>(new() { Id = tenant.Id });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK,
@@ -98,7 +98,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
         var member = await CreateTenantUserAsync(joined.Id, roleId);
         await SignInAsAsync(member.Username, joined.Id);
 
-        var (refused, problem) = await App.Client
+        var (refused, problem) = await Client
             .GETAsync<TenantGetEndpoint, TenantGetRequest, ProblemDetails>(new() { Id = stranger.Id });
 
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest,
@@ -121,7 +121,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
         var member = await CreateTenantUserAsync(joined.Id, roleId);
         await SignInAsAsync(member.Username, joined.Id);
 
-        var (refused, problem) = await App.Client
+        var (refused, problem) = await Client
             .GETAsync<TenantGetEndpoint, TenantGetRequest, ProblemDetails>(new() { Id = stranger.Id });
 
         refused.StatusCode.Should().Be(
@@ -147,10 +147,10 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
         await DeleteTenantAsync(deleted.Id);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (deletedResponse, deletedProblem) = await App.Client
+        var (deletedResponse, deletedProblem) = await Client
             .GETAsync<TenantGetEndpoint, TenantGetRequest, ProblemDetails>(new() { Id = deleted.Id });
 
-        var (unknownResponse, unknownProblem) = await App.Client
+        var (unknownResponse, unknownProblem) = await Client
             .GETAsync<TenantGetEndpoint, TenantGetRequest, ProblemDetails>(new() { Id = Guid.NewGuid() });
 
         deletedResponse.StatusCode.Should().Be(unknownResponse.StatusCode, "the two are one answer, not two");
@@ -175,7 +175,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .GETAsync<TenantGetEndpoint, TenantGetRequest, ProblemDetails>(new() { Id = Guid.NewGuid() });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -192,7 +192,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, read) = await App.Client
+        var (response, read) = await Client
             .GETAsync<TenantGetEndpoint, TenantGetRequest, TenantGetResponse>(
                 new() { Id = TestTenants.BootstrapTenantId });
 
@@ -209,7 +209,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .GETAsync<TenantGetEndpoint, TenantGetRequest, ProblemDetails>(new() { Id = Guid.Empty });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);

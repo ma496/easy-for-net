@@ -23,6 +23,15 @@ if (!bld.Environment.IsDevelopment() &&
 {
     throw new InvalidOperationException("Auth:Jwt:Key must be supplied through secure configuration outside development and testing.");
 }
+// Tests run the host hundreds of times over and log nothing anybody reads, while every statement
+// logged at Information is a SQL command formatted and written. Set here for the same reason as the
+// rate limit below: appsettings.Testing.json is not in source control, so a setting there would be
+// one machine's alone.
+if (bld.Environment.IsEnvironment("Testing"))
+{
+    bld.Logging.SetMinimumLevel(LogLevel.Warning);
+}
+
 var maximumPayloadSize = bld.Configuration.GetValue<long?>("Payload:MaximumSize") ?? 25 * 1024 * 1024;
 var defaultConnection = bld.Configuration.GetConnectionString("DefaultConnection")
                         ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.");
@@ -110,6 +119,16 @@ bld.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
 });
+// `RateLimit:PermitLimit` and `RateLimit:WindowMinutes` override these, and the Testing default is
+// effectively no limit on purpose: permits are counted per identity, and a test suite is one
+// identity making every request it can as fast as it can. Held at the production figure, a suite
+// fast enough to be worth having trips the limiter and reports it as unrelated tests failing with
+// 429. The default lives here rather than in appsettings.Testing.json because that file is not in
+// source control - it is written per machine and per generated project - so a default set there
+// would not be inherited by anybody.
+var rateLimitPermits = bld.Configuration.GetValue<int?>("RateLimit:PermitLimit")
+                       ?? (bld.Environment.IsEnvironment("Testing") ? int.MaxValue : 300);
+var rateLimitWindow = TimeSpan.FromMinutes(bld.Configuration.GetValue<double?>("RateLimit:WindowMinutes") ?? 1);
 bld.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -120,8 +139,8 @@ bld.Services.AddRateLimiter(options =>
                   ?? "unknown";
         return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
         {
-            PermitLimit = 300,
-            Window = TimeSpan.FromMinutes(1),
+            PermitLimit = rateLimitPermits,
+            Window = rateLimitWindow,
             QueueLimit = 0,
             AutoReplenishment = true
         });
@@ -138,7 +157,14 @@ bld.Services.AddHangfire(config =>
                   options.UseNpgsqlConnection(hangfireConnection));
     });
 
-bld.Services.AddHangfireServer();
+// Storage, the dashboard and the recurring job registrations stay in every environment; only the
+// worker is withheld from tests. Nothing under test waits for a job to be processed, and a worker
+// polling the database throughout a run costs connections and attempts real deliveries - mail
+// included - against settings that are placeholders outside a deployment.
+if (!bld.Environment.IsEnvironment("Testing"))
+{
+    bld.Services.AddHangfireServer();
+}
 
 // configure settings
 bld.Services.AddOptions<PayloadSetting>()

@@ -21,7 +21,7 @@ public class NotificationMarkAsUnreadTests(App app) : NotificationsTestsBase(app
         notification.IsRead = true;
         await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        var (rsp, res) = await App.Client.POSTAsync<NotificationMarkAsUnreadEndpoint, NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>(
+        var (rsp, res) = await Client.POSTAsync<NotificationMarkAsUnreadEndpoint, NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>(
             new() { Id = notification.Id });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -49,7 +49,7 @@ public class NotificationMarkAsUnreadTests(App app) : NotificationsTestsBase(app
         var notification = await CreateGlobalNotificationAsync();
         await MarkNotificationVisitedAsync(notification.Id, userId);
 
-        var (rsp, res) = await App.Client.POSTAsync<NotificationMarkAsUnreadEndpoint, NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>(
+        var (rsp, res) = await Client.POSTAsync<NotificationMarkAsUnreadEndpoint, NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>(
             new() { Id = notification.Id });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -73,7 +73,7 @@ public class NotificationMarkAsUnreadTests(App app) : NotificationsTestsBase(app
         notification.IsRead = false;
         await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        var (rsp, res) = await App.Client.POSTAsync<NotificationMarkAsUnreadEndpoint, NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>(
+        var (rsp, res) = await Client.POSTAsync<NotificationMarkAsUnreadEndpoint, NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>(
             new() { Id = notification.Id });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -93,7 +93,7 @@ public class NotificationMarkAsUnreadTests(App app) : NotificationsTestsBase(app
         var newUser = await CreateAdminUserAsync($"testuser-{faker.Generate().Username}", TestUsers.DefaultPassword);
         var otherUserNotification = await CreateUserNotificationAsync(newUser.Id);
 
-        var (rsp, _) = await App.Client.POSTAsync<NotificationMarkAsUnreadEndpoint, NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>(
+        var (rsp, _) = await Client.POSTAsync<NotificationMarkAsUnreadEndpoint, NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>(
             new() { Id = otherUserNotification.Id });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -107,7 +107,7 @@ public class NotificationMarkAsUnreadTests(App app) : NotificationsTestsBase(app
     {
         await SetAuthTokenAsync();
 
-        var (rsp, _) = await App.Client.POSTAsync<NotificationMarkAsUnreadEndpoint, NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>(
+        var (rsp, _) = await Client.POSTAsync<NotificationMarkAsUnreadEndpoint, NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>(
             new() { Id = Guid.NewGuid() });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -121,7 +121,7 @@ public class NotificationMarkAsUnreadTests(App app) : NotificationsTestsBase(app
     {
         ClearAuthToken();
 
-        var (rsp, _) = await App.Client.POSTAsync<NotificationMarkAsUnreadEndpoint, NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>(
+        var (rsp, _) = await Client.POSTAsync<NotificationMarkAsUnreadEndpoint, NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>(
             new() { Id = Guid.NewGuid() });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);

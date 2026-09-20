@@ -96,7 +96,7 @@ public class FileDeleteTests(App app) : FileTestsBase(app)
     {
         ClearAuthToken();
 
-        var response = await RequestDeleteAsync(App.Client, $"{Guid.NewGuid():N}.txt");
+        var response = await RequestDeleteAsync(Client, $"{Guid.NewGuid():N}.txt");
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized,
             "an anonymous caller has no tenant to be judged against, so no file is even looked for");

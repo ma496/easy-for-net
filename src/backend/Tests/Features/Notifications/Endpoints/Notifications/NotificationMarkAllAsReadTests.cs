@@ -36,7 +36,7 @@ public class NotificationMarkAllAsReadTests(App app) : NotificationsTestsBase(ap
 
         await SetAuthTokenAsync(newUser.Username, TestUsers.DefaultPassword);
 
-        var (rsp, res) = await App.Client.POSTAsync<NotificationMarkAllAsReadEndpoint, NotificationMarkAllAsReadResponse>();
+        var (rsp, res) = await Client.POSTAsync<NotificationMarkAllAsReadEndpoint, NotificationMarkAllAsReadResponse>();
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
         res.Success.Should().BeTrue();
@@ -176,7 +176,7 @@ public class NotificationMarkAllAsReadTests(App app) : NotificationsTestsBase(ap
     {
         ClearAuthToken();
 
-        var (rsp, _) = await App.Client.POSTAsync<NotificationMarkAllAsReadEndpoint, NotificationMarkAllAsReadResponse>();
+        var (rsp, _) = await Client.POSTAsync<NotificationMarkAllAsReadEndpoint, NotificationMarkAllAsReadResponse>();
 
         rsp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }

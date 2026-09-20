@@ -69,7 +69,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
 
         admitted.StatusCode.Should().Be(HttpStatusCode.OK, "the member holds the permission in this tenant, and belongs to it");
 
-        var (response, removed) = await App.Client
+        var (response, removed) = await Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, TenantMemberRemoveResponse>(
                 new() { TenantId = removedTenant.Id, UserId = member.Id });
 
@@ -115,7 +115,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         var administratorRoleId = await TenantAdministratorRoleIdAsync(tenant.Id);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, ProblemDetails>(
                 new() { TenantId = tenant.Id, UserId = administrator.Id });
 
@@ -143,7 +143,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         var secondAdministrator = await CreateTenantUserAsync(tenant.Id, await TenantAdministratorRoleIdAsync(tenant.Id));
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, removed) = await App.Client
+        var (response, removed) = await Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, TenantMemberRemoveResponse>(
                 new() { TenantId = tenant.Id, UserId = firstAdministrator.Id });
 
@@ -170,7 +170,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         var member = await CreateTenantUserAsync(tenant.Id, await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_View));
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, removed) = await App.Client
+        var (response, removed) = await Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, TenantMemberRemoveResponse>(
                 new() { TenantId = tenant.Id, UserId = member.Id });
 
@@ -198,7 +198,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
 
         account.IsActive.Should().BeTrue();
 
-        var (listResponse, page) = await App.Client
+        var (listResponse, page) = await Client
             .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(
                 new() { TenantId = tenant.Id, All = true });
 
@@ -220,12 +220,12 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         var member = await CreateTenantUserAsync(tenant.Id);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (suspendResponse, _) = await App.Client
+        var (suspendResponse, _) = await Client
             .POSTAsync<TenantSuspendEndpoint, TenantSuspendRequest, TenantSuspendResponse>(new() { Id = tenant.Id });
 
         suspendResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var (response, removed) = await App.Client
+        var (response, removed) = await Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, TenantMemberRemoveResponse>(
                 new() { TenantId = tenant.Id, UserId = member.Id });
 
@@ -277,16 +277,16 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         var account = await CreateAccountWithoutMembershipAsync();
         await SetPlatformAdminAuthTokenAsync();
 
-        var (neverAMember, _) = await App.Client
+        var (neverAMember, _) = await Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, TenantMemberRemoveResponse>(
                 new() { TenantId = tenant.Id, UserId = account.Id });
 
         var member = await CreateTenantUserAsync(tenant.Id);
-        var (removed, _) = await App.Client
+        var (removed, _) = await Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, TenantMemberRemoveResponse>(
                 new() { TenantId = tenant.Id, UserId = member.Id });
 
-        var (removedAgain, _) = await App.Client
+        var (removedAgain, _) = await Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, TenantMemberRemoveResponse>(
                 new() { TenantId = tenant.Id, UserId = member.Id });
 
@@ -304,7 +304,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, ProblemDetails>(
                 new() { TenantId = Guid.NewGuid(), UserId = Guid.NewGuid() });
 
@@ -322,11 +322,11 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (missingTenant, tenantProblem) = await App.Client
+        var (missingTenant, tenantProblem) = await Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, ProblemDetails>(
                 new() { TenantId = Guid.Empty, UserId = Guid.NewGuid() });
 
-        var (missingMember, memberProblem) = await App.Client
+        var (missingMember, memberProblem) = await Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, ProblemDetails>(
                 new() { TenantId = Guid.NewGuid(), UserId = Guid.Empty });
 
@@ -355,7 +355,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         (await GrantedRolesAsync(tenant.Id, ordinaryMember.Id))
             .Should().BeEmpty("the member the tenant keeps holds no role in it, and so administers nothing");
 
-        var (refused, problem) = await App.Client
+        var (refused, problem) = await Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, ProblemDetails>(
                 new() { TenantId = tenant.Id, UserId = administrator.Id });
 
@@ -371,7 +371,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         await TenantAuthorizationService.ReplaceTenantRoleAssignmentsAsync(
             tenant.Id, ordinaryMember.Id, [administratorRoleId], TestContext.Current.CancellationToken);
 
-        var (allowed, removed) = await App.Client
+        var (allowed, removed) = await Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, TenantMemberRemoveResponse>(
                 new() { TenantId = tenant.Id, UserId = administrator.Id });
 
@@ -480,7 +480,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
 
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, ProblemDetails>(
                 new() { TenantId = tenant.Id, UserId = remaining.Id });
 

@@ -22,7 +22,7 @@ public class NotificationTenancyTests(App app) : NotificationsTestsBase(app)
     /// The service the notices are raised through, resolved from the running host so that it writes through
     /// the same <see cref="AppTestsBase.DbContext"/> and reads the same tenant scope the test establishes.
     /// </summary>
-    private INotificationService NotificationService => App.Services.GetRequiredService<INotificationService>();
+    private INotificationService NotificationService => Service<INotificationService>();
 
     /// <summary>
     /// Verifies that a notification raised in one tenant is visible to a recipient acting there and not to

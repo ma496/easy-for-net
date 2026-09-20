@@ -34,6 +34,10 @@ using Microsoft.AspNetCore.Http;
 /// asserting on whatever the rest of the suite has left behind.
 /// </para>
 /// </remarks>
+// One collection for the whole file suite. Storage is a single uploads directory under the host's
+// content root, and a test that weighs what the directory holds before and against after cannot
+// have another test writing into it meanwhile.
+[Collection("FileManagement")]
 public abstract class FileTestsBase(App app) : TenancyTestsBase(app)
 {
     /// <summary>
@@ -52,7 +56,7 @@ public abstract class FileTestsBase(App app) : TenancyTestsBase(app)
     /// The storage provider the running host writes through, for asking whether a file's content is
     /// still there - which is not the same question as whether the caller was allowed to have it.
     /// </summary>
-    protected IStorageProvider StorageProvider => App.Services.GetRequiredService<IStorageProvider>();
+    protected IStorageProvider StorageProvider => Service<IStorageProvider>();
 
     /// <summary>
     /// Builds a multipart upload of the given text as a small in-memory file.
@@ -152,7 +156,7 @@ public abstract class FileTestsBase(App app) : TenancyTestsBase(app)
     protected List<string> StoredContentNames()
     {
         var storageDirectory = Path.Combine(
-            App.Services.GetRequiredService<IWebHostEnvironment>().ContentRootPath,
+            Service<IWebHostEnvironment>().ContentRootPath,
             "uploads");
 
         if (!Directory.Exists(storageDirectory))

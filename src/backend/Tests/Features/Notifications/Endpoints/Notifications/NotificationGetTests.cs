@@ -18,7 +18,7 @@ public class NotificationGetTests(App app) : NotificationsTestsBase(app)
         var userId = TestUsers.TenantAdminUserId;
         var notification = await CreateUserNotificationAsync(userId);
 
-        var (rsp, res) = await App.Client.GETAsync<NotificationGetEndpoint, NotificationGetRequest, NotificationGetResponse>(
+        var (rsp, res) = await Client.GETAsync<NotificationGetEndpoint, NotificationGetRequest, NotificationGetResponse>(
             new() { Id = notification.Id });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -37,7 +37,7 @@ public class NotificationGetTests(App app) : NotificationsTestsBase(app)
 
         var notification = await CreateGlobalNotificationAsync();
 
-        var (rsp, res) = await App.Client.GETAsync<NotificationGetEndpoint, NotificationGetRequest, NotificationGetResponse>(
+        var (rsp, res) = await Client.GETAsync<NotificationGetEndpoint, NotificationGetRequest, NotificationGetResponse>(
             new() { Id = notification.Id });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -53,7 +53,7 @@ public class NotificationGetTests(App app) : NotificationsTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var (rsp, _) = await App.Client.GETAsync<NotificationGetEndpoint, NotificationGetRequest, NotificationGetResponse>(
+        var (rsp, _) = await Client.GETAsync<NotificationGetEndpoint, NotificationGetRequest, NotificationGetResponse>(
             new() { Id = Guid.NewGuid() });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -69,7 +69,7 @@ public class NotificationGetTests(App app) : NotificationsTestsBase(app)
 
         var otherUserNotification = await CreateUserNotificationAsync(TestUsers.TestUserId);
 
-        var (rsp, _) = await App.Client.GETAsync<NotificationGetEndpoint, NotificationGetRequest, NotificationGetResponse>(
+        var (rsp, _) = await Client.GETAsync<NotificationGetEndpoint, NotificationGetRequest, NotificationGetResponse>(
             new() { Id = otherUserNotification.Id });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -85,7 +85,7 @@ public class NotificationGetTests(App app) : NotificationsTestsBase(app)
 
         var notification = await CreateGlobalNotificationAsync();
 
-        var (rsp, res) = await App.Client.GETAsync<NotificationGetEndpoint, NotificationGetRequest, NotificationGetResponse>(
+        var (rsp, res) = await Client.GETAsync<NotificationGetEndpoint, NotificationGetRequest, NotificationGetResponse>(
             new() { Id = notification.Id });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -104,7 +104,7 @@ public class NotificationGetTests(App app) : NotificationsTestsBase(app)
         var notification = await CreateGlobalNotificationAsync();
         await MarkNotificationVisitedAsync(notification.Id, userId);
 
-        var (rsp, res) = await App.Client.GETAsync<NotificationGetEndpoint, NotificationGetRequest, NotificationGetResponse>(
+        var (rsp, res) = await Client.GETAsync<NotificationGetEndpoint, NotificationGetRequest, NotificationGetResponse>(
             new() { Id = notification.Id });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -119,7 +119,7 @@ public class NotificationGetTests(App app) : NotificationsTestsBase(app)
     {
         ClearAuthToken();
 
-        var (rsp, _) = await App.Client.GETAsync<NotificationGetEndpoint, NotificationGetRequest, NotificationGetResponse>(
+        var (rsp, _) = await Client.GETAsync<NotificationGetEndpoint, NotificationGetRequest, NotificationGetResponse>(
             new() { Id = Guid.NewGuid() });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);

@@ -52,7 +52,7 @@ public class PlatformScopeIdentityTests(App app) : TenancyTestsBase(app)
         await SetPlatformAdminAuthTokenAsync();
         var platformRoleId = await CreatePlatformRoleAsync();
 
-        var (response, page) = await App.Client
+        var (response, page) = await Client
             .GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(new() { All = true });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -61,7 +61,7 @@ public class PlatformScopeIdentityTests(App app) : TenancyTestsBase(app)
         ids.Should().Contain(platformRoleId).And.Contain(TestRoles.PlatformAdminRoleId);
         ids.Should().NotContain(tenantRoleId, "a tenant's role is not one of the platform's roles");
 
-        var (namedResponse, named) = await App.Client
+        var (namedResponse, named) = await Client
             .GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(new() { All = true, TenantId = tenant.Id });
 
         namedResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -80,7 +80,7 @@ public class PlatformScopeIdentityTests(App app) : TenancyTestsBase(app)
 
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, _) = await App.Client
+        var (response, _) = await Client
             .GETAsync<RoleGetEndpoint, RoleGetRequest, RoleGetResponse>(new() { Id = tenantRoleId });
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -99,19 +99,19 @@ public class PlatformScopeIdentityTests(App app) : TenancyTestsBase(app)
         await SetPlatformAdminAuthTokenAsync();
         var platformRoleId = await CreatePlatformRoleAsync();
 
-        var (created, platformUser) = await App.Client
+        var (created, platformUser) = await Client
             .POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(NewUserRequest(platformRoleId));
 
         created.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var (platformRsp, platformPage) = await App.Client
+        var (platformRsp, platformPage) = await Client
             .GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
                 new() { Page = 1, PageSize = 10, Search = platformUser.Username });
 
         platformRsp.StatusCode.Should().Be(HttpStatusCode.OK);
         platformPage.Items.Select(item => item.Id).Should().Equal([platformUser.Id]);
 
-        var (tenantRsp, tenantPage) = await App.Client
+        var (tenantRsp, tenantPage) = await Client
             .GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
                 new() { Page = 1, PageSize = 10, Search = tenantUser.Username });
 
@@ -132,13 +132,13 @@ public class PlatformScopeIdentityTests(App app) : TenancyTestsBase(app)
         await SetPlatformAdminAuthTokenAsync();
         var platformRoleId = await CreatePlatformRoleAsync();
 
-        var (refused, refusal) = await App.Client
+        var (refused, refusal) = await Client
             .POSTAsync<UserCreateEndpoint, UserCreateRequest, ProblemDetails>(NewUserRequest(tenantRoleId));
 
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest, "only platform roles can be granted from platform scope");
         refusal.Errors.First().Code.Should().Be(ErrorCodes.ReferencedRecordNotFound);
 
-        var (created, account) = await App.Client
+        var (created, account) = await Client
             .POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(NewUserRequest(platformRoleId));
 
         created.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -179,7 +179,7 @@ public class PlatformScopeIdentityTests(App app) : TenancyTestsBase(app)
         await MarkAsPlatformAccountAsync(member.Id);
         await UserService.AssignRoleAsync(member.Id, firstPlatformRoleId);
 
-        var (response, _) = await App.Client
+        var (response, _) = await Client
             .PUTAsync<UserUpdateEndpoint, UserUpdateRequest, UserUpdateResponse>(new()
             {
                 Id = member.Id,
@@ -227,7 +227,7 @@ public class PlatformScopeIdentityTests(App app) : TenancyTestsBase(app)
 
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, page) = await App.Client
+        var (response, page) = await Client
             .GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
                 new() { Page = 1, PageSize = 10, Group = group });
 
@@ -243,7 +243,7 @@ public class PlatformScopeIdentityTests(App app) : TenancyTestsBase(app)
     /// <returns>The identifier of the created role.</returns>
     private async Task<Guid> CreatePlatformRoleAsync()
     {
-        var (response, role) = await App.Client
+        var (response, role) = await Client
             .POSTAsync<RoleCreateEndpoint, RoleCreateRequest, RoleCreateResponse>(
                 new() { Name = $"Platform {Guid.NewGuid():N}" });
 

@@ -51,7 +51,7 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
 
         await SignInAsPlatformAdministratorAsync(tenant.Id);
 
-        var (response, role) = await App.Client
+        var (response, role) = await Client
             .GETAsync<RoleGetEndpoint, RoleGetRequest, RoleGetResponse>(new() { Id = roleId });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK, "the caller administers the installation rather than this tenant");
@@ -72,7 +72,7 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
 
         await SignInAsPlatformAdministratorAsync(tenant.Id);
 
-        var (response, updated) = await App.Client
+        var (response, updated) = await Client
             .PUTAsync<RoleUpdateEndpoint, RoleUpdateRequest, RoleUpdateResponse>(new()
             {
                 Id = roleId,
@@ -100,7 +100,7 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
 
         await SignInAsPlatformAdministratorAsync(tenant.Id);
 
-        var (response, changed) = await App.Client
+        var (response, changed) = await Client
             .PUTAsync<ChangePermissionsEndpoint, ChangePermissionsRequest, ChangePermissionsResponse>(new()
             {
                 Id = roleId,
@@ -126,7 +126,7 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
 
         await SignInAsPlatformAdministratorAsync(tenant.Id);
 
-        var (response, deleted) = await App.Client
+        var (response, deleted) = await Client
             .DELETEAsync<RoleDeleteEndpoint, RoleDeleteRequest, RoleDeleteResponse>(new() { Id = roleId });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -181,7 +181,7 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
 
         await SignInAsPlatformAdministratorAsync(entered.Id);
 
-        var (response, _) = await App.Client
+        var (response, _) = await Client
             .GETAsync<RoleGetEndpoint, RoleGetRequest, RoleGetResponse>(new() { Id = roleId });
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound,

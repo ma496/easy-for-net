@@ -46,7 +46,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         var account = await CreateAccountWithoutMembershipAsync();
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, added) = await App.Client
+        var (response, added) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, TenantMemberAddResponse>(new()
             {
                 TenantId = tenant.Id,
@@ -83,7 +83,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         var account = await CreateAccountWithoutMembershipAsync();
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, added) = await App.Client
+        var (response, added) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, TenantMemberAddResponse>(new()
             {
                 TenantId = tenant.Id,
@@ -117,7 +117,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         var account = await CreateAccountWithoutMembershipAsync();
         await SetPlatformAdminAuthTokenAsync();
 
-        var (first, _) = await App.Client
+        var (first, _) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, TenantMemberAddResponse>(new()
             {
                 TenantId = tenant.Id,
@@ -125,7 +125,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
                 Roles = []
             });
 
-        var (second, problem) = await App.Client
+        var (second, problem) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, ProblemDetails>(new()
             {
                 TenantId = tenant.Id,
@@ -156,7 +156,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         var unknownUserId = Guid.NewGuid();
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, ProblemDetails>(new()
             {
                 TenantId = tenant.Id,
@@ -260,7 +260,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         var account = await CreateAccountWithoutMembershipAsync();
         await SetPlatformAdminAuthTokenAsync();
 
-        var (_, first) = await App.Client
+        var (_, first) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, TenantMemberAddResponse>(new()
             {
                 TenantId = tenant.Id,
@@ -274,7 +274,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         // be visible as a role that was never asked for this time.
         var secondRoleId = await CreateTenantRoleAsync(tenant.Id, Allow.Role_View);
 
-        var (reAddResponse, reAdded) = await App.Client
+        var (reAddResponse, reAdded) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, TenantMemberAddResponse>(new()
             {
                 TenantId = tenant.Id,
@@ -306,7 +306,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         var account = await CreateAccountWithoutMembershipAsync();
         await SetPlatformAdminAuthTokenAsync();
 
-        var (_, _) = await App.Client
+        var (_, _) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, TenantMemberAddResponse>(new()
             {
                 TenantId = tenant.Id,
@@ -316,7 +316,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
 
         await MembershipService.RemoveAsync(tenant.Id, account.Id, TestContext.Current.CancellationToken);
 
-        var (reAddResponse, reAdded) = await App.Client
+        var (reAddResponse, reAdded) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, TenantMemberAddResponse>(new()
             {
                 TenantId = tenant.Id,
@@ -326,7 +326,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
 
         reAddResponse.StatusCode.Should().Be(HttpStatusCode.OK, "a removed membership is not a membership, so it is not what a duplicate comparison sees");
 
-        var (third, thirdProblem) = await App.Client
+        var (third, thirdProblem) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, ProblemDetails>(new()
             {
                 TenantId = tenant.Id,
@@ -357,7 +357,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         await SetPlatformAdminAuthTokenAsync();
 
         var before = DateTime.UtcNow;
-        var (response, added) = await App.Client
+        var (response, added) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, TenantMemberAddResponse>(new()
             {
                 TenantId = tenant.Id,
@@ -387,7 +387,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         var account = await CreateAccountWithoutMembershipAsync();
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, ProblemDetails>(new()
             {
                 TenantId = Guid.NewGuid(),
@@ -412,7 +412,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         var account = await CreateAccountWithoutMembershipAsync();
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, ProblemDetails>(new()
             {
                 TenantId = tenant.Id,
@@ -442,7 +442,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         var account = await CreateAccountWithoutMembershipAsync();
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, ProblemDetails>(new()
             {
                 TenantId = tenant.Id,
@@ -467,7 +467,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (missingTenant, tenantProblem) = await App.Client
+        var (missingTenant, tenantProblem) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, ProblemDetails>(new()
             {
                 TenantId = Guid.Empty,
@@ -475,7 +475,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
                 Roles = []
             });
 
-        var (missingUser, userProblem) = await App.Client
+        var (missingUser, userProblem) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, ProblemDetails>(new()
             {
                 TenantId = Guid.NewGuid(),
@@ -483,7 +483,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
                 Roles = []
             });
 
-        var (emptyRole, roleProblem) = await App.Client
+        var (emptyRole, roleProblem) = await Client
             .POSTAsync<TenantMemberAddEndpoint, TenantMemberAddRequest, ProblemDetails>(new()
             {
                 TenantId = Guid.NewGuid(),

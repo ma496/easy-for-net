@@ -47,7 +47,7 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
         var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_View);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, deleted) = await App.Client
+        var (response, deleted) = await Client
             .DELETEAsync<TenantDeleteEndpoint, TenantDeleteRequest, TenantDeleteResponse>(new() { Id = tenant.Id });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -55,14 +55,14 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
 
         // Excluded from every query: neither reading it nor searching the list finds it, which is what
         // a caller can observe of a deletion.
-        var (readResponse, readProblem) = await App.Client
+        var (readResponse, readProblem) = await Client
             .GETAsync<TenantGetEndpoint, TenantGetRequest, ProblemDetails>(new() { Id = tenant.Id });
 
         readResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         readProblem.Errors.Should().ContainSingle();
         readProblem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound);
 
-        var (listResponse, page) = await App.Client
+        var (listResponse, page) = await Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(
                 new() { Search = tenant.Identifier, All = true });
 
@@ -121,11 +121,11 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
 
         uploadResponse.StatusCode.Should().Be(HttpStatusCode.OK, "the upload acts in the tenant the member's session names");
 
-        var storageProvider = App.Services.GetRequiredService<IStorageProvider>();
+        var storageProvider = Service<IStorageProvider>();
 
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, deleted) = await App.Client
+        var (response, deleted) = await Client
             .DELETEAsync<TenantDeleteEndpoint, TenantDeleteRequest, TenantDeleteResponse>(new() { Id = tenant.Id });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -150,7 +150,7 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .DELETEAsync<TenantDeleteEndpoint, TenantDeleteRequest, ProblemDetails>(
                 new() { Id = TestTenants.BootstrapTenantId });
 
@@ -175,10 +175,10 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         await SetPlatformAdminAuthTokenAsync();
 
-        var (firstResponse, _) = await App.Client
+        var (firstResponse, _) = await Client
             .DELETEAsync<TenantDeleteEndpoint, TenantDeleteRequest, TenantDeleteResponse>(new() { Id = tenant.Id });
 
-        var (secondResponse, problem) = await App.Client
+        var (secondResponse, problem) = await Client
             .DELETEAsync<TenantDeleteEndpoint, TenantDeleteRequest, ProblemDetails>(new() { Id = tenant.Id });
 
         firstResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -201,10 +201,10 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (unknownResponse, unknownProblem) = await App.Client
+        var (unknownResponse, unknownProblem) = await Client
             .DELETEAsync<TenantDeleteEndpoint, TenantDeleteRequest, ProblemDetails>(new() { Id = Guid.NewGuid() });
 
-        var (missingResponse, missingProblem) = await App.Client
+        var (missingResponse, missingProblem) = await Client
             .DELETEAsync<TenantDeleteEndpoint, TenantDeleteRequest, ProblemDetails>(new() { Id = Guid.Empty });
 
         unknownResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);

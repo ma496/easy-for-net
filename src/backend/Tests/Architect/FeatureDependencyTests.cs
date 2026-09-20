@@ -17,7 +17,7 @@ public class FeatureDependencyTests(App app) : AppTestsBase(app)
     {
       var assembly = typeof(global::Program).Assembly;
       const string baseFeatureNamespace = "Backend.Features";
-      var featureDependencyTester = App.Services.GetRequiredService<IFeatureDependencyTester>();
+      var featureDependencyTester = Service<IFeatureDependencyTester>();
       var testOutput = featureDependencyTester.Test(assembly, baseFeatureNamespace);
       
       Assert.True(testOutput.IsSuccess, "Feature dependency test failed:\n" + FormatFailureMessage(testOutput));
@@ -31,7 +31,7 @@ public class FeatureDependencyTests(App app) : AppTestsBase(app)
     {
         var assembly = GetType().Assembly;
         const string baseFeatureNamespace = "Backend.Tests.Architect.Features";
-        var featureDependencyTester = App.Services.GetRequiredService<IFeatureDependencyTester>();
+        var featureDependencyTester = Service<IFeatureDependencyTester>();
         var testOutput = featureDependencyTester.Test(assembly, baseFeatureNamespace);
       
         Assert.False(testOutput.IsSuccess);

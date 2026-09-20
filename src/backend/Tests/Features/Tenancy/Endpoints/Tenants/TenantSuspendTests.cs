@@ -40,7 +40,7 @@ public class TenantSuspendTests(App app) : TenancyTestsBase(app)
         var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.Tenant_View);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, suspended) = await App.Client
+        var (response, suspended) = await Client
             .POSTAsync<TenantSuspendEndpoint, TenantSuspendRequest, TenantSuspendResponse>(new() { Id = tenant.Id });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -75,7 +75,7 @@ public class TenantSuspendTests(App app) : TenancyTestsBase(app)
         var before = await ReloadTenantAsync(tenant.Id);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, suspended) = await App.Client
+        var (response, suspended) = await Client
             .POSTAsync<TenantSuspendEndpoint, TenantSuspendRequest, TenantSuspendResponse>(new() { Id = tenant.Id });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -96,7 +96,7 @@ public class TenantSuspendTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .POSTAsync<TenantSuspendEndpoint, TenantSuspendRequest, ProblemDetails>(
                 new() { Id = TestTenants.BootstrapTenantId });
 
@@ -122,10 +122,10 @@ public class TenantSuspendTests(App app) : TenancyTestsBase(app)
         await DeleteTenantAsync(deleted.Id);
         await SetPlatformAdminAuthTokenAsync();
 
-        var (deletedResponse, deletedProblem) = await App.Client
+        var (deletedResponse, deletedProblem) = await Client
             .POSTAsync<TenantSuspendEndpoint, TenantSuspendRequest, ProblemDetails>(new() { Id = deleted.Id });
 
-        var (unknownResponse, unknownProblem) = await App.Client
+        var (unknownResponse, unknownProblem) = await Client
             .POSTAsync<TenantSuspendEndpoint, TenantSuspendRequest, ProblemDetails>(new() { Id = Guid.NewGuid() });
 
         deletedResponse.StatusCode.Should().Be(unknownResponse.StatusCode, "the two are one answer, not two");
@@ -152,7 +152,7 @@ public class TenantSuspendTests(App app) : TenancyTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, problem) = await App.Client
+        var (response, problem) = await Client
             .POSTAsync<TenantSuspendEndpoint, TenantSuspendRequest, ProblemDetails>(new() { Id = Guid.Empty });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);

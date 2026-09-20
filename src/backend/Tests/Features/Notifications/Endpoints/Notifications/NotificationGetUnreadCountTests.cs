@@ -26,7 +26,7 @@ public class NotificationGetUnreadCountTests(App app) : NotificationsTestsBase(a
         await CreateUserNotificationAsync(userId);
         await CreateUserNotificationAsync(userId);
 
-        var (rsp, res) = await App.Client.GETAsync<NotificationGetUnreadCountEndpoint, NotificationGetUnreadCountResponse>();
+        var (rsp, res) = await Client.GETAsync<NotificationGetUnreadCountEndpoint, NotificationGetUnreadCountResponse>();
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
         res.Count.Should().BeGreaterThanOrEqualTo(2);
@@ -43,7 +43,7 @@ public class NotificationGetUnreadCountTests(App app) : NotificationsTestsBase(a
         await CreateGlobalNotificationAsync();
         await CreateGlobalNotificationAsync();
 
-        var (rsp, res) = await App.Client.GETAsync<NotificationGetUnreadCountEndpoint, NotificationGetUnreadCountResponse>();
+        var (rsp, res) = await Client.GETAsync<NotificationGetUnreadCountEndpoint, NotificationGetUnreadCountResponse>();
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
         res.Count.Should().BeGreaterThanOrEqualTo(2);
@@ -114,7 +114,7 @@ public class NotificationGetUnreadCountTests(App app) : NotificationsTestsBase(a
     {
         ClearAuthToken();
 
-        var (rsp, _) = await App.Client.GETAsync<NotificationGetUnreadCountEndpoint, NotificationGetUnreadCountResponse>();
+        var (rsp, _) = await Client.GETAsync<NotificationGetUnreadCountEndpoint, NotificationGetUnreadCountResponse>();
 
         rsp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }

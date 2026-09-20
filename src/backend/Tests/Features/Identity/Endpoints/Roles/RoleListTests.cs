@@ -24,11 +24,11 @@ public class RoleListTests(App app) : TenancyTestsBase(app)
         var requests = faker.Generate(3);
         foreach (var request in requests)
         {
-            await App.Client.POSTAsync<RoleCreateEndpoint, RoleCreateRequest, RoleCreateResponse>(request);
+            await Client.POSTAsync<RoleCreateEndpoint, RoleCreateRequest, RoleCreateResponse>(request);
         }
 
         // Get list of roles
-        var (listRsp, listRes) = await App.Client.GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(
+        var (listRsp, listRes) = await Client.GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(
             new()
             {
                 Page = 1,
@@ -51,11 +51,11 @@ public class RoleListTests(App app) : TenancyTestsBase(app)
         var faker = new Faker<RoleCreateRequest>()
             .RuleFor(u => u.Name, f => f.Internet.UserName() + f.UniqueIndex)
             .RuleFor(u => u.Description, f => f.Lorem.Sentence());
-        var (createRsp, createRes) = await App.Client.POSTAsync<RoleCreateEndpoint, RoleCreateRequest, RoleCreateResponse>(faker.Generate());
+        var (createRsp, createRes) = await Client.POSTAsync<RoleCreateEndpoint, RoleCreateRequest, RoleCreateResponse>(faker.Generate());
 
         createRsp.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var (listRsp, listRes) = await App.Client.GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(
+        var (listRsp, listRes) = await Client.GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(
             new()
             {
                 All = true
@@ -80,11 +80,11 @@ public class RoleListTests(App app) : TenancyTestsBase(app)
         var requests = faker.Generate(5);
         foreach (var request in requests)
         {
-            await App.Client.POSTAsync<RoleCreateEndpoint, RoleCreateRequest, RoleCreateResponse>(request);
+            await Client.POSTAsync<RoleCreateEndpoint, RoleCreateRequest, RoleCreateResponse>(request);
         }
 
         // Get first page with 2 roles
-        var (page1Rsp, page1Res) = await App.Client.GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(
+        var (page1Rsp, page1Res) = await Client.GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(
             new()
             {
                 Page = 1,
@@ -95,7 +95,7 @@ public class RoleListTests(App app) : TenancyTestsBase(app)
         page1Res.Items.Count.Should().Be(2);
 
         // Get second page
-        var (page2Rsp, page2Res) = await App.Client.GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(
+        var (page2Rsp, page2Res) = await Client.GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(
             new()
             {
                 Page = 2,
@@ -171,7 +171,7 @@ public class RoleListTests(App app) : TenancyTestsBase(app)
 
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, page) = await App.Client
+        var (response, page) = await Client
             .GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(new() { All = true });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);

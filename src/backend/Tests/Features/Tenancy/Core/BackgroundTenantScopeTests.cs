@@ -10,7 +10,7 @@ using Backend.Tenancy;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Nothing here goes through <c>App.Client</c>. Every dependency is resolved from a service scope of
+/// Nothing here goes through <c>Client</c>. Every dependency is resolved from a service scope of
 /// its own, the way a job activator resolves a job: there is no HTTP request, so there is no
 /// pre-processor to establish a tenant and the scope starts unresolved. That is the state these tests
 /// are about - work that runs outside a request has to be told which tenant it acts for, and failing
@@ -36,8 +36,8 @@ public class BackgroundTenantScopeTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         var marker = NewMarker();
 
-        var notifications = App.Services.GetRequiredService<INotificationService>();
-        var tenantContext = App.Services.GetRequiredService<ITenantContext>();
+        var notifications = Service<INotificationService>();
+        var tenantContext = Service<ITenantContext>();
 
         using (tenantContext.BeginUnscoped())
         {

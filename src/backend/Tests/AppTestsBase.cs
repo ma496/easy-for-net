@@ -4,21 +4,82 @@ using Backend.Tenancy;
 
 namespace Backend.Tests;
 
-[Collection("SharedContext")]
 /// <summary>
 /// Base class for all integration tests providing common setup, authentication, and helper methods.
 /// </summary>
-public abstract class AppTestsBase(App app) : TestBase<App>
+/// <remarks>
+/// It derives from the plain <c>TestBase</c> rather than <c>TestBase&lt;App&gt;</c> because
+/// <see cref="App"/> is an assembly fixture, not a class fixture - it is built once for the whole
+/// run and handed to every test class's constructor. It carries no collection attribute either, so
+/// xunit puts each test class in a collection of its own and runs them concurrently; a class that
+/// has to be serialised against another names a collection for itself.
+/// </remarks>
+public abstract class AppTestsBase(App app) : TestBase
 {
     protected readonly App App = app;
-    protected AppDbContext DbContext => App.Services.GetRequiredService<AppDbContext>();
+
+    private AsyncServiceScope _scope;
+    private bool _scopeCreated;
+    private HttpClient? _client;
+
+    /// <summary>
+    /// The service scope this test acts in - one unit of work, like the one a request would open.
+    /// </summary>
+    /// <remarks>
+    /// It is created on first use rather than in setup so that it cannot be missed by a derived class
+    /// that overrides <c>SetupAsync</c> without calling this one. Resolving these services from the
+    /// host's root provider instead would hand every test the same <see cref="AppDbContext"/> and the
+    /// same <see cref="ITenantContext"/> - one change tracker for the whole run, and one mutable
+    /// tenant scope that concurrent tests would take from each other.
+    /// </remarks>
+    private IServiceProvider Scoped
+    {
+        get
+        {
+            if (!_scopeCreated)
+            {
+                _scope = App.Services.CreateAsyncScope();
+                _scopeCreated = true;
+            }
+
+            return _scope.ServiceProvider;
+        }
+    }
+
+    /// <summary>
+    /// Resolves a service in this test's scope.
+    /// </summary>
+    protected T Service<T>() where T : notnull => Scoped.GetRequiredService<T>();
+
+    /// <summary>
+    /// This test's own HTTP client. The bearer token set on it belongs to this test and is seen by
+    /// no other, which is what lets test classes run at the same time.
+    /// </summary>
+    protected HttpClient Client => _client ??= App.CreateClient(new ClientOptions());
+
+    protected AppDbContext DbContext => Service<AppDbContext>();
 
     /// <summary>
     /// The tenant scope the current unit of work acts in. Establishing one is what lets a test
     /// arrange tenant-scoped rows directly through <see cref="DbContext"/>, standing in for the
     /// scope a request would have opened.
     /// </summary>
-    protected ITenantContext TenantContext => App.Services.GetRequiredService<ITenantContext>();
+    protected ITenantContext TenantContext => Service<ITenantContext>();
+
+    /// <summary>
+    /// Releases this test's client and scope. An override in a derived class must call this one.
+    /// </summary>
+    protected override async ValueTask TearDownAsync()
+    {
+        _client?.Dispose();
+
+        if (_scopeCreated)
+        {
+            await _scope.DisposeAsync();
+        }
+
+        await base.TearDownAsync();
+    }
 
     /// <summary>
     /// Authenticates the HTTP client by setting a Bearer token obtained from the token endpoint,
@@ -29,7 +90,7 @@ public abstract class AppTestsBase(App app) : TestBase<App>
     /// </summary>
     protected async Task SetAuthTokenAsync(string username = TestUsers.TenantAdminUsername, string password = TestUsers.AdminPassword, Guid? tenantId = null)
     {
-        await TestsHelper.SetNewAuthTokenAsync(App.Client, username, password, await TenantIdentifierOfAsync(tenantId));
+        await TestsHelper.SetNewAuthTokenAsync(Client, username, password, await TenantIdentifierOfAsync(tenantId));
     }
 
     /// <summary>
@@ -55,7 +116,7 @@ public abstract class AppTestsBase(App app) : TestBase<App>
     /// </summary>
     protected async Task SetPlatformAdminAuthTokenAsync()
     {
-        await TestsHelper.SetNewAuthTokenAsync(App.Client, TestUsers.PlatformAdminUsername, TestUsers.AdminPassword);
+        await TestsHelper.SetNewAuthTokenAsync(Client, TestUsers.PlatformAdminUsername, TestUsers.AdminPassword);
     }
 
     /// <summary>
@@ -65,7 +126,7 @@ public abstract class AppTestsBase(App app) : TestBase<App>
     /// </summary>
     protected async Task SwitchTenantAsync(Guid tenantId)
     {
-        await TestsHelper.SwitchTenantAsync(App.Client, tenantId);
+        await TestsHelper.SwitchTenantAsync(Client, tenantId);
     }
 
     /// <summary>
@@ -89,8 +150,7 @@ public abstract class AppTestsBase(App app) : TestBase<App>
     /// in a tenant too, so finding one there proves nothing went wrong.
     /// </summary>
     protected IReadOnlyCollection<string> PlatformOnlyPermissionNames()
-        => [.. App.Services
-            .GetRequiredService<IPermissionDefinitionService>()
+        => [.. Service<IPermissionDefinitionService>()
             .GetFlattenedPermissions()
             .Where(permission => permission.Scope == PermissionScope.Platform)
             .Select(permission => permission.Name)];
@@ -100,7 +160,7 @@ public abstract class AppTestsBase(App app) : TestBase<App>
     /// </summary>
     protected void ClearAuthToken()
     {
-        App.Client.DefaultRequestHeaders.Authorization = null;
+        Client.DefaultRequestHeaders.Authorization = null;
     }
 
     /// <summary>
@@ -115,8 +175,8 @@ public abstract class AppTestsBase(App app) : TestBase<App>
     /// <exception cref="Exception">Thrown when the admin role does not exist or the user already exists.</exception>
     protected async Task<User> CreateAdminUserAsync(string username, string password)
     {
-        var userService = App.Services.GetRequiredService<IUserService>();
-        var roleService = App.Services.GetRequiredService<IRoleService>();
+        var userService = Service<IUserService>();
+        var roleService = Service<IRoleService>();
         var user = await userService.GetByUsernameAsync(username);
         if (user == null)
         {

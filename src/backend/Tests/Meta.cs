@@ -17,3 +17,9 @@ global using Backend.Base;
 global using Backend.Base.Dto;
 global using Backend.ErrorHandling;
 global using Backend.Tests.Seeder;
+
+// The application under test is built once for the whole assembly. Do not replace this with
+// FastEndpoints' [assembly: EnableAdvancedTesting] and TestBaseWithAssemblyFixture<App>: that test
+// framework disables parallelization for the entire assembly, which is the one thing this suite
+// cannot give up.
+[assembly: AssemblyFixture(typeof(Backend.Tests.App))]

@@ -30,7 +30,7 @@ public class UserCreateTests(App app) : TenancyTestsBase(app)
             LastName = "a",
             IsActive = true
         };
-        var (rsp, res) = await App.Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, ProblemDetails>(request);
+        var (rsp, res) = await Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, ProblemDetails>(request);
 
         rsp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         res.Errors.Count().Should().Be(6);
@@ -45,7 +45,7 @@ public class UserCreateTests(App app) : TenancyTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var roleService = App.Services.GetRequiredService<IRoleService>();
+        var roleService = Service<IRoleService>();
         var faker = new Faker<UserCreateRequest>()
             .RuleFor(u => u.Username, f => f.Internet.UserName() + f.UniqueIndex)
             .RuleFor(u => u.Email, f => f.Internet.Email() + f.UniqueIndex)
@@ -55,7 +55,7 @@ public class UserCreateTests(App app) : TenancyTestsBase(app)
             .RuleFor(u => u.IsActive, f => true);
         var request = faker.Generate();
         request.Roles = [TestRoles.TestRoleId];
-        var (rsp, res) = await App.Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request);
+        var (rsp, res) = await Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request);
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
         res.Username.Should().Be(request.Username);
@@ -215,7 +215,7 @@ public class UserCreateTests(App app) : TenancyTestsBase(app)
         await SetPlatformAdminAuthTokenAsync();
 
         var platformUsername = NewUsername();
-        var (platformResponse, platformAccount) = await App.Client
+        var (platformResponse, platformAccount) = await Client
             .POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(new()
             {
                 Username = platformUsername,
@@ -236,7 +236,7 @@ public class UserCreateTests(App app) : TenancyTestsBase(app)
         await SwitchTenantAsync(tenant.Id);
 
         var tenantUsername = NewUsername();
-        var (tenantResponse, tenantAccount) = await App.Client
+        var (tenantResponse, tenantAccount) = await Client
             .POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(new()
             {
                 Username = tenantUsername,

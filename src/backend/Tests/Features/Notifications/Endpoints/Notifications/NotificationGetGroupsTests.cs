@@ -26,7 +26,7 @@ public class NotificationGetGroupsTests(App app) : NotificationsTestsBase(app)
 
         await CreateUserNotificationAsync(userId);
 
-        var (rsp, res) = await App.Client.GETAsync<NotificationGetGroupsEndpoint, NotificationGetGroupsResponse>();
+        var (rsp, res) = await Client.GETAsync<NotificationGetGroupsEndpoint, NotificationGetGroupsResponse>();
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
         res.Groups.Should().Contain("group-a");
@@ -50,7 +50,7 @@ public class NotificationGetGroupsTests(App app) : NotificationsTestsBase(app)
         notification2.Group = "group-a";
         await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        var (rsp, res) = await App.Client.GETAsync<NotificationGetGroupsEndpoint, NotificationGetGroupsResponse>();
+        var (rsp, res) = await Client.GETAsync<NotificationGetGroupsEndpoint, NotificationGetGroupsResponse>();
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
         res.Groups.Should().Contain("group-a");
@@ -74,7 +74,7 @@ public class NotificationGetGroupsTests(App app) : NotificationsTestsBase(app)
         notification2.Group = "apple";
         await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        var (rsp, res) = await App.Client.GETAsync<NotificationGetGroupsEndpoint, NotificationGetGroupsResponse>();
+        var (rsp, res) = await Client.GETAsync<NotificationGetGroupsEndpoint, NotificationGetGroupsResponse>();
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
         res.Groups.Should().BeInAscendingOrder();
@@ -98,7 +98,7 @@ public class NotificationGetGroupsTests(App app) : NotificationsTestsBase(app)
         platformWide.Group = group;
         await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        var (rsp, res) = await App.Client.GETAsync<NotificationGetGroupsEndpoint, NotificationGetGroupsResponse>();
+        var (rsp, res) = await Client.GETAsync<NotificationGetGroupsEndpoint, NotificationGetGroupsResponse>();
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
         res.Groups.Should().Contain(group, "the filter offers the groups of the notifications the list shows, platform-wide ones included");

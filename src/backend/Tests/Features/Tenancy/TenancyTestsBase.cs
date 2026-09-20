@@ -28,17 +28,17 @@ using Backend.Tenancy;
 /// </remarks>
 public abstract class TenancyTestsBase(App app) : AppTestsBase(app)
 {
-    protected ITenantService TenantService => App.Services.GetRequiredService<ITenantService>();
+    protected ITenantService TenantService => Service<ITenantService>();
 
-    protected ITenantAuthorizationService TenantAuthorizationService => App.Services.GetRequiredService<ITenantAuthorizationService>();
+    protected ITenantAuthorizationService TenantAuthorizationService => Service<ITenantAuthorizationService>();
 
     /// <summary>
     /// The membership service, for tests that arrange or observe a membership directly rather than
     /// through the surface that administers it - the membership path the endpoints themselves take.
     /// </summary>
-    protected ITenantMembershipService MembershipService => App.Services.GetRequiredService<ITenantMembershipService>();
+    protected ITenantMembershipService MembershipService => Service<ITenantMembershipService>();
 
-    protected IUserService UserService => App.Services.GetRequiredService<IUserService>();
+    protected IUserService UserService => Service<IUserService>();
 
     /// <summary>
     /// Creates a tenant with a unique identifier valid under AC-101, under platform scope - the
