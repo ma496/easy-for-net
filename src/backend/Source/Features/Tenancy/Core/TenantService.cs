@@ -1,3 +1,5 @@
+using Backend.Features.Tenancy.Core.Entities;
+
 namespace Backend.Features.Tenancy.Core;
 
 using Backend.Data.Entities;

@@ -1,3 +1,5 @@
+using Backend.Features.Tenancy.Core.Entities;
+
 namespace Backend.Features.Identity.Endpoints.Account;
 
 using Backend.Data.Entities;

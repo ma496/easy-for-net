@@ -97,7 +97,7 @@ sealed class SignupEndpoint(IUserService userService,
             // tenant created here is administrable from the moment it exists. It joins the transaction
             // opened above rather than opening one of its own.
             await tenantService.CreateAsync(
-                new Tenant { Name = request.TenantName, Identifier = request.TenantIdentifier },
+                new() { Name = request.TenantName, Identifier = request.TenantIdentifier },
                 user.Id,
                 cancellationToken);
 

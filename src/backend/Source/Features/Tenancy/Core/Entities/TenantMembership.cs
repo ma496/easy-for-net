@@ -1,6 +1,6 @@
-namespace Backend.Data.Entities;
-
 using Backend.Data.Entities.Base;
+
+namespace Backend.Features.Tenancy.Core.Entities;
 
 /// <summary>
 /// The link that makes a user account a member of a tenant. A membership carries no state of its

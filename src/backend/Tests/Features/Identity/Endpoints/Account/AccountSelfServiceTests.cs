@@ -1,3 +1,5 @@
+using Backend.Features.Tenancy.Core.Entities;
+
 namespace Backend.Tests.Features.Identity.Endpoints.Account;
 
 using System.Text;

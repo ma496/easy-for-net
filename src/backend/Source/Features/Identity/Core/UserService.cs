@@ -178,7 +178,7 @@ public class UserService(AppDbContext dbContext,
             // The account's key is generated when it is added rather than when it is saved, so the
             // membership can name it and both rows land in one transaction: an account is never left
             // behind without the membership that makes its creator able to see it.
-            dbContext.TenantMemberships.Add(new TenantMembership { TenantId = activeTenantId, UserId = user.Id });
+            dbContext.TenantMemberships.Add(new() { TenantId = activeTenantId, UserId = user.Id });
         }
 
         await dbContext.SaveChangesAsync();

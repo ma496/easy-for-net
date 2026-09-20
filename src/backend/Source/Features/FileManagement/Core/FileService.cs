@@ -1,3 +1,5 @@
+using Backend.Features.Tenancy.Core.Entities;
+
 namespace Backend.Features.FileManagement.Core;
 
 using Backend.Data.Entities;

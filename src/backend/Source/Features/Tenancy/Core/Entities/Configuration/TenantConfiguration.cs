@@ -1,6 +1,6 @@
-namespace Backend.Data.Entities.Configuration;
-
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Backend.Features.Tenancy.Core.Entities.Configuration;
 
 /// <summary>
 /// EF Core entity configuration for <see cref="Tenant"/>, mapping it to the <c>tenancy.Tenants</c>

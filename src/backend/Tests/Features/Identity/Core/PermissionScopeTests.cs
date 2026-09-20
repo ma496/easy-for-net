@@ -1,3 +1,5 @@
+using Backend.Features.Tenancy.Core.Entities;
+
 namespace Backend.Tests.Features.Identity.Core;
 
 using Backend.Data.Entities;
