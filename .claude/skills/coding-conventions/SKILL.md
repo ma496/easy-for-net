@@ -10,8 +10,9 @@ already does — match it rather than introducing a personal style.
 
 ## C# (`src/backend/Source`, `src/backend/Tests`)
 
-**File header order.** File-scoped namespace first, `using` directives *after* it, then the
-XML doc, then the type:
+**File header order.** The file-scoped namespace declaration is the **first line of the file** —
+nothing above it, not a `using`, not a comment, not a `#region`. Then one blank line, then the
+`using` directives, then a blank line, then the XML doc and the type:
 
 ```csharp
 namespace Backend.Features.Identity.Endpoints.Users;
@@ -24,6 +25,16 @@ using Backend.Features.Identity.Core.Entities;
 /// </summary>
 sealed class UserCreateEndpoint(IUserService userService, AppDbContext dbContext) : Endpoint<UserCreateRequest, UserCreateResponse>
 ```
+
+Usings *inside* the namespace are the point of the ordering: every type in the file is resolved
+relative to its own namespace first, so a sibling type needs no import at all. Watch out for IDEs
+and "add missing using" quick fixes, which default to hoisting a new `using` above the namespace
+and silently break the shape — move it down into the block. A file that needs no import goes
+straight from the namespace line to the blank line and the type.
+
+Two kinds of file have no namespace and are exempt: `Meta.cs` in each project, which is nothing
+but `global using` directives, and `Program.cs`, whose top-level statements require its usings at
+the top of the file.
 
 **Global usings live in `Meta.cs`** — FastEndpoints, FluentValidation, Mapperly, EF Core,
 `Backend.Data`, `Backend.Base`, `Backend.Base.Dto`, `Backend.Permissions`,
