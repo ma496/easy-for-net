@@ -89,6 +89,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
 
         var sessions = await DbContext.AuthTokens
             .AsNoTracking()
+            .AcrossAllTenants()
             .Where(row => row.UserId == user.Id)
             .OrderByDescending(row => row.CreatedAt)
             .ToListAsync(TestContext.Current.CancellationToken);
@@ -791,6 +792,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
 
         var stored = await DbContext.AuthTokens
             .AsNoTracking()
+            .AcrossAllTenants()
             .Where(row => row.UserId == user.Id)
             .ToListAsync(cancellationToken);
 
@@ -807,6 +809,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     private async Task<List<Guid>> StoredSessionIdsAsync(Guid userId)
         => await DbContext.AuthTokens
             .AsNoTracking()
+            .AcrossAllTenants()
             .Where(row => row.UserId == userId)
             .Select(row => row.Id)
             .ToListAsync(TestContext.Current.CancellationToken);

@@ -2,6 +2,7 @@ namespace Backend.Features.Identity.Core;
 
 using Backend.Attributes;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Tenancy.Core;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -92,8 +93,29 @@ public sealed class RefreshTokenConsumption
 /// <summary>
 /// EF Core implementation of <see cref="IAuthTokenService"/> that stores token records and checks refresh-token validity.
 /// </summary>
+/// <remarks>
+/// <para>
+/// <see cref="AuthToken"/> is tenant-scoped like every other persisted kind, but this service is the
+/// code that establishes and changes a session's tenant, so it is never acting inside the tenant a
+/// row names while it touches that row. Both halves of that are handled here rather than being
+/// exempted in <see cref="AppDbContext"/>, and both are deliberate and named.
+/// </para>
+/// <para>
+/// Every read relaxes tenant restriction by name. Consuming a refresh token happens on an anonymous
+/// request, which establishes no scope at all, and revoking an account's sessions has to reach the
+/// ones it holds in other tenants - signing out ends every session, not the sessions of whichever
+/// tenant the request happened to arrive in. The soft-delete filter stays in force throughout.
+/// </para>
+/// <para>
+/// The one write opens the scope of the tenant the session is for, so the row is attributed exactly
+/// the way every other tenant-scoped write is instead of inheriting the request's own tenant. That
+/// matters in three places: a sign-in and a refresh are anonymous and have no scope to inherit, a
+/// switch issues the session for the tenant being entered while still acting in the one being left,
+/// and an exit issues a session for no tenant while still acting in the one being left.
+/// </para>
+/// </remarks>
 [NoDirectUse]
-public class AuthTokenService(AppDbContext dbContext) : IAuthTokenService
+public class AuthTokenService(AppDbContext dbContext, ITenantContext tenantContext) : IAuthTokenService
 {
     public async Task<AuthToken> SaveTokenAsync(TokenResponse rsp, Guid? tenantId)
     {
@@ -106,8 +128,18 @@ public class AuthTokenService(AppDbContext dbContext) : IAuthTokenService
             TenantId = tenantId,
             UserId = Guid.Parse(rsp.UserId),
         };
-        await dbContext.AuthTokens.AddAsync(authToken);
-        await dbContext.SaveChangesAsync();
+
+        // The session's own tenant is established for the write and nothing else, so the attribution
+        // rules see a row that agrees with the active scope rather than one that contradicts it or one
+        // written with no scope at all. The scope is restored the moment the row is persisted.
+        using (tenantId is { } sessionTenantId
+            ? tenantContext.BeginTenant(sessionTenantId)
+            : tenantContext.BeginPlatformScope())
+        {
+            await dbContext.AuthTokens.AddAsync(authToken);
+            await dbContext.SaveChangesAsync();
+        }
+
         return authToken;
     }
 
@@ -124,6 +156,7 @@ public class AuthTokenService(AppDbContext dbContext) : IAuthTokenService
         // the tenant on this row is the only surviving record of which tenant the expiring session acted in.
         var issued = await dbContext.AuthTokens
             .AsNoTracking()
+            .AcrossAllTenants()
             .Where(at => at.UserId == userId && at.RefreshToken == refreshTokenHash && at.RefreshExpiry > DateTime.UtcNow)
             .Select(at => new { at.Id, at.TenantId })
             .FirstOrDefaultAsync(cancellationToken);
@@ -136,6 +169,7 @@ public class AuthTokenService(AppDbContext dbContext) : IAuthTokenService
         // single-use: two requests replaying the same token both read it, and only the one whose delete
         // actually removed the row is allowed to renew the session.
         var deleted = await dbContext.AuthTokens
+            .AcrossAllTenants()
             .Where(at => at.Id == issued.Id)
             .ExecuteDeleteAsync(cancellationToken);
 
@@ -147,6 +181,7 @@ public class AuthTokenService(AppDbContext dbContext) : IAuthTokenService
     public async Task RevokeAllAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         await dbContext.AuthTokens
+            .AcrossAllTenants()
             .Where(token => token.UserId == userId)
             .ExecuteDeleteAsync(cancellationToken);
     }
@@ -163,6 +198,7 @@ public class AuthTokenService(AppDbContext dbContext) : IAuthTokenService
         var refreshTokenHash = HashToken(refreshToken);
 
         await dbContext.AuthTokens
+            .AcrossAllTenants()
             .Where(token => token.UserId == userId && token.RefreshToken == refreshTokenHash)
             .ExecuteDeleteAsync(cancellationToken);
     }

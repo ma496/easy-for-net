@@ -128,6 +128,7 @@ public class AuthTokenServiceTests(App app) : TenancyTestsBase(app)
     private async Task<List<Guid?>> SessionTenantsAsync(Guid userId)
         => await DbContext.AuthTokens
             .AsNoTracking()
+            .AcrossAllTenants()
             .Where(token => token.UserId == userId)
             .OrderBy(token => token.TenantId)
             .Select(token => token.TenantId)
@@ -203,6 +204,7 @@ public class AuthTokenServiceTests(App app) : TenancyTestsBase(app)
 
         // assert
         var deletedToken = await DbContext.AuthTokens
+            .AcrossAllTenants()
             .Where(t => t.Id == token.Id)
             .FirstOrDefaultAsync(cancellationToken: TestContext.Current.CancellationToken);
 

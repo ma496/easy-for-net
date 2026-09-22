@@ -41,8 +41,6 @@ public class TenantScopingTests(App app) : AppTestsBase(app)
             "Global, code-declared catalogue, identical for every tenant and reconciled from code on every start (AC-040).",
         [typeof(RolePermission)] =
             "Tenant derived through Role.TenantId.",
-        [typeof(AuthToken)] =
-            "Session record read during refresh, before any tenant is established; it carries the active tenant rather than being scoped by it.",
         [typeof(Token)] =
             "Email-verification and password-reset tokens back account self-service flows that must work with no tenant (AC-051).",
         [typeof(NotificationVisit)] =

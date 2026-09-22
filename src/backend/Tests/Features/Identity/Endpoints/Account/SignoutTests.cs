@@ -102,6 +102,7 @@ public class SignoutTests(App app) : TenancyTestsBase(app)
     private async Task<List<Guid?>> SessionTenantsAsync(Guid userId)
         => await DbContext.AuthTokens
             .AsNoTracking()
+            .AcrossAllTenants()
             .Where(token => token.UserId == userId)
             .Select(token => token.TenantId)
             .ToListAsync(TestContext.Current.CancellationToken);

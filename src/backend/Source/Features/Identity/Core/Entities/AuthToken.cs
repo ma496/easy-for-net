@@ -14,11 +14,20 @@ public class AuthToken : CreatableEntity<Guid>, IMayHaveTenant
     public string RefreshToken { get; set; } = null!;
     public DateTime RefreshExpiry { get; set; }
 
-    // The tenant this session is acting in, recorded when the session is established or switched.
-    // Null means the session carries no active tenant - the state a user holding memberships in more
-    // than one tenant is in until they select one, and the state of a session with no tenant at all.
-    // Deliberately not IMayHaveTenant: the row is read during a refresh, before any tenant is
-    // established, so a tenant query filter would hide it exactly when it is needed.
+    /// <summary>
+    /// The tenant this session is acting in, recorded when the session is established or switched.
+    /// Null is platform scope - a session that acts in no tenant, which is the state of a platform
+    /// account and of an account that holds no active membership.
+    /// </summary>
+    /// <remarks>
+    /// The marker makes these rows tenant-scoped like any other, but a session record is unusual in
+    /// that the code touching it is the very code that changes the scope, so it neither reads nor
+    /// writes from inside the tenant the row names. <see cref="AuthTokenService"/> therefore reads
+    /// across tenants by name and opens the scope of the session's own tenant before writing the row,
+    /// rather than inheriting whichever tenant the request happened to be acting in: a sign-in or a
+    /// refresh is anonymous and acts in no scope at all, and a switch issues the session for the
+    /// tenant being entered while still acting in the one being left.
+    /// </remarks>
     public Guid? TenantId { get; set; }
     public Guid UserId { get; set; }
     public User User { get; set; } = null!;
