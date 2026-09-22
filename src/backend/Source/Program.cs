@@ -58,11 +58,6 @@ bld.Services.AddCors(options =>
 bld.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(defaultConnection));
 
-// one tenant scope per unit of work: the tenant query filter and the save-time attribution in
-// AppDbContext both read the active tenant from here, so a scoped registration is what keeps an
-// HTTP request, a background job and the seeder from ever seeing each other's tenant.
-bld.Services.AddScoped<ITenantContext, TenantContext>();
-
 bld.Services
     .AddAuthenticationCookie(TimeSpan.FromMinutes(bld.Configuration.GetValue<int>("Auth:AccessTokenValidity")), options =>
     {

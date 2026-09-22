@@ -69,7 +69,6 @@ public interface ITenantContext
 /// on purpose: a scope opened by a pre-processor has to stay in force for the endpoint that runs
 /// after it, and an ambient value set inside an awaited call does not flow back out to its caller.
 /// </summary>
-[AllowOutside]
 [NoDirectUse]
 public sealed class TenantContext : ITenantContext
 {

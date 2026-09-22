@@ -19,5 +19,6 @@ public class TenancyFeature : IFeature
         services.AddScoped<ITenantService, TenantService>();
         services.AddScoped<ITenantMembershipService, TenantMembershipService>();
         services.AddScoped<ITenantMembershipQuery, TenantMembershipQuery>();
+        services.AddScoped<ITenantContext, TenantContext>();
     }
 }
