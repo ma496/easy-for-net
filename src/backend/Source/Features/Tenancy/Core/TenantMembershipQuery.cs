@@ -1,6 +1,6 @@
-using Backend.Features.Tenancy.Core.Entities;
-
 namespace Backend.Features.Tenancy.Core;
+
+using Backend.Features.Tenancy.Core.Entities;
 
 /// <summary>
 /// The membership questions other features ask, answered in identifiers alone so that no membership

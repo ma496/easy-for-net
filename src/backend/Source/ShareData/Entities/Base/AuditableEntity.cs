@@ -1,4 +1,4 @@
-namespace Backend.Data.Entities.Base;
+namespace Backend.ShareData.Entities.Base;
 
 /// <summary>
 /// Base entity that tracks both creation and update audit metadata and

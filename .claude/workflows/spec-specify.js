@@ -365,7 +365,7 @@ const BASE_LENSES = [
       'Cover the whole API side in one sweep.',
       'Enumerate the vertical slices under src/backend/Source/Features and decide which one would own this capability, or whether a new slice is required.',
       'Search the Endpoints folders for endpoints that already do part of this, plus their route groups, request and response shapes, validators and list/paging conventions.',
-      'Inspect src/backend/Source/Data and the entity base classes and interfaces (audit, soft delete, normalized properties): say which tables and columns already exist that this request touches, and what would be new.',
+      'Inspect src/backend/Source/ShareData and the entity base classes and interfaces (audit, soft delete, normalized properties): say which tables and columns already exist that this request touches, and what would be new.',
       'Read the backend-feature, backend-endpoint and backend-entity skills and note the feature-isolation rules that would apply.',
     ].join(' '),
   },

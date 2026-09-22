@@ -1,8 +1,7 @@
-using Backend.Features.Tenancy.Core.Entities;
-
 namespace Backend.Tests.Features.Tenancy.Core;
 
-using Backend.Data.Entities;
+using Backend.Features.Tenancy.Core.Entities;
+using Backend.ShareData.Entities;
 
 /// <summary>
 /// Tests for the shape the tenancy schema was built with - the columns and the constraints the rest of

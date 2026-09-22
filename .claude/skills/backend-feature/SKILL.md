@@ -87,7 +87,7 @@ composition roots).
 
 Entities live in `Core/Entities`, their EF configuration in `Core/Entities/Configuration`.
 `AppDbContext.OnModelCreating` picks configurations up automatically, but the `DbSet` must be added
-by hand to `src/backend/Source/Data/AppDbContext.cs`, under a comment naming the feature:
+by hand to `src/backend/Source/ShareData/AppDbContext.cs`, under a comment naming the feature:
 
 ```csharp
 // Notifications

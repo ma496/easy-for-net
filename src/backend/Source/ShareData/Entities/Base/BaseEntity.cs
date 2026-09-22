@@ -1,4 +1,4 @@
-namespace Backend.Data.Entities.Base;
+namespace Backend.ShareData.Entities.Base;
 
 /// <summary>
 /// Minimal base entity implementation carrying no additional state beyond the

@@ -1,6 +1,6 @@
 namespace Backend.Features.Notifications.Core.Entities;
 
-using Backend.Data.Entities.Base;
+using Backend.ShareData.Entities.Base;
 
 /// <summary>
 /// Tracks per-user visits (i.e. read state) for global notifications. A visit row is created

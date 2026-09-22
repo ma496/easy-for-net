@@ -1,4 +1,4 @@
-namespace Backend.Data.Entities.Base;
+namespace Backend.ShareData.Entities.Base;
 
 /// <summary>
 /// Implemented by entities that maintain a normalized 

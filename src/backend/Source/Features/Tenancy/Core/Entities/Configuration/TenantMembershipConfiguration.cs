@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
 namespace Backend.Features.Tenancy.Core.Entities.Configuration;
+
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 /// <summary>
 /// EF Core entity configuration for <see cref="TenantMembership"/>, mapping it to the

@@ -1,4 +1,4 @@
-namespace Backend.Data.Entities.Base;
+namespace Backend.ShareData.Entities.Base;
 
 /// <summary>
 /// Interface for entities that carry both creation and update audit metadata.

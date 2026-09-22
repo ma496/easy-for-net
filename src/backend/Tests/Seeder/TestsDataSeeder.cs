@@ -1,11 +1,10 @@
-using Backend.Features.Tenancy.Core.Entities;
-
 namespace Backend.Tests.Seeder;
 
-using Backend.Data.Entities;
+using Backend.ShareData.Entities;
 using Backend.Features.FileManagement.Core.Entities;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
 using Backend.Tenancy;
 

@@ -1,11 +1,10 @@
-using Backend.Features.Tenancy.Core.Entities;
-
 namespace Backend.Tests.Architect;
 
-using Backend.Data.Entities;
-using Backend.Data.Entities.Base;
+using Backend.ShareData.Entities;
+using Backend.ShareData.Entities.Base;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Notifications.Core.Entities;
+using Backend.Features.Tenancy.Core.Entities;
 using Microsoft.EntityFrameworkCore.Metadata;
 
 /// <summary>

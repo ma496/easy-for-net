@@ -1,7 +1,6 @@
-using Backend.Features.Identity.Core;
-
 namespace Backend.Tests.Features.Identity.Endpoints.Users;
 
+using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Endpoints.Users;
 using Backend.Tests.Features.Tenancy;
 

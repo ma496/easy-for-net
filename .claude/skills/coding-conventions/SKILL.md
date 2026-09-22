@@ -37,7 +37,7 @@ but `global using` directives, and `Program.cs`, whose top-level statements requ
 the top of the file.
 
 **Global usings live in `Meta.cs`** — FastEndpoints, FluentValidation, Mapperly, EF Core,
-`Backend.Data`, `Backend.Base`, `Backend.Base.Dto`, `Backend.Permissions`,
+`Backend.ShareData`, `Backend.Base`, `Backend.Base.Dto`, `Backend.Permissions`,
 `Backend.ErrorHandling`, `Backend.Attributes`, `Backend.Extensions`. Never re-import those in a
 file; add genuinely project-wide usings to `Meta.cs` instead. The test project has its own
 `Meta.cs` (adds xUnit, FluentAssertions, Bogus, FastEndpoints.Testing).

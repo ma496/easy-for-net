@@ -9,15 +9,15 @@ description: Add or change an EF Core entity — base classes, audit/soft-delete
 
 - Entity: `src/backend/Source/Features/<Feature>/Core/Entities/<Entity>.cs`
 - Configuration: `…/Core/Entities/Configuration/<Entity>Configuration.cs`
-- `DbSet`: `src/backend/Source/Data/AppDbContext.cs`
-- Base types: `src/backend/Source/Data/Entities/Base/`
+- `DbSet`: `src/backend/Source/ShareData/AppDbContext.cs`
+- Base types: `src/backend/Source/ShareData/Entities/Base/`
 
-Entities that are not owned by a feature would go under `Data/Entities`, but in practice every
+Entities that are not owned by a feature would go under `ShareData/Entities`, but in practice every
 entity belongs to a feature.
 
 ## Base classes
 
-Pick from `Backend.Data.Entities.Base`:
+Pick from `Backend.ShareData.Entities.Base`:
 
 | Base | Gives you |
 | --- | --- |
@@ -40,7 +40,7 @@ Opt-in interfaces:
 ```csharp
 namespace Backend.Features.Identity.Core.Entities;
 
-using Backend.Data.Entities.Base;
+using Backend.ShareData.Entities.Base;
 
 /// <summary>
 /// A named bundle of permissions that can be assigned to one or more users…
@@ -103,7 +103,7 @@ Rules the existing configurations follow:
 
 ## DbSet
 
-Add to `src/backend/Source/Data/AppDbContext.cs` under the feature comment:
+Add to `src/backend/Source/ShareData/AppDbContext.cs` under the feature comment:
 
 ```csharp
 // Notifications
@@ -133,6 +133,6 @@ mind before assuming a generated project has the same migration history.
 
 ## Seeded data
 
-`Data/DataSeeder` runs on every startup and reconciles permissions, the `Admin` role, the `admin`
+`ShareData/DataSeeder` runs on every startup and reconciles permissions, the `Admin` role, the `admin`
 user, and sample notifications. Put baseline rows a fresh database cannot work without there — not
 in a migration.

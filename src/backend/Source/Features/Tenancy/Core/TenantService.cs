@@ -1,9 +1,8 @@
-using Backend.Features.Tenancy.Core.Entities;
-
 namespace Backend.Features.Tenancy.Core;
 
-using Backend.Data.Entities;
+using Backend.ShareData.Entities;
 using Backend.Features.Identity.Core;
+using Backend.Features.Tenancy.Core.Entities;
 
 /// <summary>
 /// Reads and creates tenant records. A tenant is the scope rather than something inside one, so

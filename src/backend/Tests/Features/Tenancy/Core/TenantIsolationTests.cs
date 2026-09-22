@@ -1,10 +1,9 @@
-using Backend.Features.Tenancy.Core.Entities;
-
 namespace Backend.Tests.Features.Tenancy.Core;
 
-using Backend.Data.Entities;
+using Backend.ShareData.Entities;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Roles;
+using Backend.Features.Tenancy.Core.Entities;
 
 /// <summary>
 /// Tests for what one tenant's records look like from inside another - the same, whether they belong

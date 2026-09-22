@@ -1,7 +1,6 @@
 namespace Backend.Features.Identity.Core;
 
 using Backend.Attributes;
-using Backend.Data.Entities;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Tenancy.Core;
 

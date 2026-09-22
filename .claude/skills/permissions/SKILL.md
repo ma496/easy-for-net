@@ -139,7 +139,7 @@ On the client it gates UX, never authorization: the "enter tenant" action in the
 
 ## What happens at runtime
 
-`Data/DataSeeder.SeedAsync` reconciles the database with the code-declared definitions on **every
+`ShareData/DataSeeder.SeedAsync` reconciles the database with the code-declared definitions on **every
 startup**: it inserts new permissions, updates changed display names and scopes, deletes permissions
 that no longer exist and strips them from every role, then grants the full set to the platform
 `Admin` role and the tenant-scope subset to each tenant's own `Admin` role. So:

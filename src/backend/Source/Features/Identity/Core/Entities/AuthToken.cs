@@ -1,6 +1,6 @@
 namespace Backend.Features.Identity.Core.Entities;
 
-using Backend.Data.Entities.Base;
+using Backend.ShareData.Entities.Base;
 
 /// <summary>
 /// Server-side record of an issued JWT access/refresh token pair, used to validate refresh requests and revoke tokens.

@@ -1,14 +1,13 @@
-using Backend.Features.Tenancy.Core.Entities;
-
-namespace Backend.Data;
+namespace Backend.ShareData;
 
 using System.Linq.Expressions;
-using Backend.Data.Entities;
-using Backend.Data.Entities.Base;
+using Backend.ShareData.Entities;
+using Backend.ShareData.Entities.Base;
 using Backend.Features.FileManagement.Core.Entities;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Notifications.Core.Entities;
+using Backend.Features.Tenancy.Core.Entities;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 /// <summary>

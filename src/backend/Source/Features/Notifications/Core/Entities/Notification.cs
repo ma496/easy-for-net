@@ -1,6 +1,6 @@
 namespace Backend.Features.Notifications.Core.Entities;
 
-using Backend.Data.Entities.Base;
+using Backend.ShareData.Entities.Base;
 
 /// <summary>
 /// Represents a notification together with the audience it is addressed to. <see cref="TenantId"/> and

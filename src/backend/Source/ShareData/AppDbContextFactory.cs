@@ -1,4 +1,4 @@
-namespace Backend.Data;
+namespace Backend.ShareData;
 
 using Backend.Features.Identity.Core;
 using Microsoft.EntityFrameworkCore.Design;

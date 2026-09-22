@@ -1,4 +1,4 @@
-namespace Backend.Data;
+namespace Backend.ShareData;
 
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Tenancy.Core.Entities;

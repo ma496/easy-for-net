@@ -1,9 +1,8 @@
-using Backend.Features.Tenancy.Core.Entities;
-
 namespace Backend.Features.Tenancy.Core;
 
-using Backend.Data.Entities;
+using Backend.ShareData.Entities;
 using Backend.Features.Identity.Core;
+using Backend.Features.Tenancy.Core.Entities;
 
 /// <summary>
 /// Owns who belongs to a tenant: whether an account holds a membership there, and the three changes

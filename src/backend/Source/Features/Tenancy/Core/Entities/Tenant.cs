@@ -1,6 +1,6 @@
-using Backend.Data.Entities.Base;
-
 namespace Backend.Features.Tenancy.Core.Entities;
+
+using Backend.ShareData.Entities.Base;
 
 /// <summary>
 /// An isolated customer of the application. Every tenant-scoped row belongs to exactly one tenant,

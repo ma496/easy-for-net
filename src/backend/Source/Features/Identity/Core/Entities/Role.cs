@@ -1,6 +1,6 @@
 namespace Backend.Features.Identity.Core.Entities;
 
-using Backend.Data.Entities.Base;
+using Backend.ShareData.Entities.Base;
 
 /// <summary>
 /// A named bundle of permissions that can be assigned to one or more users, simplifying access management.

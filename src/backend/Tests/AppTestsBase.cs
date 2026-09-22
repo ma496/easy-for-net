@@ -1,8 +1,8 @@
+namespace Backend.Tests;
+
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Tenancy;
-
-namespace Backend.Tests;
 
 /// <summary>
 /// Base class for all integration tests providing common setup, authentication, and helper methods.

@@ -1,11 +1,10 @@
-using Backend.Features.Tenancy.Core.Entities;
-
 namespace Backend.Tests.Features.Tenancy.Endpoints.Tenants;
 
-using Backend.Data.Entities;
+using Backend.ShareData.Entities;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Identity.Endpoints.Roles;
+using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Tenancy.Endpoints.Tenants;
 using Backend.Tenancy;

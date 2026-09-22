@@ -1,6 +1,6 @@
 namespace Backend.Features.Identity.Endpoints.Account;
 
-using Backend.Data.Entities;
+using Backend.ShareData.Entities;
 using Backend.External.Email;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;

@@ -1,6 +1,6 @@
 namespace Backend.Features.Identity.Core.Entities;
 
-using Backend.Data.Entities.Base;
+using Backend.ShareData.Entities.Base;
 
 /// <summary>
 /// Junction entity linking a <see cref="Role"/> to a <see cref="Permission"/>, representing a role's granted permission set.

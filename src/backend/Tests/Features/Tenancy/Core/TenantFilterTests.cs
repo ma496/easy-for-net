@@ -16,7 +16,7 @@ using Backend.Features.Identity.Core.Entities;
 /// </para>
 /// <para>
 /// The scope is opened on the fixture's own <see cref="Backend.Tenancy.ITenantContext"/>, which is the
-/// instance the fixture's <see cref="Backend.Data.AppDbContext"/> reads. Opening one is what stands in
+/// instance the fixture's <see cref="Backend.ShareData.AppDbContext"/> reads. Opening one is what stands in
 /// for the pre-processor a request would have run; see <c>BackgroundTenantScopeTests</c> for what
 /// happens when nobody opens one.
 /// </para>

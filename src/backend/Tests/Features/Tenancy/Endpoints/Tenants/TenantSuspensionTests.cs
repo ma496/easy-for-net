@@ -1,13 +1,12 @@
-using Backend.Features.Tenancy.Core.Entities;
-
 namespace Backend.Tests.Features.Tenancy.Endpoints.Tenants;
 
 using System.Text;
-using Backend.Data.Entities;
+using Backend.ShareData.Entities;
 using Backend.Features.FileManagement.Core;
 using Backend.Features.FileManagement.Endpoints.Files;
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Identity.Endpoints.Users;
+using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Endpoints.Tenants;
 using Microsoft.AspNetCore.Http;
 
