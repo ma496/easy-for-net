@@ -5,7 +5,7 @@ using Backend.ShareData.Entities.Base;
 /// <summary>
 /// Represents an authenticated principal in the system, holding identity, credentials, profile data, and role memberships.
 /// </summary>
-public class User : AuditableEntity<Guid>, IHasNormalizedProperties
+public class User : AuditableEntity<Guid>, IHasNormalizedProperties, ISystemCreated
 {
     public bool SystemCreated { get; set; }
     public string Username { get; set; } = null!;

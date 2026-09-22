@@ -8,7 +8,7 @@ using Backend.ShareData.Entities.Base;
 /// with no <see cref="TenantId"/> is platform scoped and is never visible from inside a tenant. Roles are
 /// soft deleted so that a deleted role's name stays reserved within its tenant.
 /// </summary>
-public class Role : AuditableEntity<Guid>, IHasNormalizedProperties, ISoftDelete, IMayHaveTenant
+public class Role : AuditableEntity<Guid>, IHasNormalizedProperties, ISoftDelete, IMayHaveTenant, ISystemCreated
 {
     public Guid? TenantId { get; set; }
     public bool SystemCreated { get; set; }

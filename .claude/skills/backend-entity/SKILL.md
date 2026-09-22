@@ -36,6 +36,9 @@ Opt-in interfaces:
 - `IHasNormalizedProperties` — implement `NormalizeProperties()` to fill `…Normalized` columns;
   `SaveChanges`/`SaveChangesAsync` calls it for added and modified entries. Normalized properties
   have a `private set` and are the columns you search and uniquely index on.
+- `ISystemCreated` (`SystemCreated`) — marks rows the system seeds for itself. Nothing is enforced
+  automatically: endpoints check the flag and refuse to update or delete a flagged row. Implement it
+  on every entity that carries the property, so the guard can be written against the interface.
 
 ```csharp
 namespace Backend.Features.Identity.Core.Entities;
@@ -45,7 +48,7 @@ using Backend.ShareData.Entities.Base;
 /// <summary>
 /// A named bundle of permissions that can be assigned to one or more users…
 /// </summary>
-public class Role : AuditableEntity<Guid>, IHasNormalizedProperties
+public class Role : AuditableEntity<Guid>, IHasNormalizedProperties, ISystemCreated
 {
     public bool SystemCreated { get; set; }
     public string Name { get; set; } = null!;
@@ -62,7 +65,7 @@ public class Role : AuditableEntity<Guid>, IHasNormalizedProperties
 ```
 
 Conventions: `Guid` keys, non-nullable reference properties initialised with `= null!`,
-collections initialised with `= []`, `SystemCreated` marks seeded rows that endpoints refuse to
+collections initialised with `= []`, `ISystemCreated` marks seeded rows that endpoints refuse to
 modify or delete.
 
 ## Configuration

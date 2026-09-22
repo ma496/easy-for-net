@@ -6,7 +6,7 @@ using Backend.ShareData.Entities.Base;
 /// An isolated customer of the application. Every tenant-scoped row belongs to exactly one tenant,
 /// and a user reaches a tenant's data only through a <see cref="TenantMembership"/>.
 /// </summary>
-public class Tenant : AuditableEntity<Guid>, ISoftDelete, IHasNormalizedProperties
+public class Tenant : AuditableEntity<Guid>, ISoftDelete, IHasNormalizedProperties, ISystemCreated
 {
     public bool SystemCreated { get; set; }
     public string Name { get; set; } = null!;
