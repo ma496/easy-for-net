@@ -1,4 +1,4 @@
-import { BaseDto, RequestBase, GenericAuditableDto, ListRequestDto, ListDto } from '@/store/api'
+import { BaseDto, RequestBase, GenericAuditableDto, ListRequestDto, ListDto, SystemCreatedDto } from '@/store/api'
 
 /** Request body for the change-permissions endpoint, listing the new set of permission ids for a role. */
 export interface ChangePermissionsRequest extends BaseDto<string>, RequestBase {
@@ -36,8 +36,7 @@ export interface RoleDeleteResponse extends BaseDto<string> {
 export interface RoleGetRequest extends BaseDto<string>, RequestBase { }
 
 /** Response from the get-role endpoint, returning the role's name, description, permissions, assigned user count, and audit fields. */
-export interface RoleGetResponse extends GenericAuditableDto<string> {
-  systemCreated: boolean
+export interface RoleGetResponse extends GenericAuditableDto<string>, SystemCreatedDto {
   name: string
   nameNormalized: string
   description: string
@@ -54,8 +53,7 @@ export interface RoleListRequest extends ListRequestDto<string>, RequestBase {
 export interface RoleListResponse extends ListDto<RoleListDto> { }
 
 /** Summary representation of a role in list responses, including permission ids and assigned user count. */
-export interface RoleListDto extends GenericAuditableDto<string> {
-  systemCreated: boolean
+export interface RoleListDto extends GenericAuditableDto<string>, SystemCreatedDto {
   name: string
   nameNormalized: string
   description: string

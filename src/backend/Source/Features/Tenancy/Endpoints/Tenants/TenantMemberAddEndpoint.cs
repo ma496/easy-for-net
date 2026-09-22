@@ -183,7 +183,7 @@ sealed class TenantMemberAddValidator : Validator<TenantMemberAddRequest>
 /// new member actually holds in that tenant - which is the set asked for, plus the tenant's
 /// administrator role when this member is the tenant's first.
 /// </summary>
-public sealed class TenantMemberAddResponse : BaseDto<Guid>
+public sealed class TenantMemberAddResponse : BaseDto<Guid>, IHaveTenantDto
 {
     public Guid TenantId { get; set; }
     public Guid UserId { get; set; }

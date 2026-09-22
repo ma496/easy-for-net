@@ -56,7 +56,7 @@ sealed class UserGetValidator : Validator<UserGetRequest>
 /// <summary>
 /// Response payload containing the user's profile fields, audit metadata, and assigned role ids.
 /// </summary>
-public sealed class UserGetResponse : AuditableDto<Guid>
+public sealed class UserGetResponse : AuditableDto<Guid>, ISystemCreatedDto
 {
     public bool SystemCreated { get; set; }
     public string Username { get; set; } = null!;

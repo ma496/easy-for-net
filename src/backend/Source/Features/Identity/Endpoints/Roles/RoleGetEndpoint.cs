@@ -63,7 +63,7 @@ sealed class RoleGetValidator : Validator<RoleGetRequest>
 /// <summary>
 /// Response payload containing the role's metadata, assigned permission ids, and user count.
 /// </summary>
-public sealed class RoleGetResponse : AuditableDto<Guid>
+public sealed class RoleGetResponse : AuditableDto<Guid>, ISystemCreatedDto
 {
     public bool SystemCreated { get; set; }
     public string Name { get; set; } = null!;

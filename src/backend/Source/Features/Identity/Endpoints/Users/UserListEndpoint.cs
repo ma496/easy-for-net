@@ -98,7 +98,7 @@ public sealed class UserListResponse : ListDto<UserListDto>
 /// <summary>
 /// Per-row DTO representing a user in list responses, including profile fields and a compact role summary.
 /// </summary>
-public sealed class UserListDto : AuditableDto<Guid>
+public sealed class UserListDto : AuditableDto<Guid>, ISystemCreatedDto
 {
     public bool SystemCreated { get; set; }
     public string Username { get; set; } = null!;

@@ -122,7 +122,7 @@ public sealed class TenantListResponse : ListDto<TenantListDto>
 /// Per-row DTO representing a tenant in list responses, carrying its display name, its identifier in
 /// both the entered and the normalized form, its lifecycle status and how many accounts belong to it.
 /// </summary>
-public sealed class TenantListDto : AuditableDto<Guid>
+public sealed class TenantListDto : AuditableDto<Guid>, ISystemCreatedDto
 {
     public bool SystemCreated { get; set; }
     public string Name { get; set; } = null!;

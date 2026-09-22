@@ -203,7 +203,7 @@ sealed class TenantMemberUpdateRolesValidator : Validator<TenantMemberUpdateRole
 /// that tenant, so the caller can confirm the set that took effect without reading the member again.
 /// The id is the membership's identity, not the account's.
 /// </summary>
-public sealed class TenantMemberUpdateRolesResponse : BaseDto<Guid>
+public sealed class TenantMemberUpdateRolesResponse : BaseDto<Guid>, IHaveTenantDto
 {
     public Guid TenantId { get; set; }
     public Guid UserId { get; set; }

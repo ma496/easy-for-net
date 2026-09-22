@@ -1,5 +1,5 @@
 import { TenantStatus } from '../enums'
-import { BaseDto, RequestBase, GenericAuditableDto, ListRequestDto, ListDto } from '@/store/api'
+import { BaseDto, RequestBase, GenericAuditableDto, ListRequestDto, ListDto, SystemCreatedDto, HaveTenantDto } from '@/store/api'
 
 /** Request body for creating a tenant, supplying its display name and its URL-safe identifier. */
 export interface TenantCreateRequest extends RequestBase {
@@ -8,8 +8,7 @@ export interface TenantCreateRequest extends RequestBase {
 }
 
 /** Response from the create-tenant endpoint, returning the assigned id, the stored name and identifier, the normalized identifier and the lifecycle status the tenant was persisted in. */
-export interface TenantCreateResponse extends BaseDto<string> {
-  systemCreated: boolean
+export interface TenantCreateResponse extends BaseDto<string>, SystemCreatedDto {
   name: string
   identifier: string
   identifierNormalized: string
@@ -29,8 +28,7 @@ export interface TenantDeleteResponse extends BaseDto<string> {
 export interface TenantGetRequest extends BaseDto<string>, RequestBase {}
 
 /** Response from the get-tenant endpoint, returning the tenant's name, identifiers, lifecycle status and audit fields. */
-export interface TenantGetResponse extends GenericAuditableDto<string> {
-  systemCreated: boolean
+export interface TenantGetResponse extends GenericAuditableDto<string>, SystemCreatedDto {
   name: string
   identifier: string
   identifierNormalized: string
@@ -46,8 +44,7 @@ export interface TenantListRequest extends ListRequestDto<string>, RequestBase {
 export interface TenantListResponse extends ListDto<TenantListDto> {}
 
 /** Summary representation of a tenant in list responses, carrying its identifiers, lifecycle status, the number of accounts belonging to it and audit fields. */
-export interface TenantListDto extends GenericAuditableDto<string> {
-  systemCreated: boolean
+export interface TenantListDto extends GenericAuditableDto<string>, SystemCreatedDto {
   name: string
   identifier: string
   identifierNormalized: string
@@ -63,8 +60,7 @@ export interface TenantMemberAddRequest extends RequestBase {
 }
 
 /** Response from the add-member endpoint, returning the new membership's id together with the tenant, the account and the roles the member actually holds. */
-export interface TenantMemberAddResponse extends BaseDto<string> {
-  tenantId: string
+export interface TenantMemberAddResponse extends BaseDto<string>, HaveTenantDto {
   userId: string
   roles: string[]
 }
@@ -114,8 +110,7 @@ export interface TenantMemberUpdateRolesRequest extends RequestBase {
 }
 
 /** Response from the update-member-roles endpoint, echoing the membership and the roles that took effect. */
-export interface TenantMemberUpdateRolesResponse extends BaseDto<string> {
-  tenantId: string
+export interface TenantMemberUpdateRolesResponse extends BaseDto<string>, HaveTenantDto {
   userId: string
   roles: string[]
 }
@@ -171,8 +166,7 @@ export interface TenantUpdateRequest extends BaseDto<string>, RequestBase {
 }
 
 /** Response from the update-tenant endpoint, echoing the tenant as it now stands including the normalized identifier. */
-export interface TenantUpdateResponse extends BaseDto<string> {
-  systemCreated: boolean
+export interface TenantUpdateResponse extends BaseDto<string>, SystemCreatedDto {
   name: string
   identifier: string
   identifierNormalized: string

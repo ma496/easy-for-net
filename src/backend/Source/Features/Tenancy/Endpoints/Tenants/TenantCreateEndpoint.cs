@@ -81,7 +81,7 @@ sealed class TenantCreateValidator : Validator<TenantCreateRequest>
 /// name and identifier as they were stored, the normalized identifier maintained beside them and the
 /// state the tenant was persisted in.
 /// </summary>
-public sealed class TenantCreateResponse : BaseDto<Guid>
+public sealed class TenantCreateResponse : BaseDto<Guid>, ISystemCreatedDto
 {
     public bool SystemCreated { get; set; }
     public string Name { get; set; } = null!;

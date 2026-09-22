@@ -109,7 +109,7 @@ public sealed class RoleListResponse : ListDto<RoleListDto>
 /// <summary>
 /// Per-row DTO representing a role in list responses, including its description, permission ids, and user count.
 /// </summary>
-public sealed class RoleListDto : AuditableDto<Guid>
+public sealed class RoleListDto : AuditableDto<Guid>, ISystemCreatedDto
 {
     public bool SystemCreated { get; set; }
     public string Name { get; set; } = null!;

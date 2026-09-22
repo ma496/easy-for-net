@@ -78,7 +78,7 @@ sealed class TenantGetValidator : Validator<TenantGetRequest>
 /// Response payload describing one tenant. It derives from <see cref="AuditableDto{TId}"/>, so the
 /// creating account and time and the last-updating account and time travel with every tenant read.
 /// </summary>
-public sealed class TenantGetResponse : AuditableDto<Guid>
+public sealed class TenantGetResponse : AuditableDto<Guid>, ISystemCreatedDto
 {
     public bool SystemCreated { get; set; }
     public string Name { get; set; } = null!;

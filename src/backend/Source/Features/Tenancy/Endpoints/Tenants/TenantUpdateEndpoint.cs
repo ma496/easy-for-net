@@ -100,7 +100,7 @@ sealed class TenantUpdateValidator : Validator<TenantUpdateRequest>
 /// Response payload returned after a successful rename, echoing the tenant as it now stands -
 /// including the normalized identifier the uniqueness rule is enforced on.
 /// </summary>
-public sealed class TenantUpdateResponse : BaseDto<Guid>
+public sealed class TenantUpdateResponse : BaseDto<Guid>, ISystemCreatedDto
 {
     public bool SystemCreated { get; set; }
     public string Name { get; set; } = null!;
