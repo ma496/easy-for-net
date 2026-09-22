@@ -72,7 +72,13 @@
     "tenantsUpdate": "تحديث",
     "tenantsMembers": "الأعضاء",
     "selectTenant": "اختيار المستأجر",
-    "tenantsDetail": "التفاصيل"
+    "tenantsDetail": "التفاصيل",
+    "editions": "الإصدارات",
+    "editionsList": "قائمة",
+    "editionsCreate": "إنشاء",
+    "editionsUpdate": "تحديث",
+    "editionsFeatures": "الميزات",
+    "tenantsFeatures": "الميزات"
   },
   "search": {
     "dashboard": "لوحة القيادة",
@@ -92,7 +98,9 @@
     "uiFileUpload": "رفع الملفات",
     "uiTooltips": "تلميحات واجهة المستخدم",
     "tenants": "المستأجرون",
-    "tenantsCreate": "إنشاء مستأجر"
+    "tenantsCreate": "إنشاء مستأجر",
+    "editions": "الإصدارات",
+    "editionsCreate": "إنشاء إصدار"
   },
   "form": {
     "label": {
@@ -112,7 +120,10 @@
       "tenantName": "اسم المستأجر",
       "tenantIdentifier": "المعرّف",
       "user": "المستخدم",
-      "tenant": "المستأجر"
+      "tenant": "المستأجر",
+      "editionName": "الاسم",
+      "editionDescription": "الوصف",
+      "editionDisplayOrder": "ترتيب العرض"
     },
     "placeholder": {
       "username": "أدخل اسم المستخدم",
@@ -129,7 +140,10 @@
       "tenantName": "أدخل اسم المستأجر",
       "tenantIdentifier": "أدخل المعرّف (مثال acme)",
       "user": "اختر المستخدم",
-      "tenant": "معرف المستأجر"
+      "tenant": "معرف المستأجر",
+      "editionName": "أدخل اسم الإصدار",
+      "editionDescription": "أدخل وصف الإصدار",
+      "edition": "اختر إصدارًا"
     }
   },
   "validation": {
@@ -140,7 +154,9 @@
     "invalidEmail": "بريد إلكتروني غير صالح",
     "mustMatch": "يجب أن يتطابق الحقل مع ${otherField}",
     "atLeastOneSelected": "يجب اختيار عنصر واحد على الأقل",
-    "tenantIdentifier": "استخدم أحرفًا إنجليزية صغيرة وأرقامًا وشرطات مفردة، على أن يبدأ وينتهي بحرف أو رقم"
+    "tenantIdentifier": "استخدم أحرفًا إنجليزية صغيرة وأرقامًا وشرطات مفردة، على أن يبدأ وينتهي بحرف أو رقم",
+    "number": "يجب أن يكون رقمًا",
+    "min": "يجب ألا يقل عن ${min}"
   },
   "error": {
     "400": {
@@ -220,7 +236,15 @@
       "crossTenantFileAccess": "هذا الملف يخص مستأجرًا آخر",
       "platformPermissionNotGrantable": "لا يمكن منح أذونات المنصة لدور مستأجر",
       "concurrentModification": "تم تغيير هذا السجل بواسطة شخص آخر. أعد التحميل وحاول مرة أخرى.",
-      "userSharedAcrossTenants": "ينتمي هذا المستخدم إلى مستأجرين آخرين ولا يمكن تغييره إلا بواسطة مسؤول المنصة"
+      "userSharedAcrossTenants": "ينتمي هذا المستخدم إلى مستأجرين آخرين ولا يمكن تغييره إلا بواسطة مسؤول المنصة",
+      "featureDisabled": "خطتك لا تتضمن هذه الميزة.",
+      "featureNotFound": "هذه الميزة غير موجودة.",
+      "invalidFeatureValue": "هذه القيمة غير مسموح بها لهذه الميزة.",
+      "featureProviderNotAllowed": "لا يمكن تعيين هذه الميزة هنا.",
+      "unknownFeatureProvider": "مزوّد ميزات غير معروف.",
+      "editionNotFound": "الإصدار غير موجود.",
+      "editionNameAlreadyExists": "يوجد إصدار بهذا الاسم بالفعل.",
+      "editionInUse": "لا يمكن حذف هذا الإصدار ما دام هناك مستأجرون عليه."
     }
   },
   "table": {
@@ -242,7 +266,10 @@
       "group": "المجموعة",
       "created": "تم الإنشاء",
       "updated": "محدث",
-      "identifier": "المعرّف"
+      "identifier": "المعرّف",
+      "displayOrder": "الترتيب",
+      "tenantCount": "المستأجرون",
+      "edition": "الإصدار"
     },
     "pagination": {
       "showingEntries": "عرض ${from} إلى ${to} من ${totalRecords} مُدخل"
@@ -554,6 +581,40 @@
       "description": "اختر المستأجر الذي تريد العمل فيه.",
       "emptyDescription": "أنت لا تنتمي إلى أي مستأجر نشط. اطلب من المسؤول إضافتك إلى مستأجره، أو سجّل حسابًا جديدًا لإنشاء مستأجر خاص بك.",
       "emptyAction": "الذهاب إلى ملفك الشخصي"
+    },
+    "editions": {
+      "title": "الإصدارات",
+      "createSuccess": "تم إنشاء الإصدار بنجاح",
+      "updateSuccess": "تم تحديث الإصدار بنجاح",
+      "deleteTitle": "حذف الإصدار",
+      "deleteConfirm": "هل أنت متأكد أنك تريد حذف هذا الإصدار؟",
+      "deleteSuccess": "تم حذف الإصدار بنجاح",
+      "notFound": "الإصدار غير موجود",
+      "list": {
+        "title": "قائمة الإصدارات"
+      },
+      "create": {
+        "title": "إنشاء إصدار"
+      },
+      "update": {
+        "title": "تحديث الإصدار"
+      }
+    },
+    "features": {
+      "tenantTitle": "ميزات المستأجر",
+      "editionTitle": "ميزات الإصدار",
+      "saveSuccess": "تم تحديث الميزات بنجاح",
+      "none": "لم يتم تعريف أي ميزات",
+      "mintTimeNotice": "تسري التغييرات على المستخدم عند تجديد جلسته في المرة القادمة.",
+      "setHere": "مُعيَّن هنا",
+      "fromEdition": "من الإصدار",
+      "fromDefault": "الافتراضي",
+      "resetToInherited": "إعادة التعيين إلى القيمة الموروثة",
+      "groups": "المجموعات",
+      "unsaved": "غير محفوظ",
+      "unsavedCount": "${count} تغيير غير محفوظ",
+      "parentDisabled": "غير سارية ما دامت الميزة الأعلى معطّلة",
+      "noMatches": "لا توجد ميزات مطابقة لبحثك"
     }
   },
   "notifications": {

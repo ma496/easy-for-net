@@ -13,6 +13,18 @@ public class Tenant : AuditableEntity<Guid>, ISoftDelete, IHasNormalizedProperti
     public string Identifier { get; set; } = null!;
     public string IdentifierNormalized { get; private set; } = null!;
     public TenantStatus Status { get; set; } = TenantStatus.Active;
+
+    /// <summary>
+    /// The plan this tenant is on, or <see langword="null"/> when it is on none.
+    /// </summary>
+    /// <remarks>
+    /// A tenant on no edition is legitimate, and is what a fresh installation looks like: its feature
+    /// values simply fall through to what the deployment configured and what the definitions declare.
+    /// </remarks>
+    public Guid? EditionId { get; set; }
+
+    public Edition? Edition { get; set; }
+
     public bool IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
 

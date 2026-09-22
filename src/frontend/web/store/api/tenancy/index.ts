@@ -49,3 +49,48 @@ export type {
   TenantUpdateRequest,
   TenantUpdateResponse,
 } from './tenants/tenants-dtos'
+export {
+  editionsApi,
+  useEditionListQuery,
+  useLazyEditionListQuery,
+  useEditionGetQuery,
+  useLazyEditionGetQuery,
+  useEditionCreateMutation,
+  useEditionUpdateMutation,
+  useEditionDeleteMutation,
+} from './editions/editions-api'
+export type {
+  EditionCreateRequest,
+  EditionCreateResponse,
+  EditionDeleteRequest,
+  EditionDeleteResponse,
+  EditionGetRequest,
+  EditionGetResponse,
+  EditionListRequest,
+  EditionListResponse,
+  EditionListDto,
+  EditionUpdateRequest,
+  EditionUpdateResponse,
+} from './editions/editions-dtos'
+export {
+  featuresApi,
+  useFeatureValueGetQuery,
+  useLazyFeatureValueGetQuery,
+  useFeatureValueUpdateMutation,
+  useMyFeaturesQuery,
+  useLazyMyFeaturesQuery,
+} from './features/features-api'
+export { FeatureValueProvider, FeatureValueTypeName } from './features/features-dtos'
+export type {
+  FeatureValueProviderName,
+  FeatureValueGetRequest,
+  FeatureValueGetResponse,
+  FeatureGroupDto,
+  FeatureDto,
+  FeatureValueTypeDto,
+  FeatureSelectionItemDto,
+  FeatureValueUpdateRequest,
+  FeatureValueDto,
+  FeatureValueUpdateResponse,
+  MyFeaturesResponse,
+} from './features/features-dtos'

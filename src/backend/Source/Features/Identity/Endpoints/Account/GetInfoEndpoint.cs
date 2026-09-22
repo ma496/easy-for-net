@@ -17,6 +17,7 @@ using Backend.Features.Identity.Core;
 /// tells them they belong to no active tenant, or which tenants they may choose from.
 /// </remarks>
 sealed class GetInfoEndpoint(AppDbContext dbContext,
+                             IPermissionFeatureFilter permissionFeatureFilter,
                              ICurrentUserService currentUserService,
                              ITenantContext tenantContext)
     : EndpointWithoutRequest<UserGetInfoResponse>
@@ -192,7 +193,12 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
         var viewScope = SessionGrants.ScopeOf(tenantId);
         var exercisesPermissions = SessionGrants.ExercisesPermissions(isPlatform, tenantId);
 
-        return await dbContext.Roles
+        // Narrowed for the tenant this endpoint worked out for itself, not for the ambient scope: the
+        // two can differ for a platform account inside a tenant, and reporting one while the session
+        // was minted for the other is exactly how the UI comes to offer what the API refuses.
+        var permitted = await SessionGrants.EnabledPermissionNamesAsync(permissionFeatureFilter, tenantId, cancellationToken);
+
+        var roles = await dbContext.Roles
             .AsNoTracking()
             .AcrossAllTenants()
             .Where(role => (role.TenantId == tenantId || role.TenantId == null)
@@ -214,6 +220,19 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
                     }).ToList()
             })
             .ToListAsync(cancellationToken);
+
+        if (permitted is null)
+        {
+            return roles;
+        }
+
+        // In memory, after the read: a set of names does not translate to SQL, and the list is a
+        // caller's own roles rather than anything large.
+        foreach (var role in roles)
+        {
+            role.Permissions = [.. role.Permissions.Where(permission => permitted.Contains(permission.Name))];
+        }
+        return roles;
     }
 }
 

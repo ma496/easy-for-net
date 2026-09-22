@@ -11,6 +11,7 @@ global using FluentValidation;
 global using Riok.Mapperly.Abstractions;
 global using Backend;
 global using Backend.Extensions;
+global using Backend.Features.Tenancy.Core.FeatureManagement;
 global using Backend.Permissions;
 global using Backend.ShareData;
 global using Backend.Base;

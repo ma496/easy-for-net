@@ -5,6 +5,8 @@ import { BaseDto, RequestBase, GenericAuditableDto, ListRequestDto, ListDto, Sys
 export interface TenantCreateRequest extends RequestBase {
   name: string
   identifier: string
+  /** The plan to put the tenant on, or null/undefined for none. */
+  editionId?: string | null
 }
 
 /** Response from the create-tenant endpoint, returning the assigned id, the stored name and identifier, the normalized identifier and the lifecycle status the tenant was persisted in. */
@@ -33,6 +35,10 @@ export interface TenantGetResponse extends GenericAuditableDto<string>, SystemCr
   identifier: string
   identifierNormalized: string
   status: TenantStatus
+  /** The plan the tenant is on, or null when it is on none. */
+  editionId?: string | null
+  /** What that plan is called, so the screen can name it without a second request. */
+  editionName?: string | null
 }
 
 /** Request parameters for the list-tenants endpoint, extending the standard list options with a lifecycle-status filter. */
@@ -50,6 +56,10 @@ export interface TenantListDto extends GenericAuditableDto<string>, SystemCreate
   identifierNormalized: string
   status: TenantStatus
   userCount: number
+  /** The plan the tenant is on, or null when it is on none. */
+  editionId?: string | null
+  /** What that plan is called, so the list can name it without a lookup per row. */
+  editionName?: string | null
 }
 
 /** Request body for adding an existing user account to a tenant with exactly the supplied tenant roles; the tenant id travels as a path segment. */
@@ -163,6 +173,8 @@ export interface TenantSwitchResponse {
 export interface TenantUpdateRequest extends BaseDto<string>, RequestBase {
   name: string
   identifier: string
+  /** The plan to put the tenant on, or null to take it off one. */
+  editionId?: string | null
 }
 
 /** Response from the update-tenant endpoint, echoing the tenant as it now stands including the normalized identifier. */

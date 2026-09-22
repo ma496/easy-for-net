@@ -41,5 +41,16 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
             .IsUnique(false);
         builder.HasIndex(x => x.Status);
         builder.HasIndex(x => x.CreatedAt);
+
+        // Restrict rather than SetNull: an edition is soft-deleted, so EF never issues a real DELETE
+        // here, and a physical one done by hand should be refused rather than quietly moving every
+        // tenant on that plan onto no plan at all. EditionDeleteEndpoint refuses first, with a
+        // message, so nobody meets this constraint in normal use.
+        builder.HasOne(x => x.Edition)
+            .WithMany()
+            .HasForeignKey(x => x.EditionId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => x.EditionId);
     }
 }

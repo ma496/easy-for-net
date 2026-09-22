@@ -16,7 +16,8 @@ using Backend.Features.Tenancy.Core;
 /// need it.
 /// </remarks>
 sealed class TenantListEndpoint(ITenantService tenantService,
-                                ITenantAuthorizationService tenantAuthorizationService) : Endpoint<TenantListRequest, TenantListResponse>
+                                ITenantAuthorizationService tenantAuthorizationService,
+                                IEditionService editionService) : Endpoint<TenantListRequest, TenantListResponse>
 {
     public override void Configure()
     {
@@ -62,6 +63,19 @@ sealed class TenantListEndpoint(ITenantService tenantService,
         var memberCounts = await tenantAuthorizationService.GetTenantMemberCountsAsync(
             [.. items.Select(tenant => tenant.Id)], cancellationToken);
 
+        // The plan's name is read once for the whole page rather than row by row, and only for the
+        // plans this page actually references.
+        var editionIds = items.Where(tenant => tenant.EditionId.HasValue)
+                              .Select(tenant => tenant.EditionId!.Value)
+                              .Distinct()
+                              .ToList();
+        var editionNames = editionIds.Count == 0
+            ? []
+            : await editionService.Editions()
+                .AsNoTracking()
+                .Where(edition => editionIds.Contains(edition.Id))
+                .ToDictionaryAsync(edition => edition.Id, edition => edition.Name, cancellationToken);
+
         var dtoMapper = new TenantListDtoMapper();
         var response = new TenantListResponse
         {
@@ -69,6 +83,7 @@ sealed class TenantListEndpoint(ITenantService tenantService,
             {
                 var dto = dtoMapper.Map(tenant);
                 dto.UserCount = memberCounts.GetValueOrDefault(tenant.Id);
+                dto.EditionName = tenant.EditionId is { } editionId ? editionNames.GetValueOrDefault(editionId) : null;
                 return dto;
             })],
             Total = total
@@ -130,6 +145,14 @@ public sealed class TenantListDto : AuditableDto<Guid>, ISystemCreatedDto
     public string IdentifierNormalized { get; set; } = null!;
     public TenantStatus Status { get; set; }
 
+    /// <summary>The plan the tenant is on, or <see langword="null"/> when it is on none.</summary>
+    public Guid? EditionId { get; set; }
+
+    /// <summary>
+    /// What that plan is called, so the list can name it without a lookup per row.
+    /// </summary>
+    public string? EditionName { get; set; }
+
     /// <summary>
     /// The number of accounts holding an active membership of the tenant. It is filled by the endpoint
     /// from the identity slice's count rather than by the mapper, because the tenant row itself knows
@@ -145,5 +168,6 @@ public sealed class TenantListDto : AuditableDto<Guid>, ISystemCreatedDto
 public partial class TenantListDtoMapper
 {
     [MapperIgnoreTarget(nameof(TenantListDto.UserCount))]
+    [MapperIgnoreTarget(nameof(TenantListDto.EditionName))]
     public partial TenantListDto Map(Tenant entity);
 }

@@ -7,6 +7,7 @@ global using Microsoft.EntityFrameworkCore;
 global using Microsoft.Extensions.Options;
 global using Backend;
 global using Backend.Extensions;
+global using Backend.Features.Tenancy.Core.FeatureManagement;
 global using Backend.Permissions;
 global using Backend.ShareData;
 global using Backend.Base;

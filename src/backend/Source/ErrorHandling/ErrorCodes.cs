@@ -47,4 +47,12 @@ public static class ErrorCodes
     public const string PlatformPermissionNotGrantable = "platformPermissionNotGrantable";
     public const string ConcurrentModification = "concurrentModification";
     public const string UserSharedAcrossTenants = "userSharedAcrossTenants";
+    public const string FeatureDisabled = "featureDisabled";
+    public const string FeatureNotFound = "featureNotFound";
+    public const string InvalidFeatureValue = "invalidFeatureValue";
+    public const string FeatureProviderNotAllowed = "featureProviderNotAllowed";
+    public const string UnknownFeatureProvider = "unknownFeatureProvider";
+    public const string EditionNotFound = "editionNotFound";
+    public const string EditionNameAlreadyExists = "editionNameAlreadyExists";
+    public const string EditionInUse = "editionInUse";
 }

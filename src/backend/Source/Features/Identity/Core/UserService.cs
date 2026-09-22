@@ -64,30 +64,6 @@ public interface IUserService
     Task DeleteAsync(User user);
     Task<bool> ValidatePasswordAsync(User user, string password);
 
-    /// <summary>
-    /// The names of the roles the account holds in one named tenant, and in no other.
-    /// </summary>
-    /// <param name="userId">The account whose roles are read.</param>
-    /// <param name="tenantId">
-    /// The tenant the roles are read for, or <see langword="null"/> for the account's platform-scoped
-    /// roles - the ones belonging to no tenant, which for an ordinary account is nothing at all.
-    /// </param>
-    /// <returns>The names of the roles held there.</returns>
-    Task<List<string>> GetUserRolesAsync(Guid userId, Guid? tenantId = null);
-
-    /// <summary>
-    /// The names of the permissions the account's roles grant it in one named tenant, without
-    /// duplicates. Only that tenant's roles are read, so authority held in one tenant confers nothing
-    /// in another and what a session may do is decided by the tenant it is acting in alone.
-    /// </summary>
-    /// <param name="userId">The account whose permissions are read.</param>
-    /// <param name="tenantId">
-    /// The tenant the permissions are read for, or <see langword="null"/> for those its platform-scoped
-    /// roles grant.
-    /// </param>
-    /// <returns>The distinct names of the permissions granted there.</returns>
-    Task<List<string>> GetUserPermissionsAsync(Guid userId, Guid? tenantId = null);
-
     Task AssignRoleAsync(Guid userId, Guid roleId);
     Task RemoveRoleAsync(Guid userId, Guid roleId);
     Task<bool> IsInRoleAsync(Guid userId, Guid roleId);
@@ -220,24 +196,6 @@ public class UserService(AppDbContext dbContext,
         return isValid;
     }
 
-    /// <inheritdoc />
-    public async Task<List<string>> GetUserRolesAsync(Guid userId, Guid? tenantId = null)
-    {
-        return await RolesHeldIn(userId, tenantId)
-            .Select(role => role.Name)
-            .ToListAsync();
-    }
-
-    /// <inheritdoc />
-    public async Task<List<string>> GetUserPermissionsAsync(Guid userId, Guid? tenantId = null)
-    {
-        return await RolesHeldIn(userId, tenantId)
-            .SelectMany(role => role.RolePermissions)
-            .Select(rolePermission => rolePermission.Permission.Name)
-            .Distinct()
-            .ToListAsync();
-    }
-
     public async Task AssignRoleAsync(Guid userId, Guid roleId)
     {
         var userRole = new UserRole { UserId = userId, RoleId = roleId };
@@ -273,29 +231,5 @@ public class UserService(AppDbContext dbContext,
         await dbContext.Users
             .Where(u => u.Id == userId)
             .ExecuteUpdateAsync(set => set.SetProperty(u => u.LastSigninAt, DateTime.UtcNow));
-    }
-
-    /// <summary>
-    /// The roles an account holds inside one tenant: the roles of that tenant alone that the account
-    /// is assigned. This is the single predicate both grant readings above are built from, so the
-    /// permissions a request is evaluated against can never come from a wider set of roles than the
-    /// roles the same tenant reports.
-    /// </summary>
-    /// <param name="userId">The account whose assignments are read.</param>
-    /// <param name="tenantId">The tenant the roles belong to, or <see langword="null"/> for the roles belonging to none.</param>
-    /// <returns>A query over the roles held there.</returns>
-    /// <remarks>
-    /// The tenant is stated in the predicate rather than left to the query filter, because the tenant
-    /// asked about is not always the one being acted in and is often asked for before any scope exists
-    /// at all - which is why the restriction is relaxed by name first. The soft-delete filter is
-    /// untouched by that, so a deleted role stops granting what it granted.
-    /// </remarks>
-    private IQueryable<Role> RolesHeldIn(Guid userId, Guid? tenantId)
-    {
-        return dbContext.Roles
-            .AsNoTracking()
-            .AcrossAllTenants()
-            .Where(role => role.TenantId == tenantId
-                           && dbContext.UserRoles.Any(assignment => assignment.UserId == userId && assignment.RoleId == role.Id));
     }
 }

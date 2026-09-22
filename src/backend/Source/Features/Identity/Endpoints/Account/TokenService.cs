@@ -48,6 +48,7 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly AppDbContext _dbContext;
     private readonly SigninSetting _signinSetting;
+    private readonly IPermissionFeatureFilter _permissionFeatureFilter;
     private readonly int _refreshTokenValidity;
 
     /// <summary>
@@ -59,13 +60,15 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
                        IOptions<SigninSetting> signinSetting,
                        IAuthTokenService authTokenService,
                        IHttpContextAccessor httpContextAccessor,
-                       AppDbContext dbContext)
+                       AppDbContext dbContext,
+                       IPermissionFeatureFilter permissionFeatureFilter)
     {
         _userService = userService;
         var authSettingValue = authSetting.Value;
         _authTokenService = authTokenService;
         _httpContextAccessor = httpContextAccessor;
         _dbContext = dbContext;
+        _permissionFeatureFilter = permissionFeatureFilter;
         _signinSetting = signinSetting.Value;
         _refreshTokenValidity = authSettingValue.RefreshTokenValidity;
 
@@ -194,7 +197,7 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
         // to, which is not the same question as whether it may be acted in today - so a tenant that comes
         // back into service, or a membership that is restored, is picked up by the very next renewal
         // instead of costing the caller a fresh sign-in.
-        var grants = await SessionGrants.ReadAsync(_dbContext, user.Id, actingTenantId, user.IsPlatform);
+        var grants = await SessionGrants.ReadAsync(_dbContext, _permissionFeatureFilter, user.Id, actingTenantId, user.IsPlatform);
 
         var claims = Helper.CreateClaims(user, grants.Roles, grants.Permissions, actingTenantId);
 

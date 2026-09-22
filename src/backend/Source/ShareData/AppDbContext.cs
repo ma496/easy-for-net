@@ -38,6 +38,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options,
     // Tenancy - the kernel every tenant-scoped set below is filtered against, so it comes first.
     public DbSet<Tenant> Tenants => Set<Tenant>();
     public DbSet<TenantMembership> TenantMemberships => Set<TenantMembership>();
+    public DbSet<Edition> Editions => Set<Edition>();
+
+    // Feature management - entitlement values, keyed by the provider that set them rather than by a
+    // tenant column, so they can be read while a session is minted and no tenant scope exists yet.
+    public DbSet<FeatureValue> FeatureValues => Set<FeatureValue>();
 
     // Identity
     public DbSet<User> Users => Set<User>();

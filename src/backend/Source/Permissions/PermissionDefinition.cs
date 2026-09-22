@@ -23,6 +23,18 @@ public class PermissionDefinition(string name, string displayName, PermissionSco
     /// </summary>
     public PermissionScope Scope { get; } = scope;
 
+    /// <summary>
+    /// The features that must be enabled for this permission - and everything beneath it - to be
+    /// exercisable at all.
+    /// </summary>
+    /// <remarks>
+    /// Ignored when serialized, deliberately: the catalogue the web app receives has already had
+    /// feature-disabled branches removed, so the requirement is something it never has to evaluate and
+    /// the payload stays exactly as it was before features existed.
+    /// </remarks>
+    [JsonIgnore]
+    public IReadOnlyList<string> RequiredFeatures { get; private set; } = [];
+
     [JsonIgnore]
     public PermissionDefinition? Parent { get; set; }
     public IList<PermissionDefinition> Children { get; set; } = [];
@@ -45,5 +57,29 @@ public class PermissionDefinition(string name, string displayName, PermissionSco
         };
         Children.Add(child);
         return child;
+    }
+
+    /// <summary>
+    /// Gates this permission - and every permission beneath it - on the named features, so a session
+    /// acting where one of them is switched off is never minted with it and the permission is not
+    /// offered on any role's surface there.
+    /// </summary>
+    /// <remarks>
+    /// The requirement is cumulative with anything an ancestor states: all of them must be enabled.
+    /// Declaring it on a group node is the usual shape, since a whole area is normally sold as one
+    /// thing and restating the condition on each leaf only invites the two to disagree.
+    /// <para>
+    /// Stating it on a <see cref="PermissionScope.Platform"/> permission has no effect and is refused
+    /// by an architecture test: platform scope is inside no tenant's plan, so there is no plan to
+    /// consult. Never gate the permissions that administer the entitlement system itself, or a feature
+    /// switched off could not be switched back on.
+    /// </para>
+    /// </remarks>
+    /// <param name="featureNames">Names from <see cref="Backend.Features.Tenancy.Core.FeatureManagement.FeatureNames"/>.</param>
+    /// <returns>This definition, so a declaration reads as one statement.</returns>
+    public PermissionDefinition RequireFeatures(params string[] featureNames)
+    {
+        RequiredFeatures = [.. RequiredFeatures, .. featureNames];
+        return this;
     }
 }

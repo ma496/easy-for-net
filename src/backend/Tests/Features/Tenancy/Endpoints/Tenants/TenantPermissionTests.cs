@@ -2,6 +2,8 @@ namespace Backend.Tests.Features.Tenancy.Endpoints.Tenants;
 
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Tenancy.Core.Entities;
+using Backend.Features.Tenancy.Endpoints.Editions;
+using Backend.Features.Tenancy.Endpoints.FeatureValues;
 using Backend.Features.Tenancy.Endpoints.Tenants;
 using Microsoft.AspNetCore.Routing;
 using System.Net.Http.Json;
@@ -99,7 +101,22 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
         // tier in its handler instead; the switch by authentication, which is the whole of what it
         // require.
         [typeof(TenantExitEndpoint)] = [],
-        [typeof(TenantSwitchEndpoint)] = []
+        [typeof(TenantSwitchEndpoint)] = [],
+
+        // The entitlement tier: what plans exist and what each of them is worth. All platform-scoped,
+        // because a tenant able to write its own entitlements would simply switch on whatever its plan
+        // withholds.
+        [typeof(EditionListEndpoint)] = [Allow.Edition_View],
+        [typeof(EditionGetEndpoint)] = [Allow.Edition_View],
+        [typeof(EditionCreateEndpoint)] = [Allow.Edition_Create],
+        [typeof(EditionUpdateEndpoint)] = [Allow.Edition_Update],
+        [typeof(EditionDeleteEndpoint)] = [Allow.Edition_Delete],
+        [typeof(FeatureValueGetEndpoint)] = [Allow.FeatureValue_View, Allow.FeatureValue_Manage],
+        [typeof(FeatureValueUpdateEndpoint)] = [Allow.FeatureValue_Manage],
+
+        // No permission, and deliberately so: asking what your own plan includes is not administering
+        // it, and the web app needs the answer to decide what is worth showing.
+        [typeof(MyFeaturesEndpoint)] = []
     };
 
     /// <summary>
@@ -424,6 +441,12 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
         var updatedName = "Tenant Renamed By A Permission Test";
         var updatedIdentifier = NewTenantIdentifier();
 
+        // A plan of the test's own, so the entitlement rows below belong to nothing any other test
+        // reads. Names carry a fresh identifier because a plan name is unique across the platform.
+        var edition = await CreateEditionForPermissionTestAsync();
+        var candidateEditionName = $"Edition Created By A Permission Test {Guid.NewGuid():N}";
+        var updatedEditionName = $"Edition Renamed By A Permission Test {Guid.NewGuid():N}";
+
         return endpoint switch
         {
             // Nothing is written by a refused exit, so there is nothing to assert did not happen: the
@@ -501,10 +524,93 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
                 async () => (await GrantedRolesAsync(tenant.Id, removable.Id)).Should().BeEmpty(
                     "a refused role replacement grants the roles it named nowhere")),
 
+            nameof(EditionListEndpoint) => new(
+                async client => await StatusOf(client
+                    .GETAsync<EditionListEndpoint, EditionListRequest, EditionListResponse>(new() { All = true }))),
+
+            nameof(EditionGetEndpoint) => new(
+                async client => await StatusOf(client
+                    .GETAsync<EditionGetEndpoint, EditionGetRequest, EditionGetResponse>(new() { Id = edition.Id }))),
+
+            nameof(EditionCreateEndpoint) => new(
+                async client => await StatusOf(client
+                    .POSTAsync<EditionCreateEndpoint, EditionCreateRequest, EditionCreateResponse>(
+                        new() { Name = candidateEditionName })),
+                async () => (await AllEditionsAsync()).Should()
+                    .NotContain(row => row.Name == candidateEditionName,
+                        "a refused creation writes no edition at all")),
+
+            nameof(EditionUpdateEndpoint) => new(
+                async client => await StatusOf(client
+                    .PUTAsync<EditionUpdateEndpoint, EditionUpdateRequest, EditionUpdateResponse>(
+                        new() { Id = edition.Id, Name = updatedEditionName })),
+                async () => (await AllEditionsAsync()).Single(row => row.Id == edition.Id).Name.Should()
+                    .Be(edition.Name, "a refused rename leaves the plan named as it was")),
+
+            nameof(EditionDeleteEndpoint) => new(
+                async client => await StatusOf(client
+                    .DELETEAsync<EditionDeleteEndpoint, EditionDeleteRequest, EditionDeleteResponse>(new() { Id = edition.Id })),
+                async () => (await AllEditionsAsync()).Should().Contain(row => row.Id == edition.Id,
+                    "a refused deletion retains the plan")),
+
+            nameof(FeatureValueGetEndpoint) => new(
+                async client => await StatusOf(client
+                    .GETAsync<FeatureValueGetEndpoint, FeatureValueGetRequest, FeatureValueGetResponse>(
+                        new() { ProviderName = "Edition", ProviderKey = edition.Id.ToString() }))),
+
+            nameof(FeatureValueUpdateEndpoint) => new(
+                async client => await StatusOf(client
+                    .PUTAsync<FeatureValueUpdateEndpoint, FeatureValueUpdateRequest, FeatureValueUpdateResponse>(
+                        new()
+                        {
+                            ProviderName = "Edition",
+                            ProviderKey = edition.Id.ToString(),
+                            Features = [new() { Name = FeatureNames.FileManagement_Enabled, Value = "false" }]
+                        })),
+                async () => (await StoredEditionFeatureValuesAsync(edition.Id)).Should().BeEmpty(
+                    "a refused change stores no entitlement at all")),
+
             _ => throw new ArgumentOutOfRangeException(nameof(endpoint), endpoint,
                 "every gated endpoint of the tenancy surface has to have an arrangement, or this theory would pass by sending nothing")
         };
     }
+
+    /// <summary>
+    /// A plan of this test's own, so the entitlement rows written against it belong to nothing any
+    /// other test reads.
+    /// </summary>
+    /// <returns>The created edition.</returns>
+    private async Task<Edition> CreateEditionForPermissionTestAsync()
+    {
+        using var platformScope = TenantContext.BeginPlatformScope();
+
+        var edition = new Edition { Name = $"Edition For A Permission Test {Guid.NewGuid():N}" };
+        DbContext.Editions.Add(edition);
+        await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+        return edition;
+    }
+
+    /// <summary>
+    /// Every edition retained in the database, deleted ones included.
+    /// </summary>
+    /// <returns>The retained edition rows.</returns>
+    private async Task<List<Edition>> AllEditionsAsync()
+        => await DbContext.Editions
+            .IgnoreQueryFilters([SoftDeleteFilterKey])
+            .AsNoTracking()
+            .ToListAsync(TestContext.Current.CancellationToken);
+
+    /// <summary>
+    /// The entitlement values stored against one plan, which a refused change must leave empty.
+    /// </summary>
+    /// <param name="editionId">The plan to read.</param>
+    /// <returns>The feature names stored for it.</returns>
+    private async Task<List<string>> StoredEditionFeatureValuesAsync(Guid editionId)
+        => await DbContext.FeatureValues
+            .AsNoTracking()
+            .Where(value => value.ProviderName == "Edition" && value.ProviderKey == editionId.ToString())
+            .Select(value => value.Name)
+            .ToListAsync(TestContext.Current.CancellationToken);
 
     /// <summary>
     /// Every tenant retained in the database, deleted ones included, so a test can tell a tenant that

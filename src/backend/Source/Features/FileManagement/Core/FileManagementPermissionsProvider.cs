@@ -13,7 +13,10 @@ public class FileManagementPermissionsProvider : IPermissionDefinitionProvider
 
     public void Define(PermissionDefinitionContext context)
     {
-        var filesPermission = context.AddPermission("Files", "Files", PermissionScope.Both);
+        // Declared on the group rather than the leaf: file storage is sold as one thing, and
+        // restating the condition on each permission beneath it would only invite the two to disagree.
+        var filesPermission = context.AddPermission("Files", "Files", PermissionScope.Both)
+                                     .RequireFeatures(FeatureNames.FileManagement_Enabled);
         filesPermission.AddChild(Allow.File_Delete, "Delete");
     }
 }

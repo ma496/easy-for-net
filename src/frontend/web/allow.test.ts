@@ -20,6 +20,19 @@ const tenancyPermissions = {
   TenantMember_Remove: 'TenantMember.Remove',
 } as const
 
+/**
+ * The entitlement permissions, restated the same way. All of them are platform-scoped: administering
+ * what a plan includes is an act on the platform, never something a tenant does to itself.
+ */
+const entitlementPermissions = {
+  Edition_View: 'Edition.View',
+  Edition_Create: 'Edition.Create',
+  Edition_Update: 'Edition.Update',
+  Edition_Delete: 'Edition.Delete',
+  FeatureValue_View: 'FeatureValue.View',
+  FeatureValue_Manage: 'FeatureValue.Manage',
+} as const
+
 describe('Allow', () => {
   it.each(Object.entries(tenancyPermissions))('mirrors %s as %s', (name, value) => {
     expect(Allow[name as keyof typeof tenancyPermissions]).toBe(value)
@@ -32,6 +45,19 @@ describe('Allow', () => {
       .sort()
 
     expect(carried).toEqual(tenancyNames)
+  })
+
+  it.each(Object.entries(entitlementPermissions))('mirrors %s as %s', (name, value) => {
+    expect(Allow[name as keyof typeof entitlementPermissions]).toBe(value)
+  })
+
+  it('carries every entitlement permission the API enforces, and no others', () => {
+    const entitlementNames = Object.keys(entitlementPermissions).sort()
+    const carried = Object.keys(Allow)
+      .filter((name) => name.startsWith('Edition') || name.startsWith('FeatureValue'))
+      .sort()
+
+    expect(carried).toEqual(entitlementNames)
   })
 
   it('gives no two permissions the same value', () => {

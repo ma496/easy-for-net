@@ -33,6 +33,10 @@ public class TenantScopingTests(App app) : AppTestsBase(app)
     {
         [typeof(Tenant)] =
             "Is the scope itself.",
+        [typeof(Edition)] =
+            "A plan the platform sells to tenants; it belongs to none of them and is administered in platform scope alone.",
+        [typeof(FeatureValue)] =
+            "Addressed by (ProviderName, ProviderKey), which already names the tenant when the provider is a tenant - and names an edition, which belongs to no tenant, when it is not. A column here would duplicate that fact and admit rows where the two disagree. Read while a session is minted, before any scope exists.",
         [typeof(User)] =
             "A global account: one identity across every tenant (AC-048). Its tenant reach is the membership row, not a column here.",
         [typeof(UserRole)] =

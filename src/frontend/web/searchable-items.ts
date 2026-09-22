@@ -21,6 +21,16 @@ export const searchableItems: SearchableItem[] = [
 
   },
   {
+    title: 'search.editions',
+    url: '/admin/editions/list',
+
+  },
+  {
+    title: 'search.editionsCreate',
+    url: '/admin/editions/create',
+
+  },
+  {
     title: 'search.roles',
     url: '/admin/roles/list',
 

@@ -58,6 +58,28 @@ export const authUrls: AuthUrl[] = [
     permissions: [Allow.Tenant_Create],
   },
   {
+    // Editing a tenant's entitlements is a platform act, not something a tenant does to itself, so
+    // every screen below is gated on a permission the API declares platform-scoped.
+    url: '/admin/tenants/features/{id}',
+    permissions: [Allow.FeatureValue_View],
+  },
+  {
+    url: '/admin/editions/list',
+    permissions: [Allow.Edition_View],
+  },
+  {
+    url: '/admin/editions/create',
+    permissions: [Allow.Edition_Create],
+  },
+  {
+    url: '/admin/editions/update/{id}',
+    permissions: [Allow.Edition_Update],
+  },
+  {
+    url: '/admin/editions/features/{id}',
+    permissions: [Allow.FeatureValue_View],
+  },
+  {
     url: '/admin/tenants/update/{id}',
     permissions: [Allow.Tenant_Update],
   },

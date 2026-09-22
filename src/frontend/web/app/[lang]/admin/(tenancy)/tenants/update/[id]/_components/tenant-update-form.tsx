@@ -2,10 +2,10 @@
 import * as Yup from 'yup'
 import { useTranslation } from '@/i18n'
 import { useLocalizedRouter } from '@/hooks'
-import { useTenantGetQuery, useTenantUpdateMutation } from '@/store/api/tenancy'
+import { useTenantGetQuery, useTenantUpdateMutation, useLazyEditionListQuery, EditionListDto, EditionListRequest } from '@/store/api/tenancy'
 import { Form, Formik } from 'formik'
 import { Button, ApiErrorMessages, Loader } from '@/components/ui'
-import { FormInput } from '@/components/ui/form'
+import { FormInput, FormLazySelect } from '@/components/ui/form'
 import { apiErrorAlert, successToast } from '@/lib/utils'
 
 /**
@@ -25,6 +25,8 @@ const createValidationSchema = (t: (key: string, params?: Record<string, string 
       .min(3, t('validation.minLength', { min: 3 }))
       .max(50, t('validation.maxLength', { max: 50 }))
       .matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, t('validation.tenantIdentifier')),
+    // Optional, and clearing it takes the tenant off its plan rather than being a missing value.
+    editionId: Yup.string(),
   })
 }
 
@@ -86,6 +88,7 @@ export const TenantUpdateForm = ({ tenantId }: TenantUpdateFormProps) => {
       id: tenantId,
       name: data.name,
       identifier: data.identifier,
+      editionId: data.editionId || null,
     })
 
     if (result.error) {
@@ -104,6 +107,7 @@ export const TenantUpdateForm = ({ tenantId }: TenantUpdateFormProps) => {
       initialValues={{
         name: tenantData.name,
         identifier: tenantData.identifier,
+        editionId: tenantData.editionId ?? '',
       }}
       validationSchema={validationSchema}
       onSubmit={onSubmit}
@@ -122,6 +126,16 @@ export const TenantUpdateForm = ({ tenantId }: TenantUpdateFormProps) => {
             label={t('form.label.tenantIdentifier')}
             placeholder={t('form.placeholder.tenantIdentifier')}
             required={true}
+          />
+          <FormLazySelect<EditionListDto, EditionListRequest>
+            name="editionId"
+            label={t('navigation.editions')}
+            placeholder={t('form.placeholder.edition')}
+            useLazyQuery={useLazyEditionListQuery}
+            getLabel={(edition) => edition.name}
+            getValue={(edition) => edition.id}
+            selectedItemId={tenantData.editionId ?? undefined}
+            pageSize={20}
           />
           <div className="flex justify-end gap-4">
             <Button

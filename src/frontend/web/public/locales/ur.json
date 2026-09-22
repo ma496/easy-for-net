@@ -72,7 +72,13 @@
     "tenantsUpdate": "اپ ڈیٹ",
     "tenantsMembers": "اراکین",
     "selectTenant": "ٹیننٹ منتخب کریں",
-    "tenantsDetail": "تفصیل"
+    "tenantsDetail": "تفصیل",
+    "editions": "ایڈیشنز",
+    "editionsList": "فہرست",
+    "editionsCreate": "بنائیں",
+    "editionsUpdate": "اپ ڈیٹ",
+    "editionsFeatures": "خصوصیات",
+    "tenantsFeatures": "خصوصیات"
   },
   "search": {
     "dashboard": "ڈیش بورڈ",
@@ -92,7 +98,9 @@
     "uiFileUpload": "UI فائل اپ لوڈ",
     "uiTooltips": "UI ٹولٹپس",
     "tenants": "ٹیننٹس",
-    "tenantsCreate": "ٹیننٹ بنائیں"
+    "tenantsCreate": "ٹیننٹ بنائیں",
+    "editions": "ایڈیشنز",
+    "editionsCreate": "ایڈیشن بنائیں"
   },
   "form": {
     "label": {
@@ -112,7 +120,10 @@
       "tenantName": "ٹیننٹ کا نام",
       "tenantIdentifier": "شناخت کنندہ",
       "user": "صارف",
-      "tenant": "ٹیننٹ"
+      "tenant": "ٹیننٹ",
+      "editionName": "نام",
+      "editionDescription": "تفصیل",
+      "editionDisplayOrder": "ترتیبِ نمائش"
     },
     "placeholder": {
       "username": "صارف کا نام درج کریں",
@@ -129,7 +140,10 @@
       "tenantName": "ٹیننٹ کا نام درج کریں",
       "tenantIdentifier": "شناخت کنندہ درج کریں (مثال کے طور پر acme)",
       "user": "صارف منتخب کریں",
-      "tenant": "ٹیننٹ شناخت کنندہ"
+      "tenant": "ٹیننٹ شناخت کنندہ",
+      "editionName": "ایڈیشن کا نام درج کریں",
+      "editionDescription": "ایڈیشن کی تفصیل درج کریں",
+      "edition": "ایک ایڈیشن منتخب کریں"
     }
   },
   "validation": {
@@ -140,7 +154,9 @@
     "invalidEmail": "غلط ای میل",
     "mustMatch": "فیلڈ ${otherField} کے ساتھ مماثل ہونا چاہیے",
     "atLeastOneSelected": "کم از کم ایک آئٹم منتخب ہونا چاہیے",
-    "tenantIdentifier": "چھوٹے انگریزی حروف، ہندسے اور واحد ہائفن استعمال کریں، جو حرف یا ہندسے سے شروع اور ختم ہوں"
+    "tenantIdentifier": "چھوٹے انگریزی حروف، ہندسے اور واحد ہائفن استعمال کریں، جو حرف یا ہندسے سے شروع اور ختم ہوں",
+    "number": "عدد ہونا چاہیے",
+    "min": "کم از کم ${min} ہونا چاہیے"
   },
   "error": {
     "400": {
@@ -220,7 +236,15 @@
       "crossTenantFileAccess": "یہ فائل کسی دوسرے ٹیننٹ کی ہے",
       "platformPermissionNotGrantable": "پلیٹ فارم کی اجازتیں ٹیننٹ کے کردار کو نہیں دی جا سکتیں",
       "concurrentModification": "یہ ریکارڈ کسی اور نے تبدیل کر دیا ہے۔ دوبارہ لوڈ کریں اور پھر کوشش کریں۔",
-      "userSharedAcrossTenants": "یہ صارف دوسرے کرایہ داروں سے بھی تعلق رکھتا ہے اور اسے صرف پلیٹ فارم ایڈمنسٹریٹر ہی تبدیل کر سکتا ہے"
+      "userSharedAcrossTenants": "یہ صارف دوسرے کرایہ داروں سے بھی تعلق رکھتا ہے اور اسے صرف پلیٹ فارم ایڈمنسٹریٹر ہی تبدیل کر سکتا ہے",
+      "featureDisabled": "آپ کے پلان میں یہ خصوصیت شامل نہیں ہے۔",
+      "featureNotFound": "ایسی کوئی خصوصیت موجود نہیں۔",
+      "invalidFeatureValue": "اس خصوصیت کے لیے یہ قدر قابلِ قبول نہیں۔",
+      "featureProviderNotAllowed": "یہ خصوصیت یہاں متعین نہیں کی جا سکتی۔",
+      "unknownFeatureProvider": "نامعلوم خصوصیت فراہم کنندہ۔",
+      "editionNotFound": "ایڈیشن نہیں ملا۔",
+      "editionNameAlreadyExists": "اس نام کا ایڈیشن پہلے سے موجود ہے۔",
+      "editionInUse": "جب تک اس ایڈیشن پر کرایہ دار موجود ہیں، اسے حذف نہیں کیا جا سکتا۔"
     }
   },
   "table": {
@@ -242,7 +266,10 @@
       "group": "گروپ",
       "created": "تخلیق شدہ",
       "updated": "اپ ڈیٹ",
-      "identifier": "شناخت کنندہ"
+      "identifier": "شناخت کنندہ",
+      "displayOrder": "ترتیب",
+      "tenantCount": "کرایہ دار",
+      "edition": "ایڈیشن"
     },
     "pagination": {
       "showingEntries": "${totalRecords} اندراجات میں سے ${from} سے ${to} دکھائے جا رہے ہیں"
@@ -554,6 +581,40 @@
       "description": "وہ ٹیننٹ منتخب کریں جس میں آپ کام کرنا چاہتے ہیں۔",
       "emptyDescription": "آپ کسی فعال ٹیننٹ سے وابستہ نہیں ہیں۔ کسی منتظم سے اپنے ٹیننٹ میں شامل کرنے کو کہیں، یا اپنا ٹیننٹ بنانے کے لیے سائن اپ کریں۔",
       "emptyAction": "اپنے پروفائل پر جائیں"
+    },
+    "editions": {
+      "title": "ایڈیشنز",
+      "createSuccess": "ایڈیشن کامیابی سے بنا دیا گیا",
+      "updateSuccess": "ایڈیشن کامیابی سے اپ ڈیٹ ہو گیا",
+      "deleteTitle": "ایڈیشن حذف کریں",
+      "deleteConfirm": "کیا آپ واقعی یہ ایڈیشن حذف کرنا چاہتے ہیں؟",
+      "deleteSuccess": "ایڈیشن کامیابی سے حذف ہو گیا",
+      "notFound": "ایڈیشن نہیں ملا",
+      "list": {
+        "title": "ایڈیشنز کی فہرست"
+      },
+      "create": {
+        "title": "ایڈیشن بنائیں"
+      },
+      "update": {
+        "title": "ایڈیشن اپ ڈیٹ کریں"
+      }
+    },
+    "features": {
+      "tenantTitle": "کرایہ دار کی خصوصیات",
+      "editionTitle": "ایڈیشن کی خصوصیات",
+      "saveSuccess": "خصوصیات کامیابی سے اپ ڈیٹ ہو گئیں",
+      "none": "کوئی خصوصیت متعین نہیں کی گئی",
+      "mintTimeNotice": "تبدیلیاں صارف کے لیے اگلی بار سیشن کی تجدید پر نافذ ہوں گی۔",
+      "setHere": "یہاں متعین کیا گیا",
+      "fromEdition": "ایڈیشن سے",
+      "fromDefault": "ڈیفالٹ",
+      "resetToInherited": "وراثتی قدر پر بحال کریں",
+      "groups": "گروپس",
+      "unsaved": "محفوظ نہیں",
+      "unsavedCount": "${count} غیر محفوظ تبدیلیاں",
+      "parentDisabled": "اوپر والی خصوصیت بند ہونے تک نافذ نہیں",
+      "noMatches": "آپ کی تلاش سے کوئی خصوصیت میل نہیں کھاتی"
     }
   },
   "notifications": {

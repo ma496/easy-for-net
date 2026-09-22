@@ -221,6 +221,53 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
+    /// Verifies that the bootstrap tenant may still be put on a plan, even though it may not be
+    /// renamed. The refusal above protects what the tenant is called and addressed by, because the
+    /// seeded data and the upgrade path are pinned to it; the plan it is on is ordinary operational
+    /// data, and in a real deployment the bootstrap tenant is a customer like any other - refusing
+    /// that too would make it the one tenant nothing could ever be sold to.
+    /// </summary>
+    /// <remarks>
+    /// The tenant is put back on no plan afterwards, because every other test in the run reads it and
+    /// its entitlements decide what their sessions are minted with.
+    /// </remarks>
+    [Fact]
+    public async Task System_Created_Tenant_Can_Still_Be_Put_On_A_Plan()
+    {
+        var before = await ReloadTenantAsync(TestTenants.BootstrapTenantId);
+        var edition = new Edition { Name = $"Plan {Guid.NewGuid():N}" };
+        DbContext.Editions.Add(edition);
+        await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        await SetPlatformAdminAuthTokenAsync();
+
+        try
+        {
+            var (response, result) = await Client
+                .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, TenantUpdateResponse>(new()
+                {
+                    Id = TestTenants.BootstrapTenantId,
+                    Name = before.Name,
+                    Identifier = before.Identifier,
+                    EditionId = edition.Id
+                });
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
+            result.EditionId.Should().Be(edition.Id);
+        }
+        finally
+        {
+            await Client.PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, TenantUpdateResponse>(new()
+            {
+                Id = TestTenants.BootstrapTenantId,
+                Name = before.Name,
+                Identifier = before.Identifier,
+                EditionId = null
+            });
+        }
+    }
+
+    /// <summary>
     /// Verifies that a tenant which has never existed and one that has been deleted are refused with
     /// the same answer, so a rename cannot be used to learn whether a tenant identifier was ever real
     /// (AC-010).

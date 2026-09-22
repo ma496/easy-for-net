@@ -44,6 +44,44 @@ public class ExceptionProcessor(IWebHostEnvironment env, ILogger<ExceptionProces
             return;
         }
 
+        // Placed before the catch-all below, which would otherwise report this as a 500. Entitlement
+        // is not authorization: the refusal is identical for every caller in the tenant, its
+        // administrator included, and it means the plan does not cover this rather than that the
+        // caller lacks a grant - so it gets a 403 with its own code instead of being reported as a
+        // permission failure or a fault.
+        if (context.ExceptionDispatchInfo.SourceException is FeatureDisabledException featureDisabled)
+        {
+            context.MarkExceptionAsHandled();
+
+            logger.LogInformation("Feature {Feature} is disabled for {Method} {Path}",
+                                  featureDisabled.FeatureName,
+                                  context.HttpContext.Request.Method,
+                                  context.HttpContext.Request.Path);
+            context.HttpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
+            context.HttpContext.Response.ContentType = "application/json";
+            var featureResponse = new
+            {
+                type = "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.3",
+                title = "Feature Disabled",
+                status = 403,
+                instance = context.HttpContext.Request.Path.Value,
+                traceId = context.HttpContext.TraceIdentifier,
+                errors = new[]
+                {
+                    new
+                    {
+                        name = featureDisabled.FeatureName,
+                        reason = featureDisabled.Message,
+                        code = ErrorCodes.FeatureDisabled
+                    }
+                }
+            };
+
+            await context.HttpContext.Response.WriteAsJsonAsync(featureResponse, cancellationToken: ct);
+
+            return;
+        }
+
         if (typeof(Exception).IsAssignableFrom(context.ExceptionDispatchInfo.SourceException.GetType()))
         {
             context.MarkExceptionAsHandled(); //only if handling the exception here.

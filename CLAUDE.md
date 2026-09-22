@@ -69,9 +69,53 @@ dotnet test tool/EasyForNetTool.Tests/EasyForNetTool.Tests.csproj
 
 **Feature isolation is enforced by tests.** `Tests/Architect/FeatureDependencyTests` fails if a type under `Backend.Features.X` depends on a type under `Backend.Features.Y` unless that type is marked `[AllowOutside]`. `[NoDirectUse]` (with `[BypassNoDirectUse]` as the escape hatch) enforces consuming a class through its interface. `Tests/Architect/Features/Feature{A,B}` are fixtures that exercise the rules themselves — not real features.
 
-**Permissions** are string constants in `Permissions/Allow.cs`, declared as a hierarchy by each feature's `IPermissionDefinitionProvider`, enforced on endpoints via `Permissions(Allow.X)`, and reconciled into the database by `ShareData/DataSeeder` on every startup (adds/renames/deletes rows and strips deleted permissions from roles). Adding a permission means: constant in `Allow.cs` → definition in the provider → mirror the constant in `src/frontend/web/allow.ts`.
+**Permissions** are string constants in `Permissions/Allow.cs`, declared as a hierarchy by each feature's `IPermissionDefinitionProvider`, enforced on endpoints via `Permissions(Allow.X)`, and reconciled into the database by `ShareData/DataSeeder` on every startup (adds/renames/deletes rows and strips deleted permissions from roles). Adding a permission means: constant in `Allow.cs` → definition in the provider → mirror the constant in `src/frontend/web/allow.ts`. A definition may also call `.RequireFeatures(...)` — see **Features (entitlements)** below.
 
 Each definition also carries a `PermissionScope` — `Tenant` (the default), `Platform` or `Both` — and `SessionGrants` narrows the permission claims a session is minted with to the scope it acts in: `Platform` + `Both` acting in no tenant, `Tenant` + `Both` acting inside one, nothing at all for an ordinary account with no tenant. **Permissions are the only authorization input**, so a tenant-scoped operation is kept out of platform scope by declaring a `Tenant`-scoped permission and by nothing else — there is no endpoint attribute beside it. The separate `User.IsPlatform` column names the account's tier, travels as the `is_platform` claim, and is read only where the tier itself is the question — sign-in, the Hangfire dashboard, entering and leaving a tenant, and what tier a newly created account gets.
+
+**Features (entitlements)** answer a different question from permissions: not *may this caller do it*
+but *does this tenant's plan include it at all* — the same answer for everyone in the tenant, its
+administrator included. Entitlements are a fact about a tenant, so the whole system lives inside the
+tenancy slice, in `Features/Tenancy/Core/FeatureManagement/`. The vocabulary other slices declare
+their features in - and the services they ask questions of - is published with `[AllowOutside]`, the
+same way `ITenantContext` is; everything that resolves or stores a value stays private to the slice.
+Each slice declares its own features in `Core/<X>FeaturesProvider.cs`, beside the
+`<X>PermissionsProvider` it already has; `<X>Feature.cs : IFeature` remains the slice's DI module and
+has nothing to do with this. Adding a feature means: constant in
+`Features/Tenancy/Core/FeatureManagement/FeatureNames.cs` → definition in the slice's provider →
+mirror the constant in `src/frontend/web/feature-names.ts`. **Every feature ships
+enabled by default**, so an installation that has sold nothing behaves as though the system were not
+there.
+
+A feature's value is resolved for one **target** through a chain, first answer winning: the tenant's
+own override → what its `Edition` (plan) grants → the deployment's `FeatureManagement` configuration
+section → the value the definition declares. `Edition` and `Tenant.EditionId` live in the tenancy
+slice; the stored values are `FeatureValue` rows keyed by `(ProviderName, ProviderKey)` rather than by
+a tenant column, which is what lets them be read while a session is minted and no tenant scope exists.
+A child feature is not in force whenever an ancestor toggle is off. `IFeatureValueResolver` takes the
+target as an argument and never reads ambient state; `IFeatureChecker` is the thin convenience over it
+for endpoint code, which fills the target in from `ITenantContext` and refuses loudly when no scope has
+been established.
+
+**A permission may declare `.RequireFeatures(...)`**, on a leaf or on a group node, in which case every
+permission beneath it inherits the requirement. `IPermissionFeatureFilter` is the only place that rule
+is written, and its three callers must not be allowed to disagree: `SessionGrants` (the claims a
+session is minted with), `GetDefinePermissionsEndpoint` (the catalogue a role is edited from) and
+`GetInfoEndpoint` (what the web app gates on). Enforcement is **mint-time only** — a feature change
+bites at the caller's next token renewal, exactly as a role change does, which is what keeps "decided
+once, when a token is minted" true. Platform scope narrows nothing: an account acting in no tenant is
+inside no plan, and gating the permissions that administer the feature system would make a feature
+switched off impossible to switch back on. Two architecture tests hold the line — no `Platform`-scoped
+permission may require a feature, and every feature a permission names must actually be declared.
+
+Two consequences worth keeping in mind. Gating never revokes anything: `DataSeeder` still persists a
+row for every permission and still grants the administrator roles the whole scope, so turning a
+feature back on restores the permission with nothing to re-grant — and `ChangePermissionsEndpoint`
+carries plan-hidden grants through a replacement rather than reading the form's silence about them as
+a removal. And an endpoint gated on a feature alone, with no permission to hang it on, calls
+`featureChecker.CheckEnabledAsync(...)` in its handler rather than declaring an attribute, so
+"permissions are the only authorization input" stays true: entitlement is a business precondition, and
+it answers 403 `featureDisabled` through `ExceptionProcessor`.
 
 **Data access.** `AppDbContext` applies entity configurations from the assembly, installs a global soft-delete query filter for `ISoftDelete`, and fills audit/normalized properties on save. List endpoints take a `ListRequestDto<TId>` and call `IQueryableExtension.Process(request)` for sorting/paging; sortable fields must be whitelisted in the request validator.
 
@@ -83,7 +127,7 @@ Each definition also carries a `PermissionScope` — `Tenant` (the default), `Pl
 
 ## Backend tests
 
-xUnit v3 + `FastEndpoints.Testing`. `App : AppFixture<Program>` runs the host with environment `Testing` and is registered as an **assembly fixture** in `Tests/Meta.cs`, so it is built, migrated and seeded once for the whole run. `AppTestsBase` gives each test its own `Client` and its own DI scope — `DbContext`, `TenantContext` and `Service<T>()` all resolve from it — plus `SetAuthTokenAsync()` (defaults to the default tenant's administrator `tenantadmin` / `Admin#123`; `SetPlatformAdminAuthTokenAsync()` signs in as the platform administrator `admin`) and `CreateAdminUserAsync`. Tests call endpoints type-safely — `Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request)` — assert with FluentAssertions, and build payloads with Bogus `Faker<T>`. Shared fixtures live in `Tests/Seeder` (`TestRoles`, `TestUsers`, `TestsDataSeeder`); reuse them instead of creating ad-hoc roles. **Test classes run in parallel**, one collection per class, so a test must not depend on global database state it did not create; a class that shares a resource with another names a `[Collection]` for itself (`Notifications`, `FileManagement`, `BootstrapTenant`). The test host substitutes a cheap password hasher and a mail service that sends nothing (`Tests/Fakes`); under `Testing`, `Program.cs` also runs no Hangfire worker, logs at `Warning` and lifts the request rate limit.
+xUnit v3 + `FastEndpoints.Testing`. `App : AppFixture<Program>` runs the host with environment `Testing` and is registered as an **assembly fixture** in `Tests/Meta.cs`, so it is built, migrated and seeded once for the whole run. `AppTestsBase` gives each test its own `Client` and its own DI scope — `DbContext`, `TenantContext` and `Service<T>()` all resolve from it — plus `SetAuthTokenAsync()` (defaults to the default tenant's administrator `tenantadmin` / `Admin#123`; `SetPlatformAdminAuthTokenAsync()` signs in as the platform administrator `admin`) and `CreateAdminUserAsync`. Tests call endpoints type-safely — `Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request)` — assert with FluentAssertions, and build payloads with Bogus `Faker<T>`. Shared fixtures live in `Tests/Seeder` (`TestRoles`, `TestUsers`, `TestsDataSeeder`); reuse them instead of creating ad-hoc roles. **Test classes run in parallel**, one collection per class, so a test must not depend on global database state it did not create; a class that shares a resource with another names a `[Collection]` for itself (`Notifications`, `FileManagement`, `BootstrapTenant`, `FeatureManagement`). The test host substitutes a cheap password hasher and a mail service that sends nothing (`Tests/Fakes`); under `Testing`, `Program.cs` also runs no Hangfire worker, logs at `Warning` and lifts the request rate limit.
 
 ## Frontend architecture
 
@@ -128,7 +172,7 @@ scripts; put anything repo-specific in `.claude/skills/spec-driven/SKILL.md` ins
 
 - Process: `spec-driven`
 - Cross-cutting: `coding-conventions`
-- API: `backend-feature`, `backend-endpoint`, `backend-entity`, `backend-tests`, `permissions`, `background-jobs`, `file-storage`, `notifications`
+- API: `backend-feature`, `backend-endpoint`, `backend-entity`, `backend-tests`, `permissions`, `feature-management`, `background-jobs`, `file-storage`, `notifications`
 - Web: `rtk-query-api`, `frontend-page`, `frontend-crud`, `ui-component`, `redux-state`, `localization`, `frontend-tests`
 - Spanning both: `api-error-handling`
 - This repository and the CLI: `new-project` (scaffolding), `template-maintenance`

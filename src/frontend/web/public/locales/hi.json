@@ -72,7 +72,13 @@
     "tenantsUpdate": "अपडेट करें",
     "tenantsMembers": "सदस्य",
     "selectTenant": "टेनेंट चुनें",
-    "tenantsDetail": "विवरण"
+    "tenantsDetail": "विवरण",
+    "editions": "संस्करण",
+    "editionsList": "सूची",
+    "editionsCreate": "बनाएं",
+    "editionsUpdate": "अपडेट करें",
+    "editionsFeatures": "सुविधाएँ",
+    "tenantsFeatures": "सुविधाएँ"
   },
   "search": {
     "dashboard": "डैशबोर्ड",
@@ -92,7 +98,9 @@
     "uiFileUpload": "UI फ़ाइल अपलोड",
     "uiTooltips": "UI टूलटिप्स",
     "tenants": "टेनेंट",
-    "tenantsCreate": "टेनेंट बनाएं"
+    "tenantsCreate": "टेनेंट बनाएं",
+    "editions": "संस्करण",
+    "editionsCreate": "संस्करण बनाएँ"
   },
   "form": {
     "label": {
@@ -112,7 +120,10 @@
       "tenantName": "टेनेंट नाम",
       "tenantIdentifier": "पहचानकर्ता",
       "user": "उपयोगकर्ता",
-      "tenant": "टेनेंट"
+      "tenant": "टेनेंट",
+      "editionName": "नाम",
+      "editionDescription": "विवरण",
+      "editionDisplayOrder": "प्रदर्शन क्रम"
     },
     "placeholder": {
       "username": "उपयोगकर्ता नाम दर्ज करें",
@@ -129,7 +140,10 @@
       "tenantName": "टेनेंट नाम दर्ज करें",
       "tenantIdentifier": "पहचानकर्ता दर्ज करें (उदाहरण के लिए acme)",
       "user": "उपयोगकर्ता चुनें",
-      "tenant": "टेनेंट पहचानकर्ता"
+      "tenant": "टेनेंट पहचानकर्ता",
+      "editionName": "संस्करण का नाम दर्ज करें",
+      "editionDescription": "संस्करण का विवरण दर्ज करें",
+      "edition": "एक संस्करण चुनें"
     }
   },
   "validation": {
@@ -140,7 +154,9 @@
     "invalidEmail": "अमान्य ईमेल",
     "mustMatch": "फ़ील्ड ${otherField} के साथ मेल खाना चाहिए",
     "atLeastOneSelected": "कम से कम एक आइटम का चयन किया जाना चाहिए",
-    "tenantIdentifier": "छोटे अंग्रेज़ी अक्षर, अंक और एकल हाइफ़न का उपयोग करें, जो अक्षर या अंक से शुरू और समाप्त हों"
+    "tenantIdentifier": "छोटे अंग्रेज़ी अक्षर, अंक और एकल हाइफ़न का उपयोग करें, जो अक्षर या अंक से शुरू और समाप्त हों",
+    "number": "संख्या होनी चाहिए",
+    "min": "कम से कम ${min} होना चाहिए"
   },
   "error": {
     "400": {
@@ -220,7 +236,15 @@
       "crossTenantFileAccess": "यह फ़ाइल किसी अन्य टेनेंट की है",
       "platformPermissionNotGrantable": "प्लेटफ़ॉर्म अनुमतियां टेनेंट भूमिका को नहीं दी जा सकतीं",
       "concurrentModification": "यह रिकॉर्ड किसी और ने बदल दिया था। पुनः लोड करें और फिर से प्रयास करें।",
-      "userSharedAcrossTenants": "यह उपयोगकर्ता अन्य टेनेंट से भी संबंधित है और इसे केवल प्लेटफ़ॉर्म प्रशासक ही बदल सकता है"
+      "userSharedAcrossTenants": "यह उपयोगकर्ता अन्य टेनेंट से भी संबंधित है और इसे केवल प्लेटफ़ॉर्म प्रशासक ही बदल सकता है",
+      "featureDisabled": "आपकी योजना में यह सुविधा शामिल नहीं है।",
+      "featureNotFound": "ऐसी कोई सुविधा मौजूद नहीं है।",
+      "invalidFeatureValue": "इस सुविधा के लिए यह मान अनुमत नहीं है।",
+      "featureProviderNotAllowed": "यह सुविधा यहाँ सेट नहीं की जा सकती।",
+      "unknownFeatureProvider": "अज्ञात सुविधा प्रदाता।",
+      "editionNotFound": "संस्करण नहीं मिला।",
+      "editionNameAlreadyExists": "इस नाम का संस्करण पहले से मौजूद है।",
+      "editionInUse": "जब तक इस संस्करण पर किरायेदार हैं, इसे हटाया नहीं जा सकता।"
     }
   },
   "table": {
@@ -242,7 +266,10 @@
       "group": "समूह",
       "created": "बनाया गया",
       "updated": "अपडेट किया गया",
-      "identifier": "पहचानकर्ता"
+      "identifier": "पहचानकर्ता",
+      "displayOrder": "क्रम",
+      "tenantCount": "किरायेदार",
+      "edition": "संस्करण"
     },
     "pagination": {
       "showingEntries": "${totalRecords} प्रविष्टियों में से ${from} से ${to} दिखा रहा है"
@@ -554,6 +581,40 @@
       "description": "वह टेनेंट चुनें जिसमें आप कार्य करना चाहते हैं।",
       "emptyDescription": "आप किसी सक्रिय टेनेंट से नहीं जुड़े हैं। किसी व्यवस्थापक से अपने टेनेंट में जोड़ने के लिए कहें, या अपना टेनेंट बनाने के लिए साइन अप करें।",
       "emptyAction": "अपनी प्रोफ़ाइल पर जाएं"
+    },
+    "editions": {
+      "title": "संस्करण",
+      "createSuccess": "संस्करण सफलतापूर्वक बनाया गया",
+      "updateSuccess": "संस्करण सफलतापूर्वक अपडेट किया गया",
+      "deleteTitle": "संस्करण हटाएँ",
+      "deleteConfirm": "क्या आप वाकई इस संस्करण को हटाना चाहते हैं?",
+      "deleteSuccess": "संस्करण सफलतापूर्वक हटाया गया",
+      "notFound": "संस्करण नहीं मिला",
+      "list": {
+        "title": "संस्करण सूची"
+      },
+      "create": {
+        "title": "संस्करण बनाएँ"
+      },
+      "update": {
+        "title": "संस्करण अपडेट करें"
+      }
+    },
+    "features": {
+      "tenantTitle": "किरायेदार सुविधाएँ",
+      "editionTitle": "संस्करण सुविधाएँ",
+      "saveSuccess": "सुविधाएँ सफलतापूर्वक अपडेट की गईं",
+      "none": "कोई सुविधा परिभाषित नहीं की गई है",
+      "mintTimeNotice": "परिवर्तन उपयोगकर्ता के लिए अगली बार सत्र नवीनीकृत होने पर प्रभावी होंगे।",
+      "setHere": "यहाँ सेट किया गया",
+      "fromEdition": "संस्करण से",
+      "fromDefault": "डिफ़ॉल्ट",
+      "resetToInherited": "विरासत में मिले मान पर रीसेट करें",
+      "groups": "समूह",
+      "unsaved": "असहेजा",
+      "unsavedCount": "${count} असहेजे परिवर्तन",
+      "parentDisabled": "ऊपर की सुविधा बंद होने तक प्रभावी नहीं",
+      "noMatches": "आपकी खोज से कोई सुविधा मेल नहीं खाती"
     }
   },
   "notifications": {

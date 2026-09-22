@@ -28,6 +28,18 @@ public interface IPermissionDefinitionService
     IReadOnlyList<FlattenedPermission> GetFlattenedPermissions();
 
     /// <summary>
+    /// Returns, for every leaf permission, the features that must be enabled before it may be
+    /// exercised - the ones it declares itself and the ones every ancestor declares, together.
+    /// </summary>
+    /// <remarks>
+    /// Purely a reading of the code-declared catalogue, so it stays synchronous: what a permission
+    /// requires is fixed, and only whether those features are <em>on</em> varies by tenant. That part
+    /// lives in the feature-management side, which is what keeps this service free of any I/O.
+    /// </remarks>
+    /// <returns>Leaf permission name to the feature names it needs, omitting leaves that need none.</returns>
+    IReadOnlyDictionary<string, IReadOnlyList<string>> GetRequiredFeaturesByPermission();
+
+    /// <summary>
     /// Returns the names of every leaf permission exercisable in one scope - those declared for it
     /// and those declared for <see cref="PermissionScope.Both"/>. This is the set a role confined to
     /// that scope may hold.
@@ -80,6 +92,20 @@ public class PermissionDefinitionService(IEnumerable<IPermissionDefinitionProvid
     }
 
     /// <inheritdoc/>
+    public IReadOnlyDictionary<string, IReadOnlyList<string>> GetRequiredFeaturesByPermission()
+    {
+        var required = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+        foreach (var group in GetPermissionGroups())
+        {
+            foreach (var permission in group.Permissions)
+            {
+                CollectRequiredFeatures(permission, [], required);
+            }
+        }
+        return required;
+    }
+
+    /// <inheritdoc/>
     public IReadOnlySet<string> GetPermissionNamesInScope(PermissionScope viewScope)
     {
         return GetFlattenedPermissions()
@@ -98,7 +124,8 @@ public class PermissionDefinitionService(IEnumerable<IPermissionDefinitionProvid
             {
                 Name = permission.Name,
                 DisplayName = permission.DisplayName,
-                Scope = permission.Scope
+                Scope = permission.Scope,
+                RequiredFeatures = permission.RequiredFeatures
             };
             yield break;
         }
@@ -138,6 +165,7 @@ public class PermissionDefinitionService(IEnumerable<IPermissionDefinitionProvid
     private static PermissionDefinition CopyLeavesInScope(PermissionDefinition permission, PermissionScope viewScope)
     {
         var copy = new PermissionDefinition(permission.Name, permission.DisplayName, permission.Scope);
+        copy.RequireFeatures([.. permission.RequiredFeatures]);
         CopyChildrenInScope(permission, copy, viewScope);
         return copy;
     }
@@ -146,7 +174,38 @@ public class PermissionDefinitionService(IEnumerable<IPermissionDefinitionProvid
     {
         foreach (var child in source.Children.Where(candidate => HasLeafInScope(candidate, viewScope)))
         {
-            CopyChildrenInScope(child, target.AddChild(child.Name, child.DisplayName, child.Scope), viewScope);
+            // The copy has to carry what the original required, or narrowing the catalogue to a scope
+            // would quietly drop the gate and hand back permissions the tenant's plan withholds.
+            var childCopy = target.AddChild(child.Name, child.DisplayName, child.Scope);
+            childCopy.RequireFeatures([.. child.RequiredFeatures]);
+            CopyChildrenInScope(child, childCopy, viewScope);
+        }
+    }
+
+    /// <summary>
+    /// Walks the tree accumulating each branch's feature requirements onto the leaves beneath it, so a
+    /// requirement stated once on a group reaches every permission in it.
+    /// </summary>
+    private static void CollectRequiredFeatures(PermissionDefinition permission,
+                                                IReadOnlyList<string> inherited,
+                                                Dictionary<string, IReadOnlyList<string>> required)
+    {
+        IReadOnlyList<string> here = permission.RequiredFeatures.Count == 0
+            ? inherited
+            : [.. inherited, .. permission.RequiredFeatures];
+
+        if (permission.Children.Count == 0)
+        {
+            if (here.Count > 0)
+            {
+                required[permission.Name] = here;
+            }
+            return;
+        }
+
+        foreach (var child in permission.Children)
+        {
+            CollectRequiredFeatures(child, here, required);
         }
     }
 
@@ -166,4 +225,10 @@ public class FlattenedPermission
     /// The scope the permission may be exercised in.
     /// </summary>
     public PermissionScope Scope { get; init; }
+
+    /// <summary>
+    /// The features this leaf declares for itself. What it needs in total, ancestors included, is
+    /// answered by <see cref="IPermissionDefinitionService.GetRequiredFeaturesByPermission"/>.
+    /// </summary>
+    public IReadOnlyList<string> RequiredFeatures { get; init; } = [];
 }

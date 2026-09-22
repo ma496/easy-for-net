@@ -28,4 +28,12 @@ export const Allow = {
   TenantMember_Add: 'TenantMember.Add',
   TenantMember_UpdateRoles: 'TenantMember.UpdateRoles',
   TenantMember_Remove: 'TenantMember.Remove',
+
+  Edition_View: 'Edition.View',
+  Edition_Create: 'Edition.Create',
+  Edition_Update: 'Edition.Update',
+  Edition_Delete: 'Edition.Delete',
+
+  FeatureValue_View: 'FeatureValue.View',
+  FeatureValue_Manage: 'FeatureValue.Manage',
 } as const

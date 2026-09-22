@@ -72,7 +72,13 @@
     "tenantsUpdate": "Mettre à jour",
     "tenantsMembers": "Membres",
     "selectTenant": "Sélectionner un locataire",
-    "tenantsDetail": "Détail"
+    "tenantsDetail": "Détail",
+    "editions": "Éditions",
+    "editionsList": "Liste",
+    "editionsCreate": "Créer",
+    "editionsUpdate": "Mettre à jour",
+    "editionsFeatures": "Fonctionnalités",
+    "tenantsFeatures": "Fonctionnalités"
   },
   "search": {
     "dashboard": "Tableau de bord",
@@ -92,7 +98,9 @@
     "uiFileUpload": "Téléchargement de fichiers UI",
     "uiTooltips": "Info-bulles UI",
     "tenants": "Locataires",
-    "tenantsCreate": "Créer un locataire"
+    "tenantsCreate": "Créer un locataire",
+    "editions": "Éditions",
+    "editionsCreate": "Créer une édition"
   },
   "form": {
     "label": {
@@ -112,7 +120,10 @@
       "tenantName": "Nom du locataire",
       "tenantIdentifier": "Identifiant",
       "user": "Utilisateur",
-      "tenant": "Locataire"
+      "tenant": "Locataire",
+      "editionName": "Nom",
+      "editionDescription": "Description",
+      "editionDisplayOrder": "Ordre d’affichage"
     },
     "placeholder": {
       "username": "Entrez le nom d'utilisateur",
@@ -129,7 +140,10 @@
       "tenantName": "Entrez le nom du locataire",
       "tenantIdentifier": "Entrez l'identifiant (par exemple acme)",
       "user": "Sélectionnez un utilisateur",
-      "tenant": "Identifiant du locataire"
+      "tenant": "Identifiant du locataire",
+      "editionName": "Saisissez le nom de l’édition",
+      "editionDescription": "Saisissez la description de l’édition",
+      "edition": "Sélectionnez une édition"
     }
   },
   "validation": {
@@ -140,7 +154,9 @@
     "invalidEmail": "Email invalide",
     "mustMatch": "Le champ doit correspondre à ${otherField}",
     "atLeastOneSelected": "Au moins un élément doit être sélectionné",
-    "tenantIdentifier": "Utilisez des lettres minuscules, des chiffres et des traits d'union simples, en commençant et en terminant par une lettre ou un chiffre"
+    "tenantIdentifier": "Utilisez des lettres minuscules, des chiffres et des traits d'union simples, en commençant et en terminant par une lettre ou un chiffre",
+    "number": "Doit être un nombre",
+    "min": "Doit être au moins ${min}"
   },
   "error": {
     "400": {
@@ -220,7 +236,15 @@
       "crossTenantFileAccess": "Ce fichier appartient à un autre locataire",
       "platformPermissionNotGrantable": "Les permissions de plateforme ne peuvent pas être accordées à un rôle de locataire",
       "concurrentModification": "Cet enregistrement a été modifié par quelqu'un d'autre. Rechargez et réessayez.",
-      "userSharedAcrossTenants": "Cet utilisateur appartient à d'autres locataires et ne peut être modifié que par un administrateur de la plateforme"
+      "userSharedAcrossTenants": "Cet utilisateur appartient à d'autres locataires et ne peut être modifié que par un administrateur de la plateforme",
+      "featureDisabled": "Votre offre n’inclut pas cette fonctionnalité.",
+      "featureNotFound": "Cette fonctionnalité n’existe pas.",
+      "invalidFeatureValue": "Cette valeur n’est pas autorisée pour cette fonctionnalité.",
+      "featureProviderNotAllowed": "Cette fonctionnalité ne peut pas être définie ici.",
+      "unknownFeatureProvider": "Fournisseur de fonctionnalités inconnu.",
+      "editionNotFound": "Édition introuvable.",
+      "editionNameAlreadyExists": "Une édition portant ce nom existe déjà.",
+      "editionInUse": "Cette édition ne peut pas être supprimée tant que des locataires y sont rattachés."
     }
   },
   "table": {
@@ -242,7 +266,10 @@
       "group": "Groupe",
       "created": "Créé",
       "updated": "Mis à jour",
-      "identifier": "Identifiant"
+      "identifier": "Identifiant",
+      "displayOrder": "Ordre",
+      "tenantCount": "Locataires",
+      "edition": "Édition"
     },
     "pagination": {
       "showingEntries": "Affichage de ${from} à ${to} sur ${totalRecords} entrées"
@@ -554,6 +581,40 @@
       "description": "Choisissez le locataire dans lequel vous souhaitez travailler.",
       "emptyDescription": "Vous n'appartenez à aucun locataire actif. Demandez à un administrateur de vous ajouter au sien, ou inscrivez-vous pour créer le vôtre.",
       "emptyAction": "Aller à votre profil"
+    },
+    "editions": {
+      "title": "Éditions",
+      "createSuccess": "Édition créée avec succès",
+      "updateSuccess": "Édition mise à jour avec succès",
+      "deleteTitle": "Supprimer l’édition",
+      "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette édition ?",
+      "deleteSuccess": "Édition supprimée avec succès",
+      "notFound": "Édition introuvable",
+      "list": {
+        "title": "Liste des éditions"
+      },
+      "create": {
+        "title": "Créer une édition"
+      },
+      "update": {
+        "title": "Modifier l’édition"
+      }
+    },
+    "features": {
+      "tenantTitle": "Fonctionnalités du locataire",
+      "editionTitle": "Fonctionnalités de l’édition",
+      "saveSuccess": "Fonctionnalités mises à jour avec succès",
+      "none": "Aucune fonctionnalité n’a été définie",
+      "mintTimeNotice": "Les modifications prennent effet pour un utilisateur lors du prochain renouvellement de sa session.",
+      "setHere": "Défini ici",
+      "fromEdition": "De l’édition",
+      "fromDefault": "Par défaut",
+      "resetToInherited": "Rétablir la valeur héritée",
+      "groups": "Groupes",
+      "unsaved": "Non enregistré",
+      "unsavedCount": "${count} modification(s) non enregistrée(s)",
+      "parentDisabled": "Sans effet tant que la fonctionnalité parente est désactivée",
+      "noMatches": "Aucune fonctionnalité ne correspond à votre recherche"
     }
   },
   "notifications": {

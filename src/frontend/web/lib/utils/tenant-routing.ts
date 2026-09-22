@@ -100,7 +100,7 @@ export const resolveTenantLanding = (user: GetUserInfoResponse | undefined): Ten
  * users, platform roles, notifications belonging to no tenant - and the UI showcase and the tenancy
  * screens read no tenant data. Any feature added later stays tenant-only until it is listed here.
  */
-const platformAccessiblePathPrefixes = ['/admin/users', '/admin/roles', '/admin/notifications', '/admin/ui', platformScopedPathPrefix]
+const platformAccessiblePathPrefixes = ['/admin/users', '/admin/roles', '/admin/notifications', '/admin/ui', '/admin/editions', platformScopedPathPrefix]
 
 /**
  * Returns true when the (locale-stripped) path names a screen a platform
@@ -126,7 +126,7 @@ export const isPlatformWithoutTenant = (user: GetUserInfoResponse | undefined): 
  * members are not here, because those are exercisable in either scope - a tenant administrator opens
  * its own tenant's detail and members from inside it.
  */
-const platformOnlyPathPrefixes = ['/admin/tenants/list', '/admin/tenants/create']
+const platformOnlyPathPrefixes = ['/admin/tenants/list', '/admin/tenants/create', '/admin/tenants/features', '/admin/editions']
 
 /**
  * Returns true when the (locale-stripped) path names one of the platform's own screens, which a

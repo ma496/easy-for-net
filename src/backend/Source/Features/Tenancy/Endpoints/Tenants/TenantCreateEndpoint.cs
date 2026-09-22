@@ -19,7 +19,7 @@ using Backend.Features.Tenancy.Core;
 /// differ between the two surfaces. No membership is created here: a tenant created from the
 /// platform has no first member until one is added.
 /// </remarks>
-sealed class TenantCreateEndpoint(ITenantService tenantService) : Endpoint<TenantCreateRequest, TenantCreateResponse>
+sealed class TenantCreateEndpoint(ITenantService tenantService, IEditionService editionService) : Endpoint<TenantCreateRequest, TenantCreateResponse>
 {
     public override void Configure()
     {
@@ -40,6 +40,8 @@ sealed class TenantCreateEndpoint(ITenantService tenantService) : Endpoint<Tenan
             ThrowError(x => x.Identifier, ITenantService.DuplicateIdentifierMessage, ErrorCodes.TenantIdentifierAlreadyExists);
         }
 
+        await RefuseUnknownEditionAsync(request.EditionId, cancellationToken);
+
         var requestMapper = new TenantCreateRequestMapper();
         var entity = requestMapper.Map(request);
         // The status, the system-created flag, the trimming, the normalized identifier and the audit
@@ -49,6 +51,25 @@ sealed class TenantCreateEndpoint(ITenantService tenantService) : Endpoint<Tenan
 
         var responseMapper = new TenantCreateResponseMapper();
         await Send.ResponseAsync(responseMapper.Map(entity), cancellation: cancellationToken);
+    }
+
+    /// <summary>
+    /// Refuses a plan that does not exist, so a tenant cannot be attributed to one and then silently
+    /// resolve its entitlements as though it were on none.
+    /// </summary>
+    /// <param name="editionId">The plan named, or <see langword="null"/> for none.</param>
+    /// <param name="cancellationToken">Token that cancels the lookup.</param>
+    private async Task RefuseUnknownEditionAsync(Guid? editionId, CancellationToken cancellationToken)
+    {
+        if (editionId is not { } id)
+        {
+            return;
+        }
+
+        if (await editionService.GetByIdAsync(id, cancellationToken) is null)
+        {
+            ThrowError(x => x.EditionId, "Edition not found", ErrorCodes.EditionNotFound);
+        }
     }
 }
 
@@ -61,6 +82,12 @@ public sealed class TenantCreateRequest
 {
     public string Name { get; set; } = null!;
     public string Identifier { get; set; } = null!;
+
+    /// <summary>
+    /// The plan to put the tenant on, or <see langword="null"/> for none - in which case its
+    /// entitlements fall through to what the deployment configured and what the definitions declare.
+    /// </summary>
+    public Guid? EditionId { get; set; }
 }
 
 /// <summary>
@@ -88,6 +115,7 @@ public sealed class TenantCreateResponse : BaseDto<Guid>, ISystemCreatedDto
     public string Identifier { get; set; } = null!;
     public string IdentifierNormalized { get; set; } = null!;
     public TenantStatus Status { get; set; }
+    public Guid? EditionId { get; set; }
 }
 
 /// <summary>

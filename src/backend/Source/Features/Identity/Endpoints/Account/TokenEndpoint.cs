@@ -29,7 +29,7 @@ using Backend.Features.Identity.Core.Entities;
 /// works platform-wide - so it signs in with none and enters a tenant when it needs one.
 /// </para>
 /// </remarks>
-sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IOptions<SigninSetting> signinSetting, IOptions<AuthSetting> authSetting) : Endpoint<TokenRequest, TokenResponse>
+sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IPermissionFeatureFilter permissionFeatureFilter, IOptions<SigninSetting> signinSetting, IOptions<AuthSetting> authSetting) : Endpoint<TokenRequest, TokenResponse>
 {
     /// <summary>
     /// The refusal reported for a tenant identifier that names no tenant, or names a deleted one. It
@@ -97,7 +97,7 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IOp
         // The grants the session starts with are read for the tenant being acted in and for no other,
         // narrowed to the scope that tenant puts the session in. They are what every request made with
         // this token is authorized on, until it is renewed, switched or replaced by a new sign-in.
-        var grants = await SessionGrants.ReadAsync(dbContext, user.Id, tenantId, user.IsPlatform, c);
+        var grants = await SessionGrants.ReadAsync(dbContext, permissionFeatureFilter, user.Id, tenantId, user.IsPlatform, c);
 
         var claims = Helper.CreateClaims(user, grants.Roles, grants.Permissions, tenantId);
 

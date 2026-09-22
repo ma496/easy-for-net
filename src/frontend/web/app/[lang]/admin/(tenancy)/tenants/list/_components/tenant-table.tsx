@@ -10,7 +10,7 @@ import {
   TenantStatus,
 } from '@/store/api/tenancy'
 import { SortDirection } from '@/store/api'
-import { Download, Loader2, Trash2, Plus, Pencil, PauseCircle, PlayCircle, Users, Eye, LogIn } from 'lucide-react'
+import { Download, Loader2, Trash2, Plus, Pencil, PauseCircle, PlayCircle, Users, Eye, LogIn, SlidersHorizontal } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { ExportFormat, successToast, exportData, isAllowed, apiErrorAlert, confirmDeleteAlert, confirmAlert, errorAlert } from '@/lib/utils'
 import { Dropdown, LocalizedLink, ApiErrorMessages, Badge } from '@/components/ui'
@@ -86,6 +86,7 @@ export const TenantTable = () => {
   const canDelete = isAllowed(authState, [Allow.Tenant_Delete])
   const canViewMembers = isAllowed(authState, [Allow.TenantMember_View])
   const canViewDetail = isAllowed(authState, [Allow.Tenant_Detail])
+  const canViewFeatures = isAllowed(authState, [Allow.FeatureValue_View])
   // A platform account holds no membership anywhere, so this table is how it reaches a tenant at all:
   // entering one puts its session inside it, which is what lets it reproduce something a tenant has
   // reported rather than reason about it from outside. This is the account tier rather than a
@@ -143,6 +144,7 @@ export const TenantTable = () => {
         [t('table.columns.identifier')]: tenant.identifier,
         [t('table.columns.status')]: tenant.status === TenantStatus.Active ? t('page.tenants.status.active') : t('page.tenants.status.suspended'),
         [t('table.columns.userCount')]: tenant.userCount,
+        [t('table.columns.edition')]: tenant.editionName ?? '',
       }))
       exportData(format, rows, t('page.tenants.title'), 'tenants')
     } finally {
@@ -215,6 +217,19 @@ export const TenantTable = () => {
       header: t('table.columns.identifier'),
       cell: (info) => info.getValue(),
     }),
+    // Filled per page by the API from the editions table rather than held on the tenant row, so like
+    // the member count it cannot be sorted on. A tenant on no plan shows a dash rather than an empty
+    // cell, so "no plan" and "not loaded" do not look the same.
+    columnHelper.accessor('editionName', {
+      header: t('table.columns.edition'),
+      cell: (info) =>
+        info.getValue() ? (
+          <Badge variant="info" type="outline">{info.getValue()}</Badge>
+        ) : (
+          <span className="text-gray-400 dark:text-gray-600">&mdash;</span>
+        ),
+      enableSorting: false,
+    }),
     // The count is computed per page by the API and is not a column of the tenants table, so it
     // cannot be sorted on.
     columnHelper.accessor('userCount', {
@@ -233,12 +248,6 @@ export const TenantTable = () => {
         ) : (
           <Badge variant="danger">{t('page.tenants.status.suspended')}</Badge>
         ),
-    }),
-    columnHelper.accessor('systemCreated', {
-      header: t('table.columns.type'),
-      cell: (info) =>
-        info.getValue() ? <Badge variant="info">{t('page.tenants.systemCreated')}</Badge> : null,
-      enableSorting: false,
     }),
     columnHelper.display({
       id: 'actions',
@@ -264,6 +273,11 @@ export const TenantTable = () => {
             {canViewMembers && (
               <LocalizedLink href={`/admin/tenants/members/${tenant.id}`} className="btn btn-secondary btn-sm" title={t('page.tenants.members.title')}>
                 <Users className="h-3 w-3" />
+              </LocalizedLink>
+            )}
+            {canViewFeatures && (
+              <LocalizedLink href={`/admin/tenants/features/${tenant.id}`} className="btn btn-secondary btn-sm" title={t('page.features.tenantTitle')}>
+                <SlidersHorizontal className="h-3 w-3" />
               </LocalizedLink>
             )}
             {canEnter && tenant.status === TenantStatus.Active && (

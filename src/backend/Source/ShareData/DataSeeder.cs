@@ -26,6 +26,8 @@ public class DataSeeder(IUserService userService,
                         IPermissionService permissionService,
                         IPermissionDefinitionService permissionDefinitionService,
                         ITenantContext tenantContext,
+                        IFeatureDefinitionService featureDefinitionService,
+                        IFeatureValueStore featureValueStore,
                         AppDbContext dbContext)
 {
     /// <summary>
@@ -64,12 +66,34 @@ public class DataSeeder(IUserService userService,
         await SeedBootstrapTenantAsync();
 
         var permissions = await ReconcilePermissionsAsync();
+        await PruneOrphanFeatureValuesAsync();
         var platformAdminUser = await SeedUserAsync(PlatformAdminUsername, PlatformAdminEmail, PlatformAdminPassword, isPlatform: true);
         var tenantAdminUser = await SeedUserAsync(TenantAdminUsername, TenantAdminEmail, TenantAdminPassword, isPlatform: false);
 
         await ReconcilePlatformAdminRoleAsync(permissions, platformAdminUser);
         await ReconcileBootstrapTenantAdministrationAsync(permissions, tenantAdminUser);
         await SeedSampleNotificationsAsync(tenantAdminUser);
+    }
+
+    /// <summary>
+    /// Removes stored feature values whose feature the code no longer declares.
+    /// </summary>
+    /// <remarks>
+    /// The mirror of the delete step in <see cref="ReconcilePermissionsAsync"/>, and needed for the
+    /// same reason: the catalogue is code, the values are rows naming it by string, so a feature
+    /// renamed or removed would otherwise leave a row nobody can see in any screen and nobody can
+    /// clear.
+    /// <para>
+    /// Note what this does <em>not</em> do. No feature definition is ever written to the database -
+    /// unlike a permission, which is persisted only because a role grant needs a foreign key to point
+    /// at. And no permission or grant is touched on account of a feature: turning a feature off hides
+    /// permissions from the sessions of the tenants it applies to, it does not revoke anything, which
+    /// is what lets turning it back on restore them with nothing to re-grant.
+    /// </para>
+    /// </remarks>
+    private async Task PruneOrphanFeatureValuesAsync()
+    {
+        await featureValueStore.PruneUnknownAsync(featureDefinitionService.GetNames());
     }
 
     /// <summary>

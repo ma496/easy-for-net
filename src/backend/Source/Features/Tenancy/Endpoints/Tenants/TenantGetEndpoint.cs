@@ -25,7 +25,7 @@ using Backend.Features.Tenancy.Core;
 /// answers only with tenants the caller has standing in.
 /// </para>
 /// </remarks>
-sealed class TenantGetEndpoint(ITenantService tenantService) : Endpoint<TenantGetRequest, TenantGetResponse>
+sealed class TenantGetEndpoint(ITenantService tenantService, IEditionService editionService) : Endpoint<TenantGetRequest, TenantGetResponse>
 {
     /// <summary>
     /// The refusal reported for a tenant the caller may not read. Absent, deleted and invisible are
@@ -51,7 +51,13 @@ sealed class TenantGetEndpoint(ITenantService tenantService) : Endpoint<TenantGe
             ThrowError(TenantNotFoundMessage, ErrorCodes.TenantNotFound);
         }
 
-        await Send.ResponseAsync(new TenantGetResponseMapper().Map(tenant), cancellation: cancellationToken);
+        var response = new TenantGetResponseMapper().Map(tenant);
+        if (tenant.EditionId is { } editionId)
+        {
+            response.EditionName = (await editionService.GetByIdAsync(editionId, cancellationToken))?.Name;
+        }
+
+        await Send.ResponseAsync(response, cancellation: cancellationToken);
     }
 }
 
@@ -85,6 +91,15 @@ public sealed class TenantGetResponse : AuditableDto<Guid>, ISystemCreatedDto
     public string Identifier { get; set; } = null!;
     public string IdentifierNormalized { get; set; } = null!;
     public TenantStatus Status { get; set; }
+
+    /// <summary>The plan the tenant is on, or <see langword="null"/> when it is on none.</summary>
+    public Guid? EditionId { get; set; }
+
+    /// <summary>
+    /// What that plan is called. Filled by the endpoint rather than the mapper, so the screen can name
+    /// the plan without a second request.
+    /// </summary>
+    public string? EditionName { get; set; }
 }
 
 /// <summary>
@@ -93,5 +108,6 @@ public sealed class TenantGetResponse : AuditableDto<Guid>, ISystemCreatedDto
 [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
 public partial class TenantGetResponseMapper
 {
+    [MapperIgnoreTarget(nameof(TenantGetResponse.EditionName))]
     public partial TenantGetResponse Map(Tenant entity);
 }

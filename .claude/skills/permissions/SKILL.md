@@ -1,6 +1,6 @@
 ---
 name: permissions
-description: Add, rename or remove a permission end-to-end across the API and the web app (Allow.cs, the feature's IPermissionDefinitionProvider, the endpoint, allow.ts, auth-urls.ts, nav-items). Use whenever authorization for a screen or endpoint changes.
+description: Add, rename or remove a permission end-to-end across the API and the web app (Allow.cs, the feature's IPermissionDefinitionProvider, the endpoint, allow.ts, auth-urls.ts, nav-items), including gating one on the tenant's plan with RequireFeatures. Use whenever authorization for a screen or endpoint changes.
 ---
 
 # Adding a permission
@@ -137,6 +137,35 @@ the session is minted, and reaches the web app as `isPlatform` on the account-in
 On the client it gates UX, never authorization: the "enter tenant" action in the tenants table and the
 "exit tenant" control in the header switcher.
 
+## Gating a permission on the tenant's plan
+
+A permission may also declare the features that must be enabled for it to be exercisable at all:
+
+```csharp
+var filesPermission = context.AddPermission("Files", "Files", PermissionScope.Both)
+                             .RequireFeatures(FeatureNames.FileManagement_Enabled);
+filesPermission.AddChild(Allow.File_Delete, "Delete");
+```
+
+Declared on a group node it reaches every permission beneath it, cumulatively with anything an
+ancestor already requires. A permission whose feature is off for the acting tenant is not minted into
+the session, is not offered on any role's permission surface, and is not reported to the web app - so
+nothing else has to change: the endpoint's own `Permissions(Allow.X)` and the client's `isAllowed`
+already refuse. The change takes effect at the caller's next session renewal, exactly as a permission
+change does.
+
+Two rules an architecture test enforces:
+
+- a `PermissionScope.Platform` permission may **not** require a feature. Platform scope is inside no
+  tenant and therefore inside no plan, so the requirement could never apply and would read as though
+  it did;
+- every feature a permission names must actually be declared, because a misspelt name would resolve
+  to nothing and hide the permission from every tenant, permanently and silently.
+
+And one rule nothing can enforce for you: **never gate the permissions that administer the
+entitlement system itself** (`Allow.Edition_*`, `Allow.FeatureValue_*`), or a feature switched off
+could not be switched back on. See the `feature-management` skill for declaring features.
+
 ## What happens at runtime
 
 `ShareData/DataSeeder.SeedAsync` reconciles the database with the code-declared definitions on **every
@@ -165,3 +194,4 @@ also returned by `/account/get-info` as `roles[].permissions[]` — which is wha
 - [ ] `isAllowed(...)` checks around the affected buttons/links
 - [ ] `nav-items.ts` / `searchable-items.ts` updated if a destination was added
 - [ ] Endpoint test asserting the permission is enforced
+- [ ] If it is gated on a plan, `.RequireFeatures(...)` on the definition and a test for the disabled case

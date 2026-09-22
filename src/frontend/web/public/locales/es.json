@@ -72,7 +72,13 @@
     "tenantsUpdate": "Actualizar",
     "tenantsMembers": "Miembros",
     "selectTenant": "Seleccionar inquilino",
-    "tenantsDetail": "Detalle"
+    "tenantsDetail": "Detalle",
+    "editions": "Ediciones",
+    "editionsList": "Lista",
+    "editionsCreate": "Crear",
+    "editionsUpdate": "Actualizar",
+    "editionsFeatures": "Funciones",
+    "tenantsFeatures": "Funciones"
   },
   "search": {
     "dashboard": "Tablero",
@@ -92,7 +98,9 @@
     "uiFileUpload": "Subida de Archivos UI",
     "uiTooltips": "Tooltips UI",
     "tenants": "Inquilinos",
-    "tenantsCreate": "Crear Inquilino"
+    "tenantsCreate": "Crear Inquilino",
+    "editions": "Ediciones",
+    "editionsCreate": "Crear edición"
   },
   "form": {
     "label": {
@@ -112,7 +120,10 @@
       "tenantName": "Nombre del inquilino",
       "tenantIdentifier": "Identificador",
       "user": "Usuario",
-      "tenant": "Inquilino"
+      "tenant": "Inquilino",
+      "editionName": "Nombre",
+      "editionDescription": "Descripción",
+      "editionDisplayOrder": "Orden de visualización"
     },
     "placeholder": {
       "username": "Ingrese nombre de usuario",
@@ -129,7 +140,10 @@
       "tenantName": "Ingrese el nombre del inquilino",
       "tenantIdentifier": "Ingrese el identificador (por ejemplo acme)",
       "user": "Seleccione un usuario",
-      "tenant": "Identificador del inquilino"
+      "tenant": "Identificador del inquilino",
+      "editionName": "Introduzca el nombre de la edición",
+      "editionDescription": "Introduzca la descripción de la edición",
+      "edition": "Seleccione una edición"
     }
   },
   "validation": {
@@ -140,7 +154,9 @@
     "invalidEmail": "Correo inválido",
     "mustMatch": "El campo debe coincidir con ${otherField}",
     "atLeastOneSelected": "Debe seleccionar al menos un elemento",
-    "tenantIdentifier": "Use letras minúsculas, dígitos y guiones simples, comenzando y terminando con una letra o un dígito"
+    "tenantIdentifier": "Use letras minúsculas, dígitos y guiones simples, comenzando y terminando con una letra o un dígito",
+    "number": "Debe ser un número",
+    "min": "Debe ser como mínimo ${min}"
   },
   "error": {
     "400": {
@@ -220,7 +236,15 @@
       "crossTenantFileAccess": "Este archivo pertenece a otro inquilino",
       "platformPermissionNotGrantable": "Los permisos de plataforma no se pueden otorgar a un rol de inquilino",
       "concurrentModification": "Otra persona modificó este registro. Recargue e inténtelo de nuevo.",
-      "userSharedAcrossTenants": "Este usuario pertenece a otros inquilinos y solo puede ser modificado por un administrador de la plataforma"
+      "userSharedAcrossTenants": "Este usuario pertenece a otros inquilinos y solo puede ser modificado por un administrador de la plataforma",
+      "featureDisabled": "Su plan no incluye esta función.",
+      "featureNotFound": "Esa función no existe.",
+      "invalidFeatureValue": "Ese valor no está permitido para esta función.",
+      "featureProviderNotAllowed": "Esta función no se puede definir aquí.",
+      "unknownFeatureProvider": "Proveedor de funciones desconocido.",
+      "editionNotFound": "Edición no encontrada.",
+      "editionNameAlreadyExists": "Ya existe una edición con este nombre.",
+      "editionInUse": "Esta edición no se puede eliminar mientras haya inquilinos en ella."
     }
   },
   "table": {
@@ -242,7 +266,10 @@
       "group": "Grupo",
       "created": "Creado",
       "updated": "Actualizado",
-      "identifier": "Identificador"
+      "identifier": "Identificador",
+      "displayOrder": "Orden",
+      "tenantCount": "Inquilinos",
+      "edition": "Edición"
     },
     "pagination": {
       "showingEntries": "Mostrando ${from} a ${to} de ${totalRecords} entradas"
@@ -554,6 +581,40 @@
       "description": "Elija el inquilino en el que desea trabajar.",
       "emptyDescription": "No perteneces a ningún inquilino activo. Pide a un administrador que te añada al suyo, o regístrate para crear el tuyo.",
       "emptyAction": "Ir a tu perfil"
+    },
+    "editions": {
+      "title": "Ediciones",
+      "createSuccess": "Edición creada correctamente",
+      "updateSuccess": "Edición actualizada correctamente",
+      "deleteTitle": "Eliminar edición",
+      "deleteConfirm": "¿Está seguro de que desea eliminar esta edición?",
+      "deleteSuccess": "Edición eliminada correctamente",
+      "notFound": "Edición no encontrada",
+      "list": {
+        "title": "Lista de ediciones"
+      },
+      "create": {
+        "title": "Crear edición"
+      },
+      "update": {
+        "title": "Actualizar edición"
+      }
+    },
+    "features": {
+      "tenantTitle": "Funciones del inquilino",
+      "editionTitle": "Funciones de la edición",
+      "saveSuccess": "Funciones actualizadas correctamente",
+      "none": "No se ha definido ninguna función",
+      "mintTimeNotice": "Los cambios se aplican a un usuario la próxima vez que se renueve su sesión.",
+      "setHere": "Definido aquí",
+      "fromEdition": "De la edición",
+      "fromDefault": "Predeterminado",
+      "resetToInherited": "Restablecer al valor heredado",
+      "groups": "Grupos",
+      "unsaved": "Sin guardar",
+      "unsavedCount": "${count} cambio(s) sin guardar",
+      "parentDisabled": "No está en vigor mientras la función superior esté desactivada",
+      "noMatches": "Ninguna función coincide con su búsqueda"
     }
   },
   "notifications": {

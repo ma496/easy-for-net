@@ -37,11 +37,34 @@ public static class SessionGrants
         => isPlatform || tenantId is not null;
 
     /// <summary>
+    /// The permission names a session acting in this tenant may exercise once its plan is taken into
+    /// account, or <see langword="null"/> when nothing is narrowed.
+    /// </summary>
+    /// <remarks>
+    /// Acting in no tenant narrows nothing: an account there is inside no plan, so there is none to
+    /// consult. Stating that here rather than at each call site is what keeps the claims a session is
+    /// minted with and the grants the account information endpoint reports from describing different
+    /// authority for the same caller.
+    /// </remarks>
+    /// <param name="permissionFeatureFilter">The filter that reads the tenant's entitlements.</param>
+    /// <param name="tenantId">The tenant the session acts in, or <see langword="null"/> for none.</param>
+    /// <param name="cancellationToken">Token used to cancel the read.</param>
+    /// <returns>The permitted names, or <see langword="null"/> to narrow nothing.</returns>
+    public static async Task<IReadOnlySet<string>?> EnabledPermissionNamesAsync(
+        IPermissionFeatureFilter permissionFeatureFilter,
+        Guid? tenantId,
+        CancellationToken cancellationToken = default)
+        => tenantId is { } id
+            ? await permissionFeatureFilter.EnabledPermissionNamesAsync(FeatureTarget.ForTenant(id), cancellationToken)
+            : null;
+
+    /// <summary>
     /// The roles and permissions to mint a session with: those granted inside the tenant being acted
     /// in, plus the account's platform-scoped roles, which belong to no tenant and are therefore
     /// neither conferred nor withdrawn by one.
     /// </summary>
     /// <param name="dbContext">The database context the grants are read through.</param>
+    /// <param name="permissionFeatureFilter">The filter that removes permissions the tenant's plan withholds.</param>
     /// <param name="userId">The account the session belongs to.</param>
     /// <param name="tenantId">The tenant the session acts in, or <see langword="null"/> for none.</param>
     /// <param name="isPlatform">Whether the account belongs to the platform tier.</param>
@@ -54,6 +77,7 @@ public static class SessionGrants
     /// granting what it granted.
     /// </remarks>
     public static async Task<GrantSet> ReadAsync(AppDbContext dbContext,
+                                                 IPermissionFeatureFilter permissionFeatureFilter,
                                                  Guid userId,
                                                  Guid? tenantId,
                                                  bool isPlatform,
@@ -77,11 +101,19 @@ public static class SessionGrants
             })
             .ToListAsync(cancellationToken);
 
+        // The tenant's plan is applied after the grants are read rather than inside the query: what a
+        // permission requires is code, and whether the tenant has it is a handful of rows read by
+        // provider key. Narrowing here also means a grant is never deleted for want of a feature - the
+        // role keeps it, and it comes back the moment the feature does.
+        var permitted = await EnabledPermissionNamesAsync(permissionFeatureFilter, tenantId, cancellationToken);
+
         return new GrantSet
         {
             Roles = [.. grants.Select(grant => grant.Name).Distinct(StringComparer.Ordinal)],
             Permissions = ExercisesPermissions(isPlatform, tenantId)
-                ? [.. grants.SelectMany(grant => grant.Permissions).Distinct(StringComparer.Ordinal)]
+                ? [.. grants.SelectMany(grant => grant.Permissions)
+                            .Distinct(StringComparer.Ordinal)
+                            .Where(permission => permitted is null || permitted.Contains(permission))]
                 : []
         };
     }

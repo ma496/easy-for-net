@@ -72,7 +72,13 @@
     "tenantsUpdate": "Update",
     "tenantsMembers": "Members",
     "selectTenant": "Select Tenant",
-    "tenantsDetail": "Detail"
+    "tenantsDetail": "Detail",
+    "editions": "Editions",
+    "editionsList": "List",
+    "editionsCreate": "Create",
+    "editionsUpdate": "Update",
+    "editionsFeatures": "Features",
+    "tenantsFeatures": "Features"
   },
   "search": {
     "dashboard": "Dashboard",
@@ -92,7 +98,9 @@
     "uiFileUpload": "UI File Upload",
     "uiTooltips": "UI Tooltips",
     "tenants": "Tenants",
-    "tenantsCreate": "Create Tenant"
+    "tenantsCreate": "Create Tenant",
+    "editions": "Editions",
+    "editionsCreate": "Create Edition"
   },
   "form": {
     "label": {
@@ -112,7 +120,10 @@
       "tenantName": "Tenant Name",
       "tenantIdentifier": "Identifier",
       "user": "User",
-      "tenant": "Tenant"
+      "tenant": "Tenant",
+      "editionName": "Name",
+      "editionDescription": "Description",
+      "editionDisplayOrder": "Display Order"
     },
     "placeholder": {
       "username": "Enter username",
@@ -129,7 +140,10 @@
       "tenantName": "Enter tenant name",
       "tenantIdentifier": "Enter identifier (for example acme)",
       "user": "Select user",
-      "tenant": "Tenant identifier"
+      "tenant": "Tenant identifier",
+      "editionName": "Enter edition name",
+      "editionDescription": "Enter edition description",
+      "edition": "Select an edition"
     }
   },
   "validation": {
@@ -140,7 +154,9 @@
     "invalidEmail": "Invalid email",
     "mustMatch": "Field must match with ${otherField}",
     "atLeastOneSelected": "At least one item must be selected",
-    "tenantIdentifier": "Use lower-case letters, digits and single hyphens, starting and ending with a letter or digit"
+    "tenantIdentifier": "Use lower-case letters, digits and single hyphens, starting and ending with a letter or digit",
+    "number": "Must be a number",
+    "min": "Must be at least ${min}"
   },
   "error": {
     "400": {
@@ -220,7 +236,15 @@
       "crossTenantFileAccess": "This file belongs to another tenant",
       "platformPermissionNotGrantable": "Platform permissions cannot be granted to a tenant role",
       "concurrentModification": "This record was changed by someone else. Reload and try again.",
-      "userSharedAcrossTenants": "This user belongs to other tenants and can only be changed by a platform administrator"
+      "userSharedAcrossTenants": "This user belongs to other tenants and can only be changed by a platform administrator",
+      "featureDisabled": "Your plan does not include this feature.",
+      "featureNotFound": "That feature does not exist.",
+      "invalidFeatureValue": "That value is not allowed for this feature.",
+      "featureProviderNotAllowed": "This feature cannot be set here.",
+      "unknownFeatureProvider": "Unknown feature provider.",
+      "editionNotFound": "Edition not found.",
+      "editionNameAlreadyExists": "An edition with this name already exists.",
+      "editionInUse": "This edition cannot be deleted while tenants are on it."
     }
   },
   "table": {
@@ -242,7 +266,10 @@
       "group": "Group",
       "created": "Created",
       "updated": "Updated",
-      "identifier": "Identifier"
+      "identifier": "Identifier",
+      "displayOrder": "Order",
+      "tenantCount": "Tenants",
+      "edition": "Edition"
     },
     "pagination": {
       "showingEntries": "Showing ${from} to ${to} of ${totalRecords} entries"
@@ -554,6 +581,40 @@
       "description": "Choose the tenant you want to work in.",
       "emptyDescription": "You do not belong to an active tenant. Ask an administrator to add you to theirs, or sign up to create your own.",
       "emptyAction": "Go to your profile"
+    },
+    "editions": {
+      "title": "Editions",
+      "createSuccess": "Edition created successfully",
+      "updateSuccess": "Edition updated successfully",
+      "deleteTitle": "Delete Edition",
+      "deleteConfirm": "Are you sure you want to delete this edition?",
+      "deleteSuccess": "Edition deleted successfully",
+      "notFound": "Edition not found",
+      "list": {
+        "title": "Editions List"
+      },
+      "create": {
+        "title": "Create Edition"
+      },
+      "update": {
+        "title": "Update Edition"
+      }
+    },
+    "features": {
+      "tenantTitle": "Tenant Features",
+      "editionTitle": "Edition Features",
+      "saveSuccess": "Features updated successfully",
+      "none": "No features have been defined",
+      "mintTimeNotice": "Changes take effect for a user the next time their session is renewed.",
+      "setHere": "Set here",
+      "fromEdition": "From edition",
+      "fromDefault": "Default",
+      "resetToInherited": "Reset to inherited",
+      "groups": "Groups",
+      "unsaved": "Unsaved",
+      "unsavedCount": "${count} unsaved change(s)",
+      "parentDisabled": "Not in force while the feature above it is off",
+      "noMatches": "No features match your search"
     }
   },
   "notifications": {

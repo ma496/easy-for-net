@@ -12,6 +12,14 @@ namespace Backend.Features.Tenancy.Core;
 /// acting in no tenant and are never offered on a tenant role's permission surface. Reading one
 /// tenant in detail and administering its membership are exercisable in both scopes: a platform
 /// account reaches any tenant that way, and a tenant administrator reaches their own.
+/// <para>
+/// Editions and feature values are platform-scoped throughout, and deliberately so: a tenant that
+/// could write its own entitlements would simply switch on whatever its plan withholds, which is
+/// self-service licensing rather than administration. A tenant administrator's legitimate question -
+/// what does my plan give me - is answered by the account's own features endpoint, which requires no
+/// permission at all. None of these declare a required feature either, or a feature switched off
+/// could never be switched back on.
+/// </para>
 /// </remarks>
 public class TenancyPermissionsProvider : IPermissionDefinitionProvider
 {
@@ -35,5 +43,15 @@ public class TenancyPermissionsProvider : IPermissionDefinitionProvider
         tenantMembersPermissions.AddChild(Allow.TenantMember_Add, "Add");
         tenantMembersPermissions.AddChild(Allow.TenantMember_UpdateRoles, "UpdateRoles");
         tenantMembersPermissions.AddChild(Allow.TenantMember_Remove, "Remove");
+
+        var editionsPermissions = context.AddPermission("Editions", "Editions", PermissionScope.Platform);
+        editionsPermissions.AddChild(Allow.Edition_View, "View");
+        editionsPermissions.AddChild(Allow.Edition_Create, "Create");
+        editionsPermissions.AddChild(Allow.Edition_Update, "Update");
+        editionsPermissions.AddChild(Allow.Edition_Delete, "Delete");
+
+        var featureValuePermissions = context.AddPermission("FeatureValues", "Feature Values", PermissionScope.Platform);
+        featureValuePermissions.AddChild(Allow.FeatureValue_View, "View");
+        featureValuePermissions.AddChild(Allow.FeatureValue_Manage, "Manage");
     }
 }

@@ -16,7 +16,7 @@ using Backend.Features.Tenancy.Core;
 /// else. Nothing is written before all three guards have passed, so a rejected rename persists no
 /// part of itself.
 /// </remarks>
-sealed class TenantUpdateEndpoint(ITenantService tenantService, AppDbContext dbContext)
+sealed class TenantUpdateEndpoint(ITenantService tenantService, IEditionService editionService, AppDbContext dbContext)
     : Endpoint<TenantUpdateRequest, TenantUpdateResponse>
 {
     public override void Configure()
@@ -38,8 +38,11 @@ sealed class TenantUpdateEndpoint(ITenantService tenantService, AppDbContext dbC
         }
 
         // The bootstrap tenant that every pre-existing row was attributed to cannot be renamed: the
-        // seeded data and the upgrade path are pinned to the identifier it was created with.
-        if (entity.SystemCreated)
+        // seeded data and the upgrade path are pinned to the identifier it was created with. Only the
+        // renaming is refused, though - the plan it is on is ordinary operational data, and in a real
+        // deployment the bootstrap tenant is a customer like any other, so refusing that too would
+        // make it the one tenant nothing could ever be sold to.
+        if (entity.SystemCreated && IsRenamed(entity, request))
         {
             ThrowError("System-created tenant cannot be modified", ErrorCodes.SystemCreatedTenantCannotBeModified);
         }
@@ -52,6 +55,12 @@ sealed class TenantUpdateEndpoint(ITenantService tenantService, AppDbContext dbC
         if (await tenantService.IdentifierExistsAsync(request.Identifier, request.Id, cancellationToken))
         {
             ThrowError(x => x.Identifier, ITenantService.DuplicateIdentifierMessage, ErrorCodes.TenantIdentifierAlreadyExists);
+        }
+
+        if (request.EditionId is { } editionId
+            && await editionService.GetByIdAsync(editionId, cancellationToken) is null)
+        {
+            ThrowError(x => x.EditionId, "Edition not found", ErrorCodes.EditionNotFound);
         }
 
         var requestMapper = new TenantUpdateRequestMapper();
@@ -69,6 +78,21 @@ sealed class TenantUpdateEndpoint(ITenantService tenantService, AppDbContext dbC
         var responseMapper = new TenantUpdateResponseMapper();
         await Send.ResponseAsync(responseMapper.Map(entity), cancellation: cancellationToken);
     }
+
+    /// <summary>
+    /// Whether the request would change what the tenant is called or addressed by, as opposed to
+    /// changing only the plan it is on.
+    /// </summary>
+    /// <param name="entity">The tenant as it stands.</param>
+    /// <param name="request">The change being asked for.</param>
+    /// <returns><see langword="true"/> when the name or the identifier would change.</returns>
+    /// <remarks>
+    /// Compared on the trimmed values, because that is the form the update would store: resubmitting
+    /// the name a tenant already has, padded differently, is not a rename.
+    /// </remarks>
+    private static bool IsRenamed(Tenant entity, TenantUpdateRequest request)
+        => !string.Equals(entity.Name, request.Name.Trim(), StringComparison.Ordinal)
+           || !string.Equals(entity.Identifier, request.Identifier.Trim(), StringComparison.Ordinal);
 }
 
 /// <summary>
@@ -79,6 +103,12 @@ public sealed class TenantUpdateRequest : BaseDto<Guid>
 {
     public string Name { get; set; } = null!;
     public string Identifier { get; set; } = null!;
+
+    /// <summary>
+    /// The plan to put the tenant on, or <see langword="null"/> to take it off one. Changing it takes
+    /// effect for the tenant's callers at their next session renewal, as every entitlement change does.
+    /// </summary>
+    public Guid? EditionId { get; set; }
 }
 
 /// <summary>
@@ -107,6 +137,7 @@ public sealed class TenantUpdateResponse : BaseDto<Guid>, ISystemCreatedDto
     public string Identifier { get; set; } = null!;
     public string IdentifierNormalized { get; set; } = null!;
     public TenantStatus Status { get; set; }
+    public Guid? EditionId { get; set; }
 }
 
 /// <summary>

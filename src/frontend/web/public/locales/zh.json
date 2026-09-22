@@ -72,7 +72,13 @@
     "tenantsUpdate": "更新",
     "tenantsMembers": "成员",
     "selectTenant": "选择租户",
-    "tenantsDetail": "详情"
+    "tenantsDetail": "详情",
+    "editions": "版本",
+    "editionsList": "列表",
+    "editionsCreate": "创建",
+    "editionsUpdate": "更新",
+    "editionsFeatures": "功能",
+    "tenantsFeatures": "功能"
   },
   "search": {
     "dashboard": "仪表板",
@@ -92,7 +98,9 @@
     "uiFileUpload": "UI 文件上传",
     "uiTooltips": "UI 工具提示",
     "tenants": "租户",
-    "tenantsCreate": "创建租户"
+    "tenantsCreate": "创建租户",
+    "editions": "版本",
+    "editionsCreate": "创建版本"
   },
   "form": {
     "label": {
@@ -112,7 +120,10 @@
       "tenantName": "租户名称",
       "tenantIdentifier": "标识符",
       "user": "用户",
-      "tenant": "租户"
+      "tenant": "租户",
+      "editionName": "名称",
+      "editionDescription": "描述",
+      "editionDisplayOrder": "显示顺序"
     },
     "placeholder": {
       "username": "输入用户名",
@@ -129,7 +140,10 @@
       "tenantName": "输入租户名称",
       "tenantIdentifier": "输入标识符（例如 acme）",
       "user": "选择用户",
-      "tenant": "租户标识符"
+      "tenant": "租户标识符",
+      "editionName": "请输入版本名称",
+      "editionDescription": "请输入版本描述",
+      "edition": "请选择版本"
     }
   },
   "validation": {
@@ -140,7 +154,9 @@
     "invalidEmail": "无效的电子邮件",
     "mustMatch": "字段必须与 ${otherField}匹配",
     "atLeastOneSelected": "必须至少选择一项",
-    "tenantIdentifier": "请使用小写字母、数字和单个连字符，并以字母或数字开头和结尾"
+    "tenantIdentifier": "请使用小写字母、数字和单个连字符，并以字母或数字开头和结尾",
+    "number": "必须是数字",
+    "min": "不得小于 ${min}"
   },
   "error": {
     "400": {
@@ -220,7 +236,15 @@
       "crossTenantFileAccess": "此文件属于其他租户",
       "platformPermissionNotGrantable": "平台权限无法授予租户角色",
       "concurrentModification": "此记录已被他人修改。请重新加载后重试。",
-      "userSharedAcrossTenants": "该用户同时属于其他租户，只能由平台管理员更改"
+      "userSharedAcrossTenants": "该用户同时属于其他租户，只能由平台管理员更改",
+      "featureDisabled": "您的套餐不包含此功能。",
+      "featureNotFound": "该功能不存在。",
+      "invalidFeatureValue": "该值不适用于此功能。",
+      "featureProviderNotAllowed": "无法在此设置该功能。",
+      "unknownFeatureProvider": "未知的功能提供方。",
+      "editionNotFound": "未找到版本。",
+      "editionNameAlreadyExists": "同名版本已存在。",
+      "editionInUse": "该版本下仍有租户，无法删除。"
     }
   },
   "table": {
@@ -242,7 +266,10 @@
       "group": "组",
       "created": "已创建",
       "updated": "已更新",
-      "identifier": "标识符"
+      "identifier": "标识符",
+      "displayOrder": "顺序",
+      "tenantCount": "租户",
+      "edition": "版本"
     },
     "pagination": {
       "showingEntries": "显示 ${from} 到 ${to} 条，共 ${totalRecords} 条记录"
@@ -554,6 +581,40 @@
       "description": "请选择您要使用的租户。",
       "emptyDescription": "您不属于任何活跃租户。请让管理员将您加入其租户，或注册以创建您自己的租户。",
       "emptyAction": "前往个人资料"
+    },
+    "editions": {
+      "title": "版本",
+      "createSuccess": "版本创建成功",
+      "updateSuccess": "版本更新成功",
+      "deleteTitle": "删除版本",
+      "deleteConfirm": "确定要删除此版本吗？",
+      "deleteSuccess": "版本删除成功",
+      "notFound": "未找到版本",
+      "list": {
+        "title": "版本列表"
+      },
+      "create": {
+        "title": "创建版本"
+      },
+      "update": {
+        "title": "更新版本"
+      }
+    },
+    "features": {
+      "tenantTitle": "租户功能",
+      "editionTitle": "版本功能",
+      "saveSuccess": "功能更新成功",
+      "none": "尚未定义任何功能",
+      "mintTimeNotice": "更改将在用户下次续订会话时生效。",
+      "setHere": "在此设置",
+      "fromEdition": "来自版本",
+      "fromDefault": "默认值",
+      "resetToInherited": "恢复为继承值",
+      "groups": "分组",
+      "unsaved": "未保存",
+      "unsavedCount": "${count} 项未保存的更改",
+      "parentDisabled": "上级功能关闭时不生效",
+      "noMatches": "没有匹配的功能"
     }
   },
   "notifications": {

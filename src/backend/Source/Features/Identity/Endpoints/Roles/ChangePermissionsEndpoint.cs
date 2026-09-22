@@ -15,10 +15,18 @@ using Backend.Features.Identity.Core.Entities;
 /// exercised in: a platform-scoped permission governs the installation rather than any one tenant and
 /// can never be granted through a role that belongs to a tenant, so no tenant can promote itself to
 /// platform authority by re-permissioning one of its own roles.
+/// <para>
+/// The submitted set replaces what the role held, but only among the permissions the caller could
+/// actually see. A permission the tenant's plan withholds is absent from the catalogue this form is
+/// built from, so submitting the form says nothing about it - and taking that silence for "remove it"
+/// would revoke the grant for good, since re-enabling the feature restores nothing that was deleted.
+/// Such grants are carried through the replacement untouched.
+/// </para>
 /// </remarks>
 sealed class ChangePermissionsEndpoint(
     IRoleService roleService,
-    IPermissionService permissionService)
+    IPermissionService permissionService,
+    IPermissionFeatureFilter permissionFeatureFilter)
     : Endpoint<ChangePermissionsRequest, ChangePermissionsResponse>
 {
     private const string SystemCreatedMessage = "System-created role permissions cannot be changed";
@@ -54,7 +62,10 @@ sealed class ChangePermissionsEndpoint(
         {
             entity.RolePermissions.Add(new RolePermission { PermissionId = permission });
         }
-        var permissionsToRemove = entity.RolePermissions.Where(x => !request.Permissions.Contains(x.PermissionId)).ToList();
+        var withheldByPlan = await GrantsWithheldByPlanAsync(entity, cancellationToken);
+        var permissionsToRemove = entity.RolePermissions
+            .Where(x => !request.Permissions.Contains(x.PermissionId) && !withheldByPlan.Contains(x.PermissionId))
+            .ToList();
         foreach (var permission in permissionsToRemove)
         {
             entity.RolePermissions.Remove(permission);
@@ -69,6 +80,43 @@ sealed class ChangePermissionsEndpoint(
                 Permissions = [.. entity.RolePermissions.Select(x => x.PermissionId)]
             }, cancellation: cancellationToken
         );
+    }
+
+    /// <summary>
+    /// The role's current grants that the tenant's plan hides, and which the submitted set therefore
+    /// cannot be speaking about.
+    /// </summary>
+    /// <param name="role">The role whose permission set is being replaced.</param>
+    /// <param name="cancellationToken">Token that cancels the lookup.</param>
+    /// <returns>The permission ids to carry through the replacement regardless of what was submitted.</returns>
+    /// <remarks>
+    /// Resolved for the role's own tenant rather than the caller's scope: a platform account editing a
+    /// tenant's role is asking about that tenant's plan, not about its own standing. A platform role
+    /// belongs to no tenant and no plan, so nothing is hidden from it and nothing needs carrying.
+    /// </remarks>
+    private async Task<HashSet<Guid>> GrantsWithheldByPlanAsync(Role role, CancellationToken cancellationToken)
+    {
+        if (role.TenantId is not { } tenantId || role.RolePermissions.Count == 0)
+        {
+            return [];
+        }
+
+        var permitted = await permissionFeatureFilter.EnabledPermissionNamesAsync(
+            FeatureTarget.ForTenant(tenantId), cancellationToken);
+        if (permitted is null)
+        {
+            return [];
+        }
+
+        var held = role.RolePermissions.Select(rolePermission => rolePermission.PermissionId).ToList();
+        var names = await permissionService.Permissions()
+            .AsNoTracking()
+            .Where(permission => held.Contains(permission.Id))
+            .Select(permission => new { permission.Id, permission.Name })
+            .ToListAsync(cancellationToken);
+
+        return [.. names.Where(permission => !permitted.Contains(permission.Name))
+                        .Select(permission => permission.Id)];
     }
 
     /// <summary>

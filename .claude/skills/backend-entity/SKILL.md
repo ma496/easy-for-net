@@ -97,7 +97,7 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
 Rules the existing configurations follow:
 
 - **Always `ToTable("<PluralName>", "<feature-schema>")`** — each feature owns a PostgreSQL schema
-  (`identity`, `notifications`) named in lowercase.
+  (`identity`, `notifications`, `tenancy`) named in lowercase.
 - Enums are stored as strings (`HasConversion<string>()`).
 - Index every column you filter or sort on. Uniqueness goes on the *normalized* column
   (`HasIndex(u => u.UsernameNormalized).IsUnique()`), while the raw column gets a non-unique index.

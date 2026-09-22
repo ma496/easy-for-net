@@ -1,5 +1,6 @@
-// ReSharper disable InconsistentNaming
 namespace Backend.Permissions;
+
+// ReSharper disable InconsistentNaming
 
 /// <summary>
 /// Centralized catalog of permission name constants used to authorize
@@ -32,4 +33,12 @@ public partial class Allow
     public const string TenantMember_Add = "TenantMember.Add";
     public const string TenantMember_UpdateRoles = "TenantMember.UpdateRoles";
     public const string TenantMember_Remove = "TenantMember.Remove";
+
+    public const string Edition_View = "Edition.View";
+    public const string Edition_Create = "Edition.Create";
+    public const string Edition_Update = "Edition.Update";
+    public const string Edition_Delete = "Edition.Delete";
+
+    public const string FeatureValue_View = "FeatureValue.View";
+    public const string FeatureValue_Manage = "FeatureValue.Manage";
 }

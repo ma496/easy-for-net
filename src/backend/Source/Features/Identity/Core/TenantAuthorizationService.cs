@@ -196,7 +196,8 @@ public class TenantAuthorizationService(AppDbContext dbContext,
                                         IHttpContextAccessor httpContextAccessor,
                                         IAuthTokenService authTokenService,
                                         RefreshTokenIssuer refreshTokenIssuer,
-                                        ITenantMembershipQuery tenantMembershipQuery) : ITenantAuthorizationService
+                                        ITenantMembershipQuery tenantMembershipQuery,
+                                        IPermissionFeatureFilter permissionFeatureFilter) : ITenantAuthorizationService
 {
     /// <summary>
     /// Name every tenant's system-created administrator role carries. A role name is unique within
@@ -546,7 +547,7 @@ public class TenantAuthorizationService(AppDbContext dbContext,
         // established and never copied from the session it replaces: the role assignments and the
         // roles' permissions as they stand at this moment decide it, so authority the caller held in
         // the tenant they acted in a moment ago is not carried into this one.
-        var grants = await SessionGrants.ReadAsync(dbContext, userId, tenantId, account.IsPlatform, cancellationToken);
+        var grants = await SessionGrants.ReadAsync(dbContext, permissionFeatureFilter, userId, tenantId, account.IsPlatform, cancellationToken);
 
         var claims = Helper.CreateClaims(account, grants.Roles, grants.Permissions, tenantId);
 
