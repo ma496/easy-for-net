@@ -101,10 +101,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options,
 
     /// <summary>
     /// Registers the <c>Tenant</c> query filter - <c>e =&gt; e.TenantId == CurrentTenantId</c> - for
-    /// every <see cref="ITenantScoped"/> entity type, so a persisted kind becomes tenant-restricted by
-    /// implementing the interface alone and nothing here has to be edited when one is added. The
-    /// filter is registered under its own key beside the soft-delete filter, so both apply to a kind
-    /// subject to both and relaxing either leaves the other in force.
+    /// every tenant-scoped entity type, so a persisted kind becomes tenant-restricted by implementing
+    /// <see cref="IMayHaveTenant"/> or <see cref="IHaveTenant"/> alone and nothing here has to be
+    /// edited when one is added. The filter is registered under its own key beside the soft-delete
+    /// filter, so both apply to a kind subject to both and relaxing either leaves the other in force.
     /// </summary>
     /// <remarks>
     /// This is an instance method because the expression must read <see cref="CurrentTenantId"/> off
@@ -114,11 +114,19 @@ public class AppDbContext(DbContextOptions<AppDbContext> options,
     /// <param name="modelBuilder">The builder being used to construct the model.</param>
     private void TenantFilter(ModelBuilder modelBuilder)
     {
-        foreach (var entityType in modelBuilder.Model.GetEntityTypes()
-                     .Where(t => typeof(ITenantScoped).IsAssignableFrom(t.ClrType)))
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes().Where(t => IsTenantScoped(t.ClrType)))
         {
             var parameter = Expression.Parameter(entityType.ClrType, "e");
-            var tenantIdProp = Expression.Property(parameter, nameof(ITenantScoped.TenantId));
+            Expression tenantIdProp = Expression.Property(parameter, nameof(IMayHaveTenant.TenantId));
+
+            // An IHaveTenant type declares TenantId as a plain Guid, so lift it to Guid? before the
+            // comparison: the active tenant is nullable, and Expression.Equal will not pair the two.
+            // The lifted comparison still translates to the same SQL equality against the parameter.
+            if (tenantIdProp.Type == typeof(Guid))
+            {
+                tenantIdProp = Expression.Convert(tenantIdProp, typeof(Guid?));
+            }
+
             var currentTenantIdProp = Expression.Property(Expression.Constant(this), nameof(CurrentTenantId));
             var filter = Expression.Lambda(
                 Expression.Equal(tenantIdProp, currentTenantIdProp),
@@ -128,6 +136,17 @@ public class AppDbContext(DbContextOptions<AppDbContext> options,
                         .HasQueryFilter(TenantFilterKey, filter);
         }
     }
+
+    /// <summary>
+    /// Whether a CLR type is subject to tenant restriction, by either marker. The two are separate
+    /// interfaces rather than one inheriting the other because they differ in the very thing that
+    /// distinguishes them - whether <c>TenantId</c> is nullable - so every place that treats them
+    /// alike asks here.
+    /// </summary>
+    /// <param name="clrType">The entity type to test.</param>
+    /// <returns><see langword="true"/> when the type carries a tenant of its own.</returns>
+    private static bool IsTenantScoped(Type clrType)
+        => typeof(IMayHaveTenant).IsAssignableFrom(clrType) || typeof(IHaveTenant).IsAssignableFrom(clrType);
 
     /// <summary>
     /// Synchronous entry point for persisting changes. Applies soft-delete
@@ -244,7 +263,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options,
     /// </summary>
     private void ApplyTenantRules()
     {
-        foreach (var entry in ChangeTracker.Entries<ITenantScoped>()
+        foreach (var entry in ChangeTracker.Entries<IMayHaveTenant>()
+                     .Where(e => e.State is EntityState.Added or EntityState.Modified))
+        {
+            if (entry.State == EntityState.Added)
+            {
+                AttributeAddedEntry(entry);
+            }
+            else
+            {
+                RefuseReattribution(entry);
+            }
+        }
+
+        foreach (var entry in ChangeTracker.Entries<IHaveTenant>()
                      .Where(e => e.State is EntityState.Added or EntityState.Modified))
         {
             if (entry.State == EntityState.Added)
@@ -273,7 +305,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options,
     /// <exception cref="TenantAttributionException">
     /// The row names a tenant other than the active one.
     /// </exception>
-    private void AttributeAddedEntry(EntityEntry<ITenantScoped> entry)
+    private void AttributeAddedEntry(EntityEntry<IMayHaveTenant> entry)
     {
         if (entry.Entity.TenantId is null)
         {
@@ -295,15 +327,57 @@ public class AppDbContext(DbContextOptions<AppDbContext> options,
     }
 
     /// <summary>
+    /// Stamps a new row of a kind that must always name a tenant, or refuses it. The nullable
+    /// counterpart above can fall back on platform scope; this one cannot, because there is no
+    /// tenantless row to write. An unattributed row therefore needs an active tenant to take, and
+    /// both an unresolved scope and platform scope leave it without one, so the write fails instead
+    /// of inventing an attribution. A row that already names a tenant other than the active one is
+    /// refused exactly as it is for a nullable kind.
+    /// </summary>
+    /// <param name="entry">The change-tracker entry for the row being added.</param>
+    /// <exception cref="TenantScopeNotEstablishedException">
+    /// The row carries no attribution and there is no active tenant to attribute it to.
+    /// </exception>
+    /// <exception cref="TenantAttributionException">
+    /// The row names a tenant other than the active one.
+    /// </exception>
+    private void AttributeAddedEntry(EntityEntry<IHaveTenant> entry)
+    {
+        if (entry.Entity.TenantId == Guid.Empty)
+        {
+            if (tenantContext is not { IsResolved: true })
+            {
+                throw new TenantScopeNotEstablishedException();
+            }
+
+            if (tenantContext.CurrentTenantId is not { } tenantId)
+            {
+                throw new TenantScopeNotEstablishedException(
+                    "This record must belong to a tenant, but the active scope is the platform itself.");
+            }
+
+            entry.Entity.TenantId = tenantId;
+            return;
+        }
+
+        if (tenantContext is { IsResolved: true }
+            && tenantContext.CurrentTenantId is { } activeTenantId
+            && entry.Entity.TenantId != activeTenantId)
+        {
+            throw new TenantAttributionException();
+        }
+    }
+
+    /// <summary>
     /// Refuses to move an existing tenant-scoped row from one tenant to another. A row's tenant is
     /// decided once, when it is created, so a changed attribution is a programming error rather than
     /// an edit.
     /// </summary>
     /// <param name="entry">The change-tracker entry for the row being modified.</param>
     /// <exception cref="TenantAttributionException">The row's tenant attribution has been changed.</exception>
-    private static void RefuseReattribution(EntityEntry<ITenantScoped> entry)
+    private static void RefuseReattribution(EntityEntry entry)
     {
-        var tenantId = entry.Property(nameof(ITenantScoped.TenantId));
+        var tenantId = entry.Property(nameof(IMayHaveTenant.TenantId));
 
         if (!Equals(tenantId.OriginalValue, tenantId.CurrentValue))
         {

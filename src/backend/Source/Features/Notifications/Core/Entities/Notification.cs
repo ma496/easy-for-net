@@ -12,7 +12,7 @@ using Backend.ShareData.Entities.Base;
 /// an addressing mode, and a row in that state would follow its recipient into every tenant they act in.
 /// Notifications are auditable and support soft deletion.
 /// </summary>
-public class Notification : AuditableEntity<Guid>, ISoftDelete, ITenantScoped
+public class Notification : AuditableEntity<Guid>, ISoftDelete, IMayHaveTenant
 {
     public NotificationType Type { get; set; }
     public string TitleKey { get; set; } = null!;

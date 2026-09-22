@@ -11,7 +11,7 @@ using Backend.ShareData.Entities.Base;
 /// two concurrent replacements of a member's role assignments the losing writer fails instead of
 /// overwriting a set it never saw, leaving the entity itself clean.
 /// </summary>
-public class TenantMembership : AuditableEntity<Guid>, ISoftDelete, ITenantScoped
+public class TenantMembership : AuditableEntity<Guid>, ISoftDelete, IMayHaveTenant
 {
     public Guid? TenantId { get; set; }
     public Guid UserId { get; set; }

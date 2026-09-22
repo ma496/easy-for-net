@@ -9,9 +9,9 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 /// <summary>
 /// Architectural check that a persisted kind cannot be added to the model without being subject to
-/// tenant restriction. Every entity type must either implement <see cref="ITenantScoped"/> - which is
-/// what makes <see cref="AppDbContext"/> register the named tenant query filter for it - or appear in
-/// <see cref="_exemptEntities"/> with a written reason. Because the exemption list stores reasons
+/// tenant restriction. Every entity type must either implement <see cref="IMayHaveTenant"/> or
+/// <see cref="IHaveTenant"/> - which is what makes <see cref="AppDbContext"/> register the named
+/// tenant query filter for it - or appear in <see cref="_exemptEntities"/> with a written reason. Because the exemption list stores reasons
 /// rather than bare types, exempting a new kind is a documented decision a reviewer can weigh instead
 /// of a one-word edit nobody notices.
 /// </summary>
@@ -50,15 +50,15 @@ public class TenantScopingTests(App app) : AppTestsBase(app)
     };
 
     /// <summary>
-    /// Verifies that every <see cref="ITenantScoped"/> entity type carries the named tenant query
-    /// filter, so that a kind becomes tenant-restricted by implementing the interface alone and no
+    /// Verifies that every tenant-scoped entity type carries the named tenant query filter, so that
+    /// a kind becomes tenant-restricted by implementing one of the two markers alone and no
     /// registration has to be remembered when one is added.
     /// </summary>
     [Fact]
     public void Every_Tenant_Scoped_Entity_Carries_The_Tenant_Filter()
     {
         var scopedEntities = PersistedEntities()
-            .Where(e => typeof(ITenantScoped).IsAssignableFrom(e.ClrType))
+            .Where(e => IsTenantScoped(e.ClrType))
             .ToList();
 
         scopedEntities.Should().NotBeEmpty(
@@ -70,15 +70,15 @@ public class TenantScopingTests(App app) : AppTestsBase(app)
             .ToList();
 
         unfiltered.Should().BeEmpty(
-            "every ITenantScoped entity must carry the query filter named " + TenantFilterKey +
+            "every tenant-scoped entity must carry the query filter named " + TenantFilterKey +
             ", but these do not: " + string.Join(", ", unfiltered));
     }
 
     /// <summary>
     /// Verifies that every persisted entity type is either tenant-scoped or exempt for a written
     /// reason. This is the check that fails when a new persisted kind is added and left unscoped:
-    /// the only way past it is to make the kind <see cref="ITenantScoped"/> or to record why it is
-    /// not.
+    /// the only way past it is to make the kind <see cref="IMayHaveTenant"/> or <see cref="IHaveTenant"/>,
+    /// or to record why it is neither.
     /// </summary>
     [Fact]
     public void Every_Entity_Is_Scoped_Or_Exempt_With_A_Reason()
@@ -86,12 +86,12 @@ public class TenantScopingTests(App app) : AppTestsBase(app)
         var persistedEntities = PersistedEntities().ToList();
 
         var unaccounted = persistedEntities
-            .Where(e => !typeof(ITenantScoped).IsAssignableFrom(e.ClrType) && !_exemptEntities.ContainsKey(e.ClrType))
+            .Where(e => !IsTenantScoped(e.ClrType) && !_exemptEntities.ContainsKey(e.ClrType))
             .Select(e => e.ClrType.Name)
             .ToList();
 
         unaccounted.Should().BeEmpty(
-            "a persisted entity must either implement ITenantScoped or be exempted with a written reason, but these are neither: " +
+            "a persisted entity must either implement IMayHaveTenant or IHaveTenant, or be exempted with a written reason, but these are neither: " +
             string.Join(", ", unaccounted));
 
         var unreasoned = _exemptEntities
@@ -104,7 +104,7 @@ public class TenantScopingTests(App app) : AppTestsBase(app)
             string.Join(", ", unreasoned));
 
         var contradictory = _exemptEntities.Keys
-            .Where(type => typeof(ITenantScoped).IsAssignableFrom(type))
+            .Where(IsTenantScoped)
             .Select(type => type.Name)
             .ToList();
 
@@ -129,4 +129,13 @@ public class TenantScopingTests(App app) : AppTestsBase(app)
     /// </summary>
     private IEnumerable<IEntityType> PersistedEntities()
         => DbContext.Model.GetEntityTypes().Where(e => !e.IsOwned());
+
+    /// <summary>
+    /// Whether an entity type carries a tenant of its own, by either marker - the same test
+    /// <see cref="AppDbContext"/> applies when it registers the filter.
+    /// </summary>
+    /// <param name="clrType">The entity type to test.</param>
+    /// <returns><see langword="true"/> when the type is tenant-scoped.</returns>
+    private static bool IsTenantScoped(Type clrType)
+        => typeof(IMayHaveTenant).IsAssignableFrom(clrType) || typeof(IHaveTenant).IsAssignableFrom(clrType);
 }

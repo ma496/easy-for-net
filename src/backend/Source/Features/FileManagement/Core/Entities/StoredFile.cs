@@ -7,7 +7,7 @@ using Backend.ShareData.Entities.Base;
 /// in; an account-owned file, such as a profile image, carries no tenant and instead names the
 /// account that owns it.
 /// </summary>
-public class StoredFile : AuditableEntity<Guid>, ITenantScoped
+public class StoredFile : AuditableEntity<Guid>, IMayHaveTenant
 {
     // The tenant the file was uploaded in. Null means the file is not tenant data:
     // together with OwnerUserId it marks an account-owned file, such as a profile image,
