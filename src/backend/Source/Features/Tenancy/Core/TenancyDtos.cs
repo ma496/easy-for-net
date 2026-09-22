@@ -1,4 +1,4 @@
-namespace Backend.Tenancy;
+namespace Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// Session material returned when an active tenant is selected or switched. It carries exactly
@@ -9,6 +9,7 @@ namespace Backend.Tenancy;
 /// <c>AccessExpiry</c> and <c>RefreshExpiry</c> and carries the user id as a string, so whatever
 /// issues the pair projects onto these members instead of assigning across.
 /// </summary>
+[AllowOutside]
 public sealed class TenantSessionDto
 {
     public Guid UserId { get; set; }
@@ -23,6 +24,7 @@ public sealed class TenantSessionDto
 /// assigned in that tenant alone, so that the same account described for another tenant
 /// carries that other tenant's roles and audit values independently.
 /// </summary>
+[AllowOutside]
 public sealed class TenantMemberDto
 {
     public Guid UserId { get; set; }
@@ -43,6 +45,7 @@ public sealed class TenantMemberDto
 /// Identifier and name of a role assigned to a member within the tenant the containing
 /// <see cref="TenantMemberDto"/> describes.
 /// </summary>
+[AllowOutside]
 public sealed class TenantMemberRoleInfo
 {
     public Guid Id { get; set; }
@@ -56,6 +59,7 @@ public sealed class TenantMemberRoleInfo
 /// taken from the <c>ListRequestDto</c> the request carries and bounded there to 1..100, and
 /// <c>Total</c> is counted before paging so a caller can tell how many pages remain.
 /// </summary>
+[AllowOutside]
 public sealed class TenantMemberPageDto : ListDto<TenantMemberDto>
 {
 }

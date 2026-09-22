@@ -2,7 +2,6 @@ namespace Backend.Tests.Features.Tenancy.Core;
 
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Identity.Core.Entities;
-using Backend.Tenancy;
 
 /// <summary>
 /// Tests for the state a freshly seeded database is in, and for what running the seeder again leaves

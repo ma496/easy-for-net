@@ -3,6 +3,7 @@ namespace Backend.Features.Notifications.Endpoints.Notifications;
 using Backend.Base.Dto;
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// POST endpoint that marks a single notification as unread for the current user.

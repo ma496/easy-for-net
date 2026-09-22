@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Backend.External.Email;
 using Backend.Features.Identity.Core;
+using Backend.Features.Tenancy.Core;
 using Backend.Middleware;
 using Backend.Settings;
 using Hangfire;

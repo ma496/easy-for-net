@@ -1,6 +1,7 @@
 namespace Backend.Features.Identity.Endpoints.Users;
 
 using Backend.Features.Identity.Core;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// This endpoint that handles <c>DELETE /users/{id}</c> to remove an existing user (refusing to delete a system-created user).

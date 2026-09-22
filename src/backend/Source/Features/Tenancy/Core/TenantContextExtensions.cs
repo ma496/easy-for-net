@@ -1,10 +1,11 @@
-namespace Backend.Tenancy;
+namespace Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// Convenience readings of the active tenant scope, so that the question "is this request acting on
 /// the platform rather than inside a tenant?" is asked the same way everywhere instead of being
 /// spelled out again at each call site.
 /// </summary>
+[AllowOutside]
 public static class TenantContextExtensions
 {
     /// <summary>

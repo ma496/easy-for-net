@@ -4,6 +4,7 @@ using Backend.Base.Dto;
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
 using Backend.Features.Notifications.Core.Entities;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// GET endpoint that returns a paged, filterable list of the notifications the current user can see while

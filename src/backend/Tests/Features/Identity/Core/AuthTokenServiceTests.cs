@@ -5,7 +5,7 @@ using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Tenancy.Endpoints.Tenants;
-using Backend.Tenancy;
+using Backend.Features.Tenancy.Core;
 using Backend.Tests.Features.Tenancy;
 
 /// <summary>

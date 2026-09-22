@@ -8,6 +8,7 @@ using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Notifications.Core.Entities;
 using Backend.Features.Tenancy.Core.Entities;
+using Backend.Features.Tenancy.Core;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 /// <summary>

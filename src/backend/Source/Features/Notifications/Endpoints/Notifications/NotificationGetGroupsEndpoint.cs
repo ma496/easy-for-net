@@ -2,6 +2,7 @@ namespace Backend.Features.Notifications.Endpoints.Notifications;
 
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
+using Backend.Features.Tenancy.Core;
 using Microsoft.EntityFrameworkCore;
 
 /// <summary>

@@ -1,6 +1,7 @@
 namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
 using Backend.Features.Identity.Core;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// This endpoint that handles <c>POST /tenants/exit</c> to put a platform account's session back into

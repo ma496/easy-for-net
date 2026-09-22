@@ -1,6 +1,6 @@
 namespace Backend.Tests.Seeder;
 
-using Backend.Tenancy;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// Stores tenant IDs created during test data seeding for use across test classes.

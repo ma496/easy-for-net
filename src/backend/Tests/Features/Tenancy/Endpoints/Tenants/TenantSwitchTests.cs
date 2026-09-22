@@ -7,7 +7,6 @@ using Backend.Features.Identity.Endpoints.Roles;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Tenancy.Endpoints.Tenants;
-using Backend.Tenancy;
 
 /// <summary>
 /// Tests for <see cref="TenantSwitchEndpoint"/>: selecting the tenant a session acts in, what the

@@ -1,6 +1,7 @@
 namespace Backend.Features.FileManagement.Endpoints.Files;
 
 using Backend.Features.FileManagement.Core;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// This endpoint exposes a POST operation accepting a multipart file upload and

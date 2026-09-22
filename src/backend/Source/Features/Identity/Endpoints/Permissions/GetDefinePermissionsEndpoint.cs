@@ -1,6 +1,7 @@
 namespace Backend.Features.Identity.Endpoints.Permissions;
 
 using Backend.Features.Identity.Core;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// GET endpoint that returns the set of permission groups defined in code via the

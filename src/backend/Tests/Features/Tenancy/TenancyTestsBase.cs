@@ -6,7 +6,6 @@ using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
-using Backend.Tenancy;
 
 /// <summary>
 /// Base class for the tenancy suite, in the shape of <c>NotificationsTestsBase</c>.

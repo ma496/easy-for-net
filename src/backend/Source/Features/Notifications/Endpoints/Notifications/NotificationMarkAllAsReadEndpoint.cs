@@ -2,6 +2,7 @@ namespace Backend.Features.Notifications.Endpoints.Notifications;
 
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core.Entities;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// POST endpoint that marks every notification the current user can see while acting in the active tenant

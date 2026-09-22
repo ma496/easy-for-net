@@ -1,6 +1,7 @@
 namespace Backend.ShareData;
 
 using Backend.Features.Identity.Core;
+using Backend.Features.Tenancy.Core;
 using Microsoft.EntityFrameworkCore.Design;
 
 /// <summary>

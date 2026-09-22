@@ -27,7 +27,7 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
     /// issuance - validating the refresh request, building the claims, and persisting the new pair - because
     /// the framework hands those steps nothing but the user identifier.
     /// </summary>
-    private const string SessionTenantItemKey = "Backend.Tenancy.SessionTenant";
+    private const string SessionTenantItemKey = "Backend.Features.Identity.SessionTenant";
 
     /// <summary>
     /// Name of the cookie a browser client carries its refresh token in, as <c>UserId:RefreshToken</c>.

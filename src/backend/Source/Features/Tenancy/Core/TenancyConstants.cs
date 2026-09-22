@@ -1,8 +1,9 @@
-namespace Backend.Tenancy;
+namespace Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// Fixed identifiers shared by the migration, the data seeder and the tests.
 /// </summary>
+[AllowOutside]
 public static class TenancyConstants
 {
     /// <summary>

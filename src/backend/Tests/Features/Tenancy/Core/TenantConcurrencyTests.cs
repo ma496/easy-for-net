@@ -4,7 +4,7 @@ using Backend.ShareData.Entities;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Endpoints.Tenants;
-using Backend.Tenancy;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// Tests for two requests changing the same member's role assignments at once - a whole set survives,

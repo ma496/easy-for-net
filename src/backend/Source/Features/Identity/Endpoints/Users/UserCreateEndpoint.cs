@@ -2,6 +2,7 @@ namespace Backend.Features.Identity.Endpoints.Users;
 
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// This endpoint that handles <c>POST /users</c> to create a new user with the supplied roles, and to

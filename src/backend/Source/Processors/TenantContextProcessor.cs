@@ -2,6 +2,7 @@ namespace Backend.Processors;
 
 using System.Security.Claims;
 using Backend.Features.Identity.Core;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// Global FastEndpoints pre-processor that establishes the tenant a request acts in, from the tenant

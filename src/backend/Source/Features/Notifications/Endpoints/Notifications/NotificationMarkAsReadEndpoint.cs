@@ -4,6 +4,7 @@ using Backend.Base.Dto;
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
 using Backend.Features.Notifications.Core.Entities;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// POST endpoint that marks a single notification as read for the current user.

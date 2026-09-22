@@ -6,7 +6,6 @@ using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
-using Backend.Tenancy;
 
 /// <summary>
 /// Seeds test data into the database including tenants, users, roles, memberships and permissions.
