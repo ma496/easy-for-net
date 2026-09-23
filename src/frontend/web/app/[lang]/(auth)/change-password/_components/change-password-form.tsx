@@ -3,9 +3,8 @@ import * as Yup from 'yup'
 import { useTranslation } from '@/i18n'
 import { useLocalizedRouter } from '@/hooks'
 import { useChangePasswordMutation } from '@/store/api/identity'
-import { useAppDispatch } from '@/store/hooks'
-import { dispatchSignedOut } from '@/store/tenant-cache'
-import { apiErrorAlert, successToast } from '@/lib/utils'
+import { leaveSignedOut } from '@/store/tenant-cache'
+import { apiErrorAlert, successAlert } from '@/lib/utils'
 import { Form, Formik } from 'formik'
 import { FormPasswordInput } from '@/components/ui/form'
 import { Button } from '@/components/ui'
@@ -38,7 +37,6 @@ export const ChangePasswordForm = () => {
   type ChangePasswordFormValues = Yup.InferType<typeof validationSchema>
   const [changePassword, { isLoading: isChangingPassword }] = useChangePasswordMutation()
   const router = useLocalizedRouter()
-  const dispatch = useAppDispatch()
 
   const onSubmit = async (data: ChangePasswordFormValues) => {
     const result = await changePassword({
@@ -51,15 +49,16 @@ export const ChangePasswordForm = () => {
       return
     }
 
-    successToast.fire({
+    // An alert the user dismisses rather than a toast, because the full page load below would wipe a
+    // toast before it could be read.
+    await successAlert({
       text: t('page.profile.changePasswordSuccess'),
     })
     // Changing the password ends every session this account had, so it is a sign-out path and has to
-    // leave nothing of the tenant behind like any other: dispatchSignedOut drops the RTK Query cache
-    // before the auth state, so the records cached for the tenant just left are not served to the next
-    // user signing in on this browser.
-    dispatchSignedOut(dispatch)
-    router.push('/signin')
+    // leave nothing of the tenant behind like any other: leaveSignedOut loads the sign-in page afresh,
+    // so the records cached for the tenant just left are not served to the next user signing in on
+    // this browser.
+    leaveSignedOut(router.localize('/signin'))
   }
 
   return (

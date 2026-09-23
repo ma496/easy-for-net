@@ -4,11 +4,11 @@ import { fileURLToPath } from 'node:url'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { appApi } from '@/store/api/_app-api'
 import { store } from '@/store'
-import { setUnreadCount, setUserInfo, signout } from '@/store/slices'
+import { setUnreadCount, setUserInfo } from '@/store/slices'
 // A value import, so the account endpoints this file puts in the cache are registered on appApi.
 import { accountApi } from '@/store/api/identity'
 import type { GetUserInfoResponse } from '@/store/api/identity'
-import { dispatchSignedOut, dispatchTenantChanged, signedOutActions, tenantChangedActions } from './tenant-cache'
+import { dispatchTenantChanged, tenantChangedActions } from './tenant-cache'
 
 const resetApiState = appApi.util.resetApiState()
 
@@ -56,22 +56,6 @@ describe('tenantChangedActions', () => {
   })
 })
 
-describe('signedOutActions', () => {
-  it('discards the cache, clears the selection and the badge when the user signs out', () => {
-    const actions = signedOutActions()
-
-    expect(actions).toEqual([resetApiState, signout(), setUnreadCount(0)])
-  })
-
-  it('resets the cache first, so no previous tenant record survives the sign-out', () => {
-    const actions = signedOutActions()
-
-    expect(actions[0].type).toBe(resetApiState.type)
-    expect(actions[1].type).toBe(signout().type)
-    expect(actions[2].type).toBe(setUnreadCount(0).type)
-  })
-})
-
 /**
  * The dispatch helpers are what every screen that changes or ends the tenant actually calls, so the
  * cases below drive them through the application's own store and then read the store back: what the
@@ -111,26 +95,6 @@ describe('the dispatch helpers', () => {
 
     expect(store.getState().auth.activeTenant?.id).toBe('b')
     expect(store.getState().auth.tenants).toEqual(userInfo.tenants)
-  })
-
-  it('leaves no cached record and no selection behind once the user has signed out', async () => {
-    await cacheARecord('a')
-    store.dispatch(setUserInfo(userInfo))
-    expect(cachedQueries()).toHaveLength(1)
-
-    dispatchSignedOut(store.dispatch)
-
-    expect(cachedQueries()).toEqual([])
-    expect(store.getState().auth.isAuthenticated).toBe(false)
-    expect(store.getState().auth.activeTenant).toBeUndefined()
-  })
-
-  it('zeroes the unread badge, which lives in slice state and would survive the cache reset', async () => {
-    store.dispatch(setUnreadCount(7))
-
-    dispatchSignedOut(store.dispatch)
-
-    expect(store.getState().notifications.unreadCount).toBe(0)
   })
 })
 
@@ -185,10 +149,13 @@ describe('the screens that change or end the tenant', () => {
     expect(source).toContain('appApi.util.resetApiState()')
   })
 
-  it.each(signedOutSites)('%s resets the cache through the helper when the session ends', (file) => {
+  it.each(signedOutSites)('%s leaves through a full page load when the session ends', (file) => {
     const source = readFileSync(join(webDirectory, file), 'utf8')
 
+    // A fresh document is what discards the whole store; a client-side push would keep the previous
+    // tenant's records, and resetting the cache in place would refetch them under the mounted page.
     expect(source).toContain("from '@/store/tenant-cache'")
-    expect(source).toContain('dispatchSignedOut(dispatch')
+    expect(source).toContain('leaveSignedOut(')
+    expect(source).not.toContain("router.push('/signin')")
   })
 })
