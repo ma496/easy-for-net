@@ -123,6 +123,7 @@ export const tenantsApi = appApi
         query: (input) => ({
           url: `/tenants/${input.id}/suspend`,
           method: 'POST',
+          body: input,
         }),
         invalidatesTags: (result, error, arg) => ['Tenants', { type: 'Tenants', id: arg.id }],
       }),
@@ -130,6 +131,7 @@ export const tenantsApi = appApi
         query: (input) => ({
           url: `/tenants/${input.id}/reactivate`,
           method: 'POST',
+          body: input,
         }),
         invalidatesTags: (result, error, arg) => ['Tenants', { type: 'Tenants', id: arg.id }],
       }),
