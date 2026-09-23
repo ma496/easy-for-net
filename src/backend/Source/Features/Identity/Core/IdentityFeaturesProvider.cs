@@ -23,7 +23,7 @@ public class IdentityFeaturesProvider : IFeatureDefinitionProvider
             FeatureNames.Identity_UserManagement,
             "User management",
             BooleanValidator.TrueValue,
-            description: "Whether the tenant may create and administer its own accounts.");
+            description: "Whether the tenant may create and administer its own accounts and roles.");
 
         // A child rather than a sibling: a seat count means nothing where accounts cannot be created
         // at all, and nesting it is what keeps the two from contradicting each other.

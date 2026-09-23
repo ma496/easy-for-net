@@ -25,9 +25,11 @@ public class PermissionFeatureFilterTests(App app) : FeatureTestsBase(app)
 
         var permitted = await PermittedAsync(tenant.Id);
 
-        permitted.Should().NotContain(Allow.User_Create);
-        permitted.Should().Contain(Allow.User_View,
-            "only the permission that declared the requirement is gated, not the whole group");
+        permitted.Should().NotContain(Allow.User_Create)
+            .And.NotContain(Allow.User_View)
+            .And.NotContain(Allow.Role_ChangePermissions);
+        permitted.Should().Contain(Allow.File_Delete,
+            "only the permissions that require the switched-off feature are gated");
     }
 
     [Fact]
@@ -101,7 +103,8 @@ public class PermissionFeatureFilterTests(App app) : FeatureTestsBase(app)
         var filtered = await PermissionFeatureFilter.FilterGroupsAsync(
             scoped, FeatureTarget.ForTenant(tenant.Id), TestContext.Current.CancellationToken);
 
-        LeafNames(filtered).Should().NotContain(Allow.User_Create).And.Contain(Allow.User_View);
+        LeafNames(filtered).Should().NotContain(Allow.User_Create).And.NotContain(Allow.Role_View)
+            .And.Contain(Allow.File_Delete);
     }
 
     #region Helpers

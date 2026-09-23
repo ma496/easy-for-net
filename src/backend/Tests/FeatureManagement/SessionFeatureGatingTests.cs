@@ -21,8 +21,8 @@ public class SessionFeatureGatingTests(App app) : FeatureTestsBase(app)
 
         var permissions = await ReportedPermissionsAsync();
 
-        permissions.Should().NotContain(Allow.User_Create);
-        permissions.Should().Contain(Allow.User_View, "only the gated permission is withheld");
+        permissions.Should().NotContain(Allow.User_Create).And.NotContain(Allow.User_View,
+            "the requirement is declared on the Users group, so every permission beneath it is withheld");
     }
 
     [Fact]
