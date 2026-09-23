@@ -118,7 +118,7 @@ export const TenantSwitcher = ({ className = '' }: TenantSwitcherProps) => {
                   <button
                     type="button"
                     disabled={isBusy}
-                    className={cn('flex flex-1 cursor-pointer items-center gap-2 rounded-lg text-start hover:text-primary', tenant.id === activeTenant?.id && 'bg-primary/10 text-primary')}
+                    className={cn('flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-start hover:text-primary', tenant.id === activeTenant?.id && 'bg-primary/10 text-primary')}
                     onClick={() => switchTenant(tenant)}
                   >
                     <Check className={cn('h-4 w-4 shrink-0', tenant.id !== activeTenant?.id && 'invisible')} />
@@ -128,7 +128,8 @@ export const TenantSwitcher = ({ className = '' }: TenantSwitcherProps) => {
                     <button
                       type="button"
                       disabled={isBusy}
-                      className="shrink-0 cursor-pointer rounded-lg p-1 text-white-dark hover:text-primary"
+                      // The dropdown's list styles stretch every row button to full width; this one only holds an icon.
+                      className="w-auto! shrink-0 cursor-pointer px-3! text-white-dark hover:text-primary"
                       title={t('page.tenants.switcher.viewDetail')}
                       aria-label={t('page.tenants.switcher.viewDetail')}
                       onClick={() => openDetail(tenant.id)}
