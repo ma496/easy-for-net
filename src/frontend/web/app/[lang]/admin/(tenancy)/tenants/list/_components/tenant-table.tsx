@@ -17,7 +17,7 @@ import { Dropdown, LocalizedLink, ApiErrorMessages, Badge } from '@/components/u
 import { useAppSelector } from '@/store/hooks'
 import { Allow } from '@/allow'
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
-import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable } from '@/components/ui/data-table'
+import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions } from '@/components/ui/data-table'
 import { TenantFilterPanel, TenantFilters } from './tenant-filter-panel'
 import { TenantFilterButton } from './tenant-filter-button'
 import { useTableUrlState, useTenantSwitch } from '@/hooks'
@@ -258,76 +258,73 @@ export const TenantTable = () => {
         // so those actions are omitted rather than shown and then refused.
         const canChangeLifecycle = !tenant.systemCreated
 
+        const isActive = tenant.status === TenantStatus.Active
+        const isCurrent = tenant.id === activeTenantId
+
         return (
           <div className="flex items-center gap-2">
-            {canUpdate && canChangeLifecycle && (
-              <LocalizedLink href={`/admin/tenants/update/${tenant.id}`} className="btn btn-secondary btn-sm">
-                <Pencil className="h-3 w-3" />
-              </LocalizedLink>
-            )}
-            {canViewDetail && (
-              <LocalizedLink href={`/admin/tenants/detail/${tenant.id}`} className="btn btn-secondary btn-sm" title={t('page.tenants.detail.title')}>
-                <Eye className="h-3 w-3" />
-              </LocalizedLink>
-            )}
-            {canViewMembers && (
-              <LocalizedLink href={`/admin/tenants/members/${tenant.id}`} className="btn btn-secondary btn-sm" title={t('page.tenants.members.title')}>
-                <Users className="h-3 w-3" />
-              </LocalizedLink>
-            )}
-            {canViewFeatures && (
-              <LocalizedLink href={`/admin/tenants/features/${tenant.id}`} className="btn btn-secondary btn-sm" title={t('page.features.tenantTitle')}>
-                <SlidersHorizontal className="h-3 w-3" />
-              </LocalizedLink>
-            )}
-            {canEnter(tenant.id) && tenant.status === TenantStatus.Active && (
-              tenant.id === activeTenantId ? (
-                <Badge variant="info">{t('page.tenants.enterCurrent')}</Badge>
-              ) : (
-                <button
-                  type="button"
-                  className="btn cursor-pointer btn-primary btn-sm"
-                  onClick={() => enterTenant(tenant.id, tenant.name)}
-                  disabled={isSwitchingTenant}
-                  title={t('page.tenants.enterButton')}
-                >
-                  <LogIn className="h-3 w-3" />
-                </button>
-              )
-            )}
-            {canSuspend && canChangeLifecycle && tenant.status === TenantStatus.Active && (
-              <button
-                type="button"
-                className="btn cursor-pointer btn-warning btn-sm"
-                onClick={() => handleSuspend(tenant.id)}
-                disabled={isLifecycleBusy}
-                title={t('page.tenants.suspendTitle')}
-              >
-                {isSuspendingTenant ? <Loader2 className="animate-spin h-3 w-3" /> : <PauseCircle className="h-3 w-3" />}
-              </button>
-            )}
-            {canReactivate && canChangeLifecycle && tenant.status === TenantStatus.Suspended && (
-              <button
-                type="button"
-                className="btn cursor-pointer btn-success btn-sm"
-                onClick={() => handleReactivate(tenant.id)}
-                disabled={isLifecycleBusy}
-                title={t('page.tenants.reactivateTitle')}
-              >
-                {isReactivatingTenant ? <Loader2 className="animate-spin h-3 w-3" /> : <PlayCircle className="h-3 w-3" />}
-              </button>
-            )}
-            {canDelete && canChangeLifecycle && (
-              <button
-                type="button"
-                className="btn cursor-pointer btn-danger btn-sm"
-                onClick={() => handleDelete(tenant.id)}
-                disabled={isLifecycleBusy}
-                title={t('page.tenants.deleteTitle')}
-              >
-                {isDeletingTenant ? <Loader2 className="animate-spin h-3 w-3" /> : <Trash2 className="h-3 w-3" />}
-              </button>
-            )}
+            <DataTableRowActions
+              actions={[
+                {
+                  label: t('common.edit'),
+                  icon: <Pencil className="h-4 w-4" />,
+                  href: `/admin/tenants/update/${tenant.id}`,
+                  hidden: !(canUpdate && canChangeLifecycle),
+                },
+                {
+                  label: t('page.tenants.detail.title'),
+                  icon: <Eye className="h-4 w-4" />,
+                  href: `/admin/tenants/detail/${tenant.id}`,
+                  hidden: !canViewDetail,
+                },
+                {
+                  label: t('page.tenants.members.title'),
+                  icon: <Users className="h-4 w-4" />,
+                  href: `/admin/tenants/members/${tenant.id}`,
+                  hidden: !canViewMembers,
+                },
+                {
+                  label: t('page.features.tenantTitle'),
+                  icon: <SlidersHorizontal className="h-4 w-4" />,
+                  href: `/admin/tenants/features/${tenant.id}`,
+                  hidden: !canViewFeatures,
+                },
+                {
+                  label: t('page.tenants.enterButton'),
+                  icon: <LogIn className="h-4 w-4" />,
+                  variant: 'primary',
+                  onClick: () => enterTenant(tenant.id, tenant.name),
+                  disabled: isSwitchingTenant,
+                  hidden: !(canEnter(tenant.id) && isActive) || isCurrent,
+                },
+                {
+                  label: t('page.tenants.suspendTitle'),
+                  icon: <PauseCircle className="h-4 w-4" />,
+                  variant: 'warning',
+                  onClick: () => handleSuspend(tenant.id),
+                  disabled: isLifecycleBusy,
+                  hidden: !(canSuspend && canChangeLifecycle && isActive),
+                },
+                {
+                  label: t('page.tenants.reactivateTitle'),
+                  icon: <PlayCircle className="h-4 w-4" />,
+                  variant: 'success',
+                  onClick: () => handleReactivate(tenant.id),
+                  disabled: isLifecycleBusy,
+                  hidden: !(canReactivate && canChangeLifecycle && tenant.status === TenantStatus.Suspended),
+                },
+                {
+                  label: t('page.tenants.deleteTitle'),
+                  icon: <Trash2 className="h-4 w-4" />,
+                  variant: 'danger',
+                  onClick: () => handleDelete(tenant.id),
+                  disabled: isLifecycleBusy,
+                  hidden: !(canDelete && canChangeLifecycle),
+                },
+              ]}
+            />
+            {/* The tenant the session is acting in is a status rather than an action, so it stays beside the menu. */}
+            {canEnter(tenant.id) && isActive && isCurrent && <Badge variant="info">{t('page.tenants.enterCurrent')}</Badge>}
           </div>
         )
       },

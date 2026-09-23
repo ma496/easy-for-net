@@ -7,7 +7,7 @@ import {
   TenantMemberRoleDto,
 } from '@/store/api/tenancy'
 import { SortDirection } from '@/store/api'
-import { Loader2, Plus, Trash2, UserCog } from 'lucide-react'
+import { Plus, Trash2, UserCog } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { successToast, isAllowed, apiErrorAlert, confirmDeleteAlert } from '@/lib/utils'
 import { ApiErrorMessages, Badge, Button } from '@/components/ui'
@@ -15,7 +15,7 @@ import { useAppSelector } from '@/store/hooks'
 import { Allow } from '@/allow'
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
 import { format } from 'date-fns'
-import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable } from '@/components/ui/data-table'
+import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions } from '@/components/ui/data-table'
 import { useTableUrlState } from '@/hooks'
 import { TenantMemberAddModal } from './tenant-member-add-modal'
 import { TenantMemberRolesModal } from './tenant-member-roles-modal'
@@ -123,29 +123,24 @@ export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
       id: 'actions',
       header: t('table.actions'),
       cell: (info) => (
-        <div className="flex items-center gap-2">
-          {canUpdateRoles && (
-            <button
-              type="button"
-              className="btn cursor-pointer btn-secondary btn-sm"
-              onClick={() => setRolesMember(info.row.original)}
-              title={t('page.tenants.members.rolesButton')}
-            >
-              <UserCog className="h-3 w-3" />
-            </button>
-          )}
-          {canRemove && (
-            <button
-              type="button"
-              className="btn cursor-pointer btn-danger btn-sm"
-              onClick={() => handleRemove(info.row.original)}
-              disabled={isRemovingMember}
-              title={t('page.tenants.members.removeTitle')}
-            >
-              {isRemovingMember ? <Loader2 className="animate-spin h-3 w-3" /> : <Trash2 className="h-3 w-3" />}
-            </button>
-          )}
-        </div>
+        <DataTableRowActions
+          actions={[
+            {
+              label: t('page.tenants.members.rolesButton'),
+              icon: <UserCog className="h-4 w-4" />,
+              onClick: () => setRolesMember(info.row.original),
+              hidden: !canUpdateRoles,
+            },
+            {
+              label: t('page.tenants.members.removeTitle'),
+              icon: <Trash2 className="h-4 w-4" />,
+              variant: 'danger',
+              onClick: () => handleRemove(info.row.original),
+              disabled: isRemovingMember,
+              hidden: !canRemove,
+            },
+          ]}
+        />
       ),
     }),
   ]

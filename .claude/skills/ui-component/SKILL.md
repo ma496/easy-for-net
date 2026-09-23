@@ -11,7 +11,7 @@ description: Build or extend a shared React component in src/frontend/web/compon
 | --- | --- | --- |
 | `components/ui/` | Generic, app-agnostic primitives | `Button`, `Badge`, `Card`, `Modal`, `Dropdown`, `Loader`, `Tooltip`, `TreeView`, `Truncated`, `DateView`, `PriceView`, `LocalizedLink`, `ApiErrorMessages` |
 | `components/ui/form/` | Inputs — a plain one and a Formik-bound `Form*` twin | `Input`/`FormInput`, `Select`/`FormSelect`, `MultiSelect`/`FormMultiSelect`, `Checkbox`/`FormCheckbox`, `DatePicker`/`FormDatePicker`, `FileUpload` |
-| `components/ui/data-table/` | The table system | `DataTableProvider`, `DataTable`, `DataTableToolbar`, `DataTablePagination`, `DataTableSortIcon`, `DataTableCheckboxCell` |
+| `components/ui/data-table/` | The table system | `DataTableProvider`, `DataTable`, `DataTableToolbar`, `DataTablePagination`, `DataTableSortIcon`, `DataTableCheckboxCell`, `DataTableRowActions` |
 | `components/layouts/` | App shell and page chrome | `AdminPageContent`, `Sidebar`, `Header`, `Footer`, `MainContainer`, `ProviderComponent`, `TranslationProvider` |
 | `components/custom/` | App-specific composites tied to domain concepts | `NavUser`, `LanguageDropdown`, `ThemeChanger`, `ImagePreview`, `BackLink`, `CookieConsentDialog` |
 | `components/notifications/` | The notification bell/panel/item trio | |

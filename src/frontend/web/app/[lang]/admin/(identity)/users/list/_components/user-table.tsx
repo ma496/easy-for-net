@@ -9,7 +9,7 @@ import { Dropdown, LocalizedLink, ApiErrorMessages, Badge } from '@/components/u
 import { useAppSelector } from '@/store/hooks'
 import { Allow } from '@/allow'
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
-import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable } from '@/components/ui/data-table'
+import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions } from '@/components/ui/data-table'
 import { UserFilterPanel, UserFilters } from './user-filter-panel'
 import { UserFilterButton } from './user-filter-button'
 import { useTableUrlState } from '@/hooks'
@@ -214,23 +214,24 @@ export const UserTable = () => {
       id: 'actions',
       header: t('table.actions'),
       cell: (info) => (
-        <div className="flex items-center gap-2">
-          {canUpdate && (
-            <LocalizedLink href={`/admin/users/update/${info.row.original.id}`} className="btn btn-secondary btn-sm">
-              <Pencil className="h-3 w-3" />
-            </LocalizedLink>
-          )}
-          {canDelete && (
-            <button
-              type="button"
-              className="btn cursor-pointer btn-danger btn-sm"
-              onClick={() => handleDelete(info.row.original.id)}
-              disabled={isDeletingUser}
-            >
-              {isDeletingUser ? <Loader2 className="animate-spin h-3 w-3" /> : <Trash2 className="h-3 w-3" />}
-            </button>
-          )}
-        </div>
+        <DataTableRowActions
+          actions={[
+            {
+              label: t('common.edit'),
+              icon: <Pencil className="h-4 w-4" />,
+              href: `/admin/users/update/${info.row.original.id}`,
+              hidden: !canUpdate,
+            },
+            {
+              label: t('common.delete'),
+              icon: <Trash2 className="h-4 w-4" />,
+              variant: 'danger',
+              onClick: () => handleDelete(info.row.original.id),
+              disabled: isDeletingUser,
+              hidden: !canDelete,
+            },
+          ]}
+        />
       ),
     }),
   ]

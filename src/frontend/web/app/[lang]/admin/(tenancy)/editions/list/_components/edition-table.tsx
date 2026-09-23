@@ -9,7 +9,7 @@ import { Dropdown, LocalizedLink, ApiErrorMessages, Badge } from '@/components/u
 import { useAppSelector } from '@/store/hooks'
 import { Allow } from '@/allow'
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
-import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable } from '@/components/ui/data-table'
+import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions } from '@/components/ui/data-table'
 import { useTableUrlState } from '@/hooks'
 
 /**
@@ -133,33 +133,30 @@ export const EditionTable = () => {
         const canBeDeleted = edition.tenantCount === 0
 
         return (
-          <div className="flex items-center gap-2">
-            {canUpdate && (
-              <LocalizedLink href={`/admin/editions/update/${edition.id}`} className="btn btn-secondary btn-sm">
-                <Pencil className="h-3 w-3" />
-              </LocalizedLink>
-            )}
-            {canViewFeatures && (
-              <LocalizedLink
-                href={`/admin/editions/features/${edition.id}`}
-                className="btn btn-secondary btn-sm"
-                title={t('page.features.editionTitle')}
-              >
-                <SlidersHorizontal className="h-3 w-3" />
-              </LocalizedLink>
-            )}
-            {canDelete && canBeDeleted && (
-              <button
-                type="button"
-                className="btn cursor-pointer btn-danger btn-sm"
-                onClick={() => handleDelete(edition.id)}
-                disabled={isDeletingEdition}
-                title={t('page.editions.deleteTitle')}
-              >
-                {isDeletingEdition ? <Loader2 className="animate-spin h-3 w-3" /> : <Trash2 className="h-3 w-3" />}
-              </button>
-            )}
-          </div>
+          <DataTableRowActions
+            actions={[
+              {
+                label: t('common.edit'),
+                icon: <Pencil className="h-4 w-4" />,
+                href: `/admin/editions/update/${edition.id}`,
+                hidden: !canUpdate,
+              },
+              {
+                label: t('page.features.editionTitle'),
+                icon: <SlidersHorizontal className="h-4 w-4" />,
+                href: `/admin/editions/features/${edition.id}`,
+                hidden: !canViewFeatures,
+              },
+              {
+                label: t('common.delete'),
+                icon: <Trash2 className="h-4 w-4" />,
+                variant: 'danger',
+                onClick: () => handleDelete(edition.id),
+                disabled: isDeletingEdition,
+                hidden: !(canDelete && canBeDeleted),
+              },
+            ]}
+          />
         )
       },
     }),

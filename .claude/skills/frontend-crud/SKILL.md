@@ -80,7 +80,22 @@ return (
 ```
 
 Columns are built with `createColumnHelper<UserListDto>()`; the actions column is
-`columnHelper.display({ id: 'actions', ... })`. Headers are translation keys
+`columnHelper.display({ id: 'actions', ... })` and renders `DataTableRowActions` — a three-dot
+trigger opening a menu of labelled actions. Gate each entry with `hidden` rather than leaving it out
+of the array, give it a translated `label`, and use `href` for navigation or `onClick` for a mutation:
+
+```tsx
+cell: (info) => (
+  <DataTableRowActions
+    actions={[
+      { label: t('common.edit'), icon: <Pencil className="h-4 w-4" />, href: `/admin/users/update/${info.row.original.id}`, hidden: !canUpdate },
+      { label: t('common.delete'), icon: <Trash2 className="h-4 w-4" />, variant: 'danger', onClick: () => handleDelete(info.row.original.id), disabled: isDeletingUser, hidden: !canDelete },
+    ]}
+  />
+),
+```
+
+Headers are translation keys
 (`t('table.columns.email')`). Set `enableSorting: false` on computed columns — and remember any
 sortable column must also be whitelisted in the backend list validator.
 

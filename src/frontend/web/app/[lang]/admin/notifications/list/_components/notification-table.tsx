@@ -2,8 +2,8 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from '@/i18n'
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
-import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable } from '@/components/ui/data-table'
-import { ApiErrorMessages, Badge, LocalizedLink, Button, Truncated, Loader } from '@/components/ui'
+import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions } from '@/components/ui/data-table'
+import { ApiErrorMessages, Badge, LocalizedLink, Button, Truncated } from '@/components/ui'
 import { apiErrorAlert, confirmAlert, confirmDeleteAlert, successToast } from '@/lib/utils'
 import {
   NotificationDto,
@@ -245,28 +245,24 @@ export const NotificationTable = () => {
       id: 'actions',
       header: t('table.actions'),
       cell: (info) => (
-        <div className="flex items-center gap-2">
-          {!info.row.original.isRead && (
-            <button
-              type="button"
-              className="btn cursor-pointer btn-secondary btn-sm"
-              onClick={() => handleMarkAsRead(info.row.original.id)}
-              title={t('notifications.markAsRead')}
-              disabled={isMarkingAsRead || isMarkingAllAsRead || isDeletingNotification}
-            >
-              {isMarkingAsRead ? <Loader className="h-3 w-3" /> : <Check className="h-3 w-3" />}
-            </button>
-          )}
-          <button
-            type="button"
-            className="btn cursor-pointer btn-danger btn-sm"
-            onClick={() => handleDelete(info.row.original.id)}
-            title={t('notifications.delete')}
-            disabled={isMarkingAsRead || isMarkingAllAsRead || isDeletingNotification}
-          >
-            {isDeletingNotification ? <Loader className="h-3 w-3" /> : <Trash2 className="h-3 w-3" />}
-          </button>
-        </div>
+        <DataTableRowActions
+          actions={[
+            {
+              label: t('notifications.markAsRead'),
+              icon: <Check className="h-4 w-4" />,
+              onClick: () => handleMarkAsRead(info.row.original.id),
+              disabled: isMarkingAsRead || isMarkingAllAsRead || isDeletingNotification,
+              hidden: info.row.original.isRead,
+            },
+            {
+              label: t('notifications.delete'),
+              icon: <Trash2 className="h-4 w-4" />,
+              variant: 'danger',
+              onClick: () => handleDelete(info.row.original.id),
+              disabled: isMarkingAsRead || isMarkingAllAsRead || isDeletingNotification,
+            },
+          ]}
+        />
       ),
     })
   ]
