@@ -12,7 +12,6 @@ app/[lang]/admin/(<group>)/<entity>/
   list/page.tsx
   list/_components/<entity>-table.tsx
   list/_components/<entity>-filter-panel.tsx
-  list/_components/<entity>-filter-button.tsx
   create/page.tsx
   create/_components/<entity>-create-form.tsx
   update/[id]/page.tsx
@@ -71,7 +70,7 @@ return (
     globalFilter={url.searchInput} setGlobalFilter={url.setGlobalFilter}
     isFetching={isFetching}
   >
-    <DataTableToolbar>{/* filter button, create link, export dropdown */}</DataTableToolbar>
+    <DataTableToolbar>{/* DataTableFilterButton, create link, export dropdown */}</DataTableToolbar>
     {filtersOpen && <UserFilterPanel />}
     <DataTable />
     <DataTablePagination siblingCount={1} />
@@ -108,6 +107,15 @@ const canUpdate = isAllowed(authState, [Allow.User_Update])
 const canDelete = isAllowed(authState, [Allow.User_Delete])
 ```
 
+Toolbar actions are **icon-only** `DataTableToolbarButton`s — the `label` becomes the tooltip and
+the accessible name; pass `href` for navigation or `onClick` for an action. Export is
+`DataTableExportButton`, filters `DataTableFilterButton`:
+
+```tsx
+{canCreate && <DataTableToolbarButton label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/users/create" />}
+<DataTableExportButton onExport={handleExport} isExporting={isExporting} disabled={isExporting || isFetching || !data?.total} />
+```
+
 Delete uses the shared alert helpers:
 
 ```tsx
@@ -124,8 +132,8 @@ Export re-fetches with `all: true` through the lazy query, maps rows to a flat o
 
 ## Filter panel
 
-Two components: a `<Entity>FilterButton` for the toolbar (shows the active-filter count) and a
-`<Entity>FilterPanel` rendered between the toolbar and the table. The panel is **draft state** —
+The shared `DataTableFilterButton` goes in the toolbar (icon-only, shows the active-filter count);
+the route supplies an `<Entity>FilterPanel` rendered between the toolbar and the table. The panel is **draft state** —
 keep `pendingFilters` in `useState`, sync it from the URL when the panel opens, and only write to
 the URL on *Search*:
 

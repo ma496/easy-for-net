@@ -10,16 +10,15 @@ import {
   TenantStatus,
 } from '@/store/api/tenancy'
 import { SortDirection } from '@/store/api'
-import { Download, Loader2, Trash2, Plus, Pencil, PauseCircle, PlayCircle, Users, Eye, LogIn, SlidersHorizontal } from 'lucide-react'
+import { Trash2, Plus, Pencil, PauseCircle, PlayCircle, Users, Eye, LogIn, SlidersHorizontal } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { ExportFormat, successToast, exportData, isAllowed, apiErrorAlert, confirmDeleteAlert, confirmAlert, errorAlert } from '@/lib/utils'
-import { Dropdown, LocalizedLink, ApiErrorMessages, Badge } from '@/components/ui'
+import { ApiErrorMessages, Badge } from '@/components/ui'
 import { useAppSelector } from '@/store/hooks'
 import { Allow } from '@/allow'
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
-import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions } from '@/components/ui/data-table'
+import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableFilterButton, DataTableToolbarButton, DataTableExportButton } from '@/components/ui/data-table'
 import { TenantFilterPanel, TenantFilters } from './tenant-filter-panel'
-import { TenantFilterButton } from './tenant-filter-button'
 import { useTableUrlState, useTenantSwitch } from '@/hooks'
 import { parseAsStringEnum } from 'nuqs'
 
@@ -45,8 +44,6 @@ export const TenantTable = () => {
     status: url.filters.status ?? '',
   })
   const { t } = useTranslation()
-
-  const isRTL = useAppSelector((state) => state.theme.rtlClass) === 'rtl'
 
   // When the filter panel opens, sync the draft values from the URL so the
   // user sees the currently-applied filters.
@@ -355,56 +352,16 @@ export const TenantTable = () => {
     >
       <DataTableToolbar>
         {/* Filter Button in toolbar */}
-        <TenantFilterButton
+        <DataTableFilterButton
           isOpen={filtersOpen}
           onToggle={() => setFiltersOpen(!filtersOpen)}
           activeFiltersCount={activeFiltersCount}
         />
 
         {canCreate && (
-          <LocalizedLink href="/admin/tenants/create" className="btn flex items-center gap-2 btn-primary">
-            <Plus size={16} />
-            <span className="hidden sm:inline">{t('table.createLink')}</span>
-          </LocalizedLink>
+          <DataTableToolbarButton label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/tenants/create" />
         )}
-        <div className="dropdown">
-          <Dropdown
-            placement={`${isRTL ? 'bottom-start' : 'bottom-end'}`}
-            btnClassName="btn btn-primary dropdown-toggle"
-            isDisabled={isExporting || isGettingTenants || !tenantListResponse?.total}
-            button={
-              <div className="flex items-center gap-2">
-                {isExporting ? <Loader2 className="animate-spin" size={16} /> : <Download size={16} />}
-                <span className="hidden sm:inline">{t('table.export.button')}</span>
-              </div>
-            }
-          >
-            <ul className="mt-10">
-              <li className="px-4 py-2 text-sm font-semibold text-gray-500 dark:text-gray-600">{t('table.export.excel')}</li>
-              <li>
-                <div role="menuitem" className="w-full cursor-pointer px-4 py-2 hover:bg-white-light dark:hover:bg-[#131E30]" onClick={() => handleExport('excel', false)}>
-                  {t('table.export.currentPage')}
-                </div>
-              </li>
-              <li>
-                <div role="menuitem" className="w-full cursor-pointer px-4 py-2 hover:bg-white-light dark:hover:bg-[#131E30]" onClick={() => handleExport('excel', true)}>
-                  {t('table.export.allRecords')}
-                </div>
-              </li>
-              <li className="px-4 py-2 text-sm font-semibold text-gray-500 dark:text-gray-600">{t('table.export.csv')}</li>
-              <li>
-                <div role="menuitem" className="w-full cursor-pointer px-4 py-2 hover:bg-white-light dark:hover:bg-[#131E30]" onClick={() => handleExport('csv', false)}>
-                  {t('table.export.currentPage')}
-                </div>
-              </li>
-              <li>
-                <div role="menuitem" className="w-full cursor-pointer px-4 py-2 hover:bg-white-light dark:hover:bg-[#131E30]" onClick={() => handleExport('csv', true)}>
-                  {t('table.export.allRecords')}
-                </div>
-              </li>
-            </ul>
-          </Dropdown>
-        </div>
+        <DataTableExportButton onExport={handleExport} isExporting={isExporting} disabled={isGettingTenants || !tenantListResponse?.total} />
       </DataTableToolbar>
 
       {/* Filter Panel - positioned between toolbar and table */}

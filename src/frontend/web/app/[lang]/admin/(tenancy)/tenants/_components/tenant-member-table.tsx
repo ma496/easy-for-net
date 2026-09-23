@@ -10,12 +10,12 @@ import { SortDirection } from '@/store/api'
 import { Plus, Trash2, UserCog } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { successToast, isAllowed, apiErrorAlert, confirmDeleteAlert } from '@/lib/utils'
-import { ApiErrorMessages, Badge, Button } from '@/components/ui'
+import { ApiErrorMessages, Badge } from '@/components/ui'
 import { useAppSelector } from '@/store/hooks'
 import { Allow } from '@/allow'
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
 import { format } from 'date-fns'
-import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions } from '@/components/ui/data-table'
+import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableToolbarButton } from '@/components/ui/data-table'
 import { useTableUrlState } from '@/hooks'
 import { TenantMemberAddModal } from './tenant-member-add-modal'
 import { TenantMemberRolesModal } from './tenant-member-roles-modal'
@@ -170,13 +170,7 @@ export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
       >
         <DataTableToolbar>
           {canAdd && (
-            <Button
-              type="button"
-              icon={<Plus size={16} />}
-              onClick={() => setIsAddOpen(true)}
-            >
-              <span className="hidden sm:inline">{t('page.tenants.members.addButton')}</span>
-            </Button>
+            <DataTableToolbarButton label={t('page.tenants.members.addButton')} icon={<Plus size={16} />} onClick={() => setIsAddOpen(true)} />
           )}
         </DataTableToolbar>
 

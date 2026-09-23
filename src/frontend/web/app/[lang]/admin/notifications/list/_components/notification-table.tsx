@@ -2,8 +2,8 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from '@/i18n'
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
-import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions } from '@/components/ui/data-table'
-import { ApiErrorMessages, Badge, LocalizedLink, Button, Truncated } from '@/components/ui'
+import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableFilterButton, DataTableToolbarButton } from '@/components/ui/data-table'
+import { ApiErrorMessages, Badge, LocalizedLink, Truncated } from '@/components/ui'
 import { apiErrorAlert, confirmAlert, confirmDeleteAlert, successToast } from '@/lib/utils'
 import {
   NotificationDto,
@@ -16,7 +16,6 @@ import {
 import { formatDistanceToNow } from 'date-fns'
 import { Check, Trash2, CheckCheck, AlertCircle, AlertTriangle, CheckCircle, Info } from 'lucide-react'
 import { NotificationFilterPanel, NotificationFilters } from './notification-filter-panel'
-import { NotificationFilterButton } from './notification-filter-button'
 import { useTableUrlState } from '@/hooks'
 import { parseAsString, parseAsStringEnum } from 'nuqs'
 
@@ -300,21 +299,19 @@ export const NotificationTable = () => {
 
       <DataTableToolbar>
         <div className="flex items-center gap-2">
-          <NotificationFilterButton
+          <DataTableFilterButton
             isOpen={filtersOpen}
             onToggle={() => setFiltersOpen(!filtersOpen)}
             activeFiltersCount={activeFiltersCount}
           />
         </div>
 
-        <Button
-          variant="secondary"
-          icon={<CheckCheck className="h-4 w-4" />}
+        <DataTableToolbarButton
+          label={t('notifications.markAllRead')}
+          icon={<CheckCheck size={16} />}
           onClick={handleMarkAllAsRead}
           disabled={!notificationResponse?.items?.some(n => !n.isRead)}
-        >
-          {t('notifications.markAllRead')}
-        </Button>
+        />
       </DataTableToolbar>
 
       <DataTable />
