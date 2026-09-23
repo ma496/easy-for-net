@@ -103,8 +103,9 @@ sign-in, at every token renewal and on a tenant switch - so the scope decides wh
 exists at all:
 
 - a platform account acting in no tenant carries `Platform` + `Both`;
-- anyone acting inside a tenant carries `Tenant` + `Both` - a platform account that entered a tenant
-  included, which is what makes it that tenant's actor rather than a caller above it;
+- anyone acting inside a tenant carries `Tenant` + `Both` from that tenant's own roles only - a
+  platform account included, which enters only a tenant it is a member of and acts there on the roles
+  its membership holds, never on its platform roles;
 - an ordinary account with no active tenant carries nothing.
 
 Consequences worth knowing before you choose:
@@ -112,6 +113,10 @@ Consequences worth knowing before you choose:
 - A `Platform` permission can never be granted through a tenant role. `ChangePermissionsEndpoint`
   refuses it with `ErrorCodes.PlatformPermissionNotGrantable`, and each tenant's system-created
   administrator role is built from `GetPermissionNamesInScope(PermissionScope.Tenant)`.
+- A `Tenant` permission can never be granted through a platform role, because a platform role counts
+  only in platform scope. `ChangePermissionsEndpoint` refuses it with
+  `ErrorCodes.TenantPermissionNotGrantable`, and the seeded platform administrator role is built from
+  `GetPermissionNamesInScope(PermissionScope.Platform)`.
 - `GET /permissions/define` returns only the scope the caller is in, so the role-permission tree
   never offers something the caller could not grant.
 - Changing an existing permission's scope takes effect on the next startup: the seeder reconciles the
@@ -123,9 +128,8 @@ Consequences worth knowing before you choose:
 may do - what it may do is decided, as for every account, by its roles narrowed to the scope it is
 acting in. Authorize on permissions; read the tier only where the tier itself is the question:
 
-- `POST /account/token` - a platform account signs in with no tenant, where an ordinary one is asked to name one;
+- `POST /account/token` - a platform account naming no tenant signs in with none, where an ordinary one is asked to name one;
 - `HangfireAuthorizationFilter` - the background-job dashboard;
-- `POST /tenants/switch` - entering a tenant without a membership;
 - `POST /tenants/exit` - leaving one again (a `Platform` permission could not work here: inside a
   tenant the session carries the tenant scope alone);
 - `POST /users` - an account created in platform scope is a platform account, one created inside a
@@ -134,8 +138,13 @@ acting in. Authorize on permissions; read the tier only where the tier itself is
 
 It reaches a request as the `is_platform` claim, written beside the role and permission claims when
 the session is minted, and reaches the web app as `isPlatform` on the account-info response.
-On the client it gates UX, never authorization: the "enter tenant" action in the tenants table and the
-"exit tenant" control in the header switcher.
+On the client it gates UX, never authorization: the "enter tenant" action in the tenants table (shown
+only on tenants the account is a member of) and the "exit tenant" control in the header switcher.
+
+Entering a tenant is not on that list. `POST /tenants/switch`, a sign-in naming a tenant and a token
+refresh all require a live membership of the tenant whatever the tier, so a platform account works
+inside a tenant only once it has been added as a member - from platform scope, through
+`POST /tenants/{id}/members`.
 
 ## Gating a permission on the tenant's plan
 

@@ -61,12 +61,12 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
 
         user.Tenants = await TenantsOfAsync(userId, cancellationToken);
 
-        // Read from the list where the caller holds a membership of the tenant, and from the tenants
-        // table otherwise. The two differ for a platform account by design: it enters a tenant on its
-        // tier and holds no membership in it, so that tenant is never among the ones listed above and
-        // would otherwise be reported as no active tenant at all - leaving the web app to send it
-        // straight back out of the tenant it just entered. Reading it separately keeps the list's
-        // meaning intact: the tenants a caller may select by membership.
+        // Read from the list where the caller still holds a membership of the tenant, and from the
+        // tenants table otherwise. The two differ once the session's tenant has become unusable - it was
+        // suspended, or the caller's membership was removed - while the session is still open: it is
+        // reported as it stands so the web app sees the selection is no longer among the ones listed and
+        // offers another, rather than believing the caller acts in no tenant while the API still acts in
+        // that one. Reading it separately keeps the list's meaning intact: the tenants a caller may select.
         var activeTenant = user.Tenants.FirstOrDefault(tenant => tenant.Id == scopedTenantId);
         if (activeTenant is null && scopedTenantId is { } enteredTenantId)
         {
@@ -76,13 +76,12 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
         user.ActiveTenant = activeTenant;
         user.ActiveTenantId = activeTenant?.Id;
 
-        // The grants reported are those of the tenant just reported as active, together with the
-        // caller's platform-scoped roles - exactly the set a session acting in that tenant is minted
-        // with, so what the web app believes the caller may do matches what the API will actually
-        // allow. Authority held in the tenant left behind by a switch is not among them; a
-        // platform-scoped role is, because it belongs to no tenant and survives every switch. With no
-        // active tenant only the platform-scoped roles remain, which for an ordinary account is an
-        // empty list.
+        // The grants reported are those of the tenant just reported as active and no others - exactly
+        // the set a session acting in that tenant is minted with, so what the web app believes the
+        // caller may do matches what the API will actually allow. Authority held in the tenant left
+        // behind by a switch is not among them, and neither are platform-scoped roles, which count only
+        // in platform scope. With no active tenant only the platform-scoped roles are reported, which
+        // for an ordinary account is an empty list.
         user.Roles = await RolesInAsync(userId, activeTenant?.Id, user.IsPlatform, cancellationToken);
 
         await Send.ResponseAsync(user, cancellation: cancellationToken);
@@ -129,10 +128,11 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
     }
 
     /// <summary>
-    /// The tenant the caller's session names when it is not one they hold a membership of - which is
-    /// what a platform account entering a tenant looks like. Membership is not asked about, because
-    /// the whole point of the read is a caller who holds none, and the lifecycle is reported rather
-    /// than judged: the status travels with the tenant so the web app can say what state it is in.
+    /// The tenant the caller's session names when it is not among the tenants they may select - their
+    /// membership was removed or the tenant suspended after the session was minted. Membership is not
+    /// asked about, because the whole point of the read is a caller who no longer holds one, and the
+    /// lifecycle is reported rather than judged: the status travels with the tenant so the web app can
+    /// say what state it is in.
     /// </summary>
     /// <param name="tenantId">The tenant the request is acting in.</param>
     /// <param name="cancellationToken">Token used to cancel the read.</param>
@@ -157,8 +157,8 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
     }
 
     /// <summary>
-    /// The roles the caller holds inside one named tenant, together with the platform-scoped roles it
-    /// holds in every tenant, each with the permissions it grants.
+    /// The roles the caller holds inside one named tenant, or its platform-scoped roles when no tenant
+    /// is named, each with the permissions it grants.
     /// </summary>
     /// <param name="userId">The account whose role assignments are read.</param>
     /// <param name="tenantId">
@@ -174,11 +174,9 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
     /// Relaxing tenant restriction by name leaves the soft-delete filter applied, so a deleted role
     /// stops granting what it granted.
     /// <para>
-    /// The platform-scoped roles are included whichever tenant is named, because that is how a session
-    /// is minted: a platform-scoped role's permissions are granted in every tenant, narrowed to the
-    /// scope being acted in. Leaving them out here would hide a platform account's own permissions
-    /// from the web app the moment it started working inside one of its tenants, and the screens those
-    /// permissions unlock would be refused by a client that the API would have admitted.
+    /// The platform-scoped roles are left out whenever a tenant is named, because that is how a session
+    /// is minted: inside a tenant a platform account acts on the roles its membership carries there.
+    /// Reporting them would have the web app offer screens the API would refuse.
     /// </para>
     /// <para>
     /// The narrowing is <see cref="SessionGrants"/>' own, asked for here rather than restated, so what
@@ -201,7 +199,7 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
         var roles = await dbContext.Roles
             .AsNoTracking()
             .AcrossAllTenants()
-            .Where(role => (role.TenantId == tenantId || role.TenantId == null)
+            .Where(role => role.TenantId == tenantId
                            && dbContext.UserRoles.Any(assignment => assignment.UserId == userId && assignment.RoleId == role.Id))
             .OrderBy(role => role.Name)
             .Select(role => new UserGetInfoResponse.RoleDto

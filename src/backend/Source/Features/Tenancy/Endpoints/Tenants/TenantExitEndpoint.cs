@@ -9,9 +9,9 @@ using Backend.Features.Tenancy.Core;
 /// </summary>
 /// <remarks>
 /// It is the counterpart of <c>POST /tenants/switch</c>, and exists because entering a tenant would
-/// otherwise be one-way: a platform account holds no membership anywhere, so once its session names a
-/// tenant there is no other tenant for it to select its way out through, and it would be left inside
-/// that one until it signed in again.
+/// otherwise be one-way: switching only ever selects a tenant, so once a platform account's session
+/// names one there would be no way back to platform scope - where its own authority lives - short of
+/// signing in again.
 /// <para>
 /// Only a platform account may ask, and the tier is the test rather than a permission: inside a
 /// tenant the session carries the tenant tier alone, so a platform-scoped permission would have been

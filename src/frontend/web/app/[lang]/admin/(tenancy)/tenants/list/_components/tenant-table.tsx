@@ -87,12 +87,12 @@ export const TenantTable = () => {
   const canViewMembers = isAllowed(authState, [Allow.TenantMember_View])
   const canViewDetail = isAllowed(authState, [Allow.Tenant_Detail])
   const canViewFeatures = isAllowed(authState, [Allow.FeatureValue_View])
-  // A platform account holds no membership anywhere, so this table is how it reaches a tenant at all:
-  // entering one puts its session inside it, which is what lets it reproduce something a tenant has
-  // reported rather than reason about it from outside. This is the account tier rather than a
-  // permission - entering a tenant is not something a tenant grants - so it is read off the user
+  // A platform account enters a tenant from here only when it is a member of that tenant - the API
+  // refuses the switch otherwise - so the action is offered on exactly the rows among its memberships.
+  // It is membership rather than a permission, so it is read off the tenants the account belongs to
   // rather than through isAllowed.
-  const canEnter = !!authState.user?.isPlatform
+  const memberTenantIds = new Set(authState.tenants.map((tenant) => tenant.id))
+  const canEnter = (tenantId: string) => !!authState.user?.isPlatform && memberTenantIds.has(tenantId)
   const activeTenantId = authState.activeTenant?.id
 
   const { enterTenant, isBusy: isSwitchingTenant } = useTenantSwitch()
@@ -280,7 +280,7 @@ export const TenantTable = () => {
                 <SlidersHorizontal className="h-3 w-3" />
               </LocalizedLink>
             )}
-            {canEnter && tenant.status === TenantStatus.Active && (
+            {canEnter(tenant.id) && tenant.status === TenantStatus.Active && (
               tenant.id === activeTenantId ? (
                 <Badge variant="info">{t('page.tenants.enterCurrent')}</Badge>
               ) : (

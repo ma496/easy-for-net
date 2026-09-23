@@ -260,28 +260,54 @@ public class TokenTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that a platform administrator may name any active tenant and start inside it holding
-    /// no membership there - which is how they reach a tenant that has reported a problem, without one
-    /// of its own members having to sign in for them.
+    /// Verifies that a platform administrator names a tenant exactly as anyone else does: a tenant they
+    /// hold no membership of refuses the sign-in, one they belong to starts the session inside it, and a
+    /// suspended one refuses it even though they belong to it.
     /// </summary>
     [Fact]
-    public async Task Platform_Administrator_May_Name_A_Tenant_They_Do_Not_Belong_To()
+    public async Task Platform_Administrator_Names_Only_A_Tenant_They_Belong_To()
     {
-        var tenant = await CreateTenantAsync();
+        var stranger = await CreateTenantAsync();
+        var own = await CreateTenantAsync();
+        var suspended = await CreateTenantAsync(TenantStatus.Suspended);
+
         var account = await CreateAccountWithoutMembershipAsync();
         await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
         await MarkAsPlatformAccountAsync(account.Id);
+        await MembershipService.AddAsync(own.Id, account.Id, [], TestContext.Current.CancellationToken);
+        await MembershipService.AddAsync(suspended.Id, account.Id, [], TestContext.Current.CancellationToken);
 
         ClearAuthToken();
 
-        (await AuthenticatedTenantAsync(account.Username, tenant.Identifier))
-            .Should().Be(tenant.Id, "platform administration belongs to no tenant and so holds in all of them");
+        (await RefusalCodeAsync(account.Username, stranger.Identifier))
+            .Should().Be(ErrorCodes.NotTenantMember, "the platform tier is no standing inside a tenant the account does not belong to");
 
-        var suspended = await CreateTenantAsync(TenantStatus.Suspended);
+        (await AuthenticatedTenantAsync(account.Username, own.Identifier))
+            .Should().Be(own.Id, "the account is a member of the tenant it named");
 
         (await RefusalCodeAsync(account.Username, suspended.Identifier))
-            .Should().Be(ErrorCodes.TenantSuspended,
-                "a suspended tenant is out of service for everybody - reaching every tenant is not reaching one that is not in service");
+            .Should().Be(ErrorCodes.TenantSuspended, "a suspended tenant is out of service for everybody");
+    }
+
+    /// <summary>
+    /// Verifies that a platform administrator who names no tenant signs in to platform scope even while
+    /// holding exactly one membership - the standing that would start an ordinary account inside that
+    /// tenant. Its own authority lives in platform scope, and it enters a tenant when it asks to.
+    /// </summary>
+    [Fact]
+    public async Task Platform_Administrator_Naming_No_Tenant_Signs_In_To_Platform_Scope()
+    {
+        var tenant = await CreateTenantAsync();
+
+        var account = await CreateAccountWithoutMembershipAsync();
+        await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
+        await MarkAsPlatformAccountAsync(account.Id);
+        await MembershipService.AddAsync(tenant.Id, account.Id, [], TestContext.Current.CancellationToken);
+
+        ClearAuthToken();
+
+        (await AuthenticatedTenantAsync(account.Username, null))
+            .Should().BeNull("a platform account starts where its own authority lives, whatever it belongs to");
     }
 
     /// <summary>

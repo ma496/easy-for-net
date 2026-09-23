@@ -122,7 +122,7 @@ public class TenantService(AppDbContext dbContext,
     public IQueryable<Tenant> Tenants()
     {
         // A platform account acting in no tenant sees every tenant there is - that is what the tenants
-        // table is. Inside a tenant it sees what its membership would show it, because entering a tenant
+        // table is. Inside a tenant it sees what its memberships show it, because entering a tenant
         // makes it that tenant's actor; the tier alone is not the test, the scope is part of it.
         if (currentUserService.IsPlatform() && tenantContext.IsPlatformScope())
         {

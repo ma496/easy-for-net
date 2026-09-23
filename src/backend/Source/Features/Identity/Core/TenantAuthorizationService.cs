@@ -359,15 +359,15 @@ public class TenantAuthorizationService(AppDbContext dbContext,
         // every request that administers a tenant named by its route and neither answer is useful
         // without the other.
         //
-        // The roles that count are this tenant's own and the platform-scoped ones, which is exactly the
-        // set a session is minted with for that tenant, so a caller is authorized here
-        // for a tenant precisely when a session acting in that tenant would be. The soft-delete filter
+        // The roles that count are this tenant's own and no others, which is exactly the set a session is
+        // minted with for that tenant, so a caller is authorized here for a tenant precisely when a
+        // session acting in that tenant would be. The soft-delete filter
         // stays in force on all three sets, so a deleted role grants nothing and a removed membership
         // places nobody.
         return dbContext.Roles
             .AsNoTracking()
             .AcrossAllTenants()
-            .AnyAsync(role => (role.TenantId == tenantId || role.TenantId == null)
+            .AnyAsync(role => role.TenantId == tenantId
                               && role.RolePermissions.Any(rolePermission => rolePermission.Permission.Name == permission)
                               && dbContext.UserRoles.Any(assignment => assignment.UserId == userId && assignment.RoleId == role.Id)
                               && memberTenantIds.Contains(tenantId),
@@ -390,8 +390,8 @@ public class TenantAuthorizationService(AppDbContext dbContext,
             return true;
         }
 
-        // A platform-scoped role belongs to no tenant and confers its permissions in every one, so an
-        // account holding it is the platform's rather than any single tenant's.
+        // A platform-scoped role belongs to no tenant and grants authority over the platform itself, so
+        // an account holding it is the platform's rather than any single tenant's.
         return await dbContext.Roles
             .AsNoTracking()
             .AcrossAllTenants()

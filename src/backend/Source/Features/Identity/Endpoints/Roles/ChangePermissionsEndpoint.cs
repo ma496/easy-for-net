@@ -14,7 +14,9 @@ using Backend.Features.Identity.Core.Entities;
 /// role refuses permission changes outright. Beyond that, a permission declares the scope it may be
 /// exercised in: a platform-scoped permission governs the installation rather than any one tenant and
 /// can never be granted through a role that belongs to a tenant, so no tenant can promote itself to
-/// platform authority by re-permissioning one of its own roles.
+/// platform authority by re-permissioning one of its own roles. The converse holds too: a
+/// tenant-scoped permission is exercised only through a tenant's own roles, so a platform role that
+/// held one would grant nothing anywhere and is refused it.
 /// <para>
 /// The submitted set replaces what the role held, but only among the permissions the caller could
 /// actually see. A permission the tenant's plan withholds is absent from the catalogue this form is
@@ -31,6 +33,7 @@ sealed class ChangePermissionsEndpoint(
 {
     private const string SystemCreatedMessage = "System-created role permissions cannot be changed";
     private const string PlatformPermissionMessage = "A platform permission cannot be granted through a tenant role";
+    private const string TenantPermissionMessage = "A tenant permission cannot be granted through a platform role";
 
     public override void Configure()
     {
@@ -54,7 +57,7 @@ sealed class ChangePermissionsEndpoint(
         if (entity.SystemCreated)
             ThrowError(SystemCreatedMessage, ErrorCodes.SystemCreatedRolePermissionsCannotBeChanged);
 
-        await RefusePlatformPermissionsAsync(entity, request.Permissions, cancellationToken);
+        await RefuseOutOfScopePermissionsAsync(entity, request.Permissions, cancellationToken);
 
         // update role permissions based on request and already assigned permissions
         var permissionsToAssign = request.Permissions.Where(x => !entity.RolePermissions.Any(rp => rp.PermissionId == x)).ToList();
@@ -120,34 +123,43 @@ sealed class ChangePermissionsEndpoint(
     }
 
     /// <summary>
-    /// Refuses the change when it would leave a tenant's role holding a platform-scoped permission.
+    /// Refuses the change when it would leave a role holding a permission that cannot be exercised in
+    /// the scope the role belongs to: a platform-scoped permission on a tenant's role, or a
+    /// tenant-scoped one on a platform role.
     /// </summary>
     /// <param name="role">The role whose permission set is being replaced.</param>
     /// <param name="permissionIds">The complete set of permissions the role is asked to end up with.</param>
     /// <param name="cancellationToken">Token that cancels the lookup.</param>
     /// <remarks>
-    /// A role that belongs to no tenant is platform scoped and may hold any scope; only a tenant's own
-    /// role is held to the permissions exercisable inside a tenant. The whole requested set is examined
-    /// rather than only the additions, so a platform permission cannot survive on a tenant role by being
+    /// A permission declared for both scopes fits either role. The whole requested set is examined
+    /// rather than only the additions, so an out-of-scope permission cannot survive on a role by being
     /// resubmitted along with the rest.
     /// </remarks>
-    private async Task RefusePlatformPermissionsAsync(Role role, List<Guid> permissionIds, CancellationToken cancellationToken)
+    private async Task RefuseOutOfScopePermissionsAsync(Role role, List<Guid> permissionIds, CancellationToken cancellationToken)
     {
-        if (role.TenantId is null || permissionIds.Count == 0)
+        if (permissionIds.Count == 0)
         {
             return;
         }
 
-        var grantsPlatformPermission = await permissionService.Permissions()
+        var foreignScope = role.TenantId is null ? PermissionScope.Tenant : PermissionScope.Platform;
+        var grantsForeignPermission = await permissionService.Permissions()
             .AsNoTracking()
             .AnyAsync(permission => permissionIds.Contains(permission.Id)
-                                    && permission.Scope == PermissionScope.Platform, cancellationToken);
-        if (grantsPlatformPermission)
+                                    && permission.Scope == foreignScope, cancellationToken);
+        if (!grantsForeignPermission)
         {
-            // Attributed to the permissions field so the web form can attach the message to the
-            // selection the caller has to correct.
-            ThrowError(x => x.Permissions, PlatformPermissionMessage, ErrorCodes.PlatformPermissionNotGrantable);
+            return;
         }
+
+        // Attributed to the permissions field so the web form can attach the message to the
+        // selection the caller has to correct.
+        if (role.TenantId is null)
+        {
+            ThrowError(x => x.Permissions, TenantPermissionMessage, ErrorCodes.TenantPermissionNotGrantable);
+        }
+
+        ThrowError(x => x.Permissions, PlatformPermissionMessage, ErrorCodes.PlatformPermissionNotGrantable);
     }
 }
 

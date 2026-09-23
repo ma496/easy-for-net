@@ -235,6 +235,7 @@
       "systemCreatedTenantCannotBeModified": "Le locataire créé par le système ne peut pas être modifié",
       "crossTenantFileAccess": "Ce fichier appartient à un autre locataire",
       "platformPermissionNotGrantable": "Les permissions de plateforme ne peuvent pas être accordées à un rôle de locataire",
+      "tenantPermissionNotGrantable": "Les permissions de locataire ne peuvent pas être accordées à un rôle de plateforme",
       "concurrentModification": "Cet enregistrement a été modifié par quelqu'un d'autre. Rechargez et réessayez.",
       "userSharedAcrossTenants": "Cet utilisateur appartient à d'autres locataires et ne peut être modifié que par un administrateur de la plateforme",
       "featureDisabled": "Votre offre n’inclut pas cette fonctionnalité.",

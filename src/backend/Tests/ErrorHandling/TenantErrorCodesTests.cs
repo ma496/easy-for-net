@@ -41,6 +41,7 @@ public class TenantErrorCodesTests
         [nameof(ErrorCodes.SystemCreatedTenantCannotBeModified)] = "systemCreatedTenantCannotBeModified",
         [nameof(ErrorCodes.CrossTenantFileAccess)] = "crossTenantFileAccess",
         [nameof(ErrorCodes.PlatformPermissionNotGrantable)] = "platformPermissionNotGrantable",
+        [nameof(ErrorCodes.TenantPermissionNotGrantable)] = "tenantPermissionNotGrantable",
         [nameof(ErrorCodes.ConcurrentModification)] = "concurrentModification"
     };
 

@@ -235,6 +235,7 @@
       "systemCreatedTenantCannotBeModified": "सिस्टम द्वारा बनाए गए टेनेंट को संशोधित नहीं किया जा सकता",
       "crossTenantFileAccess": "यह फ़ाइल किसी अन्य टेनेंट की है",
       "platformPermissionNotGrantable": "प्लेटफ़ॉर्म अनुमतियां टेनेंट भूमिका को नहीं दी जा सकतीं",
+      "tenantPermissionNotGrantable": "टेनेंट अनुमतियां प्लेटफ़ॉर्म भूमिका को नहीं दी जा सकतीं",
       "concurrentModification": "यह रिकॉर्ड किसी और ने बदल दिया था। पुनः लोड करें और फिर से प्रयास करें।",
       "userSharedAcrossTenants": "यह उपयोगकर्ता अन्य टेनेंट से भी संबंधित है और इसे केवल प्लेटफ़ॉर्म प्रशासक ही बदल सकता है",
       "featureDisabled": "आपकी योजना में यह सुविधा शामिल नहीं है।",

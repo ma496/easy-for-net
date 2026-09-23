@@ -140,11 +140,12 @@ public class SessionFeatureGatingTests(App app) : FeatureTestsBase(app)
     {
         var tenant = await CreateTenantAsync();
         await SetForTenantAsync(tenant.Id, FeatureNames.Identity_UserManagement, "false");
+        var role = await CreateTenantRoleAsync(tenant.Id, Allow.User_View, Allow.User_Create);
 
-        await SignInAsPlatformAdministratorEnteringAsync(tenant.Id);
+        await SignInAsPlatformAdministratorEnteringAsync(tenant.Id, role);
 
         (await ReportedPermissionsAsync()).Should().NotContain(Allow.User_Create,
-            "inside a tenant it exercises that tenant's tier, and the plan is part of what that tier is");
+            "inside a tenant it exercises the role its membership holds there, narrowed by that tenant's plan like anybody's");
     }
 
     #region Helpers

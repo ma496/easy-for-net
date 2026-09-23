@@ -235,6 +235,7 @@
       "systemCreatedTenantCannotBeModified": "El inquilino creado por el sistema no se puede modificar",
       "crossTenantFileAccess": "Este archivo pertenece a otro inquilino",
       "platformPermissionNotGrantable": "Los permisos de plataforma no se pueden otorgar a un rol de inquilino",
+      "tenantPermissionNotGrantable": "Los permisos de inquilino no se pueden otorgar a un rol de plataforma",
       "concurrentModification": "Otra persona modificó este registro. Recargue e inténtelo de nuevo.",
       "userSharedAcrossTenants": "Este usuario pertenece a otros inquilinos y solo puede ser modificado por un administrador de la plataforma",
       "featureDisabled": "Su plan no incluye esta función.",

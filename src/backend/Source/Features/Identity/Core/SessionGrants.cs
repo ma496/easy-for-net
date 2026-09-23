@@ -15,9 +15,7 @@ public static class SessionGrants
 {
     /// <summary>
     /// The permission tier a session acting in this tenant exercises: the tenant tier inside one, and
-    /// the platform tier in none. A permission declared for both is held either way, which is the whole
-    /// of the rule that hands a platform account a tenant's own authority when it enters one and gives
-    /// its platform authority back when it leaves.
+    /// the platform tier in none. A permission declared for both is held either way.
     /// </summary>
     /// <param name="tenantId">The tenant the session acts in, or <see langword="null"/> for none.</param>
     /// <returns>The scope whose permissions the session may exercise.</returns>
@@ -60,8 +58,9 @@ public static class SessionGrants
 
     /// <summary>
     /// The roles and permissions to mint a session with: those granted inside the tenant being acted
-    /// in, plus the account's platform-scoped roles, which belong to no tenant and are therefore
-    /// neither conferred nor withdrawn by one.
+    /// in, and no others. Inside a tenant only that tenant's own roles count - a platform account acts
+    /// there on the roles its membership carries, not on its platform roles - and in no tenant only the
+    /// platform-scoped roles, which belong to none, do.
     /// </summary>
     /// <param name="dbContext">The database context the grants are read through.</param>
     /// <param name="permissionFeatureFilter">The filter that removes permissions the tenant's plan withholds.</param>
@@ -88,7 +87,7 @@ public static class SessionGrants
         var grants = await dbContext.Roles
             .AsNoTracking()
             .AcrossAllTenants()
-            .Where(role => (role.TenantId == null || role.TenantId == tenantId)
+            .Where(role => role.TenantId == tenantId
                            && dbContext.UserRoles.Any(assignment => assignment.UserId == userId && assignment.RoleId == role.Id))
             .Select(role => new
             {
@@ -126,8 +125,8 @@ public static class SessionGrants
 public sealed class GrantSet
 {
     /// <summary>
-    /// Gets the names of the roles the account holds: those granted inside the tenant being acted in,
-    /// plus its platform-scoped roles.
+    /// Gets the names of the roles the account holds in the scope being acted in: the tenant's own
+    /// roles inside one, its platform-scoped roles in none.
     /// </summary>
     public List<string> Roles { get; init; } = [];
 

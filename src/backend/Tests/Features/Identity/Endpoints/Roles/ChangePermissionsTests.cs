@@ -1,11 +1,13 @@
 namespace Backend.Tests.Features.Identity.Endpoints.Roles;
 
+using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Roles;
 using Backend.Tests.Features.Tenancy;
 
 /// <summary>
 /// Tests for the <see cref="ChangePermissionsEndpoint"/> covering assigning permissions to roles, the
-/// platform permission a tenant role can never be given (AC-041), the system-created tenant role whose
+/// platform permission a tenant role can never be given (AC-041), the tenant-only permission a platform
+/// role can never be given, the system-created tenant role whose
 /// permissions cannot be changed at all (AC-043), and the role of another tenant that cannot be reached
 /// (AC-111).
 /// </summary>
@@ -133,6 +135,62 @@ public class ChangePermissionsTests(App app) : TenancyTestsBase(app)
 
         (await RolePermissionIdsAsync(roleId)).Should().BeEquivalentTo(before,
             "the requested set is refused whole, so the role ends up with exactly the permissions it had");
+    }
+
+    /// <summary>
+    /// Verifies that a permission exercisable only inside a tenant cannot be granted through a platform
+    /// role: a platform role counts only in platform scope, so the grant would confer nothing anywhere.
+    /// The requested set is refused whole and the role keeps what it had.
+    /// </summary>
+    /// <remarks>
+    /// The catalogue this template declares holds no permission exercisable only inside a tenant - every
+    /// one a tenant uses is declared for both scopes - so the test stores one of its own and removes it
+    /// afterwards. The seeder reconciles the permission rows only at startup, so the row is not
+    /// reconciled away while the test runs.
+    /// </remarks>
+    [Fact]
+    public async Task Tenant_Permission_Cannot_Be_Granted_To_A_Platform_Role()
+    {
+        await SetPlatformAdminAuthTokenAsync();
+
+        var (created, platformRole) = await Client
+            .POSTAsync<RoleCreateEndpoint, RoleCreateRequest, RoleCreateResponse>(
+                new() { Name = $"Platform {Guid.NewGuid():N}" });
+        created.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var tenantOnlyPermission = new Permission
+        {
+            Name = $"Test.TenantOnly.{Guid.NewGuid():N}",
+            DisplayName = "Tenant only",
+            Scope = PermissionScope.Tenant
+        };
+        DbContext.Permissions.Add(tenantOnlyPermission);
+        await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        try
+        {
+            var before = await RolePermissionIdsAsync(platformRole.Id);
+
+            var (refused, problem) = await Client
+                .PUTAsync<ChangePermissionsEndpoint, ChangePermissionsRequest, ProblemDetails>(new()
+                {
+                    Id = platformRole.Id,
+                    Permissions = [tenantOnlyPermission.Id]
+                });
+
+            refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            problem.Errors.Should().ContainSingle();
+            problem.Errors.First().Code.Should().Be(ErrorCodes.TenantPermissionNotGrantable);
+            problem.Errors.First().Name.Should().Be("permissions", "the caller is told which field to change");
+
+            (await RolePermissionIdsAsync(platformRole.Id)).Should().BeEquivalentTo(before,
+                "the requested set is refused whole, so the role ends up with exactly the permissions it had");
+        }
+        finally
+        {
+            DbContext.Permissions.Remove(tenantOnlyPermission);
+            await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
     }
 
     /// <summary>

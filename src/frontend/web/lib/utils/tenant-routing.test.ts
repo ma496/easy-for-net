@@ -108,10 +108,19 @@ describe('isActiveTenantStale', () => {
     expect(isActiveTenantStale(user)).toBe(true)
   })
 
-  it('is false for a platform administrator inside a tenant they hold no membership in', () => {
-    // The shape that would read as stale for anyone else - a selection absent from the tenants
-    // listed - is the ordinary shape for a platform administrator, who enters a tenant on a
-    // platform-scoped role and belongs to none.
+  it('is false for a platform administrator inside a tenant they are a member of', () => {
+    const platformAdmin = userInfo({
+      isPlatform: true,
+      tenants: [tenant('a')],
+      activeTenantId: 'a',
+      activeTenant: tenant('a'),
+    })
+
+    expect(isActiveTenantStale(platformAdmin)).toBe(false)
+  })
+
+  it('is true for a platform administrator whose membership of the selected tenant ended', () => {
+    // A platform account enters only the tenants it belongs to, so the tier exempts it from nothing.
     const platformAdmin = userInfo({
       isPlatform: true,
       tenants: [],
@@ -119,7 +128,7 @@ describe('isActiveTenantStale', () => {
       activeTenant: tenant('a'),
     })
 
-    expect(isActiveTenantStale(platformAdmin)).toBe(false)
+    expect(isActiveTenantStale(platformAdmin)).toBe(true)
   })
 })
 
@@ -153,7 +162,7 @@ describe('isPathAvailable', () => {
   })
 
   it("hides the platform's own screens from a caller acting in a tenant, whatever their tier", () => {
-    const platformInside = userInfo({ isPlatform: true, tenants: [], activeTenant: tenant('a') })
+    const platformInside = userInfo({ isPlatform: true, tenants: [tenant('a')], activeTenant: tenant('a') })
     const memberInside = userInfo({ tenants: [tenant('a')], activeTenant: tenant('a') })
 
     // The permissions these declare are platform-scoped, so a tenant session never carries them:
@@ -236,12 +245,12 @@ describe('resolveTenantLanding', () => {
   })
 
   it('lands a platform administrator nowhere, with a tenant entered or without one', () => {
-    // They hold no membership, so the tenants listed for them are empty either way: the chooser
-    // would be empty, and sending them there would say something true and beside the point.
-    const outside = userInfo({ isPlatform: true, tenants: [] })
+    // Their own authority lives in platform scope, so there is never a tenant they must choose before
+    // going on - with memberships to choose from or without any.
+    const outside = userInfo({ isPlatform: true, tenants: [tenant('a'), tenant('b')] })
     const inside = userInfo({
       isPlatform: true,
-      tenants: [],
+      tenants: [tenant('a')],
       activeTenantId: 'a',
       activeTenant: tenant('a'),
     })

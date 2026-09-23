@@ -219,10 +219,10 @@ public class UserListTests(App app) : TenancyTestsBase(app)
     /// </summary>
     /// <remarks>
     /// The two halves are the whole of what the tier gives. Acting in no tenant, the accounts the list
-    /// is about are the platform's own, so a tenant's member is not among them; entering a tenant, they
-    /// are that tenant's members and no other tenant's. What the tier confers is admission to any
-    /// tenant without a membership, not a view across all of them at once - which is why the caller
-    /// below reaches both tenants' accounts in turn and never both together. That an ordinary caller is
+    /// is about are the platform's own, so a tenant's member is not among them; entering a tenant it
+    /// belongs to, they are that tenant's members and no other tenant's, read on the tenant role its
+    /// membership holds there. Belonging to several tenants is not a view across all of them at once -
+    /// which is why the caller below reaches both tenants' accounts in turn and never both together. That an ordinary caller is
     /// restricted the same way is stated by
     /// <see cref="Users_Are_Restricted_To_The_Active_Tenant"/>.
     /// </remarks>
@@ -231,12 +231,20 @@ public class UserListTests(App app) : TenancyTestsBase(app)
     {
         var first = await CreateTenantAsync();
         var second = await CreateTenantAsync();
-        var inFirst = await CreateTenantUserAsync(
-            first.Id, await CreateTenantRoleAsync(first.Id, Allow.User_View));
-        var inSecond = await CreateTenantUserAsync(
-            second.Id, await CreateTenantRoleAsync(second.Id, Allow.User_View));
+        var viewInFirst = await CreateTenantRoleAsync(first.Id, Allow.User_View);
+        var viewInSecond = await CreateTenantRoleAsync(second.Id, Allow.User_View);
+        var inFirst = await CreateTenantUserAsync(first.Id, viewInFirst);
+        var inSecond = await CreateTenantUserAsync(second.Id, viewInSecond);
 
-        await SetPlatformAdminAuthTokenAsync();
+        // The platform account belongs to both tenants, holding the view role in each: a membership is
+        // what admits it to a tenant, and the tenant role is what it acts on there.
+        var platformAccount = await CreateAccountWithoutMembershipAsync();
+        await UserService.AssignRoleAsync(platformAccount.Id, TestRoles.PlatformAdminRoleId);
+        await MarkAsPlatformAccountAsync(platformAccount.Id);
+        await MembershipService.AddAsync(first.Id, platformAccount.Id, [viewInFirst], TestContext.Current.CancellationToken);
+        await MembershipService.AddAsync(second.Id, platformAccount.Id, [viewInSecond], TestContext.Current.CancellationToken);
+
+        await SignInAsAsync(platformAccount.Username);
 
         var (platformRsp, platformPage) = await Client
             .GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
@@ -254,7 +262,7 @@ public class UserListTests(App app) : TenancyTestsBase(app)
 
         firstRsp.StatusCode.Should().Be(HttpStatusCode.OK);
         firstPage.Items.Select(item => item.Id).Should().Equal([inFirst.Id],
-            "entering a tenant it holds no membership of is what puts the caller among that tenant's administrators");
+            "entering a tenant it belongs to puts the caller among that tenant's actors, on the role it holds there");
 
         var (strangerRsp, strangerPage) = await Client
             .GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
@@ -272,6 +280,6 @@ public class UserListTests(App app) : TenancyTestsBase(app)
 
         secondRsp.StatusCode.Should().Be(HttpStatusCode.OK);
         secondPage.Items.Select(item => item.Id).Should().Equal([inSecond.Id],
-            "the second tenant is reached the same way, which is the reach the tier actually gives");
+            "the second tenant is reached the same way, through the membership held there");
     }
 }

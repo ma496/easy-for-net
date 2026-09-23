@@ -124,6 +124,33 @@ public class TenantSeedingTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
+    /// Verifies that the seeded platform administrator role holds no permission exercisable only inside
+    /// a tenant: a platform role counts only in platform scope, so such a grant would confer nothing, and
+    /// a platform account acts inside a tenant only on the roles its membership holds there.
+    /// </summary>
+    [Fact]
+    public async Task Seeded_Platform_Administrator_Role_Holds_No_Tenant_Only_Permission()
+    {
+        var tenantOnlyGrants = await DbContext.RolePermissions
+            .AsNoTracking()
+            .Where(rolePermission => rolePermission.RoleId == TestRoles.PlatformAdminRoleId
+                                     && rolePermission.Permission.Scope == PermissionScope.Tenant)
+            .Select(rolePermission => rolePermission.Permission.Name)
+            .ToListAsync(TestContext.Current.CancellationToken);
+
+        tenantOnlyGrants.Should().BeEmpty("the seeder narrows the platform role to what platform scope exercises");
+
+        var platformGrants = await DbContext.RolePermissions
+            .AsNoTracking()
+            .Where(rolePermission => rolePermission.RoleId == TestRoles.PlatformAdminRoleId)
+            .Select(rolePermission => rolePermission.Permission.Name)
+            .ToListAsync(TestContext.Current.CancellationToken);
+
+        platformGrants.Should().Contain(Allow.Tenant_Create, "platform-only permissions are what the role is for")
+            .And.Contain(Allow.User_View, "and the permissions declared for both scopes are exercised in platform scope too");
+    }
+
+    /// <summary>
     /// Verifies that running the seeder again preserves a tenant, a membership and a tenant role that
     /// already exist, identities and permissions included - which is what makes it safe on the template's
     /// own first start and on every start after it (AC-084).

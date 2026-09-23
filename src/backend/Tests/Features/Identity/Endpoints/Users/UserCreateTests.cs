@@ -197,8 +197,8 @@ public class UserCreateTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that the tier a new account gets follows the scope it was created in: created while
     /// acting in no tenant it is one of the platform's own accounts and joins no tenant, and created
-    /// inside a tenant - by a platform account that entered one just as by that tenant's own
-    /// administrator - it is an ordinary account of that tenant.
+    /// inside a tenant - by a platform account that entered one it belongs to just as by that tenant's
+    /// own administrator - it is an ordinary account of that tenant.
     /// </summary>
     /// <remarks>
     /// The same caller creates both accounts, which is the whole point: the tier follows the scope the
@@ -212,7 +212,14 @@ public class UserCreateTests(App app) : TenancyTestsBase(app)
         var tenant = await CreateTenantAsync();
         var tenantRoleId = await CreateTenantRoleAsync(tenant.Id, Allow.User_Create);
 
-        await SetPlatformAdminAuthTokenAsync();
+        // The caller is a platform account that is also a member of the tenant, holding there the role
+        // that grants account creation: inside a tenant only the tenant's own roles count.
+        var caller = await CreateTenantUserAsync(tenant.Id, tenantRoleId);
+        await UserService.AssignRoleAsync(caller.Id, TestRoles.PlatformAdminRoleId);
+        await MarkAsPlatformAccountAsync(caller.Id);
+
+        // Named no tenant, a platform account signs in to platform scope whatever it belongs to.
+        await SignInAsAsync(caller.Username);
 
         var platformUsername = NewUsername();
         var (platformResponse, platformAccount) = await Client
@@ -232,7 +239,7 @@ public class UserCreateTests(App app) : TenancyTestsBase(app)
         (await MembershipTenantIdsAsync(platformAccount.Id)).Should().BeEmpty(
             "and it belongs to no tenant, which is what platform scope means");
 
-        // The very same caller, now inside a tenant it holds no membership of.
+        // The very same caller, now inside the tenant it belongs to.
         await SwitchTenantAsync(tenant.Id);
 
         var tenantUsername = NewUsername();

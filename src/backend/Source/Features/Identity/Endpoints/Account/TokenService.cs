@@ -224,9 +224,9 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
     /// over something that was not its doing. The refresh-token row keeps the tenant either way, so a
     /// suspension lifted or a membership restored is picked up by the next renewal.
     /// <para>
-    /// Membership is what places an ordinary account inside a tenant, and a platform account holds none
-    /// anywhere: it enters a tenant on its tier, so it is admitted on that instead. A suspended or deleted
-    /// tenant is refused to it exactly as it is to everyone. The read relaxes tenant restriction by name
+    /// Membership is what places an account inside a tenant, whatever its tier: a platform account whose
+    /// membership was removed loses the tenant at its next renewal exactly as an ordinary one does, and is
+    /// left in platform scope. The read relaxes tenant restriction by name
     /// because it runs before any scope is established; the soft-delete filter stays in force, which is what
     /// makes a deleted tenant read as absent.
     /// </para>
@@ -243,9 +243,8 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
             .AcrossAllTenants()
             .AnyAsync(tenant => tenant.Id == sessionTenantId
                                 && tenant.Status == TenantStatus.Active
-                                && (user.IsPlatform
-                                    || _dbContext.TenantMemberships.AcrossAllTenants()
-                                        .Any(membership => membership.TenantId == sessionTenantId && membership.UserId == user.Id)));
+                                && _dbContext.TenantMemberships.AcrossAllTenants()
+                                    .Any(membership => membership.TenantId == sessionTenantId && membership.UserId == user.Id));
 
         return isUsable ? sessionTenantId : null;
     }

@@ -75,7 +75,7 @@ public class UserCreateTests(App app) : AppTestsBase(app)
 | `DbContext` | direct EF access for arranging/asserting state, in the same scope |
 | `TenantContext` | open a tenant scope for arranging tenant-scoped rows |
 | `SetAuthTokenAsync(username, password)` | sets the Bearer header; defaults to the default tenant's administrator `tenantadmin` / `Admin#123` |
-| `SetPlatformAdminAuthTokenAsync()` | signs in as the platform administrator `admin`, who belongs to no tenant |
+| `SetPlatformAdminAuthTokenAsync()` | signs in as the platform administrator `admin`, who belongs to no tenant and so can enter none; a test that needs a platform account inside a tenant creates one with a membership (`SignInAsPlatformAdministratorEnteringAsync` in `TenancyTestsBase`) |
 | `ClearAuthToken()` | test the unauthenticated path |
 | `CreateAdminUserAsync(username, password)` | a fresh admin-role user (throws if it already exists) |
 

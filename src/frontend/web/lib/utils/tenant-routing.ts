@@ -45,15 +45,12 @@ export const isTenantScopedPath = (pathname: string): boolean => {
  * tenants the caller may work in. Do not simplify it away on the assumption that
  * the server filters it out.
  *
- * A platform account is exempt, because for it the two disagree by design: it
- * enters a tenant on its account tier and holds no membership in it, so the
- * tenant it is acting in is never among the tenants listed. Reading that as
- * stale would send it straight back out of the tenant it entered to look into a
- * problem.
+ * A platform account is held to the same rule: it enters only a tenant it is a
+ * member of, so the tenant it is acting in is among the tenants listed for it
+ * exactly as it is for anybody else.
  */
 export const isActiveTenantStale = (user: GetUserInfoResponse | undefined): boolean => {
   if (!user) return false
-  if (user.isPlatform) return false
 
   const selectedTenantId = user.activeTenantId ?? user.activeTenant?.id
   if (!selectedTenantId) return false
@@ -82,10 +79,10 @@ export const isActiveTenantStale = (user: GetUserInfoResponse | undefined): bool
  * selection already standing. What is left is a selection that stopped being
  * usable while the session was open.
  *
- * A platform account lands nowhere: it needs no tenant to work, it holds no
- * membership to be offered a choice from, and the tenant it enters is chosen
- * from the tenants table rather than from this screen - sent to the chooser it
- * would be shown an empty one.
+ * A platform account lands nowhere: it needs no tenant to work, since its own
+ * authority lives in platform scope, so there is never a choice it has to make
+ * before going on. It enters one of its tenants from the switcher or the tenants
+ * table when it wants to, and leaves through the switcher's exit.
  */
 export const resolveTenantLanding = (user: GetUserInfoResponse | undefined): TenantLandingRoute | null => {
   if (!user) return null
@@ -149,8 +146,8 @@ export const isPlatformOnlyPath = (pathname: string): boolean => {
  * Neither is a caller short of a grant somebody could give them, so both are
  * answered with the dashboard rather than a refusal. Navigation and search use
  * this to leave out what would only redirect, and the route guard uses it to
- * land a caller whose scope has just changed under them - which is what entering
- * a tenant from the tenants table does.
+ * land a caller whose scope has just changed under them - which is what a
+ * platform account entering one of its tenants from the tenants table does.
  */
 export const isPathAvailable = (user: GetUserInfoResponse | undefined, pathname: string): boolean => {
   if (isPlatformWithoutTenant(user)) {

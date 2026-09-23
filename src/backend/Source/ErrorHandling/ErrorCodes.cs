@@ -45,6 +45,7 @@ public static class ErrorCodes
     public const string SystemCreatedTenantCannotBeModified = "systemCreatedTenantCannotBeModified";
     public const string CrossTenantFileAccess = "crossTenantFileAccess";
     public const string PlatformPermissionNotGrantable = "platformPermissionNotGrantable";
+    public const string TenantPermissionNotGrantable = "tenantPermissionNotGrantable";
     public const string ConcurrentModification = "concurrentModification";
     public const string UserSharedAcrossTenants = "userSharedAcrossTenants";
     public const string FeatureDisabled = "featureDisabled";

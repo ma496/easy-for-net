@@ -171,22 +171,24 @@ public abstract class TenancyTestsBase(App app) : AppTestsBase(app)
 
         await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
         await MarkAsPlatformAccountAsync(account.Id);
-        await SignInAsAsync(account.Username);
+        await SignInAsAsync(account.Username, tenant.Id);
 
         return account;
     }
 
     /// <summary>
-    /// Creates a platform account holding no membership anywhere, signs the fixture's client in as it
-    /// and has it enter the tenant named - the way the tenants table puts a platform caller inside a
-    /// tenant it does not belong to. Its session then carries that tenant's scope, so it works there as
-    /// the tenant's own administrator would.
+    /// Creates a platform account that is a member of the tenant named, holding exactly the tenant roles
+    /// named there, signs the fixture's client in as it and has it enter that tenant - the way the
+    /// tenants table puts a platform caller inside a tenant it belongs to. Inside, its session carries
+    /// the roles its membership holds there and none of its platform roles, so what it may do is what
+    /// <paramref name="tenantRoleIds"/> grant.
     /// </summary>
-    /// <param name="tenantId">The tenant to enter.</param>
+    /// <param name="tenantId">The tenant to join and enter.</param>
+    /// <param name="tenantRoleIds">The roles the account holds in that tenant, and no others.</param>
     /// <returns>The created account.</returns>
-    protected async Task<User> SignInAsPlatformAdministratorEnteringAsync(Guid tenantId)
+    protected async Task<User> SignInAsPlatformAdministratorEnteringAsync(Guid tenantId, params Guid[] tenantRoleIds)
     {
-        var account = await CreateAccountWithoutMembershipAsync();
+        var account = await CreateTenantUserAsync(tenantId, tenantRoleIds);
 
         await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
         await MarkAsPlatformAccountAsync(account.Id);
@@ -201,7 +203,7 @@ public abstract class TenancyTestsBase(App app) : AppTestsBase(app)
     /// later requests on it are made by that caller. Leaves the client authenticated as that account.
     /// </summary>
     /// <param name="username">The account to sign in as.</param>
-    /// <param name="tenantId">The tenant to sign in to, or <see langword="null"/> to let sign-in resolve it - which it does only for an account holding exactly one active membership, or for a platform account.</param>
+    /// <param name="tenantId">The tenant to sign in to, or <see langword="null"/> to let sign-in resolve it - which it does only for an account holding exactly one active membership, or for a platform account holding none, which signs in to no tenant.</param>
     protected async Task SignInAsAsync(string username, Guid? tenantId = null)
         => await SetAuthTokenAsync(username, TestUsers.DefaultPassword, tenantId);
 

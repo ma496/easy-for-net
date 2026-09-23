@@ -21,23 +21,31 @@ using Backend.Tests.Features.Tenancy;
 public class PermissionScopeTests(App app) : TenancyTestsBase(app)
 {
     /// <summary>
-    /// Verifies the whole round trip a platform account makes: it holds the platform scope while
-    /// acting in no tenant, exchanges it for the tenant's own on entering one, and holds it again the
-    /// moment it leaves - without signing in again at any point (AC-108, AC-113).
+    /// Verifies the whole round trip a platform account makes: it holds its platform roles' authority
+    /// while acting in no tenant, exchanges it for the roles its membership holds on entering a tenant
+    /// it belongs to, and holds it again the moment it leaves - without signing in again at any point
+    /// (AC-108, AC-113).
     /// </summary>
     /// <remarks>
-    /// Both directions are asserted, and with the same two permissions each time. A narrowing that ran
-    /// only one way would leave a platform account inside a tenant still holding the authority to
-    /// delete it; one that never restored would leave it unable to work on the platform after a single
-    /// visit to a tenant. The tier itself is asserted throughout, because it is what makes the way back
-    /// out available at all.
+    /// Both directions are asserted. A narrowing that ran only one way would leave a platform account
+    /// inside a tenant still holding the authority to delete it; one that never restored would leave it
+    /// unable to work on the platform after a single visit to a tenant. Inside, the account holds only
+    /// what its tenant role grants - a both-scope permission its platform role also holds is absent
+    /// there, because platform roles count only in platform scope. The tier itself is asserted
+    /// throughout, because it is what makes the way back out available at all.
     /// </remarks>
     [Fact]
     public async Task Platform_Account_Exchanges_Its_Scope_For_A_Tenants_And_Back()
     {
         var tenant = await CreateTenantAsync();
+        var tenantRole = await CreateTenantRoleAsync(tenant.Id, Allow.TenantMember_View);
 
-        await SetPlatformAdminAuthTokenAsync();
+        var account = await CreateTenantUserAsync(tenant.Id, tenantRole);
+        await UserService.AssignRoleAsync(account.Id, TestRoles.PlatformAdminRoleId);
+        await MarkAsPlatformAccountAsync(account.Id);
+
+        // Named no tenant, a platform account signs in to platform scope whatever it belongs to.
+        await SignInAsAsync(account.Username);
 
         var outside = await PermissionsAsync();
 
@@ -52,10 +60,10 @@ public class PermissionScopeTests(App app) : TenancyTestsBase(app)
 
         inside.Should().NotContain(Allow.Tenant_Create,
             "entering a tenant makes the caller that tenant's actor, and creating tenants is not a tenant's to do");
-        inside.Should().Contain(Allow.User_View,
-            "while a permission declared for both scopes is carried in either, now over that tenant's accounts");
+        inside.Should().NotContain(Allow.User_View,
+            "the platform role holds it, but inside a tenant only the tenant's own roles count");
         inside.Should().Contain(Allow.TenantMember_View,
-            "and the tenant's own administration is what the caller holds while it is in there");
+            "what the caller holds in there is what its tenant role grants");
 
         var (left, exit) = await Client.POSTAsync<TenantExitEndpoint, TenantExitResponse>();
         left.StatusCode.Should().Be(HttpStatusCode.OK,

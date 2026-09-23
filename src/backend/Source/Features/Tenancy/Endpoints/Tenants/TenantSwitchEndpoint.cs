@@ -21,17 +21,14 @@ using Backend.Features.Tenancy.Core;
 /// <para>
 /// Usable with no tenant established for the same reason: this is the endpoint that
 /// establishes a tenant, so requiring one would leave an account with several memberships unable to
-/// pick any of them. It declares no permission either - which tenants an ordinary caller may act in
-/// is decided by their memberships, not by anything a role grants them.
+/// pick any of them. It declares no permission either - which tenants a caller may act in is decided
+/// by their memberships, not by anything a role grants them.
 /// </para>
 /// <para>
-/// The single exception is the platform tier, which belongs to no tenant and holds in all of them: a
-/// platform account may enter any tenant that exists and is not suspended, holding no membership in
-/// it. That is what makes it possible to answer a tenant reporting that something is broken by acting
-/// inside that very tenant and reproducing it, rather than reasoning about it from outside. Inside,
-/// its session carries the tenant tier and nothing of the platform's, so it works as that tenant's
-/// own administrator would. It leaves the same way it arrived, through <c>POST /tenants/exit</c>,
-/// which puts the session back into platform scope and its platform permissions back with it.
+/// The platform tier is no exception: a platform account enters only a tenant it has been made a
+/// member of, and inside it exercises the roles that membership carries there and none of its
+/// platform roles. It leaves through <c>POST /tenants/exit</c>, which puts the session back into
+/// platform scope and its platform permissions back with it.
 /// </para>
 /// <para>
 /// The guards run in a fixed order, and the order is part of the contract. The tenant is read off the
@@ -65,8 +62,8 @@ sealed class TenantSwitchEndpoint(AppDbContext dbContext,
 
     /// <summary>
     /// The refusal reported when the caller holds no active membership in the tenant selected. Holding
-    /// permissions - even every permission - in another tenant is not standing in this one; only the
-    /// platform tier, which belongs to no tenant at all, is.
+    /// permissions - even every permission - in another tenant or on the platform is not standing in
+    /// this one; only a membership of it is.
     /// </summary>
     private const string NotTenantMemberMessage = "Caller is not a member of this tenant";
 
@@ -106,20 +103,11 @@ sealed class TenantSwitchEndpoint(AppDbContext dbContext,
 
         // Asked of the membership rows as they stand now, and of nothing the caller's current session
         // carries: a membership that has been removed is soft-deleted and so keeps nobody inside a
-        // tenant, and no permission granted anywhere else is standing here.
-        //
-        // The platform tier is the one standing that does not come from a membership, and it is
-        // deliberately checked before the membership read rather than after it: a platform account
-        // holds no membership anywhere, so the read would refuse every tenant to the one caller who is
-        // meant to be able to enter any of them. It is a tier test and not a permission test, because
-        // entering a tenant is not something a tenant grants.
-        if (!currentUserService.IsPlatform())
+        // tenant, and no permission granted anywhere else - the platform tier included - is standing here.
+        var isMember = await tenantMembershipService.IsMemberAsync(tenant.Id, userId, cancellationToken);
+        if (!isMember)
         {
-            var isMember = await tenantMembershipService.IsMemberAsync(tenant.Id, userId, cancellationToken);
-            if (!isMember)
-            {
-                ThrowError(NotTenantMemberMessage, ErrorCodes.NotTenantMember);
-            }
+            ThrowError(NotTenantMemberMessage, ErrorCodes.NotTenantMember);
         }
 
         if (tenant.Status == TenantStatus.Suspended)

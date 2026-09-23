@@ -18,6 +18,7 @@ const tenantErrorCodes = [
   'crossTenantFileAccess',
   'tenantRequired',
   'platformPermissionNotGrantable',
+  'tenantPermissionNotGrantable',
   'concurrentModification',
   'userSharedAcrossTenants',
 ] as const

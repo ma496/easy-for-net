@@ -235,6 +235,7 @@
       "systemCreatedTenantCannotBeModified": "System-created tenant cannot be modified",
       "crossTenantFileAccess": "This file belongs to another tenant",
       "platformPermissionNotGrantable": "Platform permissions cannot be granted to a tenant role",
+      "tenantPermissionNotGrantable": "Tenant permissions cannot be granted to a platform role",
       "concurrentModification": "This record was changed by someone else. Reload and try again.",
       "userSharedAcrossTenants": "This user belongs to other tenants and can only be changed by a platform administrator",
       "featureDisabled": "Your plan does not include this feature.",

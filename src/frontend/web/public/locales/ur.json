@@ -235,6 +235,7 @@
       "systemCreatedTenantCannotBeModified": "سسٹم کا بنایا ہوا ٹیننٹ تبدیل نہیں کیا جا سکتا",
       "crossTenantFileAccess": "یہ فائل کسی دوسرے ٹیننٹ کی ہے",
       "platformPermissionNotGrantable": "پلیٹ فارم کی اجازتیں ٹیننٹ کے کردار کو نہیں دی جا سکتیں",
+      "tenantPermissionNotGrantable": "ٹیننٹ کی اجازتیں پلیٹ فارم کے کردار کو نہیں دی جا سکتیں",
       "concurrentModification": "یہ ریکارڈ کسی اور نے تبدیل کر دیا ہے۔ دوبارہ لوڈ کریں اور پھر کوشش کریں۔",
       "userSharedAcrossTenants": "یہ صارف دوسرے کرایہ داروں سے بھی تعلق رکھتا ہے اور اسے صرف پلیٹ فارم ایڈمنسٹریٹر ہی تبدیل کر سکتا ہے",
       "featureDisabled": "آپ کے پلان میں یہ خصوصیت شامل نہیں ہے۔",

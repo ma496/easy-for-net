@@ -130,8 +130,8 @@ public abstract class AppTestsBase(App app) : TestBase
     }
 
     /// <summary>
-    /// Marks an account as belonging to the platform tier, which is what admits it to platform scope
-    /// and lets it enter a tenant it holds no membership of. The tier is a column on the account
+    /// Marks an account as belonging to the platform tier, which is what admits it to platform scope.
+    /// It still enters a tenant only as a member of it. The tier is a column on the account
     /// rather than anything a role grants, so a test that wants a platform caller sets it here as well
     /// as assigning the platform-scoped role that carries the permissions.
     /// </summary>

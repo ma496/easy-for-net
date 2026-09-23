@@ -735,11 +735,14 @@ mechanism several of them describe; the criteria themselves still hold and are s
 
 - **AC-041** — a platform-level permission is now one declared `PermissionScope.Platform`; it cannot
   be granted through a tenant role, and cannot be exercised from inside a tenant even if it were.
-- **AC-046, AC-095, AC-113** — a platform account still administers every tenant, but it does so by
-  entering the tenant, which its tier admits it to without a membership. Inside a tenant it carries
-  that tenant's scope, so it is that tenant's actor rather than a caller standing above every tenant
-  at once. From platform scope it administers the platform's own accounts and roles, and reaches one
-  tenant's roles by naming it on the role list.
+- **AC-046, AC-095, AC-113** — a platform account administers every tenant from platform scope: it
+  lists and manages tenants and their members there, administers the platform's own accounts and
+  roles, and reaches one tenant's roles by naming it on the role list. It enters a tenant only once it
+  is a member of it - its tier admits it to no tenant by itself - and inside it acts on the roles that
+  membership holds there, never on its platform roles, so it is that tenant's actor rather than a
+  caller standing above every tenant at once. Sign-in naming a tenant, `POST /tenants/switch` and a
+  token refresh all require the membership whatever the tier, and a platform role holds only
+  `Platform` + `Both` permissions.
 - **AC-047** — the background-job dashboard is gated on the account tier rather than on a permission,
   because a permission would be narrowed away the moment a platform account entered a tenant.
 - **AC-114, AC-115** — the permission-definition catalogue is narrowed to the scope the caller is
@@ -750,8 +753,8 @@ mechanism several of them describe; the criteria themselves still hold and are s
 - `Tenant.View` is platform-scoped, so the tenants list is the platform's own screen. A tenant
   administrator reaches their own tenant through `Tenant.Detail`, which is `Both`.
 - An account created while acting in platform scope is a platform account holding no membership; one
-  created inside a tenant — by a platform account that entered it just as by that tenant's own
-  administrator — is an ordinary account of that tenant. Self-service sign-up creates an ordinary
+  created inside a tenant — by a platform account that entered it as a member just as by that
+  tenant's own administrator — is an ordinary account of that tenant. Self-service sign-up creates an ordinary
   account, so AC-118 and AC-133 are unchanged.
 - Sign-in is still not refused for an account holding no membership, which is what keeps the
   self-service onboarding of AC-133 reachable; the "please provide a tenant" message is carried by

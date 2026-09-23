@@ -235,6 +235,7 @@
       "systemCreatedTenantCannotBeModified": "无法修改系统创建的租户",
       "crossTenantFileAccess": "此文件属于其他租户",
       "platformPermissionNotGrantable": "平台权限无法授予租户角色",
+      "tenantPermissionNotGrantable": "租户权限无法授予平台角色",
       "concurrentModification": "此记录已被他人修改。请重新加载后重试。",
       "userSharedAcrossTenants": "该用户同时属于其他租户，只能由平台管理员更改",
       "featureDisabled": "您的套餐不包含此功能。",

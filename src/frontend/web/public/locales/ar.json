@@ -235,6 +235,7 @@
       "systemCreatedTenantCannotBeModified": "لا يمكن تعديل المستأجر الذي أنشأه النظام",
       "crossTenantFileAccess": "هذا الملف يخص مستأجرًا آخر",
       "platformPermissionNotGrantable": "لا يمكن منح أذونات المنصة لدور مستأجر",
+      "tenantPermissionNotGrantable": "لا يمكن منح أذونات المستأجر لدور المنصة",
       "concurrentModification": "تم تغيير هذا السجل بواسطة شخص آخر. أعد التحميل وحاول مرة أخرى.",
       "userSharedAcrossTenants": "ينتمي هذا المستخدم إلى مستأجرين آخرين ولا يمكن تغييره إلا بواسطة مسؤول المنصة",
       "featureDisabled": "خطتك لا تتضمن هذه الميزة.",

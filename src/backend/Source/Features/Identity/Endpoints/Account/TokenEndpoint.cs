@@ -21,12 +21,17 @@ using Backend.Features.Identity.Core.Entities;
 /// a person who named a tenant is told why they did not get it.
 /// </para>
 /// <para>
-/// With no tenant named, the session starts in the single active membership the account holds, and
-/// that is the only way it starts without being told. An ordinary account holding none, or holding
-/// several, is asked to name one rather than signed in with no tenant at all: such a session carries
-/// no permission whatever, so establishing one would authenticate somebody into a state where
-/// nothing they try can succeed. A platform account is the exception - it belongs to no tenant and
-/// works platform-wide - so it signs in with none and enters a tenant when it needs one.
+/// With no tenant named, an ordinary account's session starts in the single active membership it
+/// holds, and that is the only way it starts without being told. An ordinary account holding none, or
+/// holding several, is asked to name one rather than signed in with no tenant at all: such a session
+/// carries no permission whatever, so establishing one would authenticate somebody into a state where
+/// nothing they try can succeed. A platform account is the exception - its own authority lives in
+/// platform scope - so with no tenant named it signs in with none, whatever memberships it holds, and
+/// enters one of its tenants when it needs to.
+/// </para>
+/// <para>
+/// Naming a tenant needs a membership of it whatever the account's tier. The platform tier is no
+/// standing inside a tenant: a platform account works in one only once it has been made a member.
 /// </para>
 /// </remarks>
 sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IPermissionFeatureFilter permissionFeatureFilter, IOptions<SigninSetting> signinSetting, IOptions<AuthSetting> authSetting) : Endpoint<TokenRequest, TokenResponse>
@@ -40,8 +45,8 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IPe
 
     /// <summary>
     /// The refusal reported when the account holds no active membership in the tenant it named.
-    /// Holding permissions - even every permission - in another tenant is not standing in this one;
-    /// only the platform tier, which belongs to no tenant at all, is.
+    /// Holding permissions - even every permission - in another tenant or on the platform is not
+    /// standing in this one; only a membership of it is.
     /// </summary>
     private const string NotTenantMemberMessage = "You are not a member of this tenant";
 
@@ -130,8 +135,8 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IPe
     }
 
     /// <summary>
-    /// The tenant the session starts in when the request named none: the single tenant the account
-    /// holds an active membership of. A membership counts only while its row lives and its tenant
+    /// The tenant the session starts in when the request named none: none at all for a platform
+    /// account, and otherwise the single tenant the account holds an active membership of. A membership counts only while its row lives and its tenant
     /// exists and is not suspended, so an account whose only membership is of a suspended tenant has
     /// no tenant to start in rather than one inside a tenant in which nothing may be done.
     /// </summary>
@@ -145,7 +150,9 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IPe
     /// asked which tenant to work in says what to do about that, and a session where nothing works
     /// does not.
     /// <para>
-    /// A platform account belongs to no tenant and works platform-wide, so it signs in with none.
+    /// A platform account's own authority lives in platform scope, so it signs in there. Starting it
+    /// inside a tenant it happens to belong to would narrow it to that tenant's roles before it asked
+    /// to be.
     /// </para>
     /// <para>
     /// Two rows answer the whole question - one tenant, or more than one - so no more are read. The read
@@ -156,6 +163,11 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IPe
     /// </remarks>
     private async Task<Guid?> ResolveUnnamedTenantAsync(User user, CancellationToken cancellationToken)
     {
+        if (user.IsPlatform)
+        {
+            return null;
+        }
+
         var tenantIds = await dbContext.TenantMemberships
             .AsNoTracking()
             .AcrossAllTenants()
@@ -166,20 +178,13 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IPe
             .Take(2)
             .ToListAsync(cancellationToken);
 
-        if (tenantIds.Count == 1)
+        if (tenantIds.Count != 1)
         {
-            return tenantIds[0];
-        }
-
-        // A platform account works platform-wide and is never turned away for want of a tenant: with no
-        // single membership to start in it starts in none, which is the scope its own authority lives in.
-        // An ordinary account has nothing to exercise there, so it is asked which tenant it meant.
-        if (!user.IsPlatform)
-        {
+            // An ordinary account has nothing to exercise in no tenant, so it is asked which one it meant.
             ThrowError(x => x.TenantIdentifier, TenantRequiredMessage, ErrorCodes.TenantRequired);
         }
 
-        return null;
+        return tenantIds[0];
     }
 
     /// <summary>
@@ -217,17 +222,15 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IPe
             ThrowError(TenantNotFoundMessage, ErrorCodes.TenantNotFound);
         }
 
-        // Read from the membership rows rather than from anything the request carries. The platform
-        // tier is the one standing that comes from no membership: it belongs to no tenant and holds in
-        // all of them, so a platform account may name any tenant here and start inside it - which is how
-        // it reaches a tenant that has reported a problem, without one of that tenant's members having
-        // to sign in for it. It is read off the account, because at this point in the request there are
-        // no claims to ask: the session being authorized is the one about to be established.
+        // Read from the membership rows rather than from anything the request carries, because at this
+        // point in the request there are no claims to ask: the session being authorized is the one about
+        // to be established. A platform account is held to it like any other - its tier is authority on
+        // the platform, not standing inside a tenant.
         var holdsMembership = await dbContext.TenantMemberships
             .AsNoTracking()
             .AcrossAllTenants()
             .AnyAsync(membership => membership.TenantId == tenant.Id && membership.UserId == user.Id, cancellationToken);
-        if (!holdsMembership && !user.IsPlatform)
+        if (!holdsMembership)
         {
             ThrowError(NotTenantMemberMessage, ErrorCodes.NotTenantMember);
         }

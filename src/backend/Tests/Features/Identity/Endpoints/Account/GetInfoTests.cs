@@ -165,13 +165,13 @@ public class GetInfoTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that the roles reported while acting in a tenant include the caller's platform-scoped
-    /// roles, not just that tenant's own. A platform-scoped role belongs to no tenant and the session
-    /// check grants its permissions in every one, so leaving it out here would have the web
-    /// application hide screens - and refuse navigation to them - that the API would have admitted.
+    /// Verifies that the roles reported while acting in a tenant are that tenant's own and leave the
+    /// caller's platform-scoped roles out: a platform role counts only in platform scope, which is how
+    /// the session is minted, so reporting it here would have the web application offer screens the
+    /// API would refuse.
     /// </summary>
     [Fact]
-    public async Task Reports_Platform_Roles_While_Acting_In_A_Tenant()
+    public async Task Does_Not_Report_Platform_Roles_While_Acting_In_A_Tenant()
     {
         var administrator = await SignInAsPlatformAdministratorActingInATenantAsync();
 
@@ -180,15 +180,12 @@ public class GetInfoTests(App app) : TenancyTestsBase(app)
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         info.Id.Should().Be(administrator.Id);
         info.ActiveTenantId.Should().NotBeNull("the account was signed in acting inside a tenant of its own");
+        info.IsPlatform.Should().BeTrue("the tier travels with the account wherever it acts");
 
-        info.Roles.Select(role => role.Id).Should().Contain(
+        info.Roles.Select(role => role.Id).Should().NotContain(
             TestRoles.PlatformAdminRoleId,
-            "a platform-scoped role is held in every tenant, so acting in one does not hide it");
-
-        info.Roles.SelectMany(role => role.Permissions).Select(permission => permission.Name).Should()
-            .Contain(Allow.TenantMember_View,
-                "and what the platform role grants inside a tenant is what the web application is told it has")
-            .And.NotContain(Allow.Tenant_Create,
-                "while what it grants only in platform scope is narrowed away, so the web application offers exactly what the API will allow");
+            "inside a tenant only that tenant's roles count");
+        info.Roles.SelectMany(role => role.Permissions).Should().BeEmpty(
+            "the membership holds no tenant role, so nothing is granted there");
     }
 }

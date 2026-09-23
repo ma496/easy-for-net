@@ -45,6 +45,7 @@ const tenantErrorCodes = [
   'systemCreatedTenantCannotBeModified',
   'crossTenantFileAccess',
   'platformPermissionNotGrantable',
+  'tenantPermissionNotGrantable',
   'concurrentModification',
   'userSharedAcrossTenants',
 ]

@@ -6,28 +6,22 @@ using Backend.Features.Identity.Endpoints.Roles;
 using Backend.Tests.Features.Tenancy;
 
 /// <summary>
-/// Tests for the reach the platform tier gives the role endpoints: the reader, the rename, the
-/// permission change and the delete all act on a role belonging to a tenant the caller holds no
-/// membership of, once it has entered that tenant (AC-113).
+/// Tests for how the platform tier reaches the role endpoints of a tenant: the reader, the rename, the
+/// permission change and the delete all act on a tenant's role only once the platform account is a
+/// member of that tenant and has entered it, and then only on the tenant role its membership holds
+/// (AC-113).
 /// </summary>
 /// <remarks>
 /// <para>
-/// Entering is how the reach is exercised, and the only way: a session carries the permissions of the
-/// scope it acts in, so a platform caller inside tenant A is an actor of tenant A and reaches nothing of
-/// tenant B - the last test here states that directly. What the tier gives is admission to any tenant
-/// without a membership, and inside it the tenant's own authority; it is not a standing that spans
-/// tenants at once.
-/// </para>
-/// <para>
-/// Every test here signs in as a platform account and enters the tenant it is about to act on, through
-/// <see cref="SignInAsPlatformAdministratorAsync"/>. The premise that it belongs to no tenant at all is
-/// asserted rather than assumed, because it is the whole of what these tests are about: a caller who
-/// happened to be a member would be reaching the role as a member, and the reach would be untested.
+/// Entering is how the reach is exercised, and a membership is what admits the entry: a session carries
+/// the roles of the tenant it acts in and nothing else, so a platform caller inside tenant A is an actor
+/// of tenant A on tenant A's roles and reaches nothing of tenant B. The platform role the caller also
+/// holds counts only in platform scope, which the last test here states directly.
 /// </para>
 /// <para>
 /// The role acted on is one the test made, so it is not system-created and each of the four operations
 /// is available to it. A tenant's own administrator role refuses the rename, the permission change and
-/// the delete outright, which would make a test of the widening over it pass for the wrong reason.
+/// the delete outright, which would make a test of the reach over it pass for the wrong reason.
 /// </para>
 /// </remarks>
 public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
@@ -39,11 +33,11 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
     private const string SoftDeleteFilterKey = "SoftDelete";
 
     /// <summary>
-    /// Verifies that a platform administrator reads a role of a tenant it holds no membership of, with
+    /// Verifies that a platform administrator reads a role of a tenant it is a member of, with
     /// the permissions the role actually holds (AC-113).
     /// </summary>
     [Fact]
-    public async Task Reads_A_Role_Of_A_Tenant_It_Does_Not_Belong_To()
+    public async Task Reads_A_Role_Of_A_Tenant_It_Belongs_To()
     {
         var tenant = await CreateTenantAsync();
         var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.Role_View, Allow.User_View);
@@ -54,17 +48,17 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
         var (response, role) = await Client
             .GETAsync<RoleGetEndpoint, RoleGetRequest, RoleGetResponse>(new() { Id = roleId });
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK, "the caller administers the installation rather than this tenant");
+        response.StatusCode.Should().Be(HttpStatusCode.OK, "the caller holds the role's view permission through its membership");
         role.Id.Should().Be(roleId);
         role.Permissions.Should().BeEquivalentTo(grantedPermissionIds, "the role is read as it is, not as an empty one");
     }
 
     /// <summary>
-    /// Verifies that a platform administrator renames a role of a tenant it holds no membership of, and
+    /// Verifies that a platform administrator renames a role of a tenant it is a member of, and
     /// that the rename reaches the stored row (AC-113).
     /// </summary>
     [Fact]
-    public async Task Renames_A_Role_Of_A_Tenant_It_Does_Not_Belong_To()
+    public async Task Renames_A_Role_Of_A_Tenant_It_Belongs_To()
     {
         var tenant = await CreateTenantAsync();
         var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.Role_View);
@@ -77,7 +71,7 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
             {
                 Id = roleId,
                 Name = newName,
-                Description = "Renamed by a platform administrator from outside the tenant"
+                Description = "Renamed by a platform administrator acting as a member"
             });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -88,11 +82,11 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a platform administrator replaces the permission set of a role belonging to a
-    /// tenant it holds no membership of, and that the tenant's role grants the new set afterwards
+    /// tenant it is a member of, and that the tenant's role grants the new set afterwards
     /// (AC-113).
     /// </summary>
     [Fact]
-    public async Task Changes_The_Permissions_Of_A_Role_Of_A_Tenant_It_Does_Not_Belong_To()
+    public async Task Changes_The_Permissions_Of_A_Role_Of_A_Tenant_It_Belongs_To()
     {
         var tenant = await CreateTenantAsync();
         var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.Role_View);
@@ -114,12 +108,12 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that a platform administrator deletes a role belonging to a tenant it holds no
-    /// membership of, and that the delete is the soft one every other caller gets: the row is retained
+    /// Verifies that a platform administrator deletes a role belonging to a tenant it is a member
+    /// of, and that the delete is the soft one every other caller gets: the row is retained
     /// carrying the deletion, and the tenant stops being shown the role (AC-113).
     /// </summary>
     [Fact]
-    public async Task Deletes_A_Role_Of_A_Tenant_It_Does_Not_Belong_To()
+    public async Task Deletes_A_Role_Of_A_Tenant_It_Belongs_To()
     {
         var tenant = await CreateTenantAsync();
         var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.Role_View);
@@ -148,17 +142,17 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Signs in as a platform account, has it enter the tenant named, and proves the premise every test
-    /// here rests on: that the tenant is one the caller holds no membership of, so what the requests
-    /// below reach is reached by the tier that admitted it rather than by belonging there.
+    /// Signs in as a platform account that is a member of the tenant named, holding there a tenant role
+    /// with every role permission, and has it enter that tenant. The authority the requests below use is
+    /// the tenant role's: the platform role the account also holds counts only in platform scope.
     /// </summary>
-    /// <param name="tenantId">The tenant the caller enters and must not belong to.</param>
+    /// <param name="tenantId">The tenant the caller joins and enters.</param>
     private async Task SignInAsPlatformAdministratorAsync(Guid tenantId)
     {
-        var administrator = await SignInAsPlatformAdministratorEnteringAsync(tenantId);
+        var roleAdministration = await CreateTenantRoleAsync(tenantId,
+            Allow.Role_View, Allow.Role_Update, Allow.Role_ChangePermissions, Allow.Role_Delete);
 
-        (await MembershipService.IsMemberAsync(tenantId, administrator.Id, TestContext.Current.CancellationToken))
-            .Should().BeFalse("the caller works inside a tenant it does not belong to, which is the standing these tests are stated over");
+        await SignInAsPlatformAdministratorEnteringAsync(tenantId, roleAdministration);
     }
 
     /// <summary>
@@ -186,6 +180,26 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.NotFound,
             "acting inside a tenant is acting inside that tenant, so another tenant's role is absent exactly as a role that never existed is");
+    }
+
+    /// <summary>
+    /// Verifies that the platform role grants nothing inside a tenant: a platform account that is a
+    /// member holding no tenant role is refused the role reader, although its platform role holds the
+    /// same permission in platform scope.
+    /// </summary>
+    [Fact]
+    public async Task Platform_Role_Grants_Nothing_Inside_A_Tenant()
+    {
+        var tenant = await CreateTenantAsync();
+        var roleId = await CreateTenantRoleAsync(tenant.Id, Allow.Role_View);
+
+        await SignInAsPlatformAdministratorEnteringAsync(tenant.Id);
+
+        var (response, _) = await Client
+            .GETAsync<RoleGetEndpoint, RoleGetRequest, RoleGetResponse>(new() { Id = roleId });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden,
+            "inside a tenant only that tenant's roles count, and the membership holds none");
     }
 
     /// <summary>

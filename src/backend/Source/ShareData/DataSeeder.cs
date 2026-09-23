@@ -198,17 +198,22 @@ public class DataSeeder(IUserService userService,
     }
 
     /// <summary>
-    /// Keeps the platform administrator role holding the whole catalogue, every scope included, and
-    /// keeps the seeded platform account in it. The role names no tenant, which is what platform scope
-    /// is, so administering the platform is a grant of its own that administering a tenant never
-    /// implies. Holding the whole catalogue is also what gives a platform account the tenant's own
-    /// authority when it enters one: the session narrows the role's permissions to the scope being
-    /// acted in, so inside a tenant it exercises exactly the tenant tier.
+    /// Keeps the platform administrator role holding every permission exercisable in platform scope,
+    /// and keeps the seeded platform account in it. The role names no tenant, which is what platform
+    /// scope is, so administering the platform is a grant of its own that administering a tenant never
+    /// implies - and the converse: a platform role counts only in platform scope, so a tenant-only
+    /// permission on it would grant nothing and is left off. A platform account works inside a tenant
+    /// only as a member of it, on the roles that membership carries there.
     /// </summary>
     /// <param name="permissions">Every permission the catalogue holds.</param>
     /// <param name="platformAdminUser">The seeded platform administrator account.</param>
     private async Task ReconcilePlatformAdminRoleAsync(List<Permission> permissions, User platformAdminUser)
     {
+        // Narrowed here rather than filtered out wherever the role is read, exactly as the bootstrap
+        // tenant's administrator role is narrowed to the tenant tier.
+        var platformPermissionNames = permissionDefinitionService.GetPermissionNamesInScope(PermissionScope.Platform);
+        var platformPermissions = permissions.Where(p => platformPermissionNames.Contains(p.Name)).ToList();
+
         var platformAdminRole = await dbContext.Roles
             .AcrossAllTenants()
             .FirstOrDefaultAsync(r => r.TenantId == null && r.NameNormalized == AdminRoleNameNormalized);
@@ -228,7 +233,7 @@ public class DataSeeder(IUserService userService,
             }
         }
 
-        await ReconcileRolePermissionsAsync(platformAdminRole.Id, permissions);
+        await ReconcileRolePermissionsAsync(platformAdminRole.Id, platformPermissions);
         await AssignRoleIfMissingAsync(platformAdminUser.Id, platformAdminRole.Id);
     }
 
