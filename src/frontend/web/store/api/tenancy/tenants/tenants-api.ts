@@ -1,4 +1,7 @@
 import { appApi } from '@/store/api/_app-api'
+import { accountApi } from '@/store/api/identity/account/account-api'
+import { setUserInfo } from '@/store/slices/authSlice'
+import { AuthState } from '@/lib/utils'
 import {
   TenantCreateRequest,
   TenantCreateResponse,
@@ -28,10 +31,44 @@ import {
 } from './tenants-dtos'
 
 /**
+ * Re-reads the account info once a membership mutation has succeeded for the signed-in account itself,
+ * so the tenants the header offers - which come from that info, not from a cached query - pick up a
+ * tenant the account was just added to or drop one it was just removed from. A mutation that touched
+ * somebody else leaves the session state alone. A failed read keeps the previous info standing.
+ */
+const refreshOwnTenants = async (
+  userId: string,
+  { dispatch, getState, queryFulfilled }: {
+    dispatch: (action: unknown) => unknown
+    getState: () => unknown
+    queryFulfilled: Promise<unknown>
+  }
+): Promise<void> => {
+  try {
+    await queryFulfilled
+  } catch {
+    return
+  }
+
+  if ((getState() as { auth: AuthState }).auth.user?.id !== userId) {
+    return
+  }
+
+  const userInfo = (await dispatch(
+    accountApi.endpoints.getUserInfo.initiate(undefined, { subscribe: false, forceRefetch: true })
+  )) as { data?: Parameters<typeof setUserInfo>[0] }
+  if (userInfo.data) {
+    dispatch(setUserInfo(userInfo.data))
+  }
+}
+
+/**
  * RTK Query API for tenancy: the tenant lifecycle (list, get, create, update, suspend,
  * reactivate, delete), tenant membership (list, add, replace roles, remove), self-service
  * onboarding and tenant switching. Uses the 'Tenants' and 'TenantMembers' tag types, and
- * re-declares 'Users' so member mutations can refresh the tenant-scoped user surfaces.
+ * re-declares 'Users' so member mutations can refresh the tenant-scoped user surfaces. Adding or
+ * removing a member also invalidates that tenant's 'Tenants' tags, because the list and detail screens
+ * show how many accounts belong to it, and re-reads the account info when the member is the caller.
  * `tenantSwitch` and `tenantExit` deliberately carry no tags: the caller drops the whole cache with
  * `appApi.util.resetApiState()` instead, so nothing from the previous tenant is refetched.
  */
@@ -128,7 +165,8 @@ export const tenantsApi = appApi
           method: 'POST',
           body: { ...input, tenantId: undefined },
         }),
-        invalidatesTags: ['TenantMembers', 'Users'],
+        invalidatesTags: (result, error, arg) => ['TenantMembers', 'Users', 'Tenants', { type: 'Tenants', id: arg.tenantId }],
+        onQueryStarted: (arg, api) => refreshOwnTenants(arg.userId, api),
       }),
       tenantMemberUpdateRoles: builder.mutation<TenantMemberUpdateRolesResponse, TenantMemberUpdateRolesRequest>({
         query: (input) => ({
@@ -153,7 +191,10 @@ export const tenantsApi = appApi
           { type: 'TenantMembers', id: arg.userId },
           'Users',
           { type: 'Users', id: arg.userId },
+          'Tenants',
+          { type: 'Tenants', id: arg.tenantId },
         ],
+        onQueryStarted: (arg, api) => refreshOwnTenants(arg.userId, api),
       }),
       // No tags: switching tenants must drop the whole cache rather than refresh parts of it,
       // so the caller dispatches appApi.util.resetApiState() on success. Invalidating here
