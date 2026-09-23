@@ -73,7 +73,8 @@ sealed class TenantMemberRemoveEndpoint(ITenantService tenantService,
         // scope, so a platform account that has entered a tenant is read for that route tenant like
         // anybody else.
         var callerId = currentUserService.GetCurrentUserId();
-        if (!(currentUserService.IsPlatform() && tenantContext.IsPlatformScope()) &&
+        var platformAdministration = currentUserService.IsPlatform() && tenantContext.IsPlatformScope();
+        if (!platformAdministration &&
             (callerId is not { } callerUserId ||
              !await tenantAuthorizationService.HoldsTenantPermissionAsync(callerUserId, request.TenantId, Allow.TenantMember_Remove, cancellationToken)))
         {
@@ -86,6 +87,14 @@ sealed class TenantMemberRemoveEndpoint(ITenantService tenantService,
         if (tenant == null)
         {
             ThrowError(TenantNotFoundMessage, ErrorCodes.TenantNotFound);
+        }
+
+        // A platform account is administered from platform scope only, so to a tenant's own
+        // administrators its membership is as absent as it is from their member list.
+        if (!platformAdministration && await tenantAuthorizationService.IsPlatformAccountAsync(request.UserId, cancellationToken))
+        {
+            await Send.NotFoundAsync(cancellationToken);
+            return;
         }
 
         // Suspension is deliberately not a bar here. A suspended tenant is out of service for the work

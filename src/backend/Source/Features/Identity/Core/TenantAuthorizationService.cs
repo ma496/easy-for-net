@@ -31,6 +31,16 @@ public interface ITenantAuthorizationService
     Task<bool> UserExistsAsync(Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Tells whether an account belongs to the platform tier. A platform account is administered from
+    /// platform scope only, so a caller administering a tenant from inside it treats such an account
+    /// as though it did not exist - it neither lists it, adds it, re-roles it nor removes it.
+    /// </summary>
+    /// <param name="userId">The account being examined.</param>
+    /// <param name="cancellationToken">Token used to cancel the read.</param>
+    /// <returns><see langword="true"/> when the account exists and is a platform account.</returns>
+    Task<bool> IsPlatformAccountAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Provisions a tenant with its system-created administrator role - the role holding every
     /// permission the code-declared catalogue makes exercisable inside a tenant, and no platform-scoped
     /// one - and returns its identifier so the caller can grant it to the tenant's first member. Running this
@@ -131,9 +141,13 @@ public interface ITenantAuthorizationService
     /// <param name="tenantId">The tenant whose members are listed.</param>
     /// <param name="request">Paging, sorting and search criteria; their bounds are enforced by the calling endpoint's validator.</param>
     /// <param name="roleId">When supplied, limits the page to members holding that role in this tenant.</param>
+    /// <param name="includePlatformAccounts">
+    /// Whether platform accounts holding a membership are listed - only when the tenant is administered
+    /// from platform scope, since inside a tenant a platform account is nobody's to administer.
+    /// </param>
     /// <param name="cancellationToken">Token used to cancel the reads.</param>
     /// <returns>The requested page and the total number of members matching the request.</returns>
-    Task<TenantMemberPageDto> GetTenantMembersAsync(Guid tenantId, ListRequestDto<Guid> request, Guid? roleId, CancellationToken cancellationToken = default);
+    Task<TenantMemberPageDto> GetTenantMembersAsync(Guid tenantId, ListRequestDto<Guid> request, Guid? roleId, bool includePlatformAccounts, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Counts how many accounts hold an active membership of each of the tenants named, so a list of
@@ -226,6 +240,12 @@ public class TenantAuthorizationService(AppDbContext dbContext,
         => dbContext.Users
             .AsNoTracking()
             .AnyAsync(account => account.Id == userId, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<bool> IsPlatformAccountAsync(Guid userId, CancellationToken cancellationToken = default)
+        => dbContext.Users
+            .AsNoTracking()
+            .AnyAsync(account => account.Id == userId && account.IsPlatform, cancellationToken);
 
     /// <inheritdoc />
     public async Task<Guid> ProvisionTenantAdministratorRoleAsync(Guid tenantId, CancellationToken cancellationToken = default)
@@ -429,7 +449,7 @@ public class TenantAuthorizationService(AppDbContext dbContext,
     }
 
     /// <inheritdoc />
-    public async Task<TenantMemberPageDto> GetTenantMembersAsync(Guid tenantId, ListRequestDto<Guid> request, Guid? roleId, CancellationToken cancellationToken = default)
+    public async Task<TenantMemberPageDto> GetTenantMembersAsync(Guid tenantId, ListRequestDto<Guid> request, Guid? roleId, bool includePlatformAccounts, CancellationToken cancellationToken = default)
     {
         // Both sets are named once and reused: as the predicate deciding which accounts are members,
         // and as the source of the per-tenant audit values and roles each row carries.
@@ -446,6 +466,11 @@ public class TenantAuthorizationService(AppDbContext dbContext,
         var query = dbContext.Users
             .AsNoTracking()
             .Where(account => memberships.Any(membership => membership.UserId == account.Id));
+
+        if (!includePlatformAccounts)
+        {
+            query = query.Where(account => !account.IsPlatform);
+        }
 
         var search = request.Search?.Trim().ToLowerInvariant();
         if (!string.IsNullOrWhiteSpace(search))

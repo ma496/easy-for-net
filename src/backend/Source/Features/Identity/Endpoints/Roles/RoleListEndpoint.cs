@@ -43,10 +43,15 @@ sealed class RoleListEndpoint(IRoleService roleService,
             ? dbContext.Roles.AcrossAllTenants().Where(x => x.TenantId == tenantId)
             : roleService.Roles();
 
+        // Inside a tenant the user counts leave platform accounts out, as the tenant's user list does:
+        // a platform account holding a role there is nobody the tenant administers. In platform scope -
+        // the platform's roles, or a named tenant's being administered from the tenants table - every
+        // holder is counted, as the tenant's member list shows them all there.
+        var includePlatformAccounts = tenantContext.IsPlatformScope();
         var query = roles
             .AsNoTracking()
             .Include(x => x.RolePermissions)
-            .Include(x => x.UserRoles)
+            .Include(x => x.UserRoles.Where(assignment => includePlatformAccounts || !assignment.User.IsPlatform))
             .AsQueryable();
 
         var search = request.Search?.Trim().ToLowerInvariant();

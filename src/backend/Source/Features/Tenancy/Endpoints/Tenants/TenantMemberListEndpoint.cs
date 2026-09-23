@@ -47,7 +47,8 @@ sealed class TenantMemberListEndpoint(ICurrentUserService currentUserService,
         // Standing is checked before the tenant is read at all, and before anything about it reaches
         // the response: a caller who may not view the members of the tenant addressed is refused
         // identically for a tenant that exists and one that does not.
-        if (!(currentUserService.IsPlatform() && tenantContext.IsPlatformScope()))
+        var platformAdministration = currentUserService.IsPlatform() && tenantContext.IsPlatformScope();
+        if (!platformAdministration)
         {
             // Administering any tenant belongs to platform scope, which is where the tenants table is
             // worked from; a platform account that has entered a tenant is an actor of that tenant and
@@ -66,7 +67,10 @@ sealed class TenantMemberListEndpoint(ICurrentUserService currentUserService,
         // The page, its search, its role filter and its total are all the service's, so the rows carry
         // the roles and the audit values of this tenant's membership alone - the same account read for
         // another tenant reports that other tenant's roles, and neither reading disturbs the other.
-        var page = await tenantAuthorizationService.GetTenantMembersAsync(request.TenantId, request, request.RoleId, cancellationToken);
+        //
+        // A platform account holding a membership is listed only for platform administration: inside a
+        // tenant it is administered by nobody, so the tenant's own administrators do not see it.
+        var page = await tenantAuthorizationService.GetTenantMembersAsync(request.TenantId, request, request.RoleId, platformAdministration, cancellationToken);
 
         var dtoMapper = new TenantMemberListDtoMapper();
         var response = new TenantMemberListResponse

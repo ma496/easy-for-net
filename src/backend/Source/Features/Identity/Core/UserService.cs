@@ -30,8 +30,8 @@ public interface IUserService
     IQueryable<User> Users();
 
     /// <summary>
-    /// The accounts the caller may administer right now: those holding an active membership of the
-    /// tenant being acted in, or the platform's own accounts while acting in no tenant.
+    /// The accounts the caller may administer right now: the non-platform accounts holding an active
+    /// membership of the tenant being acted in, or the platform's own accounts while acting in no tenant.
     /// Lists, searches and counts all narrow from this one query, so none of them can forget the
     /// restriction and none of them can disagree about it.
     /// </summary>
@@ -137,7 +137,11 @@ public class UserService(AppDbContext dbContext,
         // tenant, matches no membership at all.
         var memberUserIds = tenantMembershipQuery.MemberUserIds(activeTenantId);
 
-        return Users().Where(account => memberUserIds.Contains(account.Id));
+        // A platform account may hold a membership of the tenant, but it is administered from platform
+        // scope only: a tenant's administrators neither see it nor edit, deactivate or delete it. The
+        // tenant membership endpoints apply the same rule, so its membership and its roles inside the
+        // tenant are managed from platform scope too.
+        return Users().Where(account => !account.IsPlatform && memberUserIds.Contains(account.Id));
     }
 
     /// <inheritdoc />

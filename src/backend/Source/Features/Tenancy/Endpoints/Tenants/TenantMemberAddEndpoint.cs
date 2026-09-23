@@ -84,7 +84,8 @@ sealed class TenantMemberAddEndpoint(ITenantService tenantService,
         // entirely - so the permission is read for the tenant named in the route instead. Administering
         // any tenant belongs to platform scope, so a platform account that has entered a tenant is read
         // for that route tenant like anybody else.
-        if (!(currentUserService.IsPlatform() && tenantContext.IsPlatformScope()))
+        var platformAdministration = currentUserService.IsPlatform() && tenantContext.IsPlatformScope();
+        if (!platformAdministration)
         {
             var callerId = currentUserService.GetCurrentUserId();
             if (callerId is not { } callerUserId
@@ -110,7 +111,10 @@ sealed class TenantMemberAddEndpoint(ITenantService tenantService,
 
         // The account is owned by the identity slice and is only ever asked about through the one
         // contract that slice publishes, so no account type is named on this surface.
-        var userExists = await tenantAuthorizationService.UserExistsAsync(request.UserId, cancellationToken);
+        // A platform account is administered from platform scope only, so a tenant's own administrators
+        // cannot bring one into their tenant: to them it reads exactly as an account that does not exist.
+        var userExists = await tenantAuthorizationService.UserExistsAsync(request.UserId, cancellationToken)
+                         && (platformAdministration || !await tenantAuthorizationService.IsPlatformAccountAsync(request.UserId, cancellationToken));
         if (!userExists)
         {
             ThrowError(x => x.UserId, UserNotFoundMessage, ErrorCodes.UserNotFound);

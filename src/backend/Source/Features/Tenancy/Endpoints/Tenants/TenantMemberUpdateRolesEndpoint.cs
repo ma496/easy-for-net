@@ -91,7 +91,8 @@ sealed class TenantMemberUpdateRolesEndpoint(ITenantService tenantService,
         // belongs to platform scope, so a platform account that has entered a tenant is read for that
         // route tenant like anybody else.
         var callerId = currentUserService.GetCurrentUserId();
-        if (!(currentUserService.IsPlatform() && tenantContext.IsPlatformScope()) &&
+        var platformAdministration = currentUserService.IsPlatform() && tenantContext.IsPlatformScope();
+        if (!platformAdministration &&
             (callerId is not { } callerUserId ||
              !await tenantAuthorizationService.HoldsTenantPermissionAsync(callerUserId, request.TenantId, Allow.TenantMember_UpdateRoles, cancellationToken)))
         {
@@ -113,8 +114,11 @@ sealed class TenantMemberUpdateRolesEndpoint(ITenantService tenantService,
 
         // A membership is a record inside a tenant, so an account holding none there - never added, or
         // since removed - is reported exactly as a missing record rather than as a business refusal.
+        // A platform account is administered from platform scope only, so to a tenant's own
+        // administrators its membership reads exactly as a missing one.
         var membership = await tenantMembershipService.GetAsync(request.TenantId, request.UserId, cancellationToken);
-        if (membership == null)
+        if (membership == null
+            || (!platformAdministration && await tenantAuthorizationService.IsPlatformAccountAsync(request.UserId, cancellationToken)))
         {
             await Send.NotFoundAsync(cancellationToken);
             return;

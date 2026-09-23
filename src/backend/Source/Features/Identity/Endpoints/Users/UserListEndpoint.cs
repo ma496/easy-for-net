@@ -17,8 +17,8 @@ sealed class UserListEndpoint(IUserService userService) : Endpoint<UserListReque
 
     public override async Task HandleAsync(UserListRequest request, CancellationToken cancellationToken)
     {
-        // The accounts the caller may administer: those holding an active membership of the tenant
-        // being acted in, widened to every account for a platform administrator. The search, the
+        // The accounts the caller may administer: the non-platform accounts holding an active membership
+        // of the tenant being acted in, or the platform's own accounts in platform scope. The search, the
         // filters and the total below all narrow from this one query, so none of them can report an
         // account the caller is not entitled to see.
         var query = userService.TenantUsers()

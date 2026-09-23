@@ -2,6 +2,7 @@ namespace Backend.Features.Identity.Endpoints.Roles;
 
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// This endpoint that handles <c>GET /roles/{id}</c> to return a single role with its permission list and user count.
@@ -12,7 +13,7 @@ using Backend.Features.Identity.Core.Entities;
 /// name, not its permissions, not its existence - can be learned from this endpoint. A caller holding
 /// platform account reads any tenant's role by entering that tenant, which is how it reaches one at all.
 /// </remarks>
-sealed class RoleGetEndpoint(IRoleService roleService) : Endpoint<RoleGetRequest, RoleGetResponse>
+sealed class RoleGetEndpoint(IRoleService roleService, ITenantContext tenantContext) : Endpoint<RoleGetRequest, RoleGetResponse>
 {
     public override void Configure()
     {
@@ -27,9 +28,13 @@ sealed class RoleGetEndpoint(IRoleService roleService) : Endpoint<RoleGetRequest
         // tenant restriction and the missing-row case are one and the same code path: a role of another
         // tenant simply is not found, and falls into the 404 below without being distinguishable from a
         // role that never existed.
+        //
+        // Inside a tenant the user count leaves platform accounts out, as the tenant's user list does:
+        // a platform account holding the role there is nobody the tenant administers.
+        var includePlatformAccounts = tenantContext.IsPlatformScope();
         var entity = await roleService.Roles()
             .Include(x => x.RolePermissions)
-            .Include(x => x.UserRoles)
+            .Include(x => x.UserRoles.Where(assignment => includePlatformAccounts || !assignment.User.IsPlatform))
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
         if (entity == null)
         {

@@ -264,6 +264,14 @@ public class UserListTests(App app) : TenancyTestsBase(app)
         firstPage.Items.Select(item => item.Id).Should().Equal([inFirst.Id],
             "entering a tenant it belongs to puts the caller among that tenant's actors, on the role it holds there");
 
+        var (selfRsp, selfPage) = await Client
+            .GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
+                new() { Page = 1, PageSize = 100, Search = platformAccount.Username });
+
+        selfRsp.StatusCode.Should().Be(HttpStatusCode.OK);
+        selfPage.Total.Should().Be(0,
+            "a platform account is administered from platform scope only, so its membership of the tenant does not put it on the tenant's list");
+
         var (strangerRsp, strangerPage) = await Client
             .GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(
                 new() { Page = 1, PageSize = 100, Search = inSecond.Username });
