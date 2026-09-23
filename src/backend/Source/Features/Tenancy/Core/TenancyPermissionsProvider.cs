@@ -41,7 +41,7 @@ public class TenancyPermissionsProvider : IPermissionDefinitionProvider
         var tenantMembersPermissions = context.AddPermission("TenantMembers", "Tenant Members", PermissionScope.Both);
         tenantMembersPermissions.AddChild(Allow.TenantMember_View, "View");
         tenantMembersPermissions.AddChild(Allow.TenantMember_Add, "Add");
-        tenantMembersPermissions.AddChild(Allow.TenantMember_UpdateRoles, "UpdateRoles");
+        tenantMembersPermissions.AddChild(Allow.TenantMember_UpdateRoles, "Update Roles");
         tenantMembersPermissions.AddChild(Allow.TenantMember_Remove, "Remove");
 
         var editionsPermissions = context.AddPermission("Editions", "Editions", PermissionScope.Platform);

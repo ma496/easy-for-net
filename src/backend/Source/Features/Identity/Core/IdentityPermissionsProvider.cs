@@ -33,6 +33,6 @@ public class IdentityPermissionsProvider : IPermissionDefinitionProvider
         rolesPermissions.AddChild(Allow.Role_Create, "Create");
         rolesPermissions.AddChild(Allow.Role_Update, "Update");
         rolesPermissions.AddChild(Allow.Role_Delete, "Delete");
-        rolesPermissions.AddChild(Allow.Role_ChangePermissions, "ChangePermissions");
+        rolesPermissions.AddChild(Allow.Role_ChangePermissions, "Change Permissions");
     }
 }
