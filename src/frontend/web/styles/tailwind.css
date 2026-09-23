@@ -1662,8 +1662,11 @@ pre.hljs {
   @apply text-white hover:text-dark-light focus:shadow-none;
 }
 
+/* toasts grow with their text on one line, wrapping only when the viewport runs out */
 .swal2-container .swal2-popup.swal2-toast {
   @apply bg-dark px-5 py-2.5;
+  width: max-content !important;
+  max-width: calc(100vw - 2rem);
 }
 
 .swal2-popup.swal2-toast .swal2-title,
