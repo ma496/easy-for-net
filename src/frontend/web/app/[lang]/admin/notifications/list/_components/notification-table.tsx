@@ -288,23 +288,12 @@ export const NotificationTable = () => {
       setGlobalFilter={url.setGlobalFilter}
       isFetching={isGettingNotifications}
     >
-      {filtersOpen && (
-        <NotificationFilterPanel
-          filters={pendingFilters}
-          onChange={handleFilterChange}
-          onSearch={handleSearch}
-          onClear={handleClear}
-        />
-      )}
-
       <DataTableToolbar>
-        <div className="flex items-center gap-2">
-          <DataTableFilterButton
-            isOpen={filtersOpen}
-            onToggle={() => setFiltersOpen(!filtersOpen)}
-            activeFiltersCount={activeFiltersCount}
-          />
-        </div>
+        <DataTableFilterButton
+          isOpen={filtersOpen}
+          onToggle={() => setFiltersOpen(!filtersOpen)}
+          activeFiltersCount={activeFiltersCount}
+        />
 
         <DataTableToolbarButton
           label={t('notifications.markAllRead')}
@@ -314,6 +303,14 @@ export const NotificationTable = () => {
         />
       </DataTableToolbar>
 
+      {filtersOpen && (
+        <NotificationFilterPanel
+          filters={pendingFilters}
+          onChange={handleFilterChange}
+          onSearch={handleSearch}
+          onClear={handleClear}
+        />
+      )}
       <DataTable />
       <DataTablePagination siblingCount={1} />
     </DataTableProvider>
