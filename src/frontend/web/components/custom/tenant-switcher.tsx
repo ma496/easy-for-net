@@ -86,18 +86,19 @@ export const TenantSwitcher = ({ className = '' }: TenantSwitcherProps) => {
   const name = (
     <>
       <Building2 className="h-4 w-4 shrink-0" />
-      <span className="max-w-40 truncate font-semibold">{activeTenantName}</span>
+      {/* Below sm only the icon is shown; the name stays available as the control's title. */}
+      <span className="hidden max-w-40 truncate font-semibold sm:inline">{activeTenantName}</span>
     </>
   )
 
   return (
     <div className={cn('flex items-center gap-1', className)}>
       {canViewDetail && detailHref ? (
-        <LocalizedLink href={detailHref} className={tenantSwitcherVariants({ interactive: true })} title={t('page.tenants.switcher.viewDetail')}>
+        <LocalizedLink href={detailHref} className={tenantSwitcherVariants({ interactive: true })} title={`${activeTenantName} - ${t('page.tenants.switcher.viewDetail')}`}>
           {name}
         </LocalizedLink>
       ) : (
-        <div className={tenantSwitcherVariants({ interactive: false })} title={t('page.tenants.switcher.label')}>
+        <div className={tenantSwitcherVariants({ interactive: false })} title={`${t('page.tenants.switcher.label')}: ${activeTenantName}`}>
           {name}
         </div>
       )}
@@ -109,9 +110,12 @@ export const TenantSwitcher = ({ className = '' }: TenantSwitcherProps) => {
             placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`}
             isDisabled={isBusy}
             btnClassName={tenantSwitcherVariants({ interactive: true })}
+            // Below sm the trigger sits near the start of the header, so an end-anchored menu would run
+            // off screen; it spans the viewport under the header instead, as the notification panel does.
+            menuClassName="max-sm:fixed max-sm:inset-x-2 max-sm:top-14"
             button={isBusy ? <Loader size="sm" className="shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
           >
-            <ul className="w-64 py-0! font-semibold text-dark dark:text-white-light/90">
+            <ul className="w-full py-0! sm:w-64 font-semibold text-dark dark:text-white-light/90">
               <li className="border-b border-white-light px-4 py-2 text-xs font-semibold text-white-dark uppercase dark:border-white-light/10">{t('page.tenants.switcher.switchTo')}</li>
               {tenants.map((tenant) => (
                 <li key={tenant.id} className="flex items-center">

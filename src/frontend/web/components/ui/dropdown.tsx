@@ -10,6 +10,8 @@ interface DropdownProps {
   button: ReactNode
   children: ReactNode
   btnClassName?: string
+  /** Extra classes for the positioned menu wrapper, e.g. to re-anchor it on narrow screens. */
+  menuClassName?: string
   isDisabled?: boolean
 }
 
@@ -75,7 +77,7 @@ export const Dropdown = forwardRef<DropdownRef, DropdownProps>((props, ref) => {
         {props.button}
       </button>
       {visibility && (
-        <div className={`absolute z-10 ${getDropdownPosition()}`}>
+        <div className={cn('absolute z-10', getDropdownPosition(), props.menuClassName)}>
           <div className="rounded-md bg-white dark:bg-gray-800 dark:text-white">{props.children}</div>
         </div>
       )}
