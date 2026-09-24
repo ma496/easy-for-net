@@ -103,6 +103,26 @@ await featureChecker.CheckEnabledAsync(FeatureNames.Reporting_Export, ct);   // 
 var maxRows = await featureChecker.GetAsync(FeatureNames.Reporting_MaxRows, 1000, ct);
 ```
 
+A limit that is exceeded throws `FeatureLimitExceededException(name, limit)`. `ExceptionProcessor`
+answers it with 403 `featureLimitExceeded`, the numeric counterpart of `featureDisabled`:
+
+```csharp
+if (rows > maxRows)
+{
+    throw new FeatureLimitExceededException(FeatureNames.Reporting_MaxRows, maxRows);
+}
+```
+
+A limit on a count - accounts, projects, anything a tenant accumulates - is a read followed by a
+write, so two concurrent requests can both see room for one more. Check it while holding a lock on the
+tenant, inside the transaction that writes the new row. `Identity.MaxUserCount` shows how:
+`TenantMembershipService` checks it after `LockTenantAsync`, and a write path outside that service
+calls `ITenantMembershipService.ReserveSeatAsync` inside its own transaction. If the web app should
+show the limit before the user hits it, have one method compute both the count and the limit, as
+`ITenantMembershipService.GetSeatsAsync` does, and use it in the guard and in the endpoint the web
+app reads (`GET /users/seats`, `GET /tenants/{tenantId}/members/seats`), so the UI and the API cannot
+disagree.
+
 `IFeatureChecker` reads the tenant from `ITenantContext`, so it works in an endpoint or a service
 handling a request. Work that runs **outside** a request — a queued or scheduled job — has no scope and
 must use `IFeatureValueResolver.ResolveAsync(FeatureTarget.ForTenant(id), ct)`, naming the tenant it
@@ -135,5 +155,5 @@ minted with.
 - [ ] Constant in `FeatureNames.cs`
 - [ ] Definition in the slice's `<X>FeaturesProvider`, defaulting to enabled
 - [ ] Mirrored in `feature-names.ts` and `feature-names.test.ts`
-- [ ] Gated a permission with `RequireFeatures`, or called the checker
+- [ ] Gated a permission with `RequireFeatures`, or called the checker (a limit throws `FeatureLimitExceededException`)
 - [ ] Test covering both the enabled and the disabled case

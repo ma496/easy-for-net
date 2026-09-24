@@ -239,6 +239,7 @@
       "concurrentModification": "Cet enregistrement a été modifié par quelqu'un d'autre. Rechargez et réessayez.",
       "userSharedAcrossTenants": "Cet utilisateur appartient à d'autres locataires et ne peut être modifié que par un administrateur de la plateforme",
       "featureDisabled": "Votre offre n’inclut pas cette fonctionnalité.",
+      "featureLimitExceeded": "La limite de votre offre pour cela a été atteinte.",
       "featureNotFound": "Cette fonctionnalité n’existe pas.",
       "invalidFeatureValue": "Cette valeur n’est pas autorisée pour cette fonctionnalité.",
       "featureProviderNotAllowed": "Cette fonctionnalité ne peut pas être définie ici.",
@@ -306,7 +307,7 @@
     "upload": "Téléchargement de fichier",
     "deleteTitle": "Supprimer le fichier",
     "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce fichier ?",
-    "tooLarge": "Fichier trop volumineux"
+    "tooLarge": "Fichier trop volumineux. Vous ne pouvez téléverser que des fichiers jusqu’à ${max} Mo."
   },
   "page": {
     "home": {
@@ -386,6 +387,7 @@
       "deleteTitle": "Supprimer l'utilisateur",
       "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cet utilisateur ?",
       "deleteSuccess": "Utilisateur supprimé avec succès",
+      "seatLimitReached": "La limite d’utilisateurs de votre offre a été atteinte",
       "create": {
         "title": "Créer un utilisateur"
       },
@@ -553,6 +555,7 @@
         "addTitle": "Ajouter un membre",
         "addButton": "Ajouter un membre",
         "addSuccess": "Membre ajouté avec succès",
+        "seatLimitReached": "La limite d’utilisateurs de l’offre de ce locataire a été atteinte",
         "rolesTitle": "Modifier les rôles du membre",
         "rolesButton": "Modifier les rôles",
         "rolesSuccess": "Rôles du membre mis à jour avec succès",

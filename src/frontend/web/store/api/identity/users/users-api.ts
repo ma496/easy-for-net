@@ -8,6 +8,7 @@ import {
   UserGetResponse,
   UserListRequest,
   UserListResponse,
+  UserSeatsResponse,
   UserUpdateRequest,
   UserUpdateResponse
 } from './users-dtos'
@@ -72,7 +73,16 @@ export const usersApi = appApi
         }),
         providesTags: (result) => ['Users', ...(result?.items?.map((item) => ({ type: 'Users' as const, id: item.id })) ?? [])],
       }),
+      // Tagged 'Users' so every mutation that adds or removes an account - here and on the tenant
+      // members API - refreshes the count along with the list.
+      userSeats: builder.query<UserSeatsResponse, void>({
+        query: () => ({
+          url: '/users/seats',
+          method: 'GET',
+        }),
+        providesTags: ['Users'],
+      }),
     }),
   })
 
-export const { useUserCreateMutation, useUserUpdateMutation, useUserDeleteMutation, useUserGetQuery, useLazyUserGetQuery, useUserListQuery, useLazyUserListQuery } = usersApi
+export const { useUserCreateMutation, useUserUpdateMutation, useUserDeleteMutation, useUserGetQuery, useLazyUserGetQuery, useUserListQuery, useLazyUserListQuery, useUserSeatsQuery } = usersApi

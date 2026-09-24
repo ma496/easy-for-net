@@ -2,6 +2,7 @@ namespace Backend.Features.FileManagement.Endpoints.Files;
 
 using Backend.Features.FileManagement.Core;
 using Backend.Features.Tenancy.Core;
+using Backend.Features.Tenancy.Core.FeatureManagement;
 
 /// <summary>
 /// This endpoint exposes a POST operation accepting a multipart file upload and
@@ -19,8 +20,17 @@ using Backend.Features.Tenancy.Core;
 /// upload is instead refused here with <see cref="ErrorCodes.NoActiveTenant"/> when no tenant is
 /// active, before the content is read, so a refused upload stores nothing.
 /// </para>
+/// <para>
+/// Every upload made while acting in a tenant - account-owned ones included - is held to that
+/// tenant's plan: refused with <see cref="ErrorCodes.FeatureDisabled"/> when the plan does not include
+/// file storage, and with <see cref="ErrorCodes.FeatureLimitExceeded"/> when the file is larger than
+/// its <c>FileManagement.MaxFileSizeMb</c> allows. An upload made in platform scope is inside nobody's
+/// plan and is held only to the deployment's own payload limit, which caps every upload in any case.
+/// </para>
 /// </remarks>
-sealed class FileUploadEndpoint(IFileService fileService, ITenantContext tenantContext) : Endpoint<FileUploadRequest, FileUploadResponse>
+sealed class FileUploadEndpoint(IFileService fileService,
+                                ITenantContext tenantContext,
+                                IFeatureChecker featureChecker) : Endpoint<FileUploadRequest, FileUploadResponse>
 {
     /// <summary>
     /// The refusal reported for a tenant-scoped upload made with no tenant active. A file attributed
@@ -28,6 +38,11 @@ sealed class FileUploadEndpoint(IFileService fileService, ITenantContext tenantC
     /// so the upload is refused rather than stored unattributed.
     /// </summary>
     private const string NoActiveTenantMessage = "A tenant-scoped file can only be uploaded while acting in a tenant";
+
+    /// <summary>
+    /// The unit <c>FileManagement.MaxFileSizeMb</c> is stated in.
+    /// </summary>
+    private const long BytesPerMegabyte = 1024 * 1024;
 
     public override void Configure()
     {
@@ -43,6 +58,17 @@ sealed class FileUploadEndpoint(IFileService fileService, ITenantContext tenantC
         if (!req.AccountOwned && !HasActiveTenant())
         {
             ThrowError(NoActiveTenantMessage, ErrorCodes.NoActiveTenant);
+        }
+
+        if (HasActiveTenant())
+        {
+            await featureChecker.CheckEnabledAsync(FeatureNames.FileManagement_Enabled, ct);
+
+            var maxFileSizeMb = await featureChecker.GetAsync(FeatureNames.FileManagement_MaxFileSizeMb, long.MaxValue / BytesPerMegabyte, ct);
+            if (req.File!.Length > maxFileSizeMb * BytesPerMegabyte)
+            {
+                throw new FeatureLimitExceededException(FeatureNames.FileManagement_MaxFileSizeMb, maxFileSizeMb);
+            }
         }
 
         await using var stream = req.File!.OpenReadStream();

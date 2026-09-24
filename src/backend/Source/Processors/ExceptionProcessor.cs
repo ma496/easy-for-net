@@ -82,6 +82,42 @@ public class ExceptionProcessor(IWebHostEnvironment env, ILogger<ExceptionProces
             return;
         }
 
+        // A numeric limit is the same kind of answer as a disabled feature - the plan does not cover
+        // this - so it is reported the same way, under its own code.
+        if (context.ExceptionDispatchInfo.SourceException is FeatureLimitExceededException limitExceeded)
+        {
+            context.MarkExceptionAsHandled();
+
+            logger.LogInformation("Feature limit {Feature} ({Limit}) reached for {Method} {Path}",
+                                  limitExceeded.FeatureName,
+                                  limitExceeded.Limit,
+                                  context.HttpContext.Request.Method,
+                                  context.HttpContext.Request.Path);
+            context.HttpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
+            context.HttpContext.Response.ContentType = "application/json";
+            var limitResponse = new
+            {
+                type = "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.3",
+                title = "Feature Limit Exceeded",
+                status = 403,
+                instance = context.HttpContext.Request.Path.Value,
+                traceId = context.HttpContext.TraceIdentifier,
+                errors = new[]
+                {
+                    new
+                    {
+                        name = limitExceeded.FeatureName,
+                        reason = limitExceeded.Message,
+                        code = ErrorCodes.FeatureLimitExceeded
+                    }
+                }
+            };
+
+            await context.HttpContext.Response.WriteAsJsonAsync(limitResponse, cancellationToken: ct);
+
+            return;
+        }
+
         if (typeof(Exception).IsAssignableFrom(context.ExceptionDispatchInfo.SourceException.GetType()))
         {
             context.MarkExceptionAsHandled(); //only if handling the exception here.

@@ -49,6 +49,7 @@ public static class ErrorCodes
     public const string ConcurrentModification = "concurrentModification";
     public const string UserSharedAcrossTenants = "userSharedAcrossTenants";
     public const string FeatureDisabled = "featureDisabled";
+    public const string FeatureLimitExceeded = "featureLimitExceeded";
     public const string FeatureNotFound = "featureNotFound";
     public const string InvalidFeatureValue = "invalidFeatureValue";
     public const string FeatureProviderNotAllowed = "featureProviderNotAllowed";

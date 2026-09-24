@@ -18,6 +18,8 @@ import {
   TenantMemberListResponse,
   TenantMemberRemoveRequest,
   TenantMemberRemoveResponse,
+  TenantMemberSeatsRequest,
+  TenantMemberSeatsResponse,
   TenantMemberUpdateRolesRequest,
   TenantMemberUpdateRolesResponse,
   TenantReactivateRequest,
@@ -161,6 +163,15 @@ export const tenantsApi = appApi
         // addresses the member, so the row tag and the invalidation line up.
         providesTags: (result) => ['TenantMembers', ...(result?.items?.map((item) => ({ type: 'TenantMembers' as const, id: item.id })) ?? [])],
       }),
+      // Tagged with both member and user tags, so adding or removing a member here and creating or
+      // deleting a user on the users screen all refresh the count.
+      tenantMemberSeats: builder.query<TenantMemberSeatsResponse, TenantMemberSeatsRequest>({
+        query: ({ tenantId }) => ({
+          url: `/tenants/${tenantId}/members/seats`,
+          method: 'GET',
+        }),
+        providesTags: ['TenantMembers', 'Users'],
+      }),
       tenantMemberAdd: builder.mutation<TenantMemberAddResponse, TenantMemberAddRequest>({
         query: (input) => ({
           url: `/tenants/${input.tenantId}/members`,
@@ -230,6 +241,7 @@ export const {
   useTenantReactivateMutation,
   useTenantDeleteMutation,
   useTenantMemberListQuery,
+  useTenantMemberSeatsQuery,
   useLazyTenantMemberListQuery,
   useTenantMemberAddMutation,
   useTenantMemberUpdateRolesMutation,

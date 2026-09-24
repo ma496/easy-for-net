@@ -2,7 +2,8 @@
 
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Upload, Trash2 } from 'lucide-react'
-import { apiErrorAlert, cn, confirmDeleteAlert, errorAlert } from '@/lib/utils'
+import { apiErrorAlert, cn, confirmDeleteAlert, effectiveMaxUploadBytes, errorAlert, formatMegabytes } from '@/lib/utils'
+import { usePlanMaxUploadBytes } from '@/hooks'
 import { Button, type ButtonProps, IconButton } from '..'
 import { useFileUploadMutation, useFileDeleteMutation, useLazyFileGetQuery, FileUploadResponse } from '@/store/api/file-management'
 import { useTranslation } from '@/i18n'
@@ -91,6 +92,8 @@ export const FileUpload = ({
   const [deleteFileTrigger, { isLoading: isDeleting }] = useFileDeleteMutation()
   const [lazyFileGet] = useLazyFileGetQuery()
   const lastFileNameRef = useRef<string | undefined>(undefined)
+  // The stricter of the prop and the caller's plan, so a file the API would refuse is refused here first.
+  const maxBytes = effectiveMaxUploadBytes(maxSizeBytes, usePlanMaxUploadBytes())
   const resolvedIcon = useMemo(() => icon ?? <Upload className="h-4 w-4" />, [icon])
   const hasCurrent = useMemo(() => !!selectedFileName || (forceDelete && !!(fileName ?? response?.fileName)), [selectedFileName, forceDelete, fileName, response])
 
@@ -103,10 +106,10 @@ export const FileUpload = ({
       const file = e.target.files?.[0]
       if (!file) return
 
-      if (maxSizeBytes && file.size > maxSizeBytes) {
+      if (maxBytes && file.size > maxBytes) {
         const err = new Error('File exceeds size limit')
         if (showError) {
-          errorAlert({ text: t('file.tooLarge') })
+          errorAlert({ text: t('file.tooLarge', { max: formatMegabytes(maxBytes) }) })
         }
         onError?.(err)
         e.target.value = ''
@@ -148,7 +151,7 @@ export const FileUpload = ({
         inputRef.current.value = ''
       }
     },
-    [uploadFile, onUploaded, onError, selectedFileUrl, maxSizeBytes, validateFile, forceDelete, accountOwned, fileName, response, deleteFileTrigger, t, showError],
+    [uploadFile, onUploaded, onError, selectedFileUrl, maxBytes, validateFile, forceDelete, accountOwned, fileName, response, deleteFileTrigger, t, showError],
   )
 
   const deleteFile = useCallback(async () => {

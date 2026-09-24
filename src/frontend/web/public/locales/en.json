@@ -239,6 +239,7 @@
       "concurrentModification": "This record was changed by someone else. Reload and try again.",
       "userSharedAcrossTenants": "This user belongs to other tenants and can only be changed by a platform administrator",
       "featureDisabled": "Your plan does not include this feature.",
+      "featureLimitExceeded": "Your plan's limit for this has been reached.",
       "featureNotFound": "That feature does not exist.",
       "invalidFeatureValue": "That value is not allowed for this feature.",
       "featureProviderNotAllowed": "This feature cannot be set here.",
@@ -306,7 +307,7 @@
     "upload": "File Upload",
     "deleteTitle": "Delete File",
     "deleteConfirm": "Are you sure you want to delete this file?",
-    "tooLarge": "File is too large"
+    "tooLarge": "File is too large. You can only upload files up to ${max} MB."
   },
   "page": {
     "home": {
@@ -386,6 +387,7 @@
       "deleteTitle": "Delete User",
       "deleteConfirm": "Are you sure you want to delete this user?",
       "deleteSuccess": "User deleted successfully",
+      "seatLimitReached": "Your plan's user limit has been reached",
       "create": {
         "title": "Create User"
       },
@@ -553,6 +555,7 @@
         "addTitle": "Add Member",
         "addButton": "Add Member",
         "addSuccess": "Member added successfully",
+        "seatLimitReached": "This tenant's plan user limit has been reached",
         "rolesTitle": "Change Member Roles",
         "rolesButton": "Change Roles",
         "rolesSuccess": "Member roles updated successfully",

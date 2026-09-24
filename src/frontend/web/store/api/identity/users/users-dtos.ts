@@ -88,3 +88,9 @@ export interface UserUpdateResponse extends BaseDto<string> {
   isActive: boolean
   roles: string[]
 }
+
+/** Response from the seats endpoint: how many accounts the tenant holds, and how many its plan allows (`null` when no limit applies). */
+export interface UserSeatsResponse {
+  used: number
+  limit: number | null
+}

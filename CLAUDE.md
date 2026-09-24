@@ -117,6 +117,19 @@ a removal. And an endpoint gated on a feature alone, with no permission to hang 
 "permissions are the only authorization input" stays true: entitlement is a business precondition, and
 it answers 403 `featureDisabled` through `ExceptionProcessor`.
 
+A numeric feature is a **limit**, and exceeding one throws `FeatureLimitExceededException`, which
+`ExceptionProcessor` answers with 403 `featureLimitExceeded`. Two are enforced. `Identity.MaxUserCount`
+is checked in `TenantMembershipService` under the tenant row lock, so concurrent additions cannot both
+take the last seat: `AddAsync` checks it for every membership, and `UserCreateEndpoint` calls
+`ReserveSeatAsync` inside the same transaction as the account it creates. `GetSeatsAsync` is the one
+reading of seats taken and seats allowed; platform accounts take none. The guard enforces it, and
+`GET /users/seats` (the acting tenant) and `GET /tenants/{tenantId}/members/seats` (the route tenant)
+report it, so the web app disables its create and add-member buttons exactly when the API would refuse. `FileUploadEndpoint` holds every upload
+made inside a tenant, account-owned ones included, to `FileManagement.Enabled` and
+`FileManagement.MaxFileSizeMb`; an upload in platform scope answers to `Payload:MaximumSize` alone.
+On the web, `FileUpload` and `MultiFileUpload` apply the stricter of their `maxSizeBytes` and
+`usePlanMaxUploadBytes()`.
+
 **Data access.** `AppDbContext` applies entity configurations from the assembly, installs a global soft-delete query filter for `ISoftDelete`, and fills audit/normalized properties on save. List endpoints take a `ListRequestDto<TId>` and call `IQueryableExtension.Process(request)` for sorting/paging; sortable fields must be whitelisted in the request validator.
 
 **Auth.** A `Jwt_Or_Cookie` policy scheme picks JWT bearer when an `Authorization: Bearer` header is present, cookies otherwise. Roles, permissions and the tenant are decided once, when a token is minted (sign-in, refresh, tenant switch/exit), and trusted until that token is replaced — no request re-reads them, and `TenantContextProcessor` establishes the tenant from the `tenant_id` claim alone. A change to what a caller may do therefore takes effect at their next token renewal, which `Auth:AccessTokenValidity` bounds for cookie and bearer clients alike — the auth cookie is configured with `SlidingExpiration = false` precisely so a browser session expires on that clock and is forced through the refresh rather than being re-issued with the ticket it already had. The refresh path is the one place a live session is re-examined: `TokenService.SetRenewalPrivilegesAsync` refuses a deactivated account and drops a tenant that has been suspended, deleted or left, renewing the session without one rather than ending it. Sign-in puts an ordinary account into exactly one tenant — its single active membership, or the `TenantIdentifier` it supplies — and refuses with `tenantRequired` otherwise; a platform account signs in with no tenant unless it names one. Every tenant a session enters — at sign-in, on `POST /tenants/switch` and at refresh — needs a live membership of it, whatever the account's tier; a platform account returns to platform scope through `POST /tenants/exit`. Refresh tokens and forgot-password tokens are cleaned by Hangfire recurring jobs registered at the end of `Program.cs`.

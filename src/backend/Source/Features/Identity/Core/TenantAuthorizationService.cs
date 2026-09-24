@@ -165,6 +165,22 @@ public interface ITenantAuthorizationService
     Task<Dictionary<Guid, int>> GetTenantMemberCountsAsync(IReadOnlyCollection<Guid> tenantIds, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Counts the seats a tenant has taken: the accounts that still exist, hold a live membership of
+    /// the tenant, and are not platform accounts. This is the one reading the tenant's
+    /// <c>Identity.MaxUserCount</c> limit is enforced and reported against.
+    /// </summary>
+    /// <param name="tenantId">The tenant whose seats are counted.</param>
+    /// <param name="cancellationToken">Token used to cancel the read.</param>
+    /// <returns>The number of seats in use.</returns>
+    /// <remarks>
+    /// A platform account holding a membership takes no seat: it is administered from platform scope
+    /// alone, a tenant's own administrators never see it, and a seat they could not see being used
+    /// would be one they could never free. A deactivated account still takes its seat, because it
+    /// still holds its membership and can be reactivated without anybody's leave.
+    /// </remarks>
+    Task<int> CountTenantSeatsAsync(Guid tenantId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Tells whether every role named belongs to one tenant, so that a request assigning a role of
     /// another tenant - or a role that belongs to none - is refused before anything is written. An
     /// empty set belongs to every tenant trivially.
@@ -446,6 +462,23 @@ public class TenantAuthorizationService(AppDbContext dbContext,
             .ToListAsync(cancellationToken);
 
         return counts.ToDictionary(row => row.TenantId!.Value, row => row.Count);
+    }
+
+    /// <inheritdoc />
+    public async Task<int> CountTenantSeatsAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        // Counted from the accounts rather than the membership rows, for the reason
+        // GetTenantMemberCountsAsync gives: a deleted account leaves its membership row behind.
+        var memberships = dbContext.TenantMemberships
+            .AsNoTracking()
+            .AcrossAllTenants()
+            .Where(membership => membership.TenantId == tenantId);
+
+        return await dbContext.Users
+            .AsNoTracking()
+            .CountAsync(account => !account.IsPlatform
+                                   && memberships.Any(membership => membership.UserId == account.Id),
+                cancellationToken);
     }
 
     /// <inheritdoc />

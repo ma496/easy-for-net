@@ -1,7 +1,8 @@
 'use client'
 import React, { useId, useState, useCallback, useEffect } from 'react'
 import { Plus, Trash2, Loader2, Pencil } from 'lucide-react'
-import { apiErrorAlert, cn, confirmDeleteAlert } from '@/lib/utils'
+import { apiErrorAlert, cn, confirmDeleteAlert, effectiveMaxUploadBytes, errorAlert, formatMegabytes } from '@/lib/utils'
+import { usePlanMaxUploadBytes } from '@/hooks'
 import { useTranslation } from '@/i18n'
 import { IconButton } from '..'
 import { useFileUploadMutation, useLazyFileGetQuery, useFileDeleteMutation } from '@/store/api/file-management'
@@ -32,6 +33,8 @@ export const MultiFileUpload = ({
   forceDelete = true,
 }: MultiFileUploadProps) => {
   const { t } = useTranslation()
+  // The stricter of the prop and the caller's plan, so a file the API would refuse is refused here first.
+  const maxBytes = effectiveMaxUploadBytes(maxSizeBytes, usePlanMaxUploadBytes()) ?? maxSizeBytes
   const inputId = useId()
   const [uploadFile, { isLoading: isUploading }] = useFileUploadMutation()
   const [deleteFile] = useFileDeleteMutation()
@@ -91,7 +94,8 @@ export const MultiFileUpload = ({
 
     const newFileNames = [...fileNames]
     for (const file of files) {
-      if (file.size > maxSizeBytes) {
+      if (file.size > maxBytes) {
+        errorAlert({ text: t('file.tooLarge', { max: formatMegabytes(maxBytes) }) })
         continue
       }
 
@@ -121,7 +125,9 @@ export const MultiFileUpload = ({
     const file = e.target.files?.[0]
     if (!file || replacingIndex === null) return
 
-    if (file.size > maxSizeBytes) {
+    if (file.size > maxBytes) {
+      errorAlert({ text: t('file.tooLarge', { max: formatMegabytes(maxBytes) }) })
+      e.target.value = ''
       return
     }
 

@@ -239,6 +239,7 @@
       "concurrentModification": "Otra persona modificó este registro. Recargue e inténtelo de nuevo.",
       "userSharedAcrossTenants": "Este usuario pertenece a otros inquilinos y solo puede ser modificado por un administrador de la plataforma",
       "featureDisabled": "Su plan no incluye esta función.",
+      "featureLimitExceeded": "Se ha alcanzado el límite de su plan para esto.",
       "featureNotFound": "Esa función no existe.",
       "invalidFeatureValue": "Ese valor no está permitido para esta función.",
       "featureProviderNotAllowed": "Esta función no se puede definir aquí.",
@@ -306,7 +307,7 @@
     "upload": "Subir Archivo",
     "deleteTitle": "Eliminar Archivo",
     "deleteConfirm": "¿Está seguro de que desea eliminar este archivo?",
-    "tooLarge": "El archivo es demasiado grande"
+    "tooLarge": "El archivo es demasiado grande. Solo puede subir archivos de hasta ${max} MB."
   },
   "page": {
     "home": {
@@ -386,6 +387,7 @@
       "deleteTitle": "Eliminar Usuario",
       "deleteConfirm": "¿Está seguro de que desea eliminar este usuario?",
       "deleteSuccess": "Usuario eliminado exitosamente",
+      "seatLimitReached": "Se ha alcanzado el límite de usuarios de su plan",
       "create": {
         "title": "Crear usuario"
       },
@@ -553,6 +555,7 @@
         "addTitle": "Agregar miembro",
         "addButton": "Agregar miembro",
         "addSuccess": "Miembro agregado exitosamente",
+        "seatLimitReached": "Se ha alcanzado el límite de usuarios del plan de este inquilino",
         "rolesTitle": "Cambiar roles del miembro",
         "rolesButton": "Cambiar roles",
         "rolesSuccess": "Roles del miembro actualizados exitosamente",

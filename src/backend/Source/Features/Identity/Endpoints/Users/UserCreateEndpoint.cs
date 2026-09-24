@@ -13,9 +13,12 @@ using Backend.Features.Tenancy.Core;
 /// A caller acting in no tenant runs in platform scope: the account is created as a platform account
 /// with no membership, and the roles it may start with are the platform roles - the ones belonging to
 /// no tenant. Created from inside a tenant - by a platform account that has entered one just as by that
-/// tenant's own administrator - it is an ordinary account of that tenant instead.
+/// tenant's own administrator - it is an ordinary account of that tenant instead, and takes one of the
+/// seats the tenant's <c>Identity.MaxUserCount</c> limit allows: once every seat is taken the account
+/// is refused with <see cref="ErrorCodes.FeatureLimitExceeded"/>.
 /// </remarks>
 sealed class UserCreateEndpoint(IUserService userService,
+                                ITenantMembershipService tenantMembershipService,
                                 ITenantContext tenantContext,
                                 AppDbContext dbContext) : Endpoint<UserCreateRequest, UserCreateResponse>
 {
@@ -76,7 +79,22 @@ sealed class UserCreateEndpoint(IUserService userService,
         // the active tenant rather than from anything the caller sent, so the request cannot name the
         // tenant the new account lands in. Only a platform administrator reaches this with no tenant
         // established, and then the account joins none.
-        await userService.CreateAsync(entity, request.Password);
+        if (tenantContext.CurrentTenantId is { } tenantId)
+        {
+            // The seat is reserved and the membership written in one transaction, because the tenant
+            // lock the reservation takes is what stops a concurrent addition taking the same last seat,
+            // and it lasts only as long as the transaction does. Asked after the field checks above, so
+            // a request that is wrong anyway is told what is wrong with it rather than that it is full.
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await tenantMembershipService.ReserveSeatAsync(tenantId, cancellationToken);
+            await userService.CreateAsync(entity, request.Password);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        else
+        {
+            await userService.CreateAsync(entity, request.Password);
+        }
+
         var responseMapper = new UserCreateResponseMapper();
         await Send.ResponseAsync(responseMapper.Map(entity), cancellation: cancellationToken);
     }

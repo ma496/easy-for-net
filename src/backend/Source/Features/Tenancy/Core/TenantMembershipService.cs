@@ -1,8 +1,9 @@
 namespace Backend.Features.Tenancy.Core;
 
-using Backend.ShareData.Entities;
+using System.Globalization;
 using Backend.Features.Identity.Core;
 using Backend.Features.Tenancy.Core.Entities;
+using Backend.Features.Tenancy.Core.FeatureManagement;
 
 /// <summary>
 /// Owns who belongs to a tenant: whether an account holds a membership there, and the three changes
@@ -100,7 +101,41 @@ public interface ITenantMembershipService
     /// the ones supplied. For every later member the set is taken exactly as given.
     /// </para>
     /// </remarks>
+    /// <para>
+    /// The tenant's <c>Identity.MaxUserCount</c> limit is enforced here, inside the tenant lock, so two
+    /// accounts joining at the same moment cannot both take the last seat. An account that would take
+    /// the tenant past its limit is refused with <see cref="FeatureLimitExceededException"/> and nothing
+    /// is written. A platform account takes no seat and is never refused on this ground.
+    /// </para>
     Task<TenantMembershipAddResult> AddAsync(Guid tenantId, Guid userId, IReadOnlyCollection<Guid> roleIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Reserves a seat in a tenant for an ordinary account whose membership the caller is about to
+    /// write itself: the tenant is locked, and the request is refused with
+    /// <see cref="FeatureLimitExceededException"/> when the tenant already holds as many accounts as its
+    /// <c>Identity.MaxUserCount</c> limit allows.
+    /// </summary>
+    /// <param name="tenantId">The tenant a seat is wanted in.</param>
+    /// <param name="cancellationToken">Token used to cancel the reads.</param>
+    /// <remarks>
+    /// This is for the one write path that does not go through <see cref="AddAsync"/> - an account
+    /// created from inside a tenant, whose membership is saved together with the account. It must be
+    /// called inside a transaction the caller has opened and that also writes that membership: the lock
+    /// lasts until the transaction ends, and it is only the lock that stops a concurrent addition
+    /// taking the seat counted here. Called outside a transaction, the check would still run but would
+    /// guard nothing.
+    /// </remarks>
+    Task ReserveSeatAsync(Guid tenantId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Reports how many seats a tenant has taken and how many its <c>Identity.MaxUserCount</c> limit
+    /// allows - the same reading <see cref="AddAsync"/> and <see cref="ReserveSeatAsync"/> enforce, so
+    /// a screen showing it and the refusal it predicts cannot disagree.
+    /// </summary>
+    /// <param name="tenantId">The tenant being asked about.</param>
+    /// <param name="cancellationToken">Token used to cancel the reads.</param>
+    /// <returns>The seats taken, and the limit, or <see langword="null"/> when none applies.</returns>
+    Task<TenantSeats> GetSeatsAsync(Guid tenantId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Replaces a member's roles inside one tenant with exactly the set supplied, unless doing so
@@ -168,7 +203,8 @@ public interface ITenantMembershipService
 [NoDirectUse]
 public class TenantMembershipService(AppDbContext dbContext,
                                      ITenantAuthorizationService tenantAuthorizationService,
-                                     ITenantContext tenantContext) : ITenantMembershipService
+                                     ITenantContext tenantContext,
+                                     IFeatureValueResolver featureValueResolver) : ITenantMembershipService
 {
     /// <summary>
     /// Excludes nobody from the last-administrator count. Replacing a member's roles has to count
@@ -198,6 +234,12 @@ public class TenantMembershipService(AppDbContext dbContext,
         // Every membership change of a tenant is serialized against the tenant's own row, so two
         // accounts joining an empty tenant at the same moment cannot both be its first member.
         await LockTenantAsync(tenantId, cancellationToken);
+
+        // Counted inside the lock, so the seats counted cannot change before this membership is saved.
+        if (!await tenantAuthorizationService.IsPlatformAccountAsync(userId, cancellationToken))
+        {
+            await EnsureSeatAvailableAsync(tenantId, cancellationToken);
+        }
 
         // Asked inside the lock and before the new row exists, so "the tenant has no member" describes
         // the tenant as it stands rather than a state this very membership has already ended.
@@ -235,6 +277,32 @@ public class TenantMembershipService(AppDbContext dbContext,
         await transaction.CommitAsync(cancellationToken);
 
         return new TenantMembershipAddResult { Membership = membership, RoleIds = grantedRoleIds };
+    }
+
+    /// <inheritdoc />
+    public async Task ReserveSeatAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        await LockTenantAsync(tenantId, cancellationToken);
+        await EnsureSeatAvailableAsync(tenantId, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<TenantSeats> GetSeatsAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        // A value that will not read as a positive number imposes no limit: the management screen
+        // validates what it stores, so such a value is a mistake someone made, and refusing every new
+        // account over it would be the wrong way to find out.
+        var values = await featureValueResolver.ResolveAsync(FeatureTarget.ForTenant(tenantId), cancellationToken);
+        long? limit = long.TryParse(values.GetOrNull(FeatureNames.Identity_MaxUserCount), NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed)
+                      && parsed > 0
+            ? parsed
+            : null;
+
+        return new TenantSeats
+        {
+            Used = await tenantAuthorizationService.CountTenantSeatsAsync(tenantId, cancellationToken),
+            Limit = limit
+        };
     }
 
     /// <inheritdoc />
@@ -334,6 +402,27 @@ public class TenantMembershipService(AppDbContext dbContext,
             .Where(membership => membership.TenantId == tenantId);
 
     /// <summary>
+    /// Refuses when the tenant already holds as many accounts as its plan allows. The limit is resolved
+    /// for the tenant named rather than for the one the request acts in, because a platform
+    /// administrator adds members to a tenant their session is not in - and the limit is a fact about
+    /// the tenant, so it binds that administrator exactly as it binds the tenant's own.
+    /// </summary>
+    /// <param name="tenantId">The tenant a seat is wanted in.</param>
+    /// <param name="cancellationToken">Token used to cancel the reads.</param>
+    /// <exception cref="FeatureLimitExceededException">Every seat is taken.</exception>
+    /// <remarks>
+    /// Call it only with the tenant locked, so the seats counted cannot change before the caller writes.
+    /// </remarks>
+    private async Task EnsureSeatAvailableAsync(Guid tenantId, CancellationToken cancellationToken)
+    {
+        var seats = await GetSeatsAsync(tenantId, cancellationToken);
+        if (seats.IsFull)
+        {
+            throw new FeatureLimitExceededException(FeatureNames.Identity_MaxUserCount, seats.Limit!.Value);
+        }
+    }
+
+    /// <summary>
     /// Takes an exclusive lock on the tenant's own row for the rest of the transaction in progress, so
     /// that the membership changes of one tenant happen one at a time.
     /// </summary>
@@ -405,4 +494,27 @@ public sealed class TenantMembershipAddResult
     /// Gets the roles the new member holds in the tenant, without duplicates.
     /// </summary>
     public List<Guid> RoleIds { get; init; } = [];
+}
+
+/// <summary>
+/// The seats a tenant has taken and the number its plan allows, as
+/// <see cref="ITenantMembershipService.GetSeatsAsync"/> reports them.
+/// </summary>
+[AllowOutside]
+public sealed class TenantSeats
+{
+    /// <summary>
+    /// Gets the number of accounts holding a seat. Platform accounts take none.
+    /// </summary>
+    public int Used { get; init; }
+
+    /// <summary>
+    /// Gets the number of seats the plan allows, or <see langword="null"/> when no limit applies.
+    /// </summary>
+    public long? Limit { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether every seat the plan allows is taken, so another account would be refused.
+    /// </summary>
+    public bool IsFull => Limit is { } limit && Used >= limit;
 }

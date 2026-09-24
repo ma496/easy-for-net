@@ -3,6 +3,7 @@ import { useState } from 'react'
 import {
   useTenantMemberListQuery,
   useTenantMemberRemoveMutation,
+  useTenantMemberSeatsQuery,
   TenantMemberListDto,
   TenantMemberRoleDto,
 } from '@/store/api/tenancy'
@@ -58,6 +59,11 @@ export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
   const canAdd = isAllowed(authState, [Allow.TenantMember_Add])
   const canUpdateRoles = isAllowed(authState, [Allow.TenantMember_UpdateRoles])
   const canRemove = isAllowed(authState, [Allow.TenantMember_Remove])
+
+  // The tenant's seat limit, counted exactly as the API enforces it. Once every seat is taken the add
+  // action stays visible but disabled, so the limit is explained rather than hidden.
+  const { data: seats } = useTenantMemberSeatsQuery({ tenantId })
+  const seatsExhausted = seats?.limit != null && seats.used >= seats.limit
 
   const handleRemove = async (member: TenantMemberListDto) => {
     const result = await confirmDeleteAlert({
@@ -169,9 +175,12 @@ export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
         isFetching={isGettingMembers}
       >
         <DataTableToolbar>
-          {canAdd && (
-            <DataTableToolbarButton label={t('page.tenants.members.addButton')} icon={<Plus size={16} />} onClick={() => setIsAddOpen(true)} />
-          )}
+          {canAdd &&
+            (seatsExhausted ? (
+              <DataTableToolbarButton label={t('page.tenants.members.seatLimitReached')} icon={<Plus size={16} />} disabled />
+            ) : (
+              <DataTableToolbarButton label={t('page.tenants.members.addButton')} icon={<Plus size={16} />} onClick={() => setIsAddOpen(true)} />
+            ))}
         </DataTableToolbar>
 
         <DataTable />

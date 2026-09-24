@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { useUserListQuery, useLazyUserListQuery, useUserDeleteMutation, UserListDto, UserRoleDto } from '@/store/api/identity'
+import { useUserListQuery, useLazyUserListQuery, useUserDeleteMutation, useUserSeatsQuery, UserListDto, UserRoleDto } from '@/store/api/identity'
 import { SortDirection } from '@/store/api'
 import { Trash2, Plus, Pencil } from 'lucide-react'
 import { useTranslation } from '@/i18n'
@@ -85,6 +85,11 @@ export const UserTable = () => {
   const canCreate = isAllowed(authState, [Allow.User_Create])
   const canUpdate = isAllowed(authState, [Allow.User_Update])
   const canDelete = isAllowed(authState, [Allow.User_Delete])
+
+  // The plan's seat limit, counted exactly as the API enforces it. Once every seat is taken the
+  // create action stays visible but disabled, so the limit is explained rather than hidden.
+  const { data: seats } = useUserSeatsQuery()
+  const seatsExhausted = seats?.limit != null && seats.used >= seats.limit
 
   const handleSearch = () => {
     url.filters.setMany({
@@ -263,9 +268,12 @@ export const UserTable = () => {
           activeFiltersCount={activeFiltersCount}
         />
 
-        {canCreate && (
-          <DataTableToolbarButton label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/users/create" />
-        )}
+        {canCreate &&
+          (seatsExhausted ? (
+            <DataTableToolbarButton label={t('page.users.seatLimitReached')} icon={<Plus size={16} />} disabled />
+          ) : (
+            <DataTableToolbarButton label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/users/create" />
+          ))}
         <DataTableExportButton onExport={handleExport} isExporting={isExporting} disabled={isGettingUsers || !userListResponse?.total} />
       </DataTableToolbar>
 

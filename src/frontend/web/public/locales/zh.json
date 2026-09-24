@@ -239,6 +239,7 @@
       "concurrentModification": "此记录已被他人修改。请重新加载后重试。",
       "userSharedAcrossTenants": "该用户同时属于其他租户，只能由平台管理员更改",
       "featureDisabled": "您的套餐不包含此功能。",
+      "featureLimitExceeded": "已达到您套餐的此项限制。",
       "featureNotFound": "该功能不存在。",
       "invalidFeatureValue": "该值不适用于此功能。",
       "featureProviderNotAllowed": "无法在此设置该功能。",
@@ -306,7 +307,7 @@
     "upload": "文件上传",
     "deleteTitle": "删除文件",
     "deleteConfirm": "您确定要删除此文件吗？",
-    "tooLarge": "文件过大"
+    "tooLarge": "文件过大。您只能上传不超过 ${max} MB 的文件。"
   },
   "page": {
     "home": {
@@ -386,6 +387,7 @@
       "deleteTitle": "删除用户",
       "deleteConfirm": "您确定要删除此用户吗？",
       "deleteSuccess": "用户删除成功",
+      "seatLimitReached": "已达到您套餐的用户数量上限",
       "create": {
         "title": "创建用户"
       },
@@ -553,6 +555,7 @@
         "addTitle": "添加成员",
         "addButton": "添加成员",
         "addSuccess": "成员添加成功",
+        "seatLimitReached": "已达到此租户套餐的用户数量上限",
         "rolesTitle": "更改成员角色",
         "rolesButton": "更改角色",
         "rolesSuccess": "成员角色更新成功",

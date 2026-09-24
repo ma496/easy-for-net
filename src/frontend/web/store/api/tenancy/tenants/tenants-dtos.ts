@@ -81,6 +81,17 @@ export interface TenantMemberListRequest extends ListRequestDto<string>, Request
   roleId?: string
 }
 
+/** Request for the tenant-member-seats endpoint; `tenantId` travels as a path segment. */
+export interface TenantMemberSeatsRequest {
+  tenantId: string
+}
+
+/** How many seats a tenant has taken, and how many its plan allows (`null` when no limit applies). */
+export interface TenantMemberSeatsResponse {
+  used: number
+  limit: number | null
+}
+
 /** Paged response of tenant members returned by the list-tenant-members endpoint. */
 export interface TenantMemberListResponse extends ListDto<TenantMemberListDto> {}
 

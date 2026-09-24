@@ -90,6 +90,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
         // The membership tier: administering who belongs to a tenant, which a tenant's own
         // administrator holds and the platform administrator holds over every tenant.
         [typeof(TenantMemberListEndpoint)] = [Allow.TenantMember_View],
+        [typeof(TenantMemberSeatsEndpoint)] = [Allow.TenantMember_View],
         [typeof(TenantMemberAddEndpoint)] = [Allow.TenantMember_Add],
         [typeof(TenantMemberRemoveEndpoint)] = [Allow.TenantMember_Remove],
         [typeof(TenantMemberUpdateRolesEndpoint)] = [Allow.TenantMember_UpdateRoles],
@@ -501,6 +502,11 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
                 async client => await StatusOf(client
                     .GETAsync<TenantMemberListEndpoint, TenantMemberListRequest, TenantMemberListResponse>(
                         new() { TenantId = tenant.Id, All = true }))),
+
+            nameof(TenantMemberSeatsEndpoint) => new(
+                async client => await StatusOf(client
+                    .GETAsync<TenantMemberSeatsEndpoint, TenantMemberSeatsRequest, TenantMemberSeatsResponse>(
+                        new() { TenantId = tenant.Id }))),
 
             nameof(TenantMemberAddEndpoint) => new(
                 async client => await StatusOf(client
