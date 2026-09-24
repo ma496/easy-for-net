@@ -89,13 +89,18 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             CopyDirectory(webProjectPath, webTargetPath, true);
             // .env.development is git-ignored in the template, so seed it from the tracked example file
             CopyFrom(webProjectPath, webTargetPath, ".env.example", ".env.development");
-            CopyFiles(versionedTemplateDir, targetPath, ".editorconfig", ".gitignore", "global.json");
+            CopyFiles(versionedTemplateDir, targetPath, ".editorconfig", ".gitignore", ".gitattributes", "global.json", "package.json", "agentic.config.json");
             CopyDirectory($"{versionedTemplateDir}/.config", $"{targetPath}/.config", true);
             CopyDirectory($"{versionedTemplateDir}/.vscode", $"{targetPath}/.vscode", true);
             // the new-project and template-maintenance skills describe working on the template
-            // repository itself, so they are of no use inside a generated project
-            CopyDirectory($"{versionedTemplateDir}/.claude", $"{targetPath}/.claude", true, ["new-project", "template-maintenance"]);
+            // repository itself, so they are of no use inside a generated project; the lessons
+            // the task loop recorded are about the template repository too
+            CopyDirectory($"{versionedTemplateDir}/.claude", $"{targetPath}/.claude", true, ["new-project", "template-maintenance", "lessons"]);
             WriteEmbeddedFile("new-project-claude.md", Path.Combine(targetPath, "CLAUDE.md"));
+            // the spec-driven task loop: its engine ships whole, and the places it records work
+            // ship empty, so a new project starts with no specs, queue, build records or lessons
+            CopyDirectory($"{versionedTemplateDir}/scripts", $"{targetPath}/scripts", true);
+            CopyTaskLoopSkeleton(versionedTemplateDir, targetPath);
 
             Console.WriteLine("Customizing project files...");
             var (backendProjectName, backendProjectRootNamespace) = Helpers.GetProjectInfo(backendProjectTargetPath);
@@ -137,6 +142,9 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(webTargetPath, "package.json"), "name", kebabCaseProjectName);
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(webTargetPath, "package-lock.json"), "name", kebabCaseProjectName);
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(webTargetPath, "package-lock.json"), "packages..name", kebabCaseProjectName);
+            // the workspace scripts and the task loop name the project in briefs, the status line and the scheduled task
+            await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(targetPath, "package.json"), "name", kebabCaseProjectName);
+            await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(targetPath, "agentic.config.json"), "project.name", kebabCaseProjectName);
             // update CLAUDE.md
             await ReplaceInFile(Path.Combine(targetPath, "CLAUDE.md"), @"EasyForNet\.slnx", $@"{pascalCaseProjectName}.slnx");
             // update the skill guides, which reference the template's namespaces and solution file
@@ -429,6 +437,35 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             ?? throw new Exception($"Embedded file '{resourceName}' was not found in the tool package.");
         using var fileStream = File.Create(targetFilePath);
         stream.CopyTo(fileStream);
+    }
+
+    /// <summary>
+    /// Lays out the places the spec-driven task loop records its work - <c>specs/</c>, <c>docs/</c>,
+    /// the <c>.agent-queue/</c> lanes and the lessons directory - with their guides but none of the
+    /// template repository's own specs, build records, queued tasks or lessons.
+    /// </summary>
+    private static void CopyTaskLoopSkeleton(string templateDir, string targetPath)
+    {
+        Directory.CreateDirectory(Path.Combine(targetPath, "specs"));
+        CopyFiles(Path.Combine(templateDir, "specs"), Path.Combine(targetPath, "specs"), "README.md", "TEMPLATE.md");
+
+        Directory.CreateDirectory(Path.Combine(targetPath, "docs"));
+        CopyFiles(Path.Combine(templateDir, "docs"), Path.Combine(targetPath, "docs"), "AGENTIC_WORKFLOW.md");
+        foreach (var ledger in new[] { "builds", "capabilities" })
+        {
+            Directory.CreateDirectory(Path.Combine(targetPath, "docs", ledger));
+            CopyFiles(Path.Combine(templateDir, "docs", ledger), Path.Combine(targetPath, "docs", ledger), "README.md");
+        }
+
+        foreach (var lane in new[] { "todo", "doing", "done", "failed" })
+        {
+            var laneDir = Directory.CreateDirectory(Path.Combine(targetPath, ".agent-queue", lane)).FullName;
+            File.WriteAllText(Path.Combine(laneDir, ".gitkeep"), string.Empty);
+        }
+        File.WriteAllText(Path.Combine(targetPath, ".agent-queue", "planned.json"), "{}\n");
+
+        var lessonsDir = Directory.CreateDirectory(Path.Combine(targetPath, ".claude", "memory", "lessons")).FullName;
+        File.WriteAllText(Path.Combine(lessonsDir, ".gitkeep"), string.Empty);
     }
 
     /// <summary>

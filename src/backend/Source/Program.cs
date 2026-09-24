@@ -266,7 +266,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerGen();
 }
 
-app.MapHealthChecks("/health").AllowAnonymous();
+// In Development the body also names the checkout the host runs from, so a live check can tell this
+// checkout's API from a stale one answering on the same port.
+(app.Environment.IsDevelopment()
+        ? app.MapHealthChecks("/health", DevelopmentHealthResponse.Options(app.Environment.ContentRootPath))
+        : app.MapHealthChecks("/health"))
+    .AllowAnonymous();
 
 // Configure Hangfire dashboard after database is ready
 app.UseHangfireDashboard("/hangfire", new DashboardOptions

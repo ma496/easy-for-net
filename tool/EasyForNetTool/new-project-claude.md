@@ -39,6 +39,14 @@ npm run test                        # vitest run
 npx vitest run lib/utils/redirect.test.ts
 ```
 
+Everything at once, from the repository root (needs PostgreSQL running):
+
+```sh
+npm run gate                        # build, backend tests, web lint/tsc/vitest, engine + hook tests, next build
+npm run gate -- --fast              # the same without the production web build
+npm run verify -- --autostart       # the gate, plus the live API smoke check when src/backend/Source changed
+```
+
 Default credentials seeded on first run: `admin` / `Admin#123` (the platform account — `IsPlatform`, no membership, so it works in platform scope only until it is added to a tenant) and `tenantadmin` / `Admin#123` (default tenant administrator).
 
 ## Backend architecture
@@ -139,6 +147,53 @@ Client permission checks use the `Allow` map in `allow.ts`, kept in sync with th
 
 Adding a language means adding it to `i18n/config.ts` and adding `public/locales/<code>.json`. If the project was created without multi-language support, only English is present and `i18n/config.ts`, `i18n/server.ts` and `store/slices/themeConfigSlice.tsx` list `en` alone.
 
+## Spec-driven development
+
+Work is described in `specs/` and built by an unattended loop. Saving a markdown file there is
+starting development: the planner splits it into tasks in `.agent-queue/todo/` (with
+`Depends-on:` ordering), and the runner builds them one at a time on the work branch — brief →
+`claude -p` → `npm run verify` → required reviews → commit. `specs/TEMPLATE.md` is a worked example;
+`specs/README.md` says what makes a brief work; `docs/AGENTIC_WORKFLOW.md` is the whole mechanism.
+The loop reads diffs and commits, so the project must be a git repository (`git init`, then a first
+commit) before it runs.
+
+```sh
+npm run queue -- add "<task>"       # queue one task directly
+npm run queue -- plan               # turn new specs/*.md into tasks, without building
+npm run queue -- drain              # build everything runnable, serially
+npm run queue                       # what is waiting, blocked, done or failed
+npm run auto -- "<task>"            # build one task now, outside the queue
+npm run loop                        # preflight → observe → plan → drain → report
+npm run schedule -- install         # run the loop on a timer (Task Scheduler / launchd)
+npm run auto:status                 # every attempt, its turns, cost and why it failed
+npm run lessons                     # what past runs recorded for future ones
+npm run pr                          # the pull-request URL for the current branch
+```
+
+- **`agentic.config.json` is the one project-specific file.** It names the conventions every brief
+  repeats, the departments (which agent owns which paths), the skills a diff owes, the gate and live
+  checks, the service verify starts, and the hook rules. `scripts/lib/project-config.mjs` reads it;
+  the rest of `scripts/` is stack-agnostic, except `gate.mjs`, `serve-api.mjs`, `pg-ready.mjs` and
+  `smoke.mjs`, which are how this stack builds and runs.
+- **Delegation is checked, not trusted.** The departments a change owes are derived from its finished
+  diff and compared with the subagents actually seen in the run's stream: `ui-ux-reviewer` designs a
+  screen first; `data-engineer`, `backend-engineer`, `frontend-engineer` build; `qa-engineer` and
+  `security-reviewer` (when owned paths changed) review, then `code-reviewer`. The agents are in
+  `.claude/agents/`.
+- **The work branch** is `project.branch`, or whichever branch is checked out when that is `null`.
+  The runner refuses a dirty tree, commits each task with a `Task: <brief>` trailer, and **never
+  pushes unless `AGENT_AUTO_PUSH=1`** — and nothing here merges. Pull requests go to
+  `project.baseBranch` (else `origin/HEAD`); `auto-ship` opens one with `gh` when it is installed.
+- **Spend is bounded** by `AGENT_MAX_USD_PER_TASK` (default 50), `AGENT_MAX_USD_PER_DRAIN` (200) and
+  `AGENT_MAX_RUNS_PER_TASK` (3); `AGENT_MODEL` picks the session model.
+- **Guards run in every permission mode.** `.claude/hooks/` refuses reading or writing `.env*` and the
+  per-environment `appsettings.*.json`, edits to build output, `dotnet ef database drop`, destructive
+  SQL, `git reset --hard`, `git add -A`, force-pushes, pushes to a protected branch and every merge
+  route — for the Bash and PowerShell tools alike. `npm run test:hooks` holds a block case and a
+  neighbouring allow case for each rule; add both when you add a rule.
+- **Records.** `.agent-runs/` (git-ignored) is every attempt; `docs/builds/` is one committed record
+  per landed task; `.claude/memory/lessons/` is what runs learned, injected into later briefs.
+
 ## Task guides
 
 `.claude/skills/` holds step-by-step guides for the recurring tasks in this codebase. Consult the matching one before writing code so new work follows the same shape as the existing features.
@@ -147,3 +202,4 @@ Adding a language means adding it to `i18n/config.ts` and adding `public/locales
 - API: `backend-feature`, `backend-endpoint`, `backend-entity`, `backend-tests`, `permissions`, `feature-management`, `background-jobs`, `file-storage`, `notifications`
 - Web: `rtk-query-api`, `frontend-page`, `frontend-crud`, `ui-component`, `redux-state`, `localization`, `frontend-tests`
 - Spanning both: `api-error-handling`
+- Process: spec-driven development — `specs/README.md`, the `.claude/commands` (`/feature`, `/fix`, `/auto`, `/queue`, `/spec-split`, `/verify`, `/ship`, `/review-diff`), and the agents in `.claude/agents`

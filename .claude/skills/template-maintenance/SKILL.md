@@ -36,16 +36,26 @@ intended baseline; add to them only what every new project would want.
 - `src/backend` (recursively, excluding `Migrations`) and `src/frontend/web`
 - `appsettings.json` duplicated into `appsettings.Development.json` / `appsettings.Testing.json`
 - `.env.example` copied to `.env.development` (the real file is git-ignored)
-- root files `.editorconfig`, `.gitignore`, `global.json`
-- directories `.config`, `.vscode`, and `.claude` (minus the `new-project` and `template-maintenance`
-  skills, which describe working on this repository rather than on a generated project)
+- root files `.editorconfig`, `.gitignore`, `.gitattributes`, `global.json`, `package.json` and
+  `agentic.config.json` (the last two get the project's kebab-case name)
+- directories `.config`, `.vscode`, `scripts` (the task loop's engine, whole), and `.claude` (minus
+  the `new-project` and `template-maintenance` skills, which describe working on this repository
+  rather than on a generated project, and minus `memory/lessons`, which holds lessons the loop
+  learned about this repository)
 - `CLAUDE.md`, written from the embedded resource `tool/EasyForNetTool/new-project-claude.md`
+- **the task loop's records as an empty skeleton** (`CopyTaskLoopSkeleton`): `specs/README.md` and
+  `specs/TEMPLATE.md`, `docs/AGENTIC_WORKFLOW.md` and the two `docs/*/README.md` guides, the
+  `.agent-queue` lanes with only their `.gitkeep`, `planned.json` as `{}`, and an empty
+  `.claude/memory/lessons`. This repository's own specs, build records, queued tasks and lessons
+  never ship.
 
 **A new root-level file or directory reaches generated projects only if it is added to that list.**
+A new file under `scripts/` ships automatically; one under `specs/`, `docs/` or `.agent-queue/`
+does not unless `CopyTaskLoopSkeleton` names it.
 
 **Inside `.claude` the rule inverts.** `CopyDirectory` excludes by directory *name*, recursively, so
-everything under `.claude` ships unless its directory is named `new-project` or `template-maintenance`
-at some level. Anything added under `.claude` reaches generated projects with no generator
+everything under `.claude` ships unless its directory is named `new-project`, `template-maintenance`
+or `lessons` at some level. Anything added under `.claude` reaches generated projects with no generator
 change. To keep something template-only, add its directory name to that
 array or put it outside `.claude`.
 
@@ -56,7 +66,10 @@ bare word "Backend" in prose.
 
 **`ReplaceInFiles` filters on an exact extension, and it is only ever called with `.md`.** Any
 other file under `.claude` is copied byte-for-byte, so keep namespaces, the solution file name and
-project file names out of non-markdown files there.
+project file names out of non-markdown files there. The same holds for `scripts/` and
+`agentic.config.json`: they are copied byte-for-byte, so they address the solution by globbing the
+root `*.slnx` and the API by directory (`src/backend/Source`, `src/backend/Tests`), never by a
+project file name.
 
 Renaming happens through `NamespaceRewriter` (Roslyn) for `.cs` files and regex `ReplaceInFile` /
 `ReplaceInFiles` for everything else, including `Meta.cs`'s `InternalsVisibleTo`,
@@ -84,6 +97,7 @@ operational: no provenance or origin statements.
 ```sh
 dotnet test tool/EasyForNetTool.Tests/EasyForNetTool.Tests.csproj
 dotnet build EasyForNet.slnx
+npm run gate                         # everything, including the tool tests while tool/ exists
 ./publish-package.sh                 # interactive: version prompt + NuGet publish confirmation
 ```
 

@@ -1,0 +1,209 @@
+{
+  "project": {
+    "name": "easy-for-net",
+    "branch": null,
+    "baseBranch": null,
+    "coAuthor": "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+    "conventions": [
+      "Features are isolated vertical slices: a type under Features/X never references a type under Features/Y unless that type is marked [AllowOutside]. Cross-feature access goes through a service interface, never through another feature's entities — the architecture tests fail the gate otherwise.",
+      "One endpoint is one file: the Endpoint, its Request, Validator, Response/DTOs and the Mapperly mapper live together. Global usings live in Meta.cs, and every C# file opens with its file-scoped namespace, then a blank line, then its using directives.",
+      "A new permission is three edits that must agree: the constant in Permissions/Allow.cs, its definition in the feature's PermissionsProvider, and the mirror in src/frontend/web/allow.ts. A new feature (entitlement) is the same triple: FeatureNames.cs, the slice's FeaturesProvider, and feature-names.ts."
+    ]
+  },
+  "commands": {
+    "gate": "node scripts/gate.mjs",
+    "verify": "npm run verify"
+  },
+  "tests": {
+    "roots": ["scripts/tests"],
+    "pattern": "\\.test\\.mjs$"
+  },
+  "docs": {
+    "guide": "CLAUDE.md",
+    "builds": "docs/builds",
+    "capabilities": "docs/capabilities"
+  },
+  "departments": [
+    {
+      "agent": "ui-ux-reviewer",
+      "label": "Design",
+      "phase": "design",
+      "match": ["^src/frontend/web/(app|components)/.*\\.tsx$"],
+      "why": "Decides what the screen should be — layout, states, narrow widths, dark mode and RTL — before code makes that decision by accident."
+    },
+    {
+      "agent": "data-engineer",
+      "label": "Data",
+      "phase": "build",
+      "match": [
+        "^src/backend/Source/Features/[^/]+/Core/Entities/",
+        "^src/backend/Source/Migrations/",
+        "^src/backend/Source/ShareData/"
+      ],
+      "why": "Entities, their EF configuration, migrations and seeding — a shape change invalidates queries, indexes and the seeder together."
+    },
+    {
+      "agent": "backend-engineer",
+      "label": "Backend",
+      "phase": "build",
+      "match": ["^src/backend/", "^tool/"],
+      "why": "Endpoints, services, permissions, feature management and their tests — everything behind the HTTP surface."
+    },
+    {
+      "agent": "frontend-engineer",
+      "label": "Front end",
+      "phase": "build",
+      "match": ["^src/frontend/web/"],
+      "why": "The Next.js app: locale-prefixed routes, RTK Query slices, forms, translations and the shared components."
+    },
+    {
+      "agent": "qa-engineer",
+      "label": "QA / acceptance",
+      "phase": "review",
+      "order": 1,
+      "always": true,
+      "why": "Asks whether the brief was actually satisfied, not merely whether the build is green."
+    },
+    {
+      "agent": "security-reviewer",
+      "label": "Security",
+      "phase": "review",
+      "order": 1,
+      "match": [
+        "^\\.claude/(hooks|settings)",
+        "^src/backend/Source/Permissions/",
+        "^src/backend/Source/Features/(Identity|Tenancy)/",
+        "^src/backend/Source/Program\\.cs$",
+        "^src/backend/Source/Middleware/",
+        "^src/backend/Source/appsettings[^/]*\\.json$",
+        "^src/frontend/web/(proxy|auth-urls|allow)\\.ts$",
+        "\\.env\\.example$"
+      ],
+      "why": "Authentication, permissions, tenant isolation, plan gating and configuration are where a mistake is not local."
+    },
+    {
+      "agent": "ui-ux-reviewer",
+      "label": "UI / UX",
+      "phase": "review",
+      "order": 1,
+      "match": ["^src/frontend/web/(app|components)/.*\\.tsx$"],
+      "why": "Layout, hierarchy and states are judged by eye, and nothing else in the loop looks."
+    },
+    {
+      "agent": "code-reviewer",
+      "label": "Code review",
+      "phase": "review",
+      "order": 2,
+      "always": true,
+      "why": "Sees what a green gate cannot: a tenant filter missing, a permission unchecked, a test weakened to pass."
+    }
+  ],
+  "skills": [
+    {
+      "skill": "backend-endpoint",
+      "match": ["^src/backend/Source/Features/[^/]+/Endpoints/.*Endpoint\\.cs$"],
+      "when": "for an endpoint change",
+      "why": "The one-file layout, route group, permissions, validator and Mapperly mapper have an order that is easy to get half-right."
+    },
+    {
+      "skill": "backend-entity",
+      "match": ["^src/backend/Source/Features/[^/]+/Core/Entities/", "^src/backend/Source/Migrations/"],
+      "when": "for a schema change",
+      "why": "An entity change is not done until its configuration, DbSet and migration agree."
+    },
+    {
+      "skill": "backend-tests",
+      "match": ["^src/backend/Tests/"],
+      "when": "for a backend test change",
+      "why": "Test classes run in parallel against one database; a test that leans on state it did not create fails intermittently."
+    },
+    {
+      "skill": "permissions",
+      "match": ["^src/backend/Source/Permissions/Allow\\.cs$", "^src/frontend/web/allow\\.ts$"],
+      "when": "for a permission change",
+      "why": "A permission lives in three places that must agree, plus the nav and route gating on the web."
+    },
+    {
+      "skill": "feature-management",
+      "match": ["/FeatureManagement/FeatureNames\\.cs$", "^src/frontend/web/feature-names\\.ts$"],
+      "when": "for an entitlement change",
+      "why": "A feature is declared in three places, and gating a permission on it has three callers that must not disagree."
+    },
+    {
+      "skill": "localization",
+      "match": ["^src/frontend/web/public/locales/"],
+      "when": "for a translation change",
+      "why": "Keys are shared across every locale file and three translator entry points."
+    },
+    {
+      "skill": "rtk-query-api",
+      "match": ["^src/frontend/web/store/api/"],
+      "when": "for a web API slice change",
+      "why": "Slices inject into the one shared appApi, and DTOs mirror the backend by name."
+    }
+  ],
+  "unownedPaths": ["^\\.agent-queue/", "^\\.agent-runs/", "^docs/builds/"],
+  "verify": {
+    "gate": "node scripts/gate.mjs",
+    "checks": [
+      {
+        "name": "smoke",
+        "description": "health, OpenAPI document, anonymous refusal",
+        "when": ["^src/backend/Source/"],
+        "run": "node scripts/smoke.mjs {{api}}",
+        "needsService": true,
+        "skipNote": "the API was untouched"
+      }
+    ],
+    "service": {
+      "start": "node scripts/serve-api.mjs",
+      "port": 5000,
+      "portEnv": "PORT",
+      "healthPath": "/health",
+      "identityField": "repoRoot",
+      "startTimeoutSeconds": 180,
+      "dependsOn": [
+        {
+          "name": "postgres",
+          "healthyWhen": "node scripts/pg-ready.mjs",
+          "waitSeconds": 30
+        }
+      ]
+    }
+  },
+  "cycle": {
+    "preflight": [
+      {
+        "name": "Postgres",
+        "healthyWhen": "node scripts/pg-ready.mjs Testing",
+        "whenMissing": "start the PostgreSQL service — the backend tests and live checks need it, so every task fails its gate until it is up"
+      }
+    ],
+    "observe": null,
+    "observeNeeds": []
+  },
+  "budget": {
+    "attempts": 3,
+    "maxTurns": 900,
+    "model": "opus"
+  },
+  "hooks": {
+    "deniedCommands": [],
+    "protectedPaths": [],
+    "conventions": [
+      {
+        "paths": ["/src/backend/.*\\.cs$", "/tool/.*\\.cs$"],
+        "except": ["/Migrations/", "/Program\\.cs$", "/NamespaceRewriterTests\\.cs$"],
+        "forbid": "^\\s*using\\s+[\\w.]+\\s*;(?=[\\s\\S]*^namespace\\s)",
+        "flags": "m",
+        "message": "a using directive comes before the namespace. Every C# file opens with its file-scoped namespace (`namespace X;`), then a blank line, then its using directives"
+      },
+      {
+        "paths": ["/src/frontend/web/.*\\.tsx?$"],
+        "except": ["/store/api/_app-api\\.ts$", "/node_modules/"],
+        "forbid": "\\bcreateApi\\s*\\(",
+        "message": "createApi is called outside store/api/_app-api.ts. Feature slices attach to the shared appApi with enhanceEndpoints(...).injectEndpoints(...)"
+      }
+    ]
+  }
+}

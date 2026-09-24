@@ -1,0 +1,24 @@
+{
+  "name": "easy-for-net",
+  "private": true,
+  "description": "Workspace scripts: the static gate and the spec-driven task loop.",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "gate": "node scripts/gate.mjs",
+    "test": "node scripts/test.mjs",
+    "test:hooks": "node .claude/hooks/hook-tests.mjs",
+    "verify": "node scripts/verify.mjs",
+    "serve:api": "node scripts/serve-api.mjs",
+    "auto": "node scripts/agent-run.mjs",
+    "auto:ship": "node scripts/auto-ship.mjs",
+    "auto:status": "node scripts/run-journal.mjs",
+    "queue": "node scripts/agent-queue.mjs",
+    "loop": "node scripts/loop.mjs",
+    "schedule": "node scripts/schedule-drain.mjs",
+    "record": "node scripts/record-build.mjs",
+    "lessons": "node scripts/record-lesson.mjs --list",
+    "pr": "node scripts/open-pr.mjs"
+  }
+}
