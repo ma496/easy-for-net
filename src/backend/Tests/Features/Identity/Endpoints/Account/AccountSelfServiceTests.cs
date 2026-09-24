@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Http;
 /// <summary>
 /// Tests that the account self-service flows stay usable for an authenticated caller acting in no
 /// tenant - sign-up, the verification email, password recovery, the password change, the profile read
-/// and edit, and setting and viewing a profile image (AC-051, AC-097).
+/// and edit, and setting and viewing a profile image.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -61,7 +61,7 @@ public class AccountSelfServiceTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that the named self-service flow is answered for a caller acting in no tenant, while a
-    /// tenant-scoped call by that same caller is refused for want of one (AC-051, AC-097).
+    /// tenant-scoped call by that same caller is refused for want of one.
     /// </summary>
     /// <param name="flow">The flow to exercise.</param>
     [Theory]
@@ -135,7 +135,7 @@ public class AccountSelfServiceTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Signs a visitor up while presenting a session that acts in no tenant - the other reading of
-    /// AC-119, alongside the anonymous visitor: neither a tenant nor the absence of a session stops it.
+    /// self-service sign-up, alongside the anonymous visitor: neither a tenant nor the absence of a session stops it.
     /// </summary>
     /// <param name="client">The client to sign up with.</param>
     /// <returns>The status of the call.</returns>
@@ -247,7 +247,7 @@ public class AccountSelfServiceTests(App app) : TenancyTestsBase(app)
     /// Uploads a file as the account's own image, sets it on the profile and reads the profile back.
     /// The file is uploaded with <see cref="FileUploadRequest.AccountOwned"/> set, which is what makes
     /// it belong to the account rather than to a tenant - and the caller is acting in no tenant at all,
-    /// which is one of the two standings AC-097 requires such a file to be usable in (AC-097).
+    /// which is one of the two standings such a file must be usable in.
     /// </summary>
     /// <param name="client">The client to call with.</param>
     /// <param name="account">The account that owns the image.</param>

@@ -8,7 +8,7 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 /// <summary>
 /// Tests for <see cref="TenantCreateEndpoint"/>: creating a tenant from the platform, the naming rules
 /// the request is held to, the audit it is recorded with and the administrator role the new tenant is
-/// provisioned with (AC-002 - AC-004, AC-012, AC-042, AC-078, AC-100 - AC-102).
+/// provisioned with.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -28,7 +28,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a platform administrator creating a tenant with a valid name and identifier is
     /// given its assigned identity, and that the tenant is persisted active and marked as a caller's
-    /// rather than as the platform's own (AC-002).
+    /// rather than as the platform's own.
     /// </summary>
     [Fact]
     public async Task Valid_Input()
@@ -54,7 +54,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that creating a tenant under an identifier another tenant already holds is refused with
-    /// the code belonging to that field, and that the refusal persists nothing (AC-003).
+    /// the code belonging to that field, and that the refusal persists nothing.
     /// </summary>
     [Fact]
     public async Task Duplicate_Identifier_Is_Refused()
@@ -83,12 +83,12 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that an identifier differing from a taken one only in case is never accepted, which is
-    /// what the comparison having no regard to case means from the outside (AC-003).
+    /// what the comparison having no regard to case means from the outside.
     /// </summary>
     /// <remarks>
     /// The answer is a 400 naming the identifier rather than the duplicate code, because the identifier
     /// shape admits lower-case values only and an upper-cased one is turned away at the door. That is
-    /// still the refusal AC-003 asks for - the value is not taken - and it is the only form of it
+    /// still the refusal uniqueness asks for - the value is not taken - and it is the only form of it
     /// reachable through this endpoint, since the shape rule refuses the mixed-case form of every
     /// identifier a caller could send. The normalized comparison itself is proved directly, with a
     /// mixed-case identifier written by the creation path, in
@@ -119,7 +119,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a request breaking more than one rule is answered with a failure against each field
-    /// that broke one, rather than with the first failure found (AC-004).
+    /// that broke one, rather than with the first failure found.
     /// </summary>
     [Fact]
     public async Task Invalid_Input()
@@ -139,7 +139,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies the bounds of the display name: a name shorter than the minimum or longer than the
     /// maximum is refused against the name field, and a name padded with white-space is accepted and
-    /// stored trimmed (AC-100).
+    /// stored trimmed.
     /// </summary>
     /// <param name="name">The display name to submit.</param>
     /// <param name="accepted">Whether the name is within the declared bounds once trimmed.</param>
@@ -189,7 +189,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies the shape and the bounds of the identifier: a value outside them is refused against the
-    /// identifier field, and a value inside them is accepted (AC-101).
+    /// identifier field, and a value inside them is accepted.
     /// </summary>
     /// <param name="identifier">The identifier to submit.</param>
     /// <param name="accepted">Whether the value is a legal identifier.</param>
@@ -230,7 +230,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a tenant records who created it and when, and who last changed it and when, so the
-    /// platform can answer who made a tenant and who renamed it (AC-012, AC-078).
+    /// platform can answer who made a tenant and who renamed it.
     /// </summary>
     [Fact]
     public async Task Records_Audit_Fields()
@@ -275,7 +275,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a new tenant is provisioned with a system-created administrator role holding every
     /// tenant-level permission and no platform-tier one, so it is administrable from inside itself the
-    /// moment it has a member (AC-042).
+    /// moment it has a member.
     /// </summary>
     /// <remarks>
     /// The role is provisioned before any member exists, and a tenant created from the platform has no

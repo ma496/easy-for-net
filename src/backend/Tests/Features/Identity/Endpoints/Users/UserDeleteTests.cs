@@ -6,7 +6,7 @@ using Backend.Tests.Features.Tenancy;
 
 /// <summary>
 /// Tests for the <see cref="UserDeleteEndpoint"/> covering deletion of users, non-existent users,
-/// protected system-created users, and the account of another tenant that is out of reach (AC-094).
+/// protected system-created users, and the account of another tenant that is out of reach.
 /// </summary>
 public class UserDeleteTests(App app) : TenancyTestsBase(app)
 {
@@ -96,7 +96,7 @@ public class UserDeleteTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that deleting an account holding no membership in the tenant being acted in answers
-    /// exactly as deleting an account that does not exist does, and leaves it in place (AC-094).
+    /// exactly as deleting an account that does not exist does, and leaves it in place.
     /// </summary>
     /// <remarks>
     /// The account is read back afterwards, both to say it is still there and to say nothing about it

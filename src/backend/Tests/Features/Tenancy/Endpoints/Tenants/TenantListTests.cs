@@ -7,16 +7,16 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 
 /// <summary>
 /// Tests for <see cref="TenantListEndpoint"/>: which tenants a caller is shown, and the paging,
-/// sorting, searching and filtering the list offers over them (AC-046, AC-061 - AC-066).
+/// sorting, searching and filtering the list offers over them.
 /// </summary>
 /// <remarks>
 /// <para>
 /// The class is built around one question - which tenants does this caller see - and the answer now
 /// begins before the list: reading every tenant there is belongs to the platform scope, so the
 /// permission that opens this surface can only be exercised by a platform account acting in no tenant
-/// (AC-046). A caller acting inside a tenant is refused it outright and learns which tenants it
+///. A caller acting inside a tenant is refused it outright and learns which tenants it
 /// belongs to from the account-info call instead, which reports exactly its active memberships
-/// (AC-066).
+///.
 /// </para>
 /// <para>
 /// Isolation is by search rather than by reading the whole list, because the suite shares one database
@@ -29,7 +29,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
 {
     /// <summary>
     /// Verifies that a caller holding platform administration sees every tenant, including ones it
-    /// holds no membership in and has never acted in (AC-046).
+    /// holds no membership in and has never acted in.
     /// </summary>
     [Fact]
     public async Task Platform_Administrator_Sees_Tenants_It_Is_Not_A_Member_Of()
@@ -50,7 +50,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
     /// Verifies that a caller acting inside a tenant is refused this surface altogether, whatever its
     /// own role names: the permission that opens it is exercisable only in platform scope, so a tenant
     /// role granting it grants nothing and the list cannot be used to discover a tenant the caller has
-    /// no standing in (AC-066).
+    /// no standing in.
     /// </summary>
     /// <remarks>
     /// The role is deliberately given the permission the endpoint asks for. That is what makes the
@@ -77,7 +77,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that the list is paged and that the total describes the whole matching set rather than
-    /// the page (AC-061).
+    /// the page.
     /// </summary>
     [Fact]
     public async Task List_Tenants_Pagination()
@@ -108,7 +108,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a page size beyond the documented maximum is refused as a validation failure
-    /// rather than served, which is what bounds the page (AC-061).
+    /// rather than served, which is what bounds the page.
     /// </summary>
     [Fact]
     public async Task Page_Size_Beyond_The_Maximum_Is_Refused()
@@ -125,7 +125,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that the permitted sort fields order the list, in either direction (AC-062).
+    /// Verifies that the permitted sort fields order the list, in either direction.
     /// </summary>
     [Fact]
     public async Task Sorting()
@@ -154,7 +154,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a sort field outside the permitted set is refused as a validation failure rather
-    /// than reaching the database (AC-063).
+    /// than reaching the database.
     /// </summary>
     [Fact]
     public async Task Invalid_Sort_Field()
@@ -173,7 +173,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that free-text search matches a tenant's display name and its identifier, and that the
     /// identifier is matched irrespective of the case it is typed in, which is what the stored
-    /// normalized form is for (AC-064).
+    /// normalized form is for.
     /// </summary>
     [Fact]
     public async Task Search_By_Name_And_Identifier()
@@ -206,7 +206,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that the list can be filtered by lifecycle status (AC-065).
+    /// Verifies that the list can be filtered by lifecycle status.
     /// </summary>
     [Fact]
     public async Task Filter_By_Status()
@@ -229,7 +229,7 @@ public class TenantListTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that each row reports the tenant's lifecycle status, whether the platform created it,
     /// and its identifier in the form the uniqueness comparison uses, so an administration screen can
-    /// render a suspended or system-created tenant without a second read (AC-065, AC-086).
+    /// render a suspended or system-created tenant without a second read.
     /// </summary>
     [Fact]
     public async Task List_Reports_The_Status_And_System_Creation_Of_Each_Tenant()

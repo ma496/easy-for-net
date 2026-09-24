@@ -6,7 +6,7 @@ using Backend.Tests.Features.Tenancy;
 
 /// <summary>
 /// Tests for the <see cref="RoleGetEndpoint"/> covering retrieval of existing and non-existent roles,
-/// and the role of another tenant that is not there to be read (AC-111).
+/// and the role of another tenant that is not there to be read.
 /// </summary>
 public class RoleGetTests(App app) : TenancyTestsBase(app)
 {
@@ -75,7 +75,7 @@ public class RoleGetTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that reading a role belonging to another tenant answers exactly as reading a role that
-    /// does not exist does, and leaves it untouched (AC-111).
+    /// does not exist does, and leaves it untouched.
     /// </summary>
     /// <remarks>
     /// The two answers are compared as one: the same status and the same body, so not even their shape

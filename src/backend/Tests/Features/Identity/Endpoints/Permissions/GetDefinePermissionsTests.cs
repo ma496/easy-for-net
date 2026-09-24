@@ -6,10 +6,10 @@ using Backend.Tests.Features.Tenancy;
 
 /// <summary>
 /// Tests for the <see cref="GetDefinePermissionsEndpoint"/> covering the catalogue a caller is offered:
-/// the one declared in code, identical in every tenant and the same on every read (AC-040), narrowed to
-/// what a tenant role can hold for a caller acting inside a tenant (AC-114), and narrowed to the
+/// the one declared in code, identical in every tenant and the same on every read, narrowed to
+/// what a tenant role can hold for a caller acting inside a tenant, and narrowed to the
 /// platform scope, with each leaf carrying the scope it was declared with, for a platform account
-/// acting in none (AC-115).
+/// acting in none.
 /// </summary>
 public class GetDefinePermissionsTests(App app) : TenancyTestsBase(app)
 {
@@ -22,7 +22,7 @@ public class GetDefinePermissionsTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that the catalogue a caller is offered is the same set in each of two tenants, and is
-    /// the set the code declares for a caller acting inside one (AC-040).
+    /// the set the code declares for a caller acting inside one.
     /// </summary>
     /// <remarks>
     /// The same caller acts in both tenants, so what is compared is one identity's view of the catalogue
@@ -52,7 +52,7 @@ public class GetDefinePermissionsTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a caller acting inside a tenant is offered the permissions exercisable there alone,
-    /// so no permission it could never grant through a tenant role is put in front of it (AC-114).
+    /// so no permission it could never grant through a tenant role is put in front of it.
     /// </summary>
     /// <remarks>
     /// The caller administers a tenant of its own, which is what makes the filter meaningful: it is
@@ -84,7 +84,7 @@ public class GetDefinePermissionsTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a platform account acting in no tenant is offered the platform scope of the
-    /// catalogue, each leaf carrying the scope it was declared with so the tiers stay apart (AC-115).
+    /// catalogue, each leaf carrying the scope it was declared with so the tiers stay apart.
     /// </summary>
     /// <remarks>
     /// The scope is asserted leaf by leaf rather than only for the platform ones: a catalogue that

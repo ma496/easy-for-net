@@ -5,7 +5,7 @@ using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Identity.Endpoints.Roles;
 
 /// <summary>
-/// Tests for what makes a membership active, and for what a membership is not (AC-103).
+/// Tests for what makes a membership active, and for what a membership is not.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -34,7 +34,7 @@ public class MembershipActivationTests(App app) : TenancyTestsBase(app)
     /// Verifies that a membership counts as active only while the row stands, is not removed, and belongs
     /// to a tenant that is neither suspended nor deleted: the one state that lets a tenant-scoped call
     /// through once the session is renewed, and the four that leave the renewed session with no tenant
-    /// and therefore no authority (AC-103).
+    /// and therefore no authority.
     /// </summary>
     /// <param name="state">The state the membership is left in before the session is renewed.</param>
     [Theory]
@@ -80,7 +80,7 @@ public class MembershipActivationTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a membership carries no per-tenant state of its own: whether a member is "active",
     /// "enabled" or "suspended" in a tenant is derived from the row and the tenant every time it is
-    /// asked, so the same question cannot be answered two ways (AC-103).
+    /// asked, so the same question cannot be answered two ways.
     /// </summary>
     [Fact]
     public void Membership_Carries_No_Further_State()

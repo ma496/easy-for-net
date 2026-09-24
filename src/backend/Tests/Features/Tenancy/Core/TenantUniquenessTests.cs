@@ -9,8 +9,7 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 
 /// <summary>
 /// Tests for what a retained row still reserves - an identifier or a role name that was freed only by
-/// deletion - and for the database constraints underneath those comparisons (AC-003, AC-039, AC-102,
-/// AC-144, AC-147).
+/// deletion - and for the database constraints underneath those comparisons.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -23,7 +22,7 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 /// </para>
 /// <para>
 /// The identifier case is the one that cannot be arranged through the create endpoint: its validator
-/// admits lower-case identifiers only (AC-101), so a padded or mixed-case identifier has no way in
+/// admits lower-case identifiers only, so a padded or mixed-case identifier has no way in
 /// through HTTP and is created through the service instead - which is the same creation path the
 /// endpoint delegates to. The refusal is then proved by submitting the lower-case form over HTTP, so
 /// the comparison is shown to run against the normalized column rather than the stored text.
@@ -52,7 +51,7 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that deleting a tenant does not free its identifier: a tenant removed through the
     /// endpoint goes on holding the identifier it was created with, and a second tenant asking for it is
-    /// refused against the identifier field with nothing persisted (AC-003).
+    /// refused against the identifier field with nothing persisted.
     /// </summary>
     [Fact]
     public async Task Soft_Deleted_Identifier_Is_Still_Reserved()
@@ -84,7 +83,7 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that deleting a role does not free its name within its tenant: the name stays reserved,
-    /// so creating a role of that name afterwards is refused rather than granted (AC-039).
+    /// so creating a role of that name afterwards is refused rather than granted.
     /// </summary>
     [Fact]
     public async Task Deleted_Role_Name_Is_Still_Reserved()
@@ -115,7 +114,7 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a tenant identifier is stored as entered but trimmed, with a lower-case normalized
     /// copy maintained beside it, and that the uniqueness comparison runs against that normalized copy
-    /// rather than the stored text (AC-102).
+    /// rather than the stored text.
     /// </summary>
     [Fact]
     public async Task Identifier_Is_Stored_Trimmed_With_A_Normalized_Copy()
@@ -164,7 +163,7 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that the uniqueness of a retained identifier and a retained role name is enforced by the
     /// database itself, not only by the comparisons the services make: a row inserted directly, past
-    /// every service, is refused by the constraint (AC-144).
+    /// every service, is refused by the constraint.
     /// </summary>
     [Fact]
     public async Task Uniqueness_Is_Enforced_By_The_Database_Over_Retained_Rows()
@@ -196,7 +195,7 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that the per-tenant unique index treats two absent tenants as equal, so platform-scoped
     /// roles - which carry no tenant at all - are unique among themselves instead of escaping the
-    /// constraint because a null never equals another null (AC-144).
+    /// constraint because a null never equals another null.
     /// </summary>
     /// <remarks>
     /// This is the one place a comparison over the tenant column can be checked for the null case, and
@@ -237,7 +236,7 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that both retained names are refused as duplicates when they are submitted again through
     /// the surfaces that own them - the deleted tenant's identifier and the deleted tenant role's name
-    /// (AC-147).
+    ///.
     /// </summary>
     [Fact]
     public async Task Deleted_Names_Are_Refused_As_Duplicates()

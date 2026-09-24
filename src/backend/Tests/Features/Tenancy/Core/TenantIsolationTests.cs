@@ -7,7 +7,7 @@ using Backend.Features.Tenancy.Core.Entities;
 
 /// <summary>
 /// Tests for what one tenant's records look like from inside another - the same, whether they belong
-/// to somebody else or to nobody at all (AC-032, AC-087, AC-111).
+/// to somebody else or to nobody at all.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -31,7 +31,7 @@ public class TenantIsolationTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that reading a record belonging to another tenant is answered exactly as reading one
     /// that does not exist, so nothing about the record - not its name, not its permissions, not its
-    /// existence - can be learned by asking for it (AC-032).
+    /// existence - can be learned by asking for it.
     /// </summary>
     [Fact]
     public async Task Cross_Tenant_Read_Responds_As_Missing()
@@ -47,7 +47,7 @@ public class TenantIsolationTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that renaming a record belonging to another tenant is refused as a missing record and
-    /// leaves the record exactly as it stood (AC-087).
+    /// leaves the record exactly as it stood.
     /// </summary>
     [Fact]
     public async Task Cross_Tenant_Update_Is_Refused()
@@ -66,7 +66,7 @@ public class TenantIsolationTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that deleting a record belonging to another tenant is refused as a missing record and
-    /// leaves the record in place, still resolvable by its own tenant (AC-087).
+    /// leaves the record in place, still resolvable by its own tenant.
     /// </summary>
     [Fact]
     public async Task Cross_Tenant_Delete_Is_Refused()
@@ -91,7 +91,7 @@ public class TenantIsolationTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a record belonging to another tenant is absent from a list and a search as well as
-    /// from a lookup, so no shape of read is left as a way around the restriction (AC-087).
+    /// from a lookup, so no shape of read is left as a way around the restriction.
     /// </summary>
     [Fact]
     public async Task Cross_Tenant_Record_Is_Not_Listed()
@@ -115,7 +115,7 @@ public class TenantIsolationTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that every verb which addresses a role - read, update and delete - answers a role of
     /// another tenant as a missing one, and that the role's name and its permission set are exactly what
-    /// they were afterwards, so the attempts neither disclosed nor changed anything (AC-111).
+    /// they were afterwards, so the attempts neither disclosed nor changed anything.
     /// </summary>
     [Fact]
     public async Task Cross_Tenant_Role_Responds_As_Missing()

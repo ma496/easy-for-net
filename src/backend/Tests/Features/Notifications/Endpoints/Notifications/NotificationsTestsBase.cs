@@ -33,7 +33,7 @@ using Backend.Tests.Features.Tenancy;
 public abstract class NotificationsTestsBase(App app) : TenancyTestsBase(app)
 {
     /// <summary>
-    /// Creates a notification addressed to a single member of a tenant (AC-053). The recipient is not
+    /// Creates a notification addressed to a single member of a tenant. The recipient is not
     /// checked against the tenant: the helper arranges a row, and the tests that need a recipient whose
     /// membership matches the attribution make one.
     /// </summary>
@@ -45,7 +45,7 @@ public abstract class NotificationsTestsBase(App app) : TenancyTestsBase(app)
         => await ArrangeNotificationAsync(userId, type, tenantId ?? TestTenants.BootstrapTenantId, "user");
 
     /// <summary>
-    /// Creates a notification addressed to every member of a tenant (AC-053). Its read state is per user
+    /// Creates a notification addressed to every member of a tenant. Its read state is per user
     /// and lives in a visit row rather than in the notification's own read flag.
     /// </summary>
     /// <param name="type">Visual/severity category of the notification.</param>
@@ -55,7 +55,7 @@ public abstract class NotificationsTestsBase(App app) : TenancyTestsBase(app)
         => await ArrangeNotificationAsync(null, type, tenantId ?? TestTenants.BootstrapTenantId, "tenant");
 
     /// <summary>
-    /// Creates a notification addressed to every user of the platform (AC-054). It names no tenant, which
+    /// Creates a notification addressed to every user of the platform. It names no tenant, which
     /// is exactly what tells it apart from a tenant-wide one.
     /// </summary>
     /// <param name="type">Visual/severity category of the notification.</param>

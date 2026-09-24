@@ -6,7 +6,7 @@ using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// Tests for tenant scope outside a user request - the standing of scheduled and queued work
-/// (AC-035, AC-131).
+///.
 /// </summary>
 /// <remarks>
 /// <para>

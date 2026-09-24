@@ -12,7 +12,7 @@ using Backend.Tests.Features.Tenancy;
 /// beside the credentials and is then honoured or refused rather than silently ignored, and that a
 /// globally deactivated account is refused authentication without its memberships being touched - so
 /// that deactivating an account withholds access to every tenant at once while reactivating it
-/// restores exactly what the account already held (AC-048, AC-049, AC-104, AC-105).
+/// restores exactly what the account already held.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -41,7 +41,7 @@ public class TokenTests(App app) : TenancyTestsBase(app)
 {
     /// <summary>
     /// Verifies that a deactivated account cannot authenticate, however many tenants it belongs to,
-    /// and that refusing it leaves every membership it holds exactly where it was (AC-104).
+    /// and that refusing it leaves every membership it holds exactly where it was.
     /// </summary>
     [Fact]
     public async Task Deactivated_Account_Cannot_Authenticate()
@@ -102,7 +102,7 @@ public class TokenTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that reactivating a deactivated account restores it to exactly the memberships it
     /// already held, without it having been added to or removed from any tenant in the meantime
-    /// (AC-105).
+    ///.
     /// </summary>
     [Fact]
     public async Task Reactivated_Account_Keeps_Exactly_Its_Memberships()
@@ -132,7 +132,7 @@ public class TokenTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that authentication needs the account's own credentials and nothing else, so that a
-    /// person signs in once however many tenants they belong to (AC-048, AC-049). Naming a tenant is
+    /// person signs in once however many tenants they belong to. Naming a tenant is
     /// available but never required, and the field carrying it is the only one that has been added to
     /// what a caller may state.
     /// </summary>

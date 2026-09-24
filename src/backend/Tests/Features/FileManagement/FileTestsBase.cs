@@ -24,8 +24,8 @@ using Microsoft.AspNetCore.Http;
 /// </para>
 /// <para>
 /// The bytes are read through <see cref="IStorageProvider"/> for the same reason: a refusal that
-/// destroyed the content would satisfy "the caller did not get it" while breaking the retention AC-060
-/// requires, so what the storage holds is asserted alongside what the caller was answered.
+/// destroyed the content would satisfy "the caller did not get it" while breaking the retention files
+/// require, so what the storage holds is asserted alongside what the caller was answered.
 /// </para>
 /// <para>
 /// Every tenant, role, membership, account and file a test asserts on is made by the test itself. The

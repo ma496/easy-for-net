@@ -4,7 +4,7 @@ using Backend.Tests.Seeder;
 
 /// <summary>
 /// Tests the background-job dashboard as the endpoint it actually is: a request to the path it is
-/// mounted on, over HTTP, answered by the pipeline the application runs (AC-047).
+/// mounted on, over HTTP, answered by the pipeline the application runs.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -33,7 +33,7 @@ public class HangfireDashboardTests(App app) : AppTestsBase(app)
 
     /// <summary>
     /// Verifies that a caller who is not a platform administrator is refused the background-job
-    /// dashboard, and that a platform administrator is served it (AC-047).
+    /// dashboard, and that a platform administrator is served it.
     /// </summary>
     [Fact]
     public async Task Refuses_Every_Caller_Outside_The_Platform_Tier()

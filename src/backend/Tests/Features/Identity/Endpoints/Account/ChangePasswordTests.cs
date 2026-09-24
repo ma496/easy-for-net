@@ -6,7 +6,7 @@ using Backend.Tests.Features.Tenancy;
 /// <summary>
 /// Tests for password changes: that the new password is what authenticates afterwards, that the old
 /// one stops doing so, and that the change is owed to a caller whatever tenant they are acting in
-/// (AC-051).
+///.
 /// </summary>
 /// <remarks>
 /// A password change does not end the sessions already issued. What a session may do is decided when
@@ -45,7 +45,7 @@ public class ChangePasswordTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a caller acting in a tenant can change its own password, which is about the person
-    /// rather than about the tenant (AC-051).
+    /// rather than about the tenant.
     /// </summary>
     /// <remarks>
     /// The account is made by the test rather than named from the seed, because the password it holds

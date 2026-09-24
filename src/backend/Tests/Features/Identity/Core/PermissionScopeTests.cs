@@ -24,7 +24,7 @@ public class PermissionScopeTests(App app) : TenancyTestsBase(app)
     /// Verifies the whole round trip a platform account makes: it holds its platform roles' authority
     /// while acting in no tenant, exchanges it for the roles its membership holds on entering a tenant
     /// it belongs to, and holds it again the moment it leaves - without signing in again at any point
-    /// (AC-108, AC-113).
+    ///.
     /// </summary>
     /// <remarks>
     /// Both directions are asserted. A narrowing that ran only one way would leave a platform account
@@ -83,7 +83,7 @@ public class PermissionScopeTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that an ordinary account acting in no tenant exercises nothing, so the platform scope
-    /// is the platform's and not merely what is left when no tenant is selected (AC-050).
+    /// is the platform's and not merely what is left when no tenant is selected.
     /// </summary>
     /// <remarks>
     /// The account is given a platform-scoped role granting a permission - the strongest form of the

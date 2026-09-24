@@ -42,7 +42,7 @@ interface TenantUpdateFormProps {
 /**
  * Interactive client-side form for editing an existing tenant's display name and identifier, populated from the API
  * and submitted back through the tenant-update mutation. The system-created tenant is shown as unmodifiable rather
- * than editable, since the API refuses to rename it (AC-011).
+ * than editable, since the API refuses to rename it.
  */
 export const TenantUpdateForm = ({ tenantId }: TenantUpdateFormProps) => {
   const { t } = useTranslation()

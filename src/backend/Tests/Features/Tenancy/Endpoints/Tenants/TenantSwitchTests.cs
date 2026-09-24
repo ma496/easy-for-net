@@ -12,8 +12,7 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 /// Tests for <see cref="TenantSwitchEndpoint"/>: selecting the tenant a session acts in, what the
 /// selection does to the requests that follow it, the three states it refuses and the one answer it
 /// gives for all of them, the tenant a request cannot supply for itself, and the account that holds
-/// several memberships and therefore starts with none (AC-025, AC-026, AC-027, AC-108, AC-109, AC-123,
-/// AC-138, AC-139, AC-140, AC-148, AC-149).
+/// several memberships and therefore starts with none.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -49,7 +48,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     /// leaving them authenticated: the answer names that tenant and carries a freshly issued token pair
     /// whose persisted row records the same tenant, the request it was asked with carries nothing but a
     /// tenant and no credential of any kind, and no credentials are re-entered anywhere along the way
-    /// (AC-139).
+    ///.
     /// </summary>
     [Fact]
     public async Task Valid_Input()
@@ -103,7 +102,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that the selection applies to every request that follows it without a second sign-in:
     /// the same client, presenting the same account's session, reads the newly selected tenant's rows
-    /// and none of the previously selected tenant's (AC-025).
+    /// and none of the previously selected tenant's.
     /// </summary>
     [Fact]
     public async Task Switch_Applies_To_Subsequent_Requests()
@@ -138,7 +137,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     /// Verifies that what a caller may do comes from the tenant they are acting in: an account holding
     /// only tenant viewing in one tenant is refused its role creation, and the same call succeeds the
     /// moment it switches to the tenant where it is an administrator - with nothing having changed but
-    /// the selection (AC-027).
+    /// the selection.
     /// </summary>
     [Fact]
     public async Task Permissions_Come_Only_From_The_Active_Tenant()
@@ -172,7 +171,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a caller holding every permission in one tenant is still refused a tenant they
     /// hold no membership in: standing is the membership and not the authority, so switching to such a
-    /// tenant reports the caller is not a member rather than granting anything (AC-026).
+    /// tenant reports the caller is not a member rather than granting anything.
     /// </summary>
     [Fact]
     public async Task Cannot_Switch_To_Non_Member_Tenant()
@@ -359,7 +358,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     /// Verifies that a withdrawn membership costs the caller the tenant at their session's next
     /// renewal: the renewal succeeds and hands back a session naming no tenant, so the request that
     /// the membership admitted a moment earlier is refused for the authority the session no longer
-    /// carries (AC-109).
+    /// carries.
     /// </summary>
     [Fact]
     public async Task Withdrawn_Membership_Is_Dropped_At_The_Next_Renewal()
@@ -396,7 +395,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that the tenant a request acts in cannot be supplied by that request: with the session
     /// acting in one tenant, a tenant named in the payload and one named in a header are both inert,
-    /// and changing the supplied value changes nothing about what is read (AC-138).
+    /// and changing the supplied value changes nothing about what is read.
     /// </summary>
     [Fact]
     public async Task Request_Supplied_Tenant_Is_Ignored()
@@ -432,7 +431,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     /// Verifies both halves of the rule at once: a tenant named by the request is ignored while the
     /// session is good, and the tenant the session names is what governs the request afterwards - so a
     /// session that has lost its tenant is refused whatever the request itself names, even when it
-    /// names a tenant the caller does still belong to (AC-148).
+    /// names a tenant the caller does still belong to.
     /// </summary>
     [Fact]
     public async Task Session_Tenant_Governs_The_Request()
@@ -475,7 +474,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that an account holding more than one membership is asked which tenant it means rather
     /// than signed in without one: nothing is chosen on its behalf, and nothing signs it in to a
-    /// session in which none of its memberships apply (AC-140).
+    /// session in which none of its memberships apply.
     /// </summary>
     [Fact]
     public async Task Several_Memberships_Must_Name_A_Tenant()
@@ -505,7 +504,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that selecting one of several tenants grants access to exactly that tenant's data: the
     /// caller starts in the other tenant, switches, and is then answered with the chosen tenant's row
-    /// and not the one it left (AC-149).
+    /// and not the one it left.
     /// </summary>
     [Fact]
     public async Task Selection_Grants_Exactly_That_Tenants_Data()
@@ -540,7 +539,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that an account holding exactly one membership is never asked to choose: sign-in
     /// resolves that tenant on its own, it is the session's active tenant, and a tenant-scoped call
-    /// succeeds with no switch having been performed (AC-123).
+    /// succeeds with no switch having been performed.
     /// </summary>
     [Fact]
     public async Task Single_Membership_Is_Auto_Selected()
@@ -569,7 +568,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a tenant that has been deleted is refused exactly as a tenant that never existed
     /// is: the same status, the same code and the same message, so a stored selection naming a tenant
-    /// that is gone discloses nothing about whether that tenant was ever real (AC-086).
+    /// that is gone discloses nothing about whether that tenant was ever real.
     /// </summary>
     [Fact]
     public async Task Cannot_Switch_To_Deleted_Tenant()
@@ -601,7 +600,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a suspended tenant cannot be selected: it is out of service rather than gone, so
     /// the refusal names suspension, and the caller keeps the session and the tenant it was acting in
-    /// (AC-086).
+    ///.
     /// </summary>
     [Fact]
     public async Task Cannot_Switch_To_Suspended_Tenant()
@@ -631,7 +630,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a selection naming no tenant is refused as a validation failure against the tenant
-    /// field, before any tenant is looked up (AC-086).
+    /// field, before any tenant is looked up.
     /// </summary>
     [Fact]
     public async Task Missing_Tenant_Is_Rejected()
@@ -652,7 +651,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that selecting a tenant requires a session to select it for: an unauthenticated caller
-    /// is refused before any tenant is read (AC-086).
+    /// is refused before any tenant is read.
     /// </summary>
     [Fact]
     public async Task Unauthenticated()

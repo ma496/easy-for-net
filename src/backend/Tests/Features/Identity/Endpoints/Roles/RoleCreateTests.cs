@@ -6,8 +6,8 @@ using Backend.Tests.Features.Tenancy;
 
 /// <summary>
 /// Tests for the <see cref="RoleCreateEndpoint"/> covering validation and successful role creation, the
-/// name a role is held to - unique within its tenant and nowhere wider (AC-038, AC-039) - the tenant a
-/// created role is attributed to without being told (AC-112), and the audit fields it records (AC-078).
+/// name a role is held to - unique within its tenant and nowhere wider - the tenant a
+/// created role is attributed to without being told, and the audit fields it records.
 /// </summary>
 public class RoleCreateTests(App app) : TenancyTestsBase(app)
 {
@@ -52,7 +52,7 @@ public class RoleCreateTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that the same role name can be taken in each of two tenants, the roles landing in the
-    /// tenant their creator was acting in (AC-038).
+    /// tenant their creator was acting in.
     /// </summary>
     /// <remarks>
     /// An administrator is made in each tenant and neither is a member of the other's, so the two
@@ -103,7 +103,7 @@ public class RoleCreateTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a name already used within the same tenant is refused however it is cased or
-    /// spaced, and that the refusal leaves the tenant with exactly the roles it had (AC-039).
+    /// spaced, and that the refusal leaves the tenant with exactly the roles it had.
     /// </summary>
     /// <remarks>
     /// The comparison is made on the normalized column, so the second request asks for the same name in
@@ -144,7 +144,7 @@ public class RoleCreateTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a role created by a caller acting in a tenant belongs to that tenant, which the
-    /// caller never names (AC-112).
+    /// caller never names.
     /// </summary>
     /// <remarks>
     /// The request type is checked for a tenant of its own before the request is made: a payload that
@@ -176,7 +176,7 @@ public class RoleCreateTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that a role records the account that created it and when (AC-078).
+    /// Verifies that a role records the account that created it and when.
     /// </summary>
     /// <remarks>
     /// The caller is an account made for this test rather than the seeded administrator, so the creating

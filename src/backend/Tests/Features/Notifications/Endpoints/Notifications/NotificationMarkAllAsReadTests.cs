@@ -6,9 +6,9 @@ using Backend.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// Tests for the <see cref="NotificationMarkAllAsReadEndpoint"/> covering marking all notifications as
-/// read for the current user, the tenant restriction both of its bulk statements carry (AC-033), the
-/// tenant whose notifications it may mark (AC-055), and the recipient's other tenants it leaves unread
-/// (AC-130).
+/// read for the current user, the tenant restriction both of its bulk statements carry, the
+/// tenant whose notifications it may mark, and the recipient's other tenants it leaves unread
+///.
 /// </summary>
 /// <remarks>
 /// The endpoint marks rows through two statements that no query filter reaches - one <c>ExecuteUpdate</c>
@@ -48,7 +48,7 @@ public class NotificationMarkAllAsReadTests(App app) : NotificationsTestsBase(ap
 
     /// <summary>
     /// Verifies that the bulk statement marking the caller's notifications as read reaches only the rows of
-    /// the tenant they are acting in (AC-033).
+    /// the tenant they are acting in.
     /// </summary>
     /// <remarks>
     /// Several rows are arranged on each side rather than one, because what is under test is a statement
@@ -93,7 +93,7 @@ public class NotificationMarkAllAsReadTests(App app) : NotificationsTestsBase(ap
 
     /// <summary>
     /// Verifies that marking everything as read marks exactly the notifications visible in the tenant the
-    /// caller acts in, leaving the same recipient's notification in another tenant unread (AC-055).
+    /// caller acts in, leaving the same recipient's notification in another tenant unread.
     /// </summary>
     /// <remarks>
     /// One recipient is a member of both tenants, so the two rows are the same person's and the only thing
@@ -129,7 +129,7 @@ public class NotificationMarkAllAsReadTests(App app) : NotificationsTestsBase(ap
 
     /// <summary>
     /// Verifies that both bulk statements reach no further than the tenant the caller acts in, so the
-    /// recipient's notifications in another tenant stay unread and unvisited (AC-130).
+    /// recipient's notifications in another tenant stay unread and unvisited.
     /// </summary>
     /// <remarks>
     /// The two halves are exercised together and separately observed: a notification addressed to the

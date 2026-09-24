@@ -34,9 +34,9 @@ interface TenantMemberRolesModalProps {
 
 /**
  * Interactive modal that replaces a member's role assignments inside one tenant with exactly the roles chosen
- * (AC-017): the picker is scoped to that tenant's roles, and starts from the member's current assignments. Removing
+ *: the picker is scoped to that tenant's roles, and starts from the member's current assignments. Removing
  * the last tenant administrator comes back as a translated API error rather than being prevented here, since only
- * the API can decide whether another administrator is left (AC-019).
+ * the API can decide whether another administrator is left.
  */
 export const TenantMemberRolesModal = ({ tenantId, member, isOpen, onClose }: TenantMemberRolesModalProps) => {
   const { t } = useTranslation()
@@ -96,7 +96,7 @@ export const TenantMemberRolesModal = ({ tenantId, member, isOpen, onClose }: Te
               pageSize={20}
               required={true}
               // The role list is tenant-scoped, so the picker only ever offers roles of the tenant the
-              // member belongs to (AC-038).
+              // member belongs to.
               generateRequest={(search, page, pageSize) => ({
                 page,
                 pageSize,

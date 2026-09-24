@@ -6,7 +6,7 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 
 /// <summary>
 /// Tests for <see cref="TenantReactivateEndpoint"/>: returning a suspended tenant to service, and the
-/// requests it refuses - which is only ever one naming a tenant that is not there (AC-008, AC-086).
+/// requests it refuses - which is only ever one naming a tenant that is not there.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -32,7 +32,7 @@ public class TenantReactivateTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that reactivating a suspended tenant returns it to the active state, which is what
-    /// restores normal access for its members without any action on their part (AC-008).
+    /// restores normal access for its members without any action on their part.
     /// </summary>
     [Fact]
     public async Task Reactivate_Suspended_Tenant()
@@ -55,7 +55,7 @@ public class TenantReactivateTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that reactivating a tenant that is already active is accepted and changes nothing, so
-    /// the operation describes a state to reach rather than a transition that can fail (AC-008).
+    /// the operation describes a state to reach rather than a transition that can fail.
     /// </summary>
     [Fact]
     public async Task Reactivating_An_Active_Tenant_Is_Accepted()
@@ -79,7 +79,7 @@ public class TenantReactivateTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that reactivating the system-created bootstrap tenant is accepted rather than refused,
     /// because a tenant that can never be suspended is never in need of reactivation - which is why this
-    /// endpoint carries no system-created guard while its siblings do (AC-008, AC-011).
+    /// endpoint carries no system-created guard while its siblings do.
     /// </summary>
     [Fact]
     public async Task Reactivating_The_System_Created_Tenant_Is_Accepted()
@@ -102,7 +102,7 @@ public class TenantReactivateTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a tenant which has never existed and one that has been deleted are refused with the
     /// same answer, so reactivation cannot be used to learn whether a tenant identifier was ever real
-    /// (AC-086).
+    ///.
     /// </summary>
     [Fact]
     public async Task Unknown_And_Deleted_Tenant_Are_Refused_Alike()
@@ -133,7 +133,7 @@ public class TenantReactivateTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a request naming no tenant at all is refused before anything is read, which is the
-    /// last of this endpoint's failure branches (AC-086).
+    /// last of this endpoint's failure branches.
     /// </summary>
     [Fact]
     public async Task Missing_Tenant_Is_Rejected()

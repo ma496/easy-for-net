@@ -103,7 +103,7 @@ describe('the dispatch helpers', () => {
  * read from the source, because there is no browser here to render a screen in. The gap it closes is the
  * one that matters for the criterion: a screen that quietly stopped resetting the cache would leave a
  * record of the previous tenant on display, and every other test in this file would stay green while it
- * did (AC-028).
+ * did.
  */
 
 /** The web root, so a screen can be read by the path it is written under. */

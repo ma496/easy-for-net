@@ -5,8 +5,8 @@ using Backend.Tests.Features.Tenancy;
 
 /// <summary>
 /// Tests for the tenant filter the <see cref="RoleListEndpoint"/> accepts: the narrowing it gives a
-/// platform administrator who names a tenant (AC-046) and the refusal to widen a caller acting in a
-/// tenant who names one (AC-038, AC-086).
+/// platform administrator who names a tenant and the refusal to widen a caller acting in a
+/// tenant who names one.
 /// </summary>
 /// <remarks>
 /// The domain is two tenants made by the test, each with a role of its own, because the question the
@@ -17,7 +17,7 @@ public class RoleListTenantFilterTests(App app) : TenancyTestsBase(app)
 {
     /// <summary>
     /// Verifies that a platform account acting in no tenant lists the platform's own roles, and reaches
-    /// one tenant's by naming it (AC-046).
+    /// one tenant's by naming it.
     /// </summary>
     /// <remarks>
     /// The unfiltered call is made first so that what the filter does is legible: without it the list is
@@ -60,7 +60,7 @@ public class RoleListTenantFilterTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a caller acting in a tenant is answered from that tenant whichever tenant it names,
-    /// so naming one can never widen its view (AC-038, AC-086).
+    /// so naming one can never widen its view.
     /// </summary>
     /// <remarks>
     /// The same request is made twice, once naming the caller's own tenant and once naming another's, and

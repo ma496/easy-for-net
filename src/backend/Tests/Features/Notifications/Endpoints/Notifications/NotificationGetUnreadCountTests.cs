@@ -4,7 +4,7 @@ using Backend.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// Tests for the <see cref="NotificationGetUnreadCountEndpoint"/> covering unread notification counting
-/// in general and the tenant the count is taken over (AC-056).
+/// in general and the tenant the count is taken over.
 /// </summary>
 /// <remarks>
 /// The count is relative rather than absolute throughout: notifications are counted per tenant and the
@@ -51,7 +51,7 @@ public class NotificationGetUnreadCountTests(App app) : NotificationsTestsBase(a
 
     /// <summary>
     /// Verifies that the count is taken over the tenant being acted in, so a notification raised in
-    /// another tenant does not move it (AC-056).
+    /// another tenant does not move it.
     /// </summary>
     /// <remarks>
     /// Two recipients' worth of proof are given here: the count taken in the tenant being acted in is

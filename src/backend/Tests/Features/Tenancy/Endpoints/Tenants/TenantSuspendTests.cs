@@ -7,7 +7,7 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 /// <summary>
 /// Tests for <see cref="TenantSuspendEndpoint"/>: putting a tenant out of service, the data it keeps
 /// while out of service, and the two requests it refuses - the system-created bootstrap tenant and one
-/// naming a tenant that is not there (AC-006, AC-011, AC-086).
+/// naming a tenant that is not there.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -32,7 +32,7 @@ public class TenantSuspendTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that suspending an active tenant sets it to suspended and retains everything it owns -
     /// the rows inside it are neither deleted nor detached, so nothing has to be restored later beyond
-    /// the status itself (AC-006).
+    /// the status itself.
     /// </summary>
     [Fact]
     public async Task Suspend_Active_Tenant()
@@ -67,7 +67,7 @@ public class TenantSuspendTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that suspending a tenant that is already suspended is accepted and changes nothing, so
-    /// the operation describes a state to reach rather than a transition that can fail (AC-006).
+    /// the operation describes a state to reach rather than a transition that can fail.
     /// </summary>
     [Fact]
     public async Task Suspending_An_Already_Suspended_Tenant_Is_Accepted()
@@ -90,7 +90,7 @@ public class TenantSuspendTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that the platform's own bootstrap tenant cannot be suspended, because the application
-    /// depends on it being in service, and that the attempt leaves it active (AC-011).
+    /// depends on it being in service, and that the attempt leaves it active.
     /// </summary>
     [Fact]
     public async Task Cannot_Suspend_System_Created_Tenant()
@@ -114,7 +114,7 @@ public class TenantSuspendTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a tenant which has never existed and one that has been deleted are refused with the
     /// same answer, so suspension cannot be used to learn whether a tenant identifier was ever real
-    /// (AC-086).
+    ///.
     /// </summary>
     [Fact]
     public async Task Unknown_And_Deleted_Tenant_Are_Refused_Alike()
@@ -146,7 +146,7 @@ public class TenantSuspendTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a request naming no tenant at all is refused before anything is read, which is the
-    /// last of this endpoint's failure branches (AC-086).
+    /// last of this endpoint's failure branches.
     /// </summary>
     [Fact]
     public async Task Missing_Tenant_Is_Rejected()

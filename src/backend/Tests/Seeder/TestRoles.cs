@@ -13,7 +13,7 @@ public static class TestRoles
     /// <summary>
     /// A role inside the bootstrap tenant holding exactly one permission
     /// (<see cref="Backend.Permissions.Allow.Tenant_Detail"/>).
-    /// Every other seeded role holds every permission, which is precisely why AC-088 needs a
+    /// Every other seeded role holds every permission, which is precisely why the permission gate tests need a
     /// purpose-built role: only a single-permission role can prove an endpoint's
     /// <c>Permissions(...)</c> declaration is what turns a caller away.
     /// </summary>

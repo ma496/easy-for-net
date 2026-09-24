@@ -4,8 +4,8 @@ using Backend.Features.FileManagement.Endpoints.Files;
 
 /// <summary>
 /// Tests for <see cref="FileUploadEndpoint"/>: that a tenant-scoped upload is attributed to the tenant
-/// the caller is acting in (AC-057), that one reached with no tenant active is refused and stores
-/// nothing (AC-099), and that an unauthenticated caller is refused before any of that (AC-098).
+/// the caller is acting in, that one reached with no tenant active is refused and stores
+/// nothing, and that an unauthenticated caller is refused before any of that.
 /// </summary>
 /// <remarks>
 /// Attribution is read off the record and off the file's reach rather than off the response, because the
@@ -18,7 +18,7 @@ public class FileUploadTests(App app) : FileTestsBase(app)
 {
     /// <summary>
     /// Verifies that a tenant-scoped file is attributed to the tenant the uploading caller is acting in
-    /// and read back from there (AC-057).
+    /// and read back from there.
     /// </summary>
     /// <remarks>
     /// The file is read back in its own tenant as well as attributed, so "belongs to this tenant" is
@@ -55,7 +55,7 @@ public class FileUploadTests(App app) : FileTestsBase(app)
 
     /// <summary>
     /// Verifies that an upload of a tenant-scoped file reached with no active tenant is refused and
-    /// stores neither a record nor any bytes (AC-099).
+    /// stores neither a record nor any bytes.
     /// </summary>
     /// <remarks>
     /// The uploader belongs to the platform tier, which is the standing that signs in acting in no
@@ -98,7 +98,7 @@ public class FileUploadTests(App app) : FileTestsBase(app)
 
     /// <summary>
     /// Verifies that an unauthenticated upload is refused with the standard unauthenticated response
-    /// (AC-098).
+    ///.
     /// </summary>
     [Fact]
     public async Task Unauthenticated()

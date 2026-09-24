@@ -31,7 +31,7 @@ interface TenantMemberTableProps {
 /**
  * Interactive client-side data table listing one tenant's members with sorting, pagination and search, and the
  * permission-gated actions that add a member, replace a member's roles and remove a member from this tenant alone
- * (AC-013): every action here is scoped to the tenant named in the route.
+ *: every action here is scoped to the tenant named in the route.
  */
 export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
   const url = useTableUrlState()

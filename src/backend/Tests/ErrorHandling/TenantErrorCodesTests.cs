@@ -4,7 +4,7 @@ using System.Reflection;
 
 /// <summary>
 /// Tests that the error-code catalogue declares a distinct code for each tenant failure, under the
-/// stable value the client and the translations are keyed on (AC-067).
+/// stable value the client and the translations are keyed on.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -47,7 +47,7 @@ public class TenantErrorCodesTests
 
     /// <summary>
     /// Verifies that every tenant failure has its own declared code, carrying the value the client and
-    /// the translations are keyed on, and that no two failures share one (AC-067).
+    /// the translations are keyed on, and that no two failures share one.
     /// </summary>
     [Fact]
     public void All_Tenant_Error_Codes_Are_Declared()

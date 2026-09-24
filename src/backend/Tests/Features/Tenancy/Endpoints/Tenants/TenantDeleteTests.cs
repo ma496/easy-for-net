@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Http;
 /// Tests for <see cref="TenantDeleteEndpoint"/>: retiring a tenant, the rows it keeps while becoming
 /// unreachable, the files it goes on holding while no longer serving them, and the refusals it answers -
 /// the system-created bootstrap tenant, a tenant already deleted and one that is not there
-/// (AC-009, AC-011, AC-060, AC-079, AC-086).
+///.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -39,7 +39,7 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that deleting a tenant soft-deletes it - excluded from every query while remaining
     /// retained in storage - and that the rows inside it are retained too, undeleted and still
-    /// attributed to it (AC-009, AC-079).
+    /// attributed to it.
     /// </summary>
     [Fact]
     public async Task Delete_Tenant()
@@ -91,10 +91,10 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a file uploaded in a tenant is retained through the tenant's deletion: the record
     /// still attributes it to the tenant and the bytes are still in storage, so a deletion takes a tenant
-    /// out of service rather than taking its data away (AC-060).
+    /// out of service rather than taking its data away.
     /// </summary>
     /// <remarks>
-    /// This is the retention half of AC-060, stated over the tenant's own files where the deletion
+    /// This is the retention half of the deleted-tenant file rule, stated over the tenant's own files where the deletion
     /// happens; <c>FileGetTests</c> is the half about what a caller is answered, and
     /// <c>TenantSuspensionTests</c> states both for suspension.
     /// </remarks>
@@ -144,7 +144,7 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that the platform's own bootstrap tenant cannot be deleted, because the application and
-    /// the seeded data are pinned to it, and that the attempt leaves it in place (AC-011).
+    /// the seeded data are pinned to it, and that the attempt leaves it in place.
     /// </summary>
     [Fact]
     public async Task Cannot_Delete_System_Created_Tenant()
@@ -168,7 +168,7 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that deleting a tenant that is already deleted is refused as a tenant that is not there,
     /// which is the same answer an unknown tenant gets and so reveals nothing about the deletion
-    /// (AC-009).
+    ///.
     /// </summary>
     [Fact]
     public async Task Deleting_An_Already_Deleted_Tenant_Is_Not_Found()
@@ -195,7 +195,7 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a tenant that has never existed is refused, and that a request naming no tenant at
     /// all is refused before anything is read - the remaining failure branches of this endpoint
-    /// (AC-086).
+    ///.
     /// </summary>
     [Fact]
     public async Task Unknown_And_Missing_Tenant_Are_Rejected()

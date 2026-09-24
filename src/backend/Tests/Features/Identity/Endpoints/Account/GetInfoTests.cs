@@ -8,7 +8,7 @@ using Backend.Tests.Features.Tenancy;
 /// Tests that the identity call reports the tenants the caller may work in and the one they are
 /// working in right now - read from the session rather than from anything the browser keeps, so the
 /// selection survives a reload and a second tab and is made once per session
-/// (AC-024, AC-124).
+///.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -35,7 +35,7 @@ public class GetInfoTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that signing in makes available the set of tenants the caller holds an active
-    /// membership in, so the application can offer exactly those and nothing else (AC-024).
+    /// membership in, so the application can offer exactly those and nothing else.
     /// </summary>
     [Fact]
     public async Task Returns_The_Callers_Tenants()
@@ -60,7 +60,7 @@ public class GetInfoTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that the selected tenant is a property of the session rather than of the tab it was
     /// made in: the same access token presented by a second client reports the identical active
-    /// tenant, so an ordinary reload or a new tab is not asked to choose again (AC-124).
+    /// tenant, so an ordinary reload or a new tab is not asked to choose again.
     /// </summary>
     [Fact]
     public async Task Active_Tenant_Survives_A_Fresh_Client()
@@ -103,7 +103,7 @@ public class GetInfoTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a tenant the caller's membership of has been removed stops being offered, while
     /// the tenants it still belongs to go on being offered - so what this call reports is the
-    /// memberships the caller holds now rather than the ones it held (AC-066).
+    /// memberships the caller holds now rather than the ones it held.
     /// </summary>
     /// <remarks>
     /// This is where the question lives now that reading every tenant there is belongs to the platform

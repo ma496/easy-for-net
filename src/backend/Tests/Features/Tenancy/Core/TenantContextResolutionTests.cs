@@ -4,7 +4,7 @@ using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Identity.Endpoints.Roles;
 
 /// <summary>
-/// Tests for which tenant a request acts in - exactly one, and never a guess (AC-022, AC-023, AC-050).
+/// Tests for which tenant a request acts in - exactly one, and never a guess.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -36,7 +36,7 @@ public class TenantContextResolutionTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a request made by an account that belongs to two tenants and has selected one acts
     /// in that one alone: the row it creates is attributed to the selected tenant, and no row is written
-    /// into the tenant it also belongs to (AC-022).
+    /// into the tenant it also belongs to.
     /// </summary>
     [Fact]
     public async Task Request_Acts_In_Exactly_One_Tenant()
@@ -74,7 +74,7 @@ public class TenantContextResolutionTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that an account belonging to two tenants and naming neither is refused at sign-in and
-    /// asked which tenant it means, rather than signed in to a session that has selected none (AC-023).
+    /// asked which tenant it means, rather than signed in to a session that has selected none.
     /// </summary>
     [Fact]
     public async Task Several_Memberships_And_No_Tenant_Named_Is_Refused_At_Sign_In()
@@ -111,7 +111,7 @@ public class TenantContextResolutionTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that an account holding no membership in any active tenant cannot sign in at all, and is
-    /// told that a tenant is what it is missing (AC-050).
+    /// told that a tenant is what it is missing.
     /// </summary>
     /// <remarks>
     /// An ordinary account with no tenant could exercise no permission whatever, so a session for it

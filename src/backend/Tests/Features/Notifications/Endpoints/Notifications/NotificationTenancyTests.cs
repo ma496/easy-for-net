@@ -6,9 +6,9 @@ using Backend.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// Tests for the per-tenant reach of a notification across the notification surfaces: a notice raised in one
-/// tenant is visible only there (AC-052), a platform-wide one is visible in every tenant and distinguishable
-/// from a tenant-wide one (AC-054), and a notice raised in one tenant is neither listed nor counted in
-/// another while the platform-wide one is (AC-129).
+/// tenant is visible only there, a platform-wide one is visible in every tenant and distinguishable
+/// from a tenant-wide one, and a notice raised in one tenant is neither listed nor counted in
+/// another while the platform-wide one is.
 /// </summary>
 /// <remarks>
 /// Every notice here is raised through <see cref="INotificationService"/> rather than arranged directly,
@@ -26,7 +26,7 @@ public class NotificationTenancyTests(App app) : NotificationsTestsBase(app)
 
     /// <summary>
     /// Verifies that a notification raised in one tenant is visible to a recipient acting there and not to
-    /// the same recipient acting in another tenant (AC-052).
+    /// the same recipient acting in another tenant.
     /// </summary>
     /// <remarks>
     /// The tenant it was attributed to is read off the stored row as well as off the two views, so that
@@ -62,7 +62,7 @@ public class NotificationTenancyTests(App app) : NotificationsTestsBase(app)
 
     /// <summary>
     /// Verifies that a platform-wide notification is visible while acting in either of two tenants, and is
-    /// told apart from a tenant-wide one by naming no tenant at all (AC-054).
+    /// told apart from a tenant-wide one by naming no tenant at all.
     /// </summary>
     /// <remarks>
     /// The recipient is a member of both tenants and the notice is raised outside any tenant scope, which is
@@ -96,7 +96,7 @@ public class NotificationTenancyTests(App app) : NotificationsTestsBase(app)
 
     /// <summary>
     /// Verifies that a notification raised in one tenant is neither listed nor counted while its recipient
-    /// acts in another, while the platform-wide one is both (AC-129).
+    /// acts in another, while the platform-wide one is both.
     /// </summary>
     /// <remarks>
     /// The count is read as a delta around a second notice raised in the same tenant, because the unread

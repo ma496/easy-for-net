@@ -9,7 +9,7 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 /// Tests for <see cref="TenantUpdateEndpoint"/>: renaming a tenant - its display name, its identifier,
 /// or both - and the three refusals that answer a rename: a tenant the caller may not see, the
 /// system-created bootstrap tenant, and an identifier another tenant already holds
-/// (AC-003, AC-004, AC-005, AC-010, AC-011).
+///.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -38,7 +38,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that renaming a tenant stores the new name and identifier, and records who renamed it
     /// and when, so an administration screen shows the tenant as it now stands and the platform can
-    /// answer who changed it (AC-005).
+    /// answer who changed it.
     /// </summary>
     [Fact]
     public async Task Valid_Input()
@@ -78,7 +78,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that renaming a tenant onto an identifier another tenant already holds is refused
     /// against the identifier field, and that the refusal leaves the tenant exactly as it was - neither
-    /// name nor identifier moved (AC-003).
+    /// name nor identifier moved.
     /// </summary>
     [Fact]
     public async Task Rename_To_Existing_Identifier()
@@ -108,7 +108,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a tenant renamed while keeping the identifier it already holds is not refused as a
-    /// duplicate of itself, which is what the comparison leaving the tenant out means (AC-003).
+    /// duplicate of itself, which is what the comparison leaving the tenant out means.
     /// </summary>
     [Fact]
     public async Task Keeping_Its_Own_Identifier_Is_Not_A_Duplicate()
@@ -135,7 +135,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a rename breaking the naming rules is refused against each field that broke one,
-    /// and that the tenant keeps the name and identifier it already had (AC-004).
+    /// and that the tenant keeps the name and identifier it already had.
     /// </summary>
     [Fact]
     public async Task Invalid_Input()
@@ -168,7 +168,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a request naming no tenant at all is refused before anything is read, so the last
     /// of this endpoint's failure branches is answered by validation rather than by a lookup of the
-    /// empty identifier (AC-086).
+    /// empty identifier.
     /// </summary>
     [Fact]
     public async Task Missing_Tenant_Is_Rejected()
@@ -189,7 +189,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that the platform's own bootstrap tenant cannot be renamed, because the identifier it
-    /// was created with is what the seeded data and the upgrade path are pinned to (AC-011).
+    /// was created with is what the seeded data and the upgrade path are pinned to.
     /// </summary>
     /// <remarks>
     /// The tenant is read but never written: the assertion is that the row the seeder made still carries
@@ -270,7 +270,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a tenant which has never existed and one that has been deleted are refused with
     /// the same answer, so a rename cannot be used to learn whether a tenant identifier was ever real
-    /// (AC-010).
+    ///.
     /// </summary>
     [Fact]
     public async Task Deleted_And_Unknown_Tenant_Are_Refused_Alike()

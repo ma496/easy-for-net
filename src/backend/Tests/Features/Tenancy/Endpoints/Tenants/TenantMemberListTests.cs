@@ -6,7 +6,7 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 /// <summary>
 /// Tests for <see cref="TenantMemberListEndpoint"/>: the page of accounts belonging to one tenant,
 /// the paging, sorting, searching and role filtering it offers over them, and the caller it refuses
-/// (AC-021, AC-061 - AC-064, AC-086).
+///.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -18,7 +18,7 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 /// The list is one of the two surfaces that address a tenant by route id rather than by the session -
 /// the other is member addition - so the refusal it owes a caller with no standing in that tenant is
 /// tested here, and the same refusal is tested from the other side in
-/// <see cref="TenantMemberAddTests"/> (AC-021).
+/// <see cref="TenantMemberAddTests"/>.
 /// </para>
 /// </remarks>
 public class TenantMemberListTests(App app) : TenancyTestsBase(app)
@@ -26,7 +26,7 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that the member list is paged and that the total describes the whole matching set
     /// rather than the page returned, so an administration screen can show how many pages remain
-    /// (AC-061).
+    ///.
     /// </summary>
     [Fact]
     public async Task List_Members_Pagination()
@@ -60,7 +60,7 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that the permitted sort fields order the member list, in either direction
-    /// (AC-062).
+    ///.
     /// </summary>
     [Fact]
     public async Task Sorting()
@@ -90,7 +90,7 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a sort field outside the permitted set is refused as a validation failure naming
-    /// the field, rather than reaching the database and failing there (AC-063).
+    /// the field, rather than reaching the database and failing there.
     /// </summary>
     [Fact]
     public async Task Invalid_Sort_Field()
@@ -110,7 +110,7 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that free-text search matches a member's username and email address, so the screen can
-    /// find one member among many either way (AC-064).
+    /// find one member among many either way.
     /// </summary>
     [Fact]
     public async Task Search_By_Username_And_Email()
@@ -139,7 +139,7 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that the list can be filtered to the members holding one role of the tenant, which is
-    /// how a screen answers who holds what (AC-086).
+    /// how a screen answers who holds what.
     /// </summary>
     [Fact]
     public async Task Filter_By_Role()
@@ -164,7 +164,7 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that each row reports the member's account details, whether that account is active,
     /// when it joined, and the roles it holds in this tenant alone, so the screen renders a member
-    /// without a second read (AC-086).
+    /// without a second read.
     /// </summary>
     [Fact]
     public async Task Rows_Report_The_Member_And_The_Tenant_Roles_It_Holds()
@@ -196,7 +196,7 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
     /// Verifies that a caller who is neither a platform administrator nor a member of the tenant
     /// addressed is refused with a defined code, and that the refusal carries no member rows - so the
     /// list cannot be used to read the membership of a tenant the caller has nothing to do with
-    /// (AC-021).
+    ///.
     /// </summary>
     /// <remarks>
     /// The caller is given every permission the endpoint declares inside its own tenant, so what

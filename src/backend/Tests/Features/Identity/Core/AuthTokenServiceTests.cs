@@ -9,7 +9,7 @@ using Backend.Features.Tenancy.Core;
 using Backend.Tests.Features.Tenancy;
 
 /// <summary>
-/// Tests for <see cref="IAuthTokenService"/> and <see cref="IAuthTokenCleanService"/> covering token validation, saving, and expiration cleanup, and for the tenant a refresh carries forward (AC-109).
+/// Tests for <see cref="IAuthTokenService"/> and <see cref="IAuthTokenCleanService"/> covering token validation, saving, and expiration cleanup, and for the tenant a refresh carries forward.
 /// </summary>
 public class AuthTokenServiceTests(App app) : TenancyTestsBase(app)
 {
@@ -22,7 +22,7 @@ public class AuthTokenServiceTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that refreshing a session re-establishes the very tenant it already had: the renewed
     /// access token names that tenant and never none, and never the one the caller acted in before
-    /// selecting (AC-109).
+    /// selecting.
     /// </summary>
     /// <remarks>
     /// <para>

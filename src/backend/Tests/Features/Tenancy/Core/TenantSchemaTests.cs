@@ -5,7 +5,7 @@ using Backend.ShareData.Entities;
 
 /// <summary>
 /// Tests for the shape the tenancy schema was built with - the columns and the constraints the rest of
-/// the feature is allowed to rely on (AC-001, AC-085).
+/// the feature is allowed to rely on.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -41,7 +41,7 @@ public class TenantSchemaTests(App app) : TenancyTestsBase(app)
     /// Verifies that the model describes a tenant as the tenant lifecycle needs it - the identity it is
     /// addressed by, the state it is in, who created and last changed it, the soft-delete pair that lets
     /// it be retired without being erased, and a unique index over the normalized identifier
-    /// (AC-001).
+    ///.
     /// </summary>
     [Fact]
     public void Tenant_Entity_Shape()
@@ -73,7 +73,7 @@ public class TenantSchemaTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that the schema the suite is running against is complete from a first-time creation:
     /// the model declares nothing the migrations have not applied, the tenancy tables are there, and
-    /// both unique indexes exist in the database rather than only in the model (AC-085).
+    /// both unique indexes exist in the database rather than only in the model.
     /// </summary>
     /// <remarks>
     /// The database this runs against was created by the shared fixture migrating an empty one, so an

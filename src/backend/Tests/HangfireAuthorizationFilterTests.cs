@@ -7,7 +7,7 @@ using Backend.Features.Identity.Core;
 /// Tests that the background-job dashboard is a platform-tier surface: an unauthenticated caller and a
 /// caller holding only a tenant's own authority are both refused, and what opens it is the account tier
 /// and nothing else - a tenant-defined role named <c>Admin</c> and any permission a tenant could grant
-/// included (AC-047).
+/// included.
 /// </summary>
 /// <remarks>
 /// The rule is exercised over principals rather than through a fabricated dashboard request, which is
@@ -21,7 +21,7 @@ public class HangfireAuthorizationFilterTests
 {
     /// <summary>
     /// Verifies that the dashboard is open to an authenticated platform account and to nobody else
-    /// (AC-047).
+    ///.
     /// </summary>
     [Fact]
     public void Dashboard_Requires_Platform_Account()

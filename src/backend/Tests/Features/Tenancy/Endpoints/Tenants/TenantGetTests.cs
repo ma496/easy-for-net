@@ -5,18 +5,18 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 
 /// <summary>
 /// Tests for <see cref="TenantGetEndpoint"/>: reading one tenant, and the single refusal that answers
-/// every way a tenant can be unavailable to the caller (AC-010, AC-021, AC-046).
+/// every way a tenant can be unavailable to the caller.
 /// </summary>
 /// <remarks>
 /// <para>
 /// The point of the refusal is what it does not say. A tenant that was deleted, a tenant the caller
 /// holds no standing in, and a tenant that never existed are deliberately one answer: the same status,
 /// the same code and the same message, so the response cannot be used to learn whether a tenant
-/// identifier is - or ever was - real (AC-010).
+/// identifier is - or ever was - real.
 /// </para>
 /// <para>
 /// A tenant addressed by id is refused through <c>ThrowError</c>, which is a 400 carrying the code,
-/// rather than through a bare 404. The code is the point: AC-069 turns it into a message, and a 404
+/// rather than through a bare 404. The code is the point: the web app turns it into a message, and a 404
 /// without one would tell the web app nothing it could translate.
 /// </para>
 /// </remarks>
@@ -24,7 +24,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
 {
     /// <summary>
     /// Verifies that a caller holding platform administration reads a tenant it holds no membership in
-    /// (AC-046).
+    ///.
     /// </summary>
     [Fact]
     public async Task Platform_Administrator_Reads_A_Tenant_It_Is_Not_A_Member_Of()
@@ -45,7 +45,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a member reads the tenant it belongs to, which is the ordinary path the
-    /// administration screens depend on (AC-021).
+    /// administration screens depend on.
     /// </summary>
     [Fact]
     public async Task Member_Reads_Its_Own_Tenant()
@@ -110,7 +110,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a caller that is a member of one tenant and not of another is refused the other
     /// exactly as it is refused a tenant that is not there, so membership standing cannot be probed
-    /// through this route (AC-021, AC-010).
+    /// through this route.
     /// </summary>
     [Fact]
     public async Task Non_Member_Is_Refused_As_If_The_Tenant_Did_Not_Exist()
@@ -138,7 +138,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a tenant which has been deleted is refused exactly as a tenant that never existed
-    /// is, which is what makes a deletion unobservable (AC-010).
+    /// is, which is what makes a deletion unobservable.
     /// </summary>
     [Fact]
     public async Task Deleted_Tenant_Is_Refused_As_If_The_Tenant_Did_Not_Exist()
@@ -168,7 +168,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that a tenant that has never existed is refused with the not-found code (AC-010).
+    /// Verifies that a tenant that has never existed is refused with the not-found code.
     /// </summary>
     [Fact]
     public async Task Unknown_Tenant_Is_Not_Found()
@@ -185,7 +185,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that reading the platform's own bootstrap tenant reports it as system-created, which is
-    /// the fact every refusal to rename, suspend or delete it rests on (AC-046).
+    /// the fact every refusal to rename, suspend or delete it rests on.
     /// </summary>
     [Fact]
     public async Task Bootstrap_Tenant_Is_System_Created()
@@ -202,7 +202,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that a request naming no tenant at all is refused before anything is read (AC-086).
+    /// Verifies that a request naming no tenant at all is refused before anything is read.
     /// </summary>
     [Fact]
     public async Task Missing_Tenant_Is_Rejected()

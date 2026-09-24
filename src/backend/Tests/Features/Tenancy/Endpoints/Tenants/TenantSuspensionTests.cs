@@ -15,7 +15,7 @@ using Microsoft.AspNetCore.Http;
 /// being answered, that the caller keeps their session and is offered another tenant instead of being
 /// signed out, that each refusal names what actually went wrong, that the tenant's files stop being
 /// served while being retained, and that reactivation restores access on the token that was refused
-/// (AC-007, AC-008, AC-029, AC-060, AC-070, AC-089).
+///.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -46,7 +46,7 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
     /// Verifies that a member of a suspended tenant stops being answered once their session is
     /// renewed: the renewal succeeds, hands back a session naming no tenant, and every tenant-scoped
     /// call is refused from then on - a 403 rather than the 200 it answered before or the 401 of a
-    /// session that ended (AC-007).
+    /// session that ended.
     /// </summary>
     [Fact]
     public async Task Suspended_Tenant_Stops_Answering_Once_The_Session_Is_Renewed()
@@ -83,7 +83,7 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
     /// Verifies that suspending one tenant leaves its member's session standing and their other
     /// memberships intact: the same token is refused the suspended tenant and still gets an answer
     /// naming the tenant they may work in instead, so the caller is never left signed out and never
-    /// left without somewhere to go (AC-029).
+    /// left without somewhere to go.
     /// </summary>
     [Fact]
     public async Task Suspension_Keeps_The_Session_And_Offers_Another_Tenant()
@@ -122,7 +122,7 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that both ways a session's tenant can stop being usable - the tenant going out of
     /// service, and the membership being removed - leave the caller signed in with the tenants they
-    /// still belong to, rather than signing them out (AC-070).
+    /// still belong to, rather than signing them out.
     /// </summary>
     /// <remarks>
     /// The two causes are no longer told apart by the refusal, and deliberately so: a renewed session
@@ -193,7 +193,7 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
     /// Verifies that a file uploaded in a tenant stops being served once that tenant is suspended,
     /// while the record attributing it and the stored bytes themselves are retained - so suspension
     /// withdraws access without destroying data, and reactivation has something to restore
-    /// (AC-060).
+    ///.
     /// </summary>
     [Fact]
     public async Task Suspended_Tenant_Files_Are_Not_Served_But_Are_Retained()
@@ -249,7 +249,7 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that reactivating a tenant returns its members to work without a second sign-in - the
     /// other half of the refusal being a refusal of the operation rather than of the session
-    /// (AC-008, AC-089).
+    ///.
     /// </summary>
     /// <remarks>
     /// The member signs in once and never again: the session that lost the tenant at one renewal gets

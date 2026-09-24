@@ -9,7 +9,7 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 /// Tests for <see cref="TenantMemberAddEndpoint"/>: joining an existing account to a tenant with
 /// exactly the roles named, the memberships it leaves untouched, the account it refuses to add twice,
 /// the account it refuses to invent, the caller it refuses for want of standing, and every other
-/// branch of the operation (AC-013 - AC-016, AC-021, AC-078, AC-086, AC-106, AC-107).
+/// branch of the operation.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -35,7 +35,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that adding an existing account to a tenant creates the membership and grants exactly
     /// the tenant roles the request named - no more, which would be authority nobody asked for, and no
-    /// fewer, which would be a member unable to do the job they were added for (AC-014).
+    /// fewer, which would be a member unable to do the job they were added for.
     /// </summary>
     [Fact]
     public async Task Valid_Input()
@@ -75,7 +75,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
     /// Verifies that the first member of a tenant is granted that tenant's administrator role on top
     /// of the set asked for, so a tenant can always be administered from inside it and the
     /// last-administrator guard can never be violated the moment a tenant gains its first member
-    /// (AC-086).
+    ///.
     /// </summary>
     [Fact]
     public async Task First_Member_Is_Also_Granted_Tenant_Administration()
@@ -108,7 +108,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that adding an account that already belongs to the tenant is refused with a defined
     /// code, naming the account as what was wrong with the request, and that the refusal creates no
-    /// second membership (AC-015).
+    /// second membership.
     /// </summary>
     [Fact]
     public async Task Duplicate_Membership()
@@ -147,7 +147,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a membership cannot be created for an account that does not exist: the request is
     /// refused with a defined code and no membership is stored, because a membership joins an existing
-    /// account to a tenant rather than bringing one into being (AC-016).
+    /// account to a tenant rather than bringing one into being.
     /// </summary>
     [Fact]
     public async Task Unknown_User()
@@ -177,7 +177,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
     /// Verifies that a caller who is neither a platform administrator nor a member of the tenant
     /// addressed is refused with a defined code, and that nothing is written - so the membership
     /// surface cannot be used to join an account to a tenant the caller has no standing in
-    /// (AC-021).
+    ///.
     /// </summary>
     /// <remarks>
     /// The caller holds the permission the endpoint declares inside its own tenant, so what refuses it
@@ -214,7 +214,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that an account's memberships are held independently, so removing it from one tenant
     /// leaves its membership of another, and the roles it holds there, exactly as they were
-    /// (AC-013).
+    ///.
     /// </summary>
     [Fact]
     public async Task Memberships_Are_Independent()
@@ -250,7 +250,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that an account that was removed from a tenant can be added to it again, that the
     /// membership it gains is a new one, and that it takes exactly the roles the second request named
-    /// rather than inheriting anything from the membership it held before (AC-106).
+    /// rather than inheriting anything from the membership it held before.
     /// </summary>
     [Fact]
     public async Task Re_Add_After_Removal()
@@ -293,7 +293,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a membership which was removed does not make the account look like an existing
     /// member - so it does not block the rejoin - and that only the live membership that rejoin
-    /// created is what a further attempt is refused against (AC-107).
+    /// created is what a further attempt is refused against.
     /// </summary>
     /// <remarks>
     /// The second half matters as much as the first: a comparison that simply ignored removed rows
@@ -347,7 +347,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a membership records who created it and when, so the tenant has its own history
-    /// of when an account joined it and on whose authority (AC-078).
+    /// of when an account joined it and on whose authority.
     /// </summary>
     [Fact]
     public async Task Records_Audit_Fields()
@@ -380,7 +380,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that adding a member to a tenant that does not exist is refused with a defined code,
-    /// which is also the answer a deleted tenant gets (AC-086).
+    /// which is also the answer a deleted tenant gets.
     /// </summary>
     [Fact]
     public async Task Tenant_Not_Found()
@@ -404,7 +404,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that nothing is added to a suspended tenant: the request is refused with the code
     /// naming suspension, and no membership is written, because a tenant that is out of service is not
-    /// administered while it is (AC-086).
+    /// administered while it is.
     /// </summary>
     [Fact]
     public async Task Suspended_Tenant_Is_Refused()
@@ -431,7 +431,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a request naming a role that is not one of this tenant's own is refused against
     /// the role set, and that no membership is created - so a request naming another tenant's role
-    /// cannot leave a member holding part of the set it asked for (AC-086).
+    /// cannot leave a member holding part of the set it asked for.
     /// </summary>
     [Fact]
     public async Task Role_Of_Another_Tenant_Is_Refused()
@@ -461,7 +461,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a request naming no tenant, no account or an empty role is refused as a
-    /// validation failure naming the field, before anything is read (AC-086).
+    /// validation failure naming the field, before anything is read.
     /// </summary>
     [Fact]
     public async Task Missing_Fields_Are_Rejected()

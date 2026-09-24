@@ -6,7 +6,7 @@ using Backend.Tests.Features.Tenancy;
 
 /// <summary>
 /// Tests for the <see cref="RoleUpdateEndpoint"/> covering updating roles, non-existent roles,
-/// protected system-created roles, and the role of another tenant that cannot be renamed (AC-111).
+/// protected system-created roles, and the role of another tenant that cannot be renamed.
 /// </summary>
 public class RoleUpdateTests(App app) : TenancyTestsBase(app)
 {
@@ -86,7 +86,7 @@ public class RoleUpdateTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that renaming a role belonging to another tenant answers exactly as renaming a role that
-    /// does not exist does, and leaves it as it was (AC-111).
+    /// does not exist does, and leaves it as it was.
     /// </summary>
     /// <remarks>
     /// The name asked for is one the caller would be allowed to take in its own tenant, so the only
@@ -145,7 +145,7 @@ public class RoleUpdateTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that renaming a role onto a name its own tenant already uses is refused with a defined
     /// code naming the field to change, compared without regard to case or surrounding whitespace, and
-    /// that the role being renamed is left exactly as it was (AC-039).
+    /// that the role being renamed is left exactly as it was.
     /// </summary>
     [Fact]
     public async Task Renaming_Onto_A_Name_The_Tenant_Already_Uses_Is_Refused()
@@ -185,7 +185,7 @@ public class RoleUpdateTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that the name a deleted role of the tenant was given is not free to take: renaming
     /// another role onto it is refused, because deleting a role does not release the name it used
-    /// (AC-039).
+    ///.
     /// </summary>
     /// <remarks>
     /// The deleted role is shown to be gone from the tenant's own view before the rename is attempted, so

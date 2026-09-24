@@ -7,7 +7,7 @@ using Backend.Tests.Features.Tenancy;
 /// Tests that signing out ends the session outright: the tenant the session was acting in is recorded
 /// on the session's own row rather than kept anywhere the client could hold on to, so discarding the
 /// session discards the selection with it, and the next sign-in on the same browser inherits nothing
-/// (AC-125).
+///.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -29,7 +29,7 @@ public class SignoutTests(App app) : TenancyTestsBase(app)
 {
     /// <summary>
     /// Verifies that signing out discards the session together with the tenant it was acting in, and
-    /// that the next sign-in inherits no selection (AC-125).
+    /// that the next sign-in inherits no selection.
     /// </summary>
     [Fact]
     public async Task Signout_Clears_The_Session_Tenant()

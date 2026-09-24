@@ -5,7 +5,7 @@ using Backend.Features.Identity.Core.Entities;
 
 /// <summary>
 /// Tests for the tenant query filter and save-time attribution - the kernel the rest of the tenancy
-/// suite stands on (AC-030 to AC-037, AC-080).
+/// suite stands on.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -252,7 +252,7 @@ public class TenantFilterTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a row the caller has attributed to a tenant other than the active one is refused
     /// rather than stored, so that supplying an attribution is never a way to write into a tenant the
-    /// caller is not acting in (AC-030).
+    /// caller is not acting in.
     /// </summary>
     [Fact]
     public async Task Attribution_Supplied_By_The_Caller_Is_Refused()
@@ -284,7 +284,7 @@ public class TenantFilterTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that an existing row is never moved from the tenant it was created in, so that a row's
-    /// attribution is decided once and a change to it is refused rather than applied (AC-030).
+    /// attribution is decided once and a change to it is refused rather than applied.
     /// </summary>
     [Fact]
     public async Task Reattributing_An_Existing_Row_Is_Refused()

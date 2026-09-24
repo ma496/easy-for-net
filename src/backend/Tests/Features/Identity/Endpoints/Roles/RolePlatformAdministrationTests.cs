@@ -9,7 +9,7 @@ using Backend.Tests.Features.Tenancy;
 /// Tests for how the platform tier reaches the role endpoints of a tenant: the reader, the rename, the
 /// permission change and the delete all act on a tenant's role only once the platform account is a
 /// member of that tenant and has entered it, and then only on the tenant role its membership holds
-/// (AC-113).
+///.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -34,7 +34,7 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a platform administrator reads a role of a tenant it is a member of, with
-    /// the permissions the role actually holds (AC-113).
+    /// the permissions the role actually holds.
     /// </summary>
     [Fact]
     public async Task Reads_A_Role_Of_A_Tenant_It_Belongs_To()
@@ -55,7 +55,7 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a platform administrator renames a role of a tenant it is a member of, and
-    /// that the rename reaches the stored row (AC-113).
+    /// that the rename reaches the stored row.
     /// </summary>
     [Fact]
     public async Task Renames_A_Role_Of_A_Tenant_It_Belongs_To()
@@ -83,7 +83,7 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a platform administrator replaces the permission set of a role belonging to a
     /// tenant it is a member of, and that the tenant's role grants the new set afterwards
-    /// (AC-113).
+    ///.
     /// </summary>
     [Fact]
     public async Task Changes_The_Permissions_Of_A_Role_Of_A_Tenant_It_Belongs_To()
@@ -110,7 +110,7 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a platform administrator deletes a role belonging to a tenant it is a member
     /// of, and that the delete is the soft one every other caller gets: the row is retained
-    /// carrying the deletion, and the tenant stops being shown the role (AC-113).
+    /// carrying the deletion, and the tenant stops being shown the role.
     /// </summary>
     [Fact]
     public async Task Deletes_A_Role_Of_A_Tenant_It_Belongs_To()
@@ -158,7 +158,7 @@ public class RolePlatformAdministrationTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that the reach stops at the tenant entered: a platform caller acting inside one tenant
     /// is answered about a role of another exactly as it would be about a role that does not exist
-    /// (AC-111, AC-113).
+    ///.
     /// </summary>
     /// <remarks>
     /// This is the other half of the four tests above, and it is what makes them say something. A

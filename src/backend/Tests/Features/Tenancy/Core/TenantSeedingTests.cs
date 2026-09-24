@@ -5,7 +5,7 @@ using Backend.Features.Identity.Core.Entities;
 
 /// <summary>
 /// Tests for the state a freshly seeded database is in, and for what running the seeder again leaves
-/// alone (AC-082, AC-083, AC-084, AC-121).
+/// alone.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -29,7 +29,7 @@ public class TenantSeedingTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that exactly one system-created tenant exists, that it is the bootstrap tenant the
     /// migration and the seeder both name, and that the seeded tenant administrator holds an active
-    /// membership of it carrying tenant administration (AC-082).
+    /// membership of it carrying tenant administration.
     /// </summary>
     [Fact]
     public async Task Bootstrap_Tenant_Exists_With_The_Seeded_Administrator()
@@ -71,7 +71,7 @@ public class TenantSeedingTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that the seeded platform administrator is a platform administrator - that it holds
     /// the platform tier, and that the role granting its platform-scoped permissions belongs to no tenant, so no tenant
-    /// role could ever have conferred it (AC-083) - and that it belongs to no tenant itself, the
+    /// role could ever have conferred it - and that it belongs to no tenant itself, the
     /// bootstrap tenant being administered by an account of its own.
     /// </summary>
     [Fact]
@@ -153,7 +153,7 @@ public class TenantSeedingTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that running the seeder again preserves a tenant, a membership and a tenant role that
     /// already exist, identities and permissions included - which is what makes it safe on the template's
-    /// own first start and on every start after it (AC-084).
+    /// own first start and on every start after it.
     /// </summary>
     /// <remarks>
     /// The second run is resolved from a scope of its own, so it is an independent unit of work rather
@@ -210,7 +210,7 @@ public class TenantSeedingTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that every role in the database declares a scope - it belongs to a tenant, or it is a
     /// platform role - and that every system-created platform role holds at least one platform
-    /// permission, so no role left behind by a legacy seed survives (AC-121).
+    /// permission, so no role left behind by a legacy seed survives.
     /// </summary>
     /// <remarks>
     /// A role belonging to no tenant is exactly what a platform role is. A platform administrator acting

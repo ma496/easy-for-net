@@ -41,7 +41,7 @@ public abstract class TenancyTestsBase(App app) : AppTestsBase(app)
     protected IUserService UserService => Service<IUserService>();
 
     /// <summary>
-    /// Creates a tenant with a unique identifier valid under AC-101, under platform scope - the
+    /// Creates a tenant with a unique, validly shaped identifier, under platform scope - the
     /// standing a tenant is created from, since a tenant belongs to no tenant of its own.
     /// </summary>
     /// <param name="status">The state to leave the tenant in. Suspension is applied after creation because a tenant is always born active.</param>
@@ -126,7 +126,7 @@ public abstract class TenancyTestsBase(App app) : AppTestsBase(app)
     }
 
     /// <summary>
-    /// Creates an active account holding no membership at all - the AC-050/AC-122 standing, in which
+    /// Creates an active account holding no membership at all - the standing in which
     /// every tenant-scoped call is refused with an explanation rather than answered from nothing.
     /// </summary>
     /// <returns>The created account.</returns>
@@ -320,7 +320,7 @@ public abstract class TenancyTestsBase(App app) : AppTestsBase(app)
     }
 
     /// <summary>
-    /// An identifier no other test can collide with, in the shape AC-101 accepts: lower-case letters,
+    /// An identifier no other test can collide with, in the shape a tenant identifier accepts: lower-case letters,
     /// digits and single hyphens, beginning and ending with a letter or a digit.
     /// </summary>
     protected static string NewTenantIdentifier() => $"t-{Guid.NewGuid():N}";

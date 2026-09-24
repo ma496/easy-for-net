@@ -30,7 +30,7 @@ const messages = new Map(
 const defaultLocaleMessages = messages.get(i18nConfig.defaultLocale)!
 const defaultLocaleKeys = [...defaultLocaleMessages.keys()].sort()
 
-/** The error codes a tenant refusal can arrive with, each of which has a message of its own (AC-069). */
+/** The error codes a tenant refusal can arrive with, each of which has a message of its own. */
 const tenantErrorCodes = [
   'authenticationRequired',
   'permissionDenied',
@@ -50,7 +50,7 @@ const tenantErrorCodes = [
   'userSharedAcrossTenants',
 ]
 
-/** The keys the tenant screens render from, one per string a person reads on them (AC-075). */
+/** The keys the tenant screens render from, one per string a person reads on them. */
 const tenantScreenKeys = [
   'navigation.tenants',
   'navigation.tenantsList',
@@ -152,7 +152,7 @@ describe('locale files', () => {
  * The tenant screens run in a locale the user may read right to left, and there is no browser here to
  * render them in, so what is checked is the source: every spacing, alignment, inset and corner these
  * screens decide has to be decided in logical terms, so the direction of the locale flips all of them
- * at once rather than leaving half the screen pointing the wrong way (AC-077).
+ * at once rather than leaving half the screen pointing the wrong way.
  */
 
 /** The directory trees holding the screens and pieces this feature introduced. */

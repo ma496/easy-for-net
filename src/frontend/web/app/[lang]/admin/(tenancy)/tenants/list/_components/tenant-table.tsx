@@ -26,7 +26,7 @@ import { parseAsStringEnum } from 'nuqs'
  * Interactive client-side data table that lists tenants with sorting, pagination, search and
  * lifecycle-status filtering synced to the URL, and permission-gated create, update, member,
  * suspend/reactivate and delete actions. The system-created tenant offers no lifecycle action,
- * since the API refuses to rename, suspend or delete it (AC-011).
+ * since the API refuses to rename, suspend or delete it.
  */
 export const TenantTable = () => {
   const url = useTableUrlState({
@@ -135,7 +135,7 @@ export const TenantTable = () => {
       if (dataToExport.length === 0) return
 
       // Every header and the sheet name are translated, because the export is read by the person who
-      // asked for it and not by the API (AC-075).
+      // asked for it and not by the API.
       const rows = dataToExport.map((tenant) => ({
         [t('table.columns.name')]: tenant.name,
         [t('table.columns.identifier')]: tenant.identifier,
@@ -251,7 +251,7 @@ export const TenantTable = () => {
       header: t('table.actions'),
       cell: (info) => {
         const tenant = info.row.original
-        // The system-created tenant is protected from every lifecycle change (AC-011),
+        // The system-created tenant is protected from every lifecycle change,
         // so those actions are omitted rather than shown and then refused.
         const canChangeLifecycle = !tenant.systemCreated
 

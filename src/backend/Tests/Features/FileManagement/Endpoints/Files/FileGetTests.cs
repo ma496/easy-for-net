@@ -5,9 +5,9 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 
 /// <summary>
 /// Tests for <see cref="FileGetEndpoint"/>: that a file attributed to another tenant is refused with the
-/// code that names why (AC-058), that knowing the stored name buys nothing (AC-059), that a file
-/// uploaded in a tenant stops being served once that tenant is deleted while being retained (AC-060), and
-/// that an unauthenticated caller is refused before any of that (AC-098).
+/// code that names why, that knowing the stored name buys nothing, that a file
+/// uploaded in a tenant stops being served once that tenant is deleted while being retained, and
+/// that an unauthenticated caller is refused before any of that.
 /// </summary>
 /// <remarks>
 /// Each refusal is read twice, once as the response the typed helper deserializes and once as the raw
@@ -19,7 +19,7 @@ public class FileGetTests(App app) : FileTestsBase(app)
 {
     /// <summary>
     /// Verifies that a caller acting in one tenant is refused a file attributed to another, with the code
-    /// that names the refusal, the file left intact, and its own tenant still served (AC-058).
+    /// that names the refusal, the file left intact, and its own tenant still served.
     /// </summary>
     [Fact]
     public async Task Cross_Tenant_File_Is_Refused()
@@ -60,7 +60,7 @@ public class FileGetTests(App app) : FileTestsBase(app)
 
     /// <summary>
     /// Verifies that the stored name itself, read from the record that attributes the file, yields no part
-    /// of another tenant's content (AC-059).
+    /// of another tenant's content.
     /// </summary>
     /// <remarks>
     /// The name is taken from the record rather than from the upload response, because that is the value a
@@ -106,7 +106,7 @@ public class FileGetTests(App app) : FileTestsBase(app)
     /// <summary>
     /// Verifies that a file uploaded in a tenant stops being served once that tenant is deleted, while
     /// the record attributing it and the stored bytes are retained - so deletion withdraws access without
-    /// destroying data (AC-060).
+    /// destroying data.
     /// </summary>
     /// <remarks>
     /// The file is served to the same client before the deletion, so the refusal that follows is provably
@@ -169,7 +169,7 @@ public class FileGetTests(App app) : FileTestsBase(app)
 
     /// <summary>
     /// Verifies that an unauthenticated read is refused with the standard unauthenticated response
-    /// (AC-098).
+    ///.
     /// </summary>
     [Fact]
     public async Task Unauthenticated()

@@ -6,8 +6,8 @@ using Backend.Tests.Features.Tenancy;
 
 /// <summary>
 /// Tests for the <see cref="RoleDeleteEndpoint"/> covering deletion of roles, non-existent roles,
-/// protected system-created roles - the platform role (AC-043) and a tenant's own (AC-043) - and the
-/// role of another tenant that cannot be deleted (AC-111).
+/// protected system-created roles - the platform role and a tenant's own - and the
+/// role of another tenant that cannot be deleted.
 /// </summary>
 public class RoleDeleteTests(App app) : TenancyTestsBase(app)
 {
@@ -94,7 +94,7 @@ public class RoleDeleteTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that a tenant's own system-created administrator role cannot be deleted (AC-043).
+    /// Verifies that a tenant's own system-created administrator role cannot be deleted.
     /// </summary>
     /// <remarks>
     /// The role is the one provisioning gave the tenant when it was created, and the caller is a member
@@ -138,7 +138,7 @@ public class RoleDeleteTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that deleting a role belonging to another tenant answers exactly as deleting a role that
-    /// does not exist does, and leaves it in place (AC-111).
+    /// does not exist does, and leaves it in place.
     /// </summary>
     /// <remarks>
     /// The role is read back across every tenant with the soft-delete filter in force, so the row being

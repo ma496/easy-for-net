@@ -24,8 +24,8 @@ using Backend.Features.Tenancy.Core;
 /// </para>
 /// <para>
 /// <c>dual</c> is the deliberate exception and the only account that exercises the "no active tenant
-/// at sign-in" path (AC-140/AC-149). <c>nomember</c> is the other way into that state - an account
-/// with no membership at all (AC-050/AC-122) - and differs from <c>dual</c> in that no tenant is
+/// at sign-in" path. <c>nomember</c> is the other way into that state - an account
+/// with no membership at all - and differs from <c>dual</c> in that no tenant is
 /// available to choose either.
 /// </para>
 /// </remarks>
@@ -68,7 +68,7 @@ public class TestsDataSeeder(IUserService userService,
         var secondTenantAdminUserId = await CreateAccountAsync("secondadmin");
 
         // limited: the bootstrap tenant, holding nothing but the single-permission role. This is the
-        // account AC-088's gate test signs in as, so it must hold no other permission anywhere.
+        // account the permission gate test signs in as, so it must hold no other permission anywhere.
         await JoinTenantAsync(TestTenants.BootstrapTenantId, limitedUserId, [limitedTenantRoleId]);
 
         // dual's first membership, and the other half of the state it exists for: one account in two

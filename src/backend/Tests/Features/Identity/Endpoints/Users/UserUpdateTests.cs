@@ -6,8 +6,7 @@ using Backend.Tests.Features.Tenancy;
 
 /// <summary>
 /// Tests for the <see cref="UserUpdateEndpoint"/> covering updating users, non-existent users,
-/// protected system-created users, and the account of another tenant that is out of reach (AC-094,
-/// AC-105).
+/// protected system-created users, and the account of another tenant that is out of reach.
 /// </summary>
 public class UserUpdateTests(App app) : TenancyTestsBase(app)
 {
@@ -101,13 +100,12 @@ public class UserUpdateTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that updating an account holding no membership in the tenant being acted in answers
-    /// exactly as updating an account that does not exist does, and leaves it untouched (AC-094,
-    /// AC-105).
+    /// exactly as updating an account that does not exist does, and leaves it untouched.
     /// </summary>
     /// <remarks>
     /// The request asks for a change to the account's profile and for it to be deactivated, so the
     /// stored values compared afterwards say whether any part of it was applied: an account reached by
-    /// an administrator of another tenant would come back renamed, and - the half AC-105 speaks to -
+    /// an administrator of another tenant would come back renamed, and - the more dangerous half -
     /// an account whose active flag was reached from outside its tenant would be one deactivation away
     /// from losing the access it was meant to keep.
     /// </remarks>

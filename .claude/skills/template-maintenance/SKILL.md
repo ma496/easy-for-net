@@ -42,12 +42,11 @@ intended baseline; add to them only what every new project would want.
 - `CLAUDE.md`, written from the embedded resource `tool/EasyForNetTool/new-project-claude.md`
 
 **A new root-level file or directory reaches generated projects only if it is added to that list.**
-`specs/` is deliberately absent — each project accumulates its own specifications.
 
 **Inside `.claude` the rule inverts.** `CopyDirectory` excludes by directory *name*, recursively, so
 everything under `.claude` ships unless its directory is named `new-project` or `template-maintenance`
-at some level. `.claude/skills`, `.claude/workflows` and `.claude/commands` all reach generated
-projects with no generator change. To keep something template-only, add its directory name to that
+at some level. Anything added under `.claude` reaches generated projects with no generator
+change. To keep something template-only, add its directory name to that
 array or put it outside `.claude`.
 
 Text inside copied markdown is rewritten (`Backend.` → the project's root namespace,
@@ -55,11 +54,9 @@ Text inside copied markdown is rewritten (`Backend.` → the project's root name
 `new-project-claude.md` in that `Backend.`-qualified form so the rewrite catches them, and avoid the
 bare word "Backend" in prose.
 
-**`ReplaceInFiles` filters on an exact extension, and it is only ever called with `.md`.** A `.js`,
-`.json` or `.ts` file under `.claude` is copied byte-for-byte. So the dynamic-workflow scripts in
-`.claude/workflows` must contain no namespace, no solution file name and no project file name; they
-delegate anything repo-specific to `CLAUDE.md` and to `.claude/skills/spec-driven/SKILL.md`, which are
-rewritten. `rg "Backend\.|EasyForNet|\.slnx|\.csproj" .claude/workflows` must return nothing.
+**`ReplaceInFiles` filters on an exact extension, and it is only ever called with `.md`.** Any
+other file under `.claude` is copied byte-for-byte, so keep namespaces, the solution file name and
+project file names out of non-markdown files there.
 
 Renaming happens through `NamespaceRewriter` (Roslyn) for `.cs` files and regex `ReplaceInFile` /
 `ReplaceInFiles` for everything else, including `Meta.cs`'s `InternalsVisibleTo`,

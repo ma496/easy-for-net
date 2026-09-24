@@ -4,7 +4,7 @@ using Backend.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// Tests for the <see cref="NotificationListEndpoint"/> covering listing, pagination, filtering by read status and group, authorization,
-/// and the tenant whose notifications the list is answered from (AC-052).
+/// and the tenant whose notifications the list is answered from.
 /// </summary>
 public class NotificationListTests(App app) : NotificationsTestsBase(app)
 {
@@ -169,7 +169,7 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
 
     /// <summary>
     /// Verifies that a notification raised in one tenant is listed only while its recipient acts in that
-    /// tenant, so one tenant's notifications stay out of another's (AC-052).
+    /// tenant, so one tenant's notifications stay out of another's.
     /// </summary>
     /// <remarks>
     /// One recipient is a member of both tenants, so what the two views differ by is the tenant being

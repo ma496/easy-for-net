@@ -11,7 +11,7 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 /// tenant with exactly the set supplied, the change it records, the last-administrator guard, the
 /// tenant whose roles it leaves alone, and every refusal it owes - a caller with no standing, a
 /// member who is not there, another tenant's role, a suspended tenant and a tenant that is not there
-/// (AC-017, AC-019, AC-020, AC-021, AC-086).
+///.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -39,7 +39,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a replacement leaves the member holding exactly the roles supplied - the role
     /// left out withdrawn and the role added granted - and that the change is recorded on the
-    /// membership as the last thing that happened to it (AC-017, AC-078).
+    /// membership as the last thing that happened to it.
     /// </summary>
     [Fact]
     public async Task Valid_Input()
@@ -78,7 +78,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
     /// Verifies that a replacement that would leave the tenant with no member holding tenant
     /// administration is refused with a defined code, and that the member still holds the
     /// administration the request would have withdrawn - refused rather than corrected, so nothing of
-    /// the request was applied (AC-019).
+    /// the request was applied.
     /// </summary>
     [Fact]
     public async Task Cannot_Strip_Last_Administrator_Role()
@@ -104,7 +104,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that an empty role set is a valid replacement that leaves the member in the tenant
     /// holding nothing there, rather than a removal: the membership stands and the account may be
-    /// given roles again without being added back (AC-017).
+    /// given roles again without being added back.
     /// </summary>
     [Fact]
     public async Task Empty_Set_Leaves_The_Member_In_The_Tenant()
@@ -130,7 +130,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a set naming the same role twice grants it once, so what was asked for, what was
-    /// stored and what is reported back are one and the same set (AC-017).
+    /// stored and what is reported back are one and the same set.
     /// </summary>
     [Fact]
     public async Task Duplicate_Roles_Are_Granted_Once()
@@ -153,7 +153,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a replacement reaches one tenant's assignments and no other's, so an account that
     /// belongs to several tenants can be re-roled in one of them without its standing in the rest being
-    /// disturbed (AC-017).
+    /// disturbed.
     /// </summary>
     [Fact]
     public async Task Only_This_Tenants_Assignments_Are_Replaced()
@@ -182,7 +182,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a replacement reaches the member's working session at its next renewal: the
     /// session stops being admitted to the operation the withdrawn role conferred, with no sign-in, no
-    /// password change and no session ended (AC-020).
+    /// password change and no session ended.
     /// </summary>
     /// <remarks>
     /// The renewal is the point at which the change lands. What a session may do is decided when its
@@ -225,7 +225,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a request naming a role that is not one of this tenant's own is refused against
     /// the role set, and that the member's assignments are left exactly as they stood - so a request
-    /// naming another tenant's role applies no part of itself (AC-086).
+    /// naming another tenant's role applies no part of itself.
     /// </summary>
     [Fact]
     public async Task Role_Of_Another_Tenant_Is_Refused()
@@ -254,7 +254,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a caller who is neither a platform administrator nor a member of the tenant
     /// addressed is refused with a defined code, and that the member named is left untouched - holding
-    /// the permission inside another tenant is not standing in this one (AC-021).
+    /// the permission inside another tenant is not standing in this one.
     /// </summary>
     [Fact]
     public async Task Non_Member_Is_Refused()
@@ -283,7 +283,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that re-roling an account that holds no membership of the tenant is answered as a
     /// missing record rather than as a business refusal, which is also the answer an account that was
-    /// removed from the tenant gets (AC-086).
+    /// removed from the tenant gets.
     /// </summary>
     [Fact]
     public async Task Member_Not_Found()
@@ -302,7 +302,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a suspended tenant's membership is not administered: the request is refused with
-    /// the code naming suspension, and the member's roles are left as they stood (AC-086).
+    /// the code naming suspension, and the member's roles are left as they stood.
     /// </summary>
     [Fact]
     public async Task Suspended_Tenant_Is_Refused()
@@ -325,7 +325,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a request naming a tenant that is not there is refused with the tenant code, which
-    /// is also the answer a deleted tenant gets (AC-086).
+    /// is also the answer a deleted tenant gets.
     /// </summary>
     [Fact]
     public async Task Tenant_Not_Found()
@@ -343,7 +343,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a request naming no tenant, no member or an empty role is refused as a validation
-    /// failure naming the field, before anything is read (AC-086).
+    /// failure naming the field, before anything is read.
     /// </summary>
     [Fact]
     public async Task Missing_Fields_Are_Rejected()
@@ -376,7 +376,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
     /// Verifies that the guard protecting a tenant from being left unadministered counts the members
     /// who hold tenant administration rather than the members the tenant happens to have: the
     /// replacement is refused while the only holder of it is the member being re-roled, however many
-    /// members remain, and is allowed the moment another member holds it (AC-019).
+    /// members remain, and is allowed the moment another member holds it.
     /// </summary>
     [Fact]
     public async Task The_Guard_Counts_Administrators_Rather_Than_Members()

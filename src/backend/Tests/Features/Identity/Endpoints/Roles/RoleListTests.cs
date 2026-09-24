@@ -5,8 +5,8 @@ using Backend.Tests.Features.Tenancy;
 
 /// <summary>
 /// Tests for the <see cref="RoleListEndpoint"/> covering listing and pagination of roles, the roles a
-/// caller acting in a tenant is shown (AC-110) and the widening a platform administrator is given
-/// instead (AC-113).
+/// caller acting in a tenant is shown and the widening a platform administrator is given
+/// instead.
 /// </summary>
 public class RoleListTests(App app) : TenancyTestsBase(app)
 {
@@ -109,7 +109,7 @@ public class RoleListTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a caller acting in a tenant lists that tenant's roles and no others, and that the
-    /// total is taken over the same restricted set (AC-110).
+    /// total is taken over the same restricted set.
     /// </summary>
     /// <remarks>
     /// The caller administers one generated tenant and is a member of no other, while the two roles it
@@ -152,7 +152,7 @@ public class RoleListTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a platform account acting in no tenant lists the platform's own roles and no
     /// tenant's, so the list follows the scope the caller is in rather than the tier it belongs to
-    /// (AC-113).
+    ///.
     /// </summary>
     /// <remarks>
     /// The two tenants are made by the test and the caller is a member of neither, which is what makes

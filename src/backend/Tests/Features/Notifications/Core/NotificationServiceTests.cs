@@ -6,8 +6,8 @@ using Backend.Tests.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// Tests for <see cref="INotificationService"/> covering the two tenant-scoped addressing modes - a single
-/// member of a tenant and every member of one (AC-053) - and the platform-wide mode that stays
-/// distinguishable from a tenant-wide one (AC-054).
+/// member of a tenant and every member of one - and the platform-wide mode that stays
+/// distinguishable from a tenant-wide one.
 /// </summary>
 /// <remarks>
 /// The rows the service writes are read twice over: once as the row it persisted, which is where the
@@ -25,7 +25,7 @@ public class NotificationServiceTests(App app) : NotificationsTestsBase(app)
 
     /// <summary>
     /// Verifies that a notification addressed to a single member of a tenant reaches that member and no
-    /// other member of the same tenant (AC-053).
+    /// other member of the same tenant.
     /// </summary>
     /// <remarks>
     /// The tenant has a second member, which is what makes the addressing meaningful: every member of a
@@ -63,7 +63,7 @@ public class NotificationServiceTests(App app) : NotificationsTestsBase(app)
 
     /// <summary>
     /// Verifies that a notification addressed to a tenant reaches every member of it and nobody outside it
-    /// (AC-053).
+    ///.
     /// </summary>
     /// <remarks>
     /// Two members of the tenant and one member of another are each asked: the two inside are what the
@@ -105,7 +105,7 @@ public class NotificationServiceTests(App app) : NotificationsTestsBase(app)
 
     /// <summary>
     /// Verifies that a notification addressed to the whole platform stays distinguishable from one
-    /// addressed to a tenant's membership (AC-054).
+    /// addressed to a tenant's membership.
     /// </summary>
     /// <remarks>
     /// The two rows are raised through the two methods and compared to each other: what tells them apart is

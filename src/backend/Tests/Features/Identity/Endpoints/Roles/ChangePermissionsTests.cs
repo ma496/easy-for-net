@@ -6,10 +6,10 @@ using Backend.Tests.Features.Tenancy;
 
 /// <summary>
 /// Tests for the <see cref="ChangePermissionsEndpoint"/> covering assigning permissions to roles, the
-/// platform permission a tenant role can never be given (AC-041), the tenant-only permission a platform
+/// platform permission a tenant role can never be given, the tenant-only permission a platform
 /// role can never be given, the system-created tenant role whose
-/// permissions cannot be changed at all (AC-043), and the role of another tenant that cannot be reached
-/// (AC-111).
+/// permissions cannot be changed at all, and the role of another tenant that cannot be reached
+///.
 /// </summary>
 public class ChangePermissionsTests(App app) : TenancyTestsBase(app)
 {
@@ -19,7 +19,7 @@ public class ChangePermissionsTests(App app) : TenancyTestsBase(app)
     /// <remarks>
     /// The role belongs to a tenant this test made and the caller administers it from inside, because a
     /// role belongs to a tenant and only the tenant-tier permissions of the catalogue can be granted
-    /// through one (AC-041) - so the set assigned here is drawn from that tier rather than from whatever
+    /// through one - so the set assigned here is drawn from that tier rather than from whatever
     /// the catalogue happens to return first.
     /// </remarks>
     [Fact]
@@ -93,7 +93,7 @@ public class ChangePermissionsTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a platform-tier permission cannot be granted through a role belonging to a tenant,
-    /// and that the refusal leaves the role's permission set exactly as it was (AC-041).
+    /// and that the refusal leaves the role's permission set exactly as it was.
     /// </summary>
     /// <remarks>
     /// The permission is declared platform-scoped in code, which is asserted here as the premise the refusal
@@ -195,7 +195,7 @@ public class ChangePermissionsTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that the permissions of a tenant's own system-created administrator role cannot be
-    /// changed, and that the role keeps them (AC-043).
+    /// changed, and that the role keeps them.
     /// </summary>
     /// <remarks>
     /// The request asks for the empty set, so the change would strip the administrator role of every
@@ -234,7 +234,7 @@ public class ChangePermissionsTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that changing the permissions of a role belonging to another tenant answers exactly as
-    /// changing the permissions of a role that does not exist does, and leaves it as it was (AC-111).
+    /// changing the permissions of a role that does not exist does, and leaves it as it was.
     /// </summary>
     /// <remarks>
     /// The set asked for is one the caller could grant inside its own tenant - a tenant-tier permission -
@@ -287,7 +287,7 @@ public class ChangePermissionsTests(App app) : TenancyTestsBase(app)
     /// A page of the permissions a tenant role may hold, ordered by name so that two calls with
     /// different offsets never return the same permission - which is what lets a test keep one and
     /// replace the rest. Platform-scoped permissions are left out because a tenant's role can never be
-    /// granted one (AC-041), so they are not part of any set this endpoint would accept.
+    /// granted one, so they are not part of any set this endpoint would accept.
     /// </summary>
     /// <param name="skip">How many of the scope's permissions to pass over.</param>
     /// <param name="take">How many to take.</param>

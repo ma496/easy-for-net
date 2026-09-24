@@ -4,9 +4,9 @@ using Backend.Features.FileManagement.Endpoints.Files;
 
 /// <summary>
 /// The combined file proof: that a file belonging to an account rather than to a tenant's data follows
-/// the account across every tenant and into none (AC-097), and that a file belonging to one tenant is
+/// the account across every tenant and into none, and that a file belonging to one tenant is
 /// neither read, replaced nor removed by a member of another, however precisely the stored name is known
-/// (AC-128).
+///.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -26,7 +26,7 @@ public class FileTenancyTests(App app) : FileTestsBase(app)
 {
     /// <summary>
     /// Verifies that an account-owned file is attributed to no tenant and to its account, and that the
-    /// account reads it while acting in either of its tenants and while acting in none (AC-097).
+    /// account reads it while acting in either of its tenants and while acting in none.
     /// </summary>
     /// <remarks>
     /// The account holds two memberships, which is what lets it act in either tenant, and belongs to the
@@ -84,7 +84,7 @@ public class FileTenancyTests(App app) : FileTestsBase(app)
     /// <summary>
     /// Verifies that a member of one tenant can neither read, replace nor delete a file belonging to
     /// another, including when the stored name is supplied verbatim, while an account-owned image stays
-    /// readable in every standing its owner acts in (AC-128).
+    /// readable in every standing its owner acts in.
     /// </summary>
     /// <remarks>
     /// The member of the other tenant holds the delete permission in their own tenant, so each refusal is
@@ -139,7 +139,7 @@ public class FileTenancyTests(App app) : FileTestsBase(app)
         ownerRead.StatusCode.Should().Be(HttpStatusCode.OK, "the owning tenant is still served the file the other was refused");
         (await ownerRead.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).Should().Be(content);
 
-        // The account-owned image from AC-097, read in both standings its owner acts in: the endpoint
+        // The account-owned image, read in both standings its owner acts in: the endpoint
         // that refuses the other tenant's file answers this caller with the content, so what decided the
         // refusals above was the attribution written at upload and not the file name or the endpoint.
         // The platform tier is how this account reaches the third standing - acting in no tenant at all,

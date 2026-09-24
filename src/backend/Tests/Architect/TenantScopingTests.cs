@@ -38,15 +38,15 @@ public class TenantScopingTests(App app) : AppTestsBase(app)
         [typeof(FeatureValue)] =
             "Addressed by (ProviderName, ProviderKey), which already names the tenant when the provider is a tenant - and names an edition, which belongs to no tenant, when it is not. A column here would duplicate that fact and admit rows where the two disagree. Read while a session is minted, before any scope exists.",
         [typeof(User)] =
-            "A global account: one identity across every tenant (AC-048). Its tenant reach is the membership row, not a column here.",
+            "A global account: one identity across every tenant. Its tenant reach is the membership row, not a column here.",
         [typeof(UserRole)] =
             "Tenant derived through Role.TenantId; a column here would duplicate that fact and admit rows where the two disagree (D13).",
         [typeof(Permission)] =
-            "Global, code-declared catalogue, identical for every tenant and reconciled from code on every start (AC-040).",
+            "Global, code-declared catalogue, identical for every tenant and reconciled from code on every start.",
         [typeof(RolePermission)] =
             "Tenant derived through Role.TenantId.",
         [typeof(Token)] =
-            "Email-verification and password-reset tokens back account self-service flows that must work with no tenant (AC-051).",
+            "Email-verification and password-reset tokens back account self-service flows that must work with no tenant.",
         [typeof(NotificationVisit)] =
             "Tenant derived through Notification.TenantId."
     };

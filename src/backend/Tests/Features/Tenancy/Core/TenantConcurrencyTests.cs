@@ -8,7 +8,7 @@ using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// Tests for two requests changing the same member's role assignments at once - a whole set survives,
-/// never a mixture of the two (AC-081).
+/// never a mixture of the two.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -32,7 +32,7 @@ public class TenantConcurrencyTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that two concurrent replacements of one member's roles persist one of the two complete
     /// sets rather than a mixture of them, and that the loser - when there is one - is told the member's
-    /// roles were changed by another request rather than being handed a set nobody asked for (AC-081).
+    /// roles were changed by another request rather than being handed a set nobody asked for.
     /// </summary>
     [Fact]
     public async Task Concurrent_Assignment_Updates_Keep_One_Complete_Set()

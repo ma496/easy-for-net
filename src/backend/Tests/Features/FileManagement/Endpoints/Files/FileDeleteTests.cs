@@ -4,9 +4,9 @@ using Backend.Features.FileManagement.Endpoints.Files;
 
 /// <summary>
 /// Tests for <see cref="FileDeleteEndpoint"/>: that replacing or removing a file of another tenant is
-/// refused with the code that names why and leaves the file exactly as it was (AC-058), that removal in
+/// refused with the code that names why and leaves the file exactly as it was, that removal in
 /// the owning tenant takes both the record and the content, and that an unauthenticated caller is refused
-/// (AC-098).
+///.
 /// </summary>
 /// <remarks>
 /// A caller acting in the wrong tenant is given the delete permission itself, so what refuses them is the
@@ -19,7 +19,7 @@ public class FileDeleteTests(App app) : FileTestsBase(app)
 {
     /// <summary>
     /// Verifies that a file belonging to the tenant the caller is acting in is removed, record and content
-    /// together (AC-058).
+    /// together.
     /// </summary>
     /// <remarks>
     /// Both halves of the removal are asserted: a record left behind points at nothing, and content left
@@ -47,7 +47,7 @@ public class FileDeleteTests(App app) : FileTestsBase(app)
 
     /// <summary>
     /// Verifies that a member of another tenant cannot delete a file attributed to a tenant they are not
-    /// acting in, and that the refusal leaves the file untouched (AC-058).
+    /// acting in, and that the refusal leaves the file untouched.
     /// </summary>
     /// <remarks>
     /// The refuser holds the delete permission in their own tenant, so the refusal is the file's
@@ -89,7 +89,7 @@ public class FileDeleteTests(App app) : FileTestsBase(app)
 
     /// <summary>
     /// Verifies that an unauthenticated removal is refused with the standard unauthenticated response
-    /// (AC-098).
+    ///.
     /// </summary>
     [Fact]
     public async Task Unauthenticated()

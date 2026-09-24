@@ -8,7 +8,7 @@ using Backend.Tests.Seeder;
 /// <summary>
 /// Tests for the <see cref="UserListEndpoint"/> covering listing, pagination, and filtering of users,
 /// and the set of accounts the caller may administer at all - the tenant being acted in, widened to
-/// every account for a platform administrator (AC-093, AC-095).
+/// every account for a platform administrator.
 /// </summary>
 /// <remarks>
 /// The restriction is asserted through the search rather than against the whole page: the suite runs
@@ -179,7 +179,7 @@ public class UserListTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a caller acting in a tenant administers that tenant's accounts and no others -
-    /// neither the page nor the count taken with it (AC-093).
+    /// neither the page nor the count taken with it.
     /// </summary>
     [Fact]
     public async Task Users_Are_Restricted_To_The_Active_Tenant()
@@ -215,7 +215,7 @@ public class UserListTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a platform account administers every tenant's accounts by entering the tenant it
-    /// means, and administers the platform's own while it is acting in none (AC-095).
+    /// means, and administers the platform's own while it is acting in none.
     /// </summary>
     /// <remarks>
     /// The two halves are the whole of what the tier gives. Acting in no tenant, the accounts the list

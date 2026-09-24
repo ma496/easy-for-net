@@ -42,7 +42,7 @@ interface TenantMemberAddModalProps {
 /**
  * Interactive modal for adding an existing user account to a tenant with exactly the roles chosen: the user picker
  * searches the global account list, while the role picker offers only the roles of the tenant being added to
- * (AC-038). A duplicate membership or an unknown account comes back as a translated API error.
+ *. A duplicate membership or an unknown account comes back as a translated API error.
  */
 export const TenantMemberAddModal = ({ tenantId, isOpen, onClose }: TenantMemberAddModalProps) => {
   const { t } = useTranslation()
@@ -107,7 +107,7 @@ export const TenantMemberAddModal = ({ tenantId, isOpen, onClose }: TenantMember
               pageSize={20}
               required={true}
               // The role list is tenant-scoped, so the picker only ever offers roles of the tenant
-              // the member is being added to (AC-038).
+              // the member is being added to.
               generateRequest={(search, page, pageSize) => ({
                 page,
                 pageSize,

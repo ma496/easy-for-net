@@ -12,7 +12,7 @@ using System.Net.Http.Json;
 /// Tests that every operation on the tenancy surface is gated by a named permission, that a caller who
 /// does not hold it is turned away before the operation runs, and that the endpoint's own declaration -
 /// rather than the caller or the request it sent - is what decides it
-/// (AC-044, AC-045, AC-086, AC-088).
+///.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -29,7 +29,7 @@ using System.Net.Http.Json;
 /// The caller is <c>limited</c>, a member of the bootstrap tenant holding
 /// <see cref="TestRoles.LimitedTenantRoleId"/> and nothing else. Every other seeded role holds every
 /// permission, so a refusal proved with one of those would be unprovable: it would read the same
-/// whether or not the endpoint declared anything at all. That is the whole of AC-088, and
+/// whether or not the endpoint declared anything at all. That is the whole point of this class, and
 /// <see cref="Purpose_Built_Role_Proves_The_Gate"/> goes a step further by moving a caller's authority
 /// one permission at a time inside a tenant the test made, showing the reachable set of endpoints
 /// follows the declarations exactly.
@@ -38,7 +38,7 @@ using System.Net.Http.Json;
 /// The endpoints on this surface declare no tenant-scoped permission of their own, which is what
 /// makes the refusals below permission refusals rather than tenant ones: nothing here is refused for
 /// want of a tenant, so whatever one of them turns away, it turns
-/// away for want of authority. Each refusal is therefore asserted on both halves of AC-045 - the
+/// away for want of authority. Each refusal is therefore asserted on both halves of a permission refusal - the
 /// standard forbidden status, and the error code that says the caller's roles are what fell short -
 /// which is the same code a caller acting in a healthy tenant without the permission is refused with.
 /// </para>
@@ -141,7 +141,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
     /// Verifies that every endpoint of the tenancy surface is routed and declares exactly the
     /// permission this document says it does, and that the two endpoints that establish a caller's
     /// tenant declare none - so an endpoint added later, or a constant whose value changed, fails here
-    /// rather than silently opening an operation to whoever can reach it (AC-044).
+    /// rather than silently opening an operation to whoever can reach it.
     /// </summary>
     /// <remarks>
     /// The declarations are read off the live endpoint definitions - the same objects the authorization
@@ -190,7 +190,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
     /// Verifies that a caller holding only <see cref="Allow.Tenant_Detail"/> is refused every operation
     /// that requires anything else, and admitted the two that require exactly that - while the same
     /// request from a caller holding the permission is carried out, so the refusal is the caller's
-    /// authority rather than the request (AC-045).
+    /// authority rather than the request.
     /// </summary>
     /// <param name="endpoint">The endpoint under test, one row per gated endpoint of the surface.</param>
     /// <remarks>
@@ -224,7 +224,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
             // The status alone would read the same for a refusal of any kind, so the code is what shows
             // this one is the caller's authority and not its tenant or its account.
             refused.Problem!.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied,
-                "{0} turns a caller away for the permission it does not hold, and says so rather than answering blank (AC-045)",
+                "{0} turns a caller away for the permission it does not hold, and says so rather than answering blank",
                 endpoint);
 
             // The refusal has to be the gate's: a handler that ran and refused would have done so with
@@ -248,7 +248,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
     /// Verifies that a purpose-built role holding exactly one permission is admitted exactly by the
     /// endpoints declaring that permission, and that widening the role by one more permission brings
     /// exactly one more endpoint into reach - so what turns a caller away is the endpoint's own
-    /// declaration, which is unprovable with a role that holds everything (AC-088).
+    /// declaration, which is unprovable with a role that holds everything.
     /// </summary>
     /// <remarks>
     /// The role is read back from the database before anything is asserted with it, because a fixture

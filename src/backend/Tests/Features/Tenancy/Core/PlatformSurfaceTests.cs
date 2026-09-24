@@ -7,7 +7,7 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 
 /// <summary>
 /// Tests for what platform administration reaches without a membership - the whole point of it being a
-/// scope of its own rather than a role inside a tenant (AC-046).
+/// scope of its own rather than a role inside a tenant.
 /// </summary>
 /// <remarks>
 /// A tenant's own administrator administers one tenant, and administering a tenant is never a way of
@@ -19,7 +19,7 @@ public class PlatformSurfaceTests(App app) : TenancyTestsBase(app)
 {
     /// <summary>
     /// Verifies that a platform administrator administers a tenant they hold no membership in: the member
-    /// they add joins the tenant, without the administrator joining it in the process (AC-046).
+    /// they add joins the tenant, without the administrator joining it in the process.
     /// </summary>
     [Fact]
     public async Task Platform_Administrator_Administers_A_Tenant_It_Is_Not_A_Member_Of()
@@ -74,7 +74,7 @@ public class PlatformSurfaceTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a platform administrator can read a tenant's members without belonging to it, so the
-    /// surface is usable for administration rather than only for the one write above (AC-046).
+    /// surface is usable for administration rather than only for the one write above.
     /// </summary>
     [Fact]
     public async Task Platform_Administrator_Lists_The_Members_Of_A_Tenant_It_Is_Not_A_Member_Of()

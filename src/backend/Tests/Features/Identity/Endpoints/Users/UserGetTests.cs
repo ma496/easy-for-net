@@ -6,7 +6,7 @@ using Backend.Tests.Features.Tenancy;
 
 /// <summary>
 /// Tests for the <see cref="UserGetEndpoint"/> covering retrieval of existing and non-existent users,
-/// and the account of another tenant that is not there to be read (AC-094).
+/// and the account of another tenant that is not there to be read.
 /// </summary>
 public class UserGetTests(App app) : TenancyTestsBase(app)
 {
@@ -81,7 +81,7 @@ public class UserGetTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that reading an account holding no membership in the tenant being acted in answers
-    /// exactly as reading an account that does not exist does, and leaves it untouched (AC-094).
+    /// exactly as reading an account that does not exist does, and leaves it untouched.
     /// </summary>
     /// <remarks>
     /// The two answers are compared as one: the same status and the same body, so not even their shape

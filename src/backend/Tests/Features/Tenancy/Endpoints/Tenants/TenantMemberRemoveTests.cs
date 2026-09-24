@@ -10,7 +10,7 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 /// Tests for <see cref="TenantMemberRemoveEndpoint"/>: revoking one account's membership of one
 /// tenant, the access that goes with it on the member's next request, the account and its other
 /// memberships that survive it, the last-administrator guard, the row that is retained rather than
-/// erased, and every refusal it owes (AC-018, AC-019, AC-020, AC-021, AC-079, AC-086).
+/// erased, and every refusal it owes.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -39,7 +39,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
     /// Verifies that removing a member revokes their membership and, at their session's next renewal,
     /// their access to the tenant's data - while leaving the account and its membership of another
     /// tenant intact, and without a sign-in, a password change or a session being ended
-    /// (AC-018, AC-020).
+    ///.
     /// </summary>
     /// <remarks>
     /// The renewal is where the removal reaches a live session: what a session may do is decided when
@@ -106,7 +106,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that removing the member who is the tenant's only holder of tenant administration is
     /// refused with a defined code, and that the membership is left active with the roles it held -
-    /// refused rather than corrected, so nothing of the removal was applied (AC-019).
+    /// refused rather than corrected, so nothing of the removal was applied.
     /// </summary>
     [Fact]
     public async Task Cannot_Remove_Last_Administrator()
@@ -134,7 +134,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that removing a tenant administrator is permitted while another member holds tenant
     /// administration - the guard is about the tenant never being left unadministered, not about any
-    /// one member being indispensable (AC-019).
+    /// one member being indispensable.
     /// </summary>
     [Fact]
     public async Task Removing_A_Tenant_Administrator_Is_Allowed_When_Another_Remains()
@@ -161,7 +161,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a removal soft-deletes the membership: the row is retained carrying the removal
     /// and the time it happened, the roles held inside the tenant are withdrawn with it, and no query
-    /// of the tenant's membership finds it any more (AC-079).
+    /// of the tenant's membership finds it any more.
     /// </summary>
     [Fact]
     public async Task Removal_Is_Soft()
@@ -211,7 +211,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a suspended tenant's membership is still administrable: suspension takes the
     /// tenant's work out of service, not the question of who belongs to it, so a member can be removed
-    /// from one rather than being left in place until it is reactivated (AC-018).
+    /// from one rather than being left in place until it is reactivated.
     /// </summary>
     [Fact]
     public async Task Suspended_Tenant_Is_Still_Administrable()
@@ -238,7 +238,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that a caller who is neither a platform administrator nor a member of the tenant
     /// addressed is refused with a defined code, and that the membership named is left active - holding
-    /// the permission inside another tenant is not standing in this one (AC-021).
+    /// the permission inside another tenant is not standing in this one.
     /// </summary>
     [Fact]
     public async Task Non_Member_Is_Refused()
@@ -268,7 +268,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// Verifies that removing an account that holds no membership of the tenant is answered as a
     /// missing record rather than as a business refusal, which is also the answer a second attempt at
-    /// the same removal gets (AC-086).
+    /// the same removal gets.
     /// </summary>
     [Fact]
     public async Task Member_Not_Found()
@@ -298,7 +298,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a request naming a tenant that is not there is refused with the tenant code, which
-    /// is also the answer a deleted tenant gets (AC-086).
+    /// is also the answer a deleted tenant gets.
     /// </summary>
     [Fact]
     public async Task Tenant_Not_Found()
@@ -316,7 +316,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Verifies that a request naming no tenant or no member is refused as a validation failure naming
-    /// the field, before anything is read (AC-086).
+    /// the field, before anything is read.
     /// </summary>
     [Fact]
     public async Task Missing_Fields_Are_Rejected()
@@ -342,7 +342,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
     /// Verifies that the guard protecting a tenant from being left unadministered counts the members
     /// who hold tenant administration rather than the members the tenant happens to have: the removal
     /// is refused while the only holder of it is the one leaving, however many members remain, and is
-    /// allowed the moment another member holds it (AC-019).
+    /// allowed the moment another member holds it.
     /// </summary>
     [Fact]
     public async Task The_Guard_Counts_Administrators_Rather_Than_Members()
