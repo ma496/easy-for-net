@@ -578,7 +578,13 @@
         "membersTitle": "Membres"
       },
       "enterButton": "Entrer",
-      "enterCurrent": "Actuel"
+      "enterCurrent": "Actuel",
+      "actions": {
+        "detail": "Détail",
+        "members": "Membres",
+        "suspend": "Suspendre",
+        "reactivate": "Réactiver"
+      }
     },
     "selectTenant": {
       "title": "Sélectionner un locataire",
@@ -618,7 +624,8 @@
       "unsaved": "Non enregistré",
       "unsavedCount": "${count} modification(s) non enregistrée(s)",
       "parentDisabled": "Sans effet tant que la fonctionnalité parente est désactivée",
-      "noMatches": "Aucune fonctionnalité ne correspond à votre recherche"
+      "noMatches": "Aucune fonctionnalité ne correspond à votre recherche",
+      "actionLabel": "Fonctionnalités"
     }
   },
   "notifications": {

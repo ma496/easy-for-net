@@ -269,19 +269,19 @@ export const TenantTable = () => {
                   hidden: !(canUpdate && canChangeLifecycle),
                 },
                 {
-                  label: t('page.tenants.detail.title'),
+                  label: t('page.tenants.actions.detail'),
                   icon: <Eye className="h-4 w-4" />,
                   href: `/admin/tenants/detail/${tenant.id}`,
                   hidden: !canViewDetail,
                 },
                 {
-                  label: t('page.tenants.members.title'),
+                  label: t('page.tenants.actions.members'),
                   icon: <Users className="h-4 w-4" />,
                   href: `/admin/tenants/members/${tenant.id}`,
                   hidden: !canViewMembers,
                 },
                 {
-                  label: t('page.features.tenantTitle'),
+                  label: t('page.features.actionLabel'),
                   icon: <SlidersHorizontal className="h-4 w-4" />,
                   href: `/admin/tenants/features/${tenant.id}`,
                   hidden: !canViewFeatures,
@@ -295,7 +295,7 @@ export const TenantTable = () => {
                   hidden: !(canEnter(tenant.id) && isActive) || isCurrent,
                 },
                 {
-                  label: t('page.tenants.suspendTitle'),
+                  label: t('page.tenants.actions.suspend'),
                   icon: <PauseCircle className="h-4 w-4" />,
                   variant: 'warning',
                   onClick: () => handleSuspend(tenant.id),
@@ -303,7 +303,7 @@ export const TenantTable = () => {
                   hidden: !(canSuspend && canChangeLifecycle && isActive),
                 },
                 {
-                  label: t('page.tenants.reactivateTitle'),
+                  label: t('page.tenants.actions.reactivate'),
                   icon: <PlayCircle className="h-4 w-4" />,
                   variant: 'success',
                   onClick: () => handleReactivate(tenant.id),
@@ -311,7 +311,7 @@ export const TenantTable = () => {
                   hidden: !(canReactivate && canChangeLifecycle && tenant.status === TenantStatus.Suspended),
                 },
                 {
-                  label: t('page.tenants.deleteTitle'),
+                  label: t('common.delete'),
                   icon: <Trash2 className="h-4 w-4" />,
                   variant: 'danger',
                   onClick: () => handleDelete(tenant.id),

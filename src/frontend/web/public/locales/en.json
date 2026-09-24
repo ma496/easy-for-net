@@ -578,7 +578,13 @@
         "membersTitle": "Members"
       },
       "enterButton": "Enter",
-      "enterCurrent": "Current"
+      "enterCurrent": "Current",
+      "actions": {
+        "detail": "Detail",
+        "members": "Members",
+        "suspend": "Suspend",
+        "reactivate": "Reactivate"
+      }
     },
     "selectTenant": {
       "title": "Select Tenant",
@@ -618,7 +624,8 @@
       "unsaved": "Unsaved",
       "unsavedCount": "${count} unsaved change(s)",
       "parentDisabled": "Not in force while the feature above it is off",
-      "noMatches": "No features match your search"
+      "noMatches": "No features match your search",
+      "actionLabel": "Features"
     }
   },
   "notifications": {

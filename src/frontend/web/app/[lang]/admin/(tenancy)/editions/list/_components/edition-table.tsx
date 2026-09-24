@@ -140,7 +140,7 @@ export const EditionTable = () => {
                 hidden: !canUpdate,
               },
               {
-                label: t('page.features.editionTitle'),
+                label: t('page.features.actionLabel'),
                 icon: <SlidersHorizontal className="h-4 w-4" />,
                 href: `/admin/editions/features/${edition.id}`,
                 hidden: !canViewFeatures,

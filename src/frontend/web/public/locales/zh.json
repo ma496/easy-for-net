@@ -578,7 +578,13 @@
         "membersTitle": "成员"
       },
       "enterButton": "进入",
-      "enterCurrent": "当前"
+      "enterCurrent": "当前",
+      "actions": {
+        "detail": "详情",
+        "members": "成员",
+        "suspend": "暂停",
+        "reactivate": "重新激活"
+      }
     },
     "selectTenant": {
       "title": "选择租户",
@@ -618,7 +624,8 @@
       "unsaved": "未保存",
       "unsavedCount": "${count} 项未保存的更改",
       "parentDisabled": "上级功能关闭时不生效",
-      "noMatches": "没有匹配的功能"
+      "noMatches": "没有匹配的功能",
+      "actionLabel": "功能"
     }
   },
   "notifications": {

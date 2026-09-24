@@ -578,7 +578,13 @@
         "membersTitle": "الأعضاء"
       },
       "enterButton": "دخول",
-      "enterCurrent": "الحالي"
+      "enterCurrent": "الحالي",
+      "actions": {
+        "detail": "التفاصيل",
+        "members": "الأعضاء",
+        "suspend": "تعليق",
+        "reactivate": "إعادة التفعيل"
+      }
     },
     "selectTenant": {
       "title": "اختيار المستأجر",
@@ -618,7 +624,8 @@
       "unsaved": "غير محفوظ",
       "unsavedCount": "${count} تغيير غير محفوظ",
       "parentDisabled": "غير سارية ما دامت الميزة الأعلى معطّلة",
-      "noMatches": "لا توجد ميزات مطابقة لبحثك"
+      "noMatches": "لا توجد ميزات مطابقة لبحثك",
+      "actionLabel": "الميزات"
     }
   },
   "notifications": {

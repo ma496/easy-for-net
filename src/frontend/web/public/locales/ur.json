@@ -578,7 +578,13 @@
         "membersTitle": "اراکین"
       },
       "enterButton": "داخل ہوں",
-      "enterCurrent": "موجودہ"
+      "enterCurrent": "موجودہ",
+      "actions": {
+        "detail": "تفصیل",
+        "members": "اراکین",
+        "suspend": "معطل کریں",
+        "reactivate": "دوبارہ فعال کریں"
+      }
     },
     "selectTenant": {
       "title": "ٹیننٹ منتخب کریں",
@@ -618,7 +624,8 @@
       "unsaved": "محفوظ نہیں",
       "unsavedCount": "${count} غیر محفوظ تبدیلیاں",
       "parentDisabled": "اوپر والی خصوصیت بند ہونے تک نافذ نہیں",
-      "noMatches": "آپ کی تلاش سے کوئی خصوصیت میل نہیں کھاتی"
+      "noMatches": "آپ کی تلاش سے کوئی خصوصیت میل نہیں کھاتی",
+      "actionLabel": "خصوصیات"
     }
   },
   "notifications": {

@@ -132,7 +132,7 @@ export const RoleTable = () => {
               hidden: !canUpdate,
             },
             {
-              label: t('page.roles.changePermissions.title'),
+              label: t('page.roles.permissions'),
               icon: <Shield className="h-4 w-4" />,
               href: `/admin/roles/change-permissions/${info.row.original.id}`,
               hidden: !canChangePermissions,

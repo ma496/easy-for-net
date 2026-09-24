@@ -578,7 +578,13 @@
         "membersTitle": "Miembros"
       },
       "enterButton": "Entrar",
-      "enterCurrent": "Actual"
+      "enterCurrent": "Actual",
+      "actions": {
+        "detail": "Detalle",
+        "members": "Miembros",
+        "suspend": "Suspender",
+        "reactivate": "Reactivar"
+      }
     },
     "selectTenant": {
       "title": "Seleccionar inquilino",
@@ -618,7 +624,8 @@
       "unsaved": "Sin guardar",
       "unsavedCount": "${count} cambio(s) sin guardar",
       "parentDisabled": "No está en vigor mientras la función superior esté desactivada",
-      "noMatches": "Ninguna función coincide con su búsqueda"
+      "noMatches": "Ninguna función coincide con su búsqueda",
+      "actionLabel": "Funciones"
     }
   },
   "notifications": {

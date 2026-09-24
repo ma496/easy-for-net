@@ -578,7 +578,13 @@
         "membersTitle": "सदस्य"
       },
       "enterButton": "प्रवेश करें",
-      "enterCurrent": "वर्तमान"
+      "enterCurrent": "वर्तमान",
+      "actions": {
+        "detail": "विवरण",
+        "members": "सदस्य",
+        "suspend": "निलंबित करें",
+        "reactivate": "पुनः सक्रिय करें"
+      }
     },
     "selectTenant": {
       "title": "टेनेंट चुनें",
@@ -618,7 +624,8 @@
       "unsaved": "असहेजा",
       "unsavedCount": "${count} असहेजे परिवर्तन",
       "parentDisabled": "ऊपर की सुविधा बंद होने तक प्रभावी नहीं",
-      "noMatches": "आपकी खोज से कोई सुविधा मेल नहीं खाती"
+      "noMatches": "आपकी खोज से कोई सुविधा मेल नहीं खाती",
+      "actionLabel": "सुविधाएँ"
     }
   },
   "notifications": {

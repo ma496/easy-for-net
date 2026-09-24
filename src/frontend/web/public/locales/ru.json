@@ -578,7 +578,13 @@
         "membersTitle": "Участники"
       },
       "enterButton": "Войти",
-      "enterCurrent": "Текущий"
+      "enterCurrent": "Текущий",
+      "actions": {
+        "detail": "Подробности",
+        "members": "Участники",
+        "suspend": "Приостановить",
+        "reactivate": "Возобновить"
+      }
     },
     "selectTenant": {
       "title": "Выбрать арендатора",
@@ -618,7 +624,8 @@
       "unsaved": "Не сохранено",
       "unsavedCount": "Несохранённых изменений: ${count}",
       "parentDisabled": "Не действует, пока отключена функция выше",
-      "noMatches": "Ничего не найдено"
+      "noMatches": "Ничего не найдено",
+      "actionLabel": "Функции"
     }
   },
   "notifications": {
