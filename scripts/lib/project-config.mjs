@@ -47,8 +47,8 @@ const DEFAULTS = {
     branch: null,
     /** Where pull requests go. `null` means `origin/HEAD`, else `main` or `master`. */
     baseBranch: null,
-    /** The trailer the runner's commits end with. */
-    coAuthor: "Co-Authored-By: Claude <noreply@anthropic.com>",
+    /** A trailer the runner's commits end with. `null` adds none, leaving the author line — each developer's own git user.name/user.email — as the only identity. */
+    coAuthor: null,
     /** Lines every unattended run is told before it starts — the traps a typecheck misses. */
     conventions: [],
   },

@@ -3,7 +3,7 @@
     "name": "easy-for-net",
     "branch": null,
     "baseBranch": null,
-    "coAuthor": "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>",
+    "coAuthor": null,
     "conventions": [
       "Features are isolated vertical slices: a type under Features/X never references a type under Features/Y unless that type is marked [AllowOutside]. Cross-feature access goes through a service interface, never through another feature's entities — the architecture tests fail the gate otherwise.",
       "One endpoint is one file: the Endpoint, its Request, Validator, Response/DTOs and the Mapperly mapper live together. Global usings live in Meta.cs, and every C# file opens with its file-scoped namespace, then a blank line, then its using directives.",
