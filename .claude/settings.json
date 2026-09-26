@@ -57,7 +57,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "$CLAUDE_PROJECT_DIR/.claude/statusline.sh"
+    "command": "node $CLAUDE_PROJECT_DIR/.claude/statusline.mjs"
   },
   "hooks": {
     "PreToolUse": [
@@ -66,12 +66,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/guard-protected-paths.sh"
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/guard-protected-paths.mjs"
           }
         ]
       },
       {
-        "matcher": "Bash",
+        "matcher": "Bash|PowerShell",
         "hooks": [
           {
             "type": "command",
@@ -96,7 +96,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/session-start.mjs"
           }
         ]
       }
