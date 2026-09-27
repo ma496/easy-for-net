@@ -78,7 +78,8 @@
     "editionsCreate": "बनाएं",
     "editionsUpdate": "अपडेट करें",
     "editionsFeatures": "सुविधाएँ",
-    "tenantsFeatures": "सुविधाएँ"
+    "tenantsFeatures": "सुविधाएँ",
+    "localization": "स्थानीयकरण"
   },
   "search": {
     "dashboard": "डैशबोर्ड",
@@ -100,7 +101,8 @@
     "tenants": "टेनेंट",
     "tenantsCreate": "टेनेंट बनाएं",
     "editions": "संस्करण",
-    "editionsCreate": "संस्करण बनाएँ"
+    "editionsCreate": "संस्करण बनाएँ",
+    "localization": "स्थानीयकरण"
   },
   "form": {
     "label": {
@@ -123,7 +125,8 @@
       "tenant": "टेनेंट",
       "editionName": "नाम",
       "editionDescription": "विवरण",
-      "editionDisplayOrder": "प्रदर्शन क्रम"
+      "editionDisplayOrder": "प्रदर्शन क्रम",
+      "defaultLanguage": "डिफ़ॉल्ट भाषा"
     },
     "placeholder": {
       "username": "उपयोगकर्ता नाम दर्ज करें",
@@ -271,7 +274,11 @@
       "identifier": "पहचानकर्ता",
       "displayOrder": "क्रम",
       "tenantCount": "किरायेदार",
-      "edition": "संस्करण"
+      "edition": "संस्करण",
+      "key": "कुंजी",
+      "defaultValue": "डिफ़ॉल्ट मान",
+      "inheritedValue": "विरासत में मिला मान",
+      "override": "ओवरराइड"
     },
     "pagination": {
       "showingEntries": "${totalRecords} प्रविष्टियों में से ${from} से ${to} दिखा रहा है"
@@ -626,6 +633,57 @@
       "parentDisabled": "ऊपर की सुविधा बंद होने तक प्रभावी नहीं",
       "noMatches": "आपकी खोज से कोई सुविधा मेल नहीं खाती",
       "actionLabel": "सुविधाएँ"
+    },
+    "localization": {
+      "title": "स्थानीयकरण",
+      "scope": {
+        "platform": "आप प्लेटफ़ॉर्म-व्यापी टेक्स्ट और भाषाएँ संपादित कर रहे हैं। हर किरायेदार इन्हें विरासत में लेता है जब तक कि वह अपनी खुद की सेटिंग न करे।",
+        "tenant": "आप ${tenant} के लिए टेक्स्ट और भाषाएँ संपादित कर रहे हैं। यहाँ जो कुछ भी नहीं बदला गया है वह प्लेटफ़ॉर्म से विरासत में मिलता है।"
+      },
+      "readOnly": "आप इन सेटिंग्स को देख सकते हैं लेकिन बदल नहीं सकते।",
+      "tabs": {
+        "texts": "टेक्स्ट",
+        "languages": "भाषाएँ"
+      },
+      "texts": {
+        "onlyOverridden": "केवल ओवरराइड किए गए",
+        "setHere": "यहाँ सेट किया गया",
+        "fromPlatform": "प्लेटफ़ॉर्म से",
+        "notOverridden": "ओवरराइड नहीं किया गया",
+        "editTitle": "टेक्स्ट संपादित करें",
+        "inheritedLabel": "विरासत में मिला मान",
+        "defaultLabel": "डिफ़ॉल्ट मान",
+        "overrideLabel": "आपका टेक्स्ट",
+        "placeholders": "इन प्लेसहोल्डर्स को बनाए रखें:",
+        "placeholderMissing": "एक प्लेसहोल्डर गायब है — ऐप इसे खाली दिखाएगा।",
+        "reset": "विरासत में मिले मान पर रीसेट करें",
+        "resetTitle": "क्या इस टेक्स्ट को रीसेट करना है?",
+        "resetConfirm": "इससे आपका ओवरराइड हट जाएगा और विरासत में मिले मान पर वापस चला जाएगा।",
+        "resetSuccess": "टेक्स्ट विरासत में मिले मान पर रीसेट कर दिया गया",
+        "saveSuccess": "टेक्स्ट सहेजा गया",
+        "noOverrides": "इस भाषा में अभी तक कुछ भी ओवरराइड नहीं किया गया है।"
+      },
+      "languages": {
+        "inherited": "विरासत में मिला",
+        "inheritedFromPlatform": "प्लेटफ़ॉर्म से विरासत में मिला",
+        "inheritedFromShipped": "बिल्ट-इन: सभी भाषाएँ, कोई डिफ़ॉल्ट नहीं",
+        "inheritedSummary": "विरासत में मिला: ${languages} · डिफ़ॉल्ट: ${default}",
+        "customize": "अनुकूलित करें",
+        "customized": "अनुकूलित",
+        "resetToInherited": "विरासत में मिले मान पर रीसेट करें",
+        "resetTitle": "क्या भाषाएँ रीसेट करनी हैं?",
+        "resetConfirm": "इससे आपका अनुकूलन हट जाएगा और विरासत में मिली सेटिंग्स पर वापस चला जाएगा।",
+        "resetSuccess": "भाषाएँ विरासत में मिली सेटिंग्स पर रीसेट कर दी गईं",
+        "enabled": "सक्षम भाषाएँ",
+        "enabledCount": "${total} में से ${count} सक्षम",
+        "rtl": "दाएँ से बाएँ",
+        "atLeastOne": "कम से कम एक भाषा सक्षम रहनी चाहिए",
+        "noDefault": "कोई नहीं — विज़िटर के ब्राउज़र की भाषा का उपयोग करें",
+        "defaultCleared": "डिफ़ॉल्ट भाषा साफ़ कर दी गई क्योंकि इसे अभी अक्षम किया गया है",
+        "currentWillSwitch": "जिस भाषा में आप यह स्क्रीन देख रहे हैं वह अक्षम की जा रही है — आपको डिफ़ॉल्ट भाषा पर बदल दिया जाएगा।",
+        "unsaved": "आपके पास असहेजे परिवर्तन हैं",
+        "saveSuccess": "भाषाएँ अपडेट की गईं"
+      }
     }
   },
   "notifications": {

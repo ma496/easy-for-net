@@ -57,6 +57,10 @@ export const searchableItems: SearchableItem[] = [
     url: '/change-password',
   },
   {
+    title: 'search.localization',
+    url: '/admin/localization',
+  },
+  {
     title: 'search.notifications',
     url: '/admin/notifications/list',
   },

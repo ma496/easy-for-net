@@ -27,7 +27,8 @@ and you should say so rather than inventing it.
   `enhanceEndpoints(...).injectEndpoints(...)`; DTO types mirror the backend's request and
   response classes by name.
 - **No hardcoded user-facing text.** Every string is a translation key, added to every
-  locale file in `public/locales/`.
+  resource file in `src/backend/Source/Features/Localization/Core/Resources/` — the API serves
+  them. Import translators from `@/i18n`, never a subpath.
 - **Permission and plan gating mirror the backend.** `allow.ts` and `feature-names.ts` hold
   the same constants as the API; nav entries and buttons gate on them.
 - **A control is not wired until a click changes the screen.** Buttons with no handler and

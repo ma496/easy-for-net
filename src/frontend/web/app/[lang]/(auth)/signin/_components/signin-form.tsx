@@ -91,6 +91,15 @@ export const SigninForm = () => {
     if (userInfoRes.data) {
       dispatch(setUserInfo(userInfoRes.data))
 
+      // The root layout persists across the client-side navigation below, so left alone it would
+      // keep showing the texts and languages fetched for the anonymous visitor rather than the ones
+      // this session's tenant (or platform) scope resolves to. A refresh makes it re-fetch them - but
+      // only after the push below, on whichever branch actually lands: `router.push` schedules a
+      // navigation and `router.refresh()` schedules a re-fetch of the current one, and Next drops a
+      // refresh that was still pending when a navigation arrives, so calling it first is calling it on
+      // the page just left rather than the one arrived at (`hooks/use-tenant-switch.ts` follows the
+      // same push-then-refresh order for the same reason).
+
       // An ordinary account arrives here already acting in a tenant - the server resolved its single
       // membership, or refused the sign-in until one was named - so the landing below is for the case
       // that survives: a selection that stopped being usable while an earlier session was open. It is
@@ -100,12 +109,14 @@ export const SigninForm = () => {
       const platformLanding = resolvePlatformLanding(userInfoRes.data, validRedirect)
       if (platformLanding) {
         router.push(platformLanding, { scroll: false })
+        router.refresh()
         return
       }
 
       const tenantLanding = resolveTenantLanding(userInfoRes.data)
       if (tenantLanding) {
         router.push(tenantLanding, { scroll: false })
+        router.refresh()
         return
       }
 
@@ -116,6 +127,7 @@ export const SigninForm = () => {
       } else {
         router.push(`/`, { scroll: false })
       }
+      router.refresh()
     }
   }
 

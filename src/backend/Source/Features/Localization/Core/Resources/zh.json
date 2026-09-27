@@ -78,7 +78,8 @@
     "editionsCreate": "创建",
     "editionsUpdate": "更新",
     "editionsFeatures": "功能",
-    "tenantsFeatures": "功能"
+    "tenantsFeatures": "功能",
+    "localization": "本地化"
   },
   "search": {
     "dashboard": "仪表板",
@@ -100,7 +101,8 @@
     "tenants": "租户",
     "tenantsCreate": "创建租户",
     "editions": "版本",
-    "editionsCreate": "创建版本"
+    "editionsCreate": "创建版本",
+    "localization": "本地化"
   },
   "form": {
     "label": {
@@ -123,7 +125,8 @@
       "tenant": "租户",
       "editionName": "名称",
       "editionDescription": "描述",
-      "editionDisplayOrder": "显示顺序"
+      "editionDisplayOrder": "显示顺序",
+      "defaultLanguage": "默认语言"
     },
     "placeholder": {
       "username": "输入用户名",
@@ -271,7 +274,11 @@
       "identifier": "标识符",
       "displayOrder": "顺序",
       "tenantCount": "租户",
-      "edition": "版本"
+      "edition": "版本",
+      "key": "键",
+      "defaultValue": "默认值",
+      "inheritedValue": "继承值",
+      "override": "覆盖值"
     },
     "pagination": {
       "showingEntries": "显示 ${from} 到 ${to} 条，共 ${totalRecords} 条记录"
@@ -626,6 +633,57 @@
       "parentDisabled": "上级功能关闭时不生效",
       "noMatches": "没有匹配的功能",
       "actionLabel": "功能"
+    },
+    "localization": {
+      "title": "本地化",
+      "scope": {
+        "platform": "您正在编辑平台级的文本和语言。除非租户自行设置，否则每个租户都将继承这些设置。",
+        "tenant": "您正在编辑 ${tenant} 的文本和语言。此处未更改的内容将继承自平台。"
+      },
+      "readOnly": "您可以查看这些设置，但无法更改它们。",
+      "tabs": {
+        "texts": "文本",
+        "languages": "语言"
+      },
+      "texts": {
+        "onlyOverridden": "仅显示已覆盖的",
+        "setHere": "在此设置",
+        "fromPlatform": "来自平台",
+        "notOverridden": "未覆盖",
+        "editTitle": "编辑文本",
+        "inheritedLabel": "继承值",
+        "defaultLabel": "默认值",
+        "overrideLabel": "您的文本",
+        "placeholders": "请保留这些占位符：",
+        "placeholderMissing": "缺少一个占位符 — 应用中将显示为空。",
+        "reset": "恢复为继承值",
+        "resetTitle": "要重置此文本吗？",
+        "resetConfirm": "这将删除您的覆盖并恢复为继承值。",
+        "resetSuccess": "文本已恢复为继承值",
+        "saveSuccess": "文本已保存",
+        "noOverrides": "此语言尚未覆盖任何内容。"
+      },
+      "languages": {
+        "inherited": "已继承",
+        "inheritedFromPlatform": "继承自平台",
+        "inheritedFromShipped": "内置：所有语言，无默认语言",
+        "inheritedSummary": "继承：${languages} · 默认：${default}",
+        "customize": "自定义",
+        "customized": "已自定义",
+        "resetToInherited": "恢复为继承设置",
+        "resetTitle": "要重置语言设置吗？",
+        "resetConfirm": "这将删除您的自定义设置并恢复为继承设置。",
+        "resetSuccess": "语言设置已恢复为继承设置",
+        "enabled": "已启用的语言",
+        "enabledCount": "已启用 ${count}/${total}",
+        "rtl": "从右到左",
+        "atLeastOne": "必须至少保留一种已启用的语言",
+        "noDefault": "无 — 使用访问者浏览器的语言",
+        "defaultCleared": "默认语言因刚被禁用而已被清除",
+        "currentWillSwitch": "您正在使用的语言即将被禁用 — 您将被切换到默认语言。",
+        "unsaved": "您有未保存的更改",
+        "saveSuccess": "语言设置已更新"
+      }
     }
   },
   "notifications": {

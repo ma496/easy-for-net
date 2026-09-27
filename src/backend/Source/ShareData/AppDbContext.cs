@@ -6,6 +6,7 @@ using Backend.ShareData.Entities.Base;
 using Backend.Features.FileManagement.Core.Entities;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Localization.Core.Entities;
 using Backend.Features.Notifications.Core.Entities;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
@@ -59,6 +60,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options,
 
     // FileManagement
     public DbSet<StoredFile> StoredFiles => Set<StoredFile>();
+
+    // Localization
+    public DbSet<LocalizationText> LocalizationTexts => Set<LocalizationText>();
+    public DbSet<LanguageSetting> LanguageSettings => Set<LanguageSetting>();
 
     /// <summary>
     /// Gets the tenant the <c>Tenant</c> query filter restricts to. The filter reads this property

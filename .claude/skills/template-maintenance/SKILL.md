@@ -78,8 +78,9 @@ name no shipped directory uses) or put it outside `.claude`.
   those keys in `appsettings.json` must be mirrored in the generator.
 - `name` in the web `package.json` / `package-lock.json`, the root `package.json`, and
   `project.name` in `agentic.config.json` become the kebab-case name.
-- The display name: `Easy\s+For\s+Net` in every `.json` under the web app (the locale files) becomes
-  the name in title case.
+- The display name: `Easy\s+For\s+Net` in every `.json` under the web app and in the API's shipped
+  translation resources (`Features/Localization/Core/Resources/*.json`) becomes the name in title
+  case.
 - Markdown under `.claude`: `Backend.` → `<Name>.` and `EasyForNet.slnx` → `<Name>.slnx`. Keep
   namespace references there `Backend.`-qualified so the rewrite catches them (a sentence ending in
   the bare word "Backend" also matches).
@@ -94,11 +95,12 @@ names out of them — they address the solution by globbing the root `*.slnx` an
 
 ## Locale filtering
 
-Without multi-language, the generator deletes `public/locales/{ur,zh,ar,hi,es,fr,ru}.json` and
-regex-rewrites three literals to English only: `const dictionaries = {...}` in `i18n/server.ts`,
-`locales: [...]` in `i18n/config.ts`, and `languageList: [...]` in
-`store/slices/themeConfigSlice.tsx`. Changing the shape of those literals makes the regexes miss
-silently; adding or removing a locale means updating the generator's list too.
+Translations ship as the API's resource files, so without multi-language the generator deletes
+`{ur,zh,ar,hi,es,fr,ru}.json` from `src/backend/Source/Features/Localization/Core/Resources` and
+regex-rewrites one literal to English only: `locales: [...]` in `i18n/config.ts`. Changing the shape
+of that literal makes the regex miss silently (and `i18n/locales.test.ts` then fails in the generated
+project); adding or removing a shipped language means updating the generator's list too.
+`LanguageCatalog` is left whole — an entry with no resource file is harmless.
 
 `-m`/`--multilanguage` is currently broken: `SetProperty` derives the property name `Multilanguage`
 from the option name, which does not match `CreateProjectArgument.MultiLanguage`, and it would also

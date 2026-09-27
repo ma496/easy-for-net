@@ -36,4 +36,7 @@ export const Allow = {
 
   FeatureValue_View: 'FeatureValue.View',
   FeatureValue_Manage: 'FeatureValue.Manage',
+
+  Localization_View: 'Localization.View',
+  Localization_Update: 'Localization.Update',
 } as const

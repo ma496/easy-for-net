@@ -257,7 +257,8 @@ options are fetched and labelled. The id travels in the path, so the payload is
 ## Don't forget
 
 - Every label, placeholder, column header, toast and confirm string needs a key in
-  `public/locales/*.json` — see the `localization` skill; error copy is keyed by backend error code,
+  every backend resource file (`Features/Localization/Core/Resources/*.json`) — see the
+  `localization` skill; error copy is keyed by backend error code,
   see `api-error-handling`.
 - A field or widget the shared library does not have yet belongs in `components/ui` — see the
   `ui-component` skill — not in the route's `_components/`.

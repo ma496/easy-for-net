@@ -48,7 +48,8 @@ directly. See the `backend-feature` skill.
 
 `TitleKey` and `MessageKey` are **i18n keys, not text** — `NotificationItem` renders them with
 `t(notification.titleKey)`. So raising a notification always means adding the matching keys to
-`src/frontend/web/public/locales/en.json` (and every other shipped locale):
+`src/backend/Source/Features/Localization/Core/Resources/en.json` (and every other shipped resource
+file there):
 
 ```json
 "notifications": {
@@ -117,7 +118,7 @@ platform-wide rows reach every account) and use its `CreateUserNotificationAsync
 
 - [ ] Called `NewUserNotificationAsync` / `NewTenantNotificationAsync` / `NewGlobalNotificationAsync` with key strings, not text
 - [ ] A tenant scope is active for user and tenant-wide notifications (jobs open one explicitly)
-- [ ] `notifications.<name>.title` and `.message` added to every shipped locale
+- [ ] `notifications.<name>.title` and `.message` added to every backend resource file
 - [ ] `notifications.groups.<slug>` added if a new group was introduced
 - [ ] `[AllowOutside]` in place if the caller is in another feature
 - [ ] Any new endpoint reads through `AcrossAllTenants().VisibleTo(...)` and handles both read-state branches

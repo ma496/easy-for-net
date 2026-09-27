@@ -136,8 +136,12 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             RenameFile(backendTestProjectTargetPath, $"{backendTestProjectName}.csproj", $"{pascalCaseProjectName}.Tests.csproj");
             await AdjustNamespaceAsync(backendTestProjectTargetPath, backendProjectRootNamespace, pascalCaseProjectName);
             await AdjustNamespaceAsync(backendTestProjectTargetPath, backendTestProjectRootNamespace, $"{pascalCaseProjectName}.Tests");
-            // replace Easy For Net text with project name in web project
-            await ReplaceInFiles(webTargetPath, @"Easy\s+For\s+Net", $@"{kebabCaseProjectName.Split('-').Select(x => char.ToUpper(x[0]) + x[1..]).Aggregate((current, next) => current + " " + next)}", ".json");
+            // replace Easy For Net text with project name in web project and in the shipped backend
+            // locale resources - the brand name a caller reads back from GET /localization/resources
+            // is one of the strings this project name has to reach.
+            var titleCaseProjectName = kebabCaseProjectName.Split('-').Select(x => char.ToUpper(x[0]) + x[1..]).Aggregate((current, next) => current + " " + next);
+            await ReplaceInFiles(webTargetPath, @"Easy\s+For\s+Net", titleCaseProjectName, ".json");
+            await ReplaceInFiles(Path.Combine(backendProjectTargetPath, "Features", "Localization", "Core", "Resources"), @"Easy\s+For\s+Net", titleCaseProjectName, ".json");
             // update package.json and package-lock.json
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(webTargetPath, "package.json"), "name", kebabCaseProjectName);
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(webTargetPath, "package-lock.json"), "name", kebabCaseProjectName);
@@ -152,13 +156,15 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             await ReplaceInFiles(claudeSkillsPath, $@"{Regex.Escape(backendProjectRootNamespace)}\.", $@"{pascalCaseProjectName}.", ".md");
             await ReplaceInFiles(claudeSkillsPath, @"EasyForNet\.slnx", $@"{pascalCaseProjectName}.slnx", ".md");
 
-            // Cleanup localization files when multiLanguage is false
+            // Cleanup localization files when multiLanguage is false: the API's shipped resource files
+            // decide which cultures exist, and the web's routing locale set must name the same ones.
             if (!argument.MultiLanguage)
             {
                 Console.WriteLine("Cleaning up localization files...");
 
-                // 1. Delete non-English locale files (ur, zh, ar, hi, es, fr, ru)
-                var localesPath = Path.Combine(webTargetPath, "public", "locales");
+                // 1. Delete non-English shipped locale resources, so the single-language project embeds
+                // only what it routes for.
+                var localesPath = Path.Combine(backendProjectTargetPath, "Features", "Localization", "Core", "Resources");
                 foreach (var locale in new[] { "ur", "zh", "ar", "hi", "es", "fr", "ru" })
                 {
                     var filePath = Path.Combine(localesPath, $"{locale}.json");
@@ -166,39 +172,13 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
                         File.Delete(filePath);
                 }
 
-                // 2. Update server.ts - keep only en dictionary
-                var serverTsPath = Path.Combine(webTargetPath, "i18n", "server.ts");
-                if (File.Exists(serverTsPath))
-                {
-                    var content = await File.ReadAllTextAsync(serverTsPath);
-                    content = Regex.Replace(content,
-                        @"const dictionaries = \{[^}]+\}",
-                        @"const dictionaries = {
-  en: () => import('../public/locales/en.json').then((module) => module.default),
-}");
-                    await File.WriteAllTextAsync(serverTsPath, content);
-                }
-
-                // 3. Update config.ts - set locales to only ['en']
+                // 2. Update config.ts - set locales to only ['en']
                 var configTsPath = Path.Combine(webTargetPath, "i18n", "config.ts");
                 if (File.Exists(configTsPath))
                 {
                     var content = await File.ReadAllTextAsync(configTsPath);
                     content = Regex.Replace(content, @"locales: \[[^\]]+\]", "locales: ['en']");
                     await File.WriteAllTextAsync(configTsPath, content);
-                }
-
-                // 4. Update themeConfigSlice.tsx - remove non-English languages
-                var themeConfigPath = Path.Combine(webTargetPath, "store", "slices", "themeConfigSlice.tsx");
-                if (File.Exists(themeConfigPath))
-                {
-                    var content = await File.ReadAllTextAsync(themeConfigPath);
-                    content = Regex.Replace(content,
-                        @"languageList: \[[^\]]+\]",
-                        @"languageList: [
-    { code: 'en', name: 'English', isRTL: false },
-  ]");
-                    await File.WriteAllTextAsync(themeConfigPath, content);
                 }
             }
 

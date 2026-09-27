@@ -1,4 +1,4 @@
-import { ProviderComponent, TranslationProvider } from '@/components/layouts'
+import { ProviderComponent, TranslationProvider, LocaleGuard } from '@/components/layouts'
 import { Nunito } from 'next/font/google'
 import { getDictionary, i18nConfig, type Locale, getServerTranslation } from '@/i18n'
 
@@ -49,6 +49,7 @@ export default async function RootLayout({
       <head></head>
       <body className={nunito.variable} suppressHydrationWarning={true}>
         <TranslationProvider dictionary={dictionary}>
+          <LocaleGuard urlLocale={lang} servedCulture={dictionary.culture} defaultCulture={dictionary.defaultCulture} languages={dictionary.languages} />
           <ProviderComponent>{children}</ProviderComponent>
         </TranslationProvider>
       </body>

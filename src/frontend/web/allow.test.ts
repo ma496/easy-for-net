@@ -33,6 +33,15 @@ const entitlementPermissions = {
   FeatureValue_Manage: 'FeatureValue.Manage',
 } as const
 
+/**
+ * The localization permissions, restated the same way. Both are scoped `Both`: a platform
+ * administrator edits the platform's own overrides, a tenant administrator edits its tenant's.
+ */
+const localizationPermissions = {
+  Localization_View: 'Localization.View',
+  Localization_Update: 'Localization.Update',
+} as const
+
 describe('Allow', () => {
   it.each(Object.entries(tenancyPermissions))('mirrors %s as %s', (name, value) => {
     expect(Allow[name as keyof typeof tenancyPermissions]).toBe(value)
@@ -58,6 +67,19 @@ describe('Allow', () => {
       .sort()
 
     expect(carried).toEqual(entitlementNames)
+  })
+
+  it.each(Object.entries(localizationPermissions))('mirrors %s as %s', (name, value) => {
+    expect(Allow[name as keyof typeof localizationPermissions]).toBe(value)
+  })
+
+  it('carries every localization permission the API enforces, and no others', () => {
+    const localizationNames = Object.keys(localizationPermissions).sort()
+    const carried = Object.keys(Allow)
+      .filter((name) => name.startsWith('Localization'))
+      .sort()
+
+    expect(carried).toEqual(localizationNames)
   })
 
   it('gives no two permissions the same value', () => {

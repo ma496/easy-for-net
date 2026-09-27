@@ -133,12 +133,18 @@ describe('isActiveTenantStale', () => {
 })
 
 describe('isPlatformAccessiblePath', () => {
-  it.each(['/admin', '/admin/users/list', '/admin/roles/update/abc', '/admin/notifications/list', '/admin/ui/buttons', '/admin/tenants/list', '/admin/tenants/detail/abc'])(
-    'lets a platform administrator with no tenant use %s',
-    (pathname) => {
-      expect(isPlatformAccessiblePath(pathname)).toBe(true)
-    },
-  )
+  it.each([
+    '/admin',
+    '/admin/users/list',
+    '/admin/roles/update/abc',
+    '/admin/notifications/list',
+    '/admin/ui/buttons',
+    '/admin/tenants/list',
+    '/admin/tenants/detail/abc',
+    '/admin/localization',
+  ])('lets a platform administrator with no tenant use %s', (pathname) => {
+    expect(isPlatformAccessiblePath(pathname)).toBe(true)
+  })
 
   it.each(['/admin/users-report', '/admin/some-new-feature'])('keeps %s tenant-only', (pathname) => {
     expect(isPlatformAccessiblePath(pathname)).toBe(false)

@@ -94,10 +94,12 @@ export const resolveTenantLanding = (user: GetUserInfoResponse | undefined): Ten
 /**
  * The screens under `/admin` a platform administrator acting in no tenant can use, besides the
  * dashboard itself: users, roles and notifications answer there about the platform's own - platform
- * users, platform roles, notifications belonging to no tenant - and the UI showcase and the tenancy
- * screens read no tenant data. Any feature added later stays tenant-only until it is listed here.
+ * users, platform roles, notifications belonging to no tenant - the UI showcase and the tenancy
+ * screens read no tenant data, and localization answers about the platform's own texts and languages
+ * (its permission is scoped `Both`, exactly like the screen). Any feature added later stays
+ * tenant-only until it is listed here.
  */
-const platformAccessiblePathPrefixes = ['/admin/users', '/admin/roles', '/admin/notifications', '/admin/ui', '/admin/editions', platformScopedPathPrefix]
+const platformAccessiblePathPrefixes = ['/admin/users', '/admin/roles', '/admin/notifications', '/admin/ui', '/admin/editions', '/admin/localization', platformScopedPathPrefix]
 
 /**
  * Returns true when the (locale-stripped) path names a screen a platform

@@ -78,7 +78,8 @@
     "editionsCreate": "Créer",
     "editionsUpdate": "Mettre à jour",
     "editionsFeatures": "Fonctionnalités",
-    "tenantsFeatures": "Fonctionnalités"
+    "tenantsFeatures": "Fonctionnalités",
+    "localization": "Localisation"
   },
   "search": {
     "dashboard": "Tableau de bord",
@@ -100,7 +101,8 @@
     "tenants": "Locataires",
     "tenantsCreate": "Créer un locataire",
     "editions": "Éditions",
-    "editionsCreate": "Créer une édition"
+    "editionsCreate": "Créer une édition",
+    "localization": "Localisation"
   },
   "form": {
     "label": {
@@ -123,7 +125,8 @@
       "tenant": "Locataire",
       "editionName": "Nom",
       "editionDescription": "Description",
-      "editionDisplayOrder": "Ordre d’affichage"
+      "editionDisplayOrder": "Ordre d’affichage",
+      "defaultLanguage": "Langue par défaut"
     },
     "placeholder": {
       "username": "Entrez le nom d'utilisateur",
@@ -271,7 +274,11 @@
       "identifier": "Identifiant",
       "displayOrder": "Ordre",
       "tenantCount": "Locataires",
-      "edition": "Édition"
+      "edition": "Édition",
+      "key": "Clé",
+      "defaultValue": "Valeur par défaut",
+      "inheritedValue": "Valeur héritée",
+      "override": "Remplacement"
     },
     "pagination": {
       "showingEntries": "Affichage de ${from} à ${to} sur ${totalRecords} entrées"
@@ -626,6 +633,57 @@
       "parentDisabled": "Sans effet tant que la fonctionnalité parente est désactivée",
       "noMatches": "Aucune fonctionnalité ne correspond à votre recherche",
       "actionLabel": "Fonctionnalités"
+    },
+    "localization": {
+      "title": "Localisation",
+      "scope": {
+        "platform": "Vous modifiez des textes et des langues au niveau de la plateforme. Chaque locataire en hérite, sauf s'il définit les siens.",
+        "tenant": "Vous modifiez les textes et les langues de ${tenant}. Tout ce qui n'est pas modifié ici est hérité de la plateforme."
+      },
+      "readOnly": "Vous pouvez consulter ces paramètres, mais pas les modifier.",
+      "tabs": {
+        "texts": "Textes",
+        "languages": "Langues"
+      },
+      "texts": {
+        "onlyOverridden": "Uniquement les textes remplacés",
+        "setHere": "Défini ici",
+        "fromPlatform": "De la plateforme",
+        "notOverridden": "Non remplacé",
+        "editTitle": "Modifier le texte",
+        "inheritedLabel": "Valeur héritée",
+        "defaultLabel": "Valeur par défaut",
+        "overrideLabel": "Votre texte",
+        "placeholders": "Conservez ces espaces réservés :",
+        "placeholderMissing": "Un espace réservé est manquant — l'application l'affichera vide.",
+        "reset": "Rétablir la valeur héritée",
+        "resetTitle": "Réinitialiser ce texte ?",
+        "resetConfirm": "Cela supprimera votre remplacement et reviendra à la valeur héritée.",
+        "resetSuccess": "Texte rétabli à la valeur héritée",
+        "saveSuccess": "Texte enregistré",
+        "noOverrides": "Rien n'a encore été remplacé dans cette langue."
+      },
+      "languages": {
+        "inherited": "Hérité",
+        "inheritedFromPlatform": "Hérité de la plateforme",
+        "inheritedFromShipped": "Intégré : toutes les langues, aucune par défaut",
+        "inheritedSummary": "Hérité : ${languages} · Par défaut : ${default}",
+        "customize": "Personnaliser",
+        "customized": "Personnalisé",
+        "resetToInherited": "Rétablir la valeur héritée",
+        "resetTitle": "Réinitialiser les langues ?",
+        "resetConfirm": "Cela supprimera votre personnalisation et reviendra à ce qui est hérité.",
+        "resetSuccess": "Langues rétablies aux paramètres hérités",
+        "enabled": "Langues activées",
+        "enabledCount": "${count} sur ${total} activées",
+        "rtl": "De droite à gauche",
+        "atLeastOne": "Au moins une langue doit rester activée",
+        "noDefault": "Aucune — utiliser la langue du navigateur du visiteur",
+        "defaultCleared": "La langue par défaut a été effacée car elle vient d'être désactivée",
+        "currentWillSwitch": "La langue dans laquelle vous consultez cet écran est en cours de désactivation — vous serez basculé vers la langue par défaut.",
+        "unsaved": "Vous avez des modifications non enregistrées",
+        "saveSuccess": "Langues mises à jour"
+      }
     }
   },
   "notifications": {

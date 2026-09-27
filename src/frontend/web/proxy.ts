@@ -1,25 +1,29 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { hasAuthCookie } from '@/lib/utils/authentication-and-authorization'
 import { isAuthRequired } from './auth-urls'
-import { i18nConfig } from './i18n'
+import { decideLocaleRouting, i18nConfig, PREFERRED_LANGUAGE_COOKIE, SCOPE_LANGUAGE_COOKIE, SCOPE_LANGUAGES_COOKIE } from './i18n'
 import { match as matchLocale } from '@formatjs/intl-localematcher'
 import Negotiator from 'negotiator'
 
 /**
- * Determines the best-matching locale for an incoming request by
- * negotiating the Accept-Language header against the configured locales,
- * falling back to the default locale.
+ * Negotiates the best-matching locale for an incoming request from its `Accept-Language` header
+ * against the configured locales, falling back to the default locale.
  */
-function getLocale(request: NextRequest): string | undefined {
+function negotiateLocale(request: NextRequest): string | undefined {
   // Negotiator expects plain object so we need to transform headers
   const negotiatorHeaders: Record<string, string> = {}
   request.headers.forEach((value, key) => (negotiatorHeaders[key] = value))
 
-  // Negotiator requires specific headers type
-  const languages = new Negotiator({ headers: negotiatorHeaders }).languages()
-  // Matcher types mismatch with Negotiator output? Apparently not anymore.
+  // A request without Accept-Language (crawlers, health probes, curl) negotiates to the wildcard `*`,
+  // which is no language tag and makes matchLocale throw - so it and anything malformed fall through
+  // to the default instead of failing the request.
+  const languages = new Negotiator({ headers: negotiatorHeaders }).languages().filter((language: string) => language !== '*')
   const locales: string[] = [...i18nConfig.locales]
-  return matchLocale(languages, locales, i18nConfig.defaultLocale)
+  try {
+    return matchLocale(languages, locales, i18nConfig.defaultLocale)
+  } catch {
+    return i18nConfig.defaultLocale
+  }
 }
 
 /**
@@ -34,32 +38,30 @@ export async function proxy(request: NextRequest) {
   // 1. Localization Logic
   const pathnameIsMissingLocale = i18nConfig.locales.every((locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`)
 
+  // `decideLocaleRouting` is the pure decision - the same function a test replays many hops of - so
+  // everything here is just turning it into the NextResponse it calls for.
+  const routing = decideLocaleRouting(
+    pathname,
+    i18nConfig.locales,
+    i18nConfig.defaultLocale,
+    {
+      preferredLanguage: request.cookies.get(PREFERRED_LANGUAGE_COOKIE)?.value,
+      scopeLanguage: request.cookies.get(SCOPE_LANGUAGE_COOKIE)?.value,
+      scopeLanguages: request.cookies.get(SCOPE_LANGUAGES_COOKIE)?.value,
+    },
+    negotiateLocale(request),
+  )
+
   let response: NextResponse | undefined
-  let currentLocale: string
+  const currentLocale = routing.locale
 
-  if (pathnameIsMissingLocale) {
-    const locale = getLocale(request) || i18nConfig.defaultLocale
-    currentLocale = locale
-
-    if (locale === i18nConfig.defaultLocale) {
-      if (!pathname.startsWith('/api') && !pathname.startsWith('/_next') && !pathname.startsWith('/assets') && !pathname.includes('favicon.ico')) {
-        // Internal rewrite for default locale
-        response = NextResponse.rewrite(new URL(`/${locale}${pathname}`, request.url))
-      }
-    } else {
-      // Redirect to localized path
-      return NextResponse.redirect(new URL(`/${locale}${pathname}`, request.url))
+  if (routing.kind === 'rewrite') {
+    if (!pathname.startsWith('/api') && !pathname.startsWith('/_next') && !pathname.startsWith('/assets') && !pathname.includes('favicon.ico')) {
+      // Internal rewrite for default locale
+      response = NextResponse.rewrite(new URL(routing.path, request.url))
     }
-  } else {
-    // Path has locale
-    const segment = pathname.split('/')[1]
-    currentLocale = segment
-
-    // Check if it's default locale in URL (e.g. /en/...) and redirect to prefix-less if needed
-    if (segment === i18nConfig.defaultLocale) {
-      const newPathname = pathname.replace(`/${i18nConfig.defaultLocale}`, '') || '/'
-      return NextResponse.redirect(new URL(newPathname, request.url))
-    }
+  } else if (routing.kind === 'redirect') {
+    return NextResponse.redirect(new URL(routing.path, request.url))
   }
 
   // 2. Auth Logic

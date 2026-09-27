@@ -153,8 +153,8 @@ results"), never for caller-supplied text.
   `text-start`/`text-end`, `border-s`/`border-e`, `rounded-s`/`rounded-e` — never `ml-`/`pl-`/`left-`/
   `text-left`. Where a logical utility does not exist, pair the `ltr:` and `rtl:` variants
   (`ltr:text-left rtl:text-right`). Components that must branch in JS read
-  `useAppSelector((state) => state.theme.rtlClass) === 'rtl'`. `i18n/locales.test.ts` fails on
-  physical utilities in the tenancy screens and `TenantSwitcher`.
+  `useAppSelector((state) => state.theme.rtlClass) === 'rtl'`. `i18n/tenant-screens.test.ts` fails on
+  physical utilities in the tenancy and localization screens and `TenantSwitcher`.
 - Icons come from `lucide-react`, sized with classes (`h-4 w-4`) or the `size` prop.
 
 ## Client vs server

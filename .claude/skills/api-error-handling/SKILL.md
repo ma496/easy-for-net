@@ -82,7 +82,8 @@ error shape into `{ title, messages }`:
   `featureDisabled` or `tenantSuspended` reaches the user instead of "Forbidden".
 - Title is `error.{status}.title` (`common.error` for anything else).
 
-So every new code needs a key in `public/locales/en.json` (and every other shipped locale):
+So every new code needs a key in the API's `Features/Localization/Core/Resources/en.json` (and every
+other shipped resource file there):
 
 ```json
 "error": {
@@ -135,6 +136,6 @@ account info; if the refresh fails it signs the user out and redirects to `/sign
 
 - [ ] Constant in `ErrorHandling/ErrorCodes.cs` (or an existing one reused)
 - [ ] `ThrowError` with that constant, the right `Send.*` helper, or the feature exception for a plan refusal
-- [ ] `error.server.<code>` key in every shipped locale file
+- [ ] `error.server.<code>` key in every backend resource file
 - [ ] The screen renders `ApiErrorMessages` or calls `apiErrorAlert`
 - [ ] An endpoint test asserts the status and, where it matters, the error name/code

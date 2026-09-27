@@ -117,9 +117,10 @@ declared right above the component. Exported components, hooks and DTO interface
 `@/i18n`, `@/hooks`, `@/allow`, `@/feature-names`).
 
 **No hard-coded user-visible strings.** Everything goes through `t('…')` from `@/i18n`
-(client) or `getServerTranslation(lang, '…')` (server component), with the key added to
-`public/locales/en.json` — and to every other `public/locales/<code>.json` when the project is
-multi-language. Key namespaces already in use:
+(client) or `getServerTranslation(lang, '…')` (server component), with the key added to the API's
+`Features/Localization/Core/Resources/en.json` — and to every other `<code>.json` there when the
+project is multi-language. Import translators from `@/i18n` itself, never a subpath. Key namespaces
+already in use:
 
 - `page.<area>.*` — page titles and page-specific copy (`page.users.create.title`)
 - `form.label.*`, `form.placeholder.*` — form field text

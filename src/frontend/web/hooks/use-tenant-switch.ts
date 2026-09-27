@@ -58,6 +58,9 @@ export const useTenantSwitch = (): TenantSwitchControls => {
       text: t(messageKey, { tenant: userInfoResult.data?.activeTenant?.name ?? fallbackName ?? '' }),
     })
     router.push('/admin')
+    // The root layout persists across that navigation, so it would otherwise keep serving the texts
+    // and languages resolved for the tenant scope just left rather than the one just entered.
+    router.refresh()
     return true
   }
 

@@ -31,6 +31,9 @@ lib/utils/redirect.test.ts                 lib/utils/tenant-routing.test.ts
 lib/utils/upload-limit.test.ts             lib/utils/api-error-helpers.test.ts
 store/slices/authSlice.test.ts             store/middlewares/rtk-error-middleware.test.ts
 store/tenant-cache.test.ts                 i18n/locales.test.ts
+i18n/tenant-screens.test.ts                i18n/resolve-locale.test.ts
+i18n/locale-guard.test.ts                  i18n/translate.test.ts
+i18n/locale-routing-loop.test.ts
 allow.test.ts  auth-urls.test.ts  feature-names.test.ts
 app/[lang]/(auth)/select-tenant/_components/select-tenant-view.test.ts
 ```
@@ -97,8 +100,9 @@ browser:
 - **Client/API mirrors**: `allow.test.ts` and `feature-names.test.ts` restate the backend constants and
   fail when `allow.ts` / `feature-names.ts` drift — add the new constant there when you add a
   permission or a feature.
-- **Locale files**: `i18n/locales.test.ts` — extend its key lists when a screen's strings must never
-  go missing (see `localization`).
+- **Locales**: `i18n/locales.test.ts` holds `i18nConfig.locales` equal to the backend's resource files;
+  `i18n/tenant-screens.test.ts` reads those files — extend its key lists when a screen's strings must
+  never go missing (see `localization`). Key parity across locales is the backend's test, not this one.
 - **Wiring that cannot be rendered here** (a guard calling a helper, a screen using logical
   utilities) may be checked by reading the source with `readFileSync`. Such a test must first assert
   that it found the files it scans, so a moved file cannot make it pass by being absent.

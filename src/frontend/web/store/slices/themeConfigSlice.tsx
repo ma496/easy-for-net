@@ -1,12 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import themeConfig from '@/theme.config'
 
-interface Language {
-  code: string
-  name: string
-  isRTL: boolean
-}
-
 interface ThemeConfigState {
   isDarkMode: boolean
   sidebar: boolean
@@ -18,7 +12,6 @@ interface ThemeConfigState {
   navbar: string
   locale: string
   semidark: boolean
-  languageList: Language[]
 }
 
 const initialState: ThemeConfigState = {
@@ -32,16 +25,6 @@ const initialState: ThemeConfigState = {
   navbar: themeConfig.navbar,
   locale: themeConfig.locale,
   semidark: themeConfig.semidark,
-  languageList: [
-    { code: 'en', name: 'English', isRTL: false },
-    { code: 'ar', name: 'Arabic', isRTL: true },
-    { code: 'ur', name: 'Urdu', isRTL: true },
-    { code: 'zh', name: 'Chinese', isRTL: false },
-    { code: 'es', name: 'Spanish', isRTL: false },
-    { code: 'fr', name: 'French', isRTL: false },
-    { code: 'hi', name: 'Hindi', isRTL: false },
-    { code: 'ru', name: 'Russian', isRTL: false },
-  ],
 }
 
 /**

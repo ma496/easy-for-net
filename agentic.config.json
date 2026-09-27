@@ -141,9 +141,9 @@
     },
     {
       "skill": "localization",
-      "match": ["^src/frontend/web/public/locales/"],
+      "match": ["^src/backend/Source/Features/Localization/", "^src/frontend/web/i18n/"],
       "when": "for a translation change",
-      "why": "Keys are shared across every locale file and three translator entry points."
+      "why": "Keys live in the API's resource files and must match across every locale; the web reads them through three translator entry points and a locale routing rule the proxy and guard share."
     },
     {
       "skill": "rtk-query-api",

@@ -1,8 +1,8 @@
 'use client'
-import { PropsWithChildren, useEffect, useState } from 'react'
+import { PropsWithChildren, useContext, useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { toggleRTL, toggleTheme, setDarkMode, toggleMenu, toggleLayout, toggleAnimation, toggleNavbar, toggleSemidark, setUserInfo } from '@/store/slices'
-import { AppLoading, ServiceUnavailableView } from '@/components/layouts'
+import { AppLoading, ServiceUnavailableView, TranslationContext } from '@/components/layouts'
 import { i18nConfig, Locale } from '@/i18n'
 import { useLazyGetUserInfoQuery } from './store/api/identity'
 import { isAllowed, isPathAvailable, isTenantScopedPath, resolvePlatformLanding, resolveTenantLanding } from './lib/utils'
@@ -23,6 +23,7 @@ function App({ children }: PropsWithChildren) {
   const router = useRouter()
   const authState = useAppSelector((state) => state.auth)
   const isServiceUnavailable = useAppSelector((state) => state.serviceAvailability.isUnavailable)
+  const dictionary = useContext(TranslationContext)
   const [isLoading, setIsLoading] = useState(true)
   const [getUserInfo, { isLoading: isLoadingUserInfo }] = useLazyGetUserInfoQuery()
   const { showDialog: showConsentDialog, isLoading: consentLoading, accept, decline } = useCookieConsent()
@@ -124,11 +125,13 @@ function App({ children }: PropsWithChildren) {
   }, [dispatch, isLoading, themeConfig.animation, themeConfig.layout, themeConfig.menu, themeConfig.navbar, themeConfig.rtlClass, themeConfig.semidark, themeConfig.theme])
 
   useEffect(() => {
-    const pathSegment = pathname.split('/')[1]
-    const lang = i18nConfig.locales.includes(pathSegment as Locale) ? pathSegment : i18nConfig.defaultLocale
-    const currentLang = themeConfig.languageList.find((language) => language.code === lang)
-    dispatch(toggleRTL(currentLang?.isRTL ? 'rtl' : 'ltr'))
-  }, [dispatch, pathname, themeConfig.languageList])
+    // The served culture's own RTL flag decides direction, so a tenant or platform override of the
+    // enabled languages is honoured exactly as the server resolved it. Until the dictionary names a
+    // served language - the empty fallback the provider starts with - direction falls back to
+    // left-to-right.
+    const servedLanguage = dictionary.languages.find((language) => language.code === dictionary.culture)
+    dispatch(toggleRTL(servedLanguage?.isRtl ? 'rtl' : 'ltr'))
+  }, [dispatch, dictionary.culture, dictionary.languages])
 
   return (
     <div

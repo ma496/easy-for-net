@@ -9,6 +9,9 @@ describe('getMatchedAuthUrl', () => {
     // screen rather than one a tenant administrator reaches.
     ['/admin/tenants/list', Allow.Tenant_View],
     ['/admin/tenants/create', Allow.Tenant_Create],
+    // Both-scoped, so this one route serves a platform administrator editing the platform's own
+    // overrides and a tenant administrator editing its tenant's, gated on the same permission.
+    ['/admin/localization', Allow.Localization_View],
   ])('guards %s with the permission the screen requires', (url, permission) => {
     expect(getMatchedAuthUrl(url)?.permissions).toEqual([permission])
   })

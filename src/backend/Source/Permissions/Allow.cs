@@ -41,4 +41,7 @@ public partial class Allow
 
     public const string FeatureValue_View = "FeatureValue.View";
     public const string FeatureValue_Manage = "FeatureValue.Manage";
+
+    public const string Localization_View = "Localization.View";
+    public const string Localization_Update = "Localization.Update";
 }

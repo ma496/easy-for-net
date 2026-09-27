@@ -94,6 +94,10 @@ export const authUrls: AuthUrl[] = [
   {
     url: '/select-tenant',
   },
+  {
+    url: '/admin/localization',
+    permissions: [Allow.Localization_View],
+  },
 ]
 
 /**

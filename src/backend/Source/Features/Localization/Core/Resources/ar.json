@@ -78,7 +78,8 @@
     "editionsCreate": "إنشاء",
     "editionsUpdate": "تحديث",
     "editionsFeatures": "الميزات",
-    "tenantsFeatures": "الميزات"
+    "tenantsFeatures": "الميزات",
+    "localization": "التوطين"
   },
   "search": {
     "dashboard": "لوحة القيادة",
@@ -100,7 +101,8 @@
     "tenants": "المستأجرون",
     "tenantsCreate": "إنشاء مستأجر",
     "editions": "الإصدارات",
-    "editionsCreate": "إنشاء إصدار"
+    "editionsCreate": "إنشاء إصدار",
+    "localization": "التوطين"
   },
   "form": {
     "label": {
@@ -123,7 +125,8 @@
       "tenant": "المستأجر",
       "editionName": "الاسم",
       "editionDescription": "الوصف",
-      "editionDisplayOrder": "ترتيب العرض"
+      "editionDisplayOrder": "ترتيب العرض",
+      "defaultLanguage": "اللغة الافتراضية"
     },
     "placeholder": {
       "username": "أدخل اسم المستخدم",
@@ -271,7 +274,11 @@
       "identifier": "المعرّف",
       "displayOrder": "الترتيب",
       "tenantCount": "المستأجرون",
-      "edition": "الإصدار"
+      "edition": "الإصدار",
+      "key": "المفتاح",
+      "defaultValue": "القيمة الافتراضية",
+      "inheritedValue": "القيمة الموروثة",
+      "override": "التجاوز"
     },
     "pagination": {
       "showingEntries": "عرض ${from} إلى ${to} من ${totalRecords} مُدخل"
@@ -626,6 +633,57 @@
       "parentDisabled": "غير سارية ما دامت الميزة الأعلى معطّلة",
       "noMatches": "لا توجد ميزات مطابقة لبحثك",
       "actionLabel": "الميزات"
+    },
+    "localization": {
+      "title": "التوطين",
+      "scope": {
+        "platform": "أنت تقوم بتحرير النصوص واللغات على مستوى المنصة. يرث كل مستأجر هذه الإعدادات ما لم يحدد إعداداته الخاصة.",
+        "tenant": "أنت تقوم بتحرير النصوص واللغات الخاصة بـ ${tenant}. كل ما لم يتم تغييره هنا يُورَث من المنصة."
+      },
+      "readOnly": "يمكنك عرض هذه الإعدادات ولكن لا يمكنك تغييرها.",
+      "tabs": {
+        "texts": "النصوص",
+        "languages": "اللغات"
+      },
+      "texts": {
+        "onlyOverridden": "التي تم تجاوزها فقط",
+        "setHere": "مُعيَّن هنا",
+        "fromPlatform": "من المنصة",
+        "notOverridden": "لم يتم تجاوزها",
+        "editTitle": "تعديل النص",
+        "inheritedLabel": "القيمة الموروثة",
+        "defaultLabel": "القيمة الافتراضية",
+        "overrideLabel": "نصك",
+        "placeholders": "احتفظ بهذه العناصر النائبة:",
+        "placeholderMissing": "أحد العناصر النائبة مفقود — سيظهر فارغًا في التطبيق.",
+        "reset": "إعادة التعيين إلى القيمة الموروثة",
+        "resetTitle": "هل تريد إعادة تعيين هذا النص؟",
+        "resetConfirm": "سيؤدي هذا إلى إزالة تجاوزك والعودة إلى القيمة الموروثة.",
+        "resetSuccess": "تمت إعادة تعيين النص إلى القيمة الموروثة",
+        "saveSuccess": "تم حفظ النص",
+        "noOverrides": "لا يوجد أي تجاوز في هذه اللغة بعد."
+      },
+      "languages": {
+        "inherited": "موروث",
+        "inheritedFromPlatform": "موروث من المنصة",
+        "inheritedFromShipped": "مدمج: جميع اللغات، بلا لغة افتراضية",
+        "inheritedSummary": "الموروث: ${languages} · الافتراضي: ${default}",
+        "customize": "تخصيص",
+        "customized": "مخصص",
+        "resetToInherited": "إعادة التعيين إلى الموروث",
+        "resetTitle": "هل تريد إعادة تعيين اللغات؟",
+        "resetConfirm": "سيؤدي هذا إلى إزالة التخصيص والعودة إلى الإعدادات الموروثة.",
+        "resetSuccess": "تمت إعادة تعيين اللغات إلى الإعدادات الموروثة",
+        "enabled": "اللغات المفعّلة",
+        "enabledCount": "${count} من ${total} مفعّلة",
+        "rtl": "من اليمين لليسار",
+        "atLeastOne": "يجب أن تبقى لغة واحدة على الأقل مفعّلة",
+        "noDefault": "لا شيء — استخدام لغة متصفح الزائر",
+        "defaultCleared": "تم مسح اللغة الافتراضية لأنه تم للتو تعطيلها",
+        "currentWillSwitch": "اللغة التي تشاهد بها هذه الشاشة قيد التعطيل — سيتم تحويلك إلى اللغة الافتراضية.",
+        "unsaved": "لديك تغييرات غير محفوظة",
+        "saveSuccess": "تم تحديث اللغات"
+      }
     }
   },
   "notifications": {

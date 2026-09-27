@@ -78,7 +78,8 @@
     "editionsCreate": "بنائیں",
     "editionsUpdate": "اپ ڈیٹ",
     "editionsFeatures": "خصوصیات",
-    "tenantsFeatures": "خصوصیات"
+    "tenantsFeatures": "خصوصیات",
+    "localization": "لوکلائزیشن"
   },
   "search": {
     "dashboard": "ڈیش بورڈ",
@@ -100,7 +101,8 @@
     "tenants": "ٹیننٹس",
     "tenantsCreate": "ٹیننٹ بنائیں",
     "editions": "ایڈیشنز",
-    "editionsCreate": "ایڈیشن بنائیں"
+    "editionsCreate": "ایڈیشن بنائیں",
+    "localization": "لوکلائزیشن"
   },
   "form": {
     "label": {
@@ -123,7 +125,8 @@
       "tenant": "ٹیننٹ",
       "editionName": "نام",
       "editionDescription": "تفصیل",
-      "editionDisplayOrder": "ترتیبِ نمائش"
+      "editionDisplayOrder": "ترتیبِ نمائش",
+      "defaultLanguage": "ڈیفالٹ زبان"
     },
     "placeholder": {
       "username": "صارف کا نام درج کریں",
@@ -271,7 +274,11 @@
       "identifier": "شناخت کنندہ",
       "displayOrder": "ترتیب",
       "tenantCount": "کرایہ دار",
-      "edition": "ایڈیشن"
+      "edition": "ایڈیشن",
+      "key": "کلید",
+      "defaultValue": "ڈیفالٹ قدر",
+      "inheritedValue": "وراثتی قدر",
+      "override": "اوور رائیڈ"
     },
     "pagination": {
       "showingEntries": "${totalRecords} اندراجات میں سے ${from} سے ${to} دکھائے جا رہے ہیں"
@@ -626,6 +633,57 @@
       "parentDisabled": "اوپر والی خصوصیت بند ہونے تک نافذ نہیں",
       "noMatches": "آپ کی تلاش سے کوئی خصوصیت میل نہیں کھاتی",
       "actionLabel": "خصوصیات"
+    },
+    "localization": {
+      "title": "لوکلائزیشن",
+      "scope": {
+        "platform": "آپ پلیٹ فارم کی سطح پر متن اور زبانیں ترمیم کر رہے ہیں۔ ہر کرایہ دار انہیں وراثت میں لیتا ہے جب تک کہ وہ اپنی مخصوص ترتیبات مقرر نہ کرے۔",
+        "tenant": "آپ ${tenant} کے لیے متن اور زبانیں ترمیم کر رہے ہیں۔ جو کچھ یہاں تبدیل نہیں کیا گیا وہ پلیٹ فارم سے وراثت میں ملتا ہے۔"
+      },
+      "readOnly": "آپ ان ترتیبات کو دیکھ سکتے ہیں لیکن تبدیل نہیں کر سکتے۔",
+      "tabs": {
+        "texts": "متن",
+        "languages": "زبانیں"
+      },
+      "texts": {
+        "onlyOverridden": "صرف اوور رائیڈ شدہ",
+        "setHere": "یہاں متعین کیا گیا",
+        "fromPlatform": "پلیٹ فارم سے",
+        "notOverridden": "اوور رائیڈ نہیں کیا گیا",
+        "editTitle": "متن ترمیم کریں",
+        "inheritedLabel": "وراثتی قدر",
+        "defaultLabel": "ڈیفالٹ قدر",
+        "overrideLabel": "آپ کا متن",
+        "placeholders": "یہ پلیس ہولڈرز برقرار رکھیں:",
+        "placeholderMissing": "ایک پلیس ہولڈر غائب ہے — ایپ اسے خالی دکھائے گی۔",
+        "reset": "وراثتی قدر پر بحال کریں",
+        "resetTitle": "کیا آپ اس متن کو ری سیٹ کرنا چاہتے ہیں؟",
+        "resetConfirm": "اس سے آپ کا اوور رائیڈ ہٹ جائے گا اور وراثتی قدر پر واپس چلا جائے گا۔",
+        "resetSuccess": "متن وراثتی قدر پر بحال کر دیا گیا",
+        "saveSuccess": "متن محفوظ کر دیا گیا",
+        "noOverrides": "اس زبان میں ابھی تک کچھ بھی اوور رائیڈ نہیں کیا گیا۔"
+      },
+      "languages": {
+        "inherited": "وراثتی",
+        "inheritedFromPlatform": "پلیٹ فارم سے وراثت میں ملا",
+        "inheritedFromShipped": "بلٹ ان: تمام زبانیں، کوئی ڈیفالٹ نہیں",
+        "inheritedSummary": "وراثتی: ${languages} · ڈیفالٹ: ${default}",
+        "customize": "حسب ضرورت بنائیں",
+        "customized": "حسب ضرورت بنایا گیا",
+        "resetToInherited": "وراثتی پر بحال کریں",
+        "resetTitle": "کیا آپ زبانیں ری سیٹ کرنا چاہتے ہیں؟",
+        "resetConfirm": "اس سے آپ کی تخصیص ہٹ جائے گی اور وراثتی ترتیبات پر واپس چلی جائے گی۔",
+        "resetSuccess": "زبانیں وراثتی ترتیبات پر بحال کر دی گئیں",
+        "enabled": "فعال زبانیں",
+        "enabledCount": "${total} میں سے ${count} فعال",
+        "rtl": "دائیں سے بائیں",
+        "atLeastOne": "کم از کم ایک زبان فعال رہنی چاہیے",
+        "noDefault": "کوئی نہیں — زائر کے براؤزر کی زبان استعمال کریں",
+        "defaultCleared": "ڈیفالٹ زبان صاف کر دی گئی کیونکہ اسے ابھی غیر فعال کیا گیا ہے",
+        "currentWillSwitch": "جس زبان میں آپ یہ اسکرین دیکھ رہے ہیں وہ غیر فعال کی جا رہی ہے — آپ کو ڈیفالٹ زبان پر منتقل کر دیا جائے گا۔",
+        "unsaved": "آپ کے پاس غیر محفوظ تبدیلیاں ہیں",
+        "saveSuccess": "زبانیں اپ ڈیٹ ہو گئیں"
+      }
     }
   },
   "notifications": {

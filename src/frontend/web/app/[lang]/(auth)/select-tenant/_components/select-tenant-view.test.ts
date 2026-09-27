@@ -18,6 +18,9 @@ import { describe, expect, it } from 'vitest'
 /** The web root, so each file of the chain can be read by the path it is written under. */
 const webDirectory = fileURLToPath(new URL('../../../../../', import.meta.url))
 
+/** Where the backend ships its localization resource files. */
+const resourcesDirectory = fileURLToPath(new URL('../../../../../../../backend/Source/Features/Localization/Core/Resources', import.meta.url))
+
 /** The root guard that decides where a caller with no usable tenant lands. */
 const guardSource = readFileSync(join(webDirectory, 'App.tsx'), 'utf8')
 
@@ -39,11 +42,11 @@ const flatten = (value: Record<string, unknown>, prefix = ''): [string, string][
 
 /** Every locale the project ships, by code, as the messages a screen looks up in it. */
 const messages = new Map(
-  readdirSync(join(webDirectory, 'public/locales'))
+  readdirSync(resourcesDirectory)
     .filter((name) => name.endsWith('.json'))
     .map((name) => [
       name.replace(/\.json$/, ''),
-      new Map(flatten(JSON.parse(readFileSync(join(webDirectory, 'public/locales', name), 'utf8')))),
+      new Map(flatten(JSON.parse(readFileSync(join(resourcesDirectory, name), 'utf8')))),
     ])
 )
 

@@ -78,7 +78,8 @@
     "editionsCreate": "Создать",
     "editionsUpdate": "Обновить",
     "editionsFeatures": "Функции",
-    "tenantsFeatures": "Функции"
+    "tenantsFeatures": "Функции",
+    "localization": "Локализация"
   },
   "search": {
     "dashboard": "Панель управления",
@@ -100,7 +101,8 @@
     "tenants": "Арендаторы",
     "tenantsCreate": "Создать арендатора",
     "editions": "Редакции",
-    "editionsCreate": "Создать редакцию"
+    "editionsCreate": "Создать редакцию",
+    "localization": "Локализация"
   },
   "form": {
     "label": {
@@ -123,7 +125,8 @@
       "tenant": "Арендатор",
       "editionName": "Название",
       "editionDescription": "Описание",
-      "editionDisplayOrder": "Порядок отображения"
+      "editionDisplayOrder": "Порядок отображения",
+      "defaultLanguage": "Язык по умолчанию"
     },
     "placeholder": {
       "username": "Введите имя пользователя",
@@ -271,7 +274,11 @@
       "identifier": "Идентификатор",
       "displayOrder": "Порядок",
       "tenantCount": "Арендаторы",
-      "edition": "Редакция"
+      "edition": "Редакция",
+      "key": "Ключ",
+      "defaultValue": "Значение по умолчанию",
+      "inheritedValue": "Унаследованное значение",
+      "override": "Переопределение"
     },
     "pagination": {
       "showingEntries": "Показано с ${from} по ${to} из ${totalRecords} записей"
@@ -626,6 +633,57 @@
       "parentDisabled": "Не действует, пока отключена функция выше",
       "noMatches": "Ничего не найдено",
       "actionLabel": "Функции"
+    },
+    "localization": {
+      "title": "Локализация",
+      "scope": {
+        "platform": "Вы редактируете тексты и языки на уровне платформы. Каждый арендатор наследует их, если не задаст собственные.",
+        "tenant": "Вы редактируете тексты и языки для ${tenant}. Всё, что здесь не изменено, наследуется от платформы."
+      },
+      "readOnly": "Вы можете просматривать эти настройки, но не можете их изменять.",
+      "tabs": {
+        "texts": "Тексты",
+        "languages": "Языки"
+      },
+      "texts": {
+        "onlyOverridden": "Только переопределённые",
+        "setHere": "Задано здесь",
+        "fromPlatform": "От платформы",
+        "notOverridden": "Не переопределено",
+        "editTitle": "Изменить текст",
+        "inheritedLabel": "Унаследованное значение",
+        "defaultLabel": "Значение по умолчанию",
+        "overrideLabel": "Ваш текст",
+        "placeholders": "Сохраните эти плейсхолдеры:",
+        "placeholderMissing": "Отсутствует плейсхолдер — приложение покажет его пустым.",
+        "reset": "Вернуть унаследованное значение",
+        "resetTitle": "Сбросить этот текст?",
+        "resetConfirm": "Это удалит ваше переопределение и вернёт унаследованное значение.",
+        "resetSuccess": "Текст сброшен до унаследованного значения",
+        "saveSuccess": "Текст сохранён",
+        "noOverrides": "В этом языке пока ничего не переопределено."
+      },
+      "languages": {
+        "inherited": "Унаследовано",
+        "inheritedFromPlatform": "Унаследовано от платформы",
+        "inheritedFromShipped": "Встроено: все языки, без значения по умолчанию",
+        "inheritedSummary": "Унаследовано: ${languages} · По умолчанию: ${default}",
+        "customize": "Настроить",
+        "customized": "Настроено",
+        "resetToInherited": "Вернуть унаследованное",
+        "resetTitle": "Сбросить языки?",
+        "resetConfirm": "Это удалит вашу настройку и вернёт унаследованные значения.",
+        "resetSuccess": "Языки сброшены до унаследованных настроек",
+        "enabled": "Включённые языки",
+        "enabledCount": "Включено ${count} из ${total}",
+        "rtl": "Справа налево",
+        "atLeastOne": "Хотя бы один язык должен оставаться включённым",
+        "noDefault": "Нет — использовать язык браузера посетителя",
+        "defaultCleared": "Язык по умолчанию сброшен, так как он был только что отключён",
+        "currentWillSwitch": "Язык, на котором вы просматриваете этот экран, отключается — вы будете переключены на язык по умолчанию.",
+        "unsaved": "У вас есть несохранённые изменения",
+        "saveSuccess": "Языки обновлены"
+      }
     }
   },
   "notifications": {

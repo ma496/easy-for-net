@@ -118,15 +118,17 @@ on, such as a numeric limit or an upsell panel.
 
 ## Translations
 
-Add every string to `public/locales/en.json` and to every other `public/locales/<code>.json`
-(`i18n/config.ts` lists the locales; `i18n/locales.test.ts` fails when their key sets differ). Follow
+Add every string to the API's `Features/Localization/Core/Resources/en.json` and to every other
+`<code>.json` beside it (the backend's `LocalizationResourceStoreTests` fail when their key sets
+differ). Follow
 the existing namespaces: `page.<area>.*` (or `page.<area>.<screen>.*`), `form.label.*`,
 `form.placeholder.*`, `validation.*`, `table.*`, `navigation.*`, `search.*`, `error.server.*`,
 `common.*`.
 
 Server components use `await getServerTranslation(lang, key)`; client components use
 `const { t } = useTranslation()` and `t('key', { min: 3 })` (placeholders are `${min}` in the JSON).
-The `localization` skill covers the third (non-component) translator and adding a language.
+Both come from `@/i18n`, never a subpath. The `localization` skill covers the third (non-component)
+translator, overrides and adding a language.
 
 ## Register the destination
 
@@ -145,6 +147,6 @@ The `localization` skill covers the third (non-component) translator and adding 
 - [ ] `_components/<name>.tsx` (`'use client'`, named export)
 - [ ] `auth-urls.ts` entry if the route needs a permission
 - [ ] Scope registered in `lib/utils/tenant-routing.ts` if the screen is not tenant-only
-- [ ] Keys in every `public/locales/*.json`
+- [ ] Keys in every backend resource file (`Features/Localization/Core/Resources/*.json`)
 - [ ] `nav-items.ts` + `searchable-items.ts`
 - [ ] `npm run lint`, `npx tsc --noEmit`, `npm run test` and `npm run build` pass
