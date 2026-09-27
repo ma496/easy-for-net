@@ -1,6 +1,6 @@
 ---
 name: frontend-page
-description: Add a route to the Next.js app under src/frontend/web/app/[lang] — server page component, _components client component, locale-prefixed routing and proxy.ts auth gating, i18n keys, nav-items and searchable-items registration. Use for any new screen that is not a full CRUD set.
+description: Add a route to the Next.js app under src/frontend/web/app/[lang] — server page component, _components client component, locale-prefixed routing, the three access layers (proxy.ts sign-in check, auth-urls.ts permissions, tenant-scope routing), i18n keys, nav-items and searchable-items registration. Use for any new screen that is not a full CRUD set.
 ---
 
 # Adding a page
@@ -10,12 +10,14 @@ description: Add a route to the Next.js app under src/frontend/web/app/[lang] �
 Every route is locale-prefixed: `app/[lang]/…`. Route groups:
 
 - `(public)` — marketing/landing, no auth
-- `(auth)` — signin, signup, profile, password flows
-- `admin/` — the authenticated app shell (sidebar, header, settings); `admin/(identity)` groups the
-  identity screens without adding a URL segment
+- `(auth)` — signin, signup, profile, password flows, `select-tenant`, `unauthorized`
+- `admin/` — the authenticated app shell (sidebar, header, settings); nested route groups such as
+  `admin/(identity)` and `admin/(tenancy)` group a feature's screens without adding a URL segment
 
 A screen is a folder with `page.tsx` plus a sibling `_components/` folder holding the interactive
-client parts. Dynamic segments are folders: `update/[id]/page.tsx`.
+client parts. Dynamic segments are folders: `update/[id]/page.tsx`, `detail/[id]/page.tsx`. A client
+component shared by several screens of one group sits in the group's own `_components/`
+(`admin/(tenancy)/_components/feature-value-editor.tsx`).
 
 ## The page component (server)
 
@@ -24,33 +26,37 @@ client parts. Dynamic segments are folders: `update/[id]/page.tsx`.
 
 ```tsx
 import { getServerTranslation } from '@/i18n'
-import { UserTable } from './_components/user-table'
+import { TenantDetailView } from './_components/tenant-detail-view'
 import { AdminPageContent } from '@/components/layouts'
 
-/** Props for the users list page, providing the localized route lang segment. */
-interface UsersProps {
-  params: Promise<{ lang: string }>
+/** Props for the tenant detail page, providing the route lang segment and the id of the tenant being shown. */
+interface TenantDetailPageProps {
+  params: Promise<{
+    lang: string
+    id: string
+  }>
 }
 
-/** Server-rendered users list page… */
-const Users = async ({ params }: UsersProps) => {
-  const { lang } = await params
-  const title = await getServerTranslation(lang, 'page.users.title')
+/** Server-rendered tenant detail page that resolves the localized title and renders the detail view. */
+const TenantDetail = async ({ params }: TenantDetailPageProps) => {
+  const { lang, id } = await params
+  const title = await getServerTranslation(lang, 'page.tenants.detail.title')
+
   return (
     <AdminPageContent title={title}>
-      <UserTable />
+      <TenantDetailView tenantId={id} />
     </AdminPageContent>
   )
 }
 
-export default Users
+export default TenantDetail
 ```
 
-For a dynamic route, destructure the extra segment and pass it down:
-`const { lang, id } = await params` → `<UserUpdateForm userId={id} />`.
+A route without a dynamic segment types `params: Promise<{ lang: string }>` and passes nothing down.
 
-`AdminPageContent` takes `title` and an optional `innerClassName` to constrain form width
-(`max-w-187.5` for create, `max-w-155` for update are the values in use).
+`AdminPageContent` takes `title`, an optional `className`, and an optional `innerClassName` to
+constrain form width (`max-w-155` for most create/update forms, `max-w-175` / `max-w-187.5` for
+wider ones). List and detail screens leave it full width.
 
 ## The client component
 
@@ -67,51 +73,78 @@ import { Button, ApiErrorMessages, Loader, LocalizedLink } from '@/components/ui
 import { FormInput, FormCheckbox } from '@/components/ui/form'
 import { apiErrorAlert, successToast, isAllowed } from '@/lib/utils'
 import { useAppSelector } from '@/store/hooks'
+import { useTenantGetQuery } from '@/store/api/tenancy'
 import { Allow } from '@/allow'
 ```
 
+Anything that loads data renders in this order: `isLoading` → `<Loader />`, `error` →
+`<ApiErrorMessages error={error} />`, no data → a translated "not found" line, then the content —
+each state wrapped in `<div className="flex justify-center items-center">`.
+
 **Navigation must stay locale-aware** — use `useLocalizedRouter()` instead of `next/navigation`'s
 router, and `<LocalizedLink href="/admin/users/list">` instead of `next/link`. Pass unprefixed
-paths; the helpers add the locale segment.
+paths; the helpers add the locale segment (`router.localize(href)` gives the prefixed path for a
+full page load).
 
-## Auth gating
+## Access: sign-in, permissions, tenant scope
 
-`proxy.ts` (Next 16's renamed middleware) handles locale negotiation *and* auth. It reads
-`auth-urls.ts`: anything under `/admin/` requires a session, and an entry with `permissions`
-requires those permissions. Add your route there:
+Three layers decide whether a screen opens; register the route with each that applies.
 
-```ts
-{ url: '/admin/notifications/list', permissions: [Allow.Notification_View] },
-```
+1. **`proxy.ts`** (Next 16's renamed middleware) negotiates the locale and checks only that a
+   session cookie exists: anything under `/admin/`, or listed in `auth-urls.ts`, redirects to
+   `/signin?redirect=…` without one. It does not check permissions.
+2. **`auth-urls.ts`** names the permissions a route needs. `App.tsx` (the client root guard) matches
+   the locale-stripped path with `getMatchedAuthUrl` and sends a caller lacking them to
+   `/unauthorized`; the sidebar and global search hide the same entries.
 
-`{id}` in a url acts as a wildcard segment. Two entries must not match the same pathname — the
-matcher throws. In-page, gate buttons with `isAllowed(authState, [Allow.X])`; see the `permissions`
-skill.
+   ```ts
+   { url: '/admin/tenants/detail/{id}', permissions: [Allow.Tenant_Detail] },
+   ```
+
+   `{id}` in a url acts as a wildcard segment. Two entries must not match the same pathname — the
+   matcher throws (`auth-urls.test.ts` pins this). A screen that depends on the tenant's plan needs
+   nothing extra here: the API gates its permission with `RequireFeatures`, so the permission is
+   simply absent from a session whose plan withholds it — see `permissions` and `feature-management`.
+3. **Tenant scope** — `lib/utils/tenant-routing.ts` decides which scope a path belongs to, and
+   `isPathAvailable(user, path)` is what `App.tsx`, the sidebar and search consult. Every `/admin`
+   screen is **tenant-only by default**: a platform account acting in no tenant is sent to `/admin`
+   and never sees it in the menu. Add the path prefix to `platformAccessiblePathPrefixes` if the
+   screen also answers in platform scope, or to `platformOnlyPathPrefixes` if it belongs to the
+   platform alone (a caller acting inside a tenant is then kept out). See the `multi-tenancy` skill.
+
+In-page, gate actions with `isAllowed(authState, [Allow.X])` — see the `permissions` skill. Reach for
+`useFeature(FeatureNames.X)` (`@/hooks`, `@/feature-names`) only where there is no permission to gate
+on, such as a numeric limit or an upsell panel.
 
 ## Translations
 
-Add every string to `public/locales/en.json` — and to every other `public/locales/<code>.json`
-when the project is multi-language (`i18n/config.ts` lists the locales). Follow the existing key
-namespaces: `page.<area>.*`, `form.label.*`, `form.placeholder.*`, `validation.*`, `table.*`,
-`navigation.*`, `search.*`, `error.server.*`, `common.*`.
+Add every string to `public/locales/en.json` and to every other `public/locales/<code>.json`
+(`i18n/config.ts` lists the locales; `i18n/locales.test.ts` fails when their key sets differ). Follow
+the existing namespaces: `page.<area>.*` (or `page.<area>.<screen>.*`), `form.label.*`,
+`form.placeholder.*`, `validation.*`, `table.*`, `navigation.*`, `search.*`, `error.server.*`,
+`common.*`.
 
 Server components use `await getServerTranslation(lang, key)`; client components use
 `const { t } = useTranslation()` and `t('key', { min: 3 })` (placeholders are `${min}` in the JSON).
-The `localization` skill covers the key namespaces, the third (non-component) translator, and adding
-a language.
+The `localization` skill covers the third (non-component) translator and adding a language.
 
 ## Register the destination
 
 - `nav-items.ts` — sidebar entry. Items are either a `NavItem` or a `NavItemGroup` (`{ title, items }`).
   `title` is an i18n key, `url` is unprefixed, `icon` comes from `lucide-react`, and detail routes are
-  listed as children with `show: false` so they highlight the parent without appearing in the menu.
-- `searchable-items.ts` — global search entry (`{ title: 'search.users', url: '/admin/users/list' }`).
+  listed as children with `show: false` so they highlight the parent (and feed the breadcrumbs)
+  without appearing in the menu. There is no permission field: the sidebar drops an item whose `url`
+  exactly matches an `auth-urls.ts` entry the caller fails or that `isPathAvailable` rejects, and a
+  parent whose children are all dropped.
+- `searchable-items.ts` — global search entry (`{ title: 'search.users', url: '/admin/users/list' }`),
+  filtered the same way. Routes with an `{id}` segment are not listed.
 
 ## Checklist
 
 - [ ] `app/[lang]/<group>/<route>/page.tsx` (server, default export)
 - [ ] `_components/<name>.tsx` (`'use client'`, named export)
-- [ ] `auth-urls.ts` entry if the route is guarded
-- [ ] Keys in `public/locales/*.json`
+- [ ] `auth-urls.ts` entry if the route needs a permission
+- [ ] Scope registered in `lib/utils/tenant-routing.ts` if the screen is not tenant-only
+- [ ] Keys in every `public/locales/*.json`
 - [ ] `nav-items.ts` + `searchable-items.ts`
-- [ ] `npm run lint` and `npm run build` pass
+- [ ] `npm run lint`, `npx tsc --noEmit`, `npm run test` and `npm run build` pass

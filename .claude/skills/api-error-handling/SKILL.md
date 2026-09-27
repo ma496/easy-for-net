@@ -1,6 +1,6 @@
 ---
 name: api-error-handling
-description: Report an API failure end-to-end — ThrowError with an ErrorCodes constant, the ProblemDetails shape FastEndpoints emits, and the web side (getApiErrorMessages, ApiErrorMessages, apiErrorAlert, error.server.* keys). Use when adding a new failure case or when an error surfaces untranslated in the UI.
+description: Report an API failure end-to-end — ThrowError with an ErrorCodes constant, plan refusals (FeatureDisabledException / FeatureLimitExceededException), the ProblemDetails shapes the API emits, and the web side (getApiErrorMessages, ApiErrorMessages, apiErrorAlert, error.server.* keys). Use when adding a new failure case or when an error surfaces untranslated in the UI.
 ---
 
 # Errors, end to end
@@ -17,7 +17,7 @@ if (usernameExists)
 }
 ```
 
-Overloads on `EndpointExtension`:
+Overloads on `EndpointExtension` (`Backend.Extensions`):
 
 | Call | Produces |
 | --- | --- |
@@ -28,10 +28,26 @@ Overloads on `EndpointExtension`:
 All three add a `ValidationFailure` and throw `ValidationFailureException`, so the response is a
 400 ProblemDetails with the code included (`IndicateErrorCode = true` in `Program.cs`).
 
-Use the other `Send.*` helpers where the situation is not a validation failure:
-`Send.NotFoundAsync` for a missing row, `Send.UnauthorizedAsync` when there is no current user,
-`Send.OkAsync` for a deliberate no-op. Never throw a bare exception for an expected failure —
-`ExceptionProcessor` turns unhandled ones into `internalServerError` with a 500.
+Use the `Send.*` helpers where the situation is not a validation failure: `Send.NotFoundAsync` for a
+missing row, `Send.UnauthorizedAsync` when there is no current user, `Send.OkAsync` for a deliberate
+no-op. Never throw a bare exception for an expected failure — `ExceptionProcessor` turns unhandled
+ones into 500 `internalServerError`.
+
+Refusals that are answered for you — do not re-implement them:
+
+| Source | Status / code |
+| --- | --- |
+| Not signed in / missing permission (`AuthorizationRefusalResultHandler`) | 401 `authenticationRequired` / 403 `permissionDenied` |
+| `featureChecker.CheckEnabledAsync(...)` → `FeatureDisabledException` | 403 `featureDisabled` (error `name` = the feature) |
+| `throw new FeatureLimitExceededException(featureName, limit)` | 403 `featureLimitExceeded` |
+| `DbUpdateException` from PostgreSQL | 400 `duplicateValue` / `duplicatePropertyValue` / `requiredFieldMissing` / `requiredPropertyFieldMissing` / `referencedRecordNotFound` / `invalidValueProvided` / `databaseError` |
+| Body over `Payload:MaximumSize` (`ToLargePayloadProcessor`) | 413 `payloadTooLarge` |
+| Wrong content type (`UnsupportedMediaTypeResponseProcessor`) | 415, no code |
+
+Plan checks throw rather than `ThrowError`, because entitlement is a business precondition, not a
+validation failure — see the `feature-management` skill. Tenancy refusals (`noActiveTenant`,
+`notTenantMember`, `tenantSuspended`, `tenantRequired`, `crossTenantFileAccess`, …) are ordinary
+`ThrowError` codes; see the `multi-tenancy` skill for when each applies.
 
 New codes go in `src/backend/Source/ErrorHandling/ErrorCodes.cs` as camelCase string constants
 (`usernameAlreadyExists`, `systemCreatedRoleCannotBeDeleted`). Reuse an existing code when it already
@@ -47,33 +63,39 @@ describes the situation — the list is deliberately shared across features.
 }
 ```
 
-`name` is the camelCased request property (empty for request-level errors), `code` is the
-`ErrorCodes` constant or a FluentValidation code, `reason` is the raw message. Titles are
-transformed by status: 400 → "Validation Error", 404 → "Not Found".
+`name` is the camelCased request property (empty for request-level errors; the feature name for plan
+refusals), `code` is the `ErrorCodes` constant or a FluentValidation code, `reason` is the raw
+message. Titles are transformed by status: 400 → "Validation Error", 404 → "Not Found"; the
+hand-shaped responses above carry their own ("Feature Disabled", "Db Update Failed", …).
 
 ## 3. Web — translate it
 
-`getApiErrorMessages` (in `lib/utils/api-error-helpers.ts`) turns any RTK error shape into
-`{ title, messages }`. For each validation error it looks up **`error.server.{code}`** in the
-dictionary, passing the field name as `${propertyName}`, and falls back to the raw `reason` when the
-key is missing. It also strips a `Normalized` suffix and lowercases the first letter to map
-`EmailNormalized` → `email`.
+`getApiErrorMessages(error, t, ignoreStatuses?)` (in `lib/utils/api-error-helpers.ts`) turns any RTK
+error shape into `{ title, messages }`:
 
-So every new code needs a key in `public/locales/en.json` (and the other locales when the project is
-multi-language):
+- **400 with `errors`** — each error is looked up as **`error.server.{code}`**, passing the
+  translated field name as `${propertyName}`, falling back to the raw `reason` when the key is
+  missing. The field name is mapped by stripping a `Normalized` suffix and lowercasing the first
+  letter (`EmailNormalized` → `email`).
+- **401 / 403 / 404 / 413 / 415 / 500** — the first error's code, translated via
+  `error.server.{code}` when that key exists, else the generic `error.{status}.message`. This is how
+  `featureDisabled` or `tenantSuspended` reaches the user instead of "Forbidden".
+- Title is `error.{status}.title` (`common.error` for anything else).
+
+So every new code needs a key in `public/locales/en.json` (and every other shipped locale):
 
 ```json
 "error": {
-  "400": { "title": "Validation Error" },
+  "400": { "title": "Bad Request" },
   "server": {
-    "usernameAlreadyExists": "This username is already taken.",
-    "duplicateValue": "${propertyName} already exists."
+    "usernameAlreadyExists": "Username already exists",
+    "featureLimitExceeded": "Your plan's limit for this has been reached."
   }
 }
 ```
 
-Because the property name is itself translated (`t(fieldName)`), a message that interpolates
-`${propertyName}` needs a top-level key for that field name too.
+A message that interpolates `${propertyName}` also needs a top-level key for that field name,
+because the name is itself translated (`t(fieldName)`).
 
 ## 4. Show it
 
@@ -89,10 +111,14 @@ const result = await createUser(payload)
 if (result.error) { apiErrorAlert(result.error); return }
 ```
 
-`ApiErrorMessages` accepts `dismissible` and `ignoreStatuses` (skip codes the screen handles
-itself, e.g. a 404 that renders an empty state). Alert/toast helpers all come from `@/lib/utils`:
+`ApiErrorMessages` accepts `className`, `dismissible` (default `true`) and `ignoreStatuses` (skip
+codes the screen handles itself, e.g. a 404 that renders an empty state); `apiErrorAlert` takes the
+same `ignoreStatuses` as its second argument. Alert/toast helpers all come from `@/lib/utils`:
 `toast`, `successToast`, `errorToast`, `sweetAlert`, `successAlert`, `errorAlert`, `warningAlert`,
 `infoAlert`, `confirmAlert`, `confirmDeleteAlert` — they already localize their default buttons.
+
+Prefer preventing a plan refusal to reporting it: disable the action when the plan or seat count says
+the API would refuse (see `feature-management`).
 
 ## Transport-level failures
 
@@ -100,14 +126,15 @@ itself, e.g. a 404 that renders an empty state). Alert/toast helpers all come fr
 dispatches `showServiceUnavailable()`, which swaps in `ServiceUnavailableView`. Do not duplicate
 that handling per screen.
 
-401/404 are intercepted earlier by `baseQueryWithReauth`, which serializes a refresh attempt through
-an `async-mutex`, retries the original request, and on failure signs the user out and redirects to
-`/signin?redirect=…`.
+A 401 (and a 404 from `/account/get-info`) is intercepted earlier by `baseQueryWithReauth`, which
+serializes a refresh attempt through an `async-mutex`, retries the original request and re-reads the
+account info; if the refresh fails it signs the user out and redirects to `/signin?redirect=…`. Other
+404s reach the screen.
 
 ## Checklist
 
 - [ ] Constant in `ErrorHandling/ErrorCodes.cs` (or an existing one reused)
-- [ ] `ThrowError` with that constant, or the right `Send.*` helper
+- [ ] `ThrowError` with that constant, the right `Send.*` helper, or the feature exception for a plan refusal
 - [ ] `error.server.<code>` key in every shipped locale file
 - [ ] The screen renders `ApiErrorMessages` or calls `apiErrorAlert`
 - [ ] An endpoint test asserts the status and, where it matters, the error name/code

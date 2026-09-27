@@ -1,6 +1,6 @@
 ---
 name: redux-state
-description: Add or change client state in src/frontend/web/store — Redux Toolkit slices, store registration, typed useAppSelector/useAppDispatch hooks, and middleware. Use when you need state that is not server data, and to decide between a slice and the RTK Query cache.
+description: Add or change client state in src/frontend/web/store — Redux Toolkit slices, store registration, typed useAppSelector/useAppDispatch hooks, the auth/tenant session state and the tenant-change reset sequence, and middleware. Use when you need state that is not server data, and to decide between a slice and the RTK Query cache.
 ---
 
 # Client state
@@ -10,45 +10,52 @@ description: Add or change client state in src/frontend/web/store — Redux Tool
 Server data belongs in the RTK Query cache — never copy a query result into a slice "so components
 can read it". Use a slice only for state the client owns:
 
-| Slice | Holds |
+| Slice (store key) | Holds |
 | --- | --- |
-| `authSlice` (`auth`) | the signed-in user (`GetUserInfoResponse`) and `isAuthenticated` |
-| `themeConfigSlice` (`theme`) | dark mode, layout, menu, `rtlClass`, animation, navbar, locale, `languageList` |
+| `authSlice` (`auth`) | the session: `user` (`GetUserInfoResponse`), `isAuthenticated`, `activeTenant`, `tenants` — typed as `AuthState` from `@/lib/utils` |
+| `themeConfigSlice` (`theme`) | theme/dark mode, layout, menu, `rtlClass`, animation, navbar, semidark, sidebar, locale, `languageList` |
 | `notificationsSlice` (`notifications`) | the unread badge count |
-| `serviceAvailabilitySlice` | whether the API is unreachable |
+| `serviceAvailabilitySlice` (`serviceAvailability`) | `isUnavailable` — whether the API is unreachable |
 
 `notificationsSlice` is the sanctioned exception to the rule above: `useNotificationHub` polls the
 unread-count query and mirrors the number into the slice so the badge can be read from anywhere
-without every consumer subscribing to the query.
+without every consumer subscribing to the query. `authSlice` is the other: the account info is
+server data, but it *is* the session every guard reads, so it is held in a slice and replaced
+wholesale by `setUserInfo`.
 
 ## Adding a slice
 
-`store/slices/<name>Slice.ts` (existing files use both `camelCaseSlice.ts` and
-`kebab-case-slice.ts` — match the neighbours you are adding to):
+`store/slices/<name>.ts` — existing files mix `camelCaseSlice.ts` (`authSlice.ts`,
+`notificationsSlice.ts`, `themeConfigSlice.tsx`) and kebab-case (`service-availability-slice.ts`);
+prefer kebab-case for a new file:
 
 ```ts
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit'
 
-interface NotificationsState {
-  unreadCount: number
+interface ServiceAvailabilityState {
+  isUnavailable: boolean
 }
 
-const initialState: NotificationsState = { unreadCount: 0 }
+const initialState: ServiceAvailabilityState = { isUnavailable: false }
 
 /**
- * Notifications slice holding the current unread notification count…
+ * Tracks whether the backend API is unreachable so the app shell can show
+ * an in-place service-unavailable screen without changing the current URL.
  */
-export const notificationsSlice = createSlice({
-  name: 'notifications',
+export const serviceAvailabilitySlice = createSlice({
+  name: 'serviceAvailability',
   initialState,
   reducers: {
-    setUnreadCount(state, action: PayloadAction<number>) {
-      state.unreadCount = action.payload
+    showServiceUnavailable(state) {
+      state.isUnavailable = true
+    },
+    clearServiceUnavailable(state) {
+      state.isUnavailable = false
     },
   },
 })
 
-export const { setUnreadCount } = notificationsSlice.actions
+export const { showServiceUnavailable, clearServiceUnavailable } = serviceAvailabilitySlice.actions
 ```
 
 Then:
@@ -61,7 +68,9 @@ export const store = configureStore({
   reducer: {
     [themeConfigSlice.name]: themeConfigSlice.reducer,
     [appApi.reducerPath]: appApi.reducer,
+    [authSlice.name]: authSlice.reducer,
     [notificationsSlice.name]: notificationsSlice.reducer,
+    [serviceAvailabilitySlice.name]: serviceAvailabilitySlice.reducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(rtkErrorMiddleware, appApi.middleware),
   devTools: process.env.NODE_ENV !== 'production',
@@ -71,9 +80,9 @@ export const store = configureStore({
 `RootState` and `AppDispatch` are inferred from the store, so a new slice is immediately typed.
 
 Reducers must stay **deterministic and side-effect free**. Persistence and DOM work (writing
-`localStorage`, toggling the `dark` class on `<html>`) happen in `App.tsx` / provider components
-reacting to state — `themeConfigSlice` is the model to follow. Use
-`setLocalStorageValue` / `getLocalStorageValue` from `@/lib/utils` for that persistence.
+`localStorage`, toggling the `dark` class, setting `dir` on `<html>`) happen in `App.tsx` / provider
+components reacting to state — `themeConfigSlice` is the model to follow. `setLocalStorageValue` /
+`getLocalStorageValue` from `@/lib/utils` wrap JSON persistence for new values.
 
 ## Reading and dispatching
 
@@ -81,28 +90,38 @@ Always the typed hooks from `@/store/hooks`, never bare `useSelector`/`useDispat
 
 ```ts
 const authState = useAppSelector((state) => state.auth)
-const unread = useAppSelector((state) => state.notifications.unreadCount)
+const hasActiveTenant = useAppSelector((state) => state.auth.activeTenant !== undefined)
 const isRTL = useAppSelector((state) => state.theme.rtlClass) === 'rtl'
 
 const dispatch = useAppDispatch()
 dispatch(setUnreadCount(count))
 ```
 
-Select the narrowest slice of state a component needs so unrelated updates do not re-render it.
+Select the narrowest value a component needs so unrelated updates do not re-render it.
 
-## Auth state
+## Session and tenant state
 
-`authSlice` is filled from `/account/get-info` after sign-in and cleared by `signout()`. The RTK
-Query `baseQueryWithReauth` dispatches `signout()` itself when a token refresh fails, then redirects
-to `/signin?redirect=…` if the current path requires auth. Permission checks read this slice
-through `isAllowed(authState, [Allow.X])` — see the `permissions` skill.
+- `App.tsx` reads `/account/get-info` on mount and dispatches `setUserInfo`, which derives
+  `isAuthenticated`, `activeTenant` and `tenants` from the payload — never set those fields on their
+  own. `baseQueryWithReauth` re-reads the info after every successful token refresh (a renewal can
+  drop a suspended or left tenant), and dispatches `signout()` then redirects to
+  `/signin?redirect=…` when the refresh fails.
+- **Changing the acting tenant** goes through `useTenantSwitch()` (`enterTenant(id)` /
+  `exitTenant()`), which calls `dispatchTenantChanged(dispatch, userInfo)` from `store/tenant-cache.ts`:
+  `appApi.util.resetApiState()` → `setUserInfo` → `setUnreadCount(0)`, in that order, so nothing
+  cached for the previous tenant can render. Do not write a second switch path; see `multi-tenancy`.
+- **Ending the session** (sign-out, password change) calls `leaveSignedOut(signinHref)` — a full page
+  load, so the next user of the browser starts with a fresh store.
+- Permission checks read this slice through `isAllowed(authState, [Allow.X])` and scope checks through
+  `isPathAvailable(authState.user, path)` — see the `permissions` skill.
 
 ## Middleware
 
 `store/middlewares/rtk-error-middleware.ts` inspects every rejected RTK Query action and dispatches
 `showServiceUnavailable()` on a `FETCH_ERROR` (the API is unreachable), which renders
-`ServiceUnavailableView`. Add cross-cutting reactions to API outcomes there rather than repeating
-them in components:
+`ServiceUnavailableView`. Every other failure stays the calling screen's business — it never signs the
+user out or redirects. Add cross-cutting reactions to API outcomes there rather than repeating them in
+components:
 
 ```ts
 export const rtkErrorMiddleware: Middleware = (api) => (next) => (action: unknown) => {
@@ -112,7 +131,9 @@ export const rtkErrorMiddleware: Middleware = (api) => (next) => (action: unknow
 ```
 
 Export new middleware from `store/middlewares/index.ts` and add it to the `concat(...)` chain
-**before** `appApi.middleware`.
+**before** `appApi.middleware`. Reducers, the middleware and the tenant-change sequence all have
+colocated Vitest tests (`authSlice.test.ts`, `rtk-error-middleware.test.ts`, `tenant-cache.test.ts`) —
+extend them; see `frontend-tests`.
 
 ## Checklist
 
@@ -121,3 +142,5 @@ Export new middleware from `store/middlewares/index.ts` and add it to the `conca
 - [ ] Registered in `store/index.tsx` by `slice.name`
 - [ ] Reducers side-effect free; persistence handled outside
 - [ ] Consumers use `useAppSelector` / `useAppDispatch` with narrow selectors
+- [ ] State that belongs to a tenant is reset by the tenant-change sequence
+- [ ] Reducer/middleware behaviour pinned in a colocated `*.test.ts`

@@ -130,6 +130,16 @@
       "why": "A feature is declared in three places, and gating a permission on it has three callers that must not disagree."
     },
     {
+      "skill": "multi-tenancy",
+      "match": [
+        "^src/backend/Source/ShareData/Entities/Base/I(May)?HaveTenant\\.cs$",
+        "^src/backend/Source/Processors/TenantContextProcessor\\.cs$",
+        "^src/backend/Source/Features/Tenancy/Core/Tenant[^/]*\\.cs$"
+      ],
+      "when": "for a tenancy change",
+      "why": "Tenant scope is established once per token and filtered in the DbContext; a change that misreads either leaks rows across tenants."
+    },
+    {
       "skill": "localization",
       "match": ["^src/frontend/web/public/locales/"],
       "when": "for a translation change",

@@ -161,8 +161,10 @@ switched off impossible to switch back on. Two architecture tests hold the line 
 permission may require a feature, and every feature a permission names must actually be declared.
 
 Two consequences worth keeping in mind. Gating never revokes anything: `DataSeeder` still persists a
-row for every permission and still grants the administrator roles the whole scope, so turning a
-feature back on restores the permission with nothing to re-grant — and `ChangePermissionsEndpoint`
+row for every permission and still grants the platform and bootstrap-tenant administrator roles their
+whole scope (other tenants' administrator roles get theirs from
+`ProvisionTenantAdministratorRoleAsync` when the tenant is created or gains its first member), so
+turning a feature back on restores the permission with nothing to re-grant — and `ChangePermissionsEndpoint`
 carries plan-hidden grants through a replacement rather than reading the form's silence about them as
 a removal. And an endpoint gated on a feature alone, with no permission to hang it on, calls
 `featureChecker.CheckEnabledAsync(...)` in its handler rather than declaring an attribute, so
@@ -211,7 +213,7 @@ Adding a language means adding it to `i18n/config.ts` and adding `public/locales
 `.claude/skills/` holds step-by-step guides for the recurring tasks here. Consult the matching one before writing code.
 
 - Cross-cutting: `coding-conventions`
-- API: `backend-feature`, `backend-endpoint`, `backend-entity`, `backend-tests`, `permissions`, `feature-management`, `background-jobs`, `file-storage`, `notifications`
+- API: `backend-feature`, `backend-endpoint`, `backend-entity`, `backend-tests`, `multi-tenancy`, `permissions`, `feature-management`, `background-jobs`, `file-storage`, `notifications`
 - Web: `rtk-query-api`, `frontend-page`, `frontend-crud`, `ui-component`, `redux-state`, `localization`, `frontend-tests`
 - Spanning both: `api-error-handling`
 - Process: spec-driven development — `specs/README.md`, the `.claude/commands` (`/feature`, `/fix`, `/auto`, `/queue`, `/spec-split`, `/verify`, `/ship`, `/review-diff`), and the agents in `.claude/agents`

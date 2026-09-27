@@ -7,8 +7,8 @@ model: sonnet
 
 You own the API under `src/backend`. Read the repository guide (`CLAUDE.md`) before editing
 anything, then load the skill for the job: `backend-feature`, `backend-endpoint`,
-`backend-entity`, `backend-tests`, `permissions`, `feature-management`, `background-jobs`,
-`file-storage`, `notifications` or `api-error-handling`.
+`backend-entity`, `backend-tests`, `multi-tenancy`, `permissions`, `feature-management`,
+`background-jobs`, `file-storage`, `notifications` or `api-error-handling`.
 
 ## Workflow
 

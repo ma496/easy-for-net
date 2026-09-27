@@ -1,11 +1,12 @@
 ---
 name: frontend-crud
-description: Build the standard list/create/update/delete screens for an entity in src/frontend/web — data table with URL-synced paging, sorting, search, filter panel and export, plus Formik + Yup create/update forms. Use when scaffolding CRUD UI for a new entity.
+description: Build the standard list/create/update/delete screens for an entity in src/frontend/web — data table with URL-synced paging, sorting, search, filter panel and export, icon-only toolbar actions and a per-row actions menu gated by permission, row state and plan limits, plus Formik + Yup create/update forms. Use when scaffolding CRUD UI for a new entity.
 ---
 
 # CRUD screens
 
-The users feature is the reference implementation; copy its structure:
+The users feature is the reference implementation (roles, tenants and editions follow the same
+shape); copy its structure:
 
 ```
 app/[lang]/admin/(<group>)/<entity>/
@@ -17,6 +18,9 @@ app/[lang]/admin/(<group>)/<entity>/
   update/[id]/page.tsx
   update/[id]/_components/<entity>-update-form.tsx
 ```
+
+The filter panel is optional (roles and editions have none); further row screens such as
+`detail/[id]` or `members/[id]` are added the same way and linked from the row actions.
 
 Page components (server) are covered by the `frontend-page` skill; the API slice by
 `rtk-query-api`. This skill covers the client components.
@@ -45,7 +49,8 @@ string (nuqs) and returns TanStack-shaped adapters. Use:
 | `url.filters.<key>`, `url.filters.setMany({...})`, `url.filters.clearFilters()` | the filter panel |
 | `url.resetPage()` | after applying or clearing filters |
 
-Fetch, then render:
+Fetch, then render (`SortDirection` comes from `@/store/api`, the table pieces from
+`@/components/ui/data-table`):
 
 ```tsx
 const { data, isFetching, error } = useUserListQuery({
@@ -79,9 +84,11 @@ return (
 ```
 
 Columns are built with `createColumnHelper<UserListDto>()`; the actions column is
-`columnHelper.display({ id: 'actions', ... })` and renders `DataTableRowActions` — a three-dot
-trigger opening a menu of labelled actions. Gate each entry with `hidden` rather than leaving it out
-of the array, give it a translated `label`, and use `href` for navigation or `onClick` for a mutation:
+`columnHelper.display({ id: 'actions', header: t('table.actions'), ... })` and renders
+`DataTableRowActions` — a three-dot trigger opening a portaled menu of labelled actions, which
+renders nothing when every entry is hidden. Gate each entry with `hidden` rather than leaving it out
+of the array, give it a translated `label`, and use `href` for navigation (locale-aware) or `onClick`
+for a mutation; `variant` is `default | primary | success | warning | danger`:
 
 ```tsx
 cell: (info) => (
@@ -94,11 +101,13 @@ cell: (info) => (
 ),
 ```
 
-Headers are translation keys
-(`t('table.columns.email')`). Set `enableSorting: false` on computed columns — and remember any
-sortable column must also be whitelisted in the backend list validator.
+Headers are translated (`t('table.columns.email')`). Set `enableSorting: false` on computed columns —
+and remember any sortable column must also be whitelisted in the backend list validator.
 
-Permission gating:
+Gating combines the caller's permissions with facts about the row. A row whose DTO extends
+`SystemCreatedDto` will be refused on update/delete, so hide those actions up front
+(`hidden: !(canDelete && !row.systemCreated)`), and hide any action the row's state rules out (a
+tenant's *suspend* only while it is active, an edition's *delete* only while no tenant uses it):
 
 ```tsx
 const authState = useAppSelector((state) => state.auth)
@@ -107,13 +116,31 @@ const canUpdate = isAllowed(authState, [Allow.User_Update])
 const canDelete = isAllowed(authState, [Allow.User_Delete])
 ```
 
+A permission whose capability depends on the tenant's plan needs no extra check — it is absent from
+the session when the plan withholds it (see `feature-management`).
+
 Toolbar actions are **icon-only** `DataTableToolbarButton`s — the `label` becomes the tooltip and
 the accessible name; pass `href` for navigation or `onClick` for an action. Export is
-`DataTableExportButton`, filters `DataTableFilterButton`:
+`DataTableExportButton` (`onExport(format, all)`), filters `DataTableFilterButton`:
 
 ```tsx
 {canCreate && <DataTableToolbarButton label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/users/create" />}
-<DataTableExportButton onExport={handleExport} isExporting={isExporting} disabled={isExporting || isFetching || !data?.total} />
+<DataTableExportButton onExport={handleExport} isExporting={isExporting} disabled={isFetching || !data?.total} />
+```
+
+When a plan **limit** stops the action, keep it visible but disabled and let the label explain why,
+driven by the same endpoint the API enforces with — the users table reads `useUserSeatsQuery()`:
+
+```tsx
+const { data: seats } = useUserSeatsQuery()
+const seatsExhausted = seats?.limit != null && seats.used >= seats.limit
+
+{canCreate &&
+  (seatsExhausted ? (
+    <DataTableToolbarButton label={t('page.users.seatLimitReached')} icon={<Plus size={16} />} disabled />
+  ) : (
+    <DataTableToolbarButton label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/users/create" />
+  ))}
 ```
 
 Delete uses the shared alert helpers:
@@ -204,10 +231,12 @@ before the round trip. Then:
 </Formik>
 ```
 
-Field components come from `@/components/ui/form`: `FormInput`, `FormPasswordInput`,
+Formik-bound fields come from `@/components/ui/form`: `FormInput`, `FormPasswordInput`,
 `FormTextarea`, `FormSelect`, `FormMultiSelect`, `FormLazySelect`, `FormLazyMultiSelect`,
-`FormCheckbox`, `FormRadio`, `FormDatePicker`, `FileUpload`, `MultiFileUpload`. Use the `Form*`
-variants inside Formik — the bare ones are for uncontrolled use.
+`FormCheckbox`, `FormRadio`, `FormDatePicker`. Use them inside Formik — the bare `Input`, `Select`,
+`Checkbox`, … are for use outside a form (the filter panel). `FileUpload` / `MultiFileUpload` are not
+Formik-bound: they upload on selection and hand back the stored file through `onUploaded`, which the
+form then writes with `setFieldValue` — see the `file-storage` skill.
 
 Submit handler:
 
@@ -221,7 +250,9 @@ router.push('/admin/users/list')          // useLocalizedRouter, unprefixed path
 The **update** form additionally loads the row and guards the render order:
 `isLoading` → `<Loader />`, `error` → `<ApiErrorMessages error={...} />`, no data →
 `t('error.server.userNotFound')`, and only then the form, with `initialValues` taken from the
-fetched row.
+fetched row. A lazy select there takes `selectedItemIds={userData.roles}` so the already-chosen
+options are fetched and labelled. The id travels in the path, so the payload is
+`{ ...values, id: userId }` and read-only fields shown in the form are stripped before sending.
 
 ## Don't forget
 
@@ -230,5 +261,6 @@ fetched row.
   see `api-error-handling`.
 - A field or widget the shared library does not have yet belongs in `components/ui` — see the
   `ui-component` skill — not in the route's `_components/`.
-- Register list/create/update routes in `auth-urls.ts`, `nav-items.ts`, `searchable-items.ts`.
-- `npm run lint` and `npm run build` before calling it done.
+- Register list/create/update routes in `auth-urls.ts`, `nav-items.ts`, `searchable-items.ts`, and
+  in `lib/utils/tenant-routing.ts` when the entity is not tenant-only — see `frontend-page`.
+- `npm run lint`, `npx tsc --noEmit`, `npm run test` and `npm run build` before calling it done.

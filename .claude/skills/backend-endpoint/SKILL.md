@@ -1,6 +1,6 @@
 ---
 name: backend-endpoint
-description: Add or change a FastEndpoints endpoint in src/backend/Source/Features. Use when the task is "add an API endpoint", "expose X over HTTP", or when editing an existing *Endpoint.cs — covers the one-file layout (endpoint + request + validator + response + Mapperly mapper), route groups, permissions, list/paging, and error codes.
+description: Add or change a FastEndpoints endpoint in src/backend/Source/Features. Use when the task is "add an API endpoint", "expose X over HTTP", or when editing an existing *Endpoint.cs — covers the one-file layout (endpoint + request + validator + response + Mapperly mapper), route groups, permissions, tenant scope and plan checks inside a handler, system-created guards, list/paging, and error codes.
 ---
 
 # Adding a backend endpoint
@@ -13,16 +13,16 @@ If the feature does not exist yet, use the `backend-feature` skill first. If `<A
 add an `<Area>Group.cs` next to the endpoints:
 
 ```csharp
-namespace Backend.Features.Identity.Endpoints.Users;
+namespace Backend.Features.Tenancy.Endpoints.Editions;
 
 /// <summary>
-/// This route group that prefixes all user-management endpoints with the <c>users</c> segment.
+/// This route group that prefixes all edition administration endpoints with the <c>editions</c> segment.
 /// </summary>
-sealed class UsersGroup : Group
+sealed class EditionsGroup : Group
 {
-    public UsersGroup()
+    public EditionsGroup()
     {
-        Configure("users", ep => {});
+        Configure("editions", ep => {});
     }
 }
 ```
@@ -35,49 +35,81 @@ API versioning uses the `v` prefix — never hard-code either into a route.
 
 The endpoint class, its request, its validator, its response and row DTOs, and its Mapperly
 mappers all live in the same file, in that order. `Features/Identity/Endpoints/Users/UserCreateEndpoint.cs`
-is the reference implementation. Skeleton:
+is the reference implementation; `Features/Tenancy/Endpoints/Editions/EditionCreateEndpoint.cs` is
+the short version:
 
 ```csharp
-namespace Backend.Features.Identity.Endpoints.Users;
+namespace Backend.Features.Tenancy.Endpoints.Editions;
 
-using Backend.Features.Identity.Core;
-using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Tenancy.Core;
+using Backend.Features.Tenancy.Core.Entities;
 
 /// <summary>
-/// This endpoint that handles <c>POST /users</c> to create a new user with the supplied roles.
+/// This endpoint that handles <c>POST /editions</c> to create a plan the platform can put tenants on.
 /// </summary>
-sealed class UserCreateEndpoint(IUserService userService, AppDbContext dbContext) : Endpoint<UserCreateRequest, UserCreateResponse>
+sealed class EditionCreateEndpoint(IEditionService editionService) : Endpoint<EditionCreateRequest, EditionCreateResponse>
 {
     public override void Configure()
     {
         Post("");
-        Group<UsersGroup>();
-        Permissions(Allow.User_Create);
+        Group<EditionsGroup>();
+        Permissions(Allow.Edition_Create);
     }
 
-    public override async Task HandleAsync(UserCreateRequest request, CancellationToken cancellationToken)
+    public override async Task HandleAsync(EditionCreateRequest request, CancellationToken cancellationToken)
     {
-        // guard clauses first, then work, then Send.ResponseAsync
-        await Send.ResponseAsync(new UserCreateResponseMapper().Map(entity), cancellation: cancellationToken);
+        if (await editionService.NameExistsAsync(request.Name, cancellationToken: cancellationToken))
+        {
+            ThrowError(x => x.Name, IEditionService.DuplicateNameMessage, ErrorCodes.EditionNameAlreadyExists);
+        }
+
+        var requestMapper = new EditionCreateRequestMapper();
+        var entity = await editionService.CreateAsync(requestMapper.Map(request), cancellationToken);
+
+        var responseMapper = new EditionCreateResponseMapper();
+        await Send.ResponseAsync(responseMapper.Map(entity), cancellation: cancellationToken);
     }
 }
 
-public sealed class UserCreateRequest { … }
-
-sealed class UserCreateValidator : Validator<UserCreateRequest>
+/// <summary>Request payload for creating an edition.</summary>
+public sealed class EditionCreateRequest
 {
-    public UserCreateValidator()
+    public string Name { get; set; } = null!;
+    public string? Description { get; set; }
+    public int DisplayOrder { get; set; }
+}
+
+/// <summary>FluentValidation rules ensuring a create-edition request supplies a usable plan name.</summary>
+sealed class EditionCreateValidator : Validator<EditionCreateRequest>
+{
+    public EditionCreateValidator()
     {
-        RuleFor(x => x.Username).NotEmpty().MinimumLength(3).MaximumLength(50);
+        RuleFor(x => x.Name).NotEmpty().EditionName();
+        RuleFor(x => x.Description).EditionDescription();
+        RuleFor(x => x.DisplayOrder).GreaterThanOrEqualTo(0);
     }
 }
 
-public sealed class UserCreateResponse : BaseDto<Guid> { … }
+/// <summary>Response payload returned after a successful edition creation.</summary>
+public sealed class EditionCreateResponse : BaseDto<Guid>
+{
+    public string Name { get; set; } = null!;
+    public string? Description { get; set; }
+    public int DisplayOrder { get; set; }
+}
 
+/// <summary>This mapper that projects an <see cref="EditionCreateRequest"/> into an <see cref="Edition"/>.</summary>
+[Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Source)]
+public partial class EditionCreateRequestMapper
+{
+    public partial Edition Map(EditionCreateRequest request);
+}
+
+/// <summary>This mapper that projects a created <see cref="Edition"/> into an <see cref="EditionCreateResponse"/>.</summary>
 [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
-public partial class UserCreateResponseMapper
+public partial class EditionCreateResponseMapper
 {
-    public partial UserCreateResponse Map(User entity);
+    public partial EditionCreateResponse Map(Edition entity);
 }
 ```
 
@@ -85,13 +117,20 @@ Notes that matter:
 
 - `HandleAsync` + `Send.ResponseAsync(...)` is the dominant style; `ExecuteAsync` returning the
   response is used only where there is nothing to send conditionally (`FileUploadEndpoint`).
-- Mappers are instantiated inline (`new UserCreateRequestMapper()`), not injected.
+- Mappers are instantiated inline (`new EditionCreateRequestMapper()`), not injected.
 - `RequiredMappingStrategy.Source` for request → entity (every request property must be consumed),
   `RequiredMappingStrategy.Target` for entity → response (every response property must be filled).
-  Use `[MapperIgnoreSource(nameof(Req.Password))]` / `[MapProperty("UserRoles", "Roles", Use = nameof(Helper))]`
-  for the mismatches, with a `private static` conversion method in the mapper.
-- Request/response base classes come from `Backend.Base.Dto`: `BaseDto<TId>` (id only),
-  `AuditableDto<TId>` (id + created/updated audit fields), `ListRequestDto<TId>`, `ListDto<T>`.
+  Use `[MapperIgnoreSource(nameof(UserCreateRequest.Password))]` /
+  `[MapProperty("UserRoles", "Roles", Use = nameof(UserRolesToRoles))]` for the mismatches, with a
+  `private static` conversion method in the mapper.
+- Field rules shared with other endpoints come from the slice's `<Entity>ValidationRules`
+  extensions (`.EditionName()`, `.TenantIdentifier()`), always after `NotEmpty()` — do not restate them.
+- DTO base classes come from `Backend.Base.Dto`: `BaseDto<TId>` (id only), `CreatableDto<TId>`,
+  `UpdatableDto<TId>`, `AuditableDto<TId>` (id + audit fields), `ListRequestDto<TId>`, `ListDto<T>`.
+  Add the marker interfaces the **projected entity** implements, with the matching property:
+  `ISystemCreatedDto` for an `ISystemCreated` entity (`UserListDto : AuditableDto<Guid>, ISystemCreatedDto`),
+  `IMayHaveTenantDto` / `IHaveTenantDto` when a DTO of an `IMayHaveTenant` / `IHaveTenant` entity
+  reports its `TenantId`.
 - Types are `sealed` and carry no accessibility modifier unless they need to be `public`
   (see the `coding-conventions` skill).
 
@@ -100,23 +139,63 @@ Notes that matter:
 | Need | Call |
 | --- | --- |
 | Route | `Post("")`, `Get("{id}")`, `Put("{id}")`, `Delete("{id}")` |
-| Prefix | `Group<UsersGroup>()` — always |
+| Prefix | `Group<EditionsGroup>()` — always |
 | Authorization | `Permissions(Allow.X)` — the constant, never a literal |
 | Signed-in but no specific permission | omit `Permissions(...)` (auth is on by default) |
 | Public endpoint | `AllowAnonymous()` (signin, signup, forget/reset password, verify email) |
 | Multipart upload | `AllowFileUploads()` |
 
-Adding a new permission is a five-file change — use the `permissions` skill.
+Permissions are the only authorization input. A tenant-only operation is kept out of platform
+scope by giving its permission `PermissionScope.Tenant`, and a plan-gated one by
+`.RequireFeatures(...)` on the permission — there is no endpoint attribute for either. Adding a
+permission touches several files — use the `permissions` skill.
+
+## Tenant scope inside a handler
+
+`TenantContextProcessor` establishes the tenant from the session before the handler runs, and
+`AppDbContext` filters and attributes every `IMayHaveTenant`/`IHaveTenant` set to it. So:
+
+- Query tenant-scoped sets directly — a row of another tenant is simply not found, and reporting it
+  exactly like a missing row (`Send.NotFoundAsync`) is the intended behaviour.
+- Never accept a `TenantId` in a request or add `Where(x => x.TenantId == …)` for the active tenant.
+- Inject `ITenantContext` (from `Backend.Features.Tenancy.Core`) when behaviour depends on the
+  scope: `tenantContext.CurrentTenantId is { } tenantId`, `tenantContext.IsPlatformScope()`.
+- `.AcrossAllTenants()` only for a deliberate cross-tenant read, with an explicit tenant predicate.
+- An `AllowAnonymous()` endpoint has no scope; one that touches tenant-scoped data opens it itself:
+  `using (tenantContext.BeginPlatformScope()) { … }` (`SignupEndpoint`).
+
+The `multi-tenancy` skill covers scopes, memberships and switching.
+
+## Plan (entitlement) checks
+
+An endpoint gated on a feature alone, with no permission to hang it on, checks in its handler:
+
+```csharp
+await featureChecker.CheckEnabledAsync(FeatureNames.FileManagement_Enabled, ct);
+var maxFileSizeMb = await featureChecker.GetAsync(FeatureNames.FileManagement_MaxFileSizeMb, long.MaxValue / BytesPerMegabyte, ct);
+```
+
+`IFeatureChecker` needs a tenant scope; `ExceptionProcessor` answers a disabled feature with 403
+`featureDisabled` and an exceeded limit with 403 `featureLimitExceeded`. See the `feature-management` skill.
 
 ## Errors and status codes
 
 - Business rule violations: `ThrowError("Username already exists", ErrorCodes.UsernameAlreadyExists);`
-  or the property-scoped overloads (`ThrowError(x => x.Email, msg, code)`). Add new codes to
-  `ErrorHandling/ErrorCodes.cs` as camelCase constants, and mirror the message key in the web
-  app's `error.server.*` translations.
-- Missing row: `await Send.NotFoundAsync(cancellationToken); return;`
+  or the property-scoped overload `ThrowError(x => x.Name, msg, code)`. Add new codes to
+  `ErrorHandling/ErrorCodes.cs` as camelCase constants. A message several endpoints share lives as a
+  constant on the service interface (`IEditionService.DuplicateNameMessage`).
+- Missing row (or another tenant's row): `await Send.NotFoundAsync(cancellationToken); return;`
 - No current user: `await Send.UnauthorizedAsync(cancellationToken); return;`
-- Never throw raw exceptions for expected failures — `ExceptionProcessor` maps unexpected ones to
+- System-created rows refuse update/delete after the lookup:
+
+```csharp
+if (entity.SystemCreated)
+    ThrowError(SystemCreatedMessage, ErrorCodes.SystemCreatedRoleCannotBeDeleted);
+```
+
+- A unique-index violation that races past the endpoint's own check becomes
+  `duplicatePropertyValue` in `ExceptionProcessor`; still check first so the caller gets the
+  specific code. Never throw raw exceptions for expected failures — unexpected ones map to
   `internalServerError`.
 
 A new error code also needs a translation on the web side; the `api-error-handling` skill covers the
@@ -134,13 +213,15 @@ Follow `UserListEndpoint`:
 ```csharp
 RuleFor(request => request.SortField)
     .Must(field => string.IsNullOrWhiteSpace(field) ||
-                   new[] { "Id", "Username", "CreatedAt" }.Contains(field, StringComparer.OrdinalIgnoreCase))
+                   new[] { "Id", "Username", "Email", "CreatedAt", "UpdatedAt" }
+                       .Contains(field, StringComparer.OrdinalIgnoreCase))
     .WithMessage("The sort field is not supported.");
 ```
 
-3. Build the query with `.AsNoTracking()` + `.Include(...)`, apply search/filters, take
-   `CountAsync` for the total **before** paging, then `query.Process(request)` for
-   sort + `IncludeIds` + paging.
+3. Start from the service's composable query when it defines who may be listed
+   (`userService.TenantUsers()`), else the `DbSet`; add `.AsNoTracking()` + `.Include(...)`, apply
+   search/filters, take `CountAsync` for the total **before** paging, then `query.Process(request)`
+   for sort + `IncludeIds` + paging (the entity must be `IBaseEntity<TId>`).
 4. Respond with `<Entity>ListResponse : ListDto<<Entity>ListDto>` (`Items` + `Total`).
 
 Search uses the normalized columns: `EF.Functions.Like(x.UsernameNormalized, $"%{search}%")` with
@@ -148,17 +229,19 @@ Search uses the normalized columns: `EF.Functions.Like(x.UsernameNormalized, $"%
 
 ## Data access
 
-Inject the feature's service (`IUserService`, `INotificationService`) when one exists; inject
+Inject the feature's service (`IUserService`, `IEditionService`) when one exists; inject
 `AppDbContext` directly only for feature-local queries the service does not cover. Cross-feature
 access must go through a type marked `[AllowOutside]` — `Tests/Architect/FeatureDependencyTests`
-fails the build otherwise.
+fails otherwise. Several writes that must stand or fall together share
+`await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);`.
 
-`AppDbContext` already stamps audit fields, runs `NormalizeProperties()`, and converts deletes of
-`ISoftDelete` entities into soft deletes — do not do any of that by hand.
+`AppDbContext` already stamps audit fields, runs `NormalizeProperties()`, attributes tenant-scoped
+rows, and converts deletes of `ISoftDelete` entities into soft deletes — do not do any of that by hand.
 
 ## Finish the change
 
-1. Add tests — see the `backend-tests` skill. Every endpoint here has a matching
+1. Add tests — see the `backend-tests` skill. Endpoints have a matching
    `Tests/Features/<Feature>/Endpoints/<Area>/<Entity><Action>Tests.cs`.
 2. Add the matching RTK Query endpoint and DTOs — see the `rtk-query-api` skill.
 3. If the entity/schema changed, add a migration — see the `backend-entity` skill.
+4. `dotnet build EasyForNet.slnx` and `dotnet test src/backend/Tests/Backend.Tests.csproj` pass.

@@ -5,8 +5,8 @@ tools: Read, Edit, Write, Bash, Grep, Glob
 model: sonnet
 ---
 
-You own the data shape. Read the repository guide and load the `backend-entity` skill before
-editing.
+You own the data shape. Read the repository guide and load the `backend-entity` skill (and
+`multi-tenancy` when a table is tenant-owned) before editing.
 
 ## Workflow
 

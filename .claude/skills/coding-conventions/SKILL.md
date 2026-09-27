@@ -15,15 +15,15 @@ nothing above it, not a `using`, not a comment, not a `#region`. Then one blank 
 `using` directives, then a blank line, then the XML doc and the type:
 
 ```csharp
-namespace Backend.Features.Identity.Endpoints.Users;
+namespace Backend.Features.Tenancy.Endpoints.Editions;
 
-using Backend.Features.Identity.Core;
-using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Tenancy.Core;
+using Backend.Features.Tenancy.Core.Entities;
 
 /// <summary>
-/// This endpoint that handles <c>POST /users</c> to create a new user with the supplied roles.
+/// This endpoint that handles <c>POST /editions</c> to create a plan the platform can put tenants on.
 /// </summary>
-sealed class UserCreateEndpoint(IUserService userService, AppDbContext dbContext) : Endpoint<UserCreateRequest, UserCreateResponse>
+sealed class EditionCreateEndpoint(IEditionService editionService) : Endpoint<EditionCreateRequest, EditionCreateResponse>
 ```
 
 Usings *inside* the namespace are the point of the ordering: every type in the file is resolved
@@ -36,24 +36,30 @@ Two kinds of file have no namespace and are exempt: `Meta.cs` in each project, w
 but `global using` directives, and `Program.cs`, whose top-level statements require its usings at
 the top of the file.
 
-**Global usings live in `Meta.cs`** — FastEndpoints, FluentValidation, Mapperly, EF Core,
-`Backend.ShareData`, `Backend.Base`, `Backend.Base.Dto`, `Backend.Permissions`,
-`Backend.ErrorHandling`, `Backend.Attributes`, `Backend.Extensions`. Never re-import those in a
-file; add genuinely project-wide usings to `Meta.cs` instead. The test project has its own
-`Meta.cs` (adds xUnit, FluentAssertions, Bogus, FastEndpoints.Testing).
+**Global usings live in `Meta.cs`** — `FastEndpoints` (+ `.Security`, `.Swagger`),
+`FluentValidation`, `Riok.Mapperly.Abstractions`, `Microsoft.EntityFrameworkCore`,
+`Microsoft.Extensions.Options`, and the project's `Backend`, `Backend.Base`, `Backend.Base.Dto`,
+`Backend.ShareData`, `Backend.Permissions`, `Backend.ErrorHandling`, `Backend.Attributes`,
+`Backend.Extensions`, `Backend.Exceptions` and `Backend.Features.Tenancy.Core.FeatureManagement`.
+Never re-import those in a file; add genuinely project-wide usings to `Meta.cs` instead.
+`Backend.ShareData.Entities.Base` and each feature's own namespaces are *not* global — import them.
+The test project has its own `Meta.cs` (adds xUnit, FluentAssertions, Bogus,
+FastEndpoints.Testing, `System.Net`, `Backend.Tests.Seeder`).
 
 **Accessibility.** `.editorconfig` sets `dotnet_style_require_accessibility_modifiers = never:error`,
-so *omit the default modifier*: endpoints, requests, validators and internal DTOs are declared as
-plain `sealed class Xyz`, not `internal sealed class Xyz`. Mark a type `public` only when it must
-cross an assembly boundary (response/DTO types consumed by generated clients, entities, services,
-feature classes). Tests can still see internal types — `Meta.cs` grants
+so *omit the default modifier*: endpoints, requests, validators, groups, internal DTOs and helper
+classes are declared as plain `sealed class Xyz` / `static class Xyz`, never `internal …`.
+Mark a type `public` only when a public signature or generated code needs it (response/DTO types,
+entities, services and their interfaces, feature classes, Mapperly mappers). Tests can still see internal types — `Meta.cs` grants
 `InternalsVisibleTo("Backend.Tests")`.
 
 **Types are `sealed` by default.** Endpoints, requests, validators, responses, groups. Mapperly
-mappers are `public partial class` (the generator needs `partial`).
+mappers are `public partial class` (the generator needs `partial`). Entities, configurations and
+service implementations are plain `public class`.
 
-**Primary constructors for dependencies.** `sealed class UserGetEndpoint(IUserService userService)`.
-No constructor bodies, no readonly backing fields.
+**Primary constructors for dependencies.** `sealed class UserGetEndpoint(IUserService userService)`,
+`public class EditionService(AppDbContext dbContext, …) : IEditionService`. No constructor bodies,
+no readonly backing fields.
 
 **Modern C# is expected:** `var` everywhere, collection expressions (`[]`, `[.. items.Select(x => …)]`),
 target-typed `new()`, pattern matching, expression-bodied members for one-liners.
@@ -69,13 +75,17 @@ interfaces, and non-obvious public methods. Add it; do not leave new types undoc
 | Request / Response | `<Entity><Action>Request` / `…Response` | `UserListRequest` |
 | Validator | `<Entity><Action>Validator` | `UserDeleteValidator` |
 | Mapper | `<Entity><Action>{Request,Response,Dto}Mapper` | `UserCreateRequestMapper` |
-| Route group | `<Area>Group` | `UsersGroup`, `FileGroup` |
+| Route group | `<Area>Group` | `UsersGroup`, `EditionsGroup` |
 | Row DTO in a list | `<Entity>ListDto` | `UserListDto` |
 | Entity config | `<Entity>Configuration` | `NotificationConfiguration` |
-| Service | `I<Name>Service` + `<Name>Service` | `IUserService` / `UserService` |
-| Feature module | `<Feature>Feature` | `IdentityFeature` |
+| Service | `I<Name>Service` + `<Name>Service` | `IEditionService` / `EditionService` |
+| Narrow read contract | `I<Name>Query` + `<Name>Query` | `ITenantMembershipQuery` |
+| Shared validation rules | `<Entity>ValidationRules` | `TenantValidationRules` |
+| Feature module (DI) | `<Feature>Feature` | `IdentityFeature` |
 | Permission provider | `<Feature>PermissionsProvider` | `IdentityPermissionsProvider` |
+| Entitlement provider | `<Feature>FeaturesProvider` | `FileManagementFeaturesProvider` |
 | Permission constant | `Entity_Action` (`"Entity.Action"` value) | `User_Create = "User.Create"` |
+| Feature (entitlement) constant | `Feature_Name` (`"Feature.Name"` value) | `Identity_MaxUserCount` |
 | Error code | `camelCase` string constant | `usernameAlreadyExists` |
 
 Private static readonly fields are `_camelCase`, private constants `PascalCase`, parameters
@@ -88,7 +98,8 @@ trailing newline to C# files.
 
 **File names are kebab-case**: `user-create-form.tsx`, `use-table-url-state.ts`, `users-api.ts`,
 `users-dtos.ts`. Route folders are kebab-case too (`change-permissions`), private folders are
-prefixed with `_` (`_components`).
+prefixed with `_` (`_components`), and admin screens sit in a route group per backend feature
+(`admin/(identity)/users`, `admin/(tenancy)/editions`).
 
 **Exports.** Named exports for components, hooks and APIs (`export const UserTable = () => …`);
 `export default` only for Next.js `page.tsx` / `layout.tsx`. Barrel files (`components/ui/index.ts`,
@@ -96,13 +107,14 @@ prefixed with `_` (`_components`).
 re-export everything — add your new symbol to the matching barrel and import from the barrel
 (`import { Button } from '@/components/ui'`), not from the deep path.
 
-**Style.** 2-space indent, single quotes, no semicolons, arrow-function components, `'use client'`
+**Style.** 2-space indent, single quotes, no semicolons (`.prettierrc`: `semi: false`,
+`singleQuote: true`, `printWidth: 200`), arrow-function components, `'use client'`
 as the very first line of any client component. Props interfaces are named `<Component>Props` and
 declared right above the component. Exported components, hooks and DTO interfaces carry a JSDoc
 `/** … */` one-liner.
 
 **Imports use the `@/` alias** (`@/store/api/identity`, `@/components/ui/form`, `@/lib/utils`,
-`@/i18n`, `@/hooks`, `@/allow`).
+`@/i18n`, `@/hooks`, `@/allow`, `@/feature-names`).
 
 **No hard-coded user-visible strings.** Everything goes through `t('…')` from `@/i18n`
 (client) or `getServerTranslation(lang, '…')` (server component), with the key added to
@@ -111,7 +123,7 @@ multi-language. Key namespaces already in use:
 
 - `page.<area>.*` — page titles and page-specific copy (`page.users.create.title`)
 - `form.label.*`, `form.placeholder.*` — form field text
-- `validation.*` — Yup messages (`validation.required`, `validation.minLength`)
+- `validation.*` — Yup messages (`validation.required`, `validation.minLength`, `validation.tenantIdentifier`)
 - `table.columns.*`, `table.actions`, `table.export.*`, `table.filter.*` — data-table chrome
 - `navigation.*` / `search.*` — sidebar entries and global search entries
 - `error.server.*` — messages keyed off backend error codes
@@ -121,5 +133,7 @@ Interpolation uses `${name}` inside the JSON value and `t('validation.minLength'
 
 **Types mirror the API.** A DTO interface in `store/api/**/…-dtos.ts` has the same name as the
 C# class it mirrors, with camelCase members, and extends `BaseDto<string>`, `GenericAuditableDto<string>`,
-`ListRequestDto<string>`, `ListDto<T>` or `RequestBase` from `@/store/api`. `Guid` maps to `string`,
-`DateTime` maps to `string`.
+`ListRequestDto<string>`, `ListDto<T>` or `RequestBase` from `@/store/api`. The C# DTO marker
+interfaces map to their counterparts without the `I`: `ISystemCreatedDto` → `SystemCreatedDto`,
+`IMayHaveTenantDto` → `MayHaveTenantDto`, `IHaveTenantDto` → `HaveTenantDto`. `Guid` maps to
+`string` (`Guid?` to `string | null`), `DateTime` maps to `string`.

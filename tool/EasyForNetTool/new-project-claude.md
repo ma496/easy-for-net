@@ -59,7 +59,7 @@ Default credentials seeded on first run: `admin` / `Admin#123` (the platform acc
 
 **One endpoint = one file.** `Features/Identity/Endpoints/Users/UserCreateEndpoint.cs` is the canonical shape: the `sealed class ...Endpoint : Endpoint<TReq, TRes>`, its `...Request`, a FluentValidation `...Validator : Validator<TReq>`, the `...Response`/DTOs, and the Riok.Mapperly `[Mapper] partial class ...Mapper` all live together. Types are internal where possible; `Meta.cs` grants `InternalsVisibleTo` to the test project so tests can reference them.
 
-**Global usings live in `Meta.cs`** (FastEndpoints, FluentValidation, Mapperly, EF Core, the `Data`, `Base.Dto` and `Permissions` namespaces, …). Do not re-add those per file; add new project-wide ones there.
+**Global usings live in `Meta.cs`** (FastEndpoints, FluentValidation, Mapperly, EF Core, the `ShareData`, `Base.Dto` and `Permissions` namespaces, …). Do not re-add those per file; add new project-wide ones there.
 
 **Feature isolation is enforced by tests.** `Tests/Architect/FeatureDependencyTests` fails if a type under `<RootNamespace>.Features.X` depends on a type under `<RootNamespace>.Features.Y` unless that type is marked `[AllowOutside]`. `[NoDirectUse]` (with `[BypassNoDirectUse]` as the escape hatch) enforces consuming a class through its interface. `Tests/Architect/Features/Feature{A,B}` are fixtures that exercise the rules themselves — not real features.
 
@@ -102,8 +102,10 @@ switched off impossible to switch back on. Two architecture tests hold the line 
 permission may require a feature, and every feature a permission names must actually be declared.
 
 Two consequences worth keeping in mind. Gating never revokes anything: `DataSeeder` still persists a
-row for every permission and still grants the administrator roles the whole scope, so turning a
-feature back on restores the permission with nothing to re-grant — and `ChangePermissionsEndpoint`
+row for every permission and still grants the platform and bootstrap-tenant administrator roles their
+whole scope (other tenants' administrator roles get theirs from
+`ProvisionTenantAdministratorRoleAsync` when the tenant is created or gains its first member), so
+turning a feature back on restores the permission with nothing to re-grant — and `ChangePermissionsEndpoint`
 carries plan-hidden grants through a replacement rather than reading the form's silence about them as
 a removal. And an endpoint gated on a feature alone, with no permission to hang it on, calls
 `featureChecker.CheckEnabledAsync(...)` in its handler rather than declaring an attribute, so
@@ -199,7 +201,7 @@ npm run pr                          # the pull-request URL for the current branc
 `.claude/skills/` holds step-by-step guides for the recurring tasks in this codebase. Consult the matching one before writing code so new work follows the same shape as the existing features.
 
 - Cross-cutting: `coding-conventions`
-- API: `backend-feature`, `backend-endpoint`, `backend-entity`, `backend-tests`, `permissions`, `feature-management`, `background-jobs`, `file-storage`, `notifications`
+- API: `backend-feature`, `backend-endpoint`, `backend-entity`, `backend-tests`, `multi-tenancy`, `permissions`, `feature-management`, `background-jobs`, `file-storage`, `notifications`
 - Web: `rtk-query-api`, `frontend-page`, `frontend-crud`, `ui-component`, `redux-state`, `localization`, `frontend-tests`
 - Spanning both: `api-error-handling`
 - Process: spec-driven development — `specs/README.md`, the `.claude/commands` (`/feature`, `/fix`, `/auto`, `/queue`, `/spec-split`, `/verify`, `/ship`, `/review-diff`), and the agents in `.claude/agents`

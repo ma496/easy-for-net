@@ -1,6 +1,6 @@
 ---
 name: frontend-tests
-description: Write and run Vitest tests for the web app in src/frontend/web — colocated *.test.ts files, what is worth testing (pure logic in lib/utils, hooks, guards) and how to structure cases. Use when changing frontend logic that has rules worth pinning down.
+description: Write and run Vitest tests for the web app in src/frontend/web — colocated *.test.ts files, what is worth testing (pure helpers, route and tenant-scope rules, reducers, middleware, the store's tenant-change reset, client/API mirrors, locale files) and how to structure cases. Use when changing frontend logic that has rules worth pinning down.
 ---
 
 # Frontend tests
@@ -8,33 +8,35 @@ description: Write and run Vitest tests for the web app in src/frontend/web — 
 Vitest, run with `npm run test` (`vitest run`) from `src/frontend/web`. A single file:
 
 ```sh
-npx vitest run lib/utils/redirect.test.ts
+npx vitest run lib/utils/tenant-routing.test.ts
 npx vitest            # watch mode while iterating
 ```
 
-`vitest.config.mts` exists only to map the `@/` alias from `tsconfig.json`; everything else is the
-defaults. The suite covers **pure logic**, not rendered components: there is no DOM environment and
-no test setup file. Keep it that way unless a task genuinely requires a browser, where adding
-`jsdom` and an environment is a deliberate decision, not a side effect.
+`vitest.config.mts` maps the `@/` alias from `tsconfig.json` and collects **`**/*.test.ts` only** — a
+`.test.tsx` file is never run. There is no DOM environment and no setup file: the suite covers logic,
+not rendered components. Keep it that way unless a task genuinely requires a browser, where adding
+`jsdom`, an environment and a `.tsx` include is a deliberate decision, not a side effect.
 
-Note that Vitest does not read `tsconfig.json` paths, and TypeScript erases an import used only as a
-type. So an import of a *value* through `@/` — `import { setUserInfo } from '@/store/slices'` — is
-resolved by the config, while a type-only one would silently need nothing; a module whose own
-imports go through the alias therefore loads in a test only because of it.
+Vitest does not read `tsconfig.json` paths, and TypeScript erases an import used only as a type. So an
+import of a *value* through `@/` — `import { setUserInfo } from '@/store/slices'` — is resolved by the
+config, while a type-only one needs nothing; a module whose own imports go through the alias loads in
+a test only because of it.
 
 ## Layout
 
 Tests are **colocated** with the code they cover and named `<file>.test.ts`:
 
 ```
-lib/utils/redirect.ts
-lib/utils/redirect.test.ts
-lib/utils/authentication-and-authorization.ts
-lib/utils/authentication-and-authorization.test.ts
+lib/utils/redirect.test.ts                 lib/utils/tenant-routing.test.ts
+lib/utils/upload-limit.test.ts             lib/utils/api-error-helpers.test.ts
+store/slices/authSlice.test.ts             store/middlewares/rtk-error-middleware.test.ts
+store/tenant-cache.test.ts                 i18n/locales.test.ts
+allow.test.ts  auth-urls.test.ts  feature-names.test.ts
+app/[lang]/(auth)/select-tenant/_components/select-tenant-view.test.ts
 ```
 
 Import the unit under test by relative path (`from './redirect'`), everything else through the `@/`
-alias — both resolve, in the test file and in the modules it pulls in.
+alias.
 
 ## Shape
 
@@ -53,16 +55,24 @@ describe('isValidRedirectPath', () => {
 })
 ```
 
-- One `describe` per exported function, named after it.
+- One `describe` per exported function (or unit), named after it.
 - `it('<behaviour in plain words>')` — describe the rule, not the mechanics.
 - `it.each([...])` for a family of inputs that share one expectation.
-- Build fixtures with a small local factory rather than repeating object literals:
+- Build fixtures with a small local factory taking overrides, rather than repeating object literals.
+  The session shape carries tenant fields — leave none out:
 
 ```ts
+const tenant = (id: string): GetUserInfoTenant => ({ id, name: `Tenant ${id}`, identifier: `t-${id}` })
+
+const userInfo = (overrides: Partial<GetUserInfoResponse> = {}): GetUserInfoResponse => ({
+  id: 'user-1', username: 'someone', email: 'someone@example.com',
+  isPlatform: false, tenants: [], roles: [],
+  ...overrides,
+})
+
 const stateWithPermissions = (...permissions: string[]): AuthState => ({
-  isAuthenticated: true,
-  user: { id: 'user-id', username: 'user', email: 'user@example.com',
-           roles: [{ id: 'role-id', name: 'Admin', permissions: permissions.map((name) => ({ id: name, name, displayName: name })) }] },
+  isAuthenticated: true, activeTenant: undefined, tenants: [],
+  user: userInfo({ roles: [{ id: 'role-id', name: 'Admin', permissions: permissions.map((name) => ({ id: name, name, displayName: name })) }] }),
 })
 ```
 
@@ -71,14 +81,30 @@ const stateWithPermissions = (...permissions: string[]): AuthState => ({
 Worth a test — anything with a rule that would be expensive to get wrong and is testable without a
 browser:
 
-- security-shaped helpers: redirect validation, `isAllowed` permission logic, auth-cookie checks
-- URL/route matching, such as `getMatchedAuthUrl` semantics (including the "two entries match the
-  same path" error)
-- data shaping: export row mapping, error-message extraction (`getApiErrorMessages`), name/label
-  formatting (`shortName`), normalization helpers
+- **Security- and routing-shaped helpers**: redirect validation, `isAllowed`, `getMatchedAuthUrl`
+  (including the "two entries match the same path" error), the tenant-scope rules in
+  `tenant-routing.ts` (`isPathAvailable`, `resolveTenantLanding`, …) for a platform account in no
+  tenant, one inside a tenant, and an ordinary member. A new `/admin` route that is not tenant-only
+  gets its case there.
+- **Data shaping**: `getApiErrorMessages`, upload-limit arithmetic, export row mapping, `shortName`.
+- **Reducers** — call `slice.reducer(state, action)` and assert on the state it returns.
+- **Middleware** — run an action through `middleware(api)(next)(action)` with a recording `dispatch`
+  and assert on what it dispatched, and on what it left alone.
+- **The store** where the behaviour *is* the cache: `tenant-cache.test.ts` seeds a record with
+  `accountApi.util.upsertQueryData`, dispatches the tenant-change sequence through the real `store`,
+  and reads `store.getState().appApi.queries` back. Reset with `appApi.util.resetApiState()` in
+  `beforeEach`.
+- **Client/API mirrors**: `allow.test.ts` and `feature-names.test.ts` restate the backend constants and
+  fail when `allow.ts` / `feature-names.ts` drift — add the new constant there when you add a
+  permission or a feature.
+- **Locale files**: `i18n/locales.test.ts` — extend its key lists when a screen's strings must never
+  go missing (see `localization`).
+- **Wiring that cannot be rendered here** (a guard calling a helper, a screen using logical
+  utilities) may be checked by reading the source with `readFileSync`. Such a test must first assert
+  that it found the files it scans, so a moved file cannot make it pass by being absent.
 
-Not worth it here — component rendering, RTK Query wiring, and styling. Endpoint behaviour is
-covered on the API side instead; see the `backend-tests` skill.
+Not worth it here — component rendering, styling, and the request/response shape of RTK Query
+endpoints. Endpoint behaviour is covered on the API side instead; see the `backend-tests` skill.
 
 ## Rules
 
@@ -86,4 +112,5 @@ covered on the API side instead; see the `backend-tests` skill.
   test sets it up; helpers that guard with `typeof window === 'undefined'` are testable as-is.
 - Assert on behaviour, not implementation details — call the exported function, check the result.
 - When you fix a bug in a helper, add the failing input as a case first.
-- `npm run test` and `npm run lint` both need to pass before the change is done.
+- `npm run test`, `npm run lint` and `npx tsc --noEmit` all need to pass before the change is done —
+  Vitest and ESLint both pass on code that fails the type check.
