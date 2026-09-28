@@ -251,8 +251,11 @@ export const FormLazyMultiSelect = <TItem, TRequest>({
         }
       }
       helpers.setValue(newValue).finally(() => helpers.setTouched(true))
+      // With a single option there is nothing else to pick, so the panel closes instead of waiting for an outside click.
+      // Only the unsearched, fully loaded list counts: a search that narrows to one match still leaves others to pick.
+      if (!debouncedSearch.trim() && !hasMore && fetchedOptions.length === 1) setOpen(false)
     },
-    [field.value, helpers, storedOptions],
+    [field.value, helpers, storedOptions, debouncedSearch, hasMore, fetchedOptions],
   )
 
   const handleClear = useCallback(

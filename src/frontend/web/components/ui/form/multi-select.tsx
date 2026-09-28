@@ -105,6 +105,8 @@ export const MultiSelect = ({
       newValue.push(val)
     }
     onChange?.(newValue)
+    // With a single option there is nothing else to pick, so the panel closes instead of waiting for an outside click.
+    if (options.length === 1) setOpen(false)
   }
 
   const handleClear = (e: React.MouseEvent) => {
