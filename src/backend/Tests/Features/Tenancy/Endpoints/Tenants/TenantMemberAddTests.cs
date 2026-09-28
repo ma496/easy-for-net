@@ -138,7 +138,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         second.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
         problem.Errors.First().Name.Should().Be("userId", "the caller is told which value was refused");
-        problem.Errors.First().Code.Should().Be(ErrorCodes.DuplicateTenantMembership);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.DuplicateTenantMembership.Value);
 
         (await MembershipRowsAsync(tenant.Id, account.Id))
             .Should().ContainSingle("a refused request writes nothing, so the membership stands exactly as it did");
@@ -168,7 +168,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
         problem.Errors.First().Name.Should().Be("userId");
-        problem.Errors.First().Code.Should().Be(ErrorCodes.UserNotFound);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.UserNotFound.Value);
 
         (await MembershipRowsAsync(tenant.Id, unknownUserId)).Should().BeEmpty();
     }
@@ -206,7 +206,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember, "holding the permission in another tenant is not standing in this one");
+        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember.Value, "holding the permission in another tenant is not standing in this one");
 
         (await MembershipRowsAsync(addressed.Id, target.Id)).Should().BeEmpty("the standing check runs before anything is read, let alone written");
     }
@@ -335,7 +335,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
                 Roles = []
             });
 
-        thirdProblem.Errors.First().Code.Should().Be(ErrorCodes.DuplicateTenantMembership, "the membership the rejoin made is live, and a second one is refused against it");
+        thirdProblem.Errors.First().Code.Should().Be(ErrorCodes.DuplicateTenantMembership.Value, "the membership the rejoin made is live, and a second one is refused against it");
         third.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
         var rows = await MembershipRowsAsync(tenant.Id, account.Id);
@@ -398,7 +398,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound.Value);
     }
 
     /// <summary>
@@ -423,7 +423,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantSuspended);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantSuspended.Value);
 
         (await MembershipRowsAsync(tenant.Id, account.Id)).Should().BeEmpty("the refusal happens before anything is written inside the tenant");
     }
@@ -454,7 +454,7 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
         problem.Errors.First().Name.Should().Be("roles", "the caller is told which value was refused");
-        problem.Errors.First().Code.Should().Be(ErrorCodes.ReferencedRecordNotFound);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.ReferencedRecordNotFound.Value);
 
         (await MembershipRowsAsync(tenant.Id, account.Id)).Should().BeEmpty("the role check runs before the membership is written, so nothing is left half-granted");
     }

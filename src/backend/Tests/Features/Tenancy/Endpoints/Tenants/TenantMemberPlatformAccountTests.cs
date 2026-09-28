@@ -83,7 +83,7 @@ public class TenantMemberPlatformAccountTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.UserNotFound);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.UserNotFound.Value);
         (await MembershipService.IsMemberAsync(tenant.Id, outsider.Id, TestContext.Current.CancellationToken))
             .Should().BeFalse();
     }

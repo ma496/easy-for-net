@@ -33,7 +33,7 @@ export const getDictionary = cache(async (locale: Locale): Promise<LocalizationR
     const headerList = await headers()
     const cookie = headerList.get('cookie')
     const response = await fetch(`${environment.apiUrl}/localization/resources/${encodeURIComponent(requestedLocale)}`, {
-      headers: cookie ? { cookie } : undefined,
+      headers: { 'Accept-Language': requestedLocale, ...(cookie ? { cookie } : {}) },
       cache: 'no-store',
     })
 

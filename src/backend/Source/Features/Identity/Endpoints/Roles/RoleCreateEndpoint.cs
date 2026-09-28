@@ -27,8 +27,6 @@ sealed class RoleCreateEndpoint(IRoleService roleService, AppDbContext dbContext
     // comparison to the tenant the new role is about to be attributed to.
     private const string SoftDeleteFilterKey = "SoftDelete";
 
-    private const string DuplicateNameMessage = "Role name already exists";
-
     public override void Configure()
     {
         Post("");
@@ -51,7 +49,7 @@ sealed class RoleCreateEndpoint(IRoleService roleService, AppDbContext dbContext
         {
             // Attributed to the name field so the web form can attach the message to the input the
             // caller has to change.
-            ThrowError(x => x.Name, DuplicateNameMessage, ErrorCodes.RoleNameAlreadyExists);
+            this.ThrowError(x => x.Name, ErrorCodes.RoleNameAlreadyExists);
         }
 
         var requestMapper = new RoleCreateRequestMapper();

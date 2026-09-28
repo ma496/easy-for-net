@@ -33,7 +33,7 @@ public class UserSeatLimitTests(App app) : FeatureTestsBase(app)
 
         refused.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         problem.Errors.Should().ContainSingle()
-               .Which.Code.Should().Be(ErrorCodes.FeatureLimitExceeded);
+               .Which.Code.Should().Be(ErrorCodes.FeatureLimitExceeded.Value);
         (await DbContext.Users.AnyAsync(account => account.Username == request.Username, TestContext.Current.CancellationToken))
             .Should().BeFalse("a refused account is not left behind without its membership");
     }
@@ -52,7 +52,7 @@ public class UserSeatLimitTests(App app) : FeatureTestsBase(app)
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden,
             "the limit is a fact about the tenant, so it binds a platform administrator too");
         problem.Errors.Should().ContainSingle()
-               .Which.Code.Should().Be(ErrorCodes.FeatureLimitExceeded);
+               .Which.Code.Should().Be(ErrorCodes.FeatureLimitExceeded.Value);
         (await MembershipService.IsMemberAsync(tenant.Id, newcomer.Id, TestContext.Current.CancellationToken))
             .Should().BeFalse();
     }
@@ -157,7 +157,7 @@ public class UserSeatLimitTests(App app) : FeatureTestsBase(app)
             .GETAsync<TenantMemberSeatsEndpoint, TenantMemberSeatsRequest, ProblemDetails>(new() { TenantId = other.Id });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        problem.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.NotTenantMember);
+        problem.Errors.Should().ContainSingle().Which.Code.Should().Be(ErrorCodes.NotTenantMember.Value);
     }
 
     private Task<TestResult<ProblemDetails>> AddMemberAsync(Guid tenantId, Guid userId)

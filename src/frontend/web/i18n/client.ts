@@ -3,9 +3,8 @@
 import { TranslationContext } from '@/components/layouts'
 import { usePathname, useRouter } from 'next/navigation'
 import { useContext } from 'react'
-import { i18nConfig } from './config'
 import { translate } from './translate'
-import { withLocale } from './locale-path'
+import { localeFromPathname, withLocale } from './locale-path'
 
 /**
  * Client-side React hook that reads the merged localization resources from TranslationContext and
@@ -24,8 +23,7 @@ export const useTranslation = () => {
     router.push(`${withLocale(pathname, locale)}${window.location.search}` as any)
   }
 
-  const currentLang = pathname.split('/')[1]
-  const language = i18nConfig.locales.includes(currentLang as (typeof i18nConfig.locales)[number]) ? currentLang : i18nConfig.defaultLocale
+  const language = localeFromPathname(pathname)
 
   const i18n = {
     language,

@@ -20,19 +20,6 @@ using Backend.Features.Tenancy.Core;
 sealed class TenantDeleteEndpoint(ITenantService tenantService, AppDbContext dbContext)
     : Endpoint<TenantDeleteRequest, TenantDeleteResponse>
 {
-    /// <summary>
-    /// The refusal reported for a tenant the caller may not act on. Absent, deleted and invisible are
-    /// deliberately one message and one code, so the response cannot reveal whether the tenant named
-    /// ever existed.
-    /// </summary>
-    private const string TenantNotFoundMessage = "Tenant not found";
-
-    /// <summary>
-    /// The refusal reported when the addressed tenant is the system-created bootstrap tenant, which
-    /// the application depends on and so may not be renamed, suspended or deleted.
-    /// </summary>
-    private const string SystemCreatedMessage = "System-created tenant cannot be deleted";
-
     public override void Configure()
     {
         Delete("{id}");
@@ -47,14 +34,14 @@ sealed class TenantDeleteEndpoint(ITenantService tenantService, AppDbContext dbC
         var entity = await tenantService.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
-            ThrowError(TenantNotFoundMessage, ErrorCodes.TenantNotFound);
+            this.ThrowError(ErrorCodes.TenantNotFound);
         }
 
         // The bootstrap tenant that every pre-existing row was attributed to cannot be deleted: the
         // seeded data and the upgrade path are pinned to it.
         if (entity.SystemCreated)
         {
-            ThrowError(SystemCreatedMessage, ErrorCodes.SystemCreatedTenantCannotBeModified);
+            this.ThrowError(ErrorCodes.SystemCreatedTenantCannotBeModified);
         }
 
         // Removing an ISoftDelete entity is turned into a soft delete by AppDbContext, so the row is

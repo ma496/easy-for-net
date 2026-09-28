@@ -56,7 +56,7 @@ public class TenantConcurrencyTests(App app) : TenancyTestsBase(app)
         // other reason, which would mean this test had stopped exercising the path it is about.
         answers.Should().OnlyContain(answer =>
             answer.Status == HttpStatusCode.OK
-            || (answer.Status == HttpStatusCode.BadRequest && answer.Code == ErrorCodes.ConcurrentModification));
+            || (answer.Status == HttpStatusCode.BadRequest && answer.Code == ErrorCodes.ConcurrentModification.Value));
 
         answers.Should().Contain(
             answer => answer.Status == HttpStatusCode.OK,

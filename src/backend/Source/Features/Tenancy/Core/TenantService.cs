@@ -21,14 +21,6 @@ using Backend.Features.Tenancy.Core.Entities;
 public interface ITenantService
 {
     /// <summary>
-    /// The message reported when an identifier is already taken. Both creation surfaces and the
-    /// update surface raise it against their own identifier field with
-    /// <see cref="ErrorCodes.TenantIdentifierAlreadyExists"/>, so a duplicate reads the same however
-    /// it was submitted.
-    /// </summary>
-    const string DuplicateIdentifierMessage = "Tenant identifier already exists";
-
-    /// <summary>
     /// The tenants the caller may see: every tenant that is not deleted for a caller holding platform
     /// administration, and otherwise only the tenants the caller holds an active membership in.
     /// Lookups, lists, searches and counts all narrow from this one query, so none of them can forget
@@ -70,7 +62,6 @@ public interface ITenantService
     /// <returns><see langword="true"/> when a tenant already holds the identifier.</returns>
     /// <remarks>
     /// Callers refuse the request against their own identifier field with
-    /// <see cref="DuplicateIdentifierMessage"/> and
     /// <see cref="ErrorCodes.TenantIdentifierAlreadyExists"/>, and persist nothing.
     /// </remarks>
     Task<bool> IdentifierExistsAsync(string identifier, Guid? excludedTenantId = null, CancellationToken cancellationToken = default);

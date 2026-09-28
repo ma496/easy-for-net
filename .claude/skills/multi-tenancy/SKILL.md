@@ -51,7 +51,7 @@ sealed class InvoiceSummaryEndpoint(AppDbContext dbContext, ITenantContext tenan
     {
         if (tenantContext.CurrentTenantId is not { } tenantId)
         {
-            ThrowError("An active tenant is required", ErrorCodes.NoActiveTenant);
+            this.ThrowError(ErrorCodes.NoActiveTenant);
         }
 
         // Already restricted to the active tenant by the query filter - no Where(TenantId) needed.

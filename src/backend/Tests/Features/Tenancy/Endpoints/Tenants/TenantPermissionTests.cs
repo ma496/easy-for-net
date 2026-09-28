@@ -223,7 +223,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
 
             // The status alone would read the same for a refusal of any kind, so the code is what shows
             // this one is the caller's authority and not its tenant or its account.
-            refused.Problem!.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied,
+            refused.Problem!.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied.Value,
                 "{0} turns a caller away for the permission it does not hold, and says so rather than answering blank",
                 endpoint);
 

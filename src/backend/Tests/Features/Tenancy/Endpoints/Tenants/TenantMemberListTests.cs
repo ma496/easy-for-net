@@ -219,7 +219,7 @@ public class TenantMemberListTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember, "holding the permission in another tenant is not standing in this one");
+        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember.Value, "holding the permission in another tenant is not standing in this one");
     }
 
     /// <summary>

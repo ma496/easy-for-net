@@ -36,33 +36,6 @@ using Backend.Features.Identity.Core.Entities;
 /// </remarks>
 sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IPermissionFeatureFilter permissionFeatureFilter, IOptions<SigninSetting> signinSetting, IOptions<AuthSetting> authSetting) : Endpoint<TokenRequest, TokenResponse>
 {
-    /// <summary>
-    /// The refusal reported for a tenant identifier that names no tenant, or names a deleted one. It
-    /// carries no detail, so the answer for a tenant that never existed and the answer for one that is
-    /// gone are the same answer.
-    /// </summary>
-    private const string TenantNotFoundMessage = "Tenant not found";
-
-    /// <summary>
-    /// The refusal reported when the account holds no active membership in the tenant it named.
-    /// Holding permissions - even every permission - in another tenant or on the platform is not
-    /// standing in this one; only a membership of it is.
-    /// </summary>
-    private const string NotTenantMemberMessage = "You are not a member of this tenant";
-
-    /// <summary>
-    /// The refusal reported when the tenant named is suspended. A suspended tenant is out of service
-    /// rather than gone, so signing in to work inside it is refused while it is.
-    /// </summary>
-    private const string TenantSuspendedMessage = "The tenant is suspended";
-
-    /// <summary>
-    /// The refusal reported when an ordinary account names no tenant and its memberships do not settle
-    /// the question by themselves - it holds none, or it holds more than one. Naming a tenant is what
-    /// resolves it, so the failure is raised against that field.
-    /// </summary>
-    private const string TenantRequiredMessage = "Please provide a tenant to sign in.";
-
     public override void Configure()
     {
         Post("token");
@@ -73,22 +46,21 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IPe
     public override async Task HandleAsync(TokenRequest req, CancellationToken c)
     {
         var user = await (!req.IsEmail ? userService.GetByUsernameAsync(req.Username) : userService.GetByEmailAsync(req.Email));
-        var errorMessage = !req.IsEmail ? "Username or password is invalid" : "Email or password is invalid";
         var errorCode = !req.IsEmail ? ErrorCodes.InvalidUsernamePassword : ErrorCodes.InvalidEmailPassword;
         if (user == null)
-            ThrowError(errorMessage, errorCode);
+            this.ThrowError(errorCode);
 
         var result = await userService.ValidatePasswordAsync(user, req.Password);
         if (!result)
-            ThrowError(errorMessage, errorCode);
+            this.ThrowError(errorCode);
 
         // A globally deactivated account is refused here, before any membership is read, so no session is
         // established for it in any tenant and the memberships it holds are neither read for authorization
         // nor written to: they wait untouched for the account to be reactivated.
         if (!user.IsActive)
-            ThrowError("User is not active", ErrorCodes.UserNotActive);
+            this.ThrowError(ErrorCodes.UserNotActive);
         if (signinSetting.Value?.IsEmailVerificationRequired == true && !user.IsEmailVerified)
-            ThrowError("Email is not verified", ErrorCodes.EmailNotVerified);
+            this.ThrowError(ErrorCodes.EmailNotVerified);
 
         var tenantId = string.IsNullOrWhiteSpace(req.TenantIdentifier)
             ? await ResolveUnnamedTenantAsync(user, c)
@@ -181,7 +153,7 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IPe
         if (tenantIds.Count != 1)
         {
             // An ordinary account has nothing to exercise in no tenant, so it is asked which one it meant.
-            ThrowError(x => x.TenantIdentifier, TenantRequiredMessage, ErrorCodes.TenantRequired);
+            this.ThrowError(x => x.TenantIdentifier, ErrorCodes.TenantRequired);
         }
 
         return tenantIds[0];
@@ -219,7 +191,7 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IPe
             .FirstOrDefaultAsync(candidate => candidate.IdentifierNormalized == normalizedIdentifier, cancellationToken);
         if (tenant == null)
         {
-            ThrowError(TenantNotFoundMessage, ErrorCodes.TenantNotFound);
+            this.ThrowError(ErrorCodes.TenantNotFound);
         }
 
         // Read from the membership rows rather than from anything the request carries, because at this
@@ -232,12 +204,12 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IPe
             .AnyAsync(membership => membership.TenantId == tenant.Id && membership.UserId == user.Id, cancellationToken);
         if (!holdsMembership)
         {
-            ThrowError(NotTenantMemberMessage, ErrorCodes.NotTenantMember);
+            this.ThrowError(ErrorCodes.NotTenantMember);
         }
 
         if (tenant.Status == TenantStatus.Suspended)
         {
-            ThrowError(TenantSuspendedMessage, ErrorCodes.TenantSuspended);
+            this.ThrowError(ErrorCodes.TenantSuspended);
         }
 
         return tenant.Id;

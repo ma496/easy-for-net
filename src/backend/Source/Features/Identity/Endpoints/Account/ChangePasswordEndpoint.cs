@@ -35,7 +35,7 @@ sealed class ChangePasswordEndpoint(AppDbContext dbContext,
         var verified = await userService.ValidatePasswordAsync(user, request.CurrentPassword);
         if (!verified)
         {
-            ThrowError(x => x.CurrentPassword, "Current password is invalid", ErrorCodes.InvalidCurrentPassword);
+            this.ThrowError(x => x.CurrentPassword, ErrorCodes.InvalidCurrentPassword);
             return;
         }
         await userService.UpdatePasswordAsync(user, request.NewPassword);

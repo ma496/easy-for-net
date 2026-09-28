@@ -41,7 +41,7 @@ public class FileUploadFeatureTests(App app) : FileTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         problem.Errors.Should().ContainSingle()
-               .Which.Code.Should().Be(ErrorCodes.FeatureLimitExceeded);
+               .Which.Code.Should().Be(ErrorCodes.FeatureLimitExceeded.Value);
         (await AnyStoredFileNamedAsync(submittedName)).Should().BeFalse("a refused upload stores nothing");
     }
 
@@ -59,7 +59,7 @@ public class FileUploadFeatureTests(App app) : FileTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         problem.Errors.Should().ContainSingle()
-               .Which.Code.Should().Be(ErrorCodes.FeatureDisabled);
+               .Which.Code.Should().Be(ErrorCodes.FeatureDisabled.Value);
     }
 
     [Fact]

@@ -130,7 +130,7 @@ public class ChangePermissionsTests(App app) : TenancyTestsBase(app)
 
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.PlatformPermissionNotGrantable);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.PlatformPermissionNotGrantable.Value);
         problem.Errors.First().Name.Should().Be("permissions", "the caller is told which field to change");
 
         (await RolePermissionIdsAsync(roleId)).Should().BeEquivalentTo(before,
@@ -180,7 +180,7 @@ public class ChangePermissionsTests(App app) : TenancyTestsBase(app)
 
             refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             problem.Errors.Should().ContainSingle();
-            problem.Errors.First().Code.Should().Be(ErrorCodes.TenantPermissionNotGrantable);
+            problem.Errors.First().Code.Should().Be(ErrorCodes.TenantPermissionNotGrantable.Value);
             problem.Errors.First().Name.Should().Be("permissions", "the caller is told which field to change");
 
             (await RolePermissionIdsAsync(platformRole.Id)).Should().BeEquivalentTo(before,
@@ -226,7 +226,7 @@ public class ChangePermissionsTests(App app) : TenancyTestsBase(app)
 
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedRolePermissionsCannotBeChanged);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedRolePermissionsCannotBeChanged.Value);
 
         (await RolePermissionIdsAsync(administratorRoleId)).Should().BeEquivalentTo(before,
             "the administrator role still holds every permission it held, so the tenant is still administrable from inside itself");

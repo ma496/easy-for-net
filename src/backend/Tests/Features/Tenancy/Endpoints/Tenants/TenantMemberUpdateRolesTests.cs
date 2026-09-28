@@ -95,7 +95,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.LastTenantAdministrator);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.LastTenantAdministrator.Value);
 
         (await GrantedRolesAsync(tenant.Id, administrator.Id))
             .Should().Equal([administratorRoleId], "the tenant is left exactly as it was, administrable by the member the request tried to strip");
@@ -245,7 +245,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
         problem.Errors.First().Name.Should().Be("roles", "the caller is told which value was refused");
-        problem.Errors.First().Code.Should().Be(ErrorCodes.ReferencedRecordNotFound);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.ReferencedRecordNotFound.Value);
 
         (await GrantedRolesAsync(tenant.Id, member.Id))
             .Should().Equal([heldRoleId], "the check runs before the replacement, so the member is left holding what they held");
@@ -275,7 +275,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember.Value);
 
         (await GrantedRolesAsync(addressed.Id, member.Id)).Should().Equal([heldRoleId], "the refusal happens before anything is read, let alone written");
     }
@@ -318,7 +318,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantSuspended);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantSuspended.Value);
 
         (await GrantedRolesAsync(tenant.Id, member.Id)).Should().Equal([heldRoleId]);
     }
@@ -338,7 +338,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound.Value);
     }
 
     /// <summary>
@@ -398,7 +398,7 @@ public class TenantMemberUpdateRolesTests(App app) : TenancyTestsBase(app)
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
         problem.Errors.First().Code.Should().Be(
-            ErrorCodes.LastTenantAdministrator,
+            ErrorCodes.LastTenantAdministrator.Value,
             "the tenant keeps a member, but no member of it would hold tenant administration");
 
         (await GrantedRolesAsync(tenant.Id, administrator.Id))

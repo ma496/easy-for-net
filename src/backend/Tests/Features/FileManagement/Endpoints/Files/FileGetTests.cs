@@ -41,7 +41,7 @@ public class FileGetTests(App app) : FileTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest, "the file exists and belongs elsewhere, so the read is refused rather than answered");
         refusal.Errors.Should().ContainSingle();
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.CrossTenantFileAccess,
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.CrossTenantFileAccess.Value,
             "the code names the attribution as the reason, so the refusal discloses nothing about the file beyond its not being this caller's");
 
         var raw = await RequestContentAsync(strangerClient, storedName);
@@ -89,7 +89,7 @@ public class FileGetTests(App app) : FileTestsBase(app)
             .GETAsync<FileGetEndpoint, FileGetRequest, ProblemDetails>(new() { FileName = storedName });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.CrossTenantFileAccess,
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.CrossTenantFileAccess.Value,
             "knowing the stored name changes nothing, because the name is an address and the record is the permission");
 
         var raw = await RequestContentAsync(strangerClient, storedName);
@@ -148,7 +148,7 @@ public class FileGetTests(App app) : FileTestsBase(app)
             "the file is looked up and found to have no live tenant to be served in, so the read is refused rather than answered");
         refusal.Errors.Should().ContainSingle();
         refusal.Errors.First().Code.Should().Be(
-            ErrorCodes.TenantNotFound,
+            ErrorCodes.TenantNotFound.Value,
             "the refusal names the state the file's tenant is in, which is a verdict about the file rather than about the caller's session");
 
         var raw = await RequestContentAsync(memberClient, storedName);

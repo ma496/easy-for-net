@@ -14,14 +14,6 @@ sealed class UserUpdateEndpoint(IUserService userService,
                                 ITenantContext tenantContext)
     : Endpoint<UserUpdateRequest, UserUpdateResponse>
 {
-    /// <summary>
-    /// The refusal reported when the account named is a shared identity: it belongs to another tenant
-    /// as well, or holds a platform-scoped role. What this endpoint writes - the names, and whether the
-    /// account is active at all - follows the account into every tenant it belongs to, so a tenant may
-    /// write it only for an account that is its own.
-    /// </summary>
-    private const string SharedAccountMessage = "User belongs to other tenants and can only be updated by a platform administrator";
-
     public override void Configure()
     {
         Put("{id}");
@@ -43,7 +35,7 @@ sealed class UserUpdateEndpoint(IUserService userService,
             return;
         }
         if (entity.SystemCreated)
-            ThrowError("System-created user cannot be updated", ErrorCodes.SystemCreatedUserCannotBeUpdated);
+            this.ThrowError(ErrorCodes.SystemCreatedUserCannotBeUpdated);
 
         // An account is one identity across every tenant it belongs to, and the fields written below are
         // the account's own rather than this tenant's view of it: deactivating it locks it out
@@ -73,7 +65,7 @@ sealed class UserUpdateEndpoint(IUserService userService,
         // is not, and both are refused the same way.
         if (requestedRoleIds.Any(roleId => !tenantRoleIds.Contains(roleId)))
         {
-            ThrowError(x => x.Roles, "Referenced record does not exist.", ErrorCodes.ReferencedRecordNotFound);
+            this.ThrowError(x => x.Roles, ErrorCodes.ReferencedRecordNotFound);
         }
 
         var requestMapper = new UserUpdateRequestMapper();
@@ -124,7 +116,7 @@ sealed class UserUpdateEndpoint(IUserService userService,
         if (tenantContext.CurrentTenantId is not { } activeTenantId
             || await tenantAuthorizationService.ReachesBeyondTenantAsync(userId, activeTenantId, cancellationToken))
         {
-            ThrowError(SharedAccountMessage, ErrorCodes.UserSharedAcrossTenants);
+            this.ThrowError(ErrorCodes.UserSharedAcrossTenants);
         }
     }
 }

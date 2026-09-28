@@ -23,25 +23,6 @@ using Backend.Features.FileManagement.Core;
 /// </remarks>
 sealed class FileDeleteEndpoint(IFileService fileService) : Endpoint<FileDeleteRequest>
 {
-    /// <summary>
-    /// The refusal reported for a file attributed to another tenant, or owned by another account. It
-    /// names neither, so it discloses nothing about the file beyond the fact that it is not the
-    /// caller's to remove.
-    /// </summary>
-    private const string CrossTenantAccessMessage = "The file belongs to another tenant";
-
-    /// <summary>
-    /// The refusal reported for a file whose tenant is suspended. A suspended tenant's files are
-    /// retained in full, so they are neither served nor removed while the suspension lasts.
-    /// </summary>
-    private const string TenantSuspendedMessage = "The tenant this file belongs to is suspended";
-
-    /// <summary>
-    /// The refusal reported for a file whose tenant no longer exists. As with suspension the content
-    /// is retained rather than tidied away.
-    /// </summary>
-    private const string TenantNotFoundMessage = "The tenant this file belongs to no longer exists";
-
     public override void Configure()
     {
         Delete("{fileName}");
@@ -75,16 +56,16 @@ sealed class FileDeleteEndpoint(IFileService fileService) : Endpoint<FileDeleteR
     [DoesNotReturn]
     private void ThrowRefusal(FileAccessStatus status)
     {
-        var (message, errorCode) = status switch
+        var errorCode = status switch
         {
-            FileAccessStatus.TenantSuspended => (TenantSuspendedMessage, ErrorCodes.TenantSuspended),
-            FileAccessStatus.TenantNotFound => (TenantNotFoundMessage, ErrorCodes.TenantNotFound),
+            FileAccessStatus.TenantSuspended => ErrorCodes.TenantSuspended,
+            FileAccessStatus.TenantNotFound => ErrorCodes.TenantNotFound,
             // Cross-tenant access, and anything a later status might add: a verdict this endpoint
             // does not recognise is a refusal, never a reason to remove the file.
-            _ => (CrossTenantAccessMessage, ErrorCodes.CrossTenantFileAccess)
+            _ => ErrorCodes.CrossTenantFileAccess
         };
 
-        ThrowError(message, errorCode);
+        this.ThrowError(errorCode);
     }
 }
 

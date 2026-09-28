@@ -60,7 +60,7 @@ sealed class EditionCreateEndpoint(IEditionService editionService) : Endpoint<Ed
     {
         if (await editionService.NameExistsAsync(request.Name, cancellationToken: cancellationToken))
         {
-            ThrowError(x => x.Name, IEditionService.DuplicateNameMessage, ErrorCodes.EditionNameAlreadyExists);
+            this.ThrowError(x => x.Name, ErrorCodes.EditionNameAlreadyExists);
         }
 
         var requestMapper = new EditionCreateRequestMapper();
@@ -180,17 +180,19 @@ var maxFileSizeMb = await featureChecker.GetAsync(FeatureNames.FileManagement_Ma
 
 ## Errors and status codes
 
-- Business rule violations: `ThrowError("Username already exists", ErrorCodes.UsernameAlreadyExists);`
-  or the property-scoped overload `ThrowError(x => x.Name, msg, code)`. Add new codes to
-  `ErrorHandling/ErrorCodes.cs` as camelCase constants. A message several endpoints share lives as a
-  constant on the service interface (`IEditionService.DuplicateNameMessage`).
+- Business rule violations: `this.ThrowError(ErrorCodes.UsernameAlreadyExists);` or the
+  property-scoped overload `this.ThrowError(x => x.Name, code)` — the call names only the
+  code, never a message; add new codes to `ErrorHandling/ErrorCodes.cs` as
+  `public static readonly ErrorCode` members. Called with the `this.` receiver: a bare `ThrowError(ErrorCodes.X)` never considers
+  extension methods and does not compile, and `this.` binds the extension because no FastEndpoints
+  instance overload accepts an `ErrorCode` — see `api-error-handling`.
 - Missing row (or another tenant's row): `await Send.NotFoundAsync(cancellationToken); return;`
 - No current user: `await Send.UnauthorizedAsync(cancellationToken); return;`
 - System-created rows refuse update/delete after the lookup:
 
 ```csharp
 if (entity.SystemCreated)
-    ThrowError(SystemCreatedMessage, ErrorCodes.SystemCreatedRoleCannotBeDeleted);
+    this.ThrowError(ErrorCodes.SystemCreatedRoleCannotBeDeleted);
 ```
 
 - A unique-index violation that races past the endpoint's own check becomes

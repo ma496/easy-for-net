@@ -37,7 +37,7 @@ sealed class TenantCreateEndpoint(ITenantService tenantService, IEditionService 
         var identifierExists = await tenantService.IdentifierExistsAsync(request.Identifier, cancellationToken: cancellationToken);
         if (identifierExists)
         {
-            ThrowError(x => x.Identifier, ITenantService.DuplicateIdentifierMessage, ErrorCodes.TenantIdentifierAlreadyExists);
+            this.ThrowError(x => x.Identifier, ErrorCodes.TenantIdentifierAlreadyExists);
         }
 
         await RefuseUnknownEditionAsync(request.EditionId, cancellationToken);
@@ -68,7 +68,7 @@ sealed class TenantCreateEndpoint(ITenantService tenantService, IEditionService 
 
         if (await editionService.GetByIdAsync(id, cancellationToken) is null)
         {
-            ThrowError(x => x.EditionId, "Edition not found", ErrorCodes.EditionNotFound);
+            this.ThrowError(x => x.EditionId, ErrorCodes.EditionNotFound);
         }
     }
 }

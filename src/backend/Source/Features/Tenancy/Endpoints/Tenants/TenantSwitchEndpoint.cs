@@ -53,27 +53,6 @@ sealed class TenantSwitchEndpoint(AppDbContext dbContext,
                                   ITenantAuthorizationService tenantAuthorizationService,
                                   ICurrentUserService currentUserService) : Endpoint<TenantSwitchRequest, TenantSwitchResponse>
 {
-    /// <summary>
-    /// The refusal reported for a tenant that does not exist or has been deleted. It carries no name
-    /// and no detail, so the answer for a tenant that never existed and the answer for one that is
-    /// gone are the same answer.
-    /// </summary>
-    private const string TenantNotFoundMessage = "Tenant not found";
-
-    /// <summary>
-    /// The refusal reported when the caller holds no active membership in the tenant selected. Holding
-    /// permissions - even every permission - in another tenant or on the platform is not standing in
-    /// this one; only a membership of it is.
-    /// </summary>
-    private const string NotTenantMemberMessage = "Caller is not a member of this tenant";
-
-    /// <summary>
-    /// The refusal reported when the tenant selected is suspended. A suspended tenant is out of
-    /// service rather than gone, so the caller keeps their session and may select another tenant they
-    /// belong to instead.
-    /// </summary>
-    private const string TenantSuspendedMessage = "The tenant is suspended";
-
     public override void Configure()
     {
         Post("switch");
@@ -98,7 +77,7 @@ sealed class TenantSwitchEndpoint(AppDbContext dbContext,
             .FirstOrDefaultAsync(candidate => candidate.Id == request.TenantId, cancellationToken);
         if (tenant == null)
         {
-            ThrowError(TenantNotFoundMessage, ErrorCodes.TenantNotFound);
+            this.ThrowError(ErrorCodes.TenantNotFound);
         }
 
         // Asked of the membership rows as they stand now, and of nothing the caller's current session
@@ -107,12 +86,12 @@ sealed class TenantSwitchEndpoint(AppDbContext dbContext,
         var isMember = await tenantMembershipService.IsMemberAsync(tenant.Id, userId, cancellationToken);
         if (!isMember)
         {
-            ThrowError(NotTenantMemberMessage, ErrorCodes.NotTenantMember);
+            this.ThrowError(ErrorCodes.NotTenantMember);
         }
 
         if (tenant.Status == TenantStatus.Suspended)
         {
-            ThrowError(TenantSuspendedMessage, ErrorCodes.TenantSuspended);
+            this.ThrowError(ErrorCodes.TenantSuspended);
         }
 
         // Re-establishes the session rather than issuing a second one beside it: the cookie principal

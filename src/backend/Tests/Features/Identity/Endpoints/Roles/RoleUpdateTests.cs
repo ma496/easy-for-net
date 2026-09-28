@@ -81,7 +81,7 @@ public class RoleUpdateTests(App app) : TenancyTestsBase(app)
 
         updateRsp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         res.Errors.Should().ContainSingle();
-        res.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedRoleCannotBeUpdated);
+        res.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedRoleCannotBeUpdated.Value);
     }
 
     /// <summary>
@@ -171,7 +171,7 @@ public class RoleUpdateTests(App app) : TenancyTestsBase(app)
 
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.RoleNameAlreadyExists);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.RoleNameAlreadyExists.Value);
         problem.Errors.First().Name.Should().Be("name", "the caller is told which field to change");
 
         var after = await RoleAsync(renamed);
@@ -221,7 +221,7 @@ public class RoleUpdateTests(App app) : TenancyTestsBase(app)
 
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.RoleNameAlreadyExists);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.RoleNameAlreadyExists.Value);
         problem.Errors.First().Name.Should().Be("name");
 
         var after = await RoleAsync(renamed);

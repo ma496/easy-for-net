@@ -16,8 +16,6 @@ using Backend.Features.Identity.Core;
 /// </remarks>
 sealed class RoleDeleteEndpoint(IRoleService roleService) : Endpoint<RoleDeleteRequest, RoleDeleteResponse>
 {
-    private const string SystemCreatedMessage = "System-created role cannot be deleted";
-
     public override void Configure()
     {
         Delete("{id}");
@@ -36,7 +34,7 @@ sealed class RoleDeleteEndpoint(IRoleService roleService) : Endpoint<RoleDeleteR
             return;
         }
         if (entity.SystemCreated)
-            ThrowError(SystemCreatedMessage, ErrorCodes.SystemCreatedRoleCannotBeDeleted);
+            this.ThrowError(ErrorCodes.SystemCreatedRoleCannotBeDeleted);
 
         // Delete the entity from the db - a soft delete, so the row survives to go on reserving the
         // role's name under the tenant's uniqueness constraint.

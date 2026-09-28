@@ -11,7 +11,7 @@ import { useAppDispatch } from '@/store/hooks'
 import { setUserInfo } from '@/store/slices'
 import { Button, LocalizedLink } from '@/components/ui'
 import { useLocalizedRouter } from '@/hooks'
-import { apiErrorAlert, resolvePlatformLanding, resolveTenantLanding, successToast } from '@/lib/utils'
+import { apiErrorAlert, getErrorCode, resolvePlatformLanding, resolveTenantLanding, successToast } from '@/lib/utils'
 import { isValidRedirectPath } from '@/lib/utils/redirect'
 
 /**
@@ -69,12 +69,7 @@ export const SigninForm = () => {
     // sign-in has always made rather than one naming an empty tenant.
     const tokenRes = await tokenApi({ ...values, tenantIdentifier: values.tenantIdentifier?.trim() || undefined })
     if (tokenRes.error) {
-      console.log('tokenRes.error', tokenRes.error)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const errorData = (tokenRes.error as any).data
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const verificationError = errorData?.errors?.find((err: any) => err.code === 'emailNotVerified')
-      if (verificationError) {
+      if (getErrorCode(tokenRes.error) === 'emailNotVerified') {
         setRegisteredEmail(values.username)
         setShowResendLink(true)
         return

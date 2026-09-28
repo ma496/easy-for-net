@@ -178,11 +178,11 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
     {
         var user = await _userService.GetByIdAsync(Guid.Parse(request.UserId));
         if (user == null)
-            ThrowError(r => r.UserId, "User not found", ErrorCodes.UserNotFound);
+            this.ThrowError(r => r.UserId, ErrorCodes.UserNotFound);
         if (!user.IsActive)
-            ThrowError(r => r.UserId, "User is not active", ErrorCodes.UserNotActive);
+            this.ThrowError(r => r.UserId, ErrorCodes.UserNotActive);
         if (_signinSetting.IsEmailVerificationRequired && !user.IsEmailVerified)
-            ThrowError(r => r.UserId, "Email is not verified", ErrorCodes.EmailNotVerified);
+            this.ThrowError(r => r.UserId, ErrorCodes.EmailNotVerified);
 
         // The tenant of the session being renewed, read off the refresh-token row a moment ago, and then
         // asked whether this account may still act in it. This is the one place a live session's tenant is

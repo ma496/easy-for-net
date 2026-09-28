@@ -13,16 +13,6 @@ using Backend.Features.Tenancy.Core.Entities;
 public interface IEditionService
 {
     /// <summary>
-    /// The refusal reported when a plan name is already taken.
-    /// </summary>
-    const string DuplicateNameMessage = "An edition with this name already exists";
-
-    /// <summary>
-    /// The refusal reported when a plan cannot be deleted because tenants are still on it.
-    /// </summary>
-    const string InUseMessage = "This edition cannot be deleted while tenants are on it";
-
-    /// <summary>
     /// The editions that have not been deleted, as a query the caller narrows further.
     /// </summary>
     /// <returns>A query over the live editions.</returns>

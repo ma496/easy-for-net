@@ -19,19 +19,6 @@ using Backend.Features.Tenancy.Core;
 /// </remarks>
 sealed class TenantSuspendEndpoint(ITenantService tenantService, AppDbContext dbContext) : Endpoint<TenantSuspendRequest, TenantSuspendResponse>
 {
-    /// <summary>
-    /// The refusal reported for a tenant the caller may not act on. Absent, deleted and invisible are
-    /// deliberately one message and one code, so the response cannot reveal whether the tenant named
-    /// ever existed.
-    /// </summary>
-    private const string TenantNotFoundMessage = "Tenant not found";
-
-    /// <summary>
-    /// The refusal reported when the addressed tenant is the system-created bootstrap tenant, which
-    /// the application depends on and so may not be renamed, suspended or deleted.
-    /// </summary>
-    private const string SystemCreatedMessage = "The system-created tenant cannot be suspended";
-
     public override void Configure()
     {
         Post("{id}/suspend");
@@ -46,12 +33,12 @@ sealed class TenantSuspendEndpoint(ITenantService tenantService, AppDbContext db
         var tenant = await tenantService.GetByIdAsync(request.Id, cancellationToken);
         if (tenant == null)
         {
-            ThrowError(TenantNotFoundMessage, ErrorCodes.TenantNotFound);
+            this.ThrowError(ErrorCodes.TenantNotFound);
         }
 
         if (tenant.SystemCreated)
         {
-            ThrowError(SystemCreatedMessage, ErrorCodes.SystemCreatedTenantCannotBeModified);
+            this.ThrowError(ErrorCodes.SystemCreatedTenantCannotBeModified);
         }
 
         // The status is the only thing written: nothing the tenant owns is deleted, detached or

@@ -81,7 +81,7 @@ public class FeatureValueEndpointTests(App app) : FeatureTestsBase(app)
             });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        problem.Errors.First().Code.Should().Be(ErrorCodes.InvalidFeatureValue);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.InvalidFeatureValue.Value);
         (await FeatureValueStore.GetAllAsync(FeatureValueProviderNames.Tenant, tenant.Id.ToString(),
                                              TestContext.Current.CancellationToken))
             .Should().BeEmpty();
@@ -126,7 +126,7 @@ public class FeatureValueEndpointTests(App app) : FeatureTestsBase(app)
             });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        problem.Errors.First().Code.Should().Be(ErrorCodes.FeatureNotFound);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.FeatureNotFound.Value);
     }
 
     [Fact]

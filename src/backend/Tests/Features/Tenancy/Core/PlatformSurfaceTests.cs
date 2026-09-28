@@ -131,7 +131,7 @@ public class PlatformSurfaceTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         refusal.Errors.Should().ContainSingle();
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied,
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied.Value,
             "listing every tenant is platform-scoped, and a session acting inside a tenant holds no platform-scoped permission");
     }
 

@@ -31,11 +31,11 @@ sealed class ResetPasswordEndpoint(ITokenService tokenService,
         var token = await tokenService.GetTokenAsync(request.Token, TokenPurpose.PasswordReset, cancellationToken);
         if (token == null)
         {
-            ThrowError("Token is invalid", ErrorCodes.InvalidToken);
+            this.ThrowError(ErrorCodes.InvalidToken);
         }
         if (!tokenService.ValidateToken(token))
         {
-            ThrowError("Token is expired", ErrorCodes.TokenExpired);
+            this.ThrowError(ErrorCodes.TokenExpired);
         }
         var user = await userService.GetByIdAsync(token.UserId);
         if (user == null)
@@ -49,7 +49,7 @@ sealed class ResetPasswordEndpoint(ITokenService tokenService,
         await userService.UpdateAsync(user);
         if (!await tokenService.UseTokenAsync(token, cancellationToken))
         {
-            ThrowError("Token is invalid", ErrorCodes.InvalidToken);
+            this.ThrowError(ErrorCodes.InvalidToken);
         }
         await authTokenService.RevokeAllAsync(user.Id, cancellationToken);
         await transaction.CommitAsync(cancellationToken);

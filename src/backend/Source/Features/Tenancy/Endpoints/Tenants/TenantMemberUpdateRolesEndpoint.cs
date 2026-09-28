@@ -39,37 +39,6 @@ sealed class TenantMemberUpdateRolesEndpoint(ITenantService tenantService,
                                              ITenantContext tenantContext)
     : Endpoint<TenantMemberUpdateRolesRequest, TenantMemberUpdateRolesResponse>
 {
-    /// <summary>
-    /// The refusal reported to a caller with no standing in the tenant addressed. It is raised before
-    /// the tenant is read, so an absent tenant and somebody else's tenant read the same way here.
-    /// </summary>
-    private const string NotTenantMemberMessage = "Caller may not administer the members of this tenant";
-
-    /// <summary>
-    /// The refusal reported for a tenant the caller may not act on. Absent, deleted and invisible are
-    /// deliberately one message and one code, so the response cannot reveal which of the three it was.
-    /// </summary>
-    private const string TenantNotFoundMessage = "Tenant not found";
-
-    /// <summary>
-    /// The refusal reported when the tenant is suspended. Membership is administered only in a tenant
-    /// that is in service, so the change waits until the tenant is reactivated.
-    /// </summary>
-    private const string TenantSuspendedMessage = "Tenant is suspended";
-
-    /// <summary>
-    /// The refusal reported when a role named does not belong to the tenant being administered - a
-    /// role of another tenant, or a role that exists nowhere. Raised against the roles field, so the
-    /// caller is told which value was refused.
-    /// </summary>
-    private const string RolesOutsideTenantMessage = "One or more roles do not belong to this tenant";
-
-    /// <summary>
-    /// The refusal reported when the member's assignments were replaced by another request while this
-    /// one was replacing them, so that no part of either request is left half-applied.
-    /// </summary>
-    private const string ConcurrentModificationMessage = "Member roles were changed by another request";
-
     public override void Configure()
     {
         Put("{tenantId}/members/{userId}/roles");
@@ -96,7 +65,7 @@ sealed class TenantMemberUpdateRolesEndpoint(ITenantService tenantService,
             (callerId is not { } callerUserId ||
              !await tenantAuthorizationService.HoldsTenantPermissionAsync(callerUserId, request.TenantId, Allow.TenantMember_UpdateRoles, cancellationToken)))
         {
-            ThrowError(NotTenantMemberMessage, ErrorCodes.NotTenantMember);
+            this.ThrowError(ErrorCodes.NotTenantMember);
         }
 
         // Read through the service, so a tenant that never existed, one that has been deleted and one
@@ -104,12 +73,12 @@ sealed class TenantMemberUpdateRolesEndpoint(ITenantService tenantService,
         var tenant = await tenantService.GetByIdAsync(request.TenantId, cancellationToken);
         if (tenant == null)
         {
-            ThrowError(TenantNotFoundMessage, ErrorCodes.TenantNotFound);
+            this.ThrowError(ErrorCodes.TenantNotFound);
         }
 
         if (tenant.Status == TenantStatus.Suspended)
         {
-            ThrowError(TenantSuspendedMessage, ErrorCodes.TenantSuspended);
+            this.ThrowError(ErrorCodes.TenantSuspended);
         }
 
         // A membership is a record inside a tenant, so an account holding none there - never added, or
@@ -132,7 +101,7 @@ sealed class TenantMemberUpdateRolesEndpoint(ITenantService tenantService,
         // that exists nowhere - persists no part of itself.
         if (!await tenantAuthorizationService.AllRolesBelongToTenantAsync(request.TenantId, roleIds, cancellationToken))
         {
-            ThrowError(x => x.Roles, RolesOutsideTenantMessage, ErrorCodes.ReferencedRecordNotFound);
+            this.ThrowError(x => x.Roles, ErrorCodes.ReferencedRecordNotFound);
         }
 
         // The replacement, the membership row it touches and the last-administrator count all happen in
@@ -154,7 +123,7 @@ sealed class TenantMemberUpdateRolesEndpoint(ITenantService tenantService,
             // being withdrawn is this member's own or the last one held anywhere in the tenant.
             if (outcome == TenantMembershipChangeOutcome.LastTenantAdministrator)
             {
-                ThrowError(ITenantMembershipService.LastAdministratorMessage, ErrorCodes.LastTenantAdministrator);
+                this.ThrowError(ErrorCodes.LastTenantAdministrator);
             }
         }
         catch (DbUpdateConcurrencyException)
@@ -162,7 +131,7 @@ sealed class TenantMemberUpdateRolesEndpoint(ITenantService tenantService,
             // The membership's concurrency token was stale, so another request replaced this member's
             // roles while this one was working. Nothing of this request was persisted, and the caller is
             // told to look again rather than left believing a set nobody ever saw whole is in force.
-            ThrowError(ConcurrentModificationMessage, ErrorCodes.ConcurrentModification);
+            this.ThrowError(ErrorCodes.ConcurrentModification);
         }
 
         await Send.ResponseAsync(new()

@@ -19,12 +19,6 @@ sealed class TenantMemberSeatsEndpoint(ICurrentUserService currentUserService,
                                        ITenantAuthorizationService tenantAuthorizationService,
                                        ITenantMembershipService tenantMembershipService) : Endpoint<TenantMemberSeatsRequest, TenantMemberSeatsResponse>
 {
-    /// <summary>
-    /// The refusal reported to a caller with no standing in the tenant addressed - the same answer
-    /// whether that tenant exists or not.
-    /// </summary>
-    private const string NotTenantMemberMessage = "Caller may not view the members of this tenant";
-
     public override void Configure()
     {
         Get("{tenantId}/members/seats");
@@ -41,7 +35,7 @@ sealed class TenantMemberSeatsEndpoint(ICurrentUserService currentUserService,
             if (callerId is not { } caller
                 || !await tenantAuthorizationService.HoldsTenantPermissionAsync(caller, request.TenantId, Allow.TenantMember_View, cancellationToken))
             {
-                ThrowError(NotTenantMemberMessage, ErrorCodes.NotTenantMember);
+                this.ThrowError(ErrorCodes.NotTenantMember);
             }
         }
 

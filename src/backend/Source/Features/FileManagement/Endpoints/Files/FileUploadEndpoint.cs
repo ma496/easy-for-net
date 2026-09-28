@@ -33,13 +33,6 @@ sealed class FileUploadEndpoint(IFileService fileService,
                                 IFeatureChecker featureChecker) : Endpoint<FileUploadRequest, FileUploadResponse>
 {
     /// <summary>
-    /// The refusal reported for a tenant-scoped upload made with no tenant active. A file attributed
-    /// to no tenant and to no account would belong to nobody, and nothing could ever read it again,
-    /// so the upload is refused rather than stored unattributed.
-    /// </summary>
-    private const string NoActiveTenantMessage = "A tenant-scoped file can only be uploaded while acting in a tenant";
-
-    /// <summary>
     /// The unit <c>FileManagement.MaxFileSizeMb</c> is stated in.
     /// </summary>
     private const long BytesPerMegabyte = 1024 * 1024;
@@ -57,7 +50,7 @@ sealed class FileUploadEndpoint(IFileService fileService,
         // no content in storage, and no record pointing at content.
         if (!req.AccountOwned && !HasActiveTenant())
         {
-            ThrowError(NoActiveTenantMessage, ErrorCodes.NoActiveTenant);
+            this.ThrowError(ErrorCodes.NoActiveTenant);
         }
 
         if (HasActiveTenant())

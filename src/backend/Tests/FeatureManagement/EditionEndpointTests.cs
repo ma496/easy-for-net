@@ -47,7 +47,7 @@ public class EditionEndpointTests(App app) : FeatureTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.EditionNameAlreadyExists);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.EditionNameAlreadyExists.Value);
         problem.Errors.First().Name.Should().Be("name", "the form has a field to correct");
     }
 
@@ -108,7 +108,7 @@ public class EditionEndpointTests(App app) : FeatureTestsBase(app)
             .DELETEAsync<EditionDeleteEndpoint, EditionDeleteRequest, ProblemDetails>(new() { Id = edition.Id });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        problem.Errors.First().Code.Should().Be(ErrorCodes.EditionInUse);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.EditionInUse.Value);
 
         // The refusal is what keeps the tenant from silently dropping to the declared defaults.
         (await ResolveForTenantAsync(tenant.Id)).Should().NotBeNull();

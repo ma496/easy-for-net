@@ -1,8 +1,10 @@
+using System.Globalization;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Backend.External.Email;
 using Backend.Features.Identity.Core;
+using Backend.Features.Localization.Core;
 using Backend.Features.Tenancy.Core;
 using Backend.Middleware;
 using Backend.Settings;
@@ -11,6 +13,7 @@ using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.Net.Http.Headers;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -213,6 +216,22 @@ var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
 await seeder.SeedAsync();
 
 app.UseForwardedHeaders();
+
+// Placed ahead of every other middleware that could see a request's culture, and driven by
+// Accept-Language alone (no query string or cookie provider) - a caller names its culture the one
+// way HTTP already gives it. Supported cultures are exactly the shipped resource files, read off the
+// same store the /localization/resources endpoint serves from, so an unshipped or absent header
+// settles on English rather than failing the request.
+var localizationResourceStore = app.Services.GetRequiredService<ILocalizationResourceStore>();
+var supportedCultures = localizationResourceStore.ShippedCultures.Select(culture => new CultureInfo(culture)).ToList();
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture("en"),
+    SupportedCultures = supportedCultures,
+    SupportedUICultures = supportedCultures,
+    RequestCultureProviders = [new AcceptLanguageHeaderRequestCultureProvider()],
+});
+
 if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
 {
     app.UseExceptionHandler();
@@ -234,11 +253,13 @@ app.UseFastEndpoints(
            c.Serializer.Options.Converters.Add(new JsonStringEnumConverter());
            c.Endpoints.Configurator = ep =>
            {
-               ep.PreProcessor<ToLargePayloadProcessor>(Order.Before);
-               // the single tenant enforcement point: it runs after the payload guard and before every
-               // endpoint-level pre-processor, establishes the tenant the request acts in, and
-               // refuses the request when a tenant-scoped endpoint has no usable tenant to act in.
+               // the single tenant enforcement point: registered first, so it runs first - ahead of the
+               // payload guard and every endpoint-level pre-processor - establishes the tenant the
+               // request acts in, and refuses the request when a tenant-scoped endpoint has no usable
+               // tenant to act in. Running it ahead of the payload guard also means a 413 answered below
+               // is localized against the caller's own tenant overrides, not the platform's alone.
                ep.PreProcessor<TenantContextProcessor>(Order.Before);
+               ep.PreProcessor<ToLargePayloadProcessor>(Order.Before);
                ep.PostProcessor<ExceptionProcessor>(Order.After);
                ep.PostProcessor<UnsupportedMediaTypeResponseProcessor>(Order.After);
            };
@@ -259,6 +280,41 @@ app.UseFastEndpoints(
                    _ => "One or more errors occurred!"
                };
            });
+           // The one place a ThrowError call or a validator rule's .WithErrorCode(ErrorCodes.X.Value)
+           // is put into the request's culture: it runs right before the built-in ProblemDetails content
+           // is written, on the same list of failures that content was just built from, so this is the
+           // last chance to change what the caller sees. Every other response shape reaches this too
+           // (a plain 200, a stream, ...), so only a ProblemDetails is touched - everything else passes
+           // through unmodified. A plain FluentValidation rule with no ErrorCodes constant behind it
+           // (NotEmptyValidator, ...) has no error.server.<code> key and is left exactly as written.
+           // FastEndpoints' own SendErrorsAsync runs this too, which is what lets the permission refusal
+           // AuthorizationRefusalResultHandler answers with - built inside UseAuthorization, ahead of
+           // every FastEndpoints pre-processor including TenantContextProcessor - reach it; ErrorLocalization
+           // covers that case by falling back to the session's own tenant_id claim when no scope was
+           // established at all.
+           c.Endpoints.GlobalResponseModifierAsync = async (httpContext, response) =>
+           {
+               if (response is not ProblemDetails problemDetails)
+               {
+                   return;
+               }
+
+               var localizationService = httpContext.RequestServices.GetRequiredService<IErrorMessageLocalizer>();
+               foreach (var error in problemDetails.Errors)
+               {
+                   error.Reason = await localizationService.LocalizeErrorAsync(
+                       httpContext, error.Code, error.Name, error.Reason, httpContext.RequestAborted);
+               }
+
+               // Detail was computed once at construction, from the error the framework built before
+               // this ran - recomputed here so a single-error response's `detail` carries the same
+               // localized text `errors` now does, exactly as FastEndpoints' own default would if the
+               // reason had been correct from the start.
+               if (problemDetails.Errors.Count() == 1)
+               {
+                   problemDetails.Detail = problemDetails.Errors.First().Reason;
+               }
+           };
        });
 
 if (app.Environment.IsDevelopment())

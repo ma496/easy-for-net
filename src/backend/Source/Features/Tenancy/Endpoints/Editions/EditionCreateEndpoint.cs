@@ -29,7 +29,7 @@ sealed class EditionCreateEndpoint(IEditionService editionService) : Endpoint<Ed
         // the backstop when two requests ask at once.
         if (await editionService.NameExistsAsync(request.Name, cancellationToken: cancellationToken))
         {
-            ThrowError(x => x.Name, IEditionService.DuplicateNameMessage, ErrorCodes.EditionNameAlreadyExists);
+            this.ThrowError(x => x.Name, ErrorCodes.EditionNameAlreadyExists);
         }
 
         var requestMapper = new EditionCreateRequestMapper();

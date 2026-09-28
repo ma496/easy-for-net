@@ -69,7 +69,7 @@ public class TenantCreateTests(App app) : TenancyTestsBase(app)
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle("the identifier is the one thing wrong with the request");
         problem.Errors.First().Name.Should().Be("identifier", "the caller is told which value was refused");
-        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantIdentifierAlreadyExists);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantIdentifierAlreadyExists.Value);
 
         var holders = await DbContext.Tenants
             .AcrossAllTenants()

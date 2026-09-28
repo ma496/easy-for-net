@@ -47,14 +47,14 @@ sealed class SignupEndpoint(IUserService userService,
             .AnyAsync(x => x.UsernameNormalized == request.Username.Trim().ToLowerInvariant(), cancellationToken);
         if (usernameExists)
         {
-            ThrowError(x => x.Username, "Username already exists", ErrorCodes.UsernameAlreadyExists);
+            this.ThrowError(x => x.Username, ErrorCodes.UsernameAlreadyExists);
         }
 
         var emailExists = await dbContext.Users
             .AnyAsync(x => x.EmailNormalized == request.Email.Trim().ToLowerInvariant(), cancellationToken);
         if (emailExists)
         {
-            ThrowError(x => x.Email, "Email already exists", ErrorCodes.EmailAlreadyExists);
+            this.ThrowError(x => x.Email, ErrorCodes.EmailAlreadyExists);
         }
 
         // Asked before anything is written, so a taken identifier is a field-level failure on this
@@ -62,7 +62,7 @@ sealed class SignupEndpoint(IUserService userService,
         // still the backstop for two sign-ups racing for the same identifier.
         if (await tenantService.IdentifierExistsAsync(request.TenantIdentifier, cancellationToken: cancellationToken))
         {
-            ThrowError(x => x.TenantIdentifier, ITenantService.DuplicateIdentifierMessage, ErrorCodes.TenantIdentifierAlreadyExists);
+            this.ThrowError(x => x.TenantIdentifier, ErrorCodes.TenantIdentifierAlreadyExists);
         }
 
         // Platform scope is established for the whole handler rather than for the account alone. Saving

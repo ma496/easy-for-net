@@ -136,7 +136,7 @@ public class PlatformScopeIdentityTests(App app) : TenancyTestsBase(app)
             .POSTAsync<UserCreateEndpoint, UserCreateRequest, ProblemDetails>(NewUserRequest(tenantRoleId));
 
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest, "only platform roles can be granted from platform scope");
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.ReferencedRecordNotFound);
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.ReferencedRecordNotFound.Value);
 
         var (created, account) = await Client
             .POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(NewUserRequest(platformRoleId));

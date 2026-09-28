@@ -86,7 +86,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         refused.StatusCode.Should().Be(HttpStatusCode.Forbidden, "the membership that admitted the member is gone, and the tenant is still in service");
         refused.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized, "the removal ends no session and asks for no credentials");
         refusal.Errors.Should().ContainSingle();
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied,
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied.Value,
             "the renewed session carries no tenant and therefore no permission");
 
         // The other tenant is untouched in every part: the membership stands, the roles held there stand,
@@ -122,7 +122,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.LastTenantAdministrator);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.LastTenantAdministrator.Value);
 
         var membership = (await MembershipRowsAsync(tenant.Id, administrator.Id)).Should().ContainSingle().Subject;
 
@@ -258,7 +258,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember.Value);
 
         var membership = (await MembershipRowsAsync(addressed.Id, member.Id)).Should().ContainSingle().Subject;
 
@@ -311,7 +311,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound.Value);
     }
 
     /// <summary>
@@ -363,7 +363,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
         problem.Errors.First().Code.Should().Be(
-            ErrorCodes.LastTenantAdministrator,
+            ErrorCodes.LastTenantAdministrator.Value,
             "the tenant keeps a member, but no member of it would hold tenant administration");
 
         (await GrantedRolesAsync(tenant.Id, administrator.Id))
@@ -488,7 +488,7 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
         problem.Errors.First().Code.Should().Be(
-            ErrorCodes.LastTenantAdministrator,
+            ErrorCodes.LastTenantAdministrator.Value,
             "the only other holder of tenant administration cannot sign in, so removing this member would leave nobody able to administer the tenant");
 
         (await MembershipService.IsMemberAsync(tenant.Id, remaining.Id, cancellationToken))

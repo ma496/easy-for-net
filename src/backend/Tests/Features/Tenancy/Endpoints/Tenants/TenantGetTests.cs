@@ -104,7 +104,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest,
             "what a caller may read is decided by their standing in the tenant, never by which of the two grants admitted them");
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound.Value);
     }
 
     /// <summary>
@@ -128,7 +128,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
             HttpStatusCode.BadRequest,
             "a tenant the caller has no standing in is refused with the code, so its existence cannot be probed");
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound.Value);
 
         // The name is what a response would leak if the tenant had been found and the refusal were
         // merely an authorization failure rather than the same answer an absent tenant gets.
@@ -156,7 +156,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
         deletedResponse.StatusCode.Should().Be(unknownResponse.StatusCode, "the two are one answer, not two");
         deletedResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         deletedProblem.Errors.Should().ContainSingle();
-        deletedProblem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound);
+        deletedProblem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound.Value);
 
         // Compared field by field rather than as whole bodies: the two bodies are not byte-identical,
         // because each carries a trace id of its own, but nothing about the tenant differs between them.
@@ -180,7 +180,7 @@ public class TenantGetTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound.Value);
     }
 
     /// <summary>

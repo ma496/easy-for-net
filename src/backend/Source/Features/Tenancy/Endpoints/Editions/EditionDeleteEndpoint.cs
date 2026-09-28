@@ -31,7 +31,7 @@ sealed class EditionDeleteEndpoint(IEditionService editionService) : Endpoint<Ed
 
         if (await editionService.TenantCountAsync(entity.Id, cancellationToken) > 0)
         {
-            ThrowError(IEditionService.InUseMessage, ErrorCodes.EditionInUse);
+            this.ThrowError(ErrorCodes.EditionInUse);
         }
 
         await editionService.DeleteAsync(entity, cancellationToken);

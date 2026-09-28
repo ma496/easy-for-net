@@ -98,7 +98,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle("the identifier is the one thing wrong with the request");
         problem.Errors.First().Name.Should().Be("identifier", "the caller is told which value was refused");
-        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantIdentifierAlreadyExists);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantIdentifierAlreadyExists.Value);
 
         var stored = await ReloadTenantAsync(tenant.Id);
 
@@ -211,7 +211,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedTenantCannotBeModified);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedTenantCannotBeModified.Value);
 
         var after = await ReloadTenantAsync(TestTenants.BootstrapTenantId);
 
@@ -298,7 +298,7 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
         deletedResponse.StatusCode.Should().Be(unknownResponse.StatusCode, "the two are one answer, not two");
         deletedResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         deletedProblem.Errors.Should().ContainSingle();
-        deletedProblem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound);
+        deletedProblem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound.Value);
 
         // Compared field by field rather than as whole bodies: each body carries a trace id of its own,
         // so only what describes the refusal is expected to be the same.

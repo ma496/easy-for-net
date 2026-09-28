@@ -126,11 +126,12 @@ var (rsp, res) = await Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, P
 rsp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 res.Errors.Select(e => e.Name).Should().Equal("username", "email", "password", "firstName", "lastName", "roles");
 
-refusal.Errors.First().Code.Should().Be(ErrorCodes.CrossTenantFileAccess);
+refusal.Errors.First().Code.Should().Be(ErrorCodes.CrossTenantFileAccess.Value);
 ```
 
 Plan refusals come back as 403 with `ErrorCodes.FeatureDisabled` / `FeatureLimitExceeded`; a missing
-permission as 403 `PermissionDenied`.
+permission as 403 `PermissionDenied`. `ErrorCodes` members are `ErrorCode` structs, not strings — read
+`.Value` when comparing against a response's `Code` (a plain `string`).
 
 ## Shared seed data
 

@@ -32,7 +32,7 @@ sealed class EditionUpdateEndpoint(IEditionService editionService) : Endpoint<Ed
         // The edition keeping its own name is not a clash, so it is excluded from the comparison.
         if (await editionService.NameExistsAsync(request.Name, entity.Id, cancellationToken))
         {
-            ThrowError(x => x.Name, IEditionService.DuplicateNameMessage, ErrorCodes.EditionNameAlreadyExists);
+            this.ThrowError(x => x.Name, ErrorCodes.EditionNameAlreadyExists);
         }
 
         entity.Name = request.Name;

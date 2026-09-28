@@ -12,7 +12,21 @@ const mutex = new Mutex()
 
 const baseQuery = fetchBaseQuery({
   baseUrl: environment.apiUrl,
-  prepareHeaders: (headers) => {
+  // The server localizes every coded error (and the resource dictionary itself) into the culture
+  // named here, so every request - not just the localization fetch - has to carry it. `window.location`
+  // rather than a router hook because this runs outside React, on every query and mutation the app
+  // makes. The `@/i18n` barrel is imported dynamically rather than at the top of the file: this module
+  // sits under every feature API, and `@/i18n` reaches - through `components/layouts`' single barrel -
+  // back up to `@/store` for unrelated reasons of its own, so a static import here would make this
+  // module and the store circularly depend on each other. A dynamic import resolves after `appApi` -
+  // and the feature APIs injected into it - have already finished evaluating, which is what breaks
+  // the cycle; there is no pathname to read on the very first server-rendered response, but that
+  // request never reaches this base query - only the browser's own subsequent calls do.
+  prepareHeaders: async (headers) => {
+    if (typeof window !== 'undefined') {
+      const { localeFromPathname } = await import('@/i18n')
+      headers.set('Accept-Language', localeFromPathname(window.location.pathname))
+    }
     return headers
   },
   credentials: 'include',

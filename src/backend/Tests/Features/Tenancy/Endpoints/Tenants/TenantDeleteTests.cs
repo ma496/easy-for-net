@@ -61,7 +61,7 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
 
         readResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         readProblem.Errors.Should().ContainSingle();
-        readProblem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound);
+        readProblem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound.Value);
 
         var (listResponse, page) = await Client
             .GETAsync<TenantListEndpoint, TenantListRequest, TenantListResponse>(
@@ -157,7 +157,7 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedTenantCannotBeModified);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedTenantCannotBeModified.Value);
 
         var retained = await ReloadTenantAsync(TestTenants.BootstrapTenantId);
 
@@ -185,7 +185,7 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
         firstResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         secondResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound.Value);
 
         var retained = await ReloadRetainedTenantAsync(tenant.Id);
 
@@ -209,7 +209,7 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
             .DELETEAsync<TenantDeleteEndpoint, TenantDeleteRequest, ProblemDetails>(new() { Id = Guid.Empty });
 
         unknownResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        unknownProblem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound);
+        unknownProblem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound.Value);
 
         missingResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         missingProblem.Errors.Should().Contain(error => error.Name == "id", "an empty id never reaches a handler");

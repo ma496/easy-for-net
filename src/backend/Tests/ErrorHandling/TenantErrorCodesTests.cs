@@ -74,14 +74,16 @@ public class TenantErrorCodesTests
 
     /// <summary>
     /// Every code the catalogue declares, by the constant that declares it, read by reflection so that
-    /// the check is against what the assembly holds rather than against a copy of it.
+    /// the check is against what the assembly holds rather than against a copy of it. Each member is a
+    /// <c>static readonly ErrorCode</c> rather than a compile-time literal, since <see cref="ErrorCode"/>
+    /// carries no implicit conversion to <see cref="string"/> for a caller to accidentally rely on.
     /// </summary>
     /// <returns>The declared code values, keyed by constant name.</returns>
     private static Dictionary<string, string> DeclaredCodes()
         => typeof(ErrorCodes)
             .GetFields(BindingFlags.Public | BindingFlags.Static)
-            .Where(field => field is { IsLiteral: true, IsInitOnly: false } && field.FieldType == typeof(string))
+            .Where(field => field.FieldType == typeof(ErrorCode))
             .ToDictionary(
                 field => field.Name,
-                field => (string)field.GetRawConstantValue()!);
+                field => ((ErrorCode)field.GetValue(null)!).Value);
 }

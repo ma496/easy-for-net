@@ -31,10 +31,6 @@ sealed class ChangePermissionsEndpoint(
     IPermissionFeatureFilter permissionFeatureFilter)
     : Endpoint<ChangePermissionsRequest, ChangePermissionsResponse>
 {
-    private const string SystemCreatedMessage = "System-created role permissions cannot be changed";
-    private const string PlatformPermissionMessage = "A platform permission cannot be granted through a tenant role";
-    private const string TenantPermissionMessage = "A tenant permission cannot be granted through a platform role";
-
     public override void Configure()
     {
         Put("change-permissions/{id}");
@@ -55,7 +51,7 @@ sealed class ChangePermissionsEndpoint(
             return;
         }
         if (entity.SystemCreated)
-            ThrowError(SystemCreatedMessage, ErrorCodes.SystemCreatedRolePermissionsCannotBeChanged);
+            this.ThrowError(ErrorCodes.SystemCreatedRolePermissionsCannotBeChanged);
 
         await RefuseOutOfScopePermissionsAsync(entity, request.Permissions, cancellationToken);
 
@@ -156,10 +152,10 @@ sealed class ChangePermissionsEndpoint(
         // selection the caller has to correct.
         if (role.TenantId is null)
         {
-            ThrowError(x => x.Permissions, TenantPermissionMessage, ErrorCodes.TenantPermissionNotGrantable);
+            this.ThrowError(x => x.Permissions, ErrorCodes.TenantPermissionNotGrantable);
         }
 
-        ThrowError(x => x.Permissions, PlatformPermissionMessage, ErrorCodes.PlatformPermissionNotGrantable);
+        this.ThrowError(x => x.Permissions, ErrorCodes.PlatformPermissionNotGrantable);
     }
 }
 

@@ -117,7 +117,7 @@ public class UserCreateTests(App app) : TenancyTestsBase(app)
         reusedUsername.StatusCode.Should().Be(HttpStatusCode.BadRequest,
             "a name taken in another tenant is taken here, because one person authenticates with one account however many tenants they belong to");
         usernameRefusal.Errors.Should().ContainSingle();
-        usernameRefusal.Errors.First().Code.Should().Be(ErrorCodes.UsernameAlreadyExists);
+        usernameRefusal.Errors.First().Code.Should().Be(ErrorCodes.UsernameAlreadyExists.Value);
 
         var attemptedUsername = NewUsername();
         var (reusedEmail, emailRefusal) = await secondClient
@@ -132,7 +132,7 @@ public class UserCreateTests(App app) : TenancyTestsBase(app)
 
         reusedEmail.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         emailRefusal.Errors.Should().ContainSingle();
-        emailRefusal.Errors.First().Code.Should().Be(ErrorCodes.EmailAlreadyExists);
+        emailRefusal.Errors.First().Code.Should().Be(ErrorCodes.EmailAlreadyExists.Value);
 
         // Refused before anything was written: the address in the second attempt is the collision, and
         // the account it would otherwise have created is not there under the name it named.

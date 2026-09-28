@@ -192,7 +192,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
 
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember.Value);
     }
 
     /// <summary>
@@ -213,7 +213,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
 
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember,
+        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember.Value,
             "a platform account enters only a tenant it has been made a member of");
 
         (await MembershipCountAsync(account.Id)).Should().Be(0,
@@ -274,7 +274,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
 
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantSuspended);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantSuspended.Value);
     }
 
     /// <summary>
@@ -388,7 +388,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
         refused.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         refused.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized, "the caller is still authenticated and is offered another tenant rather than signed out");
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied,
+        problem.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied.Value,
             "the renewed session names no tenant, so it holds nothing the endpoint requires");
     }
 
@@ -468,7 +468,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
 
         refused.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied.Value);
     }
 
     /// <summary>
@@ -488,7 +488,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest,
             "nothing is chosen on the caller's behalf when there is a choice to make");
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantRequired);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantRequired.Value);
 
         // Naming one is what the refusal asks for, and the answer then reports the whole choice - so
         // the caller can switch to the other without signing in again.
@@ -592,7 +592,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
 
         refusedRetired.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         refusedUnknown.StatusCode.Should().Be(refusedRetired.StatusCode);
-        retiredProblem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound);
+        retiredProblem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound.Value);
         unknownProblem.Errors.First().Code.Should().Be(retiredProblem.Errors.First().Code);
         unknownProblem.Errors.First().Reason.Should().Be(retiredProblem.Errors.First().Reason, "a tenant that is gone and one that never was are one answer");
     }
@@ -619,7 +619,7 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
 
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantSuspended, "the tenant exists and the caller belongs to it; it is simply not in service");
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantSuspended.Value, "the tenant exists and the caller belongs to it; it is simply not in service");
 
         // The session and the tenant it was acting in are untouched, which is what leaves the caller
         // somewhere to carry on working.

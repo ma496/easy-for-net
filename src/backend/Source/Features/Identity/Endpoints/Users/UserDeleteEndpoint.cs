@@ -11,13 +11,6 @@ sealed class UserDeleteEndpoint(IUserService userService,
                                 ITenantAuthorizationService tenantAuthorizationService,
                                 ITenantContext tenantContext) : Endpoint<UserDeleteRequest, UserDeleteResponse>
 {
-    /// <summary>
-    /// The refusal reported when the account named is a shared identity: it belongs to another tenant
-    /// as well, or holds a platform-scoped role. Deleting an account ends it everywhere, so a tenant
-    /// may delete only an account that is its own.
-    /// </summary>
-    private const string SharedAccountMessage = "User belongs to other tenants and can only be deleted by a platform administrator";
-
     public override void Configure()
     {
         Delete("{id}");
@@ -38,7 +31,7 @@ sealed class UserDeleteEndpoint(IUserService userService,
             return;
         }
         if (entity.SystemCreated)
-            ThrowError("System-created user cannot be deleted", ErrorCodes.SystemCreatedUserCannotBeDeleted);
+            this.ThrowError(ErrorCodes.SystemCreatedUserCannotBeDeleted);
 
         // An account is one identity across every tenant it belongs to, and deleting it ends it in all
         // of them. Administering one tenant is therefore not standing enough to delete an account that
@@ -49,7 +42,7 @@ sealed class UserDeleteEndpoint(IUserService userService,
             if (tenantContext.CurrentTenantId is not { } activeTenantId
                 || await tenantAuthorizationService.ReachesBeyondTenantAsync(entity.Id, activeTenantId, cancellationToken))
             {
-                ThrowError(SharedAccountMessage, ErrorCodes.UserSharedAcrossTenants);
+                this.ThrowError(ErrorCodes.UserSharedAcrossTenants);
             }
         }
 

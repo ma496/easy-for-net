@@ -10,7 +10,7 @@ export {
   clearLocaleCookie,
 } from './locale-cookies'
 export { i18nConfig, type Locale } from './config'
-export { withLocale } from './locale-path'
+export { withLocale, localeFromPathname } from './locale-path'
 export { decideLocaleGuardTarget, type LocaleGuardInput } from './locale-guard'
 export { enabledLocales, resolveLocale } from './resolve-locale'
 export { decideLocaleRouting, type LocaleRoutingCookies, type LocaleRoutingDecision } from './locale-routing'

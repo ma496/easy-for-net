@@ -91,7 +91,7 @@ public class TenantContextResolutionTests(App app) : TenancyTestsBase(app)
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest,
             "the account belongs to two tenants, so which one it came to work in is a question only it can answer");
         problem.Errors.Should().ContainSingle()
-            .Which.Code.Should().Be(ErrorCodes.TenantRequired,
+            .Which.Code.Should().Be(ErrorCodes.TenantRequired.Value,
                 "the caller is told what is missing so the sign-in screen can ask for the tenant rather than show a bare failure");
 
         // Naming one settles it, which is the point of the refusal: it is a question, not a lock-out.
@@ -133,7 +133,7 @@ public class TenantContextResolutionTests(App app) : TenancyTestsBase(app)
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest,
             "an account that belongs to no active tenant is turned away at the door rather than signed in to a session in which nothing works");
         problem.Errors.Should().ContainSingle()
-            .Which.Code.Should().Be(ErrorCodes.TenantRequired);
+            .Which.Code.Should().Be(ErrorCodes.TenantRequired.Value);
 
         // And naming a tenant it does not belong to does not get it in either: the refusal names the
         // standing it lacks rather than the field it left empty.
@@ -149,7 +149,7 @@ public class TenantContextResolutionTests(App app) : TenancyTestsBase(app)
 
         named.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         namedProblem.Errors.Should().ContainSingle()
-            .Which.Code.Should().Be(ErrorCodes.NotTenantMember,
+            .Which.Code.Should().Be(ErrorCodes.NotTenantMember.Value,
                 "membership is what places an account inside a tenant, and this one holds none anywhere");
     }
 }

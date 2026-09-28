@@ -80,7 +80,7 @@ public class TokenTests(App app) : TenancyTestsBase(app)
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest,
             "the caller is anonymous and is told their credentials were not accepted, not sent to renew a session they were never given");
         refusal.Errors.Should().ContainSingle();
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.UserNotActive);
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.UserNotActive.Value);
 
         // The session already issued is not ended in flight - it is trusted until its token is
         // replaced - and the renewal is where deactivation reaches it: the caller cannot get a new
@@ -93,7 +93,7 @@ public class TokenTests(App app) : TenancyTestsBase(app)
         renewal.StatusCode.Should().Be(HttpStatusCode.BadRequest,
             "an account out of service is given no further tokens, whatever memberships it holds");
         renewalRefusal.Errors.Should().ContainSingle();
-        renewalRefusal.Errors.First().Code.Should().Be(ErrorCodes.UserNotActive);
+        renewalRefusal.Errors.First().Code.Should().Be(ErrorCodes.UserNotActive.Value);
 
         (await MembershipIdsAsync(account.Id)).Should().Equal(memberships,
             "deactivating an account withholds its access, it does not take it out of its tenants - the memberships wait untouched for it to be reactivated");
@@ -207,7 +207,7 @@ public class TokenTests(App app) : TenancyTestsBase(app)
         unnamed.StatusCode.Should().Be(HttpStatusCode.BadRequest,
             "two memberships settle nothing by themselves, so the question is put back to the caller rather than answered by a guess");
         refusal.Errors.Should().ContainSingle();
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.TenantRequired);
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.TenantRequired.Value);
 
         var named = await AuthenticatedTenantAsync(account.Username, identifier);
 
@@ -250,13 +250,13 @@ public class TokenTests(App app) : TenancyTestsBase(app)
         ClearAuthToken();
 
         (await RefusalCodeAsync(account.Username, "no-tenant-is-called-this"))
-            .Should().Be(ErrorCodes.TenantNotFound, "an identifier that names nothing names nothing, and says no more than that");
+            .Should().Be(ErrorCodes.TenantNotFound.Value, "an identifier that names nothing names nothing, and says no more than that");
 
         (await RefusalCodeAsync(account.Username, stranger.Identifier))
-            .Should().Be(ErrorCodes.NotTenantMember, "the tenant exists and the account has no standing in it");
+            .Should().Be(ErrorCodes.NotTenantMember.Value, "the tenant exists and the account has no standing in it");
 
         (await RefusalCodeAsync(account.Username, suspended.Identifier))
-            .Should().Be(ErrorCodes.TenantSuspended, "a suspended tenant is out of service, so there is nothing to sign in and do there");
+            .Should().Be(ErrorCodes.TenantSuspended.Value, "a suspended tenant is out of service, so there is nothing to sign in and do there");
     }
 
     /// <summary>
@@ -280,13 +280,13 @@ public class TokenTests(App app) : TenancyTestsBase(app)
         ClearAuthToken();
 
         (await RefusalCodeAsync(account.Username, stranger.Identifier))
-            .Should().Be(ErrorCodes.NotTenantMember, "the platform tier is no standing inside a tenant the account does not belong to");
+            .Should().Be(ErrorCodes.NotTenantMember.Value, "the platform tier is no standing inside a tenant the account does not belong to");
 
         (await AuthenticatedTenantAsync(account.Username, own.Identifier))
             .Should().Be(own.Id, "the account is a member of the tenant it named");
 
         (await RefusalCodeAsync(account.Username, suspended.Identifier))
-            .Should().Be(ErrorCodes.TenantSuspended, "a suspended tenant is out of service for everybody");
+            .Should().Be(ErrorCodes.TenantSuspended.Value, "a suspended tenant is out of service for everybody");
     }
 
     /// <summary>

@@ -23,19 +23,6 @@ using Microsoft.AspNetCore.Authorization.Policy;
 /// </remarks>
 public sealed class AuthorizationRefusalResultHandler : IAuthorizationMiddlewareResultHandler
 {
-    /// <summary>
-    /// The refusal reported for a caller that is signed in and does not hold the permission the
-    /// endpoint it called declares.
-    /// </summary>
-    private const string PermissionDeniedMessage =
-        "The roles you hold do not grant the permission this operation requires.";
-
-    /// <summary>
-    /// The refusal reported for an operation that requires an account when the request carries none.
-    /// </summary>
-    private const string AuthenticationRequiredMessage =
-        "This operation requires an account. Sign in and try again.";
-
     private readonly AuthorizationMiddlewareResultHandler _default = new();
 
     /// <summary>
@@ -53,8 +40,12 @@ public sealed class AuthorizationRefusalResultHandler : IAuthorizationMiddleware
     {
         if (DescribeRefusal(context, authorizeResult) is { } refusal)
         {
+            // No English text is written here: the message is the shipped error.server.<code> text,
+            // read with no database involved, exactly as a freshly thrown ThrowError gives its
+            // own ValidationFailure its starting message.
+            var message = context.ResolveEnglishFallback(refusal.ErrorCode);
             await context.Response.SendErrorsAsync(
-                [new ValidationFailure(string.Empty, refusal.Message) { ErrorCode = refusal.ErrorCode }],
+                [new ValidationFailure(string.Empty, message) { ErrorCode = refusal.ErrorCode.Value }],
                 refusal.StatusCode,
                 cancellation: context.RequestAborted);
             return;
@@ -70,11 +61,11 @@ public sealed class AuthorizationRefusalResultHandler : IAuthorizationMiddleware
     /// <param name="context">The request being handled.</param>
     /// <param name="authorizeResult">The outcome of evaluating the policy.</param>
     /// <returns>
-    /// The status, message and error code to refuse the request with, when authorization refused it for
-    /// a reason this handler can name.
+    /// The status and error code to refuse the request with, when authorization refused it for a reason
+    /// this handler can name.
     /// </returns>
-    private static (int StatusCode, string Message, string ErrorCode)? DescribeRefusal(HttpContext context,
-                                                                                       PolicyAuthorizationResult authorizeResult)
+    private static (int StatusCode, ErrorCode ErrorCode)? DescribeRefusal(HttpContext context,
+                                                                          PolicyAuthorizationResult authorizeResult)
     {
         // A policy that succeeded reached no refusal to explain.
         if (authorizeResult.Succeeded)
@@ -88,7 +79,7 @@ public sealed class AuthorizationRefusalResultHandler : IAuthorizationMiddleware
         // this application answers every unauthenticated request with.
         if (authorizeResult.Challenged)
         {
-            return (StatusCodes.Status401Unauthorized, AuthenticationRequiredMessage, ErrorCodes.AuthenticationRequired);
+            return (StatusCodes.Status401Unauthorized, ErrorCodes.AuthenticationRequired);
         }
 
         // A refusal reached by a caller with no account is not one this handler can explain: there is
@@ -100,6 +91,6 @@ public sealed class AuthorizationRefusalResultHandler : IAuthorizationMiddleware
         }
 
         // Signed in and still refused: the caller does not hold what the endpoint declared.
-        return (StatusCodes.Status403Forbidden, PermissionDeniedMessage, ErrorCodes.PermissionDenied);
+        return (StatusCodes.Status403Forbidden, ErrorCodes.PermissionDenied);
     }
 }

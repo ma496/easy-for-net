@@ -91,7 +91,7 @@ public class UserDeleteTests(App app) : TenancyTestsBase(app)
 
         deleteRsp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         res.Errors.Should().ContainSingle();
-        res.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedUserCannotBeDeleted);
+        res.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedUserCannotBeDeleted.Value);
     }
 
     /// <summary>
@@ -169,7 +169,7 @@ public class UserDeleteTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.UserSharedAcrossTenants);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.UserSharedAcrossTenants.Value);
 
         (await DbContext.Users.AsNoTracking().AnyAsync(account => account.Id == shared.Id, cancellationToken))
             .Should().BeTrue("the account the other tenant also relies on is left in place");

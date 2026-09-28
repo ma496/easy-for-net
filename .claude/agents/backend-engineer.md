@@ -34,8 +34,9 @@ anything, then load the skill for the job: `backend-feature`, `backend-endpoint`
   permission, not by an attribute or a check in the handler.
 - **Tenant data is filtered by the tenant the session acts in**, from `ITenantContext`,
   never from a request parameter.
-- **Errors go through `ThrowError(message, ErrorCodes.X)`**, with a constant from
-  `ErrorHandling/ErrorCodes.cs`. A new code needs its web translation (`api-error-handling`).
+- **Errors go through `this.ThrowError(ErrorCodes.X)`**, naming only the code — never an
+  English message — from `ErrorHandling/ErrorCodes.cs`. A new code needs its
+  `error.server.<code>` key in every resource file (`api-error-handling`).
 - **Sortable list fields are whitelisted in the request validator.**
 - **Do not widen a public surface silently.** A new response field, route or status code
   goes in your report: the web app's DTOs mirror these by name.

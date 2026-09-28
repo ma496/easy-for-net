@@ -90,7 +90,7 @@ public class RoleDeleteTests(App app) : TenancyTestsBase(app)
 
         deleteRsp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         res.Errors.Should().ContainSingle();
-        res.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedRoleCannotBeDeleted);
+        res.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedRoleCannotBeDeleted.Value);
     }
 
     /// <summary>
@@ -118,7 +118,7 @@ public class RoleDeleteTests(App app) : TenancyTestsBase(app)
 
         deleteRsp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedRoleCannotBeDeleted);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedRoleCannotBeDeleted.Value);
 
         var (getRsp, resolved) = await client
             .GETAsync<RoleGetEndpoint, RoleGetRequest, RoleGetResponse>(new() { Id = administratorRoleId });

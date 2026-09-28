@@ -38,21 +38,6 @@ using Backend.Features.Tenancy.Core.FeatureManagement;
 public interface ITenantMembershipService
 {
     /// <summary>
-    /// The message reported when an account already belongs to the tenant it is being added to. The
-    /// add surface raises it against its own user field with
-    /// <see cref="ErrorCodes.DuplicateTenantMembership"/>.
-    /// </summary>
-    const string DuplicateMembershipMessage = "User is already a member of this tenant";
-
-    /// <summary>
-    /// The message reported when a change would leave a tenant with nobody able to administer it.
-    /// Both the removal and the role-replacement surfaces raise it with
-    /// <see cref="ErrorCodes.LastTenantAdministrator"/>, so the refusal reads the same whichever
-    /// change provoked it.
-    /// </summary>
-    const string LastAdministratorMessage = "Tenant must keep at least one member holding tenant administration";
-
-    /// <summary>
     /// Tells whether an account holds a membership of a tenant right now. A membership that was
     /// removed is soft-deleted and so is not one, which is what lets an account that once belonged to
     /// a tenant be added to it again without its earlier removal standing in the way.

@@ -95,7 +95,7 @@ public class UserUpdateTests(App app) : TenancyTestsBase(app)
 
         updateRsp.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         res.Errors.Should().ContainSingle();
-        res.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedUserCannotBeUpdated);
+        res.Errors.First().Code.Should().Be(ErrorCodes.SystemCreatedUserCannotBeUpdated.Value);
     }
 
     /// <summary>
@@ -190,7 +190,7 @@ public class UserUpdateTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.UserSharedAcrossTenants);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.UserSharedAcrossTenants.Value);
 
         var stored = await DbContext.Users
             .AsNoTracking()

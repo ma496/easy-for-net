@@ -28,13 +28,13 @@ sealed class VerifyEmailEndpoint(ITokenService tokenService, IUserService userSe
         var token = await tokenService.GetTokenAsync(request.Token, TokenPurpose.EmailVerification, cancellationToken);
         if (token == null || !tokenService.ValidateToken(token))
         {
-            ThrowError("Invalid or expired token", ErrorCodes.InvalidToken);
+            this.ThrowError(ErrorCodes.InvalidToken);
         }
 
         var user = await userService.GetByIdAsync(token.UserId);
         if (user == null)
         {
-            ThrowError("User not found", ErrorCodes.UserNotFound);
+            this.ThrowError(ErrorCodes.UserNotFound);
             return;
         }
 
@@ -44,7 +44,7 @@ sealed class VerifyEmailEndpoint(ITokenService tokenService, IUserService userSe
         await userService.UpdateAsync(user);
         if (!await tokenService.UseTokenAsync(token, cancellationToken))
         {
-            ThrowError("Invalid or expired token", ErrorCodes.InvalidToken);
+            this.ThrowError(ErrorCodes.InvalidToken);
         }
 
         await transaction.CommitAsync(cancellationToken);

@@ -15,5 +15,6 @@ public class LocalizationFeature : IFeature
     {
         services.AddSingleton<ILocalizationResourceStore, LocalizationResourceStore>();
         services.AddScoped<ILocalizationService, LocalizationService>();
+        services.AddScoped<IErrorMessageLocalizer, ErrorMessageLocalizer>();
     }
 }

@@ -86,7 +86,7 @@ public class FileUploadTests(App app) : FileTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest, "the request is refused rather than answered with a stored name");
         refusal.Errors.Should().ContainSingle();
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.NoActiveTenant,
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.NoActiveTenant.Value,
             "the refusal names the missing tenant, so a caller can tell it from a file that was rejected for its own sake");
 
         (await AnyStoredFileNamedAsync(submittedName)).Should().BeFalse(

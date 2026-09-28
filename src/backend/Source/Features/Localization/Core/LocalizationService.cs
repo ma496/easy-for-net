@@ -5,7 +5,10 @@ using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// Resolves the translation resources and language settings the caller's acting scope sees, and
-/// administers the overrides an administrator edits from the admin screen.
+/// administers the overrides an administrator edits from the admin screen. Internal to the
+/// <c>Localization</c> feature: the global error plumbing that needs to look up a business error's
+/// message reaches this through the narrow, published <see cref="IErrorMessageLocalizer"/> instead of
+/// depending on this interface directly - see that type for the rationale.
 /// </summary>
 /// <remarks>
 /// A text key resolves first answer wins: the acting tenant's own override, then the platform's
@@ -18,7 +21,7 @@ using Backend.Features.Tenancy.Core;
 /// else every shipped culture enabled with no configured default.
 /// </para>
 /// </remarks>
-public interface ILocalizationService
+internal interface ILocalizationService
 {
     /// <summary>
     /// Resolves the resources served for a request naming <paramref name="requestedCulture"/>: the
@@ -27,6 +30,34 @@ public interface ILocalizationService
     /// dictionary for the served culture.
     /// </summary>
     Task<ResolvedResources> ResolveResourcesAsync(string requestedCulture, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resolves the localized message for a business error carrying <paramref name="errorCode"/>, or
+    /// <see langword="null"/> when the served culture (the same resolution <see cref="ResolveResourcesAsync"/>
+    /// documents - the acting tenant's override, then the platform's, then the shipped culture, then
+    /// shipped English) has no <c>error.server.&lt;code&gt;</c> key at all - which is how a plain
+    /// FluentValidation rule (<c>NotEmptyValidator</c>, with no <see cref="ErrorCodes"/> constant behind
+    /// it) is told apart from a business error, and left exactly as FluentValidation wrote it.
+    /// </summary>
+    /// <param name="requestedCulture">The culture negotiated for the request (from its <c>Accept-Language</c> header).</param>
+    /// <param name="errorCode">The <see cref="ErrorCodes"/> value the failure carries.</param>
+    /// <param name="propertyName">
+    /// The request property the error belongs to, exactly as FastEndpoints reports it - camelCased,
+    /// empty for a request-level error. A message containing <c>${propertyName}</c> has it replaced
+    /// with that field's own localized label: a resource key matching the field name with a trailing
+    /// "Normalized" suffix stripped and its first letter lowercased, falling back to the raw field name
+    /// when no such label is shipped.
+    /// </param>
+    /// <param name="sessionTenantId">
+    /// The tenant the caller's session names, read from its <c>tenant_id</c> claim - read only when
+    /// this instance's own <see cref="ITenantContext"/> was never given a scope to begin with, which is
+    /// the case for the handful of error responses built ahead of <c>TenantContextProcessor</c> (the
+    /// permission refusal <c>AuthorizationRefusalResultHandler</c> answers with, in particular). It
+    /// decides nothing but which override text applies; an unresolved tenant context still reads and
+    /// writes nothing on its account.
+    /// </param>
+    /// <param name="cancellationToken">Cancels the resource resolution.</param>
+    Task<string?> TryLocalizeErrorAsync(string requestedCulture, string errorCode, string propertyName, Guid? sessionTenantId = null, CancellationToken cancellationToken = default);
 
     /// <summary>Resolves the effective and inherited language settings for the acting scope.</summary>
     Task<LanguageResolution> ResolveLanguagesAsync(CancellationToken cancellationToken = default);
@@ -50,25 +81,50 @@ public interface ILocalizationService
 
 /// <summary>EF Core-backed implementation of <see cref="ILocalizationService"/>.</summary>
 [NoDirectUse]
-public class LocalizationService(AppDbContext dbContext, ITenantContext tenantContext, ILocalizationResourceStore resourceStore)
+internal class LocalizationService(AppDbContext dbContext, ITenantContext tenantContext, ILocalizationResourceStore resourceStore)
     : ILocalizationService
 {
     /// <summary>
     /// The tenant reads and writes act for, or <see langword="null"/> for platform scope - and also for
     /// a request whose scope was never established at all, which reads exactly as platform scope does:
-    /// no tenant override exists to prefer over the platform's. Only <see cref="ResolveResourcesAsync"/>
+    /// no tenant override exists to prefer over the platform's. Only <see cref="ResolveResourcesAsync(string, CancellationToken)"/>
     /// can see the unresolved case, because it is the one endpoint anonymous callers reach.
     /// </summary>
     private Guid? EffectiveTenantId => tenantContext.IsResolved ? tenantContext.CurrentTenantId : null;
 
+    /// <summary>
+    /// Memoizes a resolution by the tenant it was resolved for and its canonicalized requested culture,
+    /// for the lifetime of this instance - one request or job, since the service is registered scoped.
+    /// Keyed by tenant rather than culture alone because the acting scope genuinely can change within
+    /// that lifetime: a background job iterating several tenants opens <see cref="ITenantContext.BeginTenant"/>
+    /// and disposes it more than once in the same DI scope, and <see cref="TryLocalizeErrorAsync"/>
+    /// below resolves under a caller-supplied fallback tenant of its own when no scope was ever opened
+    /// at all. A key of culture alone would serve either of those a stale or wrong tenant's cache entry.
+    /// </summary>
+    private readonly Dictionary<(Guid? TenantId, string Culture), ResolvedResources> _resolvedByScope = new();
+
     /// <inheritdoc />
-    public async Task<ResolvedResources> ResolveResourcesAsync(string requestedCulture, CancellationToken cancellationToken = default)
+    public Task<ResolvedResources> ResolveResourcesAsync(string requestedCulture, CancellationToken cancellationToken = default)
+        => ResolveResourcesAsync(requestedCulture, EffectiveTenantId, cancellationToken);
+
+    /// <summary>
+    /// Does the work <see cref="ResolveResourcesAsync(string, CancellationToken)"/> publishes, against
+    /// an explicit <paramref name="effectiveTenantId"/> rather than reading <see cref="EffectiveTenantId"/>
+    /// itself - which lets <see cref="TryLocalizeErrorAsync"/> supply its own fallback tenant for the
+    /// requests that reach it with no tenant scope established at all.
+    /// </summary>
+    private async Task<ResolvedResources> ResolveResourcesAsync(string requestedCulture, Guid? effectiveTenantId, CancellationToken cancellationToken)
     {
         requestedCulture = Canonicalize(requestedCulture);
-        var state = await ResolveLanguageStateAsync(cancellationToken);
+        var cacheKey = (effectiveTenantId, requestedCulture);
+        if (_resolvedByScope.TryGetValue(cacheKey, out var cached))
+        {
+            return cached;
+        }
+
+        var state = await ResolveLanguageStateAsync(effectiveTenantId, cancellationToken);
         var servedCulture = ResolveServedCulture(requestedCulture, state.EnabledCultures, state.DefaultCulture);
 
-        var effectiveTenantId = EffectiveTenantId;
         var isTenantScope = effectiveTenantId is not null;
 
         // Every override that could apply to the served culture, for the acting tenant and the
@@ -104,19 +160,62 @@ public class LocalizationService(AppDbContext dbContext, ITenantContext tenantCo
             }
         }
 
-        return new ResolvedResources
+        var result = new ResolvedResources
         {
             Culture = servedCulture,
             DefaultCulture = state.DefaultCulture,
             Languages = [.. state.EnabledCultures.Select(ToLanguageDto)],
             Resources = resources,
         };
+        _resolvedByScope[cacheKey] = result;
+
+        return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<string?> TryLocalizeErrorAsync(string requestedCulture, string errorCode, string propertyName, Guid? sessionTenantId = null, CancellationToken cancellationToken = default)
+    {
+        // The session's own tenant is used only when this instance's scope was never established at
+        // all - a real scope, tenant or platform, always wins over the caller-supplied fallback.
+        var effectiveTenantId = tenantContext.IsResolved ? tenantContext.CurrentTenantId : sessionTenantId;
+        var resolved = await ResolveResourcesAsync(requestedCulture, effectiveTenantId, cancellationToken);
+        var key = $"error.server.{errorCode}";
+
+        if (!resolved.Resources.TryGetValue(key, out var message))
+        {
+            return null;
+        }
+
+        const string placeholder = "${propertyName}";
+        if (message.Contains(placeholder, StringComparison.Ordinal))
+        {
+            var fieldName = ToFieldName(propertyName);
+            var label = resolved.Resources.TryGetValue(fieldName, out var shippedLabel) ? shippedLabel : fieldName;
+            message = message.Replace(placeholder, label, StringComparison.Ordinal);
+        }
+
+        return message;
+    }
+
+    /// <summary>
+    /// Maps a request property name to its form-field label key: a trailing "Normalized" suffix
+    /// stripped, and the first character lowercased ("EmailNormalized" -> "email", "FirstName" ->
+    /// "firstName", "" -> "").
+    /// </summary>
+    private static string ToFieldName(string propertyName)
+    {
+        const string normalizedSuffix = "Normalized";
+        var stripped = propertyName.EndsWith(normalizedSuffix, StringComparison.OrdinalIgnoreCase)
+            ? propertyName[..^normalizedSuffix.Length]
+            : propertyName;
+
+        return stripped.Length == 0 ? stripped : char.ToLowerInvariant(stripped[0]) + stripped[1..];
     }
 
     /// <inheritdoc />
     public async Task<LanguageResolution> ResolveLanguagesAsync(CancellationToken cancellationToken = default)
     {
-        var state = await ResolveLanguageStateAsync(cancellationToken);
+        var state = await ResolveLanguageStateAsync(EffectiveTenantId, cancellationToken);
 
         return new LanguageResolution
         {
@@ -217,6 +316,7 @@ public class LocalizationService(AppDbContext dbContext, ITenantContext tenantCo
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        _resolvedByScope.Clear();
     }
 
     /// <inheritdoc />
@@ -234,6 +334,7 @@ public class LocalizationService(AppDbContext dbContext, ITenantContext tenantCo
 
         dbContext.LocalizationTexts.Remove(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
+        _resolvedByScope.Clear();
     }
 
     /// <inheritdoc />
@@ -256,6 +357,7 @@ public class LocalizationService(AppDbContext dbContext, ITenantContext tenantCo
         entity.DefaultCulture = canonicalDefault;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        _resolvedByScope.Clear();
     }
 
     /// <inheritdoc />
@@ -270,15 +372,15 @@ public class LocalizationService(AppDbContext dbContext, ITenantContext tenantCo
 
         dbContext.LanguageSettings.Remove(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
+        _resolvedByScope.Clear();
     }
 
     /// <summary>
     /// Resolves which cultures the acting scope offers and which is its default, following the
     /// row-level inheritance chain, along with what would apply without this scope's own row.
     /// </summary>
-    private async Task<LanguageState> ResolveLanguageStateAsync(CancellationToken cancellationToken)
+    private async Task<LanguageState> ResolveLanguageStateAsync(Guid? effectiveTenantId, CancellationToken cancellationToken)
     {
-        var effectiveTenantId = EffectiveTenantId;
         var isTenantScope = effectiveTenantId is not null;
 
         // AcrossAllTenants because this must work with no scope resolved at all (a genuinely anonymous

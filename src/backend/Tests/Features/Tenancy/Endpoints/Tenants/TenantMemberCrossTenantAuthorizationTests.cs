@@ -43,7 +43,7 @@ public class TenantMemberCrossTenantAuthorizationTests(App app) : TenancyTestsBa
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember.Value);
 
         (await GrantedRolesAsync(addressed.Id, caller.Id)).Should().BeEmpty(
             "administering one tenant confers nothing in another, so the caller holds in the tenant they addressed exactly what they held before: nothing");
@@ -66,7 +66,7 @@ public class TenantMemberCrossTenantAuthorizationTests(App app) : TenancyTestsBa
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember.Value);
 
         (await MembershipService.IsMemberAsync(addressed.Id, outsider.Id, TestContext.Current.CancellationToken))
             .Should().BeFalse("the refusal happens before anything is written");
@@ -89,7 +89,7 @@ public class TenantMemberCrossTenantAuthorizationTests(App app) : TenancyTestsBa
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember.Value);
 
         (await MembershipService.IsMemberAsync(addressed.Id, administrator.Id, TestContext.Current.CancellationToken))
             .Should().BeTrue("the tenant keeps the member that administers it");
@@ -112,7 +112,7 @@ public class TenantMemberCrossTenantAuthorizationTests(App app) : TenancyTestsBa
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.NotTenantMember.Value);
     }
 
     /// <summary>

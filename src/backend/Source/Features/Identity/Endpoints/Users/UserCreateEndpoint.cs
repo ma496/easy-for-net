@@ -40,14 +40,14 @@ sealed class UserCreateEndpoint(IUserService userService,
             .AnyAsync(x => x.UsernameNormalized == request.Username.Trim().ToLowerInvariant(), cancellationToken);
         if (usernameExists)
         {
-            ThrowError("Username already exists", ErrorCodes.UsernameAlreadyExists);
+            this.ThrowError(ErrorCodes.UsernameAlreadyExists);
         }
 
         var emailExists = await dbContext.Users
             .AnyAsync(x => x.EmailNormalized == request.Email.Trim().ToLowerInvariant(), cancellationToken);
         if (emailExists)
         {
-            ThrowError("Email already exists", ErrorCodes.EmailAlreadyExists);
+            this.ThrowError(ErrorCodes.EmailAlreadyExists);
         }
 
         // The roles a new account may start with are the roles of the tenant being acted in and no
@@ -61,7 +61,7 @@ sealed class UserCreateEndpoint(IUserService userService,
             .CountAsync(role => requestedRoleIds.Contains(role.Id), cancellationToken);
         if (tenantRoleCount != requestedRoleIds.Count)
         {
-            ThrowError(x => x.Roles, "Referenced record does not exist.", ErrorCodes.ReferencedRecordNotFound);
+            this.ThrowError(x => x.Roles, ErrorCodes.ReferencedRecordNotFound);
         }
 
         var requestMapper = new UserCreateRequestMapper();

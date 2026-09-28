@@ -73,7 +73,7 @@ public class MembershipActivationTests(App app) : TenancyTestsBase(app)
         refused.StatusCode.Should().Be(HttpStatusCode.Forbidden);
         problem.Errors.Should().ContainSingle();
         problem.Errors.First().Code.Should().Be(
-            ErrorCodes.PermissionDenied,
+            ErrorCodes.PermissionDenied.Value,
             "the renewal left the session naming no tenant, so it holds no permission and is refused for the authority it lacks");
     }
 

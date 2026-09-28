@@ -29,7 +29,7 @@ sealed class FeatureValueGetEndpoint(IFeatureDefinitionService featureDefinition
     {
         if (!Guid.TryParse(request.ProviderKey, out var providerKey))
         {
-            ThrowError(x => x.ProviderKey, "The provider key is not a valid identifier.", ErrorCodes.InvalidValueProvided);
+            this.ThrowError(x => x.ProviderKey, ErrorCodes.InvalidValueProvided);
         }
 
         // The provider key has to name something that exists, or the screen would happily edit values

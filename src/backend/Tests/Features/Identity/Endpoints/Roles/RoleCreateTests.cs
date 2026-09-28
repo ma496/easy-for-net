@@ -135,7 +135,7 @@ public class RoleCreateTests(App app) : TenancyTestsBase(app)
 
         refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.RoleNameAlreadyExists);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.RoleNameAlreadyExists.Value);
         problem.Errors.First().Name.Should().Be("name", "the caller is told which field to change");
 
         (await RoleIdsInAsync(tenant.Id)).Should().BeEquivalentTo(before,

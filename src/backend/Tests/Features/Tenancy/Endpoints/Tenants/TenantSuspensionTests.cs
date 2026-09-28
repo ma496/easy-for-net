@@ -75,7 +75,7 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
         after.StatusCode.Should().Be(HttpStatusCode.Forbidden, "the tenant being out of service is a refusal of the operation, not of the caller's identity");
         after.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized, "the caller stays signed in and is asked for no credentials");
         refusal.Errors.Should().ContainSingle();
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied,
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied.Value,
             "the renewed session carries no tenant and therefore no permission, so what refuses the call is the authority it lacks");
     }
 
@@ -105,7 +105,7 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
         var (refused, refusal) = await session.Client.GETAsync<UserListEndpoint, UserListRequest, ProblemDetails>(new());
 
         refused.StatusCode.Should().Be(HttpStatusCode.Forbidden);
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied);
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied.Value);
 
         // The same token, on an endpoint that has to answer a caller with no usable tenant: this is
         // how the application learns which tenant to offer instead, so a refusal here would leave the
@@ -171,8 +171,8 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
         suspendedResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden, "a suspended tenant is a refusal, never a sign-out");
         revokedResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden, "so is a membership that was removed");
 
-        suspendedRefusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied);
-        revokedRefusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied);
+        suspendedRefusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied.Value);
+        revokedRefusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied.Value);
 
         // Where the caller goes next is answered here rather than by the refusal: each is still signed
         // in, and each is offered the tenant they still belong to.
@@ -232,7 +232,7 @@ public class TenantSuspensionTests(App app) : TenancyTestsBase(app)
 
         downloadResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest, "the refusal names suspension rather than reporting the file as missing");
         refusal.Errors.Should().ContainSingle();
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.TenantSuspended);
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.TenantSuspended.Value);
 
         // Retained, not destroyed: the record still attributes the file to the tenant, and the bytes
         // are still in storage. A suspension that deleted either would make reactivation a rebuild.

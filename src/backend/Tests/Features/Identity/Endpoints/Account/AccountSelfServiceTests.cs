@@ -77,7 +77,7 @@ public class AccountSelfServiceTests(App app) : TenancyTestsBase(app)
         refused.StatusCode.Should().Be(HttpStatusCode.Forbidden,
             "this caller acts in no tenant and so holds no permission at all, which is the state the flow below has to survive");
         refusal.Errors.Should().ContainSingle();
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied);
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied.Value);
 
         var statuses = await RunFlowAsync(flow, client, account);
 

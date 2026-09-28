@@ -28,13 +28,6 @@ sealed class TenantMemberListEndpoint(ICurrentUserService currentUserService,
                                       ITenantContext tenantContext,
                                       ITenantAuthorizationService tenantAuthorizationService) : Endpoint<TenantMemberListRequest, TenantMemberListResponse>
 {
-    /// <summary>
-    /// The refusal reported to a caller with no standing in the tenant addressed. It is deliberately
-    /// the same answer whether that tenant exists or not, so this surface discloses nothing about
-    /// tenants the caller has nothing to do with.
-    /// </summary>
-    private const string NotTenantMemberMessage = "Caller may not view the members of this tenant";
-
     public override void Configure()
     {
         Get("{tenantId}/members");
@@ -60,7 +53,7 @@ sealed class TenantMemberListEndpoint(ICurrentUserService currentUserService,
             if (callerId is not { } caller
                 || !await tenantAuthorizationService.HoldsTenantPermissionAsync(caller, request.TenantId, Allow.TenantMember_View, cancellationToken))
             {
-                ThrowError(NotTenantMemberMessage, ErrorCodes.NotTenantMember);
+                this.ThrowError(ErrorCodes.NotTenantMember);
             }
         }
 

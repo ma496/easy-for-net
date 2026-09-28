@@ -65,9 +65,15 @@ public sealed class TenantContextProcessor : IGlobalPreProcessor
     /// Reads the identifier of the tenant the session names, or <see langword="null"/> when it names
     /// none or names one that is not a well-formed identifier.
     /// </summary>
+    /// <remarks>
+    /// Internal rather than private so <see cref="Backend.ErrorHandling.ErrorLocalization"/> can read
+    /// the same claim the same way for the handful of error responses built ahead of this processor
+    /// (the permission refusal <see cref="Backend.Middleware.AuthorizationRefusalResultHandler"/>
+    /// answers with), without duplicating the parsing.
+    /// </remarks>
     /// <param name="principal">The principal the request authenticated as.</param>
     /// <returns>The tenant the session was established for, if it names one.</returns>
-    private static Guid? ReadSessionTenantId(ClaimsPrincipal principal)
+    internal static Guid? ReadSessionTenantId(ClaimsPrincipal principal)
         => Guid.TryParse(principal.FindFirstValue(ClaimConstants.TenantId), out var tenantId)
             ? tenantId
             : null;

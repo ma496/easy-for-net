@@ -70,7 +70,7 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantIdentifierAlreadyExists);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantIdentifierAlreadyExists.Value);
         problem.Errors.First().Name.Should().BeEquivalentTo("Identifier", "the refusal is attributed to the field the caller must change");
 
         // Exactly one tenant holds the identifier, and it is the deleted one: the refused request
@@ -105,7 +105,7 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle();
-        problem.Errors.First().Code.Should().Be(ErrorCodes.RoleNameAlreadyExists);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.RoleNameAlreadyExists.Value);
         problem.Errors.First().Name.Should().BeEquivalentTo("Name");
 
         (await CountRolesAsync(tenant.Id)).Should().Be(rolesBefore, "the refused request added no role, not even a deleted one");
@@ -157,7 +157,7 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
             });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantIdentifierAlreadyExists);
+        problem.Errors.First().Code.Should().Be(ErrorCodes.TenantIdentifierAlreadyExists.Value);
     }
 
     /// <summary>
@@ -255,7 +255,7 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
             .POSTAsync<RoleCreateEndpoint, RoleCreateRequest, ProblemDetails>(new() { Name = roleName });
 
         nameResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        nameProblem.Errors.First().Code.Should().Be(ErrorCodes.RoleNameAlreadyExists);
+        nameProblem.Errors.First().Code.Should().Be(ErrorCodes.RoleNameAlreadyExists.Value);
 
         await DeleteTenantAsync(tenant.Id);
 
@@ -267,7 +267,7 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
             });
 
         identifierResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        identifierProblem.Errors.First().Code.Should().Be(ErrorCodes.TenantIdentifierAlreadyExists);
+        identifierProblem.Errors.First().Code.Should().Be(ErrorCodes.TenantIdentifierAlreadyExists.Value);
     }
 
     /// <summary>

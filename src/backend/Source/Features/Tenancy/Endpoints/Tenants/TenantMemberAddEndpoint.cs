@@ -37,38 +37,6 @@ sealed class TenantMemberAddEndpoint(ITenantService tenantService,
                                      ICurrentUserService currentUserService,
                                      ITenantContext tenantContext) : Endpoint<TenantMemberAddRequest, TenantMemberAddResponse>
 {
-    /// <summary>
-    /// The refusal reported to a caller with no standing in the tenant named. It is deliberately the
-    /// same answer for a tenant that does not exist, so the membership surface cannot be used to
-    /// discover which tenants there are.
-    /// </summary>
-    private const string NotTenantMemberMessage = "Caller may not administer the members of this tenant";
-
-    /// <summary>
-    /// The refusal reported for a tenant the caller may not act on. Absent, deleted and invisible are
-    /// deliberately one message and one code.
-    /// </summary>
-    private const string TenantNotFoundMessage = "Tenant not found";
-
-    /// <summary>
-    /// The refusal reported when the tenant named is suspended. A suspended tenant is out of service
-    /// rather than gone, so nothing inside it is changed while it is - its membership included.
-    /// </summary>
-    private const string TenantSuspendedMessage = "Members cannot be added while the tenant is suspended";
-
-    /// <summary>
-    /// The refusal reported when the account named does not exist. A membership joins an existing
-    /// account to a tenant; it never brings an account into being.
-    /// </summary>
-    private const string UserNotFoundMessage = "User not found";
-
-    /// <summary>
-    /// The refusal reported when a role named is not one of this tenant's own. Another tenant's role
-    /// and a role that exists nowhere are one answer, for the same reason a tenant the caller cannot
-    /// see reads as missing.
-    /// </summary>
-    private const string RoleNotFoundMessage = "Referenced record does not exist.";
-
     public override void Configure()
     {
         Post("{tenantId}/members");
@@ -91,7 +59,7 @@ sealed class TenantMemberAddEndpoint(ITenantService tenantService,
             if (callerId is not { } callerUserId
                 || !await tenantAuthorizationService.HoldsTenantPermissionAsync(callerUserId, request.TenantId, Allow.TenantMember_Add, cancellationToken))
             {
-                ThrowError(NotTenantMemberMessage, ErrorCodes.NotTenantMember);
+                this.ThrowError(ErrorCodes.NotTenantMember);
             }
         }
 
@@ -101,12 +69,12 @@ sealed class TenantMemberAddEndpoint(ITenantService tenantService,
         var tenant = await tenantService.GetByIdAsync(request.TenantId, cancellationToken);
         if (tenant == null)
         {
-            ThrowError(TenantNotFoundMessage, ErrorCodes.TenantNotFound);
+            this.ThrowError(ErrorCodes.TenantNotFound);
         }
 
         if (tenant.Status == TenantStatus.Suspended)
         {
-            ThrowError(TenantSuspendedMessage, ErrorCodes.TenantSuspended);
+            this.ThrowError(ErrorCodes.TenantSuspended);
         }
 
         // The account is owned by the identity slice and is only ever asked about through the one
@@ -117,7 +85,7 @@ sealed class TenantMemberAddEndpoint(ITenantService tenantService,
                          && (platformAdministration || !await tenantAuthorizationService.IsPlatformAccountAsync(request.UserId, cancellationToken));
         if (!userExists)
         {
-            ThrowError(x => x.UserId, UserNotFoundMessage, ErrorCodes.UserNotFound);
+            this.ThrowError(x => x.UserId, ErrorCodes.UserNotFound);
         }
 
         // Only a membership that stands right now makes the account a member already: one that was
@@ -126,7 +94,7 @@ sealed class TenantMemberAddEndpoint(ITenantService tenantService,
         var alreadyMember = await tenantMembershipService.IsMemberAsync(request.TenantId, request.UserId, cancellationToken);
         if (alreadyMember)
         {
-            ThrowError(x => x.UserId, ITenantMembershipService.DuplicateMembershipMessage, ErrorCodes.DuplicateTenantMembership);
+            this.ThrowError(x => x.UserId, ErrorCodes.DuplicateTenantMembership);
         }
 
         // Checked before anything is written, so a request naming another tenant's role creates no
@@ -134,7 +102,7 @@ sealed class TenantMemberAddEndpoint(ITenantService tenantService,
         var rolesBelongToTenant = await tenantAuthorizationService.AllRolesBelongToTenantAsync(request.TenantId, request.Roles, cancellationToken);
         if (!rolesBelongToTenant)
         {
-            ThrowError(x => x.Roles, RoleNotFoundMessage, ErrorCodes.ReferencedRecordNotFound);
+            this.ThrowError(x => x.Roles, ErrorCodes.ReferencedRecordNotFound);
         }
 
         // The roles actually granted are reported rather than the ones asked for: a tenant gaining its

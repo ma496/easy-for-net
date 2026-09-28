@@ -26,9 +26,6 @@ sealed class RoleUpdateEndpoint(IRoleService roleService, AppDbContext dbContext
     private const string TenantFilterKey = "Tenant";
     private const string SoftDeleteFilterKey = "SoftDelete";
 
-    private const string DuplicateNameMessage = "Role name already exists";
-    private const string SystemCreatedMessage = "System-created role cannot be updated";
-
     public override void Configure()
     {
         Put("{id}");
@@ -49,7 +46,7 @@ sealed class RoleUpdateEndpoint(IRoleService roleService, AppDbContext dbContext
             return;
         }
         if (entity.SystemCreated)
-            ThrowError(SystemCreatedMessage, ErrorCodes.SystemCreatedRoleCannotBeUpdated);
+            this.ThrowError(ErrorCodes.SystemCreatedRoleCannotBeUpdated);
 
         // Compared within the role's own tenant, against its deleted roles as well as its live ones.
         // The tenant is named in the predicate rather than left to the filter, so the answer is the same
@@ -68,7 +65,7 @@ sealed class RoleUpdateEndpoint(IRoleService roleService, AppDbContext dbContext
         {
             // Attributed to the name field so the web form can attach the message to the input the
             // caller has to change.
-            ThrowError(x => x.Name, DuplicateNameMessage, ErrorCodes.RoleNameAlreadyExists);
+            this.ThrowError(x => x.Name, ErrorCodes.RoleNameAlreadyExists);
         }
 
         var requestMapper = new RoleUpdateRequestMapper();

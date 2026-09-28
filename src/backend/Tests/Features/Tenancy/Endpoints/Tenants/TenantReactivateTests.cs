@@ -120,7 +120,7 @@ public class TenantReactivateTests(App app) : TenancyTestsBase(app)
         deletedResponse.StatusCode.Should().Be(unknownResponse.StatusCode, "the two are one answer, not two");
         deletedResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         deletedProblem.Errors.Should().ContainSingle();
-        deletedProblem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound);
+        deletedProblem.Errors.First().Code.Should().Be(ErrorCodes.TenantNotFound.Value);
 
         deletedProblem.Errors.Select(error => (error.Name, error.Code, error.Reason))
             .Should().BeEquivalentTo(unknownProblem.Errors.Select(error => (error.Name, error.Code, error.Reason)));

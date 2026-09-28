@@ -168,7 +168,7 @@ public class SignupTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problem.Errors.Should().ContainSingle()
-            .Which.Code.Should().Be(ErrorCodes.TenantIdentifierAlreadyExists);
+            .Which.Code.Should().Be(ErrorCodes.TenantIdentifierAlreadyExists.Value);
 
         var created = await DbContext.Users
             .AsNoTracking()

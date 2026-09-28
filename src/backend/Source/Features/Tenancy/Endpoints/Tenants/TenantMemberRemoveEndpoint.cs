@@ -41,18 +41,6 @@ sealed class TenantMemberRemoveEndpoint(ITenantService tenantService,
                                         ITenantContext tenantContext)
     : Endpoint<TenantMemberRemoveRequest, TenantMemberRemoveResponse>
 {
-    /// <summary>
-    /// The refusal reported to a caller with no standing in the tenant addressed. It is raised before
-    /// the tenant is read, so an absent tenant and somebody else's tenant read the same way here.
-    /// </summary>
-    private const string NotTenantMemberMessage = "Caller may not administer the members of this tenant";
-
-    /// <summary>
-    /// The refusal reported for a tenant the caller may not act on. Absent, deleted and invisible are
-    /// deliberately one message and one code, so the response cannot reveal which of the three it was.
-    /// </summary>
-    private const string TenantNotFoundMessage = "Tenant not found";
-
     public override void Configure()
     {
         Delete("{tenantId}/members/{userId}");
@@ -78,7 +66,7 @@ sealed class TenantMemberRemoveEndpoint(ITenantService tenantService,
             (callerId is not { } callerUserId ||
              !await tenantAuthorizationService.HoldsTenantPermissionAsync(callerUserId, request.TenantId, Allow.TenantMember_Remove, cancellationToken)))
         {
-            ThrowError(NotTenantMemberMessage, ErrorCodes.NotTenantMember);
+            this.ThrowError(ErrorCodes.NotTenantMember);
         }
 
         // Read through the service, so a tenant that never existed, one that has been deleted and one
@@ -86,7 +74,7 @@ sealed class TenantMemberRemoveEndpoint(ITenantService tenantService,
         var tenant = await tenantService.GetByIdAsync(request.TenantId, cancellationToken);
         if (tenant == null)
         {
-            ThrowError(TenantNotFoundMessage, ErrorCodes.TenantNotFound);
+            this.ThrowError(ErrorCodes.TenantNotFound);
         }
 
         // A platform account is administered from platform scope only, so to a tenant's own
@@ -119,7 +107,7 @@ sealed class TenantMemberRemoveEndpoint(ITenantService tenantService,
         // administer it, and nothing of the removal was persisted.
         if (outcome == TenantMembershipChangeOutcome.LastTenantAdministrator)
         {
-            ThrowError(ITenantMembershipService.LastAdministratorMessage, ErrorCodes.LastTenantAdministrator);
+            this.ThrowError(ErrorCodes.LastTenantAdministrator);
         }
 
         await Send.ResponseAsync(new() { Success = true }, cancellation: cancellationToken);

@@ -19,13 +19,6 @@ using Backend.Features.Tenancy.Core;
 /// </remarks>
 sealed class TenantReactivateEndpoint(ITenantService tenantService, AppDbContext dbContext) : Endpoint<TenantReactivateRequest, TenantReactivateResponse>
 {
-    /// <summary>
-    /// The refusal reported for a tenant the caller may not act on. Absent, deleted and invisible are
-    /// deliberately one message and one code, so the response cannot reveal whether the tenant named
-    /// ever existed.
-    /// </summary>
-    private const string TenantNotFoundMessage = "Tenant not found";
-
     public override void Configure()
     {
         Post("{id}/reactivate");
@@ -40,7 +33,7 @@ sealed class TenantReactivateEndpoint(ITenantService tenantService, AppDbContext
         var tenant = await tenantService.GetByIdAsync(request.Id, cancellationToken);
         if (tenant == null)
         {
-            ThrowError(TenantNotFoundMessage, ErrorCodes.TenantNotFound);
+            this.ThrowError(ErrorCodes.TenantNotFound);
         }
 
         // The status is the only thing written, and it is the only thing suspension ever changed, so

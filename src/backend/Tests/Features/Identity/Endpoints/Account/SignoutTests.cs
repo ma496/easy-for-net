@@ -80,7 +80,7 @@ public class SignoutTests(App app) : TenancyTestsBase(app)
         unnamed.StatusCode.Should().Be(HttpStatusCode.BadRequest,
             "the previous selection was discarded with the session rather than kept for the next one");
         refusal.Errors.Should().ContainSingle();
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.TenantRequired);
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.TenantRequired.Value);
 
         // And the memberships themselves are untouched: naming either tenant signs the caller in.
         await TestsHelper.SetNewAuthTokenAsync(afterSignout, account.Username, TestUsers.DefaultPassword, other.Identifier);

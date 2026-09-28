@@ -34,7 +34,7 @@ sealed class TenantUpdateEndpoint(ITenantService tenantService, IEditionService 
         var entity = await tenantService.GetByIdAsync(request.Id, cancellationToken);
         if (entity == null)
         {
-            ThrowError("Tenant not found", ErrorCodes.TenantNotFound);
+            this.ThrowError(ErrorCodes.TenantNotFound);
         }
 
         // The bootstrap tenant that every pre-existing row was attributed to cannot be renamed: the
@@ -44,7 +44,7 @@ sealed class TenantUpdateEndpoint(ITenantService tenantService, IEditionService 
         // make it the one tenant nothing could ever be sold to.
         if (entity.SystemCreated && IsRenamed(entity, request))
         {
-            ThrowError("System-created tenant cannot be modified", ErrorCodes.SystemCreatedTenantCannotBeModified);
+            this.ThrowError(ErrorCodes.SystemCreatedTenantCannotBeModified);
         }
 
         // Compared on the stored normalized lower-case form and across retained rows, so an identifier
@@ -54,13 +54,13 @@ sealed class TenantUpdateEndpoint(ITenantService tenantService, IEditionService 
         // value was refused.
         if (await tenantService.IdentifierExistsAsync(request.Identifier, request.Id, cancellationToken))
         {
-            ThrowError(x => x.Identifier, ITenantService.DuplicateIdentifierMessage, ErrorCodes.TenantIdentifierAlreadyExists);
+            this.ThrowError(x => x.Identifier, ErrorCodes.TenantIdentifierAlreadyExists);
         }
 
         if (request.EditionId is { } editionId
             && await editionService.GetByIdAsync(editionId, cancellationToken) is null)
         {
-            ThrowError(x => x.EditionId, "Edition not found", ErrorCodes.EditionNotFound);
+            this.ThrowError(x => x.EditionId, ErrorCodes.EditionNotFound);
         }
 
         var requestMapper = new TenantUpdateRequestMapper();

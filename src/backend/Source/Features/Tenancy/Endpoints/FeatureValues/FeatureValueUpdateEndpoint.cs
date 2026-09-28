@@ -29,7 +29,7 @@ sealed class FeatureValueUpdateEndpoint(IFeatureDefinitionService featureDefinit
     {
         if (!Guid.TryParse(request.ProviderKey, out var providerKey))
         {
-            ThrowError(x => x.ProviderKey, "The provider key is not a valid identifier.", ErrorCodes.InvalidValueProvided);
+            this.ThrowError(x => x.ProviderKey, ErrorCodes.InvalidValueProvided);
         }
 
         var exists = request.ProviderName == FeatureValueProviderNames.Tenant
@@ -48,22 +48,18 @@ sealed class FeatureValueUpdateEndpoint(IFeatureDefinitionService featureDefinit
             var definition = featureDefinitionService.GetOrNull(feature.Name);
             if (definition is null)
             {
-                ThrowError(x => x.Features, $"There is no feature named '{feature.Name}'.", ErrorCodes.FeatureNotFound);
+                this.ThrowError(x => x.Features, ErrorCodes.FeatureNotFound);
                 continue;
             }
 
             if (!definition.AllowsProvider(request.ProviderName))
             {
-                ThrowError(x => x.Features,
-                           $"The feature '{feature.Name}' cannot be set by {request.ProviderName.ToLowerInvariant()}.",
-                           ErrorCodes.FeatureProviderNotAllowed);
+                this.ThrowError(x => x.Features, ErrorCodes.FeatureProviderNotAllowed);
             }
 
             if (!definition.ValueType.IsValid(feature.Value))
             {
-                ThrowError(x => x.Features,
-                           $"'{feature.Value}' is not an acceptable value for '{feature.Name}'.",
-                           ErrorCodes.InvalidFeatureValue);
+                this.ThrowError(x => x.Features, ErrorCodes.InvalidFeatureValue);
             }
         }
 

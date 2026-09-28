@@ -75,7 +75,7 @@ public class FileDeleteTests(App app) : FileTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest, "the file exists and belongs elsewhere, so the removal is refused rather than reported as done");
         refusal.Errors.Should().ContainSingle();
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.CrossTenantFileAccess,
+        refusal.Errors.First().Code.Should().Be(ErrorCodes.CrossTenantFileAccess.Value,
             "the refusal is the same one a read gets, so a known stored name buys nothing here either");
 
         (await StoredFileExistsAsync(storedName)).Should().BeTrue("a refused removal leaves the record where it was");

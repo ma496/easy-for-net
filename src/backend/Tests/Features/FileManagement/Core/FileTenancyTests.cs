@@ -118,13 +118,13 @@ public class FileTenancyTests(App app) : FileTestsBase(app)
             .GETAsync<FileGetEndpoint, FileGetRequest, ProblemDetails>(new() { FileName = storedName });
 
         readResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest, "the file belongs to another tenant, so the read is refused");
-        readRefusal.Errors.First().Code.Should().Be(ErrorCodes.CrossTenantFileAccess);
+        readRefusal.Errors.First().Code.Should().Be(ErrorCodes.CrossTenantFileAccess.Value);
 
         var (deleteResponse, deleteRefusal) = await strangerClient
             .DELETEAsync<FileDeleteEndpoint, FileDeleteRequest, ProblemDetails>(new() { FileName = storedName });
 
         deleteResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest, "the deletion a replacement begins with is refused the same way the read is");
-        deleteRefusal.Errors.First().Code.Should().Be(ErrorCodes.CrossTenantFileAccess);
+        deleteRefusal.Errors.First().Code.Should().Be(ErrorCodes.CrossTenantFileAccess.Value);
 
         var refusedBytes = await RequestContentAsync(strangerClient, storedName);
 
