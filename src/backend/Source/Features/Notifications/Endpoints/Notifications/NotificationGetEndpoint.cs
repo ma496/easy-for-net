@@ -9,10 +9,10 @@ using Backend.Features.Tenancy.Core;
 /// GET endpoint that returns a single notification by id, resolving its per-user read state.
 /// </summary>
 /// <remarks>
-/// The notification is looked for among the ones the caller can see while acting in the active tenant,
-/// which is the same set the list answers from: the tenant's own notifications addressed to them or to
-/// its whole membership, and the platform-wide ones. Both halves matter here - a notification of another
-/// tenant is not the caller's to read, and a platform-wide one is, whichever tenant they act in.
+/// The notification is looked for among the ones the caller can see in the active scope, which is the
+/// same set the list answers from: the scope's own notifications addressed to them or to the tenant's
+/// whole membership, and the platform-wide ones. Both halves matter here - a notification raised in
+/// another scope is not the caller's to read there, and a platform-wide one is, whichever scope they act in.
 /// </remarks>
 sealed class NotificationGetEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext) : Endpoint<NotificationGetRequest, NotificationGetResponse>
 {

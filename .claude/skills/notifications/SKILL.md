@@ -11,7 +11,7 @@ Inject `INotificationService` (from `Backend.Features.Notifications.Core`) and c
 the audience:
 
 ```csharp
-// one member of the active tenant
+// one account, in the active scope - a tenant, or platform scope
 await notificationService.NewUserNotificationAsync(
     userId,
     NotificationType.Warning,
@@ -32,17 +32,22 @@ await notificationService.NewGlobalNotificationAsync(NotificationType.Info,
 
 `NotificationType` is `Info | Warning | Error | Success` and drives the icon/colour in the UI.
 
-**Tenant scope.** Attribution comes from `ITenantContext`, never from an argument. `NewUser…` and
-`NewTenant…` stamp the active tenant and throw `InvalidOperationException` in platform scope (and
-`TenantScopeNotEstablishedException` with no scope at all); the recipient sees the row only while
-acting in that tenant. `NewGlobal…` opens platform scope itself and writes `TenantId = null`. From a
-request the scope is already set; from a background job open it first with
-`tenantContext.BeginTenant(tenantId)` (see `background-jobs`, and `multi-tenancy` for the model).
+**Scope.** Attribution comes from `ITenantContext`, never from an argument, and every method throws
+`TenantScopeNotEstablishedException` with no scope at all. `NewUser…` stamps the active scope: inside
+a tenant the recipient sees the row only while acting in that tenant, and in platform scope the row
+names no tenant and the recipient sees it only while acting in platform scope - this is how a platform
+account is told something personally. `NewTenant…` needs an actual tenant and throws
+`InvalidOperationException` in platform scope, where its row would read as the platform-wide broadcast.
+`NewGlobal…` opens platform scope itself and writes `TenantId = null`. From a request the scope is
+already set. To address the account in a tenant other than the one the request acts in (a platform
+administrator adding a member from platform scope, say) or from a background job, open it first with
+`using (tenantContext.BeginTenant(tenantId)) { ... }` (see `background-jobs`, and `multi-tenancy` for
+the model), after saving any other pending work, because attribution is stamped at save time.
 
-**Cross-feature note:** `INotificationService` lives in the Notifications feature and is not marked
-`[AllowOutside]`, so calling it from another feature fails `FeatureDependencyTests`. Mark the
-interface `[AllowOutside]` (the entities stay private) rather than reaching for `AppDbContext`
-directly. See the `backend-feature` skill.
+**Cross-feature use:** `INotificationService` and `NotificationType` are `[AllowOutside]`, so another
+slice injects the service directly (`TenantMemberAddEndpoint` tells an account it joined a
+tenant). The entities stay private to the slice - never reach for `dbContext.Notifications` from
+outside it. See the `backend-feature` skill.
 
 ## The translation-key contract
 
@@ -58,7 +63,10 @@ file there):
 ```
 
 Never pass user-facing English through `titleKey`/`messageKey`, and never interpolate values into
-the key — variable parts go in `Metadata`.
+the key — variable parts go in `Metadata`. The web app interpolates the top-level string and number
+values of a JSON-object `Metadata` into the text (`notificationVariables` in `lib/utils`), so a
+message `"You have been added to ${tenantName}"` raised with
+`JsonSerializer.Serialize(new { tenantName = tenant.Name })` shows the name.
 
 `Group` is a short lowercase slug used to filter the list; add its label under
 `notifications.groups.<slug>` (the UI falls back to the raw slug). `Metadata` is an opaque JSON
@@ -68,17 +76,21 @@ string for details the UI may show; keep it small and stable.
 
 | Row | `TenantId` | `UserId` | Read state |
 | --- | --- | --- | --- |
-| user | active tenant | recipient | `IsRead` on the row |
+| user, in a tenant | active tenant | recipient | `IsRead` on the row |
+| user, in platform scope | null | recipient | `IsRead` on the row |
 | tenant-wide | active tenant | null | one `NotificationVisit` per user |
 | platform-wide | null | null | one `NotificationVisit` per user |
 
 `NotificationVisits` is unique on (`NotificationId`, `UserId`), because one audience row is shared by
 all its readers.
 
-What a caller sees is "rows of the active tenant, or of no tenant, addressed to them or to nobody" —
-the internal `VisibleTo(userId, activeTenantId)` in `Core/NotificationQueries.cs`, applied over
-`.AcrossAllTenants()` because the tenant filter alone would hide the platform-wide rows. Anything
-that reads, counts or marks notifications uses that shape and handles both read-state branches:
+What a caller sees is "rows of the active scope addressed to them or to nobody, plus the platform-wide
+rows" — so a personal row never crosses between a tenant and platform scope, and only the platform-wide
+broadcast is seen everywhere. That is the internal `VisibleTo(userId, activeTenantId)` in
+`Core/NotificationQueries.cs`, applied over `.AcrossAllTenants()` because the tenant filter alone would
+hide the platform-wide rows from a caller acting in a tenant. Anything that reads, counts or marks
+notifications goes through it (the one hand-written SQL statement in mark-all-as-read spells the same
+rule out for audience rows) and handles both read-state branches:
 `GetUnreadCountAsync` combines "my unread rows" with "audience rows I have not visited", and
 `NotificationMarkAsReadEndpoint` either flips `IsRead` or inserts a visit row. Copy it rather than
 inventing a third scheme.
@@ -93,32 +105,39 @@ Under `Features/Notifications/Endpoints/Notifications` with the `notifications` 
 (`GET ""`, filters `isRead` and `group`), `GET {id}`, `DELETE {id}`, `POST {id}/mark-as-read`,
 `POST {id}/mark-as-unread`, `POST mark-all-as-read`, `GET unread-count`, `GET groups`. There is no
 create endpoint — notifications are raised by server code. They are authenticated but carry **no
-permission** — every signed-in user sees their own notifications. Follow that when adding one.
+permission** — every signed-in user sees their own notifications. Follow that when adding one. An
+ordinary account whose tenant was dropped at token renewal acts in platform scope and is answered
+with the platform-wide broadcasts alone; that is harmless, and the web app sends it to
+`/select-tenant` rather than polling.
 
 ## Web side
 
 - `notificationsApi` (`store/api/notifications/notifications`) uses the `Notifications` tag type;
-  mutations invalidate the collection plus the touched row. `notificationGetUnreadCount` is
-  deliberately untagged because it polls.
+  mutations invalidate the collection plus the touched row. `notificationGetUnreadCount` provides
+  `{ type: 'Notifications', id: 'UNREAD_COUNT' }`, so every mutation refetches the badge at once;
+  a notification mutation must keep invalidating the `Notifications` type, or the badge waits for the poll.
 - `useNotificationHub()` polls the unread count every 30 s and mirrors it into
   `notificationsSlice.unreadCount`. It skips polling when the caller has no active tenant and is not
-  a platform account acting in none. It is mounted once, in `components/layouts/header.tsx` — do not
+  a platform account acting in none (that caller is on `/select-tenant`). It is mounted once, in `components/layouts/header.tsx` — do not
   mount it per screen.
 - `components/notifications/` holds `NotificationBell` (badge), `NotificationPanel` (dropdown list)
-  and `NotificationItem` (single row, renders `t(titleKey)` / `t(messageKey)`), with full pages under
+  and `NotificationItem` (single row, renders `t(titleKey, notificationVariables(metadata))` and the
+  same for `messageKey`), with full pages under
   `app/[lang]/admin/notifications/` (`list`, `[id]`).
 
 ## Testing
 
 Derive from `NotificationsTestsBase` (it carries `[Collection("Notifications")]`, because
 platform-wide rows reach every account) and use its `CreateUserNotificationAsync`,
-`CreateTenantNotificationAsync`, `CreateGlobalNotificationAsync` and `IsVisitedAsync` helpers.
+`CreateTenantNotificationAsync`, `CreatePlatformUserNotificationAsync`, `CreateGlobalNotificationAsync`
+and `IsVisitedAsync` helpers. `NotificationPlatformScopeTests` shows asking one platform account from
+both sides of the boundary: `ClientForAsync(username)` signs it in to platform scope,
+`ClientForAsync(username, tenantId)` to its tenant.
 
 ## Checklist
 
 - [ ] Called `NewUserNotificationAsync` / `NewTenantNotificationAsync` / `NewGlobalNotificationAsync` with key strings, not text
-- [ ] A tenant scope is active for user and tenant-wide notifications (jobs open one explicitly)
+- [ ] The scope the recipient will read it in is active: their tenant, or platform scope for a platform account (jobs and cross-tenant callers open one explicitly)
 - [ ] `notifications.<name>.title` and `.message` added to every backend resource file
 - [ ] `notifications.groups.<slug>` added if a new group was introduced
-- [ ] `[AllowOutside]` in place if the caller is in another feature
 - [ ] Any new endpoint reads through `AcrossAllTenants().VisibleTo(...)` and handles both read-state branches

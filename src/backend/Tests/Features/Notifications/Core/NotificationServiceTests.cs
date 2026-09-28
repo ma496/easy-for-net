@@ -146,6 +146,51 @@ public class NotificationServiceTests(App app) : NotificationsTestsBase(app)
     /// A title key no other test can collide with, in the shape the list's search can be pointed at.
     /// </summary>
     /// <returns>The key.</returns>
+    /// <summary>
+    /// Verifies that a notification addressed to one account while acting in platform scope names no tenant,
+    /// reaches that account in platform scope, and does not follow it into a tenant it belongs to.
+    /// </summary>
+    [Fact]
+    public async Task Addresses_A_Single_Account_In_Platform_Scope()
+    {
+        var tenant = await CreateTenantAsync();
+        var recipient = await CreateTenantUserAsync(tenant.Id);
+        await MarkAsPlatformAccountAsync(recipient.Id);
+
+        var titleKey = NewTitleKey();
+
+        using (TenantContext.BeginPlatformScope())
+        {
+            await NotificationService.NewUserNotificationAsync(
+                recipient.Id, NotificationType.Info, titleKey, $"{titleKey}.message", cancellationToken: TestContext.Current.CancellationToken);
+        }
+
+        var stored = await NotificationByTitleAsync(titleKey);
+        stored.TenantId.Should().BeNull("a notice raised in platform scope belongs to no tenant");
+        stored.UserId.Should().Be(recipient.Id,
+            "and it names its recipient, which is what tells it apart from the platform-wide broadcast");
+
+        (await SearchIdsAsync(await ClientForAsync(recipient.Username), titleKey)).Should().Contain(stored.Id,
+            "the recipient acting in platform scope is shown it");
+        (await SearchIdsAsync(await ClientForAsync(recipient.Username, tenant.Id), titleKey)).Should().BeEmpty(
+            "the same recipient acting in a tenant is not, so a platform-scope notice stays in platform scope");
+    }
+
+    /// <summary>
+    /// Verifies that a tenant-wide notification cannot be raised in platform scope, where a row naming
+    /// neither a tenant nor a user would be read as the platform-wide broadcast.
+    /// </summary>
+    [Fact]
+    public async Task Refuses_A_Tenant_Wide_Notification_In_Platform_Scope()
+    {
+        using var platformScope = TenantContext.BeginPlatformScope();
+
+        var raise = () => NotificationService.NewTenantNotificationAsync(
+            NotificationType.Info, NewTitleKey(), "test.message.tenancy", cancellationToken: TestContext.Current.CancellationToken);
+
+        await raise.Should().ThrowAsync<InvalidOperationException>();
+    }
+
     private static string NewTitleKey() => $"test.title.tenancy.{Guid.NewGuid()}";
 
     /// <summary>

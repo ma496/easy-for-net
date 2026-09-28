@@ -1,13 +1,14 @@
 namespace Backend.Features.Notifications.Endpoints.Notifications;
 
 using Backend.Features.Identity.Core;
+using Backend.Features.Notifications.Core;
 using Backend.Features.Notifications.Core.Entities;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
-/// POST endpoint that marks every notification the current user can see while acting in the active tenant
-/// as read: their own unread notifications of that tenant, the notifications addressed to the whole tenant,
-/// and the platform-wide ones. Notifications raised in the caller's other tenants are left unread.
+/// POST endpoint that marks every notification the current user can see in the active scope as read: their
+/// own unread notifications raised in that scope, the notifications addressed to the whole tenant, and the
+/// platform-wide ones. Personal notifications raised in another scope are left unread.
 /// </summary>
 /// <remarks>
 /// Both halves below are bulk statements rather than per-record saves - one <c>ExecuteUpdate</c> and one
@@ -49,14 +50,14 @@ sealed class NotificationMarkAllAsReadEndpoint(AppDbContext dbContext, ICurrentU
 
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        // Tenant restriction is relaxed by name and narrowed straight back down by hand, the same way the
-        // list and unread-count reads do it, so the rows this bulk update touches are the caller's own
-        // notifications in the active tenant and nothing else. The soft-delete filter stays in force.
+        // Tenant restriction is relaxed by name and narrowed straight back down through the same
+        // VisibleTo the list and unread-count reads use, so the rows this bulk update touches are the
+        // caller's own notifications raised in the active scope and nothing else. The soft-delete filter
+        // stays in force.
         await dbContext.Notifications
             .AcrossAllTenants()
-            .Where(x => (x.TenantId == activeTenantId || x.TenantId == null)
-                        && x.UserId == userId.Value
-                        && !x.IsRead)
+            .VisibleTo(userId.Value, activeTenantId)
+            .Where(x => x.UserId == userId.Value && !x.IsRead)
             .ExecuteUpdateAsync(setters => setters.SetProperty(notification => notification.IsRead, true), cancellationToken);
 
         // Read state for a notification addressed to an audience rather than to one user lives in a visit

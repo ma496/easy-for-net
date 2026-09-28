@@ -4,13 +4,12 @@ using Backend.ShareData.Entities.Base;
 
 /// <summary>
 /// Represents a notification together with the audience it is addressed to. <see cref="TenantId"/> and
-/// <see cref="UserId"/> combine into three addressing modes: both set means a single member of that tenant,
-/// a tenant with no user means every member of that tenant, and both null means every user of the platform.
-/// A platform-wide notification therefore stays distinguishable from a tenant-wide one precisely because its
-/// tenant is null, and a tenant-scoped notification is only ever shown to recipients acting in that tenant.
-/// A notification addressed to a user always names that user's tenant: a null tenant with a user set is not
-/// an addressing mode, and a row in that state would follow its recipient into every tenant they act in.
-/// Notifications are auditable and support soft deletion.
+/// <see cref="UserId"/> combine into four addressing modes: both set means a single member of that tenant,
+/// a tenant with no user means every member of that tenant, a user with no tenant means that one account
+/// while it acts in platform scope, and both null means every user of the platform, whichever scope they
+/// act in. A personal notification - tenant or platform - is shown only in the scope it was raised in, so
+/// a platform-scope one never follows its recipient into a tenant; only the platform-wide broadcast is seen
+/// everywhere. Notifications are auditable and support soft deletion.
 /// </summary>
 public class Notification : AuditableEntity<Guid>, ISoftDelete, IMayHaveTenant
 {
@@ -28,7 +27,8 @@ public class Notification : AuditableEntity<Guid>, ISoftDelete, IMayHaveTenant
     public DateTime? DeletedAt { get; set; }
 
     // The tenant the notification belongs to. Null means platform scope: combined with a null UserId
-    // it is the platform-wide notification every user sees, whichever tenant they are acting in.
+    // it is the platform-wide notification every user sees, whichever tenant they are acting in, and
+    // combined with a UserId it is a personal notification seen only while acting in platform scope.
     public Guid? TenantId { get; set; }
     public Guid? UserId { get; set; }
 

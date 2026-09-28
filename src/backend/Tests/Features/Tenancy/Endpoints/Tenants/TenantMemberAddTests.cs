@@ -69,6 +69,16 @@ public class TenantMemberAddTests(App app) : TenancyTestsBase(app)
         var membership = (await MembershipRowsAsync(tenant.Id, account.Id)).Should().ContainSingle().Subject;
 
         membership.IsDeleted.Should().BeFalse();
+
+        // Raised in the tenant joined, although the caller acts in platform scope, so the new member
+        // finds it once they act there; the tenant's name travels in the metadata the text interpolates.
+        var notice = await DbContext.Notifications
+            .AcrossAllTenants()
+            .AsNoTracking()
+            .SingleAsync(notification => notification.UserId == account.Id && notification.TitleKey == "notifications.tenantMemberAdded.title",
+                         TestContext.Current.CancellationToken);
+        notice.TenantId.Should().Be(tenant.Id, "the new member is told inside the tenant they joined");
+        System.Text.Json.JsonDocument.Parse(notice.Metadata!).RootElement.GetProperty("tenantName").GetString().Should().Be(tenant.Name);
     }
 
     /// <summary>

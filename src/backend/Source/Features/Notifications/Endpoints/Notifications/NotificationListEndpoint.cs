@@ -7,12 +7,12 @@ using Backend.Features.Notifications.Core.Entities;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
-/// GET endpoint that returns a paged, filterable list of the notifications the current user can see while
-/// acting in the active tenant, resolving per-user read state for the notifications addressed to an audience
-/// rather than to one user. Three addressing modes reach the caller: the notifications of the active tenant
-/// addressed to them personally, the notifications addressed to every member of that tenant, and the
-/// platform-wide notifications, which name no tenant and therefore stay visible whichever tenant the caller
-/// is acting in. Notifications raised in the caller's other tenants are not listed.
+/// GET endpoint that returns a paged, filterable list of the notifications the current user can see in the
+/// active scope, resolving per-user read state for the notifications addressed to an audience rather than to
+/// one user. Three addressing modes reach the caller: the notifications of the active scope - the tenant, or
+/// platform scope - addressed to them personally, the notifications addressed to every member of the tenant,
+/// and the platform-wide notifications, which name neither a tenant nor a user and therefore stay visible
+/// in every scope. Personal notifications raised in another scope are not listed.
 /// </summary>
 sealed class NotificationListEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext) : Endpoint<NotificationListRequest, NotificationListResponse>
 {

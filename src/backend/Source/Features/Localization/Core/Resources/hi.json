@@ -739,6 +739,10 @@
     "welcome": {
       "title": "स्वागत है",
       "message": "आवेदन में आपका स्वागत है"
+    },
+    "tenantMemberAdded": {
+      "title": "एक टेनेंट में जोड़ा गया",
+      "message": "आपको ${tenantName} में जोड़ा गया है"
     }
   }
 }

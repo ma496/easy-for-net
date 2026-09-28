@@ -1,7 +1,9 @@
 namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
+using System.Text.Json;
 using Backend.ShareData.Entities;
 using Backend.Features.Identity.Core;
+using Backend.Features.Notifications.Core;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
 
@@ -35,7 +37,8 @@ sealed class TenantMemberAddEndpoint(ITenantService tenantService,
                                      ITenantMembershipService tenantMembershipService,
                                      ITenantAuthorizationService tenantAuthorizationService,
                                      ICurrentUserService currentUserService,
-                                     ITenantContext tenantContext) : Endpoint<TenantMemberAddRequest, TenantMemberAddResponse>
+                                     ITenantContext tenantContext,
+                                     INotificationService notificationService) : Endpoint<TenantMemberAddRequest, TenantMemberAddResponse>
 {
     public override void Configure()
     {
@@ -109,6 +112,20 @@ sealed class TenantMemberAddEndpoint(ITenantService tenantService,
         // first member also gives that member the tenant's system-created administrator role, so that
         // every tenant is administrable from inside it from the moment anybody is in it.
         var result = await tenantMembershipService.AddAsync(request.TenantId, request.UserId, request.Roles, cancellationToken);
+
+        // Raised in the tenant the account joined rather than the one the caller acts in - a platform
+        // administrator adds members from platform scope - so the new member finds it once they act in
+        // that tenant. The membership is already committed, so nothing unsaved is flushed in this scope.
+        using (tenantContext.BeginTenant(request.TenantId))
+        {
+            await notificationService.NewUserNotificationAsync(request.UserId,
+                                                               NotificationType.Info,
+                                                               "notifications.tenantMemberAdded.title",
+                                                               "notifications.tenantMemberAdded.message",
+                                                               "system",
+                                                               JsonSerializer.Serialize(new { tenantName = tenant.Name }),
+                                                               cancellationToken);
+        }
 
         var response = new TenantMemberAddResponse
         {

@@ -4,12 +4,12 @@ using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
 
 /// <summary>
-/// GET endpoint that returns the number of unread notifications the current user can see while acting in
-/// the active tenant. The count is the unread part of exactly the set <c>NotificationListEndpoint</c> would
-/// list: the caller's own unread notifications in the active tenant, the notifications addressed to every
-/// member of that tenant they have not visited, and the platform-wide notifications they have not visited.
-/// Notifications raised in the caller's other tenants are never counted, so the badge cannot advertise a
-/// notification the list will not show.
+/// GET endpoint that returns the number of unread notifications the current user can see in the active
+/// scope. The count is the unread part of exactly the set <c>NotificationListEndpoint</c> would list: the
+/// caller's own unread notifications raised in that scope, the notifications addressed to every member of
+/// the tenant they have not visited, and the platform-wide notifications they have not visited. Personal
+/// notifications raised in another scope are never counted, so the badge cannot advertise a notification
+/// the list will not show.
 /// </summary>
 sealed class NotificationGetUnreadCountEndpoint(ICurrentUserService currentUserService, INotificationService notificationService) : EndpointWithoutRequest<NotificationGetUnreadCountResponse>
 {
@@ -28,9 +28,8 @@ sealed class NotificationGetUnreadCountEndpoint(ICurrentUserService currentUserS
             return;
         }
 
-        // The tenant narrowing lives in the service: it reads the active scope itself and counts only
-        // the rows the list endpoint would show. The list endpoint spells the same predicate out over
-        // its own query, so the two are kept in step by hand and have to be changed together.
+        // The scope narrowing lives in the service: it reads the active scope itself and counts only
+        // the rows the list endpoint would show, through the same VisibleTo the list reads through.
         var count = await notificationService.GetUnreadCountAsync(userId.Value, cancellationToken);
 
         await Send.ResponseAsync(new NotificationGetUnreadCountResponse { Count = count }, cancellation: cancellationToken);
@@ -38,7 +37,7 @@ sealed class NotificationGetUnreadCountEndpoint(ICurrentUserService currentUserS
 }
 
 /// <summary>
-/// Response payload containing the unread notification count for the current user in the active tenant.
+/// Response payload containing the unread notification count for the current user in the active scope.
 /// </summary>
 public sealed class NotificationGetUnreadCountResponse
 {

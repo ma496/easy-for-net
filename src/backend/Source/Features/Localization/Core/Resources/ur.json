@@ -739,6 +739,10 @@
     "welcome": {
       "title": "خوش آمدید",
       "message": "ایپلیکیشن میں خوش آمدید"
+    },
+    "tenantMemberAdded": {
+      "title": "ایک ٹیننٹ میں شامل کیا گیا",
+      "message": "آپ کو ${tenantName} میں شامل کر دیا گیا ہے"
     }
   }
 }

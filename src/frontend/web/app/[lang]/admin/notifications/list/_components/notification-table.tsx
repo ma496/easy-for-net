@@ -4,7 +4,7 @@ import { useTranslation } from '@/i18n'
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
 import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableFilterButton, DataTableToolbarButton } from '@/components/ui/data-table'
 import { ApiErrorMessages, Badge, LocalizedLink, Truncated } from '@/components/ui'
-import { apiErrorAlert, confirmAlert, confirmDeleteAlert, successToast } from '@/lib/utils'
+import { apiErrorAlert, confirmAlert, confirmDeleteAlert, notificationVariables, successToast } from '@/lib/utils'
 import {
   NotificationDto,
   NotificationType,
@@ -195,7 +195,7 @@ export const NotificationTable = () => {
           href={`/admin/notifications/${info.row.original.id}`}
           className="font-medium text-primary hover:underline"
         >
-          {t(info.getValue())}
+          {t(info.getValue(), notificationVariables(info.row.original.metadata))}
         </LocalizedLink>
       )
     }),
@@ -203,7 +203,7 @@ export const NotificationTable = () => {
       header: t('table.columns.message'),
       cell: (info) => (
         <Truncated
-          text={t(info.getValue())}
+          text={t(info.getValue(), notificationVariables(info.row.original.metadata))}
           className="text-gray-500 dark:text-gray-400"
           underline={false}
         />

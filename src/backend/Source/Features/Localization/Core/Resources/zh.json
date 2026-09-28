@@ -739,6 +739,10 @@
     "welcome": {
       "title": "欢迎",
       "message": "欢迎使用应用程序"
+    },
+    "tenantMemberAdded": {
+      "title": "已加入租户",
+      "message": "您已被添加到 ${tenantName}"
     }
   }
 }

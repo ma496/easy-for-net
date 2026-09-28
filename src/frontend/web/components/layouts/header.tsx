@@ -20,7 +20,7 @@ export const Header = () => {
   const pathname = usePathname()
   const dispatch = useAppDispatch()
   const themeConfig = useAppSelector((state) => state.theme)
-  // Notifications are read in the tenant being acted in, or in platform scope by a platform administrator acting in none; anybody else has none to show.
+  // Notifications are read in the tenant being acted in, or in platform scope by a platform account acting in none. An ordinary account left with no tenant is sent to choose one, so the bell waits until it has.
   const canReadNotifications = useAppSelector((state) => state.auth.activeTenant != null || isPlatformWithoutTenant(state.auth.user))
   const { t } = useTranslation()
 

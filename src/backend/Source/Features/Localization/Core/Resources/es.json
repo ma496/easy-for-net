@@ -739,6 +739,10 @@
     "welcome": {
       "title": "Bienvenido",
       "message": "Bienvenido a la aplicación"
+    },
+    "tenantMemberAdded": {
+      "title": "Añadido a un inquilino",
+      "message": "Se te ha añadido a ${tenantName}"
     }
   }
 }

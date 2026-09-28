@@ -12,8 +12,10 @@ const POLL_INTERVAL_MS = 30_000
  * syncs the result into the notifications Redux slice. Designed to be
  * mounted once (e.g. in the app shell) to keep the badge counter live.
  * Notifications are read in the tenant being acted in, or in platform scope by a
- * platform administrator acting in none, so nothing is polled for anybody else
- * without an active tenant - they would only be refused on every poll.
+ * platform account acting in none. An ordinary account left with no tenant (its
+ * tenant suspended or left, and dropped when the session was renewed) is not
+ * refused by the API - it would be answered with the platform-wide broadcasts
+ * alone - but it is sent to choose a tenant, so nothing is polled until it has.
  */
 export function useNotificationHub() {
   const dispatch = useAppDispatch()

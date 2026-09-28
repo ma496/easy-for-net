@@ -99,6 +99,9 @@ export const notificationsApi = appApi
           url: '/notifications/unread-count',
           method: 'GET',
         }),
+        // Tagged so that every mutation above - each invalidates the whole 'Notifications' type - refetches
+        // the badge at once instead of leaving it stale until the next poll.
+        providesTags: [{ type: 'Notifications', id: 'UNREAD_COUNT' }],
       }),
       notificationGetGroups: builder.query<NotificationGetGroupsResponse, NotificationGetGroupsRequest>({
         query: () => ({

@@ -7,14 +7,14 @@ using Backend.Features.Notifications.Endpoints.Notifications;
 using Backend.Tests.Features.Tenancy;
 
 /// <summary>
-/// Base class for notification endpoint tests: the three ways a notification can be addressed, arranged
+/// Base class for notification endpoint tests: the four ways a notification can be addressed, arranged
 /// directly through the fixture's <see cref="AppTestsBase.DbContext"/> - to a single member of a tenant,
-/// to every member of one, and to every user of the platform.
+/// to every member of one, to a single account acting in platform scope, and to every user of the platform.
 /// </summary>
 /// <remarks>
 /// <para>
 /// Every row is written inside the scope that attributes it - a tenant for the two tenant-scoped
-/// addressing modes, platform scope for the platform-wide one - which is the arrangement standing in
+/// addressing modes, platform scope for the platform-scope personal and platform-wide ones - which is the arrangement standing in
 /// for the scope a request would have opened. Attribution is taken from the active scope at save time,
 /// so a row naming no tenant cannot be written at all with no scope established, and a platform-wide
 /// notification written while a tenant is active would quietly become that tenant's.
@@ -53,6 +53,16 @@ public abstract class NotificationsTestsBase(App app) : TenancyTestsBase(app)
     /// <returns>The arranged notification, carrying its assigned identity and attribution.</returns>
     protected async Task<Notification> CreateTenantNotificationAsync(NotificationType type = NotificationType.Info, Guid? tenantId = null)
         => await ArrangeNotificationAsync(null, type, tenantId ?? TestTenants.BootstrapTenantId, "tenant");
+
+    /// <summary>
+    /// Creates a notification addressed to a single account while it acts in platform scope. It names no
+    /// tenant, and the user it names is what tells it apart from the platform-wide notification.
+    /// </summary>
+    /// <param name="userId">Identifier of the recipient.</param>
+    /// <param name="type">Visual/severity category of the notification.</param>
+    /// <returns>The arranged notification, carrying its assigned identity and no attribution.</returns>
+    protected async Task<Notification> CreatePlatformUserNotificationAsync(Guid userId, NotificationType type = NotificationType.Info)
+        => await ArrangeNotificationAsync(userId, type, tenantId: null, "platform-user");
 
     /// <summary>
     /// Creates a notification addressed to every user of the platform. It names no tenant, which
