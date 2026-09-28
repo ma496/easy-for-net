@@ -9,7 +9,7 @@ description: Build or extend a shared React component in src/frontend/web/compon
 
 | Folder | For | Examples |
 | --- | --- | --- |
-| `components/ui/` | Generic, app-agnostic primitives | `Button`, `IconButton`, `Badge`, `Card`, `Modal`, `Dropdown`, `Loader`, `Tooltip`, `TreeView`, `Truncated`, `DateView`, `PriceView`, `Breadcrumbs`, `LocalizedLink`, `ApiErrorMessages` |
+| `components/ui/` | Generic, app-agnostic primitives | `Button`, `IconButton`, `Badge`, `Card`, `Modal`, `Dropdown`, `Loader`, `Tabs`, `Tooltip`, `TreeView`, `Truncated`, `DateView`, `PriceView`, `Breadcrumbs`, `LocalizedLink`, `ApiErrorMessages` |
 | `components/ui/form/` | Inputs — a bare one and, for most, a Formik-bound `Form*` twin | `Input`/`FormInput`, `Select`/`FormSelect`, `MultiSelect`/`FormMultiSelect`, `Checkbox`/`FormCheckbox`, `DatePicker`/`FormDatePicker`, `FormLazySelect`, `FormLazyMultiSelect`, `FileUpload`, `MultiFileUpload` |
 | `components/ui/data-table/` | The table system | `DataTableProvider`, `DataTable`, `DataTableToolbar`, `DataTableToolbarButton`, `DataTableFilterButton`, `DataTableExportButton`, `DataTableRowActions`, `DataTablePagination`, `DataTableSortIcon`, `DataTableCheckboxCell` |
 | `components/layouts/` | App shell and page chrome | `AdminPageContent`, `Sidebar`, `Header`, `Footer`, `MainContainer`, `SearchComponent`, `ServiceUnavailableView`, `ProviderComponent`, `TranslationProvider` |

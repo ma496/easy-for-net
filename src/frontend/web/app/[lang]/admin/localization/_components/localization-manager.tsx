@@ -4,7 +4,8 @@ import { useQueryState, parseAsStringEnum } from 'nuqs'
 import { Globe } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { useAppSelector } from '@/store/hooks'
-import { cn, isAllowed } from '@/lib/utils'
+import { isAllowed } from '@/lib/utils'
+import { Tabs } from '@/components/ui'
 import { Allow } from '@/allow'
 import { LocalizationTextTable } from './localization-text-table'
 import { LocalizationLanguageEditor } from './localization-language-editor'
@@ -35,31 +36,15 @@ export const LocalizationManager = () => {
     <div className="flex flex-col gap-4">
       <div className="flex items-start gap-2 rounded-md border border-info/30 bg-info/10 p-3 text-sm text-info">
         <Globe className="mt-0.5 h-4 w-4 shrink-0" />
-        <div className="min-w-0 break-words">
+        <div className="min-w-0 wrap-break-word">
           <div>{activeTenant ? t('page.localization.scope.tenant', { tenant: activeTenant.name }) : t('page.localization.scope.platform')}</div>
           {!canUpdate && <div>{t('page.localization.readOnly')}</div>}
         </div>
       </div>
 
-      <div role="tablist" className="flex border-b border-white-light dark:border-[#191e3a]">
-        {LOCALIZATION_TABS.map((candidate) => (
-          <button
-            key={candidate}
-            type="button"
-            role="tab"
-            aria-selected={tab === candidate}
-            className={cn(
-              '-mb-px flex-1 px-4 py-2 sm:flex-none',
-              tab === candidate ? 'border-b-2 border-primary font-semibold text-primary' : 'text-gray-600 hover:text-primary dark:text-gray-400',
-            )}
-            onClick={() => setTab(candidate)}
-          >
-            {t(`page.localization.tabs.${candidate}`)}
-          </button>
-        ))}
-      </div>
-
-      {tab === 'texts' ? <LocalizationTextTable canUpdate={canUpdate} /> : <LocalizationLanguageEditor canUpdate={canUpdate} />}
+      <Tabs items={LOCALIZATION_TABS.map((candidate) => ({ value: candidate, label: t(`page.localization.tabs.${candidate}`) }))} value={tab} onValueChange={setTab}>
+        {tab === 'texts' ? <LocalizationTextTable canUpdate={canUpdate} /> : <LocalizationLanguageEditor canUpdate={canUpdate} />}
+      </Tabs>
     </div>
   )
 }
