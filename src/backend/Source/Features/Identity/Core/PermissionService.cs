@@ -4,8 +4,8 @@ using Backend.Attributes;
 using Backend.Features.Identity.Core.Entities;
 
 /// <summary>
-/// Defines CRUD and lookup operations for <see cref="Permission"/> entities, including the role/permission
-/// junction and per-user permission resolution.
+/// Defines CRUD and lookup operations for <see cref="Permission"/> entities, including the
+/// role/permission junction.
 /// </summary>
 public interface IPermissionService
 {
@@ -19,7 +19,6 @@ public interface IPermissionService
     Task DeleteAsync(List<Guid> ids);
     Task DeleteAsync(Permission permission);
     Task<List<Permission>> GetRolePermissionsAsync(Guid roleId);
-    Task<List<Permission>> GetUserPermissionsAsync(Guid userId);
     Task RemovePermissionFromAllRoles(Guid permissionId);
     Task RemovePermissionsFromAllRoles(List<Guid> permissionIds);
 }
@@ -92,16 +91,6 @@ public class PermissionService(AppDbContext dbContext) : IPermissionService
         return await dbContext.RolePermissions
             .Where(rp => rp.RoleId == roleId)
             .Select(rp => rp.Permission)
-            .ToListAsync();
-    }
-
-    public async Task<List<Permission>> GetUserPermissionsAsync(Guid userId)
-    {
-        return await dbContext.UserRoles
-            .Where(ur => ur.UserId == userId)
-            .SelectMany(ur => ur.Role.RolePermissions)
-            .Select(rp => rp.Permission)
-            .Distinct()
             .ToListAsync();
     }
 

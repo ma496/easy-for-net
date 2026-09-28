@@ -76,7 +76,9 @@ public class FeatureDependencyTester : IFeatureDependencyTester {
 
             var failedTypes = result.FailingTypes.Select<Type, FailedTypeInfo>(t =>
             {
-                var typeDefinition = assemblyDefinition.MainModule.GetType(t.FullName);
+                // Reflection spells a nested type Outer+Nested where Cecil expects Outer/Nested, so a
+                // failing nested type would otherwise be reported with no dependencies at all.
+                var typeDefinition = assemblyDefinition.MainModule.GetType(t.FullName?.Replace('+', '/') ?? string.Empty);
                 if (typeDefinition == null)
                 {
                     return new(t, []);

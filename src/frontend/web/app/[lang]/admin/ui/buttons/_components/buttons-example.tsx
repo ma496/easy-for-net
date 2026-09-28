@@ -65,7 +65,7 @@ export const ButtonsExample = () => {
           description="Different button styles and color schemes"
           code={basicButtonsCode}
           preview={
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <Button>Default</Button>
               <Button variant="outline">Outline</Button>
               <Button variant="info">Info</Button>
@@ -98,7 +98,7 @@ export const ButtonsExample = () => {
           description="Buttons enhanced with icons for better visual communication"
           code={iconButtonsCode}
           preview={
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <Button icon={<ArrowRightIcon />}>With Icon</Button>
               <Button variant="outline" icon={<MailIcon />}>
                 Send Email
@@ -106,7 +106,7 @@ export const ButtonsExample = () => {
               <Button variant="success" icon={<CheckIcon />}>
                 Confirm
               </Button>
-              <Button variant="info" size="sm" icon={<SendIcon size={14} />}>
+              <Button variant="info" size="sm" icon={<SendIcon />}>
                 Small with Icon
               </Button>
               <Button variant="danger" size="lg" icon={<AlertCircleIcon />}>
@@ -122,7 +122,7 @@ export const ButtonsExample = () => {
           description="Buttons with loading indicators for async operations"
           code={loadingButtonsCode}
           preview={
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <Button isLoading>Loading...</Button>
               <Button variant="info" isLoading>
                 Processing
@@ -146,7 +146,7 @@ export const ButtonsExample = () => {
           description="Buttons with rounded-sm styling"
           code={roundedButtonsCode}
           preview={
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <Button rounded="full">Rounded</Button>
               <Button variant="info" rounded="full">
                 Rounded Info
@@ -184,7 +184,7 @@ export const ButtonsExample = () => {
           description="Buttons with custom CSS classes and effects"
           code={customStyledCode}
           preview={
-            <div className="flex flex-wrap justify-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <Button className="bg-linear-to-r from-purple-500 to-pink-500 text-white hover:from-pink-500 hover:to-purple-500">Gradient Button</Button>
               <Button className="bg-emerald-500 shadow-lg shadow-emerald-500/50 hover:bg-emerald-600">Shadow Effect</Button>
               <Button className="relative overflow-hidden bg-violet-500 before:absolute before:inset-0 before:-translate-x-full before:bg-white/20 before:transition-transform before:duration-300 hover:bg-violet-600 hover:before:translate-x-full">
@@ -211,7 +211,7 @@ export const ButtonsExample = () => {
 </div>`}
           preview={
             <div className="space-y-4">
-              <div className="flex flex-wrap justify-center gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-3">
                 <Button variant="outline" icon={<MailIcon />}>
                   Contact Us
                 </Button>
@@ -222,7 +222,7 @@ export const ButtonsExample = () => {
                   Delete Item
                 </Button>
               </div>
-              <div className="flex flex-wrap justify-center gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-3">
                 <Button size="sm" variant="secondary">
                   Cancel
                 </Button>

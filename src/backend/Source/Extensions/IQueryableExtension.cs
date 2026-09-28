@@ -2,7 +2,7 @@ namespace Backend.Extensions;
 
 using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
-using Backend.Data.Entities.Base;
+using Backend.ShareData.Entities.Base;
 
 /// <summary>
 /// Queryable extensions that apply the standard pagination, sorting, and

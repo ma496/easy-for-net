@@ -1,13 +1,13 @@
 'use client'
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
-import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable } from '@/components/ui/data-table'
+import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableToolbarButton, DataTableExportButton } from '@/components/ui/data-table'
 import { useState } from 'react'
 import { useRoleListQuery, useLazyRoleListQuery, useRoleDeleteMutation, RoleListDto } from '@/store/api/identity'
 import { SortDirection } from '@/store/api'
-import { Download, Loader2, Trash2, Plus, Pencil, Shield } from 'lucide-react'
+import { Trash2, Plus, Pencil, Shield } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { apiErrorAlert, exportData, ExportFormat, isAllowed, confirmDeleteAlert, errorAlert, successToast } from '@/lib/utils'
-import { Dropdown, Badge, LocalizedLink, ApiErrorMessages } from '@/components/ui'
+import { Badge, ApiErrorMessages } from '@/components/ui'
 import { useAppSelector } from '@/store/hooks'
 import { Allow } from '@/allow'
 import { useTableUrlState } from '@/hooks'
@@ -21,7 +21,6 @@ export const RoleTable = () => {
 
   const [isExporting, setIsExporting] = useState(false)
   const { t } = useTranslation()
-  const isRTL = useAppSelector((state) => state.theme.rtlClass) === 'rtl'
 
   const {
     data: roleListResponse,
@@ -124,27 +123,30 @@ export const RoleTable = () => {
       id: 'actions',
       header: t('table.actions'),
       cell: (info) => (
-        <div className="flex items-center gap-2">
-          {canUpdate && (
-            <LocalizedLink href={`/admin/roles/update/${info.row.original.id}`} className="btn btn-secondary btn-sm">
-              <Pencil className="h-3 w-3" />
-            </LocalizedLink>
-          )}
-          {canDelete && (
-            <button
-              type="button"
-              className="btn cursor-pointer btn-danger btn-sm"
-              disabled={isDeletingRole}
-              onClick={() => handleDelete(info.row.original.id)}>
-              {isDeletingRole ? <Loader2 className="animate-spin h-3 w-3" /> : <Trash2 className="h-3 w-3" />}
-            </button>
-          )}
-          {canChangePermissions && (
-            <LocalizedLink href={`/admin/roles/change-permissions/${info.row.original.id}`} className="btn btn-primary btn-sm">
-              <Shield className="h-3 w-3" />
-            </LocalizedLink>
-          )}
-        </div>
+        <DataTableRowActions
+          actions={[
+            {
+              label: t('common.edit'),
+              icon: <Pencil className="h-4 w-4" />,
+              href: `/admin/roles/update/${info.row.original.id}`,
+              hidden: !canUpdate,
+            },
+            {
+              label: t('page.roles.permissions'),
+              icon: <Shield className="h-4 w-4" />,
+              href: `/admin/roles/change-permissions/${info.row.original.id}`,
+              hidden: !canChangePermissions,
+            },
+            {
+              label: t('common.delete'),
+              icon: <Trash2 className="h-4 w-4" />,
+              variant: 'danger',
+              onClick: () => handleDelete(info.row.original.id),
+              disabled: isDeletingRole,
+              hidden: !canDelete,
+            },
+          ]}
+        />
       ),
     }),
   ]
@@ -173,49 +175,9 @@ export const RoleTable = () => {
     >
       <DataTableToolbar>
         {canCreate && (
-          <LocalizedLink href="/admin/roles/create" className="btn flex items-center gap-2 btn-primary">
-            <Plus size={16} />
-            <span>{t('table.createLink')}</span>
-          </LocalizedLink>
+          <DataTableToolbarButton label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/roles/create" />
         )}
-        <div className="dropdown">
-          <Dropdown
-            placement={`${isRTL ? 'bottom-start' : 'bottom-end'}`}
-            btnClassName="btn btn-primary dropdown-toggle"
-            isDisabled={isExporting || isGettingRoles || !roleListResponse?.total}
-            button={
-              <div className="flex items-center gap-2">
-                {isExporting ? <Loader2 className="animate-spin" size={16} /> : <Download size={16} />}
-                <span className="">{t('table.export.button')}</span>
-              </div>
-            }
-          >
-            <ul className="mt-10">
-              <li className="px-4 py-2 text-sm font-semibold text-gray-500 dark:text-gray-600">{t('table.export.excel')}</li>
-              <li>
-                <div role="menuitem" className="w-full cursor-pointer px-4 py-2 hover:bg-white-light dark:hover:bg-[#131E30]" onClick={() => handleExport('excel', false)}>
-                  {t('table.export.currentPage')}
-                </div>
-              </li>
-              <li>
-                <div role="menuitem" className="w-full cursor-pointer px-4 py-2 hover:bg-white-light dark:hover:bg-[#131E30]" onClick={() => handleExport('excel', true)}>
-                  {t('table.export.allRecords')}
-                </div>
-              </li>
-              <li className="px-4 py-2 text-sm font-semibold text-gray-500 dark:text-gray-600">{t('table.export.csv')}</li>
-              <li>
-                <div role="menuitem" className="w-full cursor-pointer px-4 py-2 hover:bg-white-light dark:hover:bg-[#131E30]" onClick={() => handleExport('csv', false)}>
-                  {t('table.export.currentPage')}
-                </div>
-              </li>
-              <li>
-                <div role="menuitem" className="w-full cursor-pointer px-4 py-2 hover:bg-white-light dark:hover:bg-[#131E30]" onClick={() => handleExport('csv', true)}>
-                  {t('table.export.allRecords')}
-                </div>
-              </li>
-            </ul>
-          </Dropdown>
-        </div>
+        <DataTableExportButton onExport={handleExport} isExporting={isExporting} disabled={isGettingRoles || !roleListResponse?.total} />
       </DataTableToolbar>
       <DataTable />
       <DataTablePagination siblingCount={1} />

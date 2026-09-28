@@ -2,29 +2,47 @@ import { getTranslation } from '@/i18n'
 import { SweetAlertOptions, SweetAlertResult } from 'sweetalert2'
 
 const Swal = (await import('sweetalert2')).default
-/** SweetAlert2 mixin configured as a generic, top-end toast with a 3s timer. */
+
+/**
+ * Centres the toast over the page header and places it 2px below the header's bottom edge,
+ * measured at open time so it follows the sidebar width, the menu layout and a scrolled-away header.
+ */
+function placeToastBelowHeader(): void {
+  const container = Swal.getContainer()
+  const header = document.querySelector('header')
+  if (!container || !header) return
+  const rect = header.getBoundingClientRect()
+  container.style.top = `${Math.max(rect.bottom, 0)}px`
+  container.style.paddingTop = '2px'
+  container.style.left = `${rect.left + rect.width / 2}px`
+}
+
+/** SweetAlert2 mixin configured as a generic, top-center toast with a 3s timer. */
 export const toast = Swal.mixin({
   toast: true,
-  position: 'top-end',
+  position: 'top',
+  willOpen: placeToastBelowHeader,
   timer: 3000,
   timerProgressBar: true,
   showConfirmButton: false,
   showCloseButton: true,
 })
-/** SweetAlert2 mixin for success toasts (top-end, success icon, 5s timer). */
+/** SweetAlert2 mixin for success toasts (top-center, success icon, 5s timer). */
 export const successToast = Swal.mixin({
   toast: true,
-  position: 'top-end',
+  position: 'top',
+  willOpen: placeToastBelowHeader,
   timer: 5000,
   icon: 'success',
   timerProgressBar: true,
   showConfirmButton: false,
   showCloseButton: true,
 })
-/** SweetAlert2 mixin for error toasts (top-end, error icon, 7s timer). */
+/** SweetAlert2 mixin for error toasts (top-center, error icon, 7s timer). */
 export const errorToast = Swal.mixin({
   toast: true,
-  position: 'top-end',
+  position: 'top',
+  willOpen: placeToastBelowHeader,
   timer: 7000,
   icon: 'error',
   timerProgressBar: true,

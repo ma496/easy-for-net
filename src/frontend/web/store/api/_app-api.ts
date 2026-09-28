@@ -2,14 +2,31 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import { environment } from '@/config'
 import { Mutex } from 'async-mutex'
 import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query'
-import { signout } from '../slices/authSlice'
+import { setUserInfo, signout } from '../slices/authSlice'
 import { isAuthRequired } from '@/auth-urls'
+// Imported straight from the DTO file rather than through the feature barrel, and as a type alone,
+// so this module gains no runtime edge back to the feature APIs that are injected into it.
+import type { GetUserInfoResponse } from './identity/account/account-dtos'
 
 const mutex = new Mutex()
 
 const baseQuery = fetchBaseQuery({
   baseUrl: environment.apiUrl,
-  prepareHeaders: (headers) => {
+  // The server localizes every coded error (and the resource dictionary itself) into the culture
+  // named here, so every request - not just the localization fetch - has to carry it. `window.location`
+  // rather than a router hook because this runs outside React, on every query and mutation the app
+  // makes. The `@/i18n` barrel is imported dynamically rather than at the top of the file: this module
+  // sits under every feature API, and `@/i18n` reaches - through `components/layouts`' single barrel -
+  // back up to `@/store` for unrelated reasons of its own, so a static import here would make this
+  // module and the store circularly depend on each other. A dynamic import resolves after `appApi` -
+  // and the feature APIs injected into it - have already finished evaluating, which is what breaks
+  // the cycle; there is no pathname to read on the very first server-rendered response, but that
+  // request never reaches this base query - only the browser's own subsequent calls do.
+  prepareHeaders: async (headers) => {
+    if (typeof window !== 'undefined') {
+      const { localeFromPathname } = await import('@/i18n')
+      headers.set('Accept-Language', localeFromPathname(window.location.pathname))
+    }
     return headers
   },
   credentials: 'include',
@@ -55,6 +72,21 @@ const baseQueryWithReauth: BaseQueryFn<
         if (refreshResult.data) {
           // Retry the initial query
           result = await baseQuery(args, api, extraOptions)
+
+          // A renewal re-reads what the caller may do, so the session it hands back is not always the
+          // one that expired: a tenant that has since been suspended, deleted or left is dropped, and
+          // the renewed session then holds no permission at all. Re-reading the account info here is
+          // what lets the route guard notice and offer the caller another tenant - without it the app
+          // would go on believing in the tenant it lost and show refusals it cannot explain.
+          // Taken through the plain base query rather than this one, so a 401 on the read cannot
+          // re-enter the refresh it was triggered by. A read that fails leaves the previous info
+          // standing and is not retried here: the app re-reads it on its next mount, and the
+          // alternative - discarding what we know on a network blip - would throw the caller out of a
+          // tenant that never went anywhere.
+          const userInfo = await baseQuery('/account/get-info', api, extraOptions)
+          if (userInfo.data) {
+            api.dispatch(setUserInfo(userInfo.data as GetUserInfoResponse))
+          }
         } else {
           api.dispatch(signout())
           const pathname = typeof window !== 'undefined' ? window.location.pathname : undefined

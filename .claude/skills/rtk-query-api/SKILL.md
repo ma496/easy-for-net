@@ -1,6 +1,6 @@
 ---
 name: rtk-query-api
-description: Add or change an RTK Query API slice and its DTOs under src/frontend/web/store/api — injectEndpoints on the shared appApi, DTO files mirroring the backend, and the rules for when to use cache tags (providesTags/invalidatesTags) and when to skip them.
+description: Add or change an RTK Query API slice and its DTOs under src/frontend/web/store/api — injectEndpoints on the shared appApi, DTO files mirroring the backend (including the tenant and system-created markers), feature barrels, and the rules for cache tags (providesTags/invalidatesTags, tags shared across slices, and the full cache reset when the tenant changes).
 ---
 
 # RTK Query APIs
@@ -10,25 +10,40 @@ description: Add or change an RTK Query API slice and its DTOs under src/fronten
 ```
 store/api/
   _app-api.ts                       # the ONE createApi — never call createApi again
-  index.ts                          # barrel: base DTO types + every feature export
-  base/dto/*.ts                     # BaseDto, ListDto, ListRequestDto, RequestBase, …
+  index.ts                          # barrel for the shared bases only: SortDirection + base DTO types
+  base/dto/*.ts                     # BaseDto, ListDto, ListRequestDto, RequestBase, SystemCreatedDto, …
   <feature>/
-    index.ts                        # barrel for the feature
+    index.ts                        # barrel for the feature: slices, hooks, DTO types, enums
+    enums.ts                        # optional: enums the feature's DTOs share
     <area>/
       <area>-api.ts
       <area>-dtos.ts
 ```
 
-`<feature>` and `<area>` mirror the backend: `identity/users`, `identity/roles`,
-`identity/account`, `notifications/notifications`, `file-management/files`.
+`<feature>` and `<area>` mirror the backend: `identity/users`, `identity/roles`, `identity/account`,
+`identity/permissions`, `notifications/notifications`, `file-management/files`, `tenancy/tenants`,
+`tenancy/editions`, `tenancy/features`.
 
 ## DTOs first
 
 `<area>-dtos.ts` mirrors the C# request/response classes **by name**, camelCased. `Guid` → `string`,
-`DateTime` → `string`. Extend the shared bases from `@/store/api`:
+`DateTime` → `string`, a nullable → `T | null` or an optional property. Extend the shared bases from
+`@/store/api`:
+
+| Base | For |
+| --- | --- |
+| `BaseDto<TId>` | anything carrying `id` (get/delete requests, responses) |
+| `RequestBase` | every request |
+| `ListRequestDto<TId>` / `ListDto<T>` | list requests (`page`, `pageSize`, `sortField`, `sortDirection`, `search`, `all`, `includeIds`) and paged responses (`items`, `total`) |
+| `GenericAuditableDto<TId>` (and the creatable/updatable variants) | rows with audit fields |
+| `SystemCreatedDto` | rows the system seeded, which update/delete will refuse — the UI hides those actions |
+| `HaveTenantDto` / `MayHaveTenantDto` | rows that carry `tenantId` (`string`, or `string \| null` where null is platform scope) |
+| `EmptyRequest` | an endpoint that takes nothing |
+
+Pick the marker from the entity the DTO projects, not from the fields it happens to carry.
 
 ```ts
-import { BaseDto, RequestBase, GenericAuditableDto, ListRequestDto, ListDto } from '@/store/api'
+import { BaseDto, RequestBase, GenericAuditableDto, ListRequestDto, ListDto, SystemCreatedDto } from '@/store/api'
 
 /** Request body for creating a new user… */
 export interface UserCreateRequest extends RequestBase {
@@ -51,21 +66,23 @@ export interface UserListRequest extends ListRequestDto<string>, RequestBase {
 }
 ```
 
-Every exported interface gets a one-line JSDoc.
+String enums the backend serializes by name are either a TS `enum` (`TenantStatus`,
+`NotificationType`, in the feature's `enums.ts`) or an `as const` object plus a derived union type
+(`FeatureValueProvider` / `FeatureValueProviderName`). Every exported interface gets a one-line JSDoc.
 
 ## The API slice
 
 Attach to the shared `appApi`; it already carries the base URL, credentials, and the
-`baseQueryWithReauth` that refreshes the token through an `async-mutex` and signs the user out on
-failure.
+`baseQueryWithReauth` that refreshes the token through an `async-mutex`, re-reads the account info
+after a successful refresh (the renewed session may have dropped its tenant), and signs the user out
+when the refresh fails.
 
 ```ts
 import { appApi } from '@/store/api/_app-api'
 import { UserCreateRequest, UserCreateResponse, … } from './users-dtos'
 
 /**
- * RTK Query API for user management: CRUD on users and a paginated listing
- * endpoint… Uses the 'Users' tag type for cache invalidation across the feature.
+ * RTK Query API for user management… Uses the 'Users' tag type for cache invalidation.
  */
 export const usersApi = appApi
   .enhanceEndpoints({ addTagTypes: ['Users'] })
@@ -78,28 +95,36 @@ export const { useUserCreateMutation, useUserGetQuery, useLazyUserGetQuery, useU
 ```
 
 Endpoint naming matches the backend endpoint: `userCreate`, `userUpdate`, `userDelete`, `userGet`,
-`userList`, `notificationMarkAsRead`. Hooks therefore come out as `useUserCreateMutation`,
-`useUserListQuery`, `useLazyUserListQuery`.
+`userList`, `tenantMemberAdd`, `notificationMarkAsRead`. Hooks therefore come out as
+`useUserCreateMutation`, `useUserListQuery`, `useLazyUserListQuery`.
 
-Then export the slice, the hooks and the DTO types from `store/api/<feature>/index.ts`, and make
-sure `store/api/index.ts` re-exports the feature. Components import from the feature barrel:
-`import { useUserListQuery, UserListDto } from '@/store/api/identity'`.
+Then export the slice, the hooks, the DTO types (`export type { … }`) and any enums from
+`store/api/<feature>/index.ts`. Components import from the feature barrel —
+`import { useUserListQuery, UserListDto } from '@/store/api/identity'` — and shared bases from
+`@/store/api`, which does **not** re-export the features. Inside `store/`, import across slices by
+file path (`@/store/api/identity/account/account-api`) to avoid barrel cycles.
 
 ## When to use tags — and when not to
 
 Use a tag type when the data is a **server-owned collection that this app also mutates**, so a
-mutation must refresh lists and details. That is `Users`, `Roles`, `Notifications`. The tag type is
-the PascalCase plural of the area, and it is declared with `enhanceEndpoints({ addTagTypes: [...] })`
-on that feature's slice only.
+mutation must refresh lists and details: `Users`, `Roles`, `Notifications`, `Tenants`,
+`TenantMembers`, `Editions`, `FeatureValues`. Name it after the area in PascalCase and declare it with
+`enhanceEndpoints({ addTagTypes: [...] })` on every slice that provides **or invalidates** it — a slice
+may re-declare another area's tag (`tenantsApi` declares `Users` so a member change refreshes the user
+list and the seat count; `editionsApi` declares `Tenants` because deleting a plan changes the tenants
+list).
 
 Do **not** add tags when there is nothing to invalidate:
 
 - `account-api.ts` — signin/signup/password/profile calls; session state lives in `authSlice`
   and the reauth flow, not in the cache.
-- `permissions-api.ts` — the permission catalog is static for the life of a deployment.
+- `permissions-api.ts` — the permission catalogue is static for the life of a deployment.
 - `files-api.ts` — uploads/downloads/deletes are addressed by file name, and nothing lists them.
-- Individual polled endpoints such as `notificationGetUnreadCount`, which refetches on its own
-  interval; tagging it would only add redundant refetches.
+- Polled endpoints such as `notificationGetUnreadCount`, which refetch on their own interval.
+- `tenantSwitch` / `tenantExit` — changing the acting tenant changes what **every** cached query would
+  answer, so the caller drops the whole cache instead (`appApi.util.resetApiState()` through
+  `useTenantSwitch` / `dispatchTenantChanged` in `store/tenant-cache.ts`). Invalidating would refetch
+  the previous tenant's data mid-switch. See the `multi-tenancy` skill.
 
 Those slices use plain `appApi.injectEndpoints({ overrideExisting: false, endpoints })`.
 
@@ -118,9 +143,17 @@ invalidatesTags: ['Users'],
 // update / delete / mark-as-read: collection + that row
 invalidatesTags: (result, error, arg) => ['Users', { type: 'Users', id: arg.id }],
 
-// an aggregate that any mutation in the area affects
-providesTags: ['Notifications'],
+// an aggregate that any mutation in the area affects (a count, the seat usage)
+providesTags: ['Users'],
+
+// a row keyed by more than one field
+providesTags: (result, error, arg) => [{ type: 'FeatureValues', id: `${arg.providerName}:${arg.providerKey}` }],
 ```
+
+A mutation that changes what the **signed-in account** is (its tenants, its roles) also has to refresh
+`authSlice`, which is not in the cache: `onQueryStarted` awaits `queryFulfilled`, re-reads
+`accountApi.endpoints.getUserInfo` with `forceRefetch: true`, and dispatches `setUserInfo` —
+`refreshOwnTenants` in `tenants-api.ts` is the model.
 
 ## Query shapes
 
@@ -131,7 +164,7 @@ userCreate: builder.mutation<UserCreateResponse, UserCreateRequest>({
   invalidatesTags: ['Users'],
 }),
 
-// update: id goes in the path, and is stripped from the body
+// update: ids go in the path, and are stripped from the body
 userUpdate: builder.mutation<UserUpdateResponse, UserUpdateRequest>({
   query: (input) => ({ url: `/users/${input.id}`, method: 'PUT', body: { ...input, id: undefined } }),
   invalidatesTags: (result, error, arg) => ['Users', { type: 'Users', id: arg.id }],
@@ -159,9 +192,11 @@ query: (input) => ({ url: `/file-management/${input.fileName}`, method: 'GET', r
 ## Consuming in components
 
 - Query: `const { data, isFetching, error } = useUserListQuery({ … })` — render
-  `<ApiErrorMessages error={error} />` on failure.
+  `<ApiErrorMessages error={error} />` on failure. Pass `{ skip: true }` when the call cannot apply
+  yet (`useMyFeaturesQuery(undefined, { skip: !hasActiveTenant })`).
 - Mutation: `const [createUser, { isLoading }] = useUserCreateMutation()`, then
   `const result = await createUser(payload)`; on `result.error` call `apiErrorAlert(result.error)`
-  and return; on success `successToast.fire({ text: t('…') })` and navigate.
+  and return; on success `successToast.fire({ text: t('…') })` and navigate. See
+  `api-error-handling` for how the error codes are translated.
 - Lazy query for on-demand fetches (export "all rows", async selects):
   `const [fetchUsers] = useLazyUserListQuery()`.

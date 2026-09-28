@@ -4,10 +4,16 @@ import type { SerializedError } from '@reduxjs/toolkit'
 export type ApiError = FetchBaseQueryError | SerializedError | { messages: string[] } | undefined | null
 
 /**
- * Represents a single validation error returned by the backend API.
- * `name` is the property name (e.g. "EmailNormalized"),
- * `code` is the error code (e.g. "duplicate_email"),
- * `reason` is the fallback message.
+ * A single field or request-level error the way the API reports it. `name` is the camelCased
+ * request property the refusal belongs to (empty for a request-level refusal, the feature name for a
+ * plan refusal), `code` is the `ErrorCodes` constant or a FluentValidation rule name, and `reason` is
+ * the message to show, exactly as the API sent it. A code this application defines is localized into
+ * the caller's `Accept-Language` culture from `error.server.{code}` there, `${propertyName}` and all —
+ * a bare FluentValidation rule with no `error.server.*` entry of its own instead carries
+ * FluentValidation's own built-in per-culture message, already translated into that same culture by
+ * FluentValidation itself rather than by this application's resource dictionary, with the raw
+ * property name standing in the sentence where `${propertyName}` would put the translated field
+ * label. Neither case is this application's to translate again.
  */
 export interface ValidationError {
   name: string
@@ -31,8 +37,38 @@ function isErrorWithMessage(error: unknown): error is { message: string } {
 }
 
 /**
- * Extracts the error message string from a FetchBaseQueryError or SerializedError.
- * Returns `null` if the error shape is unknown.
+ * The `errors` a coded API response carries - every field and request-level refusal, in the shape
+ * `ExceptionProcessor` and `AuthorizationRefusalResultHandler` both answer with, whatever the status -
+ * or `null` when the body carries none.
+ */
+function getValidationErrors(data: unknown): ValidationError[] | null {
+  if (!data || typeof data !== 'object') return null
+
+  const body = data as Record<string, unknown>
+
+  return Array.isArray(body.errors) && body.errors.length > 0 ? (body.errors as ValidationError[]) : null
+}
+
+/**
+ * The machine-readable code a failed response's first error carries, or `null` when it carries none.
+ *
+ * `getApiErrorMessages` itself has no use for this — it shows the `reason` the API already localized
+ * — but a screen that needs to *branch* on what specifically refused a request (a feature gate, a
+ * tenant refusal) rather than just display it still needs the code itself.
+ */
+export function getErrorCode(error: ApiError): string | null {
+  if (!isFetchBaseQueryError(error) || typeof error.status !== 'number') return null
+
+  const errors = getValidationErrors(error.data)
+  const code = errors?.[0]?.code
+
+  return typeof code === 'string' && code.length > 0 ? code : null
+}
+
+/**
+ * Extracts the error message string from a FetchBaseQueryError or SerializedError, for a body that
+ * carries no structured `errors` to read a reason from - a transport-level failure, or a response
+ * this application did not shape itself.
  */
 function getErrorMessage(error: unknown): string | null {
   if (isFetchBaseQueryError(error)) {
@@ -45,10 +81,11 @@ function getErrorMessage(error: unknown): string | null {
     if (error.status === 'CUSTOM_ERROR') {
       return error.error
     }
-    // Numeric status — data may have a message
+    // Numeric status — data may still name its reason at the top level
     const data = error.data
     if (data && typeof data === 'object') {
       const obj = data as Record<string, unknown>
+      if (typeof obj.detail === 'string' && obj.detail.length > 0) return obj.detail
       if (typeof obj.message === 'string') return obj.message
       if (typeof obj.title === 'string') return obj.title
     }
@@ -66,45 +103,34 @@ function getErrorMessage(error: unknown): string | null {
 }
 
 /**
- * Maps a backend `ValidationError.name` to the corresponding Formik field name.
- *
- * The backend returns `PascalCase` names, optionally with a `Normalized` suffix
- * (e.g. `"EmailNormalized"`, `"UsernameNormalized"`, `"FirstName"`).
- * This function strips the `Normalized` suffix and lowercases the first character.
- *
- * Examples:
- *   "EmailNormalized" → "email"
- *   "UsernameNormalized" → "username"
- *   "PasswordNormalized" → "password"
- *   "FirstName" → "firstName"
- *   "LastName" → "lastName"
- *   "Roles" → "roles"
+ * The generic title for an HTTP status this application recognizes, or `common.error` for one it
+ * does not. Independent of whatever the body says refused the request — the status is what this
+ * application can always name, whatever the response looked like.
  */
-function toFormFieldName(name: string): string {
-  const stripped = name.replace(/normalized$/i, '')
-  return stripped.charAt(0).toLowerCase() + stripped.slice(1)
+function titleForStatus(status: number, t: (key: string) => string): string {
+  const key = `error.${status}.title`
+  const translated = t(key)
+  return translated !== key ? translated : t('common.error')
 }
 
 /**
- * Formats a single `ValidationError` into a localized message string.
- *
- * Attempts to look up `error.server.{code}` in the translation dictionary.
- * Falls back to `error.reason` if no translation key exists.
- * The property name is localized via `t(name)`.
+ * The generic message for an HTTP status this application recognizes, for a response that named no
+ * reason of its own to show instead - a body with no `errors`, `detail`, `message` or `title`.
  */
-function getFieldErrorMessage(
-  error: ValidationError,
-  t: (key: string, vars?: Record<string, string | number>) => string,
-): string {
-  const fieldName = t(toFormFieldName(error.name))
-  const key = `error.server.${error.code}`
-  const translated = t(key, { propertyName: fieldName })
-  // If the translation returned the key itself, it doesn't exist — fall back
-  return translated !== key ? translated : error.reason
+function messageForStatus(status: number, t: (key: string) => string): string {
+  const key = `error.${status}.message`
+  const translated = t(key)
+  return translated !== key ? translated : t('error.500.message')
 }
 
 /**
  * Extracts a human-readable title and message list from any RTK error shape.
+ *
+ * A response that carries `errors` — every refusal this application raises itself, whatever the
+ * status — is shown exactly as the API sent it: one message per error, read from `reason` with no
+ * translation of its own, since the API already localized it into the caller's UI language. Only the
+ * title, and the message for a response that names no reason at all, are this application's own copy,
+ * because a bare HTTP status is the one thing here that is never itself localized.
  */
 export function getApiErrorMessages(
   error: ApiError,
@@ -124,59 +150,27 @@ export function getApiErrorMessages(
 
   // Numeric HTTP status
   if (typeof status === 'number' && !ignoreStatuses.includes(status)) {
-    // 400 with validation errors
-    if (status === 400 && data && typeof data === 'object') {
-      const obj = data as Record<string, unknown>
-      const validationErrors = obj.errors
-      if (Array.isArray(validationErrors) && validationErrors.length > 0) {
-        const msgs = validationErrors.map((e: ValidationError) => getFieldErrorMessage(e, t))
-        return { title: t('error.400.title'), messages: msgs }
-      }
-      // 400 without structured errors — try to show the data as-is
-      const msg = getErrorMessage(error)
-      return {
-        title: t('error.400.title'),
-        messages: msg ? [msg] : [JSON.stringify(data)],
-      }
+    const errors = getValidationErrors(data)
+    if (errors) {
+      return { title: titleForStatus(status, t), messages: errors.map((e) => e.reason) }
     }
-    if (status === 401) {
-      return { title: t('error.401.title'), messages: [t('error.401.message')] }
-    }
-    if (status === 403) {
-      return { title: t('error.403.title'), messages: [t('error.403.message')] }
-    }
-    if (status === 404) {
-      return { title: t('error.404.title'), messages: [t('error.404.message')] }
-    }
-    if (status === 413) {
-      return { title: t('error.413.title'), messages: [t('error.413.message')] }
-    }
-    if (status === 415) {
-      return { title: t('error.415.title'), messages: [t('error.415.message')] }
-    }
-    if (status === 500) {
-      return { title: t('error.500.title'), messages: [t('error.500.message')] }
-    }
-    // Unknown status — try to get a message from data
+
     const msg = getErrorMessage(error)
-    return {
-      title: t('common.error'),
-      messages: msg ? [msg] : [t('error.500.message')],
-    }
+    return { title: titleForStatus(status, t), messages: [msg ?? messageForStatus(status, t)] }
   }
 
   // Plain { messages: string[] } object
-  if ('messages' in error && Array.isArray((error as Record<string, unknown>).messages)) {
+  if (error && typeof error === 'object' && 'messages' in error && Array.isArray((error as Record<string, unknown>).messages)) {
     return {
       title: t('common.error'),
       messages: (error as { messages: string[] }).messages,
     }
   }
 
-  // SerializedError or other unknown shapes
+  // A transport-level failure (FETCH_ERROR / PARSING_ERROR / CUSTOM_ERROR) or any other unknown shape
   const msg = getErrorMessage(error)
   return {
     title: t('common.error'),
-    messages: msg ? [msg] : [t('error.500.message')],
+    messages: [msg ?? t('error.500.message')],
   }
 }

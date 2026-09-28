@@ -29,4 +29,14 @@
       <Folder Include="Features\Identity\Endpoints\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <!-- Shipped locale files: embedded so LocalizationResourceStore can read them off the assembly
+           manifest, and removed from whatever implicit item type the SDK would otherwise give them so
+           they are not also copied to the output/publish directory as loose content. The fixed
+           LogicalName keeps the manifest name independent of the project's root namespace. -->
+      <Content Remove="Features\Localization\Core\Resources\*.json" />
+      <None Remove="Features\Localization\Core\Resources\*.json" />
+      <EmbeddedResource Include="Features\Localization\Core\Resources\*.json" LogicalName="Localization.Resources.%(Filename)%(Extension)" />
+    </ItemGroup>
+
 </Project>

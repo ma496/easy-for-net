@@ -45,6 +45,59 @@ export const authUrls: AuthUrl[] = [
     url: '/admin/roles/change-permissions/{id}',
     permissions: [Allow.Role_ChangePermissions],
   },
+  {
+    // The tenants list is the platform's own screen - it answers about every tenant there is - so it
+    // is gated on Tenant.View, which the API declares platform-scoped: a session carries it only
+    // while acting in no tenant, so a tenant administrator never holds it however their roles are
+    // granted. They reach their own tenant through the detail screen below instead.
+    url: '/admin/tenants/list',
+    permissions: [Allow.Tenant_View],
+  },
+  {
+    url: '/admin/tenants/create',
+    permissions: [Allow.Tenant_Create],
+  },
+  {
+    // Editing a tenant's entitlements is a platform act, not something a tenant does to itself, so
+    // every screen below is gated on a permission the API declares platform-scoped.
+    url: '/admin/tenants/features/{id}',
+    permissions: [Allow.FeatureValue_View],
+  },
+  {
+    url: '/admin/editions/list',
+    permissions: [Allow.Edition_View],
+  },
+  {
+    url: '/admin/editions/create',
+    permissions: [Allow.Edition_Create],
+  },
+  {
+    url: '/admin/editions/update/{id}',
+    permissions: [Allow.Edition_Update],
+  },
+  {
+    url: '/admin/editions/features/{id}',
+    permissions: [Allow.FeatureValue_View],
+  },
+  {
+    url: '/admin/tenants/update/{id}',
+    permissions: [Allow.Tenant_Update],
+  },
+  {
+    url: '/admin/tenants/members/{id}',
+    permissions: [Allow.TenantMember_View],
+  },
+  {
+    url: '/admin/tenants/detail/{id}',
+    permissions: [Allow.Tenant_Detail],
+  },
+  {
+    url: '/select-tenant',
+  },
+  {
+    url: '/admin/localization',
+    permissions: [Allow.Localization_View],
+  },
 ]
 
 /**
@@ -86,4 +139,3 @@ export const getMatchedAuthUrl = (url: string): AuthUrl | undefined => {
 export const isAuthRequired = (url: string) => {
   return url.includes('/admin/') || !!getMatchedAuthUrl(url)
 }
-

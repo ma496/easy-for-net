@@ -1,0 +1,748 @@
+{
+  "brand": {
+    "name": "Easy For Net"
+  },
+  "cookieConsent": {
+    "title": "Valoramos tu privacidad",
+    "description": "Utilizamos cookies para mejorar su experiencia de navegación. Al continuar visitando este sitio, acepta nuestro uso de cookies.",
+    "accept": "Aceptar",
+    "decline": "Rechazar"
+  },
+  "common": {
+    "back": "Atrás",
+    "more": "Más",
+    "list": "Lista",
+    "preview": "Vista previa",
+    "add": "Añadir",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "save": "Guardar",
+    "update": "Actualizar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "search": "Buscar...",
+    "loading": "Cargando...",
+    "success": "Éxito",
+    "error": "Error",
+    "warning": "Advertencia",
+    "info": "Información",
+    "yes": "Sí",
+    "no": "No",
+    "ok": "OK",
+    "retry": "Reintentar",
+    "submit": "Enviar",
+    "actions": "Acciones",
+    "allRightsReserved": "Todos los derechos reservados.",
+    "deleteConfirm": "Sí, eliminarlo",
+    "notifications": "Notificaciones",
+    "viewAll": "Ver todo",
+    "close": "Cerrar"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "dashboard": "Tablero",
+    "dashboardSales": "Ventas",
+    "administration": "Administración",
+    "users": "Usuarios",
+    "roles": "Roles",
+    "rolesList": "Lista",
+    "rolesCreate": "Crear",
+    "rolesUpdate": "Actualizar",
+    "rolesChangePermissions": "Cambiar Permisos",
+    "components": "Componentes",
+    "uiFormElements": "Elementos de Formulario",
+    "uiButtons": "Botones",
+    "uiCards": "Tarjetas",
+    "uiDatePicker": "Selector de Fecha",
+    "uiDateView": "Vista de Fecha",
+    "uiTreeview": "Vista de Árbol",
+    "changePassword": "Cambiar Contraseña",
+    "profile": "Perfil",
+    "uiFileUpload": "Subir Archivo",
+    "uiTooltips": "Tooltips",
+    "usersList": "Lista",
+    "usersCreate": "Crear",
+    "usersUpdate": "Actualizar",
+    "notifications": "Notificaciones",
+    "notificationsList": "Lista",
+    "notificationsDetail": "Detalles",
+    "tenants": "Inquilinos",
+    "tenantsList": "Lista",
+    "tenantsCreate": "Crear",
+    "tenantsUpdate": "Actualizar",
+    "tenantsMembers": "Miembros",
+    "selectTenant": "Seleccionar inquilino",
+    "tenantsDetail": "Detalle",
+    "editions": "Ediciones",
+    "editionsList": "Lista",
+    "editionsCreate": "Crear",
+    "editionsUpdate": "Actualizar",
+    "editionsFeatures": "Funciones",
+    "tenantsFeatures": "Funciones",
+    "localization": "Localización"
+  },
+  "search": {
+    "dashboard": "Tablero",
+    "users": "Usuarios",
+    "usersCreate": "Crear Usuario",
+    "roles": "Roles",
+    "rolesCreate": "Crear Rol",
+    "uiButtons": "Botones UI",
+    "uiCards": "Tarjetas UI",
+    "uiDatePicker": "Selector de Fecha UI",
+    "uiDateView": "Vista de Fecha UI",
+    "uiTreeview": "Vista de Árbol UI",
+    "changePassword": "Cambiar Contraseña",
+    "profile": "Perfil",
+    "notifications": "Notificaciones",
+    "uiFormElements": "Elementos de Formulario UI",
+    "uiFileUpload": "Subida de Archivos UI",
+    "uiTooltips": "Tooltips UI",
+    "tenants": "Inquilinos",
+    "tenantsCreate": "Crear Inquilino",
+    "editions": "Ediciones",
+    "editionsCreate": "Crear edición",
+    "localization": "Localización"
+  },
+  "form": {
+    "label": {
+      "username": "Nombre de usuario",
+      "password": "Contraseña",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "email": "Correo electrónico",
+      "currentPassword": "Contraseña actual",
+      "newPassword": "Nueva contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "roleName": "Nombre del rol",
+      "roleDescription": "Descripción",
+      "roles": "Roles",
+      "isActive": "Activo",
+      "name": "Nombre",
+      "tenantName": "Nombre del inquilino",
+      "tenantIdentifier": "Identificador",
+      "user": "Usuario",
+      "tenant": "Inquilino",
+      "editionName": "Nombre",
+      "editionDescription": "Descripción",
+      "editionDisplayOrder": "Orden de visualización",
+      "defaultLanguage": "Idioma predeterminado"
+    },
+    "placeholder": {
+      "username": "Ingrese nombre de usuario",
+      "password": "Ingrese contraseña",
+      "firstName": "Ingrese nombre",
+      "lastName": "Ingrese apellido",
+      "email": "Ingrese correo electrónico",
+      "currentPassword": "Ingrese contraseña actual",
+      "newPassword": "Ingrese nueva contraseña",
+      "confirmPassword": "Confirme la contraseña",
+      "roleName": "Ingrese nombre del rol",
+      "roleDescription": "Ingrese descripción del rol",
+      "roles": "Seleccione roles",
+      "tenantName": "Ingrese el nombre del inquilino",
+      "tenantIdentifier": "Ingrese el identificador (por ejemplo acme)",
+      "user": "Seleccione un usuario",
+      "tenant": "Identificador del inquilino",
+      "editionName": "Introduzca el nombre de la edición",
+      "editionDescription": "Introduzca la descripción de la edición",
+      "edition": "Seleccione una edición"
+    }
+  },
+  "validation": {
+    "required": "Campo obligatorio",
+    "minLength": "El campo debe tener al menos ${min} caracteres",
+    "maxLength": "El campo no debe exceder ${max} caracteres",
+    "email": "Formato de correo inválido",
+    "invalidEmail": "Correo inválido",
+    "mustMatch": "El campo debe coincidir con ${otherField}",
+    "atLeastOneSelected": "Debe seleccionar al menos un elemento",
+    "tenantIdentifier": "Use letras minúsculas, dígitos y guiones simples, comenzando y terminando con una letra o un dígito",
+    "number": "Debe ser un número",
+    "min": "Debe ser como mínimo ${min}"
+  },
+  "error": {
+    "400": {
+      "title": "Solicitud Incorrecta"
+    },
+    "401": {
+      "title": "No Autorizado",
+      "message": "No está autorizado para acceder a este recurso."
+    },
+    "403": {
+      "title": "Prohibido",
+      "message": "No tiene permiso para acceder a este recurso."
+    },
+    "404": {
+      "title": "No Encontrado",
+      "message": "No se encontró el recurso solicitado."
+    },
+    "413": {
+      "title": "Carga Útil Demasiado Grande",
+      "message": "La carga útil de la solicitud es demasiado grande."
+    },
+    "415": {
+      "title": "Tipo de Medio No Soportado",
+      "message": "El tipo de medio de la solicitud no es soportado."
+    },
+    "500": {
+      "title": "Error Interno del Servidor",
+      "message": "Ocurrió un error al procesar la solicitud."
+    },
+    "connection": {
+      "title": "Error de Conexión",
+      "message": "No se puede conectar al servidor. Verifique su conexión o intente más tarde."
+    },
+    "serviceUnavailable": {
+      "title": "Servicio No Disponible",
+      "message": "El servidor no está accesible en este momento. Intente de nuevo en unos momentos.",
+      "retry": "Reintentar"
+    },
+    "server": {
+      "internalServerError": "Error interno del servidor",
+      "duplicateValue": "Valor duplicado",
+      "duplicatePropertyValue": "Valor de propiedad duplicado",
+      "requiredFieldMissing": "Falta campo obligatorio",
+      "requiredPropertyFieldMissing": "Falta campo de propiedad obligatorio",
+      "referencedRecordNotFound": "Registro referenciado no encontrado",
+      "invalidValueProvided": "Valor proporcionado inválido",
+      "databaseError": "Error de base de datos",
+      "authenticationRequired": "Esta operación requiere iniciar sesión.",
+      "permissionDenied": "Sus roles no otorgan el permiso que requiere esta operación.",
+      "invalidCurrentPassword": "Contraseña actual inválida",
+      "invalidToken": "Token inválido",
+      "tokenExpired": "Token expirado",
+      "payloadTooLarge": "Carga útil demasiado grande",
+      "invalidUsernamePassword": "Usuario o contraseña inválidos",
+      "invalidEmailPassword": "Correo o contraseña inválidos",
+      "userNotActive": "Usuario no activo",
+      "userNotFound": "Usuario no encontrado",
+      "emailAlreadyExists": "El correo ya existe",
+      "usernameAlreadyExists": "El nombre de usuario ya existe",
+      "emailNotVerified": "Correo no verificado",
+      "roleNameAlreadyExists": "El nombre del rol ya existe",
+      "roleNotFound": "Rol no encontrado",
+      "systemCreatedRolePermissionsCannotBeChanged": "Los permisos del rol creado por el sistema no se pueden cambiar",
+      "systemCreatedRoleCannotBeDeleted": "El rol creado por el sistema no se puede eliminar",
+      "systemCreatedRoleCannotBeUpdated": "El rol creado por el sistema no se puede actualizar",
+      "systemCreatedUserCannotBeDeleted": "El usuario creado por el sistema no se puede eliminar",
+      "systemCreatedUserCannotBeUpdated": "El usuario creado por el sistema no se puede actualizar",
+      "tenantNotFound": "Inquilino no encontrado",
+      "tenantSuspended": "Este inquilino está suspendido",
+      "notTenantMember": "No es miembro de este inquilino",
+      "noActiveTenant": "No hay ningún inquilino activo seleccionado",
+      "tenantRequired": "Indica un inquilino para iniciar sesión.",
+      "tenantIdentifierAlreadyExists": "El identificador del inquilino ya existe",
+      "duplicateTenantMembership": "Este usuario ya es miembro de este inquilino",
+      "lastTenantAdministrator": "No se puede quitar al último administrador del inquilino",
+      "systemCreatedTenantCannotBeModified": "El inquilino creado por el sistema no se puede modificar",
+      "crossTenantFileAccess": "Este archivo pertenece a otro inquilino",
+      "platformPermissionNotGrantable": "Los permisos de plataforma no se pueden otorgar a un rol de inquilino",
+      "tenantPermissionNotGrantable": "Los permisos de inquilino no se pueden otorgar a un rol de plataforma",
+      "concurrentModification": "Otra persona modificó este registro. Recargue e inténtelo de nuevo.",
+      "userSharedAcrossTenants": "Este usuario pertenece a otros inquilinos y solo puede ser modificado por un administrador de la plataforma",
+      "featureDisabled": "Su plan no incluye esta función.",
+      "featureLimitExceeded": "Se ha alcanzado el límite de su plan para esto.",
+      "featureNotFound": "Esa función no existe.",
+      "invalidFeatureValue": "Ese valor no está permitido para esta función.",
+      "featureProviderNotAllowed": "Esta función no se puede definir aquí.",
+      "unknownFeatureProvider": "Proveedor de funciones desconocido.",
+      "editionNotFound": "Edición no encontrada.",
+      "editionNameAlreadyExists": "Ya existe una edición con este nombre.",
+      "editionInUse": "Esta edición no se puede eliminar mientras haya inquilinos en ella."
+    }
+  },
+  "table": {
+    "columns": {
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "email": "Correo",
+      "roles": "Roles",
+      "userName": "Usuario",
+      "isActive": "Activo",
+      "name": "Nombre",
+      "description": "Descripción",
+      "userCount": "Usuarios",
+      "type": "Tipo",
+      "title": "Título",
+      "message": "Mensaje",
+      "status": "Estado",
+      "date": "Fecha",
+      "group": "Grupo",
+      "created": "Creado",
+      "updated": "Actualizado",
+      "identifier": "Identificador",
+      "displayOrder": "Orden",
+      "tenantCount": "Inquilinos",
+      "edition": "Edición",
+      "key": "Clave",
+      "defaultValue": "Valor predeterminado",
+      "inheritedValue": "Valor heredado",
+      "override": "Sobrescritura"
+    },
+    "pagination": {
+      "showingEntries": "Mostrando ${from} a ${to} de ${totalRecords} entradas"
+    },
+    "noRecords": "No se encontraron registros",
+    "searchPlaceholder": "Buscar...",
+    "export": {
+      "button": "Exportar",
+      "excel": "Excel",
+      "csv": "CSV",
+      "currentPage": "Página Actual",
+      "allRecords": "Todos los Registros"
+    },
+    "actions": "Acciones",
+    "createLink": "Crear",
+    "filter": {
+      "button": "Filtros",
+      "all": "Todos",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "allRoles": "Todos los Roles",
+      "activeStatus": "Estado Activo",
+      "role": "Rol",
+      "selectRole": "Seleccionar Rol",
+      "search": "Buscar",
+      "clear": "Limpiar",
+      "tenantStatus": "Estado del Inquilino",
+      "allStatuses": "Todos los Estados",
+      "suspended": "Suspendido"
+    }
+  },
+  "file": {
+    "upload": "Subir Archivo",
+    "deleteTitle": "Eliminar Archivo",
+    "deleteConfirm": "¿Está seguro de que desea eliminar este archivo?",
+    "tooLarge": "El archivo es demasiado grande. Solo puede subir archivos de hasta ${max} MB."
+  },
+  "page": {
+    "home": {
+      "hero": {
+        "badge": "Plantilla de código abierto .NET y Next.js",
+        "titleFocus": "Enfócate en",
+        "titleHighlight": "Lógica de Negocio",
+        "description": "Deja de perder tiempo en código repetitivo. Una base lista para producción con autenticación, permisos y trabajos en segundo plano preconfigurados.",
+        "dashboardDetail": "Tablero",
+        "signin": "Iniciar Sesión",
+        "viewSource": "Ver Código"
+      },
+      "features": {
+        "titleBadge": "Características",
+        "title": "Todo lo que necesitas para construir más rápido",
+        "description": "Un kit de inicio completo con todas las características esenciales preconstruidas, para que puedas concentrarte en tus requisitos comerciales únicos.",
+        "items": {
+          "permissions": {
+            "title": "Permisos Granulares",
+            "description": "Control de acceso basado en roles (RBAC) incorporado con permisos granulares. Administra fácilmente lo que los usuarios pueden ver y hacer."
+          },
+          "email": {
+            "title": "Servicio de Correo Electrónico",
+            "description": "Servicio de correo electrónico integrado para notificaciones, restablecimiento de contraseñas y más. Listo para conectar con tu proveedor SMTP."
+          },
+          "jobs": {
+            "title": "Trabajos en Segundo Plano",
+            "description": "Impulsado por Hangfire. Incluye trabajos preconfigurados para limpieza de tokens y mantenimiento de archivos."
+          },
+          "cleanup": {
+            "title": "Limpieza de Tokens y Archivos",
+            "description": "Servicios automatizados para mantener limpia tu base de datos y almacenamiento. Elimina tokens caducados y archivos temporales."
+          },
+          "users": {
+            "title": "Gestión de Usuarios",
+            "description": "Gestión completa del ciclo de vida del usuario. Crea, actualiza y administra perfiles de usuario y roles desde el primer momento."
+          },
+          "ui": {
+            "title": "Componentes de UI Modernos",
+            "description": "Una rica biblioteca de componentes accesibles y listos para modo oscuro construidos con Tailwind CSS y Headless UI."
+          }
+        }
+      },
+      "cta": {
+        "title": "Código Abierto e Impulsado por la Comunidad",
+        "description": "Únete a la comunidad, contribuye al proyecto o haz un fork para comenzar tu próxima gran idea.",
+        "button": "Estrella en GitHub",
+        "opensource": "Código Abierto",
+        "license": "Licencia MIT. Gratis para uso en proyectos personales y comerciales."
+      },
+      "title": "Inicio"
+    },
+    "dashboard": {
+      "title": "Tablero",
+      "sales": "Ventas",
+      "revenue": "Ingresos",
+      "salesByCategory": "Ventas por Categoría",
+      "dailySales": "Ventas Diarias",
+      "summary": "Resumen",
+      "totalOrders": "Total de Pedidos",
+      "totalProfit": "Beneficio Total",
+      "income": "Ingresos",
+      "expenses": "Gastos",
+      "profit": "Beneficio",
+      "weekly": "Semanal",
+      "monthly": "Mensual",
+      "yearly": "Anual",
+      "viewReport": "Ver Informe",
+      "editReport": "Editar Informe",
+      "markAsDone": "Marcar como Hecho",
+      "goToColumns": "Ir a columnas para detalles"
+    },
+    "users": {
+      "title": "Usuarios",
+      "createSuccess": "Usuario creado exitosamente",
+      "updateSuccess": "Usuario actualizado exitosamente",
+      "deleteTitle": "Eliminar Usuario",
+      "deleteConfirm": "¿Está seguro de que desea eliminar este usuario?",
+      "deleteSuccess": "Usuario eliminado exitosamente",
+      "seatLimitReached": "Se ha alcanzado el límite de usuarios de su plan",
+      "create": {
+        "title": "Crear usuario"
+      },
+      "list": {
+        "title": "Lista de usuarios"
+      },
+      "update": {
+        "title": "Actualizar usuario"
+      }
+    },
+    "roles": {
+      "title": "Roles",
+      "createSuccess": "Rol creado exitosamente",
+      "updateSuccess": "Rol actualizado exitosamente",
+      "deleteTitle": "Eliminar Rol",
+      "deleteConfirm": "¿Está seguro de que desea eliminar este rol?",
+      "deleteSuccess": "Rol eliminado exitosamente",
+      "notFound": "Rol no encontrado",
+      "permissions": "Permisos",
+      "permissionsUpdateSuccess": "Permisos actualizados exitosamente",
+      "changePermissions": {
+        "title": "Cambiar permisos"
+      },
+      "create": {
+        "title": "Crear rol"
+      },
+      "list": {
+        "title": "Lista de roles"
+      },
+      "update": {
+        "title": "Actualizar rol"
+      },
+      "permissionGroups": "Grupos de Permisos"
+    },
+    "profile": {
+      "title": "Perfil",
+      "description": "Actualiza tu información personal",
+      "updateSuccess": "Perfil actualizado exitosamente",
+      "deleteAvatarTitle": "Eliminar Foto de Perfil",
+      "deleteAvatarConfirm": "¿Está seguro de que desea eliminar su foto de perfil?",
+      "altImage": "Imagen de Perfil",
+      "changePasswordSuccess": "Contraseña cambiada exitosamente"
+    },
+    "verifyEmail": {
+      "verifying": "Verificando su correo...",
+      "verifiedTitle": "¡Correo Verificado!",
+      "verifiedMessage": "Su correo ha sido verificado exitosamente. Ahora puede iniciar sesión.",
+      "buttonSignin": "Iniciar Sesión Ahora",
+      "resendButton": "Reenviar Correo de Verificación",
+      "resendSuccess": "El correo de verificación ha sido reenviado.",
+      "resendWait": "Por favor espere ${seconds}s",
+      "notVerifiedTitle": "Verificación de Correo Requerida",
+      "notVerifiedMessage": "Su dirección de correo no está verificada. Por favor revise su bandeja de entrada o haga clic abajo para reenviar.",
+      "failedTitle": "Verificación Fallida",
+      "failedMessage": "El enlace de verificación es inválido o ha expirado.",
+      "title": "Verificar correo electrónico"
+    },
+    "auth": {
+      "signin": {
+        "title": "Iniciar Sesión",
+        "description": "Ingrese sus credenciales para iniciar sesión",
+        "button": "Iniciar Sesión",
+        "forgotPassword": "¿Olvidó su contraseña?",
+        "signupLink": "Registrarse",
+        "noAccount": "¿No tiene una cuenta?",
+        "backToSignin": "Volver a Iniciar Sesión"
+      },
+      "signup": {
+        "title": "Registrarse",
+        "description": "Ingrese su correo electrónico y contraseña para registrarse",
+        "button": "Registrarse",
+        "signinLink": "Iniciar Sesión",
+        "alreadyHaveAccount": "¿Ya tiene una cuenta?",
+        "successTitle": "¡Éxito!",
+        "successVerifyEmail": "¡Registro exitoso! Por favor verifique su correo electrónico.",
+        "successMessage": "¡Registro exitoso! Vaya a la página de inicio de sesión.",
+        "tenantSectionTitle": "Tu inquilino"
+      },
+      "forgotPassword": {
+        "title": "Olvidé mi Contraseña",
+        "description": "Ingrese su correo electrónico para restablecer su contraseña",
+        "button": "Enviar Enlace de Restablecimiento",
+        "success": "Enlace de restablecimiento enviado",
+        "checkEmail": "Revise su correo electrónico para ver las instrucciones"
+      },
+      "resetPassword": {
+        "title": "Restablecer Contraseña",
+        "description": "Ingrese su nueva contraseña para restablecer su cuenta",
+        "button": "Restablecer Contraseña",
+        "success": "Contraseña restablecida exitosamente",
+        "hasBeenReset": "Su contraseña ha sido restablecida exitosamente"
+      },
+      "signout": "Cerrar Sesión",
+      "unauthorized": {
+        "title": "No autorizado"
+      }
+    },
+    "changePassword": {
+      "title": "Cambiar contraseña",
+      "description": "Asegura tu cuenta manteniéndola segura"
+    },
+    "ui": {
+      "buttons": {
+        "title": "Botones de UI"
+      },
+      "cards": {
+        "title": "Tarjetas de UI"
+      },
+      "datePicker": {
+        "title": "Selector de fecha de UI"
+      },
+      "dateView": {
+        "title": "Vista de fecha de UI"
+      },
+      "fileUpload": {
+        "title": "Subida de archivos de UI"
+      },
+      "formElements": {
+        "title": "Elementos de formulario de UI"
+      },
+      "treeview": {
+        "title": "Vista de árbol de UI"
+      },
+      "tooltip": {
+        "title": "UI Tooltip"
+      }
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "detail": {
+        "title": "Detalles de la notificación"
+      },
+      "viewAll": "Ver todas las notificaciones"
+    },
+    "tenants": {
+      "title": "Inquilinos",
+      "notFound": "Inquilino no encontrado",
+      "systemCreated": "Creado por el sistema",
+      "createSuccess": "Inquilino creado exitosamente",
+      "updateSuccess": "Inquilino actualizado exitosamente",
+      "deleteTitle": "Eliminar Inquilino",
+      "deleteConfirm": "¿Está seguro de que desea eliminar este inquilino?",
+      "deleteSuccess": "Inquilino eliminado exitosamente",
+      "suspendTitle": "Suspender Inquilino",
+      "suspendConfirm": "¿Está seguro de que desea suspender este inquilino? Sus miembros perderán el acceso hasta que se reactive.",
+      "suspendSuccess": "Inquilino suspendido exitosamente",
+      "reactivateTitle": "Reactivar Inquilino",
+      "reactivateConfirm": "¿Está seguro de que desea reactivar este inquilino?",
+      "reactivateSuccess": "Inquilino reactivado exitosamente",
+      "list": {
+        "title": "Lista de inquilinos"
+      },
+      "create": {
+        "title": "Crear inquilino"
+      },
+      "update": {
+        "title": "Actualizar inquilino"
+      },
+      "status": {
+        "active": "Activo",
+        "suspended": "Suspendido"
+      },
+      "members": {
+        "title": "Miembros del inquilino",
+        "addTitle": "Agregar miembro",
+        "addButton": "Agregar miembro",
+        "addSuccess": "Miembro agregado exitosamente",
+        "seatLimitReached": "Se ha alcanzado el límite de usuarios del plan de este inquilino",
+        "rolesTitle": "Cambiar roles del miembro",
+        "rolesButton": "Cambiar roles",
+        "rolesSuccess": "Roles del miembro actualizados exitosamente",
+        "removeTitle": "Quitar miembro",
+        "removeConfirm": "¿Está seguro de que desea quitar a este miembro del inquilino?",
+        "removeSuccess": "Miembro quitado exitosamente"
+      },
+      "switcher": {
+        "label": "Inquilino",
+        "switchTo": "Cambiar de inquilino",
+        "switchSuccess": "Ahora está trabajando en ${tenant}",
+        "noTenant": "Ningún inquilino seleccionado",
+        "viewDetail": "Ver detalle del inquilino",
+        "exitTenant": "Salir del inquilino",
+        "exitSuccess": "Vuelves a trabajar como usuario de la plataforma"
+      },
+      "detail": {
+        "title": "Detalle del inquilino",
+        "information": "Información del inquilino",
+        "membersTitle": "Miembros"
+      },
+      "enterButton": "Entrar",
+      "enterCurrent": "Actual",
+      "actions": {
+        "detail": "Detalle",
+        "members": "Miembros",
+        "suspend": "Suspender",
+        "reactivate": "Reactivar"
+      }
+    },
+    "selectTenant": {
+      "title": "Seleccionar inquilino",
+      "description": "Elija el inquilino en el que desea trabajar.",
+      "emptyDescription": "No perteneces a ningún inquilino activo. Pide a un administrador que te añada al suyo, o regístrate para crear el tuyo.",
+      "emptyAction": "Ir a tu perfil"
+    },
+    "editions": {
+      "title": "Ediciones",
+      "createSuccess": "Edición creada correctamente",
+      "updateSuccess": "Edición actualizada correctamente",
+      "deleteTitle": "Eliminar edición",
+      "deleteConfirm": "¿Está seguro de que desea eliminar esta edición?",
+      "deleteSuccess": "Edición eliminada correctamente",
+      "notFound": "Edición no encontrada",
+      "list": {
+        "title": "Lista de ediciones"
+      },
+      "create": {
+        "title": "Crear edición"
+      },
+      "update": {
+        "title": "Actualizar edición"
+      }
+    },
+    "features": {
+      "tenantTitle": "Funciones del inquilino",
+      "editionTitle": "Funciones de la edición",
+      "saveSuccess": "Funciones actualizadas correctamente",
+      "none": "No se ha definido ninguna función",
+      "mintTimeNotice": "Los cambios se aplican a un usuario la próxima vez que se renueve su sesión.",
+      "setHere": "Definido aquí",
+      "fromEdition": "De la edición",
+      "fromDefault": "Predeterminado",
+      "resetToInherited": "Restablecer al valor heredado",
+      "groups": "Grupos",
+      "unsaved": "Sin guardar",
+      "unsavedCount": "${count} cambio(s) sin guardar",
+      "parentDisabled": "No está en vigor mientras la función superior esté desactivada",
+      "noMatches": "Ninguna función coincide con su búsqueda",
+      "actionLabel": "Funciones"
+    },
+    "localization": {
+      "title": "Localización",
+      "scope": {
+        "platform": "Está editando textos e idiomas a nivel de plataforma. Todos los inquilinos heredan estos valores a menos que definan los suyos propios.",
+        "tenant": "Está editando los textos e idiomas de ${tenant}. Todo lo que no cambie aquí se hereda de la plataforma."
+      },
+      "readOnly": "Puede ver esta configuración, pero no modificarla.",
+      "tabs": {
+        "texts": "Textos",
+        "languages": "Idiomas"
+      },
+      "texts": {
+        "onlyOverridden": "Solo los sobrescritos",
+        "setHere": "Definido aquí",
+        "fromPlatform": "De la plataforma",
+        "notOverridden": "No sobrescrito",
+        "editTitle": "Editar texto",
+        "inheritedLabel": "Valor heredado",
+        "defaultLabel": "Valor predeterminado",
+        "overrideLabel": "Su texto",
+        "placeholders": "Conserve estos marcadores de posición:",
+        "placeholderMissing": "Falta un marcador de posición: la aplicación lo mostrará vacío.",
+        "reset": "Restablecer al valor heredado",
+        "resetTitle": "¿Restablecer este texto?",
+        "resetConfirm": "Esto eliminará su valor personalizado y volverá al valor heredado.",
+        "resetSuccess": "Texto restablecido al valor heredado",
+        "saveSuccess": "Texto guardado",
+        "noOverrides": "Todavía no se ha sobrescrito nada en este idioma."
+      },
+      "languages": {
+        "inherited": "Heredado",
+        "inheritedFromPlatform": "Heredado de la plataforma",
+        "inheritedFromShipped": "Integrado: todos los idiomas, sin predeterminado",
+        "inheritedSummary": "Heredado: ${languages} · Predeterminado: ${default}",
+        "customize": "Personalizar",
+        "customized": "Personalizado",
+        "resetToInherited": "Restablecer a lo heredado",
+        "resetTitle": "¿Restablecer los idiomas?",
+        "resetConfirm": "Esto eliminará su personalización y volverá a lo heredado.",
+        "resetSuccess": "Idiomas restablecidos a la configuración heredada",
+        "enabled": "Idiomas habilitados",
+        "enabledCount": "${count} de ${total} habilitados",
+        "rtl": "De derecha a izquierda",
+        "atLeastOne": "Debe permanecer habilitado al menos un idioma",
+        "noDefault": "Ninguno: usar el idioma del navegador del visitante",
+        "defaultCleared": "El idioma predeterminado se borró porque acaba de deshabilitarse",
+        "currentWillSwitch": "El idioma en el que está viendo esta pantalla se está deshabilitando; se le cambiará al predeterminado.",
+        "unsaved": "Tiene cambios sin guardar",
+        "saveSuccess": "Idiomas actualizados"
+      }
+    }
+  },
+  "notifications": {
+    "noNotifications": "No hay notificaciones",
+    "notFound": "Notificación no encontrada",
+    "viewAll": "Ver todas las notificaciones",
+    "markAllRead": "Marcar todo como leído",
+    "markAsRead": "Marcar como leído",
+    "markAsUnread": "Marcar como no leído",
+    "delete": "Eliminar",
+    "all": "Todos",
+    "read": "Leído",
+    "unread": "No leído",
+    "group": "Grupo",
+    "metadata": "Metadatos",
+    "markedAsRead": "Notificación marcada como leída",
+    "markedAsUnread": "Notificación marcada como no leída",
+    "markedAllAsRead": "Todas las notificaciones marcadas como leídas",
+    "deleted": "Notificación eliminada",
+    "deleteTitle": "Eliminar notificación",
+    "deleteConfirm": "¿Está seguro de que desea eliminar esta notificación?",
+    "markAllReadConfirmTitle": "Marcar todo como leído",
+    "markAllReadConfirmText": "¿Está seguro de que desea marcar todas las notificaciones como leídas?",
+    "filterByGroup": "Filtrar por grupo",
+    "groups": {
+      "inventory": "Inventario",
+      "system": "Sistema",
+      "payments": "Pagos",
+      "orders": "Pedidos"
+    },
+    "types": {
+      "info": "Información",
+      "warning": "Advertencia",
+      "error": "Error",
+      "success": "Éxito"
+    },
+    "inventoryBelowLimit": {
+      "title": "Alerta de inventario bajo",
+      "message": "El artículo está por debajo del nivel mínimo de stock"
+    },
+    "systemUpdate": {
+      "title": "Actualización del sistema",
+      "message": "Hay una actualización del sistema disponible"
+    },
+    "orderCompleted": {
+      "title": "Pedido completado",
+      "message": "Su pedido se ha completado correctamente"
+    },
+    "paymentFailed": {
+      "title": "Pago fallido",
+      "message": "Ha fallado una transacción de pago"
+    },
+    "welcome": {
+      "title": "Bienvenido",
+      "message": "Bienvenido a la aplicación"
+    },
+    "tenantMemberAdded": {
+      "title": "Añadido a un inquilino",
+      "message": "Se te ha añadido a ${tenantName}"
+    }
+  }
+}

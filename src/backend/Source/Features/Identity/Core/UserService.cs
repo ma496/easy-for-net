@@ -2,24 +2,68 @@ namespace Backend.Features.Identity.Core;
 
 using Backend.Attributes;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// Defines CRUD and lookup operations for <see cref="User"/> entities, including password management and role assignment.
 /// </summary>
+/// <remarks>
+/// An account belongs to no tenant of its own - one account is one identity across every tenant - so the lookups
+/// by identifier, username and email answer platform-wide, which is what lets a caller sign in before any tenant
+/// has been established. What a tenant scopes is everything hung off the account: the roles and permissions it
+/// holds are read for one named tenant and no other, and the accounts a caller may administer are the ones holding
+/// an active membership of the tenant being acted in.
+/// </remarks>
 public interface IUserService
 {
     Task<User?> GetByIdAsync(Guid id);
     Task<User?> GetByUsernameAsync(string username);
     Task<User?> GetByEmailAsync(string email);
     Task<User?> GetByEmailOrUsernameAsync(string emailOrUsername);
+
+    /// <summary>
+    /// Every user account, restricted by no tenant. This is the platform-wide set, and the set a
+    /// platform administrator is entitled to; a caller administering accounts from inside a tenant
+    /// reads <see cref="TenantUsers"/> instead.
+    /// </summary>
+    /// <returns>A composable query over every account.</returns>
     IQueryable<User> Users();
+
+    /// <summary>
+    /// The accounts the caller may administer right now: the non-platform accounts holding an active
+    /// membership of the tenant being acted in, or the platform's own accounts while acting in no tenant.
+    /// Lists, searches and counts all narrow from this one query, so none of them can forget the
+    /// restriction and none of them can disagree about it.
+    /// </summary>
+    /// <returns>A composable query over the accounts the caller may administer.</returns>
+    /// <remarks>
+    /// Acting in no tenant is not an error here, it is an empty set: a membership always names a
+    /// tenant, so a caller whose scope is the platform rather than a tenant holds no accounts to
+    /// administer and reads none. A caller with no scope established at all - work outside a request
+    /// that never named the tenant it acts for - fails with
+    /// <see cref="TenantScopeNotEstablishedException"/> rather than quietly reading nothing.
+    /// </remarks>
+    IQueryable<User> TenantUsers();
+
+    /// <summary>
+    /// Creates an account with the supplied password and, when the caller is acting inside a tenant,
+    /// grants the new account an active membership of that tenant in the same transaction, so an
+    /// administrator never creates an account they cannot then see.
+    /// </summary>
+    /// <param name="user">The account to create, carrying any role assignments it is to start with.</param>
+    /// <param name="password">The initial password, hashed before it is stored.</param>
+    /// <returns>The created account.</returns>
+    /// <remarks>
+    /// No membership is written when the caller is acting in no tenant: self-service sign-up creates
+    /// a global account that joins nothing, and the seeder runs before any tenant exists at all.
+    /// </remarks>
     Task<User> CreateAsync(User user, string password);
+
     Task UpdateAsync(User user);
     Task DeleteAsync(Guid id);
     Task DeleteAsync(User user);
     Task<bool> ValidatePasswordAsync(User user, string password);
-    Task<List<string>> GetUserRolesAsync(Guid userId);
-    Task<List<string>> GetUserPermissionsAsync(Guid userId);
+
     Task AssignRoleAsync(Guid userId, Guid roleId);
     Task RemoveRoleAsync(Guid userId, Guid roleId);
     Task<bool> IsInRoleAsync(Guid userId, Guid roleId);
@@ -30,8 +74,18 @@ public interface IUserService
 /// <summary>
 /// EF Core-backed implementation of <see cref="IUserService"/> that manages users, their passwords, and role memberships.
 /// </summary>
+/// <remarks>
+/// Every read here that concerns a tenant relaxes tenant restriction by name and states the tenant it
+/// means in its own predicate, because the tenant asked about is not always the one being acted in -
+/// sign-in resolves a session's roles before any scope exists, and a platform administrator reads
+/// accounts from outside every tenant. The soft-delete filter stays in force throughout, so a deleted
+/// role grants nothing and a removed membership places nobody.
+/// </remarks>
 [NoDirectUse]
-public class UserService(AppDbContext dbContext, IPasswordHasher passwordHasher) : IUserService
+public class UserService(AppDbContext dbContext,
+                         IPasswordHasher passwordHasher,
+                         ITenantContext tenantContext,
+                         ITenantMembershipQuery tenantMembershipQuery) : IUserService
 {
     public async Task<User?> GetByIdAsync(Guid id)
     {
@@ -53,15 +107,61 @@ public class UserService(AppDbContext dbContext, IPasswordHasher passwordHasher)
         return await dbContext.Users.FirstOrDefaultAsync(u => u.EmailNormalized == emailOrUsername.ToLowerInvariant() || u.UsernameNormalized == emailOrUsername.ToLowerInvariant());
     }
 
+    /// <inheritdoc />
     public IQueryable<User> Users()
     {
         return dbContext.Users;
     }
 
+    /// <inheritdoc />
+    public IQueryable<User> TenantUsers()
+    {
+        // Acting in no tenant, the accounts administered are the platform's own - the ones the account
+        // tier marks as such. It is a scope test rather than a question about the caller: what reaches
+        // this point in platform scope is already a caller the tenant requirement admitted there, and
+        // which accounts platform scope is about does not depend on who is asking.
+        if (tenantContext.IsPlatformScope())
+        {
+            return Users().Where(account => account.IsPlatform);
+        }
+
+        // Read once, outside the expression, so the tenant the restriction means is fixed here rather
+        // than re-read while the query is translated - and so a scope that was never established fails
+        // at the call rather than somewhere inside a deferred query.
+        var activeTenantId = tenantContext.CurrentTenantId;
+
+        // Who belongs to a tenant is the tenancy slice's question, asked here through the contract it
+        // publishes rather than by reading its rows: the membership row never crosses into identity,
+        // only the identifiers. The answer is still an unexecuted query, so it composes into the one
+        // below and the database settles both halves at once - and platform scope, which names no
+        // tenant, matches no membership at all.
+        var memberUserIds = tenantMembershipQuery.MemberUserIds(activeTenantId);
+
+        // A platform account may hold a membership of the tenant, but it is administered from platform
+        // scope only: a tenant's administrators neither see it nor edit, deactivate or delete it. The
+        // tenant membership endpoints apply the same rule, so its membership and its roles inside the
+        // tenant are managed from platform scope too.
+        return Users().Where(account => !account.IsPlatform && memberUserIds.Contains(account.Id));
+    }
+
+    /// <inheritdoc />
     public async Task<User> CreateAsync(User user, string password)
     {
         user.PasswordHash = passwordHasher.HashPassword(password);
         dbContext.Users.Add(user);
+
+        // A tenant is established for a request made from inside one, resolved to the platform for the
+        // anonymous and self-service flows, and not established at all for the seeder, which runs
+        // before any request. Only the first of those grants a membership, and asking whether a scope
+        // exists before reading it is what keeps the other two working rather than failing.
+        if (tenantContext.IsResolved && tenantContext.CurrentTenantId is { } activeTenantId)
+        {
+            // The account's key is generated when it is added rather than when it is saved, so the
+            // membership can name it and both rows land in one transaction: an account is never left
+            // behind without the membership that makes its creator able to see it.
+            dbContext.TenantMemberships.Add(new() { TenantId = activeTenantId, UserId = user.Id });
+        }
+
         await dbContext.SaveChangesAsync();
         return user;
     }
@@ -98,24 +198,6 @@ public class UserService(AppDbContext dbContext, IPasswordHasher passwordHasher)
         }
 
         return isValid;
-    }
-
-    public async Task<List<string>> GetUserRolesAsync(Guid userId)
-    {
-        return await dbContext.UserRoles
-            .Where(ur => ur.UserId == userId)
-            .Select(ur => ur.Role.Name)
-            .ToListAsync();
-    }
-
-    public async Task<List<string>> GetUserPermissionsAsync(Guid userId)
-    {
-        return await dbContext.UserRoles
-            .Where(ur => ur.UserId == userId)
-            .SelectMany(ur => ur.Role.RolePermissions)
-            .Select(rp => rp.Permission.Name)
-            .Distinct()
-            .ToListAsync();
     }
 
     public async Task AssignRoleAsync(Guid userId, Guid roleId)

@@ -4,7 +4,7 @@ using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 
 /// <summary>
-/// This endpoint that handles <c>GET /users</c> to return a paginated, filterable list of users with their role assignments.
+/// This endpoint that handles <c>GET /users</c> to return a paginated, filterable list of the user accounts the caller may administer, with their role assignments.
 /// </summary>
 sealed class UserListEndpoint(IUserService userService) : Endpoint<UserListRequest, UserListResponse>
 {
@@ -17,8 +17,11 @@ sealed class UserListEndpoint(IUserService userService) : Endpoint<UserListReque
 
     public override async Task HandleAsync(UserListRequest request, CancellationToken cancellationToken)
     {
-        // get entities from db
-        var query = userService.Users()
+        // The accounts the caller may administer: the non-platform accounts holding an active membership
+        // of the tenant being acted in, or the platform's own accounts in platform scope. The search, the
+        // filters and the total below all narrow from this one query, so none of them can report an
+        // account the caller is not entitled to see.
+        var query = userService.TenantUsers()
             .AsNoTracking()
             .Include(x => x.UserRoles)
             .ThenInclude(x => x.Role)
@@ -95,7 +98,7 @@ public sealed class UserListResponse : ListDto<UserListDto>
 /// <summary>
 /// Per-row DTO representing a user in list responses, including profile fields and a compact role summary.
 /// </summary>
-public sealed class UserListDto : AuditableDto<Guid>
+public sealed class UserListDto : AuditableDto<Guid>, ISystemCreatedDto
 {
     public bool SystemCreated { get; set; }
     public string Username { get; set; } = null!;
@@ -125,6 +128,8 @@ public partial class UserListDtoMapper
     [MapProperty("UserRoles", "Roles", Use = nameof(UserRolesToRoles))]
     public partial UserListDto Map(User entity);
 
+    // A role of another tenant is filtered out of the include, which leaves its assignment row with
+    // no role attached; such an assignment names nothing the caller may see, so it is not reported.
     private static List<UserRoleDto> UserRolesToRoles(ICollection<UserRole> userRoles)
-        => [.. userRoles.Select(x => new UserRoleDto { Id = x.RoleId, Name = x.Role.Name })];
+        => [.. userRoles.Where(x => x.Role != null).Select(x => new UserRoleDto { Id = x.RoleId, Name = x.Role.Name })];
 }

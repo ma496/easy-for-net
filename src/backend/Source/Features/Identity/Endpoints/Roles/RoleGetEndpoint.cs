@@ -2,11 +2,18 @@ namespace Backend.Features.Identity.Endpoints.Roles;
 
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// This endpoint that handles <c>GET /roles/{id}</c> to return a single role with its permission list and user count.
 /// </summary>
-sealed class RoleGetEndpoint(IRoleService roleService) : Endpoint<RoleGetRequest, RoleGetResponse>
+/// <remarks>
+/// Only the roles of the tenant being acted in are readable here: a role belonging to another tenant
+/// is answered with the same 404 as an identifier naming no role at all, so nothing about it - not its
+/// name, not its permissions, not its existence - can be learned from this endpoint. A caller holding
+/// platform account reads any tenant's role by entering that tenant, which is how it reaches one at all.
+/// </remarks>
+sealed class RoleGetEndpoint(IRoleService roleService, ITenantContext tenantContext) : Endpoint<RoleGetRequest, RoleGetResponse>
 {
     public override void Configure()
     {
@@ -17,10 +24,17 @@ sealed class RoleGetEndpoint(IRoleService roleService) : Endpoint<RoleGetRequest
 
     public override async Task HandleAsync(RoleGetRequest request, CancellationToken cancellationToken)
     {
-        // get entity from db
+        // The lookup narrows from the roles the caller may see rather than from every role, so the
+        // tenant restriction and the missing-row case are one and the same code path: a role of another
+        // tenant simply is not found, and falls into the 404 below without being distinguishable from a
+        // role that never existed.
+        //
+        // Inside a tenant the user count leaves platform accounts out, as the tenant's user list does:
+        // a platform account holding the role there is nobody the tenant administers.
+        var includePlatformAccounts = tenantContext.IsPlatformScope();
         var entity = await roleService.Roles()
             .Include(x => x.RolePermissions)
-            .Include(x => x.UserRoles)
+            .Include(x => x.UserRoles.Where(assignment => includePlatformAccounts || !assignment.User.IsPlatform))
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
         if (entity == null)
         {
@@ -40,7 +54,7 @@ sealed class RoleGetRequest : BaseDto<Guid>
 {
 }
 
-/// <summary>>
+/// <summary>
 /// FluentValidation rules requiring a non-empty id for role retrieval.
 /// </summary>
 sealed class RoleGetValidator : Validator<RoleGetRequest>
@@ -54,7 +68,7 @@ sealed class RoleGetValidator : Validator<RoleGetRequest>
 /// <summary>
 /// Response payload containing the role's metadata, assigned permission ids, and user count.
 /// </summary>
-public sealed class RoleGetResponse : AuditableDto<Guid>
+public sealed class RoleGetResponse : AuditableDto<Guid>, ISystemCreatedDto
 {
     public bool SystemCreated { get; set; }
     public string Name { get; set; } = null!;

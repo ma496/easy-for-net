@@ -2,11 +2,16 @@ namespace Backend.Features.Identity.Endpoints.Users;
 
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// This endpoint that handles <c>PUT /users/{id}</c> to update a user's profile, active state, and role memberships.
 /// </summary>
-sealed class UserUpdateEndpoint(IUserService userService)
+sealed class UserUpdateEndpoint(IUserService userService,
+                                AppDbContext dbContext,
+                                ICurrentUserService currentUserService,
+                                ITenantAuthorizationService tenantAuthorizationService,
+                                ITenantContext tenantContext)
     : Endpoint<UserUpdateRequest, UserUpdateResponse>
 {
     public override void Configure()
@@ -18,8 +23,10 @@ sealed class UserUpdateEndpoint(IUserService userService)
 
     public override async Task HandleAsync(UserUpdateRequest request, CancellationToken cancellationToken)
     {
-        // get entity from db
-        var entity = await userService.Users()
+        // The account is read from the set the caller may administer, so one holding no membership of
+        // the tenant being acted in answers exactly as an account that does not exist does, and nothing
+        // below runs against it. A platform administrator administers every account.
+        var entity = await userService.TenantUsers()
             .Include(x => x.UserRoles)
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
         if (entity == null)
@@ -28,17 +35,52 @@ sealed class UserUpdateEndpoint(IUserService userService)
             return;
         }
         if (entity.SystemCreated)
-            ThrowError("System-created user cannot be updated", ErrorCodes.SystemCreatedUserCannotBeUpdated);
+            this.ThrowError(ErrorCodes.SystemCreatedUserCannotBeUpdated);
+
+        // An account is one identity across every tenant it belongs to, and the fields written below are
+        // the account's own rather than this tenant's view of it: deactivating it locks it out
+        // everywhere, and renaming it renames it everywhere. Administering one tenant is therefore not
+        // standing enough to write them for an account that also belongs to another tenant or holds a
+        // platform-scoped role - otherwise anyone who can create a tenant could add a member of somebody
+        // else's tenant to it and lock them out of theirs. Such an account is administered by its owner
+        // or by a platform administrator; what it may do *inside this tenant* stays administrable here,
+        // through the tenant's own membership surface.
+        await GuardSharedAccountAsync(entity.Id, cancellationToken);
+
+        // The roles this endpoint may hand out and take away are the roles of the tenant being acted in
+        // and no others, so they are read straight through the tenant query filter rather than through
+        // IRoleService.Roles(), which widens for a platform administrator: were the two sets read from
+        // different authorities, a role could be assignable and yet impossible to unassign, and the
+        // response would report a removal that never happened. One query answers both halves, over the
+        // roles named by the request and the roles the account already holds.
+        var requestedRoleIds = request.Roles.Distinct().ToList();
+        var assignedRoleIds = entity.UserRoles.Select(userRole => userRole.RoleId).ToList();
+        var tenantRoleIds = await dbContext.Roles
+            .AsNoTracking()
+            .Where(role => requestedRoleIds.Contains(role.Id) || assignedRoleIds.Contains(role.Id))
+            .Select(role => role.Id)
+            .ToListAsync(cancellationToken);
+
+        // A role belonging to another tenant is not found here, exactly as a role that does not exist
+        // is not, and both are refused the same way.
+        if (requestedRoleIds.Any(roleId => !tenantRoleIds.Contains(roleId)))
+        {
+            this.ThrowError(x => x.Roles, ErrorCodes.ReferencedRecordNotFound);
+        }
 
         var requestMapper = new UserUpdateRequestMapper();
         requestMapper.Update(request, entity);
         // update user roles based on request and already assigned roles
-        var rolesToAssign = request.Roles.Where(x => entity.UserRoles.All(ur => ur.RoleId != x)).ToList();
+        var rolesToAssign = requestedRoleIds.Where(x => entity.UserRoles.All(ur => ur.RoleId != x)).ToList();
         foreach (var role in rolesToAssign)
         {
             entity.UserRoles.Add(new UserRole { RoleId = role });
         }
-        var rolesToRemove = entity.UserRoles.Where(x => !request.Roles.Contains(x.RoleId)).ToList();
+        // An assignment to a role of another tenant is left alone: administering an account from inside
+        // one tenant never strips what it holds in another.
+        var rolesToRemove = entity.UserRoles
+            .Where(x => tenantRoleIds.Contains(x.RoleId) && !requestedRoleIds.Contains(x.RoleId))
+            .ToList();
         foreach (var role in rolesToRemove)
         {
             entity.UserRoles.Remove(role);
@@ -47,7 +89,35 @@ sealed class UserUpdateEndpoint(IUserService userService)
         // save entity to db
         await userService.UpdateAsync(entity);
         var responseMapper = new UserUpdateResponseMapper();
-        await Send.ResponseAsync(responseMapper.Map(entity), cancellation: cancellationToken);
+        var response = responseMapper.Map(entity);
+        // The roles echoed back are the tenant's own - the set just written - rather than every
+        // assignment the account holds, so the response never names another tenant's role.
+        response.Roles = requestedRoleIds;
+        await Send.ResponseAsync(response, cancellation: cancellationToken);
+    }
+
+    /// <summary>
+    /// Refuses the request when the account reaches beyond the tenant being acted in. A platform
+    /// account acting in no tenant administers the platform's own accounts and is never refused here;
+    /// inside a tenant it is an actor of that tenant and is refused exactly as its administrators are.
+    /// </summary>
+    /// <param name="userId">The account being written.</param>
+    /// <param name="cancellationToken">Token used to cancel the read.</param>
+    private async Task GuardSharedAccountAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        if (currentUserService.IsPlatform() && tenantContext.IsPlatformScope())
+        {
+            return;
+        }
+
+        // A caller acting in no tenant who is not a platform account administers no accounts at all -
+        // the set this account was read from is empty for them - so reaching this with no tenant means
+        // something above changed; it is refused rather than waved through.
+        if (tenantContext.CurrentTenantId is not { } activeTenantId
+            || await tenantAuthorizationService.ReachesBeyondTenantAsync(userId, activeTenantId, cancellationToken))
+        {
+            this.ThrowError(ErrorCodes.UserSharedAcrossTenants);
+        }
     }
 }
 
@@ -97,18 +167,15 @@ public partial class UserUpdateRequestMapper
 }
 
 /// <summary>
-/// This mapper that projects a <see cref="User"/> entity into a <see cref="UserUpdateResponse"/>, collapsing <see cref="UserRole"/> join rows into role ids.
+/// This mapper that projects a <see cref="User"/> entity into a <see cref="UserUpdateResponse"/>. The
+/// role ids are filled in by the endpoint rather than mapped, because only the roles the caller may see
+/// are echoed back.
 /// </summary>
 [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
 public partial class UserUpdateResponseMapper
 {
-    [MapProperty(nameof(User.UserRoles), nameof(UserUpdateResponse.Roles), Use = nameof(UserRolesToRoles))]
+    [MapperIgnoreTarget(nameof(UserUpdateResponse.Roles))]
     public partial UserUpdateResponse Map(User entity);
-
-    private static List<Guid> UserRolesToRoles(ICollection<UserRole> userRoles)
-    {
-        return [.. userRoles.Select(x => x.RoleId)];
-    }
 }
 
 

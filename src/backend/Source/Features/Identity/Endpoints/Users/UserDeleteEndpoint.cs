@@ -1,11 +1,15 @@
 namespace Backend.Features.Identity.Endpoints.Users;
 
 using Backend.Features.Identity.Core;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// This endpoint that handles <c>DELETE /users/{id}</c> to remove an existing user (refusing to delete a system-created user).
 /// </summary>
-sealed class UserDeleteEndpoint(IUserService userService) : Endpoint<UserDeleteRequest, UserDeleteResponse>
+sealed class UserDeleteEndpoint(IUserService userService,
+                                ICurrentUserService currentUserService,
+                                ITenantAuthorizationService tenantAuthorizationService,
+                                ITenantContext tenantContext) : Endpoint<UserDeleteRequest, UserDeleteResponse>
 {
     public override void Configure()
     {
@@ -16,18 +20,35 @@ sealed class UserDeleteEndpoint(IUserService userService) : Endpoint<UserDeleteR
 
     public override async Task HandleAsync(UserDeleteRequest request, CancellationToken cancellationToken)
     {
-        // get entity from db
-        var entity = await userService.GetByIdAsync(request.Id);
+        // The account is read from the set the caller may administer, so one holding no membership of
+        // the tenant being acted in answers exactly as an account that does not exist does and is left
+        // in place. A platform administrator administers every account.
+        var entity = await userService.TenantUsers()
+            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
         if (entity == null)
         {
             await Send.NotFoundAsync(cancellationToken);
             return;
         }
         if (entity.SystemCreated)
-            ThrowError("System-created user cannot be deleted", ErrorCodes.SystemCreatedUserCannotBeDeleted);
+            this.ThrowError(ErrorCodes.SystemCreatedUserCannotBeDeleted);
 
-        // Delete the entity from the db
-        await userService.DeleteAsync(request.Id);
+        // An account is one identity across every tenant it belongs to, and deleting it ends it in all
+        // of them. Administering one tenant is therefore not standing enough to delete an account that
+        // also belongs to another tenant or holds a platform-scoped role: that account is deleted from
+        // platform scope, while this tenant removes it from its own membership instead.
+        if (!(currentUserService.IsPlatform() && tenantContext.IsPlatformScope()))
+        {
+            if (tenantContext.CurrentTenantId is not { } activeTenantId
+                || await tenantAuthorizationService.ReachesBeyondTenantAsync(entity.Id, activeTenantId, cancellationToken))
+            {
+                this.ThrowError(ErrorCodes.UserSharedAcrossTenants);
+            }
+        }
+
+        // Delete the entity from the db - the account already read above, so the deletion cannot reach
+        // one the caller may not administer.
+        await userService.DeleteAsync(entity);
         await Send.ResponseAsync(new() { Success = true }, cancellation: cancellationToken);
     }
 }

@@ -1,0 +1,10 @@
+* text=auto
+
+# The task loop parses these files line by line; keep them LF on every checkout.
+*.mjs text eol=lf
+specs/** text eol=lf
+docs/** text eol=lf
+.agent-queue/** text eol=lf
+.claude/** text eol=lf
+agentic.config.json text eol=lf
+package.json text eol=lf

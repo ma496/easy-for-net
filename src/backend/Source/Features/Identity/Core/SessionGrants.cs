@@ -1,0 +1,138 @@
+namespace Backend.Features.Identity.Core;
+
+/// <summary>
+/// Reads what an account holds inside one tenant - the roles it is assigned there and the
+/// permissions those roles grant, narrowed to the scope the session will act in. It is asked once
+/// per session rather than once per request: sign-in, a refresh and a tenant switch each mint a
+/// token carrying the answer, and every request in between is authorized from the claims that token
+/// already holds.
+/// </summary>
+/// <remarks>
+/// The narrowing is stated here and nowhere else, so the claims a session is minted with and the
+/// grants the account info endpoint reports cannot describe different authority for the same caller.
+/// </remarks>
+public static class SessionGrants
+{
+    /// <summary>
+    /// The permission tier a session acting in this tenant exercises: the tenant tier inside one, and
+    /// the platform tier in none. A permission declared for both is held either way.
+    /// </summary>
+    /// <param name="tenantId">The tenant the session acts in, or <see langword="null"/> for none.</param>
+    /// <returns>The scope whose permissions the session may exercise.</returns>
+    public static PermissionScope ScopeOf(Guid? tenantId)
+        => tenantId is null ? PermissionScope.Platform : PermissionScope.Tenant;
+
+    /// <summary>
+    /// Whether the account exercises any permission at all in that scope. The platform scope belongs
+    /// to platform accounts alone: an ordinary account acting in no tenant has not chosen one yet, or
+    /// has lost the one it had, and is not thereby working on the platform. It keeps its role names,
+    /// which describe who it is rather than what it may do here.
+    /// </summary>
+    /// <param name="isPlatform">Whether the account belongs to the platform tier.</param>
+    /// <param name="tenantId">The tenant the session acts in, or <see langword="null"/> for none.</param>
+    /// <returns><see langword="true"/> when the session exercises the permissions its roles grant.</returns>
+    public static bool ExercisesPermissions(bool isPlatform, Guid? tenantId)
+        => isPlatform || tenantId is not null;
+
+    /// <summary>
+    /// The permission names a session acting in this tenant may exercise once its plan is taken into
+    /// account, or <see langword="null"/> when nothing is narrowed.
+    /// </summary>
+    /// <remarks>
+    /// Acting in no tenant narrows nothing: an account there is inside no plan, so there is none to
+    /// consult. Stating that here rather than at each call site is what keeps the claims a session is
+    /// minted with and the grants the account information endpoint reports from describing different
+    /// authority for the same caller.
+    /// </remarks>
+    /// <param name="permissionFeatureFilter">The filter that reads the tenant's entitlements.</param>
+    /// <param name="tenantId">The tenant the session acts in, or <see langword="null"/> for none.</param>
+    /// <param name="cancellationToken">Token used to cancel the read.</param>
+    /// <returns>The permitted names, or <see langword="null"/> to narrow nothing.</returns>
+    public static async Task<IReadOnlySet<string>?> EnabledPermissionNamesAsync(
+        IPermissionFeatureFilter permissionFeatureFilter,
+        Guid? tenantId,
+        CancellationToken cancellationToken = default)
+        => tenantId is { } id
+            ? await permissionFeatureFilter.EnabledPermissionNamesAsync(FeatureTarget.ForTenant(id), cancellationToken)
+            : null;
+
+    /// <summary>
+    /// The roles and permissions to mint a session with: those granted inside the tenant being acted
+    /// in, and no others. Inside a tenant only that tenant's own roles count - a platform account acts
+    /// there on the roles its membership carries, not on its platform roles - and in no tenant only the
+    /// platform-scoped roles, which belong to none, do.
+    /// </summary>
+    /// <param name="dbContext">The database context the grants are read through.</param>
+    /// <param name="permissionFeatureFilter">The filter that removes permissions the tenant's plan withholds.</param>
+    /// <param name="userId">The account the session belongs to.</param>
+    /// <param name="tenantId">The tenant the session acts in, or <see langword="null"/> for none.</param>
+    /// <param name="isPlatform">Whether the account belongs to the platform tier.</param>
+    /// <param name="cancellationToken">Token used to cancel the read.</param>
+    /// <returns>The role and permission names the session carries.</returns>
+    /// <remarks>
+    /// Tenant restriction is relaxed by name because this runs before any tenant scope is established -
+    /// at sign-in and at refresh there is no scope at all, and the tenant being read for is stated in
+    /// the predicate instead. The soft-delete filter stays in force throughout, so a deleted role stops
+    /// granting what it granted.
+    /// </remarks>
+    public static async Task<GrantSet> ReadAsync(AppDbContext dbContext,
+                                                 IPermissionFeatureFilter permissionFeatureFilter,
+                                                 Guid userId,
+                                                 Guid? tenantId,
+                                                 bool isPlatform,
+                                                 CancellationToken cancellationToken = default)
+    {
+        var viewScope = ScopeOf(tenantId);
+
+        var grants = await dbContext.Roles
+            .AsNoTracking()
+            .AcrossAllTenants()
+            .Where(role => role.TenantId == tenantId
+                           && dbContext.UserRoles.Any(assignment => assignment.UserId == userId && assignment.RoleId == role.Id))
+            .Select(role => new
+            {
+                role.Name,
+                Permissions = role.RolePermissions
+                    .Where(rolePermission => rolePermission.Permission.Scope == viewScope
+                                             || rolePermission.Permission.Scope == PermissionScope.Both)
+                    .Select(rolePermission => rolePermission.Permission.Name)
+                    .ToList()
+            })
+            .ToListAsync(cancellationToken);
+
+        // The tenant's plan is applied after the grants are read rather than inside the query: what a
+        // permission requires is code, and whether the tenant has it is a handful of rows read by
+        // provider key. Narrowing here also means a grant is never deleted for want of a feature - the
+        // role keeps it, and it comes back the moment the feature does.
+        var permitted = await EnabledPermissionNamesAsync(permissionFeatureFilter, tenantId, cancellationToken);
+
+        return new GrantSet
+        {
+            Roles = [.. grants.Select(grant => grant.Name).Distinct(StringComparer.Ordinal)],
+            Permissions = ExercisesPermissions(isPlatform, tenantId)
+                ? [.. grants.SelectMany(grant => grant.Permissions)
+                            .Distinct(StringComparer.Ordinal)
+                            .Where(permission => permitted is null || permitted.Contains(permission))]
+                : []
+        };
+    }
+}
+
+/// <summary>
+/// The roles and permissions one session is minted with. It describes the account's standing at the
+/// moment the token was issued, which is what every request that token authorizes is decided on.
+/// </summary>
+public sealed class GrantSet
+{
+    /// <summary>
+    /// Gets the names of the roles the account holds in the scope being acted in: the tenant's own
+    /// roles inside one, its platform-scoped roles in none.
+    /// </summary>
+    public List<string> Roles { get; init; } = [];
+
+    /// <summary>
+    /// Gets the names of the permissions those roles grant, narrowed to the scope being acted in and
+    /// without duplicates. Empty for an ordinary account acting in no tenant.
+    /// </summary>
+    public List<string> Permissions { get; init; } = [];
+}

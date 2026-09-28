@@ -4,12 +4,17 @@ using Backend.Base.Dto;
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
 using Backend.Features.Notifications.Core.Entities;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
-/// GET endpoint that returns a paged, filterable list of notifications visible to the current user,
-/// resolving per-user read state for global notifications.
+/// GET endpoint that returns a paged, filterable list of the notifications the current user can see in the
+/// active scope, resolving per-user read state for the notifications addressed to an audience rather than to
+/// one user. Three addressing modes reach the caller: the notifications of the active scope - the tenant, or
+/// platform scope - addressed to them personally, the notifications addressed to every member of the tenant,
+/// and the platform-wide notifications, which name neither a tenant nor a user and therefore stay visible
+/// in every scope. Personal notifications raised in another scope are not listed.
 /// </summary>
-sealed class NotificationListEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService) : Endpoint<NotificationListRequest, NotificationListResponse>
+sealed class NotificationListEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext) : Endpoint<NotificationListRequest, NotificationListResponse>
 {
     public override void Configure()
     {
@@ -25,9 +30,18 @@ sealed class NotificationListEndpoint(AppDbContext dbContext, ICurrentUserServic
             return;
         }
 
+        // Reading the active tenant here rather than leaning on the query filter is what lets the
+        // platform-wide notifications back in: the filter alone would hide every row naming no tenant.
+        // With no scope established this throws instead of listing rows the caller is not acting for.
+        var activeTenantId = tenantContext.CurrentTenantId;
+
+        // The tenant restriction is relaxed by name and then narrowed straight back down to the two
+        // audiences the caller belongs to, so a notification of another tenant is unreachable here even
+        // though the filter is off. The soft-delete filter stays in force.
         var query = dbContext.Notifications
             .AsNoTracking()
-            .Where(x => x.UserId == userId.Value || x.UserId == null);
+            .AcrossAllTenants()
+            .VisibleTo(userId.Value, activeTenantId);
 
         if (request.IsRead == true)
         {

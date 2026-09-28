@@ -16,12 +16,12 @@ public class NotificationMarkAsReadTests(App app) : NotificationsTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var userId = TestUsers.AdminUserId;
+        var userId = TestUsers.TenantAdminUserId;
         var notification = await CreateUserNotificationAsync(userId);
         notification.IsRead = false;
         await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        var (rsp, res) = await App.Client.POSTAsync<NotificationMarkAsReadEndpoint, NotificationMarkAsReadRequest, NotificationMarkAsReadResponse>(
+        var (rsp, res) = await Client.POSTAsync<NotificationMarkAsReadEndpoint, NotificationMarkAsReadRequest, NotificationMarkAsReadResponse>(
             new() { Id = notification.Id });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -29,7 +29,11 @@ public class NotificationMarkAsReadTests(App app) : NotificationsTestsBase(app)
         res.Id.Should().Be(notification.Id);
 
         DbContext.ChangeTracker.Clear();
-        var updated = await DbContext.Notifications.FirstOrDefaultAsync(x => x.Id == notification.Id, cancellationToken: TestContext.Current.CancellationToken);
+        // Read across every tenant: the row carries the tenant it was raised in and the lookup here is
+        // about the row itself rather than about who may see it while acting where.
+        var updated = await DbContext.Notifications
+            .AcrossAllTenants()
+            .FirstOrDefaultAsync(x => x.Id == notification.Id, cancellationToken: TestContext.Current.CancellationToken);
         updated!.IsRead.Should().BeTrue();
     }
 
@@ -41,10 +45,10 @@ public class NotificationMarkAsReadTests(App app) : NotificationsTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var userId = TestUsers.AdminUserId;
+        var userId = TestUsers.TenantAdminUserId;
         var notification = await CreateGlobalNotificationAsync();
 
-        var (rsp, res) = await App.Client.POSTAsync<NotificationMarkAsReadEndpoint, NotificationMarkAsReadRequest, NotificationMarkAsReadResponse>(
+        var (rsp, res) = await Client.POSTAsync<NotificationMarkAsReadEndpoint, NotificationMarkAsReadRequest, NotificationMarkAsReadResponse>(
             new() { Id = notification.Id });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -63,12 +67,12 @@ public class NotificationMarkAsReadTests(App app) : NotificationsTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var userId = TestUsers.AdminUserId;
+        var userId = TestUsers.TenantAdminUserId;
         var notification = await CreateUserNotificationAsync(userId);
         notification.IsRead = true;
         await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        var (rsp, res) = await App.Client.POSTAsync<NotificationMarkAsReadEndpoint, NotificationMarkAsReadRequest, NotificationMarkAsReadResponse>(
+        var (rsp, res) = await Client.POSTAsync<NotificationMarkAsReadEndpoint, NotificationMarkAsReadRequest, NotificationMarkAsReadResponse>(
             new() { Id = notification.Id });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -88,7 +92,7 @@ public class NotificationMarkAsReadTests(App app) : NotificationsTestsBase(app)
         var newUser = await CreateAdminUserAsync($"testuser-{faker.Generate().Username}", TestUsers.DefaultPassword);
         var otherUserNotification = await CreateUserNotificationAsync(newUser.Id);
 
-        var (rsp, _) = await App.Client.POSTAsync<NotificationMarkAsReadEndpoint, NotificationMarkAsReadRequest, NotificationMarkAsReadResponse>(
+        var (rsp, _) = await Client.POSTAsync<NotificationMarkAsReadEndpoint, NotificationMarkAsReadRequest, NotificationMarkAsReadResponse>(
             new() { Id = otherUserNotification.Id });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -102,7 +106,7 @@ public class NotificationMarkAsReadTests(App app) : NotificationsTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var (rsp, _) = await App.Client.POSTAsync<NotificationMarkAsReadEndpoint, NotificationMarkAsReadRequest, NotificationMarkAsReadResponse>(
+        var (rsp, _) = await Client.POSTAsync<NotificationMarkAsReadEndpoint, NotificationMarkAsReadRequest, NotificationMarkAsReadResponse>(
             new() { Id = Guid.NewGuid() });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -116,7 +120,7 @@ public class NotificationMarkAsReadTests(App app) : NotificationsTestsBase(app)
     {
         ClearAuthToken();
 
-        var (rsp, _) = await App.Client.POSTAsync<NotificationMarkAsReadEndpoint, NotificationMarkAsReadRequest, NotificationMarkAsReadResponse>(
+        var (rsp, _) = await Client.POSTAsync<NotificationMarkAsReadEndpoint, NotificationMarkAsReadRequest, NotificationMarkAsReadResponse>(
             new() { Id = Guid.NewGuid() });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);

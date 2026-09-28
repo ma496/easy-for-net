@@ -10,12 +10,14 @@ interface DataTableProps {
   className?: string
   suppressScrollX?: boolean
   suppressScrollY?: boolean
+  /** Shown instead of the default "no records" message when there are no rows to render. */
+  emptyMessage?: string
 }
 
 /**
- * DataTable is the body component of the data-table system that renders the table's headers (with click-to-sort affordance), rows, and either a loading indicator, a localized "no records" message, or the data rows themselves from the shared DataTable context.
+ * DataTable is the body component of the data-table system that renders the table's headers (with click-to-sort affordance), rows, and either a loading indicator, a localized "no records" message (or a caller-supplied `emptyMessage`), or the data rows themselves from the shared DataTable context.
  */
-export function DataTable<TData>({ className = '', suppressScrollX = false, suppressScrollY = true }: DataTableProps) {
+export function DataTable<TData>({ className = '', suppressScrollX = false, suppressScrollY = true, emptyMessage }: DataTableProps) {
   const { columns, table, isFetching } = useDataTable<TData>()
   const { t } = useTranslation()
 
@@ -34,7 +36,7 @@ export function DataTable<TData>({ className = '', suppressScrollX = false, supp
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="p-4 text-left font-semibold first:rounded-tl-md last:rounded-tr-md"
+                    className="p-4 text-start font-semibold first:rounded-ss-md last:rounded-se-md"
                     style={{ width: header.getSize(), minWidth: header.column.columnDef.minSize, maxWidth: header.column.columnDef.maxSize }}
                   >
                     {header.isPlaceholder ? null : (
@@ -75,7 +77,7 @@ export function DataTable<TData>({ className = '', suppressScrollX = false, supp
             ) : (
               <tr>
                 <td colSpan={columns.length} className="py-6 text-center">
-                  {t('table.noRecords')}
+                  {emptyMessage ?? t('table.noRecords')}
                 </td>
               </tr>
             )}

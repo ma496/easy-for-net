@@ -1,27 +1,19 @@
 'use client'
 
 import { createContext, useEffect } from 'react'
+import { emptyLocalizationResources, type LocalizationResourcesResponse } from '@/i18n'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const TranslationContext = createContext<Record<string, any>>({})
+export const TranslationContext = createContext<LocalizationResourcesResponse>(emptyLocalizationResources('en'))
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export let globalDictionary: Record<string, any> = {}
+export let globalDictionary: LocalizationResourcesResponse = emptyLocalizationResources('en')
 
 /**
- * Context provider that publishes the current locale's translation dictionary to descendants and updates a module-level {@link globalDictionary} reference inside an effect so non-React code can read translations.
+ * Context provider that publishes the current locale's merged localization resources (the flat
+ * dictionary, the served culture, the acting scope's default culture and its enabled languages) to
+ * descendants, and mirrors the same value into a module-level {@link globalDictionary} reference
+ * inside an effect so non-React code can read translations too.
  */
-export const TranslationProvider = ({
-  dictionary,
-  children,
-}: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dictionary: Record<string, any>
-  children: React.ReactNode
-}) => {
-  // globalDictionary = dictionary
-  // globalDictionary = dictionary
-  // Side effect moved to useEffect
+export const TranslationProvider = ({ dictionary, children }: { dictionary: LocalizationResourcesResponse; children: React.ReactNode }) => {
   useEffect(() => {
     globalDictionary = dictionary
   }, [dictionary])

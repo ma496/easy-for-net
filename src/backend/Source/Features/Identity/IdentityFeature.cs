@@ -35,5 +35,12 @@ public class IdentityFeature : IFeature
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IAuthTokenCleanService, AuthTokenCleanService>();
         services.AddScoped<ITokenCleanService, TokenCleanService>();
+        services.AddScoped<ITenantAuthorizationService, TenantAuthorizationService>();
+
+        // FastEndpoints builds the refresh-token service itself for the refresh endpoint and does not
+        // require it to be registered. It is registered here as well because the tenant authorization
+        // contract issues a token pair through it when a session is re-established for a newly
+        // selected tenant, and a constructor-injected dependency has to be resolvable.
+        services.AddScoped<Endpoints.Account.TokenService>();
     }
 }

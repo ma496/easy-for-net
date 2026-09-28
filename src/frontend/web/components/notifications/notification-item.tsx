@@ -4,6 +4,7 @@ import { NotificationDto, NotificationType } from '@/store/api/notifications'
 import { formatDistanceToNow } from 'date-fns'
 import { AlertTriangle, AlertCircle, CheckCircle, Info } from 'lucide-react'
 import { LocalizedLink } from '@/components/ui'
+import { notificationVariables } from '@/lib/utils'
 
 /**
  * Props for the {@link NotificationItem} component, receiving the {@link NotificationDto} to display.
@@ -53,8 +54,8 @@ export const NotificationItem = ({ notification }: NotificationItemProps) => {
         <div className="flex items-start gap-2">
           <div className="mt-0.5">{getTypeIcon(notification.type)}</div>
           <div>
-            <h4 className="text-sm font-medium">{t(notification.titleKey)}</h4>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t(notification.messageKey)}</p>
+            <h4 className="text-sm font-medium">{t(notification.titleKey, notificationVariables(notification.metadata))}</h4>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t(notification.messageKey, notificationVariables(notification.metadata))}</p>
             <span className="mt-1 block text-xs text-gray-400 dark:text-gray-500">
               {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
             </span>

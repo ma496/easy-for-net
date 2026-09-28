@@ -4,7 +4,7 @@ import { useTranslation } from '@/i18n'
 import { formatDistanceToNow, format } from 'date-fns'
 import { AlertCircle, AlertTriangle, CheckCircle, Info, Check, EyeOff } from 'lucide-react'
 import { Badge, Button, ApiErrorMessages, Loader } from '@/components/ui'
-import { apiErrorAlert, successToast } from '@/lib/utils'
+import { apiErrorAlert, notificationVariables, successToast } from '@/lib/utils'
 
 /**
  * Props for the NotificationDetail component, supplying the id of the notification to display.
@@ -131,7 +131,7 @@ export const NotificationDetail = ({ id }: NotificationDetailProps) => {
           <div className="mt-1">{getTypeIcon(notification.type)}</div>
           <div className="flex-1 space-y-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-semibold">{t(notification.titleKey)}</h2>
+              <h2 className="text-xl font-semibold">{t(notification.titleKey, notificationVariables(notification.metadata))}</h2>
               {getTypeBadge(notification.type)}
               {notification.isRead && (
                 <Badge variant="secondary">{t('notifications.read')}</Badge>
@@ -139,7 +139,7 @@ export const NotificationDetail = ({ id }: NotificationDetailProps) => {
             </div>
 
             <p className="text-gray-600 dark:text-gray-300">
-              {t(notification.messageKey)}
+              {t(notification.messageKey, notificationVariables(notification.metadata))}
             </p>
 
             {notification.metadata && (

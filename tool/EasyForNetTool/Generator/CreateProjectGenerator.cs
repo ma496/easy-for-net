@@ -89,13 +89,18 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             CopyDirectory(webProjectPath, webTargetPath, true);
             // .env.development is git-ignored in the template, so seed it from the tracked example file
             CopyFrom(webProjectPath, webTargetPath, ".env.example", ".env.development");
-            CopyFiles(versionedTemplateDir, targetPath, ".editorconfig", ".gitignore", "global.json");
+            CopyFiles(versionedTemplateDir, targetPath, ".editorconfig", ".gitignore", ".gitattributes", "global.json", "package.json", "agentic.config.json");
             CopyDirectory($"{versionedTemplateDir}/.config", $"{targetPath}/.config", true);
             CopyDirectory($"{versionedTemplateDir}/.vscode", $"{targetPath}/.vscode", true);
             // the new-project and template-maintenance skills describe working on the template
-            // repository itself, so they are of no use inside a generated project
-            CopyDirectory($"{versionedTemplateDir}/.claude", $"{targetPath}/.claude", true, ["new-project", "template-maintenance"]);
+            // repository itself, so they are of no use inside a generated project; the lessons
+            // the task loop recorded are about the template repository too
+            CopyDirectory($"{versionedTemplateDir}/.claude", $"{targetPath}/.claude", true, ["new-project", "template-maintenance", "lessons"]);
             WriteEmbeddedFile("new-project-claude.md", Path.Combine(targetPath, "CLAUDE.md"));
+            // the spec-driven task loop: its engine ships whole, and the places it records work
+            // ship empty, so a new project starts with no specs, queue, build records or lessons
+            CopyDirectory($"{versionedTemplateDir}/scripts", $"{targetPath}/scripts", true);
+            CopyTaskLoopSkeleton(versionedTemplateDir, targetPath);
 
             Console.WriteLine("Customizing project files...");
             var (backendProjectName, backendProjectRootNamespace) = Helpers.GetProjectInfo(backendProjectTargetPath);
@@ -131,12 +136,19 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             RenameFile(backendTestProjectTargetPath, $"{backendTestProjectName}.csproj", $"{pascalCaseProjectName}.Tests.csproj");
             await AdjustNamespaceAsync(backendTestProjectTargetPath, backendProjectRootNamespace, pascalCaseProjectName);
             await AdjustNamespaceAsync(backendTestProjectTargetPath, backendTestProjectRootNamespace, $"{pascalCaseProjectName}.Tests");
-            // replace Easy For Net text with project name in web project
-            await ReplaceInFiles(webTargetPath, @"Easy\s+For\s+Net", $@"{kebabCaseProjectName.Split('-').Select(x => char.ToUpper(x[0]) + x[1..]).Aggregate((current, next) => current + " " + next)}", ".json");
+            // replace Easy For Net text with project name in web project and in the shipped backend
+            // locale resources - the brand name a caller reads back from GET /localization/resources
+            // is one of the strings this project name has to reach.
+            var titleCaseProjectName = kebabCaseProjectName.Split('-').Select(x => char.ToUpper(x[0]) + x[1..]).Aggregate((current, next) => current + " " + next);
+            await ReplaceInFiles(webTargetPath, @"Easy\s+For\s+Net", titleCaseProjectName, ".json");
+            await ReplaceInFiles(Path.Combine(backendProjectTargetPath, "Features", "Localization", "Core", "Resources"), @"Easy\s+For\s+Net", titleCaseProjectName, ".json");
             // update package.json and package-lock.json
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(webTargetPath, "package.json"), "name", kebabCaseProjectName);
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(webTargetPath, "package-lock.json"), "name", kebabCaseProjectName);
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(webTargetPath, "package-lock.json"), "packages..name", kebabCaseProjectName);
+            // the workspace scripts and the task loop name the project in briefs, the status line and the scheduled task
+            await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(targetPath, "package.json"), "name", kebabCaseProjectName);
+            await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(targetPath, "agentic.config.json"), "project.name", kebabCaseProjectName);
             // update CLAUDE.md
             await ReplaceInFile(Path.Combine(targetPath, "CLAUDE.md"), @"EasyForNet\.slnx", $@"{pascalCaseProjectName}.slnx");
             // update the skill guides, which reference the template's namespaces and solution file
@@ -144,13 +156,15 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             await ReplaceInFiles(claudeSkillsPath, $@"{Regex.Escape(backendProjectRootNamespace)}\.", $@"{pascalCaseProjectName}.", ".md");
             await ReplaceInFiles(claudeSkillsPath, @"EasyForNet\.slnx", $@"{pascalCaseProjectName}.slnx", ".md");
 
-            // Cleanup localization files when multiLanguage is false
+            // Cleanup localization files when multiLanguage is false: the API's shipped resource files
+            // decide which cultures exist, and the web's routing locale set must name the same ones.
             if (!argument.MultiLanguage)
             {
                 Console.WriteLine("Cleaning up localization files...");
 
-                // 1. Delete non-English locale files (ur, zh, ar, hi, es, fr, ru)
-                var localesPath = Path.Combine(webTargetPath, "public", "locales");
+                // 1. Delete non-English shipped locale resources, so the single-language project embeds
+                // only what it routes for.
+                var localesPath = Path.Combine(backendProjectTargetPath, "Features", "Localization", "Core", "Resources");
                 foreach (var locale in new[] { "ur", "zh", "ar", "hi", "es", "fr", "ru" })
                 {
                     var filePath = Path.Combine(localesPath, $"{locale}.json");
@@ -158,39 +172,13 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
                         File.Delete(filePath);
                 }
 
-                // 2. Update server.ts - keep only en dictionary
-                var serverTsPath = Path.Combine(webTargetPath, "i18n", "server.ts");
-                if (File.Exists(serverTsPath))
-                {
-                    var content = await File.ReadAllTextAsync(serverTsPath);
-                    content = Regex.Replace(content,
-                        @"const dictionaries = \{[^}]+\}",
-                        @"const dictionaries = {
-  en: () => import('../public/locales/en.json').then((module) => module.default),
-}");
-                    await File.WriteAllTextAsync(serverTsPath, content);
-                }
-
-                // 3. Update config.ts - set locales to only ['en']
+                // 2. Update config.ts - set locales to only ['en']
                 var configTsPath = Path.Combine(webTargetPath, "i18n", "config.ts");
                 if (File.Exists(configTsPath))
                 {
                     var content = await File.ReadAllTextAsync(configTsPath);
                     content = Regex.Replace(content, @"locales: \[[^\]]+\]", "locales: ['en']");
                     await File.WriteAllTextAsync(configTsPath, content);
-                }
-
-                // 4. Update themeConfigSlice.tsx - remove non-English languages
-                var themeConfigPath = Path.Combine(webTargetPath, "store", "slices", "themeConfigSlice.tsx");
-                if (File.Exists(themeConfigPath))
-                {
-                    var content = await File.ReadAllTextAsync(themeConfigPath);
-                    content = Regex.Replace(content,
-                        @"languageList: \[[^\]]+\]",
-                        @"languageList: [
-    { code: 'en', name: 'English', isRTL: false },
-  ]");
-                    await File.WriteAllTextAsync(themeConfigPath, content);
                 }
             }
 
@@ -429,6 +417,35 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             ?? throw new Exception($"Embedded file '{resourceName}' was not found in the tool package.");
         using var fileStream = File.Create(targetFilePath);
         stream.CopyTo(fileStream);
+    }
+
+    /// <summary>
+    /// Lays out the places the spec-driven task loop records its work - <c>specs/</c>, <c>docs/</c>,
+    /// the <c>.agent-queue/</c> lanes and the lessons directory - with their guides but none of the
+    /// template repository's own specs, build records, queued tasks or lessons.
+    /// </summary>
+    private static void CopyTaskLoopSkeleton(string templateDir, string targetPath)
+    {
+        Directory.CreateDirectory(Path.Combine(targetPath, "specs"));
+        CopyFiles(Path.Combine(templateDir, "specs"), Path.Combine(targetPath, "specs"), "README.md", "TEMPLATE.md");
+
+        Directory.CreateDirectory(Path.Combine(targetPath, "docs"));
+        CopyFiles(Path.Combine(templateDir, "docs"), Path.Combine(targetPath, "docs"), "AGENTIC_WORKFLOW.md");
+        foreach (var ledger in new[] { "builds", "capabilities" })
+        {
+            Directory.CreateDirectory(Path.Combine(targetPath, "docs", ledger));
+            CopyFiles(Path.Combine(templateDir, "docs", ledger), Path.Combine(targetPath, "docs", ledger), "README.md");
+        }
+
+        foreach (var lane in new[] { "todo", "doing", "done", "failed" })
+        {
+            var laneDir = Directory.CreateDirectory(Path.Combine(targetPath, ".agent-queue", lane)).FullName;
+            File.WriteAllText(Path.Combine(laneDir, ".gitkeep"), string.Empty);
+        }
+        File.WriteAllText(Path.Combine(targetPath, ".agent-queue", "planned.json"), "{}\n");
+
+        var lessonsDir = Directory.CreateDirectory(Path.Combine(targetPath, ".claude", "memory", "lessons")).FullName;
+        File.WriteAllText(Path.Combine(lessonsDir, ".gitkeep"), string.Empty);
     }
 
     /// <summary>

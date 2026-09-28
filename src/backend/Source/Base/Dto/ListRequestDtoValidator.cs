@@ -8,10 +8,15 @@ public class ListRequestDtoValidator<TId> : Validator<ListRequestDto<TId>>
 {
     public ListRequestDtoValidator()
     {
-        RuleFor(x => x.Page).GreaterThan(0)
-            .When(x => !x.All && x.IncludeIds?.Count == 0);
-        RuleFor(x => x.PageSize).InclusiveBetween(1, 100)
-            .When(x => !x.All && x.IncludeIds?.Count == 0);
+        // The paging rules apply exactly when paging is applied: `IQueryableExtension.Process` pages
+        // only when the request does not ask for everything and does not name the rows it wants, so
+        // validating the values in any other case would refuse a request that is never paged - and
+        // failing to validate them in this one leaves both values unbounded.
+        var paged = new Func<ListRequestDto<TId>, bool>(
+            request => !request.All && request.IncludeIds is null or { Count: 0 });
+
+        RuleFor(x => x.Page).GreaterThan(0).When(paged);
+        RuleFor(x => x.PageSize).InclusiveBetween(1, 100).When(paged);
         RuleFor(x => x.IncludeIds)
             .Must(ids => ids is null || ids.Count <= 100)
             .WithMessage("No more than 100 IDs may be requested.");

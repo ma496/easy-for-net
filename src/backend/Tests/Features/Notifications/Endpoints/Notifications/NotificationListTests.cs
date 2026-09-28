@@ -3,7 +3,8 @@ namespace Backend.Tests.Features.Notifications.Endpoints.Notifications;
 using Backend.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
-/// Tests for the <see cref="NotificationListEndpoint"/> covering listing, pagination, filtering by read status and group, and authorization.
+/// Tests for the <see cref="NotificationListEndpoint"/> covering listing, pagination, filtering by read status and group, authorization,
+/// and the tenant whose notifications the list is answered from.
 /// </summary>
 public class NotificationListTests(App app) : NotificationsTestsBase(app)
 {
@@ -15,14 +16,17 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var userId = TestUsers.AdminUserId;
+        var userId = TestUsers.TenantAdminUserId;
         var notification = await CreateUserNotificationAsync(userId);
 
-        var (rsp, res) = await App.Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
+        var (rsp, res) = await Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
             new()
             {
                 Page = 1,
-                PageSize = 10000
+                // Asking for everything rather than for a very large page: the arranged notification is
+                // an unread one, so it sorts ahead of the read ones, but the platform-wide notifications
+                // every caller sees are in the same list and a page can only hold so many of them.
+                All = true
             });
 
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -41,7 +45,7 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
 
         var notification = await CreateGlobalNotificationAsync();
 
-        var (rsp, res) = await App.Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
+        var (rsp, res) = await Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
             new()
             {
                 Page = 1,
@@ -67,13 +71,13 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var userId = TestUsers.AdminUserId;
+        var userId = TestUsers.TenantAdminUserId;
         for (var i = 0; i < 5; i++)
         {
             await CreateUserNotificationAsync(userId);
         }
 
-        var (rsp, res) = await App.Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
+        var (rsp, res) = await Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
             new()
             {
                 Page = 1,
@@ -83,7 +87,7 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
         res.Items.Count.Should().Be(2);
 
-        var (page2Rsp, page2Res) = await App.Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
+        var (page2Rsp, page2Res) = await Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
             new()
             {
                 Page = 2,
@@ -102,7 +106,7 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var userId = TestUsers.AdminUserId;
+        var userId = TestUsers.TenantAdminUserId;
         var unread = await CreateUserNotificationAsync(userId);
         unread.IsRead = false;
         await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
@@ -111,7 +115,7 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
         readNotification.IsRead = true;
         await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        var (unreadRsp, unreadRes) = await App.Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
+        var (unreadRsp, unreadRes) = await Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
             new()
             {
                 Page = 1,
@@ -122,7 +126,7 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
         unreadRsp.StatusCode.Should().Be(HttpStatusCode.OK);
         unreadRes.Items.Should().AllSatisfy(x => x.IsRead.Should().BeFalse());
 
-        var (readRsp, readRes) = await App.Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
+        var (readRsp, readRes) = await Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
             new()
             {
                 Page = 1,
@@ -142,7 +146,7 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        var userId = TestUsers.AdminUserId;
+        var userId = TestUsers.TenantAdminUserId;
         var groupName = "test-group";
 
         var grouped = await CreateUserNotificationAsync(userId);
@@ -151,7 +155,7 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
 
         await CreateUserNotificationAsync(userId);
 
-        var (rsp, res) = await App.Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
+        var (rsp, res) = await Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
             new()
             {
                 Page = 1,
@@ -164,6 +168,45 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
     }
 
     /// <summary>
+    /// Verifies that a notification raised in one tenant is listed only while its recipient acts in that
+    /// tenant, so one tenant's notifications stay out of another's.
+    /// </summary>
+    /// <remarks>
+    /// One recipient is a member of both tenants, so what the two views differ by is the tenant being
+    /// acted in and nothing else - the same account, the same two notifications. Each notification is
+    /// looked for in its own tenant as well as in the other's, because a list that answered nothing to
+    /// everybody would satisfy "absent from the other tenant" without being restricted at all.
+    /// </remarks>
+    [Fact]
+    public async Task Notification_Of_Another_Tenant_Is_Not_Listed()
+    {
+        var acted = await CreateTenantAsync();
+        var other = await CreateTenantAsync();
+        var recipient = await CreateDualTenantMemberAsync(acted.Id, other.Id);
+
+        var inActed = await CreateUserNotificationAsync(recipient.Id, tenantId: acted.Id);
+        var inOther = await CreateUserNotificationAsync(recipient.Id, tenantId: other.Id);
+
+        var actedClient = await ClientForAsync(recipient.Username, acted.Id);
+        var otherClient = await ClientForAsync(recipient.Username, other.Id);
+
+        var inActedWhileActingInActed = await SearchIdsAsync(actedClient, inActed.TitleKey);
+        var inOtherWhileActingInActed = await SearchIdsAsync(actedClient, inOther.TitleKey);
+        var inActedWhileActingInOther = await SearchIdsAsync(otherClient, inActed.TitleKey);
+        var inOtherWhileActingInOther = await SearchIdsAsync(otherClient, inOther.TitleKey);
+
+        inActedWhileActingInActed.Should().Contain(inActed.Id,
+            "the notification was raised in the tenant the recipient is acting in, so it is one of the notifications they see there");
+        inOtherWhileActingInOther.Should().Contain(inOther.Id,
+            "and the other tenant's notification is likewise one of theirs there, so neither tenant is an empty view");
+
+        inOtherWhileActingInActed.Should().BeEmpty(
+            "a notification raised in another tenant is not listed, which is what keeps one tenant's notifications out of another's");
+        inActedWhileActingInOther.Should().BeEmpty(
+            "and the restriction runs both ways, so there is no tenant whose notifications are the visible ones");
+    }
+
+    /// <summary>
     /// Verifies that unauthenticated list requests return 401 Unauthorized.
     /// </summary>
     [Fact]
@@ -171,7 +214,7 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
     {
         ClearAuthToken();
 
-        var (rsp, _) = await App.Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
+        var (rsp, _) = await Client.GETAsync<NotificationListEndpoint, NotificationListRequest, NotificationListResponse>(
             new()
             {
                 Page = 1,
@@ -180,4 +223,5 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
 
         rsp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
+
 }

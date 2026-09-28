@@ -2,11 +2,25 @@ namespace Backend.Features.Identity.Endpoints.Users;
 
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
-/// This endpoint that handles <c>POST /users</c> to create a new user with the supplied roles.
+/// This endpoint that handles <c>POST /users</c> to create a new user with the supplied roles, and to
+/// make that account a member of the tenant the caller is acting in. The sign-in identifiers are kept
+/// unique across every tenant, while the roles the account may start with are the acting tenant's own.
 /// </summary>
-sealed class UserCreateEndpoint(IUserService userService, AppDbContext dbContext) : Endpoint<UserCreateRequest, UserCreateResponse>
+/// <remarks>
+/// A caller acting in no tenant runs in platform scope: the account is created as a platform account
+/// with no membership, and the roles it may start with are the platform roles - the ones belonging to
+/// no tenant. Created from inside a tenant - by a platform account that has entered one just as by that
+/// tenant's own administrator - it is an ordinary account of that tenant instead, and takes one of the
+/// seats the tenant's <c>Identity.MaxUserCount</c> limit allows: once every seat is taken the account
+/// is refused with <see cref="ErrorCodes.FeatureLimitExceeded"/>.
+/// </remarks>
+sealed class UserCreateEndpoint(IUserService userService,
+                                ITenantMembershipService tenantMembershipService,
+                                ITenantContext tenantContext,
+                                AppDbContext dbContext) : Endpoint<UserCreateRequest, UserCreateResponse>
 {
     public override void Configure()
     {
@@ -17,25 +31,70 @@ sealed class UserCreateEndpoint(IUserService userService, AppDbContext dbContext
 
     public override async Task HandleAsync(UserCreateRequest request, CancellationToken cancellationToken)
     {
+        // An account belongs to no tenant - one person authenticates with one account however many
+        // tenants they belong to - so both identifier checks read every account there is rather than
+        // the ones the caller may administer. A username or an email address already taken in another
+        // tenant is therefore taken here too, and the account is refused: a second account carrying
+        // the same sign-in identifier could never be told apart from the first at sign-in.
         var usernameExists = await dbContext.Users
             .AnyAsync(x => x.UsernameNormalized == request.Username.Trim().ToLowerInvariant(), cancellationToken);
         if (usernameExists)
         {
-            ThrowError("Username already exists", ErrorCodes.UsernameAlreadyExists);
+            this.ThrowError(ErrorCodes.UsernameAlreadyExists);
         }
 
         var emailExists = await dbContext.Users
             .AnyAsync(x => x.EmailNormalized == request.Email.Trim().ToLowerInvariant(), cancellationToken);
         if (emailExists)
         {
-            ThrowError("Email already exists", ErrorCodes.EmailAlreadyExists);
+            this.ThrowError(ErrorCodes.EmailAlreadyExists);
+        }
+
+        // The roles a new account may start with are the roles of the tenant being acted in and no
+        // others, so they are read straight through the tenant query filter - the same authority
+        // UserUpdateEndpoint reads them from, so a role that can be granted here can also be taken
+        // away there. A role belonging to another tenant is not found, exactly as a role that does not
+        // exist is not, and both are refused the same way.
+        var requestedRoleIds = request.Roles.Distinct().ToList();
+        var tenantRoleCount = await dbContext.Roles
+            .AsNoTracking()
+            .CountAsync(role => requestedRoleIds.Contains(role.Id), cancellationToken);
+        if (tenantRoleCount != requestedRoleIds.Count)
+        {
+            this.ThrowError(x => x.Roles, ErrorCodes.ReferencedRecordNotFound);
         }
 
         var requestMapper = new UserCreateRequestMapper();
         var entity = requestMapper.Map(request);
         entity.IsEmailVerified = true;
-        // save entity to db
-        await userService.CreateAsync(entity, request.Password);
+
+        // The tier follows the scope the account is created in, and is never taken from the request:
+        // creating an account in platform scope is how the platform's own accounts come into being,
+        // while one created inside a tenant belongs to that tenant and joins it below. Nothing the
+        // caller sends can decide this, so no tenant can mint a platform account for itself.
+        entity.IsPlatform = tenantContext.IsPlatformScope();
+        // Saving the account also grants it an active membership of the tenant being acted in, written
+        // in the same transaction by the service, so an administrator never creates an account that
+        // the very next list or read refuses to show them. The membership is attributed centrally from
+        // the active tenant rather than from anything the caller sent, so the request cannot name the
+        // tenant the new account lands in. Only a platform administrator reaches this with no tenant
+        // established, and then the account joins none.
+        if (tenantContext.CurrentTenantId is { } tenantId)
+        {
+            // The seat is reserved and the membership written in one transaction, because the tenant
+            // lock the reservation takes is what stops a concurrent addition taking the same last seat,
+            // and it lasts only as long as the transaction does. Asked after the field checks above, so
+            // a request that is wrong anyway is told what is wrong with it rather than that it is full.
+            await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await tenantMembershipService.ReserveSeatAsync(tenantId, cancellationToken);
+            await userService.CreateAsync(entity, request.Password);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        else
+        {
+            await userService.CreateAsync(entity, request.Password);
+        }
+
         var responseMapper = new UserCreateResponseMapper();
         await Send.ResponseAsync(responseMapper.Map(entity), cancellation: cancellationToken);
     }
@@ -96,8 +155,11 @@ public partial class UserCreateRequestMapper
      MapperIgnoreSource(nameof(UserCreateRequest.Password))]
     public partial User Map(UserCreateRequest request);
 
+    // A UserRole is keyed by the pair of account and role, so one request naming the same role twice
+    // would produce two rows carrying one key and fail the save rather than the request. The ids are
+    // collapsed to the set the endpoint validated, which is the set the response then echoes back.
     private static ICollection<UserRole> RolesToUserRoles(List<Guid> roles)
-        => [.. roles.Select(x => new UserRole { RoleId = x })];
+        => [.. roles.Distinct().Select(x => new UserRole { RoleId = x })];
 }
 
 /// <summary>

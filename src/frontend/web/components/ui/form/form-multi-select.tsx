@@ -92,6 +92,8 @@ export const FormMultiSelect = ({
       newValue.push(val)
     }
     helpers.setValue(newValue).finally(() => helpers.setTouched(true))
+    // With a single option there is nothing else to pick, so the panel closes instead of waiting for an outside click.
+    if (options.length === 1) setOpen(false)
   }
 
   const handleClear = (e: React.MouseEvent) => {

@@ -2,7 +2,8 @@
 
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Upload, Trash2 } from 'lucide-react'
-import { apiErrorAlert, cn, confirmDeleteAlert, errorAlert } from '@/lib/utils'
+import { apiErrorAlert, cn, confirmDeleteAlert, effectiveMaxUploadBytes, errorAlert, formatMegabytes } from '@/lib/utils'
+import { usePlanMaxUploadBytes } from '@/hooks'
 import { Button, type ButtonProps, IconButton } from '..'
 import { useFileUploadMutation, useFileDeleteMutation, useLazyFileGetQuery, FileUploadResponse } from '@/store/api/file-management'
 import { useTranslation } from '@/i18n'
@@ -26,6 +27,13 @@ export interface FileUploadProps {
   id?: string
   disabled?: boolean
   forceDelete?: boolean // file delete only when forceDelete is true
+  /**
+   * Marks the uploaded file as belonging to the calling account rather than to the tenant's data - a
+   * profile image and the like. Such a file is attributed to no tenant and to the account that owns
+   * it, so it can be uploaded and read while acting in any tenant or in none. Left unset, the file is
+   * attributed to the tenant active at the time of upload.
+   */
+  accountOwned?: boolean
   maxSizeBytes?: number
   onClear?: () => void
   validateFile?: (file: File) => string | undefined
@@ -63,6 +71,7 @@ export const FileUpload = ({
   rounded,
   disabled,
   forceDelete = true,
+  accountOwned = false,
   onUploaded,
   onError,
   fileName,
@@ -83,6 +92,8 @@ export const FileUpload = ({
   const [deleteFileTrigger, { isLoading: isDeleting }] = useFileDeleteMutation()
   const [lazyFileGet] = useLazyFileGetQuery()
   const lastFileNameRef = useRef<string | undefined>(undefined)
+  // The stricter of the prop and the caller's plan, so a file the API would refuse is refused here first.
+  const maxBytes = effectiveMaxUploadBytes(maxSizeBytes, usePlanMaxUploadBytes())
   const resolvedIcon = useMemo(() => icon ?? <Upload className="h-4 w-4" />, [icon])
   const hasCurrent = useMemo(() => !!selectedFileName || (forceDelete && !!(fileName ?? response?.fileName)), [selectedFileName, forceDelete, fileName, response])
 
@@ -95,10 +106,10 @@ export const FileUpload = ({
       const file = e.target.files?.[0]
       if (!file) return
 
-      if (maxSizeBytes && file.size > maxSizeBytes) {
+      if (maxBytes && file.size > maxBytes) {
         const err = new Error('File exceeds size limit')
         if (showError) {
-          errorAlert({ text: t('file.tooLarge') })
+          errorAlert({ text: t('file.tooLarge', { max: formatMegabytes(maxBytes) }) })
         }
         onError?.(err)
         e.target.value = ''
@@ -120,7 +131,9 @@ export const FileUpload = ({
       if (selectedFileUrl?.startsWith('blob:')) {
         URL.revokeObjectURL(selectedFileUrl)
       }
-      const res = await uploadFile({ file })
+      // accountOwned travels with the upload so an account-owned file (a profile image, say) is
+      // attributed to the account instead of the active tenant, and is accepted with no tenant active.
+      const res = await uploadFile({ file, accountOwned })
       if (res.data) {
         if (forceDelete && oldFileName) {
           await deleteFileTrigger({ fileName: oldFileName })
@@ -138,7 +151,7 @@ export const FileUpload = ({
         inputRef.current.value = ''
       }
     },
-    [uploadFile, onUploaded, onError, selectedFileUrl, maxSizeBytes, validateFile, forceDelete, fileName, response, deleteFileTrigger, t, showError],
+    [uploadFile, onUploaded, onError, selectedFileUrl, maxBytes, validateFile, forceDelete, accountOwned, fileName, response, deleteFileTrigger, t, showError],
   )
 
   const deleteFile = useCallback(async () => {

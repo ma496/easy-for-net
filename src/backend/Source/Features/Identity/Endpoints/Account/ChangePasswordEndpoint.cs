@@ -6,6 +6,11 @@ using Backend.Features.Identity.Core;
 /// Authenticated POST endpoint that changes the current user's password after verifying the
 /// existing one.
 /// </summary>
+/// <remarks>
+/// Usable with no tenant established, because changing one's own password is account
+/// self-service: it acts on the account rather than on any tenant's data, so it stays usable while
+/// the caller acts in any tenant or in none.
+/// </remarks>
 sealed class ChangePasswordEndpoint(AppDbContext dbContext,
                                     ICurrentUserService currentUserService,
                                     IUserService userService,
@@ -30,7 +35,7 @@ sealed class ChangePasswordEndpoint(AppDbContext dbContext,
         var verified = await userService.ValidatePasswordAsync(user, request.CurrentPassword);
         if (!verified)
         {
-            ThrowError(x => x.CurrentPassword, "Current password is invalid", ErrorCodes.InvalidCurrentPassword);
+            this.ThrowError(x => x.CurrentPassword, ErrorCodes.InvalidCurrentPassword);
             return;
         }
         await userService.UpdatePasswordAsync(user, request.NewPassword);

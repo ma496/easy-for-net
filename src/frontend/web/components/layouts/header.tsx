@@ -3,22 +3,25 @@ import { useEffect } from 'react'
 import { LocalizedLink } from '@/components/ui'
 import { toggleSidebar } from '@/store/slices'
 import { usePathname } from 'next/navigation'
-import { ThemeChanger, NavUser, LanguageDropdown } from '@/components/custom'
+import { ThemeChanger, NavUser, LanguageDropdown, TenantSwitcher } from '@/components/custom'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { SearchComponent } from './search-component'
 import { Menu } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { NotificationBell } from '@/components/notifications'
 import { useNotificationHub } from '@/hooks'
+import { isPlatformWithoutTenant } from '@/lib/utils'
 import Image from 'next/image'
 
 /**
- * Header is the client-side application top bar that contains the brand logo, mobile sidebar toggle, search box, notification bell, theme changer, language dropdown, and the user navigation menu; it also activates the current horizontal-menu link and subscribes to the notification hub.
+ * Header is the client-side application top bar that contains the brand logo, mobile sidebar toggle, search box, tenant switcher, notification bell, theme changer, language dropdown, and the user navigation menu; it also activates the current horizontal-menu link and subscribes to the notification hub.
  */
 export const Header = () => {
   const pathname = usePathname()
   const dispatch = useAppDispatch()
   const themeConfig = useAppSelector((state) => state.theme)
+  // Notifications are read in the tenant being acted in, or in platform scope by a platform account acting in none. An ordinary account left with no tenant is sent to choose one, so the bell waits until it has.
+  const canReadNotifications = useAppSelector((state) => state.auth.activeTenant != null || isPlatformWithoutTenant(state.auth.user))
   const { t } = useTranslation()
 
   useNotificationHub()
@@ -53,32 +56,40 @@ export const Header = () => {
   return (
     <header className={`z-40 ${themeConfig.semidark && themeConfig.menu === 'horizontal' ? 'dark' : ''}`}>
       <div className="shadow-xs">
-        <div className="relative flex w-full items-center bg-white px-5 py-2.5 dark:bg-black">
+        <div className="relative flex w-full items-center bg-white px-3 py-2.5 sm:px-5 dark:bg-black">
           <div className="ms-2 horizontal-logo flex items-center justify-between lg:hidden">
-            <LocalizedLink href="/admin" className="flex shrink-0 items-center main-logo">
+            {/* Below sm the logo gives way to the controls; the menu toggle alone opens the sidebar that carries it. */}
+            <LocalizedLink href="/admin" className="hidden shrink-0 items-center main-logo sm:flex">
               <Image className="-ms-1 inline h-8 w-8" src="/assets/images/icon.png" alt="logo" width={32} height={32} unoptimized priority />
               <span className="ms-1.5 hidden align-middle text-sm font-semibold transition-all duration-300 md:inline dark:text-white-light">{t('brand.name')}</span>
             </LocalizedLink>
             <button
               type="button"
-              className="ms-2 collapse-icon flex flex-none cursor-pointer rounded-full bg-white-light/40 p-2 hover:bg-white-light/90 hover:text-primary lg:hidden dark:bg-dark/40 dark:text-[#d0d2d6] dark:hover:bg-dark/60 dark:hover:text-primary"
+              className="collapse-icon flex flex-none cursor-pointer rounded-full bg-white-light/40 p-2 hover:bg-white-light/90 hover:text-primary sm:ms-2 lg:hidden dark:bg-dark/40 dark:text-[#d0d2d6] dark:hover:bg-dark/60 dark:hover:text-primary"
               onClick={() => dispatch(toggleSidebar())}
             >
               <Menu className="h-5 w-5" />
             </button>
           </div>
 
-          <div className="ms-auto flex items-center gap-1.5 sm:ms-0 sm:flex-1 lg:gap-2 dark:text-[#d0d2d6]">
-            <div className="ms-2 hidden sm:me-auto sm:block">
+          <div className="ms-auto flex items-center gap-1 sm:ms-0 sm:flex-1 sm:gap-1.5 lg:gap-2 dark:text-[#d0d2d6]">
+            <div className="sm:ms-2 sm:me-auto">
               <SearchComponent />
             </div>
 
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-1 sm:gap-2">
               <div>
-                <NotificationBell />
+                <TenantSwitcher />
               </div>
 
-              <div>
+              {canReadNotifications && (
+                <div>
+                  <NotificationBell />
+                </div>
+              )}
+
+              {/* Below sm the theme stays reachable from the settings customizer. */}
+              <div className="hidden sm:block">
                 <ThemeChanger theme={themeConfig.theme} />
               </div>
 

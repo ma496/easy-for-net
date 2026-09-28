@@ -1,14 +1,19 @@
+using System.Globalization;
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Backend.External.Email;
 using Backend.Features.Identity.Core;
+using Backend.Features.Localization.Core;
+using Backend.Features.Tenancy.Core;
 using Backend.Middleware;
 using Backend.Settings;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.Net.Http.Headers;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -22,6 +27,15 @@ if (!bld.Environment.IsDevelopment() &&
 {
     throw new InvalidOperationException("Auth:Jwt:Key must be supplied through secure configuration outside development and testing.");
 }
+// Tests run the host hundreds of times over and log nothing anybody reads, while every statement
+// logged at Information is a SQL command formatted and written. Set here for the same reason as the
+// rate limit below: appsettings.Testing.json is not in source control, so a setting there would be
+// one machine's alone.
+if (bld.Environment.IsEnvironment("Testing"))
+{
+    bld.Logging.SetMinimumLevel(LogLevel.Warning);
+}
+
 var maximumPayloadSize = bld.Configuration.GetValue<long?>("Payload:MaximumSize") ?? 25 * 1024 * 1024;
 var defaultConnection = bld.Configuration.GetConnectionString("DefaultConnection")
                         ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.");
@@ -55,6 +69,16 @@ bld.Services
             ? CookieSecurePolicy.SameAsRequest
             : CookieSecurePolicy.Always;
         options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;
+
+        // Load-bearing, and the reason is not the cookie's lifetime but what expiring it forces.
+        // Roles, permissions and the tenant are decided when a session is minted and trusted until it
+        // is replaced, and the refresh is the only place they are read again - so a session that never
+        // expires is a session whose authority is never revisited. Sliding expiration re-issues the
+        // cookie carrying the ticket it already had, which would leave an open browser tab holding a
+        // revoked membership or a suspended tenant's permissions for as long as somebody kept clicking.
+        // Letting the cookie expire on the same clock as the access token is what sends the browser
+        // through the refresh endpoint, where the account and its tenant are re-read.
+        options.SlidingExpiration = false;
     })
     .AddAuthenticationJwtBearer(x => x.SigningKey = bld.Configuration["Auth:Jwt:Key"])
     .AddAuthentication(o =>
@@ -75,6 +99,11 @@ bld.Services
        };
    });
 bld.Services.AddAuthorization();
+
+// Endpoint authorization is evaluated before the tenant enforcement point and against the permissions
+// the request currently holds, so a caller whose tenant selection went stale is refused there - with a
+// bare 403 - before the enforcement point can say why. This gives that refusal its reason.
+bld.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, AuthorizationRefusalResultHandler>();
 bld.Services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
 {
     options.TokenValidationParameters.ValidateIssuer = true;
@@ -89,6 +118,16 @@ bld.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
 });
+// `RateLimit:PermitLimit` and `RateLimit:WindowMinutes` override these, and the Testing default is
+// effectively no limit on purpose: permits are counted per identity, and a test suite is one
+// identity making every request it can as fast as it can. Held at the production figure, a suite
+// fast enough to be worth having trips the limiter and reports it as unrelated tests failing with
+// 429. The default lives here rather than in appsettings.Testing.json because that file is not in
+// source control - it is written per machine and per generated project - so a default set there
+// would not be inherited by anybody.
+var rateLimitPermits = bld.Configuration.GetValue<int?>("RateLimit:PermitLimit")
+                       ?? (bld.Environment.IsEnvironment("Testing") ? int.MaxValue : 300);
+var rateLimitWindow = TimeSpan.FromMinutes(bld.Configuration.GetValue<double?>("RateLimit:WindowMinutes") ?? 1);
 bld.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -99,8 +138,8 @@ bld.Services.AddRateLimiter(options =>
                   ?? "unknown";
         return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
         {
-            PermitLimit = 300,
-            Window = TimeSpan.FromMinutes(1),
+            PermitLimit = rateLimitPermits,
+            Window = rateLimitWindow,
             QueueLimit = 0,
             AutoReplenishment = true
         });
@@ -117,7 +156,14 @@ bld.Services.AddHangfire(config =>
                   options.UseNpgsqlConnection(hangfireConnection));
     });
 
-bld.Services.AddHangfireServer();
+// Storage, the dashboard and the recurring job registrations stay in every environment; only the
+// worker is withheld from tests. Nothing under test waits for a job to be processed, and a worker
+// polling the database throughout a run costs connections and attempts real deliveries - mail
+// included - against settings that are placeholders outside a deployment.
+if (!bld.Environment.IsEnvironment("Testing"))
+{
+    bld.Services.AddHangfireServer();
+}
 
 // configure settings
 bld.Services.AddOptions<PayloadSetting>()
@@ -170,6 +216,22 @@ var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
 await seeder.SeedAsync();
 
 app.UseForwardedHeaders();
+
+// Placed ahead of every other middleware that could see a request's culture, and driven by
+// Accept-Language alone (no query string or cookie provider) - a caller names its culture the one
+// way HTTP already gives it. Supported cultures are exactly the shipped resource files, read off the
+// same store the /localization/resources endpoint serves from, so an unshipped or absent header
+// settles on English rather than failing the request.
+var localizationResourceStore = app.Services.GetRequiredService<ILocalizationResourceStore>();
+var supportedCultures = localizationResourceStore.ShippedCultures.Select(culture => new CultureInfo(culture)).ToList();
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture("en"),
+    SupportedCultures = supportedCultures,
+    SupportedUICultures = supportedCultures,
+    RequestCultureProviders = [new AcceptLanguageHeaderRequestCultureProvider()],
+});
+
 if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"))
 {
     app.UseExceptionHandler();
@@ -179,7 +241,6 @@ if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"
 
 app.UseCors()
    .UseAuthentication()
-   .UseMiddleware<SessionValidationMiddleware>()
    .UseRateLimiter()
    .UseAuthorization();
 
@@ -192,6 +253,12 @@ app.UseFastEndpoints(
            c.Serializer.Options.Converters.Add(new JsonStringEnumConverter());
            c.Endpoints.Configurator = ep =>
            {
+               // the single tenant enforcement point: registered first, so it runs first - ahead of the
+               // payload guard and every endpoint-level pre-processor - establishes the tenant the
+               // request acts in, and refuses the request when a tenant-scoped endpoint has no usable
+               // tenant to act in. Running it ahead of the payload guard also means a 413 answered below
+               // is localized against the caller's own tenant overrides, not the platform's alone.
+               ep.PreProcessor<TenantContextProcessor>(Order.Before);
                ep.PreProcessor<ToLargePayloadProcessor>(Order.Before);
                ep.PostProcessor<ExceptionProcessor>(Order.After);
                ep.PostProcessor<UnsupportedMediaTypeResponseProcessor>(Order.After);
@@ -213,6 +280,41 @@ app.UseFastEndpoints(
                    _ => "One or more errors occurred!"
                };
            });
+           // The one place a ThrowError call or a validator rule's .WithErrorCode(ErrorCodes.X.Value)
+           // is put into the request's culture: it runs right before the built-in ProblemDetails content
+           // is written, on the same list of failures that content was just built from, so this is the
+           // last chance to change what the caller sees. Every other response shape reaches this too
+           // (a plain 200, a stream, ...), so only a ProblemDetails is touched - everything else passes
+           // through unmodified. A plain FluentValidation rule with no ErrorCodes constant behind it
+           // (NotEmptyValidator, ...) has no error.server.<code> key and is left exactly as written.
+           // FastEndpoints' own SendErrorsAsync runs this too, which is what lets the permission refusal
+           // AuthorizationRefusalResultHandler answers with - built inside UseAuthorization, ahead of
+           // every FastEndpoints pre-processor including TenantContextProcessor - reach it; ErrorLocalization
+           // covers that case by falling back to the session's own tenant_id claim when no scope was
+           // established at all.
+           c.Endpoints.GlobalResponseModifierAsync = async (httpContext, response) =>
+           {
+               if (response is not ProblemDetails problemDetails)
+               {
+                   return;
+               }
+
+               var localizationService = httpContext.RequestServices.GetRequiredService<IErrorMessageLocalizer>();
+               foreach (var error in problemDetails.Errors)
+               {
+                   error.Reason = await localizationService.LocalizeErrorAsync(
+                       httpContext, error.Code, error.Name, error.Reason, httpContext.RequestAborted);
+               }
+
+               // Detail was computed once at construction, from the error the framework built before
+               // this ran - recomputed here so a single-error response's `detail` carries the same
+               // localized text `errors` now does, exactly as FastEndpoints' own default would if the
+               // reason had been correct from the start.
+               if (problemDetails.Errors.Count() == 1)
+               {
+                   problemDetails.Detail = problemDetails.Errors.First().Reason;
+               }
+           };
        });
 
 if (app.Environment.IsDevelopment())
@@ -220,7 +322,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerGen();
 }
 
-app.MapHealthChecks("/health").AllowAnonymous();
+// In Development the body also names the checkout the host runs from, so a live check can tell this
+// checkout's API from a stale one answering on the same port.
+(app.Environment.IsDevelopment()
+        ? app.MapHealthChecks("/health", DevelopmentHealthResponse.Options(app.Environment.ContentRootPath))
+        : app.MapHealthChecks("/health"))
+    .AllowAnonymous();
 
 // Configure Hangfire dashboard after database is ready
 app.UseHangfireDashboard("/hangfire", new DashboardOptions

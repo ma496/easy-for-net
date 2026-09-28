@@ -22,9 +22,9 @@ const buttonVariants = cva('btn cursor-pointer inline-flex items-center justify-
       'outline-dark': 'btn-outline-dark',
     },
     size: {
-      default: '',
-      sm: 'btn-sm',
-      lg: 'btn-lg',
+      default: "[&_svg:not([class*='size-'])]:size-4",
+      sm: "btn-sm [&_svg:not([class*='size-'])]:size-3.5",
+      lg: "btn-lg [&_svg:not([class*='size-'])]:size-5",
     },
     rounded: {
       default: '',
@@ -54,8 +54,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ className, va
   return (
     <button className={cn(buttonVariants({ variant, size, rounded }), className)} ref={ref} disabled={disabled || isLoading} {...props}>
       <div className="flex items-center justify-center gap-2">
-        {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-        {icon && !isLoading && <span>{icon}</span>}
+        {isLoading && <Loader2 className="animate-spin" />}
+        {icon && !isLoading && <span className="inline-flex shrink-0">{icon}</span>}
         {children}
       </div>
     </button>

@@ -20,6 +20,7 @@ export type {
   GetUserInfoResponse,
   GetUserInfoRole,
   GetUserInfoPermission,
+  GetUserInfoTenant,
   GetUserProfileResponse,
   RefreshTokenRequest,
   RefreshTokenResponse,
@@ -82,6 +83,7 @@ export {
   useLazyUserGetQuery,
   useUserListQuery,
   useLazyUserListQuery,
+  useUserSeatsQuery,
 } from './users/users-api'
 export type {
   UserCreateRequest,
@@ -94,6 +96,7 @@ export type {
   UserListResponse,
   UserListDto,
   UserRoleDto,
+  UserSeatsResponse,
   UserUpdateRequest,
   UserUpdateResponse,
 } from './users/users-dtos'

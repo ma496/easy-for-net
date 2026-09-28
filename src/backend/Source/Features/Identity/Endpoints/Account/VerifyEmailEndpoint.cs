@@ -7,6 +7,12 @@ using Backend.Features.Identity.Core.Entities;
 /// Anonymous POST endpoint that marks a user's email as verified after validating the
 /// verification token delivered to their inbox.
 /// </summary>
+/// <remarks>
+/// Usable with no tenant established, because email verification is one of the account
+/// self-service flows that has to work with no tenant established: it confirms an address on the
+/// account itself, which an account created by self-service sign-up does before it belongs to any
+/// tenant.
+/// </remarks>
 sealed class VerifyEmailEndpoint(ITokenService tokenService, IUserService userService, AppDbContext dbContext)
     : Endpoint<VerifyEmailRequest, EmptyResponse>
 {
@@ -22,13 +28,13 @@ sealed class VerifyEmailEndpoint(ITokenService tokenService, IUserService userSe
         var token = await tokenService.GetTokenAsync(request.Token, TokenPurpose.EmailVerification, cancellationToken);
         if (token == null || !tokenService.ValidateToken(token))
         {
-            ThrowError("Invalid or expired token", ErrorCodes.InvalidToken);
+            this.ThrowError(ErrorCodes.InvalidToken);
         }
 
         var user = await userService.GetByIdAsync(token.UserId);
         if (user == null)
         {
-            ThrowError("User not found", ErrorCodes.UserNotFound);
+            this.ThrowError(ErrorCodes.UserNotFound);
             return;
         }
 
@@ -38,7 +44,7 @@ sealed class VerifyEmailEndpoint(ITokenService tokenService, IUserService userSe
         await userService.UpdateAsync(user);
         if (!await tokenService.UseTokenAsync(token, cancellationToken))
         {
-            ThrowError("Invalid or expired token", ErrorCodes.InvalidToken);
+            this.ThrowError(ErrorCodes.InvalidToken);
         }
 
         await transaction.CommitAsync(cancellationToken);

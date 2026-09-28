@@ -1,13 +1,42 @@
 namespace Backend.Features.FileManagement.Endpoints.Files;
 
 using Backend.Features.FileManagement.Core;
+using Backend.Features.Tenancy.Core;
+using Backend.Features.Tenancy.Core.FeatureManagement;
 
 /// <summary>
 /// This endpoint exposes a POST operation accepting a multipart file upload and
 /// returning the unique filename under which the file was stored.
 /// </summary>
-public class FileUploadEndpoint(IFileService fileService) : Endpoint<FileUploadRequest, FileUploadResponse>
+/// <remarks>
+/// Authentication is required - the endpoint declares no anonymous access, so an unauthenticated
+/// caller is refused with the standard 401. That is not a policy decision so much as an arithmetic
+/// one: every stored file is attributed either to a tenant or to an account, and an anonymous caller
+/// has neither, so there would be nothing to attribute the upload to and nobody entitled to read it.
+/// <para>
+/// Usable with no tenant established, because it enforces the tenant rule itself rather than
+/// escaping it. An account-owned upload - a profile image and the like - has to work while the caller
+/// acts in any tenant or in none, so it cannot be behind the global requirement; a tenant-scoped
+/// upload is instead refused here with <see cref="ErrorCodes.NoActiveTenant"/> when no tenant is
+/// active, before the content is read, so a refused upload stores nothing.
+/// </para>
+/// <para>
+/// Every upload made while acting in a tenant - account-owned ones included - is held to that
+/// tenant's plan: refused with <see cref="ErrorCodes.FeatureDisabled"/> when the plan does not include
+/// file storage, and with <see cref="ErrorCodes.FeatureLimitExceeded"/> when the file is larger than
+/// its <c>FileManagement.MaxFileSizeMb</c> allows. An upload made in platform scope is inside nobody's
+/// plan and is held only to the deployment's own payload limit, which caps every upload in any case.
+/// </para>
+/// </remarks>
+sealed class FileUploadEndpoint(IFileService fileService,
+                                ITenantContext tenantContext,
+                                IFeatureChecker featureChecker) : Endpoint<FileUploadRequest, FileUploadResponse>
 {
+    /// <summary>
+    /// The unit <c>FileManagement.MaxFileSizeMb</c> is stated in.
+    /// </summary>
+    private const long BytesPerMegabyte = 1024 * 1024;
+
     public override void Configure()
     {
         Post("upload");
@@ -17,8 +46,26 @@ public class FileUploadEndpoint(IFileService fileService) : Endpoint<FileUploadR
 
     public override async Task<FileUploadResponse> ExecuteAsync(FileUploadRequest req, CancellationToken ct)
     {
+        // Settled before the stream is opened, because a refused upload has to leave nothing behind:
+        // no content in storage, and no record pointing at content.
+        if (!req.AccountOwned && !HasActiveTenant())
+        {
+            this.ThrowError(ErrorCodes.NoActiveTenant);
+        }
+
+        if (HasActiveTenant())
+        {
+            await featureChecker.CheckEnabledAsync(FeatureNames.FileManagement_Enabled, ct);
+
+            var maxFileSizeMb = await featureChecker.GetAsync(FeatureNames.FileManagement_MaxFileSizeMb, long.MaxValue / BytesPerMegabyte, ct);
+            if (req.File!.Length > maxFileSizeMb * BytesPerMegabyte)
+            {
+                throw new FeatureLimitExceededException(FeatureNames.FileManagement_MaxFileSizeMb, maxFileSizeMb);
+            }
+        }
+
         await using var stream = req.File!.OpenReadStream();
-        var fileName = await fileService.UploadAsync(stream, req.File.FileName, req.File.ContentType);
+        var fileName = await fileService.UploadAsync(stream, req.File.FileName, req.File.ContentType, req.AccountOwned, ct);
 
         var response = new FileUploadResponse
         {
@@ -27,21 +74,39 @@ public class FileUploadEndpoint(IFileService fileService) : Endpoint<FileUploadR
 
         return response;
     }
+
+    /// <summary>
+    /// Reports whether this request acts in a tenant that a file can be attributed to. Platform
+    /// scope, and the unresolved scope a request reaching here outside the tenant pipeline would
+    /// carry, both answer no: neither names a tenant, and reading either as "no tenant needed" is
+    /// exactly how a tenant-scoped file would end up belonging to nobody.
+    /// </summary>
+    /// <returns><see langword="true"/> when a tenant is active for this request.</returns>
+    private bool HasActiveTenant() => tenantContext.IsResolved && tenantContext.CurrentTenantId is not null;
 }
 
 /// <summary>
 /// Request payload for <see cref="FileUploadEndpoint"/>, containing the uploaded
-/// file as a multipart form part.
+/// file as a multipart form part together with how it is to be attributed.
 /// </summary>
-public class FileUploadRequest
+public sealed class FileUploadRequest
 {
     public IFormFile? File { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the file belongs to the calling account rather than to
+    /// the tenant's data - a profile image and the like. Such a file is attributed to no tenant and to
+    /// the calling account, may be uploaded while acting in any tenant or in none, and is read back by
+    /// its owner alone. The default, <see langword="false"/>, attributes the file to the tenant active
+    /// at the time of upload, which is then the only tenant it can ever be read in.
+    /// </summary>
+    public bool AccountOwned { get; set; }
 }
 
 /// <summary>
 /// This validator validates the <see cref="FileUploadRequest"/>.
 /// </summary>
-public class FileUploadValidator : Validator<FileUploadRequest>
+sealed class FileUploadValidator : Validator<FileUploadRequest>
 {
     public FileUploadValidator()
     {
@@ -53,7 +118,7 @@ public class FileUploadValidator : Validator<FileUploadRequest>
 /// Response from <see cref="FileUploadEndpoint"/>, returning the unique filename
 /// under which the uploaded file was stored.
 /// </summary>
-public class FileUploadResponse
+public sealed class FileUploadResponse
 {
     public string FileName { get; set; } = null!;
 }

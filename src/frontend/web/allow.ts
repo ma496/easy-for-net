@@ -1,5 +1,6 @@
 /**
- * Central registry of permission keys used throughout the app to gate access to user and role management features.
+ * Central registry of permission keys used throughout the app to gate access to user, role, file and tenancy features.
+ * Every entry mirrors a constant of the same name in the API's `Allow` catalog.
  */
 export const Allow = {
   User_View: 'User.View',
@@ -14,4 +15,28 @@ export const Allow = {
   Role_ChangePermissions: 'Role.ChangePermissions',
 
   File_Delete: 'File.Delete',
+
+  Tenant_View: 'Tenant.View',
+  Tenant_Detail: 'Tenant.Detail',
+  Tenant_Create: 'Tenant.Create',
+  Tenant_Update: 'Tenant.Update',
+  Tenant_Suspend: 'Tenant.Suspend',
+  Tenant_Reactivate: 'Tenant.Reactivate',
+  Tenant_Delete: 'Tenant.Delete',
+
+  TenantMember_View: 'TenantMember.View',
+  TenantMember_Add: 'TenantMember.Add',
+  TenantMember_UpdateRoles: 'TenantMember.UpdateRoles',
+  TenantMember_Remove: 'TenantMember.Remove',
+
+  Edition_View: 'Edition.View',
+  Edition_Create: 'Edition.Create',
+  Edition_Update: 'Edition.Update',
+  Edition_Delete: 'Edition.Delete',
+
+  FeatureValue_View: 'FeatureValue.View',
+  FeatureValue_Manage: 'FeatureValue.Manage',
+
+  Localization_View: 'Localization.View',
+  Localization_Update: 'Localization.Update',
 } as const

@@ -1,0 +1,748 @@
+{
+  "brand": {
+    "name": "Easy For Net"
+  },
+  "cookieConsent": {
+    "title": "We value your privacy",
+    "description": "We use cookies to enhance your browsing experience. By continuing to visit this site you agree to our use of cookies.",
+    "accept": "Accept",
+    "decline": "Decline"
+  },
+  "common": {
+    "back": "Back",
+    "more": "More",
+    "list": "List",
+    "preview": "Preview",
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "update": "Update",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "search": "Search...",
+    "loading": "Loading...",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "retry": "Retry",
+    "submit": "Submit",
+    "actions": "Actions",
+    "allRightsReserved": "All rights reserved.",
+    "deleteConfirm": "Yes, delete it",
+    "notifications": "Notifications",
+    "viewAll": "View all",
+    "close": "Close"
+  },
+  "navigation": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "dashboardSales": "Sales",
+    "administration": "Administration",
+    "users": "Users",
+    "roles": "Roles",
+    "rolesList": "List",
+    "rolesCreate": "Create",
+    "rolesUpdate": "Update",
+    "rolesChangePermissions": "Change Permissions",
+    "components": "Components",
+    "uiFormElements": "Form Elements",
+    "uiButtons": "Buttons",
+    "uiCards": "Cards",
+    "uiDatePicker": "Date Picker",
+    "uiDateView": "Date View",
+    "uiTreeview": "Tree View",
+    "changePassword": "Change Password",
+    "profile": "Profile",
+    "uiFileUpload": "File Upload",
+    "uiTooltips": "Tooltips",
+    "usersList": "List",
+    "usersCreate": "Create",
+    "usersUpdate": "Update",
+    "notifications": "Notifications",
+    "notificationsList": "List",
+    "notificationsDetail": "Detail",
+    "tenants": "Tenants",
+    "tenantsList": "List",
+    "tenantsCreate": "Create",
+    "tenantsUpdate": "Update",
+    "tenantsMembers": "Members",
+    "selectTenant": "Select Tenant",
+    "tenantsDetail": "Detail",
+    "editions": "Editions",
+    "editionsList": "List",
+    "editionsCreate": "Create",
+    "editionsUpdate": "Update",
+    "editionsFeatures": "Features",
+    "tenantsFeatures": "Features",
+    "localization": "Localization"
+  },
+  "search": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "usersCreate": "Create User",
+    "roles": "Roles",
+    "rolesCreate": "Create Role",
+    "uiButtons": "UI Buttons",
+    "uiCards": "UI Cards",
+    "uiDatePicker": "UI Date Picker",
+    "uiDateView": "UI Date View",
+    "uiTreeview": "UI Tree View",
+    "changePassword": "Change Password",
+    "profile": "Profile",
+    "notifications": "Notifications",
+    "uiFormElements": "UI Form Elements",
+    "uiFileUpload": "UI File Upload",
+    "uiTooltips": "UI Tooltips",
+    "tenants": "Tenants",
+    "tenantsCreate": "Create Tenant",
+    "editions": "Editions",
+    "editionsCreate": "Create Edition",
+    "localization": "Localization"
+  },
+  "form": {
+    "label": {
+      "username": "Username",
+      "password": "Password",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "roleName": "Role Name",
+      "roleDescription": "Description",
+      "roles": "Roles",
+      "isActive": "Active",
+      "name": "Name",
+      "tenantName": "Tenant Name",
+      "tenantIdentifier": "Identifier",
+      "user": "User",
+      "tenant": "Tenant",
+      "editionName": "Name",
+      "editionDescription": "Description",
+      "editionDisplayOrder": "Display Order",
+      "defaultLanguage": "Default language"
+    },
+    "placeholder": {
+      "username": "Enter username",
+      "password": "Enter password",
+      "firstName": "Enter first name",
+      "lastName": "Enter last name",
+      "email": "Enter email",
+      "currentPassword": "Enter current password",
+      "newPassword": "Enter new password",
+      "confirmPassword": "Enter confirm password",
+      "roleName": "Enter role name",
+      "roleDescription": "Enter role description",
+      "roles": "Select roles",
+      "tenantName": "Enter tenant name",
+      "tenantIdentifier": "Enter identifier (for example acme)",
+      "user": "Select user",
+      "tenant": "Tenant identifier",
+      "editionName": "Enter edition name",
+      "editionDescription": "Enter edition description",
+      "edition": "Select an edition"
+    }
+  },
+  "validation": {
+    "required": "Field is required",
+    "minLength": "Field must be at least ${min} characters",
+    "maxLength": "Field must not exceed ${max} characters",
+    "email": "Invalid email format",
+    "invalidEmail": "Invalid email",
+    "mustMatch": "Field must match with ${otherField}",
+    "atLeastOneSelected": "At least one item must be selected",
+    "tenantIdentifier": "Use lower-case letters, digits and single hyphens, starting and ending with a letter or digit",
+    "number": "Must be a number",
+    "min": "Must be at least ${min}"
+  },
+  "error": {
+    "400": {
+      "title": "Bad Request"
+    },
+    "401": {
+      "title": "Unauthorized",
+      "message": "You are not authorized to access this resource."
+    },
+    "403": {
+      "title": "Forbidden",
+      "message": "You are not allowed to access this resource."
+    },
+    "404": {
+      "title": "Not Found",
+      "message": "The requested resource was not found."
+    },
+    "413": {
+      "title": "Payload Too Large",
+      "message": "The request payload is too large."
+    },
+    "415": {
+      "title": "Unsupported Media Type",
+      "message": "The request media type is not supported."
+    },
+    "500": {
+      "title": "Internal Server Error",
+      "message": "An error occurred while processing the request."
+    },
+    "connection": {
+      "title": "Connection Error",
+      "message": "Unable to connect to the server. Please check your connection or try again later."
+    },
+    "serviceUnavailable": {
+      "title": "Service Unavailable",
+      "message": "The server is currently unreachable. Please try again in a few moments.",
+      "retry": "Retry"
+    },
+    "server": {
+      "internalServerError": "Internal server error",
+      "duplicateValue": "Duplicate value",
+      "duplicatePropertyValue": "Duplicate property value",
+      "requiredFieldMissing": "Required field missing",
+      "requiredPropertyFieldMissing": "Required property field missing",
+      "referencedRecordNotFound": "Referenced record not found",
+      "invalidValueProvided": "Invalid value provided",
+      "databaseError": "Database error",
+      "authenticationRequired": "Authentication is required for this operation.",
+      "permissionDenied": "Your roles do not grant the permission this operation requires.",
+      "invalidCurrentPassword": "Invalid current password",
+      "invalidToken": "Invalid token",
+      "tokenExpired": "Token expired",
+      "payloadTooLarge": "Payload too large",
+      "invalidUsernamePassword": "Invalid username or password",
+      "invalidEmailPassword": "Invalid email or password",
+      "userNotActive": "User not active",
+      "userNotFound": "User not found",
+      "emailAlreadyExists": "Email already exists",
+      "usernameAlreadyExists": "Username already exists",
+      "emailNotVerified": "Email is not verified",
+      "roleNameAlreadyExists": "Role name already exists",
+      "roleNotFound": "Role not found",
+      "systemCreatedRolePermissionsCannotBeChanged": "System-created role permissions cannot be changed",
+      "systemCreatedRoleCannotBeDeleted": "System-created role cannot be deleted",
+      "systemCreatedRoleCannotBeUpdated": "System-created role cannot be updated",
+      "systemCreatedUserCannotBeDeleted": "System-created user cannot be deleted",
+      "systemCreatedUserCannotBeUpdated": "System-created user cannot be updated",
+      "tenantNotFound": "Tenant not found",
+      "tenantSuspended": "This tenant is suspended",
+      "notTenantMember": "You are not a member of this tenant",
+      "noActiveTenant": "No active tenant is selected",
+      "tenantRequired": "Please provide a tenant to sign in.",
+      "tenantIdentifierAlreadyExists": "Tenant identifier already exists",
+      "duplicateTenantMembership": "This user is already a member of this tenant",
+      "lastTenantAdministrator": "The last tenant administrator cannot be removed",
+      "systemCreatedTenantCannotBeModified": "System-created tenant cannot be modified",
+      "crossTenantFileAccess": "This file belongs to another tenant",
+      "platformPermissionNotGrantable": "Platform permissions cannot be granted to a tenant role",
+      "tenantPermissionNotGrantable": "Tenant permissions cannot be granted to a platform role",
+      "concurrentModification": "This record was changed by someone else. Reload and try again.",
+      "userSharedAcrossTenants": "This user belongs to other tenants and can only be changed by a platform administrator",
+      "featureDisabled": "Your plan does not include this feature.",
+      "featureLimitExceeded": "Your plan's limit for this has been reached.",
+      "featureNotFound": "That feature does not exist.",
+      "invalidFeatureValue": "That value is not allowed for this feature.",
+      "featureProviderNotAllowed": "This feature cannot be set here.",
+      "unknownFeatureProvider": "Unknown feature provider.",
+      "editionNotFound": "Edition not found.",
+      "editionNameAlreadyExists": "An edition with this name already exists.",
+      "editionInUse": "This edition cannot be deleted while tenants are on it."
+    }
+  },
+  "table": {
+    "columns": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "roles": "Roles",
+      "userName": "User Name",
+      "isActive": "Active",
+      "name": "Name",
+      "description": "Description",
+      "userCount": "Users",
+      "type": "Type",
+      "title": "Title",
+      "message": "Message",
+      "status": "Status",
+      "date": "Date",
+      "group": "Group",
+      "created": "Created",
+      "updated": "Updated",
+      "identifier": "Identifier",
+      "displayOrder": "Order",
+      "tenantCount": "Tenants",
+      "edition": "Edition",
+      "key": "Key",
+      "defaultValue": "Default value",
+      "inheritedValue": "Inherited value",
+      "override": "Override"
+    },
+    "pagination": {
+      "showingEntries": "Showing ${from} to ${to} of ${totalRecords} entries"
+    },
+    "noRecords": "No records found",
+    "searchPlaceholder": "Search...",
+    "export": {
+      "button": "Export",
+      "excel": "Excel",
+      "csv": "CSV",
+      "currentPage": "Current Page",
+      "allRecords": "All Records"
+    },
+    "actions": "Actions",
+    "createLink": "Create",
+    "filter": {
+      "button": "Filters",
+      "all": "All",
+      "active": "Active",
+      "inactive": "Inactive",
+      "allRoles": "All Roles",
+      "activeStatus": "Active Status",
+      "role": "Role",
+      "selectRole": "Select Role",
+      "search": "Search",
+      "clear": "Clear",
+      "tenantStatus": "Tenant Status",
+      "allStatuses": "All Statuses",
+      "suspended": "Suspended"
+    }
+  },
+  "file": {
+    "upload": "File Upload",
+    "deleteTitle": "Delete File",
+    "deleteConfirm": "Are you sure you want to delete this file?",
+    "tooLarge": "File is too large. You can only upload files up to ${max} MB."
+  },
+  "page": {
+    "home": {
+      "hero": {
+        "badge": "Open Source .NET & Next.js Template",
+        "titleFocus": "Focus on",
+        "titleHighlight": "Business Logic",
+        "description": "Stop wasting time on boilerplate. A production-ready foundation with Authentication, Permissions, and Background Jobs pre-configured.",
+        "dashboardDetail": "Dashboard",
+        "signin": "Signin",
+        "viewSource": "View Source"
+      },
+      "features": {
+        "titleBadge": "Features",
+        "title": "Everything you need to build faster",
+        "description": "A complete starter kit with all the essential features pre-built, so you can focus on your unique business requirements.",
+        "items": {
+          "permissions": {
+            "title": "Granular Permissions",
+            "description": "Built-in role-based access control (RBAC) with granular permissions. Easily manage what users can see and do."
+          },
+          "email": {
+            "title": "Email Service",
+            "description": "Integrated email service for notifications, password resets, and more. Ready to connect with your SMTP provider."
+          },
+          "jobs": {
+            "title": "Background Jobs",
+            "description": "Powered by Hangfire. Includes pre-configured jobs for token cleanup and file maintenance."
+          },
+          "cleanup": {
+            "title": "Token & File Cleanup",
+            "description": "Automated services to keep your database and storage clean. Removes expired tokens and temporary files."
+          },
+          "users": {
+            "title": "User Management",
+            "description": "Complete user lifecycle management. Create, update, and manage user profiles and roles out of the box."
+          },
+          "ui": {
+            "title": "Modern UI Components",
+            "description": "A rich library of accessible, dark-mode ready components built with Tailwind CSS and Headless UI."
+          }
+        }
+      },
+      "cta": {
+        "title": "Open Source & Community Driven",
+        "description": "Join the community, contribute to the project, or fork it to start your next big idea.",
+        "button": "Star on GitHub",
+        "opensource": "Open Source",
+        "license": "MIT Licensed. Free to use for personal and commercial projects."
+      },
+      "title": "Home"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "sales": "Sales",
+      "revenue": "Revenue",
+      "salesByCategory": "Sales By Category",
+      "dailySales": "Daily Sales",
+      "summary": "Summary",
+      "totalOrders": "Total Orders",
+      "totalProfit": "Total Profit",
+      "income": "Income",
+      "expenses": "Expenses",
+      "profit": "Profit",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "viewReport": "View Report",
+      "editReport": "Edit Report",
+      "markAsDone": "Mark as Done",
+      "goToColumns": "Go to columns for details"
+    },
+    "users": {
+      "title": "Users",
+      "createSuccess": "User created successfully",
+      "updateSuccess": "User updated successfully",
+      "deleteTitle": "Delete User",
+      "deleteConfirm": "Are you sure you want to delete this user?",
+      "deleteSuccess": "User deleted successfully",
+      "seatLimitReached": "Your plan's user limit has been reached",
+      "create": {
+        "title": "Create User"
+      },
+      "list": {
+        "title": "Users List"
+      },
+      "update": {
+        "title": "Update User"
+      }
+    },
+    "roles": {
+      "title": "Roles",
+      "createSuccess": "Role created successfully",
+      "updateSuccess": "Role updated successfully",
+      "deleteTitle": "Delete Role",
+      "deleteConfirm": "Are you sure you want to delete this role?",
+      "deleteSuccess": "Role deleted successfully",
+      "notFound": "Role not found",
+      "permissions": "Permissions",
+      "permissionsUpdateSuccess": "Permissions updated successfully",
+      "changePermissions": {
+        "title": "Change Permissions"
+      },
+      "create": {
+        "title": "Create Role"
+      },
+      "list": {
+        "title": "Roles List"
+      },
+      "update": {
+        "title": "Update Role"
+      },
+      "permissionGroups": "Permission Groups"
+    },
+    "profile": {
+      "title": "Profile",
+      "description": "Update your personal information",
+      "updateSuccess": "Profile updated successfully",
+      "deleteAvatarTitle": "Delete Profile Picture",
+      "deleteAvatarConfirm": "Are you sure you want to delete your profile picture?",
+      "altImage": "Profile Image",
+      "changePasswordSuccess": "Password changed successfully"
+    },
+    "verifyEmail": {
+      "verifying": "Verifying your email...",
+      "verifiedTitle": "Email Verified!",
+      "verifiedMessage": "Your email has been successfully verified. You can now sign in.",
+      "buttonSignin": "Sign In Now",
+      "resendButton": "Resend Verification Email",
+      "resendSuccess": "Verification email has been resent.",
+      "resendWait": "Please wait ${seconds}s",
+      "notVerifiedTitle": "Email Verification Required",
+      "notVerifiedMessage": "Your email address is not verified. Please check your inbox for the verification link or click the button below to resend it.",
+      "failedTitle": "Verification Failed",
+      "failedMessage": "The verification link is invalid or has expired.",
+      "title": "Verify Email"
+    },
+    "auth": {
+      "signin": {
+        "title": "Sign In",
+        "description": "Enter your credentials to sign in",
+        "button": "Sign In",
+        "forgotPassword": "Forgot Password?",
+        "signupLink": "Sign Up",
+        "noAccount": "Don't have an account?",
+        "backToSignin": "Back to Sign In"
+      },
+      "signup": {
+        "title": "Sign Up",
+        "description": "Enter your email and password to register",
+        "button": "Sign Up",
+        "signinLink": "Sign In",
+        "alreadyHaveAccount": "Already have an account?",
+        "successTitle": "Success!",
+        "successVerifyEmail": "Registration successful! Please check your email to verify your account.",
+        "successMessage": "Registration successful! Go to sign in page.",
+        "tenantSectionTitle": "Your tenant"
+      },
+      "forgotPassword": {
+        "title": "Forget Password",
+        "description": "Enter your email to reset your password",
+        "button": "Send Reset Link",
+        "success": "Password Reset Link Sent",
+        "checkEmail": "Please check your email for password reset instructions"
+      },
+      "resetPassword": {
+        "title": "Reset Password",
+        "description": "Enter your new password to reset your account",
+        "button": "Reset Password",
+        "success": "Password reset successfully",
+        "hasBeenReset": "Your password has been reset successfully"
+      },
+      "signout": "Sign Out",
+      "unauthorized": {
+        "title": "Unauthorized"
+      }
+    },
+    "changePassword": {
+      "title": "Change Password",
+      "description": "Ensure your account stays secure"
+    },
+    "ui": {
+      "buttons": {
+        "title": "UI Buttons"
+      },
+      "cards": {
+        "title": "UI Cards"
+      },
+      "datePicker": {
+        "title": "UI Date Picker"
+      },
+      "dateView": {
+        "title": "UI Date View"
+      },
+      "fileUpload": {
+        "title": "UI File Upload"
+      },
+      "formElements": {
+        "title": "UI Form Elements"
+      },
+      "treeview": {
+        "title": "UI Tree View"
+      },
+      "tooltip": {
+        "title": "UI Tooltip"
+      }
+    },
+    "notifications": {
+      "title": "Notifications",
+      "detail": {
+        "title": "Notification Details"
+      },
+      "viewAll": "View all notifications"
+    },
+    "tenants": {
+      "title": "Tenants",
+      "notFound": "Tenant not found",
+      "systemCreated": "System-created",
+      "createSuccess": "Tenant created successfully",
+      "updateSuccess": "Tenant updated successfully",
+      "deleteTitle": "Delete Tenant",
+      "deleteConfirm": "Are you sure you want to delete this tenant?",
+      "deleteSuccess": "Tenant deleted successfully",
+      "suspendTitle": "Suspend Tenant",
+      "suspendConfirm": "Are you sure you want to suspend this tenant? Its members lose access until it is reactivated.",
+      "suspendSuccess": "Tenant suspended successfully",
+      "reactivateTitle": "Reactivate Tenant",
+      "reactivateConfirm": "Are you sure you want to reactivate this tenant?",
+      "reactivateSuccess": "Tenant reactivated successfully",
+      "list": {
+        "title": "Tenants List"
+      },
+      "create": {
+        "title": "Create Tenant"
+      },
+      "update": {
+        "title": "Update Tenant"
+      },
+      "status": {
+        "active": "Active",
+        "suspended": "Suspended"
+      },
+      "members": {
+        "title": "Tenant Members",
+        "addTitle": "Add Member",
+        "addButton": "Add Member",
+        "addSuccess": "Member added successfully",
+        "seatLimitReached": "This tenant's plan user limit has been reached",
+        "rolesTitle": "Change Member Roles",
+        "rolesButton": "Change Roles",
+        "rolesSuccess": "Member roles updated successfully",
+        "removeTitle": "Remove Member",
+        "removeConfirm": "Are you sure you want to remove this member from the tenant?",
+        "removeSuccess": "Member removed successfully"
+      },
+      "switcher": {
+        "label": "Tenant",
+        "switchTo": "Switch tenant",
+        "switchSuccess": "You are now working in ${tenant}",
+        "noTenant": "No tenant selected",
+        "viewDetail": "View tenant detail",
+        "exitTenant": "Exit tenant",
+        "exitSuccess": "You are working as a platform user again"
+      },
+      "detail": {
+        "title": "Tenant Detail",
+        "information": "Tenant Information",
+        "membersTitle": "Members"
+      },
+      "enterButton": "Enter",
+      "enterCurrent": "Current",
+      "actions": {
+        "detail": "Detail",
+        "members": "Members",
+        "suspend": "Suspend",
+        "reactivate": "Reactivate"
+      }
+    },
+    "selectTenant": {
+      "title": "Select Tenant",
+      "description": "Choose the tenant you want to work in.",
+      "emptyDescription": "You do not belong to an active tenant. Ask an administrator to add you to theirs, or sign up to create your own.",
+      "emptyAction": "Go to your profile"
+    },
+    "editions": {
+      "title": "Editions",
+      "createSuccess": "Edition created successfully",
+      "updateSuccess": "Edition updated successfully",
+      "deleteTitle": "Delete Edition",
+      "deleteConfirm": "Are you sure you want to delete this edition?",
+      "deleteSuccess": "Edition deleted successfully",
+      "notFound": "Edition not found",
+      "list": {
+        "title": "Editions List"
+      },
+      "create": {
+        "title": "Create Edition"
+      },
+      "update": {
+        "title": "Update Edition"
+      }
+    },
+    "features": {
+      "tenantTitle": "Tenant Features",
+      "editionTitle": "Edition Features",
+      "saveSuccess": "Features updated successfully",
+      "none": "No features have been defined",
+      "mintTimeNotice": "Changes take effect for a user the next time their session is renewed.",
+      "setHere": "Set here",
+      "fromEdition": "From edition",
+      "fromDefault": "Default",
+      "resetToInherited": "Reset to inherited",
+      "groups": "Groups",
+      "unsaved": "Unsaved",
+      "unsavedCount": "${count} unsaved change(s)",
+      "parentDisabled": "Not in force while the feature above it is off",
+      "noMatches": "No features match your search",
+      "actionLabel": "Features"
+    },
+    "localization": {
+      "title": "Localization",
+      "scope": {
+        "platform": "You are editing platform-wide texts and languages. Every tenant inherits these unless it sets its own.",
+        "tenant": "You are editing texts and languages for ${tenant}. Anything not changed here is inherited from the platform."
+      },
+      "readOnly": "You can view these settings but not change them.",
+      "tabs": {
+        "texts": "Texts",
+        "languages": "Languages"
+      },
+      "texts": {
+        "onlyOverridden": "Only overridden",
+        "setHere": "Set here",
+        "fromPlatform": "From platform",
+        "notOverridden": "Not overridden",
+        "editTitle": "Edit text",
+        "inheritedLabel": "Inherited value",
+        "defaultLabel": "Default value",
+        "overrideLabel": "Your text",
+        "placeholders": "Keep these placeholders:",
+        "placeholderMissing": "A placeholder is missing — the app will show it empty.",
+        "reset": "Reset to inherited",
+        "resetTitle": "Reset this text?",
+        "resetConfirm": "This removes your override and falls back to the inherited value.",
+        "resetSuccess": "Text reset to the inherited value",
+        "saveSuccess": "Text saved",
+        "noOverrides": "Nothing is overridden in this language yet."
+      },
+      "languages": {
+        "inherited": "Inherited",
+        "inheritedFromPlatform": "Inherited from the platform",
+        "inheritedFromShipped": "Built-in: every language, no default",
+        "inheritedSummary": "Inherited: ${languages} · Default: ${default}",
+        "customize": "Customize",
+        "customized": "Customized",
+        "resetToInherited": "Reset to inherited",
+        "resetTitle": "Reset languages?",
+        "resetConfirm": "This removes your customization and falls back to what is inherited.",
+        "resetSuccess": "Languages reset to the inherited settings",
+        "enabled": "Enabled languages",
+        "enabledCount": "${count} of ${total} enabled",
+        "rtl": "RTL",
+        "atLeastOne": "At least one language must stay enabled",
+        "noDefault": "None — use the visitor's browser language",
+        "defaultCleared": "The default language was cleared because it was just disabled",
+        "currentWillSwitch": "The language you are viewing this screen in is being disabled — you will be switched to the default.",
+        "unsaved": "You have unsaved changes",
+        "saveSuccess": "Languages updated"
+      }
+    }
+  },
+  "notifications": {
+    "noNotifications": "No notifications",
+    "notFound": "Notification not found",
+    "viewAll": "View all notifications",
+    "markAllRead": "Mark all as read",
+    "markAsRead": "Mark as read",
+    "markAsUnread": "Mark as unread",
+    "delete": "Delete",
+    "all": "All",
+    "read": "Read",
+    "unread": "Unread",
+    "group": "Group",
+    "metadata": "Metadata",
+    "markedAsRead": "Notification marked as read",
+    "markedAsUnread": "Notification marked as unread",
+    "markedAllAsRead": "All notifications marked as read",
+    "deleted": "Notification deleted",
+    "deleteTitle": "Delete Notification",
+    "deleteConfirm": "Are you sure you want to delete this notification?",
+    "markAllReadConfirmTitle": "Mark All as Read",
+    "markAllReadConfirmText": "Are you sure you want to mark all notifications as read?",
+    "filterByGroup": "Filter by group",
+    "groups": {
+      "inventory": "Inventory",
+      "system": "System",
+      "payments": "Payments",
+      "orders": "Orders"
+    },
+    "types": {
+      "info": "Info",
+      "warning": "Warning",
+      "error": "Error",
+      "success": "Success"
+    },
+    "inventoryBelowLimit": {
+      "title": "Low Inventory Alert",
+      "message": "Item is below the minimum stock level"
+    },
+    "systemUpdate": {
+      "title": "System Update",
+      "message": "A system update is available"
+    },
+    "orderCompleted": {
+      "title": "Order Completed",
+      "message": "Your order has been completed successfully"
+    },
+    "paymentFailed": {
+      "title": "Payment Failed",
+      "message": "A payment transaction has failed"
+    },
+    "welcome": {
+      "title": "Welcome",
+      "message": "Welcome to the application"
+    },
+    "tenantMemberAdded": {
+      "title": "Added to a tenant",
+      "message": "You have been added to ${tenantName}"
+    }
+  }
+}

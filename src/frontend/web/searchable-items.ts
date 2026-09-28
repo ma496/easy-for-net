@@ -21,6 +21,16 @@ export const searchableItems: SearchableItem[] = [
 
   },
   {
+    title: 'search.editions',
+    url: '/admin/editions/list',
+
+  },
+  {
+    title: 'search.editionsCreate',
+    url: '/admin/editions/create',
+
+  },
+  {
     title: 'search.roles',
     url: '/admin/roles/list',
 
@@ -31,12 +41,24 @@ export const searchableItems: SearchableItem[] = [
 
   },
   {
+    title: 'search.tenants',
+    url: '/admin/tenants/list',
+  },
+  {
+    title: 'search.tenantsCreate',
+    url: '/admin/tenants/create',
+  },
+  {
     title: 'search.profile',
     url: '/profile',
   },
   {
     title: 'search.changePassword',
     url: '/change-password',
+  },
+  {
+    title: 'search.localization',
+    url: '/admin/localization',
   },
   {
     title: 'search.notifications',

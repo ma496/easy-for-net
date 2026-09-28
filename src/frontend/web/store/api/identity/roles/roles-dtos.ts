@@ -1,4 +1,4 @@
-import { BaseDto, RequestBase, GenericAuditableDto, ListRequestDto, ListDto } from '@/store/api'
+import { BaseDto, RequestBase, GenericAuditableDto, ListRequestDto, ListDto, SystemCreatedDto } from '@/store/api'
 
 /** Request body for the change-permissions endpoint, listing the new set of permission ids for a role. */
 export interface ChangePermissionsRequest extends BaseDto<string>, RequestBase {
@@ -36,8 +36,7 @@ export interface RoleDeleteResponse extends BaseDto<string> {
 export interface RoleGetRequest extends BaseDto<string>, RequestBase { }
 
 /** Response from the get-role endpoint, returning the role's name, description, permissions, assigned user count, and audit fields. */
-export interface RoleGetResponse extends GenericAuditableDto<string> {
-  systemCreated: boolean
+export interface RoleGetResponse extends GenericAuditableDto<string>, SystemCreatedDto {
   name: string
   nameNormalized: string
   description: string
@@ -45,15 +44,16 @@ export interface RoleGetResponse extends GenericAuditableDto<string> {
   userCount: number
 }
 
-/** Request parameters for the list-roles endpoint, combining standard list/search/sort options with the request base. */
-export interface RoleListRequest extends ListRequestDto<string>, RequestBase { }
+/** Request parameters for the list-roles endpoint, combining standard list/search/sort options with the request base, plus an optional tenant filter honoured only for a platform administrator. */
+export interface RoleListRequest extends ListRequestDto<string>, RequestBase {
+  tenantId?: string
+}
 
 /** Paged response of roles returned by the list-roles endpoint. */
 export interface RoleListResponse extends ListDto<RoleListDto> { }
 
 /** Summary representation of a role in list responses, including permission ids and assigned user count. */
-export interface RoleListDto extends GenericAuditableDto<string> {
-  systemCreated: boolean
+export interface RoleListDto extends GenericAuditableDto<string>, SystemCreatedDto {
   name: string
   nameNormalized: string
   description: string

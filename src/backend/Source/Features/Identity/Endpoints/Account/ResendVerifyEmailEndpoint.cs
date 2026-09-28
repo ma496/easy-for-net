@@ -10,6 +10,12 @@ using Microsoft.Extensions.Options;
 /// Anonymous POST endpoint that re-issues an email verification message to a user who
 /// has not yet verified their email address.
 /// </summary>
+/// <remarks>
+/// Usable with no tenant established, because re-issuing the verification email is one of
+/// the account self-service flows that has to work with no tenant established: it acts on the
+/// account's own email address, which an account created by self-service sign-up confirms before it
+/// belongs to any tenant.
+/// </remarks>
 sealed class ResendVerifyEmailEndpoint(IUserService userService,
                                ITokenService tokenService,
                                IEmailBackgroundJobs emailBackgroundJobs,

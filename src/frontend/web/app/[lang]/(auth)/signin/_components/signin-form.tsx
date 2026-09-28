@@ -3,7 +3,7 @@ import * as Yup from 'yup'
 import { useTranslation } from '@/i18n'
 import { Formik, Form } from 'formik'
 import { FormInput, FormPasswordInput } from '@/components/ui/form'
-import { Mail, Lock, AlertCircle } from 'lucide-react'
+import { Mail, Lock, AlertCircle, Building2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useTokenMutation, useLazyGetUserInfoQuery, useResendVerifyEmailMutation } from '@/store/api/identity'
@@ -11,11 +11,14 @@ import { useAppDispatch } from '@/store/hooks'
 import { setUserInfo } from '@/store/slices'
 import { Button, LocalizedLink } from '@/components/ui'
 import { useLocalizedRouter } from '@/hooks'
-import { apiErrorAlert, successToast } from '@/lib/utils'
+import { apiErrorAlert, getErrorCode, resolvePlatformLanding, resolveTenantLanding, successToast } from '@/lib/utils'
 import { isValidRedirectPath } from '@/lib/utils/redirect'
 
 /**
  * Interactive client-side form that authenticates a user with username/password and routes them to the appropriate landing page.
+ * An ordinary account signs in to exactly one tenant: the server resolves it when the account belongs to one, and asks for the
+ * tenant field when it belongs to several or to none. Naming a tenant that cannot be acted in refuses the sign-in rather than
+ * quietly starting them somewhere else. A platform administrator needs no tenant and goes straight on.
  * Manages a verification-message sub-state with a resend-email countdown for accounts whose email is not yet verified.
  */
 export const SigninForm = () => {
@@ -33,6 +36,9 @@ export const SigninForm = () => {
       .required(t('validation.required'))
       .min(8, t('validation.minLength', { min: 8 }))
       .max(50, t('validation.maxLength', { max: 50 })),
+    // Optional, and only bounded here: which tenants this account may start a session in is the
+    // server's question, and an identifier of the wrong shape simply names no tenant.
+    tenantIdentifier: Yup.string().max(50, t('validation.maxLength', { max: 50 })),
   })
 
   type SigninFormValues = Yup.InferType<typeof validationSchema>
@@ -59,14 +65,11 @@ export const SigninForm = () => {
   }, [countdown])
 
   const submitForm = async (values: SigninFormValues) => {
-    const tokenRes = await tokenApi(values)
+    // Sent only when it was actually filled in, so an untouched field produces exactly the request a
+    // sign-in has always made rather than one naming an empty tenant.
+    const tokenRes = await tokenApi({ ...values, tenantIdentifier: values.tenantIdentifier?.trim() || undefined })
     if (tokenRes.error) {
-      console.log('tokenRes.error', tokenRes.error)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const errorData = (tokenRes.error as any).data
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const verificationError = errorData?.errors?.find((err: any) => err.code === 'emailNotVerified')
-      if (verificationError) {
+      if (getErrorCode(tokenRes.error) === 'emailNotVerified') {
         setRegisteredEmail(values.username)
         setShowResendLink(true)
         return
@@ -82,6 +85,36 @@ export const SigninForm = () => {
     }
     if (userInfoRes.data) {
       dispatch(setUserInfo(userInfoRes.data))
+
+      // The root layout persists across the client-side navigation below, so left alone it would
+      // keep showing the texts and languages fetched for the anonymous visitor rather than the ones
+      // this session's tenant (or platform) scope resolves to. A refresh makes it re-fetch them - but
+      // only after the push below, on whichever branch actually lands: `router.push` schedules a
+      // navigation and `router.refresh()` schedules a re-fetch of the current one, and Next drops a
+      // refresh that was still pending when a navigation arrives, so calling it first is calling it on
+      // the page just left rather than the one arrived at (`hooks/use-tenant-switch.ts` follows the
+      // same push-then-refresh order for the same reason).
+
+      // An ordinary account arrives here already acting in a tenant - the server resolved its single
+      // membership, or refused the sign-in until one was named - so the landing below is for the case
+      // that survives: a selection that stopped being usable while an earlier session was open. It is
+      // decided ahead of the `redirect` parameter, since honouring that would open a tenant-scoped
+      // screen with no tenant behind it. A platform administrator acting in no tenant needs none.
+      const validRedirect = redirectTo && isValidRedirectPath(redirectTo) ? redirectTo : null
+      const platformLanding = resolvePlatformLanding(userInfoRes.data, validRedirect)
+      if (platformLanding) {
+        router.push(platformLanding, { scroll: false })
+        router.refresh()
+        return
+      }
+
+      const tenantLanding = resolveTenantLanding(userInfoRes.data)
+      if (tenantLanding) {
+        router.push(tenantLanding, { scroll: false })
+        router.refresh()
+        return
+      }
+
       if (redirectTo && isValidRedirectPath(redirectTo)) {
         router.push(redirectTo, { scroll: false })
       } else if (userInfoRes.data.roles.find((role) => role.name === 'Admin')) {
@@ -89,6 +122,7 @@ export const SigninForm = () => {
       } else {
         router.push(`/`, { scroll: false })
       }
+      router.refresh()
     }
   }
 
@@ -107,11 +141,12 @@ export const SigninForm = () => {
   }
 
   return (
-    <Formik initialValues={{ username: '', password: '' }} validationSchema={validationSchema} onSubmit={submitForm}>
+    <Formik initialValues={{ username: '', password: '', tenantIdentifier: '' }} validationSchema={validationSchema} onSubmit={submitForm}>
       {() => (
         <Form className="space-y-5 dark:text-white">
           <FormInput label={t('form.label.username')} name="username" placeholder={t('form.placeholder.username')} icon={<Mail size={16} />} autoFocus={true} required={true} />
           <FormPasswordInput label={t('form.label.password')} name="password" placeholder={t('form.placeholder.password')} icon={<Lock size={16} />} required={true} />
+          <FormInput label={t('form.label.tenant')} name="tenantIdentifier" placeholder={t('form.placeholder.tenant')} icon={<Building2 size={16} />} />
 
           {showResendLink && (
             <div role="alert" className="relative flex items-start gap-3 rounded-lg border border-danger/30 bg-danger-light p-4 text-sm dark:border-danger/40 dark:bg-danger/10">

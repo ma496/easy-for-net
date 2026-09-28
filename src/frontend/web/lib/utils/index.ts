@@ -3,5 +3,17 @@ export { toast, successToast, errorToast, sweetAlert, successAlert, errorAlert, 
 export { type ExportFormat, exportData } from './export'
 export { type AuthState, isAllowed, hasAuthCookie } from './authentication-and-authorization'
 export { constants } from './constants'
-export { type ApiError, type ValidationError, getApiErrorMessages } from './api-error-helpers'
+export { type ApiError, type ValidationError, getApiErrorMessages, getErrorCode } from './api-error-helpers'
 export { apiErrorAlert } from './api-error-alert'
+export {
+  type TenantLandingRoute,
+  isTenantScopedPath,
+  isActiveTenantStale,
+  resolveTenantLanding,
+  isPlatformAccessiblePath,
+  isPlatformWithoutTenant,
+  isPathAvailable,
+  resolvePlatformLanding,
+} from './tenant-routing'
+export { planMegabytesToBytes, effectiveMaxUploadBytes, formatMegabytes } from './upload-limit'
+export { notificationVariables } from './notification-variables'

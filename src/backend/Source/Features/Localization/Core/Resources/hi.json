@@ -1,0 +1,748 @@
+{
+  "brand": {
+    "name": "Easy For Net"
+  },
+  "cookieConsent": {
+    "title": "हम आपकी गोपनीयता का सम्मान करते हैं",
+    "description": "हम आपके ब्राउज़िंग अनुभव को बेहतर बनाने के लिए कुकीज़ का उपयोग करते हैं। इस साइट पर जारी रکھ کر آپ ہمارے کوکیز کے استعمال سے سہم ت ہوتے ہیں۔",
+    "accept": "سوئیکار کریں",
+    "decline": "ا سہیکار کریں"
+  },
+  "common": {
+    "back": "वापस",
+    "more": "अधिक",
+    "list": "सूची",
+    "preview": "पूर्वावलोकन",
+    "add": "जोड़ें",
+    "edit": "संपादित करें",
+    "delete": "हटाएं",
+    "save": "सहेजें",
+    "update": "अपडेट करें",
+    "cancel": "रद्द करें",
+    "confirm": "पुष्टि करें",
+    "search": "खोजें...",
+    "loading": "लोड हो रहा है...",
+    "success": "सफलता",
+    "error": "त्रुटि",
+    "warning": "चेतावनी",
+    "info": "जानकारी",
+    "yes": "हाँ",
+    "no": "नहीं",
+    "ok": "ठीक है",
+    "retry": "पुनः प्रयास करें",
+    "submit": "जमा करें",
+    "actions": "क्रियाएं",
+    "allRightsReserved": "सर्वाधिकार सुरक्षित।",
+    "deleteConfirm": "हाँ, इसे हटा दें",
+    "notifications": "सूचनाएं",
+    "viewAll": "सभी देखें",
+    "close": "बंद करें"
+  },
+  "navigation": {
+    "home": "होम",
+    "dashboard": "डैशबोर्ड",
+    "dashboardSales": "बिक्री",
+    "administration": "प्रशासन",
+    "users": "उपयोगकर्ता",
+    "roles": "भूमिकाएं",
+    "rolesList": "सूची",
+    "rolesCreate": "बनाएं",
+    "rolesUpdate": "अपडेट करें",
+    "rolesChangePermissions": "अनुमतियां बदलें",
+    "components": "घटक",
+    "uiFormElements": "फॉर्म तत्व",
+    "uiButtons": "बटन",
+    "uiCards": "कार्ड",
+    "uiDatePicker": "दिनांक चयनकर्ता",
+    "uiDateView": "दिनांक दृश्य",
+    "uiTreeview": "ट्री व्यू",
+    "changePassword": "पासवर्ड बदलें",
+    "profile": "प्रोफ़ाइल",
+    "uiFileUpload": "फ़ाइल अपलोड",
+    "uiTooltips": "टूलटिप्स",
+    "usersList": "सूची",
+    "usersCreate": "बनाएं",
+    "usersUpdate": "अपडेट करें",
+    "notifications": "सूचनाएं",
+    "notificationsList": "सूची",
+    "notificationsDetail": "विवरण",
+    "tenants": "टेनेंट",
+    "tenantsList": "सूची",
+    "tenantsCreate": "बनाएं",
+    "tenantsUpdate": "अपडेट करें",
+    "tenantsMembers": "सदस्य",
+    "selectTenant": "टेनेंट चुनें",
+    "tenantsDetail": "विवरण",
+    "editions": "संस्करण",
+    "editionsList": "सूची",
+    "editionsCreate": "बनाएं",
+    "editionsUpdate": "अपडेट करें",
+    "editionsFeatures": "सुविधाएँ",
+    "tenantsFeatures": "सुविधाएँ",
+    "localization": "स्थानीयकरण"
+  },
+  "search": {
+    "dashboard": "डैशबोर्ड",
+    "users": "उपयोगकर्ता",
+    "usersCreate": "उपयोगकर्ता बनाएं",
+    "roles": "भूमिकाएं",
+    "rolesCreate": "भूमिका बनाएं",
+    "uiButtons": "UI बटन",
+    "uiCards": "UI कार्ड",
+    "uiDatePicker": "UI दिनांक चयनकर्ता",
+    "uiDateView": "UI दिनांक दृश्य",
+    "uiTreeview": "UI ट्री व्यू",
+    "changePassword": "पासवर्ड बदलें",
+    "profile": "प्रोफ़ाइल",
+    "notifications": "सूचनाएं",
+    "uiFormElements": "UI फॉर्म तत्व",
+    "uiFileUpload": "UI फ़ाइल अपलोड",
+    "uiTooltips": "UI टूलटिप्स",
+    "tenants": "टेनेंट",
+    "tenantsCreate": "टेनेंट बनाएं",
+    "editions": "संस्करण",
+    "editionsCreate": "संस्करण बनाएँ",
+    "localization": "स्थानीयकरण"
+  },
+  "form": {
+    "label": {
+      "username": "उपयोगकर्ता नाम",
+      "password": "पासवर्ड",
+      "firstName": "पहला नाम",
+      "lastName": "अंतिम नाम",
+      "email": "ईमेल",
+      "currentPassword": "वर्तमान पासवर्ड",
+      "newPassword": "नया पासवर्ड",
+      "confirmPassword": "पासवर्ड की पुष्टि करें",
+      "roleName": "भूमिका नाम",
+      "roleDescription": "विवरण",
+      "roles": "भूमिकाएं",
+      "isActive": "सक्रिय",
+      "name": "नाम",
+      "tenantName": "टेनेंट नाम",
+      "tenantIdentifier": "पहचानकर्ता",
+      "user": "उपयोगकर्ता",
+      "tenant": "टेनेंट",
+      "editionName": "नाम",
+      "editionDescription": "विवरण",
+      "editionDisplayOrder": "प्रदर्शन क्रम",
+      "defaultLanguage": "डिफ़ॉल्ट भाषा"
+    },
+    "placeholder": {
+      "username": "उपयोगकर्ता नाम दर्ज करें",
+      "password": "पासवर्ड दर्ज करें",
+      "firstName": "पहला नाम दर्ज करें",
+      "lastName": "अंतिम नाम दर्ज करें",
+      "email": "ईमेल दर्ज करें",
+      "currentPassword": "वर्तमान पासवर्ड दर्ज करें",
+      "newPassword": "नया पासवर्ड दर्ज करें",
+      "confirmPassword": "पुष्टि पासवर्ड दर्ज करें",
+      "roleName": "भूमिका नाम दर्ज करें",
+      "roleDescription": "भूमिका विवरण दर्ज करें",
+      "roles": "भूमिकाएं चुनें",
+      "tenantName": "टेनेंट नाम दर्ज करें",
+      "tenantIdentifier": "पहचानकर्ता दर्ज करें (उदाहरण के लिए acme)",
+      "user": "उपयोगकर्ता चुनें",
+      "tenant": "टेनेंट पहचानकर्ता",
+      "editionName": "संस्करण का नाम दर्ज करें",
+      "editionDescription": "संस्करण का विवरण दर्ज करें",
+      "edition": "एक संस्करण चुनें"
+    }
+  },
+  "validation": {
+    "required": "फ़ील्ड आवश्यक है",
+    "minLength": "फ़ील्ड कम से कम ${min} वर्णों का होना चाहिए",
+    "maxLength": "फ़ील्ड ${max} वर्णों से अधिक नहीं होना चाहिए",
+    "email": "अमान्य ईमेल प्रारूप",
+    "invalidEmail": "अमान्य ईमेल",
+    "mustMatch": "फ़ील्ड ${otherField} के साथ मेल खाना चाहिए",
+    "atLeastOneSelected": "कम से कम एक आइटम का चयन किया जाना चाहिए",
+    "tenantIdentifier": "छोटे अंग्रेज़ी अक्षर, अंक और एकल हाइफ़न का उपयोग करें, जो अक्षर या अंक से शुरू और समाप्त हों",
+    "number": "संख्या होनी चाहिए",
+    "min": "कम से कम ${min} होना चाहिए"
+  },
+  "error": {
+    "400": {
+      "title": "खराब अनुरोध"
+    },
+    "401": {
+      "title": "अनधिकृत",
+      "message": "आप इस संसाधन तक पहुँचने के लिए अधिकृत नहीं हैं।"
+    },
+    "403": {
+      "title": "वर्जित",
+      "message": "आपको इस संसाधन तक पहुँचने की अनुमति नहीं है।"
+    },
+    "404": {
+      "title": "नहीं मिला",
+      "message": "अनुरोधित संसाधन नहीं मिला।"
+    },
+    "413": {
+      "title": "पेलोड बहुत बड़ा है",
+      "message": "अनुरोध पेलोड बहुत बड़ा है।"
+    },
+    "415": {
+      "title": "असमर्थित मीडिया प्रकार",
+      "message": "अनुरोध मीडिया प्रकार समर्थित नहीं है।"
+    },
+    "500": {
+      "title": "आंतरिक सर्वर त्रुटि",
+      "message": "अनुरोध को संसाधित करते समय एक त्रुटि हुई।"
+    },
+    "connection": {
+      "title": "कनेक्शन त्रुटि",
+      "message": "सर्वर से कनेक्ट करने में असमर्थ। कृपया अपना कनेक्शन जांचें या बाद में पुनः प्रयास करें।"
+    },
+    "serviceUnavailable": {
+      "title": "सेवा अनुपलब्ध",
+      "message": "सर्वर इस समय अनुपलब्ध है। कृपया कुछ क्षणों में पुनः प्रयास करें।",
+      "retry": "पुनः प्रयास करें"
+    },
+    "server": {
+      "internalServerError": "आंतरिक सर्वर त्रुटि",
+      "duplicateValue": "डुप्लिकेट मान",
+      "duplicatePropertyValue": "डुप्लिकेट संपत्ति मान",
+      "requiredFieldMissing": "आवश्यक फ़ील्ड गायब है",
+      "requiredPropertyFieldMissing": "आवश्यक संपत्ति फ़ील्ड गायब है",
+      "referencedRecordNotFound": "संदर्भित रिकॉर्ड नहीं मिला",
+      "invalidValueProvided": "अमान्य मान प्रदान किया गया",
+      "databaseError": "डेटाबेस त्रुटि",
+      "authenticationRequired": "इस कार्रवाई के लिए साइन इन आवश्यक है।",
+      "permissionDenied": "आपकी भूमिकाएँ इस कार्रवाई के लिए आवश्यक अनुमति नहीं देती हैं।",
+      "invalidCurrentPassword": "अमान्य वर्तमान पासवर्ड",
+      "invalidToken": "अमान्य टोकन",
+      "tokenExpired": "टोकन समाप्त हो गया",
+      "payloadTooLarge": "पेलोड बहुत बड़ा है",
+      "invalidUsernamePassword": "अमान्य उपयोगकर्ता नाम या पासवर्ड",
+      "invalidEmailPassword": "अमान्य ईमेल या पासवर्ड",
+      "userNotActive": "उपयोगकर्ता सक्रिय नहीं है",
+      "userNotFound": "उपयोगकर्ता नहीं मिला",
+      "emailAlreadyExists": "ईमेल पहले से मौजूद है",
+      "usernameAlreadyExists": "उपयोगकर्ता नाम पहले से मौजूद है",
+      "emailNotVerified": "ईमेल सत्यापित नहीं है",
+      "roleNameAlreadyExists": "भूमिका नाम पहले से मौजूद है",
+      "roleNotFound": "भूमिका नहीं मिली",
+      "systemCreatedRolePermissionsCannotBeChanged": "सिस्टम द्वारा बनाई गई भूमिका की अनुमतियां बदली नहीं जा सकतीं",
+      "systemCreatedRoleCannotBeDeleted": "सिस्टम द्वारा बनाई गई भूमिका हटाई नहीं जा सकती",
+      "systemCreatedRoleCannotBeUpdated": "सिस्टम द्वारा बनाई गई भूमिका अपडेट नहीं की जा सकती",
+      "systemCreatedUserCannotBeDeleted": "सिस्टम द्वारा बनाया गया उपयोगकर्ता हटाया नहीं जा सकता",
+      "systemCreatedUserCannotBeUpdated": "सिस्टम द्वारा बनाया गया उपयोगकर्ता अपडेट नहीं किया जा सकता",
+      "tenantNotFound": "टेनेंट नहीं मिला",
+      "tenantSuspended": "यह टेनेंट निलंबित है",
+      "notTenantMember": "आप इस टेनेंट के सदस्य नहीं हैं",
+      "noActiveTenant": "कोई सक्रिय टेनेंट चयनित नहीं है",
+      "tenantRequired": "साइन इन करने के लिए कृपया टेनेंट बताएं।",
+      "tenantIdentifierAlreadyExists": "टेनेंट पहचानकर्ता पहले से मौजूद है",
+      "duplicateTenantMembership": "यह उपयोगकर्ता पहले से ही इस टेनेंट का सदस्य है",
+      "lastTenantAdministrator": "अंतिम टेनेंट प्रशासक को नहीं हटाया जा सकता",
+      "systemCreatedTenantCannotBeModified": "सिस्टम द्वारा बनाए गए टेनेंट को संशोधित नहीं किया जा सकता",
+      "crossTenantFileAccess": "यह फ़ाइल किसी अन्य टेनेंट की है",
+      "platformPermissionNotGrantable": "प्लेटफ़ॉर्म अनुमतियां टेनेंट भूमिका को नहीं दी जा सकतीं",
+      "tenantPermissionNotGrantable": "टेनेंट अनुमतियां प्लेटफ़ॉर्म भूमिका को नहीं दी जा सकतीं",
+      "concurrentModification": "यह रिकॉर्ड किसी और ने बदल दिया था। पुनः लोड करें और फिर से प्रयास करें।",
+      "userSharedAcrossTenants": "यह उपयोगकर्ता अन्य टेनेंट से भी संबंधित है और इसे केवल प्लेटफ़ॉर्म प्रशासक ही बदल सकता है",
+      "featureDisabled": "आपकी योजना में यह सुविधा शामिल नहीं है।",
+      "featureLimitExceeded": "आपकी योजना की इसके लिए सीमा पूरी हो गई है।",
+      "featureNotFound": "ऐसी कोई सुविधा मौजूद नहीं है।",
+      "invalidFeatureValue": "इस सुविधा के लिए यह मान अनुमत नहीं है।",
+      "featureProviderNotAllowed": "यह सुविधा यहाँ सेट नहीं की जा सकती।",
+      "unknownFeatureProvider": "अज्ञात सुविधा प्रदाता।",
+      "editionNotFound": "संस्करण नहीं मिला।",
+      "editionNameAlreadyExists": "इस नाम का संस्करण पहले से मौजूद है।",
+      "editionInUse": "जब तक इस संस्करण पर किरायेदार हैं, इसे हटाया नहीं जा सकता।"
+    }
+  },
+  "table": {
+    "columns": {
+      "firstName": "पहला नाम",
+      "lastName": "अंतिम नाम",
+      "email": "ईमेल",
+      "roles": "भूमिकाएं",
+      "userName": "उपयोगकर्ता नाम",
+      "isActive": "सक्रिय",
+      "name": "नाम",
+      "description": "विवरण",
+      "userCount": "उपयोगकर्ता",
+      "type": "प्रकार",
+      "title": "शीर्षक",
+      "message": "संदेश",
+      "status": "स्थिति",
+      "date": "तारीख",
+      "group": "समूह",
+      "created": "बनाया गया",
+      "updated": "अपडेट किया गया",
+      "identifier": "पहचानकर्ता",
+      "displayOrder": "क्रम",
+      "tenantCount": "किरायेदार",
+      "edition": "संस्करण",
+      "key": "कुंजी",
+      "defaultValue": "डिफ़ॉल्ट मान",
+      "inheritedValue": "विरासत में मिला मान",
+      "override": "ओवरराइड"
+    },
+    "pagination": {
+      "showingEntries": "${totalRecords} प्रविष्टियों में से ${from} से ${to} दिखा रहा है"
+    },
+    "noRecords": "कोई रिकॉर्ड नहीं मिला",
+    "searchPlaceholder": "खोजें...",
+    "export": {
+      "button": "निर्यात",
+      "excel": "एक्सेल",
+      "csv": "सीएसवी",
+      "currentPage": "वर्तमान पृष्ठ",
+      "allRecords": "सभी रिकॉर्ड"
+    },
+    "actions": "क्रियाएं",
+    "createLink": "बनाएं",
+    "filter": {
+      "button": "फिल्टर",
+      "all": "सभी",
+      "active": "सक्रिय",
+      "inactive": "निष्क्रिय",
+      "allRoles": "सभी भूमिकाएं",
+      "activeStatus": "सक्रिय स्थिति",
+      "role": "भूमिका",
+      "selectRole": "भूमिका चुनें",
+      "search": "खोजें",
+      "clear": "साफ़ करें",
+      "tenantStatus": "टेनेंट स्थिति",
+      "allStatuses": "सभी स्थितियां",
+      "suspended": "निलंबित"
+    }
+  },
+  "file": {
+    "upload": "फ़ाइल अपलोड",
+    "deleteTitle": "फ़ाइल हटाएं",
+    "deleteConfirm": "क्या आप वाकई इस फ़ाइल को हटाना चाहते हैं?",
+    "tooLarge": "फ़ाइल बहुत बड़ी है। आप केवल ${max} MB तक की फ़ाइलें अपलोड कर सकते हैं।"
+  },
+  "page": {
+    "home": {
+      "hero": {
+        "badge": "ओपन सोर्स .NET और Next.js टेम्प्लेट",
+        "titleFocus": "ध्यान दें",
+        "titleHighlight": "व्यावसायिक तर्क",
+        "description": "बॉयलरप्लेट पर समय बर्बाद करना बंद करें। प्रमाणीकरण, अनुमतियां और पृष्ठभूमि कार्यों के साथ उत्पादन-तैयार नींव पहले से कॉन्फ़िगर की गई है।",
+        "dashboardDetail": "डैशबोर्ड",
+        "signin": "साइन इन",
+        "viewSource": "स्रोत देखें"
+      },
+      "features": {
+        "titleBadge": "विशेषताएं",
+        "title": "तेजी से निर्माण करने के लिए आपको जो कुछ भी चाहिए",
+        "description": "सभी आवश्यक सुविधाओं के साथ एक पूर्ण स्टार्टर किट पहले से बनी हुई है, ताकि आप अपनी अनूठी व्यावसायिक आवश्यकताओं पर ध्यान केंद्रित कर सकें।",
+        "items": {
+          "permissions": {
+            "title": "दानेदार अनुमतियां",
+            "description": "दानेदार अनुमतियों के साथ अंतर्निहित भूमिका-आधारित पहुँच नियंत्रण (RBAC)। आसानी से प्रबंधित करें कि उपयोगकर्ता क्या देख और कर सकते हैं।"
+          },
+          "email": {
+            "title": "ईमेल सेवा",
+            "description": "सूचनाएं, पासवर्ड रीसेट और अधिक के लिए एकीकृत ईमेल सेवा। अपने SMTP प्रदाता के साथ कनेक्ट करने के लिए तैयार।"
+          },
+          "jobs": {
+            "title": "पृष्ठभूमि कार्य",
+            "description": "Hangfire द्वारा संचालित। टोकन सफाई और फ़ाइल रखरखाव के लिए पूर्व-कॉन्फ़िगर कार्य शामिल हैं।"
+          },
+          "cleanup": {
+            "title": "टोकन और फ़ाइल सफाई",
+            "description": "आपके डेटाबेस और स्टोरेज को साफ रखने के लिए स्वचालित सेवाएं। समय सीमा समाप्त टोकन और अस्थायी फ़ाइलों को हटाता है।"
+          },
+          "users": {
+            "title": "उपयोगकर्ता प्रबंधन",
+            "description": "पूर्ण उपयोगकर्ता जीवनचक्र प्रबंधन। बॉक्स के बाहर उपयोगकर्ता प्रोफ़ाइल और भूमिकाएं बनाएं, अपडेट करें और प्रबंधित करें।"
+          },
+          "ui": {
+            "title": "आधुनिक UI घटक",
+            "description": "Tailwind CSS और Headless UI के साथ निर्मित सुलभ, डार्क-मोड तैयार घटकों की एक समृद्ध लाइब्रेरी।"
+          }
+        }
+      },
+      "cta": {
+        "title": "ओपन सोर्स और समुदाय संचालित",
+        "description": "समुदाय में शामिल हों, प्रोजेक्ट में योगदान करें, या अपना अगला बड़ा विचार शुरू करने के लिए इसे फोर्क करें।",
+        "button": "GitHub पर स्टार दें",
+        "opensource": "ओपन सोर्स",
+        "license": "MIT लाइसेंस प्राप्त। व्यक्तिगत और व्यावसायिक परियोजनाओं के लिए उपयोग करने के लिए स्वतंत्र।"
+      },
+      "title": "होम"
+    },
+    "dashboard": {
+      "title": "डैशबोर्ड",
+      "sales": "बिक्री",
+      "revenue": "राजस्व",
+      "salesByCategory": "श्रेणी के अनुसार बिक्री",
+      "dailySales": "दैनिक बिक्री",
+      "summary": "सारांश",
+      "totalOrders": "कुल आदेश",
+      "totalProfit": "कुल लाभ",
+      "income": "आय",
+      "expenses": "व्यय",
+      "profit": "लाभ",
+      "weekly": "साप्ताहिक",
+      "monthly": "मासिक",
+      "yearly": "वार्षिक",
+      "viewReport": "रिपोर्ट देखें",
+      "editReport": "रिपोर्ट संपादित करें",
+      "markAsDone": "पूर्ण के रूप में चिह्नित करें",
+      "goToColumns": "विवरण के लिए कॉलम पर जाएं"
+    },
+    "users": {
+      "title": "उपयोगकर्ता",
+      "createSuccess": "उपयोगकर्ता सफलतापूर्वक बनाया गया",
+      "updateSuccess": "उपयोगकर्ता सफलतापूर्वक अपडेट किया गया",
+      "deleteTitle": "उपयोगकर्ता हटाएं",
+      "deleteConfirm": "क्या आप वाकई इस उपयोगकर्ता को हटाना चाहते हैं?",
+      "deleteSuccess": "उपयोगकर्ता सफलतापूर्वक हटाया गया",
+      "seatLimitReached": "आपकी योजना की उपयोगकर्ता सीमा पूरी हो गई है",
+      "create": {
+        "title": "उपयोगकर्ता बनाएँ"
+      },
+      "list": {
+        "title": "उपयोगकर्ताओं की सूची"
+      },
+      "update": {
+        "title": "उपयोगकर्ता अपडेट करें"
+      }
+    },
+    "roles": {
+      "title": "भूमिकाएं",
+      "createSuccess": "भूमिका सफलतापूर्वक बनाई गई",
+      "updateSuccess": "भूमिका सफलतापूर्वक अपडेट की गई",
+      "deleteTitle": "भूमिका हटाएं",
+      "deleteConfirm": "क्या आप वाकई इस भूमिका को हटाना चाहते हैं?",
+      "deleteSuccess": "भूमिका सफलतापूर्वक हटाई गई",
+      "notFound": "भूमिका नहीं मिली",
+      "permissions": "अनुमतियां",
+      "permissionsUpdateSuccess": "अनुमतियां सफलतापूर्वक अपडेट की गईं",
+      "changePermissions": {
+        "title": "अनुमतियाँ बदलें"
+      },
+      "create": {
+        "title": "भूमिका बनाएँ"
+      },
+      "list": {
+        "title": "भूमिकाओं की सूची"
+      },
+      "update": {
+        "title": "भूमिका अपडेट करें"
+      },
+      "permissionGroups": "अनुमति समूह"
+    },
+    "profile": {
+      "title": "प्रोफ़ाइल",
+      "description": "अपनी व्यक्तिगत जानकारी अपडेट करें",
+      "updateSuccess": "प्रोफ़ाइल सफलतापूर्वक अपडेट की गई",
+      "deleteAvatarTitle": "प्रोफ़ाइल चित्र हटाएं",
+      "deleteAvatarConfirm": "क्या आप वाकई अपना प्रोफ़ाइल चित्र हटाना चाहते हैं?",
+      "altImage": "प्रोफ़ाइल छवि",
+      "changePasswordSuccess": "पासवर्ड सफलतापूर्वक बदला गया"
+    },
+    "verifyEmail": {
+      "verifying": "आपके ईमेल का सत्यापन हो रहा है...",
+      "verifiedTitle": "ईमेल सत्यापित!",
+      "verifiedMessage": "आपका ईमेल सफलतापूर्वक सत्यापित हो गया है। अब आप साइन इन कर सकते हैं।",
+      "buttonSignin": "अभी साइन इन करें",
+      "resendButton": "सत्यापन ईमेल पुनः भेजें",
+      "resendSuccess": "सत्यापन ईमेल पुनः भेज दिया गया है।",
+      "resendWait": "कृपया ${seconds} सेकंड प्रतीक्षा करें",
+      "notVerifiedTitle": "ईमेल सत्यापन आवश्यक",
+      "notVerifiedMessage": "आपका ईमेल पता सत्यापित नहीं है। कृपया सत्यापन लिंक के लिए अपना इनबॉक्स देखें या इसे पुनः भेजने के लिए नीचे क्लिक करें।",
+      "failedTitle": "सत्यापन विफल",
+      "failedMessage": "सत्यापन लिंक अमान्य है या समाप्त हो गया है।",
+      "title": "ईमेल सत्यापित करें"
+    },
+    "auth": {
+      "signin": {
+        "title": "साइन इन",
+        "description": "साइन इन करने के लिए अपनी साख दर्ज करें",
+        "button": "साइन इन",
+        "forgotPassword": "पासवर्ड भूल गए?",
+        "signupLink": "साइन अप",
+        "noAccount": "खाता नहीं है?",
+        "backToSignin": "साइन इन पर वापस जाएं"
+      },
+      "signup": {
+        "title": "साइन अप",
+        "description": "रजिस्टर करने के लिए अपना ईमेल और पासवर्ड दर्ज करें",
+        "button": "साइन अप",
+        "signinLink": "साइन इन",
+        "alreadyHaveAccount": "पहले से खाता है?",
+        "successTitle": "सफलता!",
+        "successVerifyEmail": "पंजीकरण सफल! कृपया अपने खाते को सत्यापित करने के लिए अपना ईमेल देखें।",
+        "successMessage": "पंजीकरण सफल! साइन इन पेज पर जाएं।",
+        "tenantSectionTitle": "आपका टेनेंट"
+      },
+      "forgotPassword": {
+        "title": "पासवर्ड भूल गए",
+        "description": "अपना पासवर्ड रीसेट करने के लिए अपना ईमेल दर्ज करें",
+        "button": "रीसेट लिंक भेजें",
+        "success": "पासवर्ड रीसेट लिंक भेजा गया",
+        "checkEmail": "कृपया पासवर्ड रीसेट निर्देशों के लिए अपना ईमेल देखें"
+      },
+      "resetPassword": {
+        "title": "पासवर्ड रीसेट करें",
+        "description": "अपना खाता रीसेट करने के लिए अपना नया पासवर्ड दर्ज करें",
+        "button": "पासवर्ड रीसेट करें",
+        "success": "पासवर्ड सफलतापूर्वक रीसेट किया गया",
+        "hasBeenReset": "आपका पासवर्ड सफलतापूर्वक रीसेट कर दिया गया है"
+      },
+      "signout": "साइन आउट",
+      "unauthorized": {
+        "title": "अनधिकृत"
+      }
+    },
+    "changePassword": {
+      "title": "पासवर्ड बदलें",
+      "description": "अपने खाते को सुरक्षित रखें"
+    },
+    "ui": {
+      "buttons": {
+        "title": "यूआई बटन"
+      },
+      "cards": {
+        "title": "यूआई कार्ड"
+      },
+      "datePicker": {
+        "title": "यूआई डेट पिकर"
+      },
+      "dateView": {
+        "title": "यूआई डेट व्यू"
+      },
+      "fileUpload": {
+        "title": "यूआई फ़ाइल अपलोड"
+      },
+      "formElements": {
+        "title": "यूआई फॉर्म तत्व"
+      },
+      "treeview": {
+        "title": "यूआई ट्री व्यू"
+      },
+      "tooltip": {
+        "title": "UI टूलटिप"
+      }
+    },
+    "notifications": {
+      "title": "सूचनाएं",
+      "detail": {
+        "title": "सूचना विवरण"
+      },
+      "viewAll": "सभी सूचनाएं देखें"
+    },
+    "tenants": {
+      "title": "टेनेंट",
+      "notFound": "टेनेंट नहीं मिला",
+      "systemCreated": "सिस्टम द्वारा बनाया गया",
+      "createSuccess": "टेनेंट सफलतापूर्वक बनाया गया",
+      "updateSuccess": "टेनेंट सफलतापूर्वक अपडेट किया गया",
+      "deleteTitle": "टेनेंट हटाएं",
+      "deleteConfirm": "क्या आप वाकई इस टेनेंट को हटाना चाहते हैं?",
+      "deleteSuccess": "टेनेंट सफलतापूर्वक हटाया गया",
+      "suspendTitle": "टेनेंट निलंबित करें",
+      "suspendConfirm": "क्या आप वाकई इस टेनेंट को निलंबित करना चाहते हैं? पुनः सक्रिय होने तक इसके सदस्यों की पहुंच समाप्त हो जाएगी।",
+      "suspendSuccess": "टेनेंट सफलतापूर्वक निलंबित किया गया",
+      "reactivateTitle": "टेनेंट पुनः सक्रिय करें",
+      "reactivateConfirm": "क्या आप वाकई इस टेनेंट को पुनः सक्रिय करना चाहते हैं?",
+      "reactivateSuccess": "टेनेंट सफलतापूर्वक पुनः सक्रिय किया गया",
+      "list": {
+        "title": "टेनेंट सूची"
+      },
+      "create": {
+        "title": "टेनेंट बनाएं"
+      },
+      "update": {
+        "title": "टेनेंट अपडेट करें"
+      },
+      "status": {
+        "active": "सक्रिय",
+        "suspended": "निलंबित"
+      },
+      "members": {
+        "title": "टेनेंट सदस्य",
+        "addTitle": "सदस्य जोड़ें",
+        "addButton": "सदस्य जोड़ें",
+        "addSuccess": "सदस्य सफलतापूर्वक जोड़ा गया",
+        "seatLimitReached": "इस टेनेंट की योजना की उपयोगकर्ता सीमा पूरी हो गई है",
+        "rolesTitle": "सदस्य की भूमिकाएं बदलें",
+        "rolesButton": "भूमिकाएं बदलें",
+        "rolesSuccess": "सदस्य की भूमिकाएं सफलतापूर्वक अपडेट की गईं",
+        "removeTitle": "सदस्य हटाएं",
+        "removeConfirm": "क्या आप वाकई इस सदस्य को टेनेंट से हटाना चाहते हैं?",
+        "removeSuccess": "सदस्य सफलतापूर्वक हटाया गया"
+      },
+      "switcher": {
+        "label": "टेनेंट",
+        "switchTo": "टेनेंट बदलें",
+        "switchSuccess": "अब आप ${tenant} में कार्य कर रहे हैं",
+        "noTenant": "कोई टेनेंट चयनित नहीं",
+        "viewDetail": "टेनेंट विवरण देखें",
+        "exitTenant": "टेनेंट से बाहर निकलें",
+        "exitSuccess": "आप फिर से प्लेटफ़ॉर्म उपयोगकर्ता के रूप में कार्य कर रहे हैं"
+      },
+      "detail": {
+        "title": "टेनेंट विवरण",
+        "information": "टेनेंट जानकारी",
+        "membersTitle": "सदस्य"
+      },
+      "enterButton": "प्रवेश करें",
+      "enterCurrent": "वर्तमान",
+      "actions": {
+        "detail": "विवरण",
+        "members": "सदस्य",
+        "suspend": "निलंबित करें",
+        "reactivate": "पुनः सक्रिय करें"
+      }
+    },
+    "selectTenant": {
+      "title": "टेनेंट चुनें",
+      "description": "वह टेनेंट चुनें जिसमें आप कार्य करना चाहते हैं।",
+      "emptyDescription": "आप किसी सक्रिय टेनेंट से नहीं जुड़े हैं। किसी व्यवस्थापक से अपने टेनेंट में जोड़ने के लिए कहें, या अपना टेनेंट बनाने के लिए साइन अप करें।",
+      "emptyAction": "अपनी प्रोफ़ाइल पर जाएं"
+    },
+    "editions": {
+      "title": "संस्करण",
+      "createSuccess": "संस्करण सफलतापूर्वक बनाया गया",
+      "updateSuccess": "संस्करण सफलतापूर्वक अपडेट किया गया",
+      "deleteTitle": "संस्करण हटाएँ",
+      "deleteConfirm": "क्या आप वाकई इस संस्करण को हटाना चाहते हैं?",
+      "deleteSuccess": "संस्करण सफलतापूर्वक हटाया गया",
+      "notFound": "संस्करण नहीं मिला",
+      "list": {
+        "title": "संस्करण सूची"
+      },
+      "create": {
+        "title": "संस्करण बनाएँ"
+      },
+      "update": {
+        "title": "संस्करण अपडेट करें"
+      }
+    },
+    "features": {
+      "tenantTitle": "किरायेदार सुविधाएँ",
+      "editionTitle": "संस्करण सुविधाएँ",
+      "saveSuccess": "सुविधाएँ सफलतापूर्वक अपडेट की गईं",
+      "none": "कोई सुविधा परिभाषित नहीं की गई है",
+      "mintTimeNotice": "परिवर्तन उपयोगकर्ता के लिए अगली बार सत्र नवीनीकृत होने पर प्रभावी होंगे।",
+      "setHere": "यहाँ सेट किया गया",
+      "fromEdition": "संस्करण से",
+      "fromDefault": "डिफ़ॉल्ट",
+      "resetToInherited": "विरासत में मिले मान पर रीसेट करें",
+      "groups": "समूह",
+      "unsaved": "असहेजा",
+      "unsavedCount": "${count} असहेजे परिवर्तन",
+      "parentDisabled": "ऊपर की सुविधा बंद होने तक प्रभावी नहीं",
+      "noMatches": "आपकी खोज से कोई सुविधा मेल नहीं खाती",
+      "actionLabel": "सुविधाएँ"
+    },
+    "localization": {
+      "title": "स्थानीयकरण",
+      "scope": {
+        "platform": "आप प्लेटफ़ॉर्म-व्यापी टेक्स्ट और भाषाएँ संपादित कर रहे हैं। हर किरायेदार इन्हें विरासत में लेता है जब तक कि वह अपनी खुद की सेटिंग न करे।",
+        "tenant": "आप ${tenant} के लिए टेक्स्ट और भाषाएँ संपादित कर रहे हैं। यहाँ जो कुछ भी नहीं बदला गया है वह प्लेटफ़ॉर्म से विरासत में मिलता है।"
+      },
+      "readOnly": "आप इन सेटिंग्स को देख सकते हैं लेकिन बदल नहीं सकते।",
+      "tabs": {
+        "texts": "टेक्स्ट",
+        "languages": "भाषाएँ"
+      },
+      "texts": {
+        "onlyOverridden": "केवल ओवरराइड किए गए",
+        "setHere": "यहाँ सेट किया गया",
+        "fromPlatform": "प्लेटफ़ॉर्म से",
+        "notOverridden": "ओवरराइड नहीं किया गया",
+        "editTitle": "टेक्स्ट संपादित करें",
+        "inheritedLabel": "विरासत में मिला मान",
+        "defaultLabel": "डिफ़ॉल्ट मान",
+        "overrideLabel": "आपका टेक्स्ट",
+        "placeholders": "इन प्लेसहोल्डर्स को बनाए रखें:",
+        "placeholderMissing": "एक प्लेसहोल्डर गायब है — ऐप इसे खाली दिखाएगा।",
+        "reset": "विरासत में मिले मान पर रीसेट करें",
+        "resetTitle": "क्या इस टेक्स्ट को रीसेट करना है?",
+        "resetConfirm": "इससे आपका ओवरराइड हट जाएगा और विरासत में मिले मान पर वापस चला जाएगा।",
+        "resetSuccess": "टेक्स्ट विरासत में मिले मान पर रीसेट कर दिया गया",
+        "saveSuccess": "टेक्स्ट सहेजा गया",
+        "noOverrides": "इस भाषा में अभी तक कुछ भी ओवरराइड नहीं किया गया है।"
+      },
+      "languages": {
+        "inherited": "विरासत में मिला",
+        "inheritedFromPlatform": "प्लेटफ़ॉर्म से विरासत में मिला",
+        "inheritedFromShipped": "बिल्ट-इन: सभी भाषाएँ, कोई डिफ़ॉल्ट नहीं",
+        "inheritedSummary": "विरासत में मिला: ${languages} · डिफ़ॉल्ट: ${default}",
+        "customize": "अनुकूलित करें",
+        "customized": "अनुकूलित",
+        "resetToInherited": "विरासत में मिले मान पर रीसेट करें",
+        "resetTitle": "क्या भाषाएँ रीसेट करनी हैं?",
+        "resetConfirm": "इससे आपका अनुकूलन हट जाएगा और विरासत में मिली सेटिंग्स पर वापस चला जाएगा।",
+        "resetSuccess": "भाषाएँ विरासत में मिली सेटिंग्स पर रीसेट कर दी गईं",
+        "enabled": "सक्षम भाषाएँ",
+        "enabledCount": "${total} में से ${count} सक्षम",
+        "rtl": "दाएँ से बाएँ",
+        "atLeastOne": "कम से कम एक भाषा सक्षम रहनी चाहिए",
+        "noDefault": "कोई नहीं — विज़िटर के ब्राउज़र की भाषा का उपयोग करें",
+        "defaultCleared": "डिफ़ॉल्ट भाषा साफ़ कर दी गई क्योंकि इसे अभी अक्षम किया गया है",
+        "currentWillSwitch": "जिस भाषा में आप यह स्क्रीन देख रहे हैं वह अक्षम की जा रही है — आपको डिफ़ॉल्ट भाषा पर बदल दिया जाएगा।",
+        "unsaved": "आपके पास असहेजे परिवर्तन हैं",
+        "saveSuccess": "भाषाएँ अपडेट की गईं"
+      }
+    }
+  },
+  "notifications": {
+    "noNotifications": "कोई सूचना नहीं",
+    "notFound": "सूचना नहीं मिली",
+    "viewAll": "सभी सूचनाएं देखें",
+    "markAllRead": "सभी को पढ़ा हुआ चिह्नित करें",
+    "markAsRead": "पढ़ा हुआ चिह्नित करें",
+    "markAsUnread": "अपढ़ा चिह्नित करें",
+    "delete": "हटाएं",
+    "all": "सभी",
+    "read": "पढ़ा हुआ",
+    "unread": "अपठित",
+    "group": "समूह",
+    "metadata": "मेटाडेटा",
+    "markedAsRead": "सूचना पढ़ा हुआ चिह्नित",
+    "markedAsUnread": "सूचना अपढ़ी चिह्नित",
+    "markedAllAsRead": "सभी सूचनाएं पढ़ा हुआ चिह्नित",
+    "deleted": "सूचना हटाई गई",
+    "deleteTitle": "सूचना हटाएं",
+    "deleteConfirm": "क्या आप वाकई इस सूचना को हटाना चाहते हैं?",
+    "markAllReadConfirmTitle": "सभी को पढ़ा हुआ चिह्नित करें",
+    "markAllReadConfirmText": "क्या आप वाकई सभी सूचनाओं को पढ़ा हुआ चिह्नित करना चाहते हैं?",
+    "filterByGroup": "समूह के अनुसार फ़िल्टर करें",
+    "groups": {
+      "inventory": "इन्वेंटरी",
+      "system": "सिस्टम",
+      "payments": "भुगतान",
+      "orders": "ऑर्डर"
+    },
+    "types": {
+      "info": "जानकारी",
+      "warning": "चेतावनी",
+      "error": "त्रुटि",
+      "success": "सफलता"
+    },
+    "inventoryBelowLimit": {
+      "title": "कम इन्वेंटरी चेतावनी",
+      "message": "आइटम न्यूनतम स्टॉक स्तर से नीचे है"
+    },
+    "systemUpdate": {
+      "title": "सिस्टम अपडेट",
+      "message": "एक सिस्टम अपडेट उपलब्ध है"
+    },
+    "orderCompleted": {
+      "title": "ऑर्डर पूर्ण",
+      "message": "आपका ऑर्डर सफलतापूर्वक पूर्ण हुआ"
+    },
+    "paymentFailed": {
+      "title": "भुगतान विफल",
+      "message": "एक भुगतान लेनदेन विफल रहा"
+    },
+    "welcome": {
+      "title": "स्वागत है",
+      "message": "आवेदन में आपका स्वागत है"
+    },
+    "tenantMemberAdded": {
+      "title": "एक टेनेंट में जोड़ा गया",
+      "message": "आपको ${tenantName} में जोड़ा गया है"
+    }
+  }
+}

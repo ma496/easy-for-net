@@ -1,11 +1,10 @@
 'use client'
 import { Dropdown, type DropdownRef } from '@/components/ui'
+import { TranslationContext } from '@/components/layouts'
 import { ChevronDown } from 'lucide-react'
-import { useTranslation } from '@/i18n'
-import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { toggleRTL } from '@/store/slices'
-import { useLocalizedRouter } from '@/hooks'
-import { useRef } from 'react'
+import { useTranslation, PREFERRED_LANGUAGE_COOKIE, writeLocaleCookie } from '@/i18n'
+import { useAppSelector } from '@/store/hooks'
+import { useContext, useRef } from 'react'
 import { cva } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
@@ -28,12 +27,15 @@ interface LanguageDropdownProps {
 }
 
 /**
- * Client-side dropdown that lists the available languages and allows the user to switch the active locale, updating i18n, RTL state, and refreshing the localized router.
+ * Client-side dropdown that lists the languages enabled for the acting scope (platform or tenant)
+ * and switches to the one picked: it writes a `preferred-language` cookie so the choice survives a
+ * later visit with no locale in the URL, then navigates to the same page under that locale segment.
+ * RTL and the flags shown come from the same list, so a scope that enables only a subset of the
+ * shipped languages never offers one it does not serve.
  */
 export const LanguageDropdown = ({ className = '', onlyFlag = false }: LanguageDropdownProps) => {
-  const dispatch = useAppDispatch()
-  const router = useLocalizedRouter()
   const { i18n } = useTranslation()
+  const dictionary = useContext(TranslationContext)
   const dropdownRef = useRef<DropdownRef>(null)
 
   const handleLinkClick = () => {
@@ -44,15 +46,10 @@ export const LanguageDropdown = ({ className = '', onlyFlag = false }: LanguageD
 
   const isRtl = useAppSelector((state) => state.theme.rtlClass) === 'rtl'
 
-  const themeConfig = useAppSelector((state) => state.theme)
-  const setLocale = (flag: string) => {
-    const selectedLanguage = themeConfig.languageList.find((lang) => lang.code === flag)
-    if (selectedLanguage?.isRTL) {
-      dispatch(toggleRTL('rtl'))
-    } else {
-      dispatch(toggleRTL('ltr'))
-    }
-    router.refresh()
+  const setLocale = (code: string) => {
+    writeLocaleCookie(PREFERRED_LANGUAGE_COOKIE, code)
+    i18n.changeLanguage(code)
+    handleLinkClick()
   }
 
   return (
@@ -84,25 +81,18 @@ export const LanguageDropdown = ({ className = '', onlyFlag = false }: LanguageD
           }
         >
           <ul className="grid w-70 grid-cols-2 gap-2 px-2! font-semibold text-dark dark:text-white-light/90">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {themeConfig.languageList.map((item: any) => {
-              return (
-                <li key={item.code}>
-                  <button
-                    type="button"
-                    className={cn('flex w-full cursor-pointer rounded-lg hover:text-primary', i18n.language === item.code && 'bg-primary/10 text-primary')}
-                    onClick={() => {
-                      i18n.changeLanguage(item.code)
-                      setLocale(item.code)
-                      handleLinkClick()
-                    }}
-                  >
-                    <Image src={`/assets/images/flags/${item.code.toUpperCase()}.svg`} alt={`${item.name} flag`} width={20} height={20} className="h-5 w-5 rounded-full object-cover" />
-                    <span className="ltr:ml-3 rtl:mr-3">{item.name}</span>
-                  </button>
-                </li>
-              )
-            })}
+            {dictionary.languages.map((item) => (
+              <li key={item.code}>
+                <button
+                  type="button"
+                  className={cn('flex w-full cursor-pointer rounded-lg hover:text-primary', i18n.language === item.code && 'bg-primary/10 text-primary')}
+                  onClick={() => setLocale(item.code)}
+                >
+                  <Image src={`/assets/images/flags/${item.code.toUpperCase()}.svg`} alt={`${item.name} flag`} width={20} height={20} className="h-5 w-5 rounded-full object-cover" />
+                  <span className="ms-3">{item.name}</span>
+                </button>
+              </li>
+            ))}
           </ul>
         </Dropdown>
       )}

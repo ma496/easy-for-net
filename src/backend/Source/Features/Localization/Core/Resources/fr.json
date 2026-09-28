@@ -1,0 +1,748 @@
+{
+  "brand": {
+    "name": "Easy For Net"
+  },
+  "cookieConsent": {
+    "title": "Nous respectons votre vie privée",
+    "description": "Nous utilisons des cookies pour améliorer votre expérience de navigation. En continuant à visiter ce site, vous acceptez notre utilisation des cookies.",
+    "accept": "Accepter",
+    "decline": "Refuser"
+  },
+  "common": {
+    "back": "Retour",
+    "more": "Plus",
+    "list": "Liste",
+    "preview": "Aperçu",
+    "add": "Ajouter",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "save": "Enregistrer",
+    "update": "Mettre à jour",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "search": "Rechercher...",
+    "loading": "Chargement...",
+    "success": "Succès",
+    "error": "Erreur",
+    "warning": "Avertissement",
+    "info": "Info",
+    "yes": "Oui",
+    "no": "Non",
+    "ok": "OK",
+    "retry": "Réessayer",
+    "submit": "Soumettre",
+    "actions": "Actions",
+    "allRightsReserved": "Tous droits réservés.",
+    "deleteConfirm": "Oui, supprimer",
+    "notifications": "Notifications",
+    "viewAll": "Voir tout",
+    "close": "Fermer"
+  },
+  "navigation": {
+    "home": "Accueil",
+    "dashboard": "Tableau de bord",
+    "dashboardSales": "Ventes",
+    "administration": "Administration",
+    "users": "Utilisateurs",
+    "roles": "Rôles",
+    "rolesList": "Liste",
+    "rolesCreate": "Créer",
+    "rolesUpdate": "Mettre à jour",
+    "rolesChangePermissions": "Modifier les permissions",
+    "components": "Composants",
+    "uiFormElements": "Éléments de formulaire",
+    "uiButtons": "Boutons",
+    "uiCards": "Cartes",
+    "uiDatePicker": "Sélecteur de date",
+    "uiDateView": "Vue date",
+    "uiTreeview": "Vue arborescente",
+    "changePassword": "Changer le mot de passe",
+    "profile": "Profil",
+    "uiFileUpload": "Téléchargement de fichiers",
+    "uiTooltips": "Info-bulles",
+    "usersList": "Liste",
+    "usersCreate": "Créer",
+    "usersUpdate": "Mettre à jour",
+    "notifications": "Notifications",
+    "notificationsList": "Liste",
+    "notificationsDetail": "Détails",
+    "tenants": "Locataires",
+    "tenantsList": "Liste",
+    "tenantsCreate": "Créer",
+    "tenantsUpdate": "Mettre à jour",
+    "tenantsMembers": "Membres",
+    "selectTenant": "Sélectionner un locataire",
+    "tenantsDetail": "Détail",
+    "editions": "Éditions",
+    "editionsList": "Liste",
+    "editionsCreate": "Créer",
+    "editionsUpdate": "Mettre à jour",
+    "editionsFeatures": "Fonctionnalités",
+    "tenantsFeatures": "Fonctionnalités",
+    "localization": "Localisation"
+  },
+  "search": {
+    "dashboard": "Tableau de bord",
+    "users": "Utilisateurs",
+    "usersCreate": "Créer un utilisateur",
+    "roles": "Rôles",
+    "rolesCreate": "Créer un rôle",
+    "uiButtons": "Boutons UI",
+    "uiCards": "Cartes UI",
+    "uiDatePicker": "Sélecteur de date UI",
+    "uiDateView": "Vue date UI",
+    "uiTreeview": "Vue arborescente UI",
+    "changePassword": "Changer le mot de passe",
+    "profile": "Profil",
+    "notifications": "Notifications",
+    "uiFormElements": "Éléments de formulaire UI",
+    "uiFileUpload": "Téléchargement de fichiers UI",
+    "uiTooltips": "Info-bulles UI",
+    "tenants": "Locataires",
+    "tenantsCreate": "Créer un locataire",
+    "editions": "Éditions",
+    "editionsCreate": "Créer une édition",
+    "localization": "Localisation"
+  },
+  "form": {
+    "label": {
+      "username": "Nom d'utilisateur",
+      "password": "Mot de passe",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "email": "Email",
+      "currentPassword": "Mot de passe actuel",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "roleName": "Nom du rôle",
+      "roleDescription": "Description",
+      "roles": "Rôles",
+      "isActive": "Actif",
+      "name": "Nom",
+      "tenantName": "Nom du locataire",
+      "tenantIdentifier": "Identifiant",
+      "user": "Utilisateur",
+      "tenant": "Locataire",
+      "editionName": "Nom",
+      "editionDescription": "Description",
+      "editionDisplayOrder": "Ordre d’affichage",
+      "defaultLanguage": "Langue par défaut"
+    },
+    "placeholder": {
+      "username": "Entrez le nom d'utilisateur",
+      "password": "Entrez le mot de passe",
+      "firstName": "Entrez le prénom",
+      "lastName": "Entrez le nom",
+      "email": "Entrez l'email",
+      "currentPassword": "Entrez le mot de passe actuel",
+      "newPassword": "Entrez le nouveau mot de passe",
+      "confirmPassword": "Confirmez le mot de passe",
+      "roleName": "Entrez le nom du rôle",
+      "roleDescription": "Entrez la description du rôle",
+      "roles": "Sélectionnez les rôles",
+      "tenantName": "Entrez le nom du locataire",
+      "tenantIdentifier": "Entrez l'identifiant (par exemple acme)",
+      "user": "Sélectionnez un utilisateur",
+      "tenant": "Identifiant du locataire",
+      "editionName": "Saisissez le nom de l’édition",
+      "editionDescription": "Saisissez la description de l’édition",
+      "edition": "Sélectionnez une édition"
+    }
+  },
+  "validation": {
+    "required": "Champ requis",
+    "minLength": "Le champ doit contenir au moins ${min} caractères",
+    "maxLength": "Le champ ne doit pas dépasser ${max} caractères",
+    "email": "Format d'email invalide",
+    "invalidEmail": "Email invalide",
+    "mustMatch": "Le champ doit correspondre à ${otherField}",
+    "atLeastOneSelected": "Au moins un élément doit être sélectionné",
+    "tenantIdentifier": "Utilisez des lettres minuscules, des chiffres et des traits d'union simples, en commençant et en terminant par une lettre ou un chiffre",
+    "number": "Doit être un nombre",
+    "min": "Doit être au moins ${min}"
+  },
+  "error": {
+    "400": {
+      "title": "Mauvaise requête"
+    },
+    "401": {
+      "title": "Non autorisé",
+      "message": "Vous n'êtes pas autorisé à accéder à cette ressource."
+    },
+    "403": {
+      "title": "Interdit",
+      "message": "Vous n'avez pas la permission d'accéder à cette ressource."
+    },
+    "404": {
+      "title": "Non trouvé",
+      "message": "La ressource demandée est introuvable."
+    },
+    "413": {
+      "title": "Charge utile trop volumineuse",
+      "message": "La charge utile de la requête est trop volumineuse."
+    },
+    "415": {
+      "title": "Type de média non supporté",
+      "message": "Le type de média de la requête n'est pas supporté."
+    },
+    "500": {
+      "title": "Erreur interne du serveur",
+      "message": "Une erreur est survenue lors du traitement de la requête."
+    },
+    "connection": {
+      "title": "Erreur de connexion",
+      "message": "Impossible de se connecter au serveur. Veuillez vérifier votre connexion ou réessayer plus tard."
+    },
+    "serviceUnavailable": {
+      "title": "Service Indisponible",
+      "message": "Le serveur est actuellement inaccessible. Veuillez réessayer dans quelques instants.",
+      "retry": "Réessayer"
+    },
+    "server": {
+      "internalServerError": "Erreur interne du serveur",
+      "duplicateValue": "Valeur en double",
+      "duplicatePropertyValue": "Valeur de propriété en double",
+      "requiredFieldMissing": "Champ requis manquant",
+      "requiredPropertyFieldMissing": "Champ de propriété requis manquant",
+      "referencedRecordNotFound": "Enregistrement référencé non trouvé",
+      "invalidValueProvided": "Valeur fournie invalide",
+      "databaseError": "Erreur de base de données",
+      "authenticationRequired": "Cette opération nécessite une connexion.",
+      "permissionDenied": "Vos rôles n'accordent pas l'autorisation requise par cette opération.",
+      "invalidCurrentPassword": "Mot de passe actuel invalide",
+      "invalidToken": "Jeton invalide",
+      "tokenExpired": "Jeton expiré",
+      "payloadTooLarge": "Charge utile trop volumineuse",
+      "invalidUsernamePassword": "Nom d'utilisateur ou mot de passe invalide",
+      "invalidEmailPassword": "Email ou mot de passe invalide",
+      "userNotActive": "Utilisateur non actif",
+      "userNotFound": "Utilisateur non trouvé",
+      "emailAlreadyExists": "L'email existe déjà",
+      "usernameAlreadyExists": "Le nom d'utilisateur existe déjà",
+      "emailNotVerified": "Email non vérifié",
+      "roleNameAlreadyExists": "Le nom du rôle existe déjà",
+      "roleNotFound": "Rôle non trouvé",
+      "systemCreatedRolePermissionsCannotBeChanged": "Les permissions du rôle créé par le système ne peuvent pas être modifiées",
+      "systemCreatedRoleCannotBeDeleted": "Le rôle créé par le système ne peut pas être supprimé",
+      "systemCreatedRoleCannotBeUpdated": "Le rôle créé par le système ne peut pas être mis à jour",
+      "systemCreatedUserCannotBeDeleted": "L'utilisateur créé par le système ne peut pas être supprimé",
+      "systemCreatedUserCannotBeUpdated": "L'utilisateur créé par le système ne peut pas être mis à jour",
+      "tenantNotFound": "Locataire non trouvé",
+      "tenantSuspended": "Ce locataire est suspendu",
+      "notTenantMember": "Vous n'êtes pas membre de ce locataire",
+      "noActiveTenant": "Aucun locataire actif n'est sélectionné",
+      "tenantRequired": "Veuillez indiquer un locataire pour vous connecter.",
+      "tenantIdentifierAlreadyExists": "L'identifiant du locataire existe déjà",
+      "duplicateTenantMembership": "Cet utilisateur est déjà membre de ce locataire",
+      "lastTenantAdministrator": "Le dernier administrateur du locataire ne peut pas être retiré",
+      "systemCreatedTenantCannotBeModified": "Le locataire créé par le système ne peut pas être modifié",
+      "crossTenantFileAccess": "Ce fichier appartient à un autre locataire",
+      "platformPermissionNotGrantable": "Les permissions de plateforme ne peuvent pas être accordées à un rôle de locataire",
+      "tenantPermissionNotGrantable": "Les permissions de locataire ne peuvent pas être accordées à un rôle de plateforme",
+      "concurrentModification": "Cet enregistrement a été modifié par quelqu'un d'autre. Rechargez et réessayez.",
+      "userSharedAcrossTenants": "Cet utilisateur appartient à d'autres locataires et ne peut être modifié que par un administrateur de la plateforme",
+      "featureDisabled": "Votre offre n’inclut pas cette fonctionnalité.",
+      "featureLimitExceeded": "La limite de votre offre pour cela a été atteinte.",
+      "featureNotFound": "Cette fonctionnalité n’existe pas.",
+      "invalidFeatureValue": "Cette valeur n’est pas autorisée pour cette fonctionnalité.",
+      "featureProviderNotAllowed": "Cette fonctionnalité ne peut pas être définie ici.",
+      "unknownFeatureProvider": "Fournisseur de fonctionnalités inconnu.",
+      "editionNotFound": "Édition introuvable.",
+      "editionNameAlreadyExists": "Une édition portant ce nom existe déjà.",
+      "editionInUse": "Cette édition ne peut pas être supprimée tant que des locataires y sont rattachés."
+    }
+  },
+  "table": {
+    "columns": {
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "email": "Email",
+      "roles": "Rôles",
+      "userName": "Nom d'utilisateur",
+      "isActive": "Actif",
+      "name": "Nom",
+      "description": "Description",
+      "userCount": "Utilisateurs",
+      "type": "Type",
+      "title": "Titre",
+      "message": "Message",
+      "status": "Statut",
+      "date": "Date",
+      "group": "Groupe",
+      "created": "Créé",
+      "updated": "Mis à jour",
+      "identifier": "Identifiant",
+      "displayOrder": "Ordre",
+      "tenantCount": "Locataires",
+      "edition": "Édition",
+      "key": "Clé",
+      "defaultValue": "Valeur par défaut",
+      "inheritedValue": "Valeur héritée",
+      "override": "Remplacement"
+    },
+    "pagination": {
+      "showingEntries": "Affichage de ${from} à ${to} sur ${totalRecords} entrées"
+    },
+    "noRecords": "Aucun enregistrement trouvé",
+    "searchPlaceholder": "Rechercher...",
+    "export": {
+      "button": "Exporter",
+      "excel": "Excel",
+      "csv": "CSV",
+      "currentPage": "Page actuelle",
+      "allRecords": "Tous les enregistrements"
+    },
+    "actions": "Actions",
+    "createLink": "Créer",
+    "filter": {
+      "button": "Filtres",
+      "all": "Tous",
+      "active": "Actif",
+      "inactive": "Inactif",
+      "allRoles": "Tous les rôles",
+      "activeStatus": "Statut actif",
+      "role": "Rôle",
+      "selectRole": "Sélectionner un rôle",
+      "search": "Rechercher",
+      "clear": "Effacer",
+      "tenantStatus": "Statut du locataire",
+      "allStatuses": "Tous les statuts",
+      "suspended": "Suspendu"
+    }
+  },
+  "file": {
+    "upload": "Téléchargement de fichier",
+    "deleteTitle": "Supprimer le fichier",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce fichier ?",
+    "tooLarge": "Fichier trop volumineux. Vous ne pouvez téléverser que des fichiers jusqu’à ${max} Mo."
+  },
+  "page": {
+    "home": {
+      "hero": {
+        "badge": "Modèle Open Source .NET & Next.js",
+        "titleFocus": "Concentrez-vous sur",
+        "titleHighlight": "la Logique Métier",
+        "description": "Arrêtez de perdre du temps sur le code passe-partout. Une fondation prête pour la production avec authentification, permissions et tâches en arrière-plan préconfigurées.",
+        "dashboardDetail": "Tableau de bord",
+        "signin": "Se connecter",
+        "viewSource": "Voir la source"
+      },
+      "features": {
+        "titleBadge": "Fonctionnalités",
+        "title": "Tout ce dont vous avez besoin pour construire plus vite",
+        "description": "Un kit de démarrage complet avec toutes les fonctionnalités essentielles pré-construites, pour que vous puissiez vous concentrer sur vos besoins métier uniques.",
+        "items": {
+          "permissions": {
+            "title": "Permissions Granulaires",
+            "description": "Contrôle d'accès basé sur les rôles (RBAC) intégré avec des permissions granulaires. Gérez facilement ce que les utilisateurs peuvent voir et faire."
+          },
+          "email": {
+            "title": "Service Email",
+            "description": "Service email intégré pour les notifications, réinitialisations de mot de passe et plus. Prêt à connecter avec votre fournisseur SMTP."
+          },
+          "jobs": {
+            "title": "Tâches en Arrière-plan",
+            "description": "Propulsé par Hangfire. Inclut des tâches préconfigurées pour le nettoyage des jetons et la maintenance des fichiers."
+          },
+          "cleanup": {
+            "title": "Nettoyage des Jetons et Fichiers",
+            "description": "Services automatisés pour garder votre base de données et stockage propres. Supprime les jetons expirés et fichiers temporaires."
+          },
+          "users": {
+            "title": "Gestion des Utilisateurs",
+            "description": "Gestion complète du cycle de vie des utilisateurs. Créez, mettez à jour et gérez les profils et rôles utilisateurs dès le début."
+          },
+          "ui": {
+            "title": "Composants UI Modernes",
+            "description": "Une riche bibliothèque de composants accessibles, prêts pour le mode sombre, construits avec Tailwind CSS et Headless UI."
+          }
+        }
+      },
+      "cta": {
+        "title": "Open Source & Dirigé par la Communauté",
+        "description": "Rejoignez la communauté, contribuez au projet ou forkez-le pour démarrer votre prochaine grande idée.",
+        "button": "Étoile sur GitHub",
+        "opensource": "Open Source",
+        "license": "Licence MIT. Gratuit pour les projets personnels et commerciaux."
+      },
+      "title": "Accueil"
+    },
+    "dashboard": {
+      "title": "Tableau de bord",
+      "sales": "Ventes",
+      "revenue": "Revenus",
+      "salesByCategory": "Ventes par catégorie",
+      "dailySales": "Ventes journalières",
+      "summary": "Résumé",
+      "totalOrders": "Total des commandes",
+      "totalProfit": "Profit total",
+      "income": "Revenus",
+      "expenses": "Dépenses",
+      "profit": "Profit",
+      "weekly": "Hebdomadaire",
+      "monthly": "Mensuel",
+      "yearly": "Annuel",
+      "viewReport": "Voir le rapport",
+      "editReport": "Modifier le rapport",
+      "markAsDone": "Marquer comme fait",
+      "goToColumns": "Aller aux colonnes pour les détails"
+    },
+    "users": {
+      "title": "Utilisateurs",
+      "createSuccess": "Utilisateur créé avec succès",
+      "updateSuccess": "Utilisateur mis à jour avec succès",
+      "deleteTitle": "Supprimer l'utilisateur",
+      "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cet utilisateur ?",
+      "deleteSuccess": "Utilisateur supprimé avec succès",
+      "seatLimitReached": "La limite d’utilisateurs de votre offre a été atteinte",
+      "create": {
+        "title": "Créer un utilisateur"
+      },
+      "list": {
+        "title": "Liste des utilisateurs"
+      },
+      "update": {
+        "title": "Mettre à jour l'utilisateur"
+      }
+    },
+    "roles": {
+      "title": "Rôles",
+      "createSuccess": "Rôle créé avec succès",
+      "updateSuccess": "Rôle mis à jour avec succès",
+      "deleteTitle": "Supprimer le rôle",
+      "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce rôle ?",
+      "deleteSuccess": "Rôle supprimé avec succès",
+      "notFound": "Rôle non trouvé",
+      "permissions": "Permissions",
+      "permissionsUpdateSuccess": "Permissions mises à jour avec succès",
+      "changePermissions": {
+        "title": "Changer les permissions"
+      },
+      "create": {
+        "title": "Créer un rôle"
+      },
+      "list": {
+        "title": "Liste des rôles"
+      },
+      "update": {
+        "title": "Mettre à jour le rôle"
+      },
+      "permissionGroups": "Groupes d'autorisations"
+    },
+    "profile": {
+      "title": "Profil",
+      "description": "Mettez à jour vos informations personnelles",
+      "updateSuccess": "Profil mis à jour avec succès",
+      "deleteAvatarTitle": "Supprimer la photo de profil",
+      "deleteAvatarConfirm": "Êtes-vous sûr de vouloir supprimer votre photo de profil ?",
+      "altImage": "Image de profil",
+      "changePasswordSuccess": "Mot de passe changé avec succès"
+    },
+    "verifyEmail": {
+      "verifying": "Vérification de votre email...",
+      "verifiedTitle": "Email vérifié !",
+      "verifiedMessage": "Votre email a été vérifié avec succès. Vous pouvez maintenant vous connecter.",
+      "buttonSignin": "Se connecter maintenant",
+      "resendButton": "Renvoyer l'email de vérification",
+      "resendSuccess": "L'email de vérification a été renvoyé.",
+      "resendWait": "Veuillez patienter ${seconds}s",
+      "notVerifiedTitle": "Vérification de l'email requise",
+      "notVerifiedMessage": "Votre adresse email n'est pas vérifiée. Veuillez vérifier votre boîte de réception ou cliquez ci-dessous pour renvoyer.",
+      "failedTitle": "Échec de la vérification",
+      "failedMessage": "Le lien de vérification est invalide ou a expiré.",
+      "title": "Vérifier l'email"
+    },
+    "auth": {
+      "signin": {
+        "title": "Se connecter",
+        "description": "Entrez vos identifiants pour vous connecter",
+        "button": "Se connecter",
+        "forgotPassword": "Mot de passe oublié ?",
+        "signupLink": "S'inscrire",
+        "noAccount": "Pas de compte ?",
+        "backToSignin": "Retour à la connexion"
+      },
+      "signup": {
+        "title": "S'inscrire",
+        "description": "Entrez votre email et mot de passe pour vous inscrire",
+        "button": "S'inscrire",
+        "signinLink": "Se connecter",
+        "alreadyHaveAccount": "Vous avez déjà un compte ?",
+        "successTitle": "Succès !",
+        "successVerifyEmail": "Inscription réussie ! Veuillez vérifier votre email.",
+        "successMessage": "Inscription réussie ! Allez à la page de connexion.",
+        "tenantSectionTitle": "Votre locataire"
+      },
+      "forgotPassword": {
+        "title": "Mot de passe oublié",
+        "description": "Entrez votre email pour réinitialiser votre mot de passe",
+        "button": "Envoyer le lien",
+        "success": "Lien de réinitialisation envoyé",
+        "checkEmail": "Veuillez vérifier votre email pour les instructions"
+      },
+      "resetPassword": {
+        "title": "Réinitialiser le mot de passe",
+        "description": "Entrez votre nouveau mot de passe",
+        "button": "Réinitialiser le mot de passe",
+        "success": "Mot de passe réinitialisé avec succès",
+        "hasBeenReset": "Votre mot de passe a été réinitialisé avec succès"
+      },
+      "signout": "Se déconnecter",
+      "unauthorized": {
+        "title": "Non autorisé"
+      }
+    },
+    "changePassword": {
+      "title": "Changer le mot de passe",
+      "description": "Assurez la sécurité de votre compte"
+    },
+    "ui": {
+      "buttons": {
+        "title": "Boutons UI"
+      },
+      "cards": {
+        "title": "Cartes UI"
+      },
+      "datePicker": {
+        "title": "Sélecteur de date UI"
+      },
+      "dateView": {
+        "title": "Vue de date UI"
+      },
+      "fileUpload": {
+        "title": "Téléchargement de fichiers UI"
+      },
+      "formElements": {
+        "title": "Éléments de formulaire UI"
+      },
+      "treeview": {
+        "title": "Vue arborescente UI"
+      },
+      "tooltip": {
+        "title": "UI Info-bulle"
+      }
+    },
+    "notifications": {
+      "title": "Notifications",
+      "detail": {
+        "title": "Détails de la notification"
+      },
+      "viewAll": "Voir toutes les notifications"
+    },
+    "tenants": {
+      "title": "Locataires",
+      "notFound": "Locataire non trouvé",
+      "systemCreated": "Créé par le système",
+      "createSuccess": "Locataire créé avec succès",
+      "updateSuccess": "Locataire mis à jour avec succès",
+      "deleteTitle": "Supprimer le locataire",
+      "deleteConfirm": "Êtes-vous sûr de vouloir supprimer ce locataire ?",
+      "deleteSuccess": "Locataire supprimé avec succès",
+      "suspendTitle": "Suspendre le locataire",
+      "suspendConfirm": "Êtes-vous sûr de vouloir suspendre ce locataire ? Ses membres perdront l'accès jusqu'à sa réactivation.",
+      "suspendSuccess": "Locataire suspendu avec succès",
+      "reactivateTitle": "Réactiver le locataire",
+      "reactivateConfirm": "Êtes-vous sûr de vouloir réactiver ce locataire ?",
+      "reactivateSuccess": "Locataire réactivé avec succès",
+      "list": {
+        "title": "Liste des locataires"
+      },
+      "create": {
+        "title": "Créer un locataire"
+      },
+      "update": {
+        "title": "Mettre à jour le locataire"
+      },
+      "status": {
+        "active": "Actif",
+        "suspended": "Suspendu"
+      },
+      "members": {
+        "title": "Membres du locataire",
+        "addTitle": "Ajouter un membre",
+        "addButton": "Ajouter un membre",
+        "addSuccess": "Membre ajouté avec succès",
+        "seatLimitReached": "La limite d’utilisateurs de l’offre de ce locataire a été atteinte",
+        "rolesTitle": "Modifier les rôles du membre",
+        "rolesButton": "Modifier les rôles",
+        "rolesSuccess": "Rôles du membre mis à jour avec succès",
+        "removeTitle": "Retirer le membre",
+        "removeConfirm": "Êtes-vous sûr de vouloir retirer ce membre du locataire ?",
+        "removeSuccess": "Membre retiré avec succès"
+      },
+      "switcher": {
+        "label": "Locataire",
+        "switchTo": "Changer de locataire",
+        "switchSuccess": "Vous travaillez maintenant dans ${tenant}",
+        "noTenant": "Aucun locataire sélectionné",
+        "viewDetail": "Voir le détail du locataire",
+        "exitTenant": "Quitter le locataire",
+        "exitSuccess": "Vous travaillez de nouveau en tant qu’utilisateur de la plateforme"
+      },
+      "detail": {
+        "title": "Détail du locataire",
+        "information": "Informations du locataire",
+        "membersTitle": "Membres"
+      },
+      "enterButton": "Entrer",
+      "enterCurrent": "Actuel",
+      "actions": {
+        "detail": "Détail",
+        "members": "Membres",
+        "suspend": "Suspendre",
+        "reactivate": "Réactiver"
+      }
+    },
+    "selectTenant": {
+      "title": "Sélectionner un locataire",
+      "description": "Choisissez le locataire dans lequel vous souhaitez travailler.",
+      "emptyDescription": "Vous n'appartenez à aucun locataire actif. Demandez à un administrateur de vous ajouter au sien, ou inscrivez-vous pour créer le vôtre.",
+      "emptyAction": "Aller à votre profil"
+    },
+    "editions": {
+      "title": "Éditions",
+      "createSuccess": "Édition créée avec succès",
+      "updateSuccess": "Édition mise à jour avec succès",
+      "deleteTitle": "Supprimer l’édition",
+      "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette édition ?",
+      "deleteSuccess": "Édition supprimée avec succès",
+      "notFound": "Édition introuvable",
+      "list": {
+        "title": "Liste des éditions"
+      },
+      "create": {
+        "title": "Créer une édition"
+      },
+      "update": {
+        "title": "Modifier l’édition"
+      }
+    },
+    "features": {
+      "tenantTitle": "Fonctionnalités du locataire",
+      "editionTitle": "Fonctionnalités de l’édition",
+      "saveSuccess": "Fonctionnalités mises à jour avec succès",
+      "none": "Aucune fonctionnalité n’a été définie",
+      "mintTimeNotice": "Les modifications prennent effet pour un utilisateur lors du prochain renouvellement de sa session.",
+      "setHere": "Défini ici",
+      "fromEdition": "De l’édition",
+      "fromDefault": "Par défaut",
+      "resetToInherited": "Rétablir la valeur héritée",
+      "groups": "Groupes",
+      "unsaved": "Non enregistré",
+      "unsavedCount": "${count} modification(s) non enregistrée(s)",
+      "parentDisabled": "Sans effet tant que la fonctionnalité parente est désactivée",
+      "noMatches": "Aucune fonctionnalité ne correspond à votre recherche",
+      "actionLabel": "Fonctionnalités"
+    },
+    "localization": {
+      "title": "Localisation",
+      "scope": {
+        "platform": "Vous modifiez des textes et des langues au niveau de la plateforme. Chaque locataire en hérite, sauf s'il définit les siens.",
+        "tenant": "Vous modifiez les textes et les langues de ${tenant}. Tout ce qui n'est pas modifié ici est hérité de la plateforme."
+      },
+      "readOnly": "Vous pouvez consulter ces paramètres, mais pas les modifier.",
+      "tabs": {
+        "texts": "Textes",
+        "languages": "Langues"
+      },
+      "texts": {
+        "onlyOverridden": "Uniquement les textes remplacés",
+        "setHere": "Défini ici",
+        "fromPlatform": "De la plateforme",
+        "notOverridden": "Non remplacé",
+        "editTitle": "Modifier le texte",
+        "inheritedLabel": "Valeur héritée",
+        "defaultLabel": "Valeur par défaut",
+        "overrideLabel": "Votre texte",
+        "placeholders": "Conservez ces espaces réservés :",
+        "placeholderMissing": "Un espace réservé est manquant — l'application l'affichera vide.",
+        "reset": "Rétablir la valeur héritée",
+        "resetTitle": "Réinitialiser ce texte ?",
+        "resetConfirm": "Cela supprimera votre remplacement et reviendra à la valeur héritée.",
+        "resetSuccess": "Texte rétabli à la valeur héritée",
+        "saveSuccess": "Texte enregistré",
+        "noOverrides": "Rien n'a encore été remplacé dans cette langue."
+      },
+      "languages": {
+        "inherited": "Hérité",
+        "inheritedFromPlatform": "Hérité de la plateforme",
+        "inheritedFromShipped": "Intégré : toutes les langues, aucune par défaut",
+        "inheritedSummary": "Hérité : ${languages} · Par défaut : ${default}",
+        "customize": "Personnaliser",
+        "customized": "Personnalisé",
+        "resetToInherited": "Rétablir la valeur héritée",
+        "resetTitle": "Réinitialiser les langues ?",
+        "resetConfirm": "Cela supprimera votre personnalisation et reviendra à ce qui est hérité.",
+        "resetSuccess": "Langues rétablies aux paramètres hérités",
+        "enabled": "Langues activées",
+        "enabledCount": "${count} sur ${total} activées",
+        "rtl": "De droite à gauche",
+        "atLeastOne": "Au moins une langue doit rester activée",
+        "noDefault": "Aucune — utiliser la langue du navigateur du visiteur",
+        "defaultCleared": "La langue par défaut a été effacée car elle vient d'être désactivée",
+        "currentWillSwitch": "La langue dans laquelle vous consultez cet écran est en cours de désactivation — vous serez basculé vers la langue par défaut.",
+        "unsaved": "Vous avez des modifications non enregistrées",
+        "saveSuccess": "Langues mises à jour"
+      }
+    }
+  },
+  "notifications": {
+    "noNotifications": "Aucune notification",
+    "notFound": "Notification non trouvée",
+    "viewAll": "Voir toutes les notifications",
+    "markAllRead": "Tout marquer comme lu",
+    "markAsRead": "Marquer comme lu",
+    "markAsUnread": "Marquer comme non lu",
+    "delete": "Supprimer",
+    "all": "Tous",
+    "read": "Lu",
+    "unread": "Non lu",
+    "group": "Groupe",
+    "metadata": "Métadonnées",
+    "markedAsRead": "Notification marquée comme lue",
+    "markedAsUnread": "Notification marquée comme non lue",
+    "markedAllAsRead": "Toutes les notifications marquées comme lues",
+    "deleted": "Notification supprimée",
+    "deleteTitle": "Supprimer la notification",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette notification?",
+    "markAllReadConfirmTitle": "Tout marquer comme lu",
+    "markAllReadConfirmText": "Êtes-vous sûr de vouloir marquer toutes les notifications comme lues?",
+    "filterByGroup": "Filtrer par groupe",
+    "groups": {
+      "inventory": "Inventaire",
+      "system": "Système",
+      "payments": "Paiements",
+      "orders": "Commandes"
+    },
+    "types": {
+      "info": "Information",
+      "warning": "Avertissement",
+      "error": "Erreur",
+      "success": "Succès"
+    },
+    "inventoryBelowLimit": {
+      "title": "Alerte stock bas",
+      "message": "L'article est en dessous du niveau de stock minimum"
+    },
+    "systemUpdate": {
+      "title": "Mise à jour du système",
+      "message": "Une mise à jour du système est disponible"
+    },
+    "orderCompleted": {
+      "title": "Commande terminée",
+      "message": "Votre commande a été terminée avec succès"
+    },
+    "paymentFailed": {
+      "title": "Paiement échoué",
+      "message": "Une transaction de paiement a échoué"
+    },
+    "welcome": {
+      "title": "Bienvenue",
+      "message": "Bienvenue dans l'application"
+    },
+    "tenantMemberAdded": {
+      "title": "Ajouté à un locataire",
+      "message": "Vous avez été ajouté à ${tenantName}"
+    }
+  }
+}

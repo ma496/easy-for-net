@@ -1,4 +1,4 @@
-import { BaseDto, RequestBase, GenericAuditableDto, ListRequestDto, ListDto } from '@/store/api'
+import { BaseDto, RequestBase, GenericAuditableDto, ListRequestDto, ListDto, SystemCreatedDto } from '@/store/api'
 
 /** Request body for creating a new user, supplying credentials, profile fields, active flag, and assigned role ids. */
 export interface UserCreateRequest extends RequestBase {
@@ -36,8 +36,7 @@ export interface UserDeleteResponse extends BaseDto<string> {
 export interface UserGetRequest extends BaseDto<string>, RequestBase {}
 
 /** Response from the get-user endpoint, returning the user's profile, status, roles, and audit fields. */
-export interface UserGetResponse extends GenericAuditableDto<string> {
-  systemCreated: boolean
+export interface UserGetResponse extends GenericAuditableDto<string>, SystemCreatedDto {
   username: string
   usernameNormalized: string
   email: string
@@ -58,8 +57,7 @@ export interface UserListRequest extends ListRequestDto<string>, RequestBase {
 export interface UserListResponse extends ListDto<UserListDto> {}
 
 /** Summary representation of a user in list responses, with expanded role objects. */
-export interface UserListDto extends GenericAuditableDto<string> {
-  systemCreated: boolean
+export interface UserListDto extends GenericAuditableDto<string>, SystemCreatedDto {
   username: string
   usernameNormalized: string
   email: string
@@ -89,4 +87,10 @@ export interface UserUpdateResponse extends BaseDto<string> {
   lastName?: string
   isActive: boolean
   roles: string[]
+}
+
+/** Response from the seats endpoint: how many accounts the tenant holds, and how many its plan allows (`null` when no limit applies). */
+export interface UserSeatsResponse {
+  used: number
+  limit: number | null
 }

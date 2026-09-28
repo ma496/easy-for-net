@@ -2,9 +2,9 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from '@/i18n'
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
-import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable } from '@/components/ui/data-table'
-import { ApiErrorMessages, Badge, LocalizedLink, Button, Truncated, Loader } from '@/components/ui'
-import { apiErrorAlert, confirmAlert, confirmDeleteAlert, successToast } from '@/lib/utils'
+import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableFilterButton, DataTableToolbarButton } from '@/components/ui/data-table'
+import { ApiErrorMessages, Badge, LocalizedLink, Truncated } from '@/components/ui'
+import { apiErrorAlert, confirmAlert, confirmDeleteAlert, notificationVariables, successToast } from '@/lib/utils'
 import {
   NotificationDto,
   NotificationType,
@@ -16,7 +16,6 @@ import {
 import { formatDistanceToNow } from 'date-fns'
 import { Check, Trash2, CheckCheck, AlertCircle, AlertTriangle, CheckCircle, Info } from 'lucide-react'
 import { NotificationFilterPanel, NotificationFilters } from './notification-filter-panel'
-import { NotificationFilterButton } from './notification-filter-button'
 import { useTableUrlState } from '@/hooks'
 import { parseAsString, parseAsStringEnum } from 'nuqs'
 
@@ -196,7 +195,7 @@ export const NotificationTable = () => {
           href={`/admin/notifications/${info.row.original.id}`}
           className="font-medium text-primary hover:underline"
         >
-          {t(info.getValue())}
+          {t(info.getValue(), notificationVariables(info.row.original.metadata))}
         </LocalizedLink>
       )
     }),
@@ -204,7 +203,7 @@ export const NotificationTable = () => {
       header: t('table.columns.message'),
       cell: (info) => (
         <Truncated
-          text={t(info.getValue())}
+          text={t(info.getValue(), notificationVariables(info.row.original.metadata))}
           className="text-gray-500 dark:text-gray-400"
           underline={false}
         />
@@ -245,28 +244,24 @@ export const NotificationTable = () => {
       id: 'actions',
       header: t('table.actions'),
       cell: (info) => (
-        <div className="flex items-center gap-2">
-          {!info.row.original.isRead && (
-            <button
-              type="button"
-              className="btn cursor-pointer btn-secondary btn-sm"
-              onClick={() => handleMarkAsRead(info.row.original.id)}
-              title={t('notifications.markAsRead')}
-              disabled={isMarkingAsRead || isMarkingAllAsRead || isDeletingNotification}
-            >
-              {isMarkingAsRead ? <Loader className="h-3 w-3" /> : <Check className="h-3 w-3" />}
-            </button>
-          )}
-          <button
-            type="button"
-            className="btn cursor-pointer btn-danger btn-sm"
-            onClick={() => handleDelete(info.row.original.id)}
-            title={t('notifications.delete')}
-            disabled={isMarkingAsRead || isMarkingAllAsRead || isDeletingNotification}
-          >
-            {isDeletingNotification ? <Loader className="h-3 w-3" /> : <Trash2 className="h-3 w-3" />}
-          </button>
-        </div>
+        <DataTableRowActions
+          actions={[
+            {
+              label: t('notifications.markAsRead'),
+              icon: <Check className="h-4 w-4" />,
+              onClick: () => handleMarkAsRead(info.row.original.id),
+              disabled: isMarkingAsRead || isMarkingAllAsRead || isDeletingNotification,
+              hidden: info.row.original.isRead,
+            },
+            {
+              label: t('notifications.delete'),
+              icon: <Trash2 className="h-4 w-4" />,
+              variant: 'danger',
+              onClick: () => handleDelete(info.row.original.id),
+              disabled: isMarkingAsRead || isMarkingAllAsRead || isDeletingNotification,
+            },
+          ]}
+        />
       ),
     })
   ]
@@ -293,6 +288,21 @@ export const NotificationTable = () => {
       setGlobalFilter={url.setGlobalFilter}
       isFetching={isGettingNotifications}
     >
+      <DataTableToolbar>
+        <DataTableFilterButton
+          isOpen={filtersOpen}
+          onToggle={() => setFiltersOpen(!filtersOpen)}
+          activeFiltersCount={activeFiltersCount}
+        />
+
+        <DataTableToolbarButton
+          label={t('notifications.markAllRead')}
+          icon={<CheckCheck size={16} />}
+          onClick={handleMarkAllAsRead}
+          disabled={!notificationResponse?.items?.some(n => !n.isRead)}
+        />
+      </DataTableToolbar>
+
       {filtersOpen && (
         <NotificationFilterPanel
           filters={pendingFilters}
@@ -301,26 +311,6 @@ export const NotificationTable = () => {
           onClear={handleClear}
         />
       )}
-
-      <DataTableToolbar>
-        <div className="flex items-center gap-2">
-          <NotificationFilterButton
-            isOpen={filtersOpen}
-            onToggle={() => setFiltersOpen(!filtersOpen)}
-            activeFiltersCount={activeFiltersCount}
-          />
-        </div>
-
-        <Button
-          variant="secondary"
-          icon={<CheckCheck className="h-4 w-4" />}
-          onClick={handleMarkAllAsRead}
-          disabled={!notificationResponse?.items?.some(n => !n.isRead)}
-        >
-          {t('notifications.markAllRead')}
-        </Button>
-      </DataTableToolbar>
-
       <DataTable />
       <DataTablePagination siblingCount={1} />
     </DataTableProvider>

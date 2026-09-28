@@ -7,6 +7,12 @@ using Backend.Features.FileManagement.Core;
 /// Authenticated POST endpoint that updates the current user's profile (email, name,
 /// and profile image) and cleans up the previously stored image when it changes.
 /// </summary>
+/// <remarks>
+/// Usable with no tenant established, because editing one's own profile is account
+/// self-service. The profile image is account-owned rather than tenant data and is attributed to no
+/// tenant, so setting, replacing and clearing it works while the caller acts in any tenant or in
+/// none.
+/// </remarks>
 sealed class UpdateProfileEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService,
     IFileService fileService)
     : Endpoint<UserUpdateProfileRequest, UserUpdateProfileResponse>

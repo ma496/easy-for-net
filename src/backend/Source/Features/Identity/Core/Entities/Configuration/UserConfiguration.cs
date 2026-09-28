@@ -28,5 +28,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsUnique(false);
         builder.HasIndex(u => u.LastName)
             .IsUnique(false);
+
+        builder.Property(u => u.IsPlatform)
+            .HasDefaultValue(false);
     }
 }

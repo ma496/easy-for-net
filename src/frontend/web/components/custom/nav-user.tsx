@@ -1,7 +1,7 @@
 'use client'
 import { LocalizedLink, Dropdown, type DropdownRef, Loader } from '@/components/ui'
-import { useAppSelector, useAppDispatch } from '@/store/hooks'
-import { signout } from '@/store/slices'
+import { useAppSelector } from '@/store/hooks'
+import { leaveSignedOut } from '@/store/tenant-cache'
 import { useLocalizedRouter } from '@/hooks'
 import { useTranslation } from '@/i18n'
 import { User, LogOut, Lock } from 'lucide-react'
@@ -12,12 +12,13 @@ import { apiErrorAlert } from '@/lib/utils'
 import Image from 'next/image'
 
 /**
- * Header dropdown that shows the signed-in user avatar, profile/change-password links, and a sign-out action that hits the logout API and redirects to the sign-in page.
+ * Header dropdown that shows the signed-in user avatar, profile/change-password links, and a
+ * sign-out action that hits the logout API and then loads the sign-in page afresh, discarding the
+ * stored active-tenant selection together with the tenant-scoped data cached in the browser.
  */
 export const NavUser = () => {
   const { user } = useAppSelector((state) => state.auth)
   const router = useLocalizedRouter()
-  const dispatch = useAppDispatch()
   const { t } = useTranslation()
   const isRtl = useAppSelector((state) => state.theme.rtlClass) === 'rtl'
   const dropdownRef = useRef<DropdownRef>(null)
@@ -39,8 +40,10 @@ export const NavUser = () => {
       apiErrorAlert(result.error)
       return
     }
-    dispatch(signout())
-    router.push('/signin')
+    // Signing out must leave nothing of this tenant behind, so the next user signing in on this
+    // browser inherits neither a selection nor a previous tenant's records: leaveSignedOut loads the
+    // sign-in page afresh, discarding the whole store rather than resetting it under a mounted page.
+    leaveSignedOut(router.localize('/signin'))
   }
 
   return (
