@@ -20,7 +20,8 @@ loop.mjs            the whole cycle: look → observe → plan → drain → rep
 | `test.mjs` | The unit suite, over the roots named in the config. |
 | `run-journal.mjs` | Every attempt, its cost, its turns, and why it failed. `npm run auto:status`. |
 | `record-build.mjs` | Writes a build record per landed task, and rebuilds the index. |
-| `record-lesson.mjs` | Writes a lesson into `.claude/memory/lessons/`. `npm run lessons` lists them. |
+| `record-lesson.mjs` | Writes a lesson into `.claude/memory/lessons/`, naming the task from `--task` or `AGENT_TASK`. `npm run lessons` lists them. |
+| `claude-contract.mjs` | Probes the installed Claude CLI and checks its stream still carries what the runner reads. `--record` saves fixtures; `--if-changed` is what `loop.mjs` runs. |
 | `schedule-drain.mjs` | Installs (or removes) the timer that runs the cycle hands-off. |
 | `auto-ship.mjs` | Stages deliberately and commits, with the task trailer that lets the audit pair a commit to its brief. |
 | `open-pr.mjs` | Prints (or opens) the pull-request page for the current branch. Never merges. |
@@ -28,7 +29,8 @@ loop.mjs            the whole cycle: look → observe → plan → drain → rep
 | `serve-api.mjs` | Starts the API on `$PORT` as Development — what verify starts for a live check. |
 | `pg-ready.mjs` | Whether PostgreSQL accepts connections — the dependency probe for verify and the loop. |
 | `smoke.mjs` | The live check: health, the OpenAPI document, and an anonymous caller refused. |
-| `lib/` | The pure parts: the department map, spend and budget arithmetic, salvage, stream parsing, memory selection, cross-platform process helpers (`proc.mjs`), the timer's files (`schedule.mjs`), remote and PR URLs (`remote.mjs`). |
+| `lib/` | The pure parts: the department map, spend and budget arithmetic, salvage, memory selection, cross-platform process helpers (`proc.mjs`), the timer's files (`schedule.mjs`), remote and PR URLs (`remote.mjs`), the config and its validation (`project-config.mjs`), the queue lock (`queue-lock.mjs`), `Depends-on:` resolution (`task-deps.mjs`), changed-path listing (`changed-paths.mjs`), journal outcomes (`outcomes.mjs`), how an attempt ended (`attempt-outcome.mjs`). |
+| `lib/claude-events.mjs` | **The only reader of the Claude CLI's stream-json.** `stream-render.mjs` renders and adds up what it normalises. A CLI release that moves a field is fixed here, and `tests/claude-stream-contract.test.mjs` holds it against captured streams. |
 
 **Two kinds of file live here.** The engine — everything above except `gate`, `serve-api`,
 `pg-ready` and `smoke` — knows nothing about the stack; it asks `lib/project-config.mjs`,
@@ -42,8 +44,14 @@ works on one machine and silently fails on the next.
 
 ## Rules
 
-- **No model calls outside `agent-run.mjs` and the planner in `agent-queue.mjs`.** Anything
-  else must be able to run on a timer, unattended, for free.
+- **No model calls outside `agent-run.mjs`, the planner in `agent-queue.mjs`, and the
+  contract probe in `claude-contract.mjs`** — the last on the cheapest model, once per CLI
+  version, and never from the gate. Anything else must be able to run on a timer, unattended,
+  for free.
+- **Every session is started with `resolveModel` / `modelArgs`** from `lib/project-config.mjs`,
+  its prompt on stdin, through `lib/proc.mjs`. A session that picks its own model, or takes its
+  prompt as an argument, is the one that runs on an unchosen default or fails on Windows'
+  command-line limit.
 - **Exit codes are the interface.** `0` worked, `1` failed, `3` a spend ceiling stopped it,
   `4` the account cannot run. A caller that cannot tell "out of money" from "never verified"
   will report the wrong thing to a person who is not watching.

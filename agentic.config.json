@@ -199,7 +199,8 @@
   },
   "budget": {
     "attempts": 3,
-    "maxTurns": 900,
+    "maxTurns": 350,
+    "maxMinutesPerAttempt": 120,
     "model": "opus"
   },
   "hooks": {

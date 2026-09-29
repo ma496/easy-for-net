@@ -56,6 +56,33 @@ export function chargeFor(costUsd, assumedUsd = DEFAULT_ASSUMED_USD) {
     : { usd: round(rateOf(assumedUsd)), assumed: true };
 }
 
+/**
+ * What an unmeasured attempt should be charged, learned from the attempts that were.
+ *
+ * The flat default is a dollar, and the attempts that go unmeasured are the ones that were
+ * killed — by the turn backstop, the wall clock, a crash — which are the long ones. One
+ * reached $240. Charging those a dollar let a task burn several and still read as $3 against
+ * its ceiling. So when the journal has enough measured attempts, the median of them is the
+ * figure; with fewer than `minSamples`, the fallback stands.
+ *
+ * Returns the fallback unchanged when it was set explicitly (AGENT_ASSUMED_USD_PER_CALL): an
+ * operator who chose a figure meant it.
+ */
+export function assumedRateFromHistory(entries, fallback = DEFAULT_ASSUMED_USD, { explicit = false, minSamples = 5 } = {}) {
+  if (explicit) return rateOf(fallback);
+  const measured = [];
+  for (const entry of entries ?? []) {
+    for (const c of Array.isArray(entry?.attemptCostsUsd) ? entry.attemptCostsUsd : []) {
+      if (typeof c === "number" && Number.isFinite(c) && c > 0) measured.push(c);
+    }
+  }
+  if (measured.length < minSamples) return rateOf(fallback);
+  measured.sort((a, b) => a - b);
+  const mid = Math.floor(measured.length / 2);
+  const median = measured.length % 2 ? measured[mid] : (measured[mid - 1] + measured[mid]) / 2;
+  return round(Math.max(rateOf(fallback), median));
+}
+
 /** A total that has counted nothing yet. */
 export const emptySpend = () => ({
   usd: 0,

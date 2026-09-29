@@ -27,6 +27,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { apiAdoptionVerdict } from "./lib/api-identity.mjs";
+import { workingTreePaths } from "./lib/changed-paths.mjs";
 import { IS_WINDOWS, killTree, runCommandSync, sleepSync, spawnCommand } from "./lib/proc.mjs";
 import { compileRules, config, fill, WORK_BRANCH } from "./lib/project-config.mjs";
 
@@ -97,11 +98,8 @@ function changedPaths() {
       if (p.trim()) paths.add(p.trim());
     }
   }
-  for (const line of capture("git", ["status", "--porcelain"]).split("\n")) {
-    if (!line.trim()) continue;
-    const p = line.slice(3).trim();
-    paths.add((p.includes(" -> ") ? p.split(" -> ")[1] : p).replace(/^"|"$/g, ""));
-  }
+  // Untracked files one by one: a new directory is otherwise a single line no rule matches.
+  for (const p of workingTreePaths()) paths.add(p);
   return [...paths];
 }
 
