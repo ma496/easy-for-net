@@ -2,6 +2,7 @@ namespace Backend.Features.Identity.Core;
 
 using Backend.Attributes;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Tenancy.Core;
 using System.Security.Cryptography;
 using System.Text;
@@ -23,8 +24,16 @@ public interface IAuthTokenService
     /// point states this explicitly, so that a session can never inherit whatever tenant happened to be
     /// recorded last.
     /// </param>
+    /// <param name="sessionId">
+    /// The session-store record the pair belongs to, or <see langword="null"/> for a pair with none. It is
+    /// written on the row so that a refresh can delete the session it replaces.
+    /// </param>
+    /// <param name="securityStamp">
+    /// The account's security stamp the pair was authorized under. A refresh carries it forward and is
+    /// refused once the account's stamp has moved on, which is what ends a chain across a password change.
+    /// </param>
     /// <returns>The stored record.</returns>
-    Task<AuthToken> SaveTokenAsync(TokenResponse rsp, Guid? tenantId);
+    Task<AuthToken> SaveTokenAsync(TokenResponse rsp, Guid? tenantId, string? sessionId, Guid securityStamp);
 
     /// <summary>
     /// Validates a refresh request against the stored pairs and consumes the matching one, so that a refresh
@@ -60,6 +69,23 @@ public interface IAuthTokenService
     /// issued - is not an error: there is simply nothing left to revoke.
     /// </remarks>
     Task RevokeRefreshTokenAsync(Guid userId, string refreshToken, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Moves one session onto the account's new security stamp - its stored pairs and its session-store
+    /// record both - so the session a caller changed its own password from goes on renewing, switching and
+    /// exiting while every other chain of the account is refused.
+    /// </summary>
+    /// <remarks>
+    /// The record is rewritten only when a pair of the session was still stored, and is deleted again when
+    /// that pair is gone once the rewrite has landed. Every revocation, sign-out and renewal deletes a
+    /// session's pairs before its record, so one that ran concurrently either deletes the record after it
+    /// was rewritten or is seen by that re-check - a session ended in the meantime is never brought back.
+    /// </remarks>
+    /// <param name="userId">The account the session belongs to.</param>
+    /// <param name="sessionId">The session that is restamped.</param>
+    /// <param name="securityStamp">The account's new stamp.</param>
+    /// <param name="cancellationToken">Token used to cancel the update.</param>
+    Task RestampSessionAsync(Guid userId, string sessionId, Guid securityStamp, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -88,6 +114,19 @@ public sealed class RefreshTokenConsumption
     /// Meaningful only while <see cref="Consumed"/> is <see langword="true"/>.
     /// </summary>
     public Guid? TenantId { get; init; }
+
+    /// <summary>
+    /// Gets the identifier of the session-store record the consumed pair belonged to, or
+    /// <see langword="null"/> when the row named none. A refresh deletes that session as it mints its
+    /// replacement. Meaningful only while <see cref="Consumed"/> is <see langword="true"/>.
+    /// </summary>
+    public string? SessionId { get; init; }
+
+    /// <summary>
+    /// Gets the account security stamp the consumed pair was issued under. A renewal is refused when it no
+    /// longer matches the account's. Meaningful only while <see cref="Consumed"/> is <see langword="true"/>.
+    /// </summary>
+    public Guid SecurityStamp { get; init; }
 }
 
 /// <summary>
@@ -115,9 +154,9 @@ public sealed class RefreshTokenConsumption
 /// </para>
 /// </remarks>
 [NoDirectUse]
-public class AuthTokenService(AppDbContext dbContext, ITenantContext tenantContext) : IAuthTokenService
+public class AuthTokenService(AppDbContext dbContext, ITenantContext tenantContext, ISessionStore sessionStore) : IAuthTokenService
 {
-    public async Task<AuthToken> SaveTokenAsync(TokenResponse rsp, Guid? tenantId)
+    public async Task<AuthToken> SaveTokenAsync(TokenResponse rsp, Guid? tenantId, string? sessionId, Guid securityStamp)
     {
         var authToken = new AuthToken
         {
@@ -126,6 +165,8 @@ public class AuthTokenService(AppDbContext dbContext, ITenantContext tenantConte
             RefreshToken = HashToken(rsp.RefreshToken),
             RefreshExpiry = rsp.RefreshExpiry,
             TenantId = tenantId,
+            SessionId = sessionId,
+            SecurityStamp = securityStamp,
             UserId = Guid.Parse(rsp.UserId),
         };
 
@@ -158,7 +199,7 @@ public class AuthTokenService(AppDbContext dbContext, ITenantContext tenantConte
             .AsNoTracking()
             .AcrossAllTenants()
             .Where(at => at.UserId == userId && at.RefreshToken == refreshTokenHash && at.RefreshExpiry > DateTime.UtcNow)
-            .Select(at => new { at.Id, at.TenantId })
+            .Select(at => new { at.Id, at.TenantId, at.SessionId, at.SecurityStamp })
             .FirstOrDefaultAsync(cancellationToken);
         if (issued is null)
         {
@@ -174,7 +215,7 @@ public class AuthTokenService(AppDbContext dbContext, ITenantContext tenantConte
             .ExecuteDeleteAsync(cancellationToken);
 
         return deleted == 1
-            ? new RefreshTokenConsumption { Consumed = true, TenantId = issued.TenantId }
+            ? new RefreshTokenConsumption { Consumed = true, TenantId = issued.TenantId, SessionId = issued.SessionId, SecurityStamp = issued.SecurityStamp }
             : RefreshTokenConsumption.Rejected;
     }
 
@@ -201,6 +242,46 @@ public class AuthTokenService(AppDbContext dbContext, ITenantContext tenantConte
             .AcrossAllTenants()
             .Where(token => token.UserId == userId && token.RefreshToken == refreshTokenHash)
             .ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task RestampSessionAsync(Guid userId, string sessionId, Guid securityStamp, CancellationToken cancellationToken = default)
+    {
+        var restamped = await dbContext.AuthTokens
+            .AcrossAllTenants()
+            .Where(token => token.UserId == userId && token.SessionId == sessionId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(token => token.SecurityStamp, securityStamp), cancellationToken);
+        if (restamped == 0
+            || await sessionStore.GetAsync(sessionId, cancellationToken) is not { } session
+            || session.UserId != userId)
+        {
+            return;
+        }
+
+        // Storing a record under an existing identifier replaces it, so this rewrites the one field and
+        // keeps the session's identity, grants and expiry exactly as they were.
+        await sessionStore.CreateAsync(new SessionRecord
+        {
+            SessionId = session.SessionId,
+            UserId = session.UserId,
+            Username = session.Username,
+            Email = session.Email,
+            IsPlatform = session.IsPlatform,
+            TenantId = session.TenantId,
+            Roles = session.Roles,
+            Permissions = session.Permissions,
+            SecurityStamp = securityStamp,
+            CreatedAt = session.CreatedAt,
+            ExpiresAt = session.ExpiresAt,
+        }, cancellationToken);
+
+        var stillIssued = await dbContext.AuthTokens
+            .AsNoTracking()
+            .AcrossAllTenants()
+            .AnyAsync(token => token.UserId == userId && token.SessionId == sessionId, cancellationToken);
+        if (!stillIssued)
+        {
+            await sessionStore.DeleteAsync(sessionId, cancellationToken);
+        }
     }
 
     private static string HashToken(string token)

@@ -23,4 +23,14 @@ public static class ClaimConstants
     /// which is how it finds its way back out.
     /// </summary>
     public const string IsPlatform = "is_platform";
+
+    /// <summary>
+    /// Claim type carrying the identifier of the session a token belongs to. It is, with the account's
+    /// own identifier, the whole of what a token or auth cookie says: everything else about the
+    /// session is read from the session store on every request and projected onto the request's
+    /// principal as the claims above. Inbound claim mapping may surface it as
+    /// <see cref="System.Security.Claims.ClaimTypes.Sid"/>, so read it through
+    /// <see cref="Sessions.SessionClaims.ReadSessionId"/>.
+    /// </summary>
+    public const string SessionId = "sid";
 }

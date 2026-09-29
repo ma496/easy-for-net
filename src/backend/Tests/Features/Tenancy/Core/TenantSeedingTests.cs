@@ -24,6 +24,9 @@ using Backend.Features.Identity.Core.Entities;
 /// run with the same identities.
 /// </para>
 /// </remarks>
+// Shares a collection with TenantUpdateTests, which briefly marks a tenant of its own system-created to
+// prove such a tenant can still be put on a plan; the count of system-created tenants below must not see it.
+[Collection("BootstrapTenant")]
 public class TenantSeedingTests(App app) : TenancyTestsBase(app)
 {
     /// <summary>

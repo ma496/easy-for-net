@@ -4,11 +4,11 @@ namespace Backend.Features.Tenancy.Core.FeatureManagement;
 /// Narrows the permission catalogue to what a target's plan actually entitles it to.
 /// </summary>
 /// <remarks>
-/// This is the only place the permission-to-feature rule is written. Three callers need it and must
-/// not be allowed to disagree: the claims a session is minted with, the catalogue the role permission
-/// screen is built from, and the grants the account information endpoint reports to the web app. If
-/// any two of those answered differently, the UI would offer something the API refuses or hide
-/// something it allows.
+/// This is the only place the permission-to-feature rule is written. Two callers need it and must
+/// not be allowed to disagree: the session minted at sign-in, refresh and tenant switch, and the
+/// catalogue the role permission screen is built from. The account information endpoint agrees with
+/// the first by construction, because it reports the minted session itself. If the two answered
+/// differently, the UI would offer something the API refuses or hide something it allows.
 /// </remarks>
 [AllowOutside]
 public interface IPermissionFeatureFilter

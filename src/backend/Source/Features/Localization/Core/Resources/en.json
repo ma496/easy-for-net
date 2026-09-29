@@ -249,7 +249,8 @@
       "unknownFeatureProvider": "Unknown feature provider.",
       "editionNotFound": "Edition not found.",
       "editionNameAlreadyExists": "An edition with this name already exists.",
-      "editionInUse": "This edition cannot be deleted while tenants are on it."
+      "editionInUse": "This edition cannot be deleted while tenants are on it.",
+      "sessionStoreUnavailable": "The session service is temporarily unavailable. Please try again in a moment."
     }
   },
   "table": {

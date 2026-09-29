@@ -3,6 +3,7 @@ namespace Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Identity.Core.Sessions;
 
 /// <summary>
 /// Anonymous POST endpoint that authenticates a user by username/email and password and
@@ -34,7 +35,7 @@ using Backend.Features.Identity.Core.Entities;
 /// standing inside a tenant: a platform account works in one only once it has been made a member.
 /// </para>
 /// </remarks>
-sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IPermissionFeatureFilter permissionFeatureFilter, IOptions<SigninSetting> signinSetting, IOptions<AuthSetting> authSetting) : Endpoint<TokenRequest, TokenResponse>
+sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, ISessionIssuer sessionIssuer, IOptions<SigninSetting> signinSetting, IOptions<AuthSetting> authSetting) : Endpoint<TokenRequest, TokenResponse>
 {
     public override void Configure()
     {
@@ -71,12 +72,14 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, IPe
         // re-establish the very tenant the session started in rather than none.
         TokenService.RecordSessionTenant(HttpContext, tenantId);
 
-        // The grants the session starts with are read for the tenant being acted in and for no other,
-        // narrowed to the scope that tenant puts the session in. They are what every request made with
-        // this token is authorized on, until it is renewed, switched or replaced by a new sign-in.
-        var grants = await SessionGrants.ReadAsync(dbContext, permissionFeatureFilter, user.Id, tenantId, user.IsPlatform, c);
+        // The session the caller starts with is minted for the tenant being acted in and for no other,
+        // its grants narrowed to the scope that tenant puts it in. It is what every request made with
+        // the token below is authorized on, until the session is renewed, switched, revoked or replaced
+        // by a new sign-in. The token and the cookie carry only the account and the session's identifier.
+        var session = await sessionIssuer.IssueAsync(user, tenantId, c);
+        TokenService.RecordSessionId(HttpContext, session.SessionId, user.SecurityStamp);
 
-        var claims = Helper.CreateClaims(user, grants.Roles, grants.Permissions, tenantId);
+        var claims = SessionClaims.ForToken(user.Id, session.SessionId);
 
         // for cookie authentication
         await CookieAuth.SignInAsync(u =>

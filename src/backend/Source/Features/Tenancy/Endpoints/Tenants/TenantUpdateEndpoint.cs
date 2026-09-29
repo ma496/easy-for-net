@@ -1,6 +1,7 @@
 namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
 using Backend.ShareData.Entities;
+using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
 
@@ -15,8 +16,17 @@ using Backend.Features.Tenancy.Core;
 /// an absent or a deleted one is, so the response never betrays that the tenant exists for somebody
 /// else. Nothing is written before all three guards have passed, so a rejected rename persists no
 /// part of itself.
+/// <para>
+/// Moving the tenant onto another plan, or off one, changes what its sessions were minted with, so once
+/// the change is saved every session acting in the tenant is ended and its members come back under the
+/// new plan. A rename alone ends nothing, and no session in another tenant or in platform scope is
+/// touched either way.
+/// </para>
 /// </remarks>
-sealed class TenantUpdateEndpoint(ITenantService tenantService, IEditionService editionService, AppDbContext dbContext)
+sealed class TenantUpdateEndpoint(ITenantService tenantService,
+                                  IEditionService editionService,
+                                  AppDbContext dbContext,
+                                  ISessionRevocationService sessionRevocationService)
     : Endpoint<TenantUpdateRequest, TenantUpdateResponse>
 {
     public override void Configure()
@@ -63,6 +73,8 @@ sealed class TenantUpdateEndpoint(ITenantService tenantService, IEditionService 
             this.ThrowError(x => x.EditionId, ErrorCodes.EditionNotFound);
         }
 
+        var previousEditionId = entity.EditionId;
+
         var requestMapper = new TenantUpdateRequestMapper();
         requestMapper.Update(request, entity);
 
@@ -74,6 +86,13 @@ sealed class TenantUpdateEndpoint(ITenantService tenantService, IEditionService 
         entity.Identifier = entity.Identifier.Trim();
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Not cancellable: the plan change has committed, so the caller going away must not leave the
+        // sessions minted under the old plan running.
+        if (entity.EditionId != previousEditionId)
+        {
+            await sessionRevocationService.RevokeTenantAsync(entity.Id, CancellationToken.None);
+        }
 
         var responseMapper = new TenantUpdateResponseMapper();
         await Send.ResponseAsync(responseMapper.Map(entity), cancellation: cancellationToken);
@@ -105,8 +124,8 @@ public sealed class TenantUpdateRequest : BaseDto<Guid>
     public string Identifier { get; set; } = null!;
 
     /// <summary>
-    /// The plan to put the tenant on, or <see langword="null"/> to take it off one. Changing it takes
-    /// effect for the tenant's callers at their next session renewal, as every entitlement change does.
+    /// The plan to put the tenant on, or <see langword="null"/> to take it off one. Changing it ends
+    /// every session acting in the tenant, so its callers sign in again under the new plan.
     /// </summary>
     public Guid? EditionId { get; set; }
 }

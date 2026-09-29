@@ -100,8 +100,9 @@ usersPermissions.AddChild(Allow.User_View, "View");
 ```
 
 Declared on a group node it reaches every permission beneath it. `IPermissionFeatureFilter` removes
-the permission from the session (`SessionGrants`), from the role permission surface
-(`GetDefinePermissionsEndpoint`) and from what the web app is told (`GetInfoEndpoint`), so the existing
+the permission from the session (`SessionGrants`) and from the role permission surface
+(`GetDefinePermissionsEndpoint`); what the web app is told (`GetInfoEndpoint`) is the session's own
+permissions, so it agrees by construction, and the existing
 `Permissions(Allow.X)` and `isAllowed` checks do the rest. Details and the two architecture rules
 (`Tests/Architect/PermissionFeatureDeclarationTests.cs`: no `Platform` permission may require a
 feature; every required feature must be declared) are in the `permissions` skill. The permissions
@@ -161,15 +162,29 @@ upgrade rather than show nothing. `usePlanMaxUploadBytes()` is the worked exampl
 only while a tenant is active, and `FileUpload` / `MultiFileUpload` apply the stricter of it and their
 own `maxSizeBytes`.
 
-## 5. Mint-time semantics
+## 5. When a plan change takes effect
 
-A feature change takes effect for a caller at their **next token renewal** — sign-in, refresh or
-tenant switch — exactly as a role change does. Nothing ends a session that is already running, and the
-window is bounded by `Auth:AccessTokenValidity`. Say so in any UI that edits entitlements; the feature
-editor already does. (`IFeatureChecker` calls are the exception: they read the current value on every
-call.)
+Plan gating is **computed when the session is created, and the session is revoked when the plan
+changes**. `SessionGrants` applies `IPermissionFeatureFilter` once, when sign-in, refresh or a tenant
+switch writes the session to the store; every request then reads that stored session. So each
+endpoint that changes a plan ends the sessions it affects through the `[AllowOutside]`
+`Backend.Features.Identity.Core.Sessions.ISessionRevocationService`, after its change commits:
 
-Gating never revokes anything. Role grants stay in the database while the feature is off, so turning
+| Change | Sessions ended |
+|---|---|
+| `TenantUpdateEndpoint` changing the tenant's edition (a rename ends none) | every session in that tenant |
+| `FeatureValueUpdateEndpoint` naming a tenant | every session in that tenant |
+| `FeatureValueUpdateEndpoint` naming an edition, or `EditionDeleteEndpoint` | every session in every tenant on that edition |
+
+The old access token answers 401 on its next request and its refresh token is refused, so the
+tenant's users come back under the new plan when they sign in again. A new endpoint that changes what
+a tenant's plan grants must revoke the same way — never inside the transaction, never by touching the
+session store. Platform-scope sessions are inside no plan, so a plan change never targets them (one whose refresh row still records the tenant may be ended with it, which errs on the safe side). A
+change to the `FeatureManagement` configuration section revokes nothing and reaches a session only when
+it is next replaced. (`IFeatureChecker` calls are unaffected by any of this: they read the current value
+on every call.)
+
+Gating never removes a grant. Role grants stay in the database while the feature is off, so turning
 it back on restores the permission with nothing to re-grant, and `ChangePermissionsEndpoint` carries
 plan-hidden grants through a replacement rather than reading their absence from the form as a removal.
 
@@ -180,8 +195,10 @@ Add cases to `src/backend/Tests/FeatureManagement/`, deriving from `FeatureTests
 `ResolveForTenantAsync`). A test that writes a feature value writes it for a tenant or edition it
 created itself; one that touches a seeded tenant, or the whole table, declares
 `[Collection("FeatureManagement")]`, because a feature value changes what other tests' sessions are
-minted with. After changing a value, sign in again (or switch tenant) before asserting on permissions —
-the old token still carries the old grants.
+created with — and ends the sessions of the tenant it names. After changing a value through its
+endpoint, sign in again before asserting on permissions: the old token answers 401. A value written
+straight through the service or `DbContext` revokes nothing, so a session created before it keeps the
+old grants until it is replaced.
 
 ## Checklist
 

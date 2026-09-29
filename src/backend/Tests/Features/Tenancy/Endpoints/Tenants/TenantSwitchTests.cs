@@ -7,6 +7,7 @@ using Backend.Features.Identity.Endpoints.Roles;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Tenancy.Endpoints.Tenants;
+using Backend.Tests.Features.Identity;
 
 /// <summary>
 /// Tests for <see cref="TenantSwitchEndpoint"/>: selecting the tenant a session acts in, what the
@@ -28,7 +29,7 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 /// seeded tenant or to a seeded account's memberships.
 /// </para>
 /// </remarks>
-public class TenantSwitchTests(App app) : TenancyTestsBase(app)
+public class TenantSwitchTests(App app) : SessionRevocationTestsBase(app)
 {
     /// <summary>
     /// The soft-delete query filter's registered key, named so a read that has to see a retained row
@@ -310,12 +311,43 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that a platform administrator whose membership is withdrawn loses the tenant at the
-    /// session's next renewal exactly as an ordinary member does, and is left in platform scope rather
-    /// than signed out.
+    /// Verifies that a platform administrator whose membership is withdrawn through the endpoint has the
+    /// session it acts in that tenant with ended at once, whatever its tier, while the account itself
+    /// can still sign in to platform scope.
     /// </summary>
     [Fact]
-    public async Task Platform_Administrator_Withdrawn_Membership_Is_Dropped_At_The_Next_Renewal()
+    public async Task Platform_Administrator_Withdrawn_Membership_Ends_The_Tenant_Session()
+    {
+        var (tenant, _) = await PrepareTenantAsync();
+
+        var account = await CreatePlatformAccountAsync();
+        await JoinAsync(tenant.Id, account.Id);
+
+        var session = await SessionForAsync(account.Username, tenant.Id);
+
+        await SetPlatformAdminAuthTokenAsync();
+        var (removed, _) = await Client
+            .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, TenantMemberRemoveResponse>(
+                new() { TenantId = tenant.Id, UserId = account.Id });
+
+        removed.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        await AssertEndedAsync(session);
+
+        var platformSession = await SessionForAsync(account.Username);
+        var (response, info) = await platformSession.Client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        info.ActiveTenantId.Should().BeNull("a platform account that has left a tenant signs in to platform scope");
+    }
+
+    /// <summary>
+    /// Verifies that a platform administrator whose membership is withdrawn with no endpoint involved
+    /// loses the tenant at the session's next renewal, and is left in platform scope rather than
+    /// signed out.
+    /// </summary>
+    [Fact]
+    public async Task Platform_Administrator_Membership_Removed_Directly_Is_Dropped_At_The_Next_Renewal()
     {
         var (tenant, _) = await PrepareTenantAsync();
 
@@ -355,13 +387,12 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that a withdrawn membership costs the caller the tenant at their session's next
-    /// renewal: the renewal succeeds and hands back a session naming no tenant, so the request that
-    /// the membership admitted a moment earlier is refused for the authority the session no longer
-    /// carries.
+    /// Verifies that a membership withdrawn through the endpoint ends the session that acted in the
+    /// tenant at once: the request the membership admitted a moment earlier answers 401 without any
+    /// renewal, and the refresh token is refused.
     /// </summary>
     [Fact]
-    public async Task Withdrawn_Membership_Is_Dropped_At_The_Next_Renewal()
+    public async Task Withdrawn_Membership_Ends_The_Tenant_Session()
     {
         var (tenant, _) = await PrepareTenantAsync();
         var roleHoldingView = await CreateTenantRoleAsync(tenant.Id, Allow.Role_View);
@@ -375,6 +406,32 @@ public class TenantSwitchTests(App app) : TenancyTestsBase(app)
             .GETAsync<RoleListEndpoint, RoleListRequest, RoleListResponse>(new() { All = true });
 
         admitted.StatusCode.Should().Be(HttpStatusCode.OK, "the role the membership granted is what admits this call");
+
+        await SetPlatformAdminAuthTokenAsync();
+        var (removed, _) = await Client
+            .DELETEAsync<TenantMemberRemoveEndpoint, TenantMemberRemoveRequest, TenantMemberRemoveResponse>(
+                new() { TenantId = tenant.Id, UserId = user.Id });
+
+        removed.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        await AssertEndedAsync(session);
+    }
+
+    /// <summary>
+    /// Verifies that a membership withdrawn with no endpoint involved costs the caller the tenant at
+    /// their session's next renewal: the renewal succeeds and hands back a session naming no tenant, so
+    /// the request the membership admitted is refused for the authority the session no longer carries.
+    /// </summary>
+    [Fact]
+    public async Task Membership_Removed_Directly_Is_Dropped_At_The_Next_Renewal()
+    {
+        var (tenant, _) = await PrepareTenantAsync();
+        var roleHoldingView = await CreateTenantRoleAsync(tenant.Id, Allow.Role_View);
+        var user = await CreateAccountWithoutMembershipAsync();
+
+        await JoinAsync(tenant.Id, user.Id, roleHoldingView);
+
+        var session = await SessionForAsync(user.Username, tenant.Id);
 
         var membershipRevoked = await MembershipService.RemoveAsync(tenant.Id, user.Id, TestContext.Current.CancellationToken);
 

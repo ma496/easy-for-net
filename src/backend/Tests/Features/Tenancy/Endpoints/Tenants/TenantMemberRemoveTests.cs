@@ -1,6 +1,7 @@
 namespace Backend.Tests.Features.Tenancy.Endpoints.Tenants;
 
 using Backend.ShareData.Entities;
+using Backend.Tests.Features.Identity;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Users;
 using Backend.Features.Tenancy.Core.Entities;
@@ -27,7 +28,7 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 /// removed is the tenant's only administrator.
 /// </para>
 /// </remarks>
-public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
+public class TenantMemberRemoveTests(App app) : SessionRevocationTestsBase(app)
 {
     /// <summary>
     /// The soft-delete query filter's registered key, named so a read that has to see a retained
@@ -36,16 +37,10 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
     private const string SoftDeleteFilterKey = "SoftDelete";
 
     /// <summary>
-    /// Verifies that removing a member revokes their membership and, at their session's next renewal,
-    /// their access to the tenant's data - while leaving the account and its membership of another
-    /// tenant intact, and without a sign-in, a password change or a session being ended
-    ///.
+    /// Verifies that removing a member revokes their membership and ends their session in that tenant
+    /// at once - the access token answers 401 with no renewal and the refresh token is refused - while
+    /// leaving the account, its membership of another tenant and its session there intact.
     /// </summary>
-    /// <remarks>
-    /// The renewal is where the removal reaches a live session: what a session may do is decided when
-    /// its token is minted and trusted until that token is replaced, so the access token the member
-    /// already holds goes on working for the rest of its validity.
-    /// </remarks>
     [Fact]
     public async Task Valid_Input()
     {
@@ -77,26 +72,15 @@ public class TenantMemberRemoveTests(App app) : TenancyTestsBase(app)
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         removed.Success.Should().BeTrue();
 
-        // The renewal succeeds - the account is still who it was - and hands back a session that no
-        // longer names the tenant the member was removed from.
-        await removedSession.RenewAsync();
-
-        var (refused, refusal) = await removedSession.Client.GETAsync<UserListEndpoint, UserListRequest, ProblemDetails>(new());
-
-        refused.StatusCode.Should().Be(HttpStatusCode.Forbidden, "the membership that admitted the member is gone, and the tenant is still in service");
-        refused.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized, "the removal ends no session and asks for no credentials");
-        refusal.Errors.Should().ContainSingle();
-        refusal.Errors.First().Code.Should().Be(ErrorCodes.PermissionDenied.Value,
-            "the renewed session carries no tenant and therefore no permission");
+        await AssertEndedAsync(removedSession);
 
         // The other tenant is untouched in every part: the membership stands, the roles held there stand,
-        // and a session acting in it goes on being answered - across a renewal of its own, so that what
-        // is shown is the membership surviving rather than a token that had not yet been re-read.
+        // and a session acting in it goes on being answered and renewed.
         (await MembershipService.IsMemberAsync(remainingTenant.Id, member.Id, cancellationToken))
             .Should().BeTrue("a membership of one tenant is not a membership of another");
         (await GrantedRolesAsync(remainingTenant.Id, member.Id)).Should().Equal([roleInRemaining]);
 
-        await remainingSession.RenewAsync();
+        await AssertAliveAsync(remainingSession);
 
         var (stillAdmitted, _) = await remainingSession.Client.GETAsync<UserListEndpoint, UserListRequest, UserListResponse>(new());
 

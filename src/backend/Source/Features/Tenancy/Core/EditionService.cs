@@ -58,6 +58,15 @@ public interface IEditionService
                                                            CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// The live tenants on an edition - the tenants whose sessions a change to what the plan is worth
+    /// must end.
+    /// </summary>
+    /// <param name="id">The edition's identity.</param>
+    /// <param name="cancellationToken">Token used to cancel the read.</param>
+    /// <returns>The identities of the tenants on the edition.</returns>
+    Task<IReadOnlyList<Guid>> TenantIdsAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Persists a new edition.
     /// </summary>
     /// <param name="edition">The edition to create.</param>
@@ -131,6 +140,15 @@ public class EditionService(AppDbContext dbContext, IFeatureValueStore featureVa
 
         return counts.ToDictionary(entry => entry.EditionId, entry => entry.Count);
     }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<Guid>> TenantIdsAsync(Guid id, CancellationToken cancellationToken = default)
+        => await dbContext.Tenants
+            .AsNoTracking()
+            .AcrossAllTenants()
+            .Where(tenant => tenant.EditionId == id)
+            .Select(tenant => tenant.Id)
+            .ToListAsync(cancellationToken);
 
     /// <inheritdoc/>
     public async Task<Edition> CreateAsync(Edition edition, CancellationToken cancellationToken = default)

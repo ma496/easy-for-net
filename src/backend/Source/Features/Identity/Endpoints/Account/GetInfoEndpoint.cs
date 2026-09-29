@@ -17,7 +17,6 @@ using Backend.Features.Identity.Core;
 /// tells them they belong to no active tenant, or which tenants they may choose from.
 /// </remarks>
 sealed class GetInfoEndpoint(AppDbContext dbContext,
-                             IPermissionFeatureFilter permissionFeatureFilter,
                              ICurrentUserService currentUserService,
                              ITenantContext tenantContext)
     : EndpointWithoutRequest<UserGetInfoResponse>
@@ -76,13 +75,13 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
         user.ActiveTenant = activeTenant;
         user.ActiveTenantId = activeTenant?.Id;
 
-        // The grants reported are those of the tenant just reported as active and no others - exactly
-        // the set a session acting in that tenant is minted with, so what the web app believes the
-        // caller may do matches what the API will actually allow. Authority held in the tenant left
-        // behind by a switch is not among them, and neither are platform-scoped roles, which count only
-        // in platform scope. With no active tenant only the platform-scoped roles are reported, which
-        // for an ordinary account is an empty list.
-        user.Roles = await RolesInAsync(userId, activeTenant?.Id, user.IsPlatform, cancellationToken);
+        // The grants reported are the session's own - the roles and permissions the API enforces for this
+        // very session, read from the session the request was authenticated with rather than worked out
+        // again from the database - so what the web app believes the caller may do is what the API will
+        // actually allow, including for a session whose role or plan changed after it was minted and has
+        // not been renewed. Only the display detail (identifiers, display names, which role grants what)
+        // is looked up.
+        user.Roles = await RolesOfSessionAsync(scopedTenantId, cancellationToken);
 
         await Send.ResponseAsync(user, cancellation: cancellationToken);
     }
@@ -157,79 +156,70 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
     }
 
     /// <summary>
-    /// The roles the caller holds inside one named tenant, or its platform-scoped roles when no tenant
-    /// is named, each with the permissions it grants.
+    /// The roles and permissions the caller's session holds, each role with the permissions it grants.
     /// </summary>
-    /// <param name="userId">The account whose role assignments are read.</param>
-    /// <param name="tenantId">
-    /// The tenant the roles are read for, or <see langword="null"/> for the caller's platform-scoped
-    /// roles - the ones belonging to no tenant.
-    /// </param>
-    /// <param name="isPlatform">Whether the account belongs to the platform tier.</param>
+    /// <param name="tenantId">The tenant the session acts in, or <see langword="null"/> for none.</param>
     /// <param name="cancellationToken">Token used to cancel the read.</param>
-    /// <returns>The roles held there, ordered by name, each with the permissions it grants.</returns>
+    /// <returns>The session's roles, ordered by name, whose permissions together are exactly the session's.</returns>
     /// <remarks>
-    /// The tenant is stated in the predicate rather than left to the query filter, because the same
-    /// read has to answer for the roles belonging to no tenant as well as for one tenant's own.
-    /// Relaxing tenant restriction by name leaves the soft-delete filter applied, so a deleted role
-    /// stops granting what it granted.
-    /// <para>
-    /// The platform-scoped roles are left out whenever a tenant is named, because that is how a session
-    /// is minted: inside a tenant a platform account acts on the roles its membership carries there.
-    /// Reporting them would have the web app offer screens the API would refuse.
-    /// </para>
-    /// <para>
-    /// The narrowing is <see cref="SessionGrants"/>' own, asked for here rather than restated, so what
-    /// the web app believes the caller may do is what the API will actually allow: the tenant tier
-    /// inside a tenant, the platform tier in platform scope, and nothing at all for an ordinary account
-    /// that has no tenant active. Only the projection differs - this one carries ids and display names
-    /// for the screens to read, where a session carries names alone.
-    /// </para>
+    /// The session alone decides what is reported: the role names returned are exactly the session's, and
+    /// the permissions across all of them are exactly the session's, whatever has happened to the roles
+    /// since it was minted. The database only adds what the session does not store - a role's identifier
+    /// and each permission's identifier and display name - and is never used to drop anything. A role that
+    /// no longer exists is still reported, by name, with an empty identifier; a permission the database no
+    /// longer attributes to any listed role is reported on the first role, and one that no longer exists
+    /// carries its name as its display name. Tenant restriction is relaxed by name because the tenant is
+    /// stated in the predicate (the platform-scoped roles belong to none); the soft-delete filter stays in
+    /// force.
     /// </remarks>
-    private async Task<List<UserGetInfoResponse.RoleDto>> RolesInAsync(Guid? userId, Guid? tenantId, bool isPlatform, CancellationToken cancellationToken)
+    private async Task<List<UserGetInfoResponse.RoleDto>> RolesOfSessionAsync(Guid? tenantId, CancellationToken cancellationToken)
     {
-        var viewScope = SessionGrants.ScopeOf(tenantId);
-        var exercisesPermissions = SessionGrants.ExercisesPermissions(isPlatform, tenantId);
+        var roleNames = currentUserService.GetCurrentUserRoles().Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToList();
+        var permissionNames = currentUserService.GetCurrentUserPermissions().Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToList();
 
-        // Narrowed for the tenant this endpoint worked out for itself, not for the ambient scope: the
-        // two can differ for a platform account inside a tenant, and reporting one while the session
-        // was minted for the other is exactly how the UI comes to offer what the API refuses.
-        var permitted = await SessionGrants.EnabledPermissionNamesAsync(permissionFeatureFilter, tenantId, cancellationToken);
+        var permissionRows = (await dbContext.Permissions
+                .AsNoTracking()
+                .Where(permission => permissionNames.Contains(permission.Name))
+                .Select(permission => new { permission.Id, permission.Name, permission.DisplayName })
+                .ToListAsync(cancellationToken))
+            .ToDictionary(permission => permission.Name, StringComparer.Ordinal);
 
-        var roles = await dbContext.Roles
-            .AsNoTracking()
-            .AcrossAllTenants()
-            .Where(role => role.TenantId == tenantId
-                           && dbContext.UserRoles.Any(assignment => assignment.UserId == userId && assignment.RoleId == role.Id))
-            .OrderBy(role => role.Name)
-            .Select(role => new UserGetInfoResponse.RoleDto
+        var roleRows = (await dbContext.Roles
+                .AsNoTracking()
+                .AcrossAllTenants()
+                .Where(role => role.TenantId == tenantId && roleNames.Contains(role.Name))
+                .Select(role => new
+                {
+                    role.Id,
+                    role.Name,
+                    Permissions = role.RolePermissions.Select(rolePermission => rolePermission.Permission.Name).ToList()
+                })
+                .ToListAsync(cancellationToken))
+            .ToDictionary(role => role.Name, StringComparer.Ordinal);
+
+        UserGetInfoResponse.PermissionDto Describe(string name)
+            => permissionRows.TryGetValue(name, out var row)
+                ? new() { Id = row.Id, Name = name, DisplayName = row.DisplayName }
+                : new() { Id = Guid.Empty, Name = name, DisplayName = name };
+
+        var held = permissionNames.ToHashSet(StringComparer.Ordinal);
+        var roles = roleNames
+            .Select(name => new UserGetInfoResponse.RoleDto
             {
-                Id = role.Id,
-                Name = role.Name,
-                Permissions = role.RolePermissions
-                    .Where(rolePermission => exercisesPermissions
-                                             && (rolePermission.Permission.Scope == viewScope
-                                                 || rolePermission.Permission.Scope == PermissionScope.Both))
-                    .Select(rolePermission => new UserGetInfoResponse.PermissionDto
-                    {
-                        Id = rolePermission.PermissionId,
-                        Name = rolePermission.Permission.Name,
-                        DisplayName = rolePermission.Permission.DisplayName
-                    }).ToList()
+                Id = roleRows.TryGetValue(name, out var row) ? row.Id : Guid.Empty,
+                Name = name,
+                Permissions = roleRows.TryGetValue(name, out row)
+                    ? [.. row.Permissions.Where(held.Contains).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).Select(Describe)]
+                    : []
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
 
-        if (permitted is null)
+        var covered = roles.SelectMany(role => role.Permissions).Select(permission => permission.Name).ToHashSet(StringComparer.Ordinal);
+        if (roles.Count > 0)
         {
-            return roles;
+            roles[0].Permissions.AddRange(permissionNames.Where(name => !covered.Contains(name)).Select(Describe));
         }
 
-        // In memory, after the read: a set of names does not translate to SQL, and the list is a
-        // caller's own roles rather than anything large.
-        foreach (var role in roles)
-        {
-            role.Permissions = [.. role.Permissions.Where(permission => permitted.Contains(permission.Name))];
-        }
         return roles;
     }
 }

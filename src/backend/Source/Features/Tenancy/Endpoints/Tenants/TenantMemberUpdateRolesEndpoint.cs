@@ -2,6 +2,7 @@ namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
 using Backend.ShareData.Entities;
 using Backend.Features.Identity.Core;
+using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
 
@@ -21,9 +22,9 @@ using Backend.Features.Tenancy.Core;
 /// Only the member's assignments inside this one tenant are rewritten. The same account's memberships
 /// of other tenants, and the roles it holds in them, are outside everything this writes, which is
 /// what lets an account belong to several tenants with different standing in each. The change reaches
-/// the member's live sessions on their next request - what a session may do is recomputed from the
-/// assignments each time - so they are neither signed out nor asked to sign in again for it to take
-/// effect.
+/// the member's sessions in this tenant by ending them once the replacement has committed: their access
+/// tokens answer 401 on the very next request and they sign in again to be minted with the new roles.
+/// Sessions in other tenants or in platform scope are not touched, and a refused change ends none.
 /// </para>
 /// <para>
 /// Two administrators re-roling the same member at once cannot interleave into a set neither of them
@@ -36,7 +37,8 @@ sealed class TenantMemberUpdateRolesEndpoint(ITenantService tenantService,
                                              ITenantMembershipService tenantMembershipService,
                                              ITenantAuthorizationService tenantAuthorizationService,
                                              ICurrentUserService currentUserService,
-                                             ITenantContext tenantContext)
+                                             ITenantContext tenantContext,
+                                             ISessionRevocationService sessionRevocationService)
     : Endpoint<TenantMemberUpdateRolesRequest, TenantMemberUpdateRolesResponse>
 {
     public override void Configure()
@@ -133,6 +135,9 @@ sealed class TenantMemberUpdateRolesEndpoint(ITenantService tenantService,
             // told to look again rather than left believing a set nobody ever saw whole is in force.
             this.ThrowError(ErrorCodes.ConcurrentModification);
         }
+
+        // The replacement has committed inside the service, which revocation requires.
+        await sessionRevocationService.RevokeUserInScopeAsync(request.UserId, request.TenantId, cancellationToken);
 
         await Send.ResponseAsync(new()
         {

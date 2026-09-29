@@ -1,6 +1,7 @@
 namespace Backend.Processors;
 
 using Backend.Features.Localization.Core;
+using Backend.Middleware;
 using Npgsql;
 
 /// <summary>
@@ -134,6 +135,19 @@ public class ExceptionProcessor(IWebHostEnvironment env, ILogger<ExceptionProces
             };
 
             await context.HttpContext.Response.WriteAsJsonAsync(limitResponse, cancellationToken: ct);
+
+            return;
+        }
+
+        // The session store could not be reached while a session was being minted or deleted (sign-in,
+        // refresh, switch, exit, sign-out). Not a fault in the request and not a 500: the same 503 the
+        // per-request validation answers, so a client sees one thing whichever step hit the outage.
+        if (context.ExceptionDispatchInfo.SourceException is SessionStoreUnavailableException storeUnavailable)
+        {
+            context.MarkExceptionAsHandled();
+
+            logger.LogError(storeUnavailable, "The session store is unavailable for {Method} {Path}", context.HttpContext.Request.Method, context.HttpContext.Request.Path);
+            await SessionStoreUnavailableMiddleware.WriteAsync(context.HttpContext, localizationService, ct);
 
             return;
         }

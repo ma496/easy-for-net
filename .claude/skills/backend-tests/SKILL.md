@@ -103,9 +103,14 @@ abstract `<Area>TestsBase` on top of the closest of these.
 | `ClearAuthToken()` | test the unauthenticated path |
 | `CreateAdminUserAsync(username, password)` | a fresh administrator of the default tenant (throws if it already exists) |
 
-Roles, permissions and the tenant are decided when a token is minted, so a test that changes a
-caller's roles, membership or plan must sign in again (or renew via `SessionForAsync`) before
-asserting the effect. Tenancy concepts are in the `multi-tenancy` skill.
+A token holds only the account and `sid`; roles, permissions and the tenant live in the session the
+store holds, which every request reads (`SessionOfAsync(accessToken)` returns it). A change made
+through an endpoint that revokes — a user's roles, a role's grants, a membership, a tenant's status or
+plan — ends the affected sessions at once, so assert that the **old access token, not renewed, answers
+401** and its refresh is refused, that a session the change does not name keeps working, and sign in
+again (or use `SessionForAsync`) to see the new grants. A change written straight through a service or
+`DbContext` revokes nothing: an existing session keeps what it was created with until it is replaced.
+Tenancy concepts are in the `multi-tenancy` skill.
 
 ## Calling endpoints
 

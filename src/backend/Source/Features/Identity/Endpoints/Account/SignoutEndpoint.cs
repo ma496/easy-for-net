@@ -1,10 +1,12 @@
 namespace Backend.Features.Identity.Endpoints.Account;
 
 using Backend.Features.Identity.Core;
+using Backend.Features.Identity.Core.Sessions;
 
 /// <summary>
-/// Authenticated POST endpoint that signs the current user out by clearing the auth
-/// cookie and the refresh-token cookie.
+/// Authenticated POST endpoint that signs the current user out by deleting the session it is
+/// signed in with, revoking its refresh tokens and clearing the auth cookie and the refresh-token
+/// cookie.
 /// </summary>
 /// <remarks>
 /// Usable with no tenant established, because signing out is account self-service: a
@@ -14,7 +16,7 @@ using Backend.Features.Identity.Core;
 /// the same flow, so the next account signing in on that browser inherits no selection and sees no
 /// previous tenant's records.
 /// </remarks>
-sealed class SignoutEndpoint(ICurrentUserService currentUserService, IAuthTokenService authTokenService)
+sealed class SignoutEndpoint(ICurrentUserService currentUserService, IAuthTokenService authTokenService, ISessionStore sessionStore)
     : EndpointWithoutRequest<EmptyResponse>
 {
     public override void Configure()
@@ -30,6 +32,14 @@ sealed class SignoutEndpoint(ICurrentUserService currentUserService, IAuthTokenS
         {
             await authTokenService.RevokeAllAsync(userId.Value, c);
         }
+
+        // The session the caller is signing out of is deleted too, not only the refresh tokens: the access
+        // token it signs out with must stop working now, not when it would have expired.
+        if (SessionClaims.ReadSessionId(User) is { } sessionId)
+        {
+            await sessionStore.DeleteAsync(sessionId, c);
+        }
+
         await CookieAuth.SignOutAsync();
         HttpContext.Response.Cookies.Delete("refreshToken");
         await Send.OkAsync(c);

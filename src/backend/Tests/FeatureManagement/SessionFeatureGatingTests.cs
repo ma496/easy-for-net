@@ -4,11 +4,12 @@ using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Identity.Endpoints.Permissions;
 using Backend.Features.Identity.Endpoints.Users;
+using Backend.Features.Tenancy.Endpoints.FeatureValues;
 
 /// <summary>
 /// The acceptance tests for the mint-time contract: a permission whose feature the tenant's plan
 /// withholds is not minted into a session, is not offered on a role's surface, and is not reported to
-/// the web app - while a session already issued keeps what it was issued with until it is renewed.
+/// the web app - and a plan change ends the sessions minted under the old plan, so none keeps it.
 /// </summary>
 public class SessionFeatureGatingTests(App app) : FeatureTestsBase(app)
 {
@@ -61,20 +62,36 @@ public class SessionFeatureGatingTests(App app) : FeatureTestsBase(app)
     }
 
     [Fact]
-    public async Task A_Session_Already_Issued_Keeps_What_It_Was_Issued_With()
+    public async Task A_Plan_Change_Ends_A_Session_Already_Issued_And_The_Next_One_Carries_The_New_Plan()
     {
         var tenant = await CreateTenantAsync();
-        var (_, roleId) = await SignInWithUserAdministrationAsync(tenant.Id);
+        var role = await CreateTenantRoleAsync(tenant.Id, Allow.User_View, Allow.User_Create);
+        var account = await CreateTenantUserAsync(tenant.Id, role);
+        var issued = await SessionForAsync(account.Username, tenant.Id);
 
-        // Switched off after the token was minted. Authority is decided once, when a session is
-        // issued, and every request until it is replaced is authorized from the claims it already
-        // holds - so this call must still succeed. The window is bounded by Auth:AccessTokenValidity,
-        // and this is exactly how a role change behaves today.
-        await SetForTenantAsync(tenant.Id, FeatureNames.Identity_UserManagement, "false");
+        // Switched off after the session was minted, through the endpoint a platform administrator
+        // uses. Authority is decided once, when a session is issued, so a session minted under the old
+        // plan cannot be narrowed in place - it is ended instead, and the access token it holds, not
+        // renewed, names nothing any more.
+        await SetPlatformAdminAuthTokenAsync();
+        var (update, _) = await Client
+            .PUTAsync<FeatureValueUpdateEndpoint, FeatureValueUpdateRequest, FeatureValueUpdateResponse>(new()
+            {
+                ProviderName = FeatureValueProviderNames.Tenant,
+                ProviderKey = tenant.Id.ToString(),
+                Features = [new() { Name = FeatureNames.Identity_UserManagement, Value = "false" }]
+            });
+        update.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var response = await CreateAUserAsync(roleId);
+        var (stale, _) = await issued.Client.GETAsync<GetInfoEndpoint, ProblemDetails>();
+        stale.StatusCode.Should().Be(HttpStatusCode.Unauthorized,
+            "the plan change ended the session, so its access token answers 401 without waiting for a renewal");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        await SignInAsAsync(account.Username, tenant.Id);
+
+        (await CreateAUserAsync(role)).StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await ReportedPermissionsAsync()).Should().NotContain(Allow.User_Create,
+            "the session signed in after the change is minted under the new plan");
     }
 
     [Fact]

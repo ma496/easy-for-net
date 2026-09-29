@@ -226,6 +226,7 @@ public class UserService(AppDbContext dbContext,
     public async Task<User> UpdatePasswordAsync(User user, string password)
     {
         user.PasswordHash = passwordHasher.HashPassword(password);
+        user.SecurityStamp = Guid.NewGuid();
         await UpdateAsync(user);
         return user;
     }

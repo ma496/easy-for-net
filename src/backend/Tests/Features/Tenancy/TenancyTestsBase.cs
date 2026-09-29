@@ -41,6 +41,50 @@ public abstract class TenancyTestsBase(App app) : AppTestsBase(app)
     protected IUserService UserService => Service<IUserService>();
 
     /// <summary>
+    /// Creates an edition with a name no other test will take.
+    /// </summary>
+    /// <param name="name">A name to use, or <see langword="null"/> to generate one.</param>
+    /// <returns>The created edition.</returns>
+    protected async Task<Edition> CreateEditionAsync(string? name = null)
+    {
+        var edition = new Edition
+        {
+            Name = name ?? $"Edition {Guid.NewGuid():N}",
+            Description = "Edition made by a test"
+        };
+        DbContext.Editions.Add(edition);
+        await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+        return edition;
+    }
+
+    /// <summary>
+    /// Puts a tenant on an edition, or on none.
+    /// </summary>
+    /// <param name="tenantId">The tenant to move.</param>
+    /// <param name="editionId">The plan to put it on, or <see langword="null"/> to take it off one.</param>
+    protected async Task PutOnEditionAsync(Guid tenantId, Guid? editionId)
+    {
+        using var platformScope = TenantContext.BeginPlatformScope();
+
+        var tenant = await DbContext.Tenants.SingleAsync(row => row.Id == tenantId,
+                                                         TestContext.Current.CancellationToken);
+        tenant.EditionId = editionId;
+        await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>
+    /// Creates a tenant already on an edition.
+    /// </summary>
+    /// <param name="editionId">The plan to put it on.</param>
+    /// <returns>The created tenant.</returns>
+    protected async Task<Tenant> CreateTenantOnEditionAsync(Guid editionId)
+    {
+        var tenant = await CreateTenantAsync();
+        await PutOnEditionAsync(tenant.Id, editionId);
+        return tenant;
+    }
+
+    /// <summary>
     /// Creates a tenant with a unique, validly shaped identifier, under platform scope - the
     /// standing a tenant is created from, since a tenant belongs to no tenant of its own.
     /// </summary>

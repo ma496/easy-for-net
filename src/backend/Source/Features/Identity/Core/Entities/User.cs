@@ -28,6 +28,13 @@ public class User : AuditableEntity<Guid>, IHasNormalizedProperties, ISystemCrea
     public DateTime? LastSigninAt { get; set; }
     public string? Image { get; set; }
 
+    /// <summary>
+    /// Rotated whenever the account's credentials change (password change or reset) and when it is
+    /// deactivated. Every refresh-token row records the stamp its chain was signed in under, and a renewal
+    /// whose row names an older stamp is refused. Existing rows default to <see cref="Guid.Empty"/>.
+    /// </summary>
+    public Guid SecurityStamp { get; set; }
+
     public ICollection<UserRole> UserRoles { get; set; } = [];
     public ICollection<AuthToken> AuthTokens { get; set; } = [];
     public ICollection<Token> Tokens { get; set; } = [];

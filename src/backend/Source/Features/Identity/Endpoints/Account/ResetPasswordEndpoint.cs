@@ -2,6 +2,7 @@ namespace Backend.Features.Identity.Endpoints.Account;
 
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Identity.Core.Sessions;
 
 /// <summary>
 /// Anonymous POST endpoint that completes the password-reset flow by validating a
@@ -11,11 +12,15 @@ using Backend.Features.Identity.Core.Entities;
 /// Usable with no tenant established, because completing password recovery is one of the
 /// account self-service flows that has to work with no tenant established: it acts on the account
 /// the token names rather than on any tenant's data.
+/// <para>
+/// Every session of the account ends once the new password has committed: whoever held the old one is
+/// locked out, and a reset that rolls back leaves the sessions working.
+/// </para>
 /// </remarks>
 sealed class ResetPasswordEndpoint(ITokenService tokenService,
                                    IUserService userService,
                                    IPasswordHasher passwordHasher,
-                                   IAuthTokenService authTokenService,
+                                   ISessionRevocationService sessionRevocationService,
                                    AppDbContext dbContext)
     : Endpoint<ResetPasswordRequest>
 {
@@ -44,6 +49,7 @@ sealed class ResetPasswordEndpoint(ITokenService tokenService,
             return;
         }
         user.PasswordHash = passwordHasher.HashPassword(request.Password);
+        user.SecurityStamp = Guid.NewGuid();
 
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
         await userService.UpdateAsync(user);
@@ -51,8 +57,9 @@ sealed class ResetPasswordEndpoint(ITokenService tokenService,
         {
             this.ThrowError(ErrorCodes.InvalidToken);
         }
-        await authTokenService.RevokeAllAsync(user.Id, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+
+        await sessionRevocationService.RevokeUserAsync(user.Id, cancellationToken);
 
         await Send.OkAsync(cancellation: cancellationToken);
     }

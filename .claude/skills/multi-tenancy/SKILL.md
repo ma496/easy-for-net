@@ -27,10 +27,18 @@ three states:
 
 **In a request** `Processors/TenantContextProcessor` (a global pre-processor) opens the scope from the
 session's `tenant_id` claim alone — tenant scope when it names one, platform scope when it does not. No
-database read; an unauthenticated request stays unresolved. The claim is minted at sign-in, refresh,
-`POST /tenants/switch` and `POST /tenants/exit`, and trusted until the token is replaced; only refresh
-re-checks membership and tenant status (`TokenService.SetRenewalPrivilegesAsync`) and drops a tenant
-that was suspended, deleted or left. So endpoints never set the scope — they read it:
+database read; an unauthenticated request stays unresolved. The token carries only the account and
+`sid`; `tenant_id` comes from the session record, which sign-in, refresh, `POST /tenants/switch` and
+`POST /tenants/exit` write to the session store and which every request reads and projects onto its
+principal before authorization. A change that takes a tenant away ends the affected sessions at once
+through `Backend.Features.Identity.Core.Sessions.ISessionRevocationService`, after the change commits:
+removing a member or replacing their tenant roles ends that user's sessions in that tenant; suspending
+or deleting a tenant, or changing its plan, ends every session in it. Their access tokens answer 401 on
+the next request and their refresh tokens are refused. Refresh still re-checks membership and tenant
+status (`TokenService.SetRenewalPrivilegesAsync`) and drops a tenant that was suspended, deleted or
+left. A new Tenancy endpoint that changes who may act in a tenant, or with what, must revoke the same
+way — never inside the transaction, and never by touching the session store. So endpoints never set
+the scope — they read it:
 
 ```csharp
 namespace Backend.Features.Invoices.Endpoints.Invoices;
@@ -239,4 +247,6 @@ platform account inside a tenant); `ClientForAsync` gives a second identity its 
 
 - An exemption in `TenantScopingTests` to silence a missing marker — only for kinds with no tenant.
 - `AcrossAllTenants()` without a tenant predicate, or a tenant id taken from the request: a leak.
-- Expecting a role, membership, suspension or plan change to bite before the next token renewal.
+- A new endpoint that changes a membership, a tenant's status or its plan without revoking the
+  affected sessions through `ISessionRevocationService` after it commits: the sessions keep acting on
+  what they were created with until they are replaced.

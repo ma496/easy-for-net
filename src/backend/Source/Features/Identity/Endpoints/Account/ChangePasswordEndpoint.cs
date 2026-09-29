@@ -1,6 +1,7 @@
 namespace Backend.Features.Identity.Endpoints.Account;
 
 using Backend.Features.Identity.Core;
+using Backend.Features.Identity.Core.Sessions;
 
 /// <summary>
 /// Authenticated POST endpoint that changes the current user's password after verifying the
@@ -10,10 +11,16 @@ using Backend.Features.Identity.Core;
 /// Usable with no tenant established, because changing one's own password is account
 /// self-service: it acts on the account rather than on any tenant's data, so it stays usable while
 /// the caller acts in any tenant or in none.
+/// <para>
+/// Once the new password is saved, every other session of the account ends - its access token answers
+/// 401 and its refresh token is refused - so whoever held the old password is locked out. The session
+/// making the change is kept, so the person changing it is not signed out by doing so.
+/// </para>
 /// </remarks>
 sealed class ChangePasswordEndpoint(AppDbContext dbContext,
                                     ICurrentUserService currentUserService,
                                     IUserService userService,
+                                    ISessionRevocationService sessionRevocationService,
                                     IAuthTokenService authTokenService)
     : Endpoint<ChangePasswordRequest, EmptyResponse>
 {
@@ -39,7 +46,19 @@ sealed class ChangePasswordEndpoint(AppDbContext dbContext,
             return;
         }
         await userService.UpdatePasswordAsync(user, request.NewPassword);
-        await authTokenService.RevokeAllAsync(user.Id, cancellationToken);
+        if (SessionClaims.ReadSessionId(User) is { } currentSessionId)
+        {
+            await sessionRevocationService.RevokeUserExceptAsync(user.Id, currentSessionId, cancellationToken);
+
+            // The change rotated the account's security stamp, which refuses every refresh token issued
+            // before it and every switch made from a session minted before it - this session's too, unless its
+            // row and its record are moved onto the new stamp.
+            await authTokenService.RestampSessionAsync(user.Id, currentSessionId, user.SecurityStamp, cancellationToken);
+        }
+        else
+        {
+            await sessionRevocationService.RevokeUserAsync(user.Id, cancellationToken);
+        }
         await Send.OkAsync(cancellationToken);
     }
 }

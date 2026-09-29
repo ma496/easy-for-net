@@ -1,6 +1,5 @@
 namespace Backend.Tests.Features.Identity.Core;
 
-using System.Text.Json;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Account;
@@ -82,7 +81,7 @@ public class AuthTokenServiceTests(App app) : TenancyTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        TenantClaimOf(refreshed.AccessToken).Should().Be(expectedTenantId,
+        (await SessionOfAsync(refreshed.AccessToken))!.TenantId.Should().Be(expectedTenantId,
             "a refresh re-establishes the tenant the session already had - it neither loses it as the session is renewed nor resurrects the one the caller acted in before selecting");
 
         // The pair is renewed rather than replayed: the row the token was read from is spent and one
@@ -135,25 +134,6 @@ public class AuthTokenServiceTests(App app) : TenancyTestsBase(app)
             .ToListAsync(TestContext.Current.CancellationToken);
 
     /// <summary>
-    /// The tenant an access token names, read out of the token itself so that what is asserted is what
-    /// the session was issued with rather than what a later request made of it.
-    /// </summary>
-    /// <param name="accessToken">The token to read.</param>
-    /// <returns>The tenant it names, or <see langword="null"/> when it names none.</returns>
-    private static Guid? TenantClaimOf(string accessToken)
-    {
-        var payload = accessToken.Split('.')[1].Replace('-', '+').Replace('_', '/');
-        payload = payload.PadRight(payload.Length + ((4 - (payload.Length % 4)) % 4), '=');
-
-        using var document = JsonDocument.Parse(Convert.FromBase64String(payload));
-
-        return document.RootElement.TryGetProperty(ClaimConstants.TenantId, out var claim)
-               && Guid.TryParse(claim.GetString(), out var tenantId)
-            ? tenantId
-            : null;
-    }
-
-    /// <summary>
     /// Verifies that a valid refresh token can be consumed exactly once.
     /// </summary>
     [Fact]
@@ -162,7 +142,7 @@ public class AuthTokenServiceTests(App app) : TenancyTestsBase(app)
         var authTokenService = Service<IAuthTokenService>();
         var cancellationToken = TestContext.Current.CancellationToken;
         var token = NewToken(TestUsers.TestUserId, $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(1), $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(1));
-        await authTokenService.SaveTokenAsync(token, tenantId: null);
+        await authTokenService.SaveTokenAsync(token, tenantId: null, sessionId: null, securityStamp: Guid.Empty);
         var request = new FastEndpoints.Security.TokenRequest { RefreshToken = token.RefreshToken, UserId = TestUsers.TestUserId.ToString() };
         var consumption = await authTokenService.ConsumeRefreshTokenAsync(request, cancellationToken);
         var replayConsumption = await authTokenService.ConsumeRefreshTokenAsync(request, cancellationToken);
@@ -181,7 +161,7 @@ public class AuthTokenServiceTests(App app) : TenancyTestsBase(app)
         var authTokenService = Service<IAuthTokenService>();
         var cancellationToken = TestContext.Current.CancellationToken;
         var token = NewToken(TestUsers.TestUserId, $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(-1), $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(-1));
-        await authTokenService.SaveTokenAsync(token, tenantId: null);
+        await authTokenService.SaveTokenAsync(token, tenantId: null, sessionId: null, securityStamp: Guid.Empty);
         var consumption = await authTokenService.ConsumeRefreshTokenAsync(
             new FastEndpoints.Security.TokenRequest { RefreshToken = token.RefreshToken, UserId = TestUsers.TestUserId.ToString() }, cancellationToken);
 
@@ -198,7 +178,7 @@ public class AuthTokenServiceTests(App app) : TenancyTestsBase(app)
         var authTokenCleanService = Service<IAuthTokenCleanService>();
         // create expired token
         var expiredToken = NewToken(TestUsers.TestUserId, $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(-1), $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(-1));
-        var token = await authTokenService.SaveTokenAsync(expiredToken, tenantId: null);
+        var token = await authTokenService.SaveTokenAsync(expiredToken, tenantId: null, sessionId: null, securityStamp: Guid.Empty);
         // delete expired tokens
         await authTokenCleanService.DeleteExpiredTokensAsync();
 

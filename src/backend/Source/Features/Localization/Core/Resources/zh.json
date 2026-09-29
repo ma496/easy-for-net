@@ -249,7 +249,8 @@
       "unknownFeatureProvider": "未知的功能提供方。",
       "editionNotFound": "未找到版本。",
       "editionNameAlreadyExists": "同名版本已存在。",
-      "editionInUse": "该版本下仍有租户，无法删除。"
+      "editionInUse": "该版本下仍有租户，无法删除。",
+      "sessionStoreUnavailable": "会话服务暂时不可用，请稍后重试。"
     }
   },
   "table": {

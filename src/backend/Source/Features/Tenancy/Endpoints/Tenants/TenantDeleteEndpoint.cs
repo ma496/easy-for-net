@@ -1,5 +1,6 @@
 namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
+using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
@@ -12,12 +13,11 @@ using Backend.Features.Tenancy.Core;
 /// authorizes the tenant it addresses itself: a tenant that never existed, one already deleted and
 /// one the caller may not see are all refused with the same message and the same
 /// <see cref="ErrorCodes.TenantNotFound"/>, so the response never betrays that the tenant exists for
-/// somebody else. Deletion is not enforced against live sessions here. Members of a deleted tenant
-/// keep their sessions and stay signed in; their next tenant-scoped request is refused by
-/// <c>TenantContextProcessor</c> with the same not-found code, which leaves their access to every
-/// other tenant they belong to intact and lets the web app offer them one of those instead.
+/// somebody else. Once the deletion is saved, every session acting in the tenant is ended: access
+/// tokens answer 401 on the next request and refresh tokens are refused. Sessions in other tenants
+/// and in platform scope are untouched.
 /// </remarks>
-sealed class TenantDeleteEndpoint(ITenantService tenantService, AppDbContext dbContext)
+sealed class TenantDeleteEndpoint(ITenantService tenantService, AppDbContext dbContext, ISessionRevocationService sessionRevocationService)
     : Endpoint<TenantDeleteRequest, TenantDeleteResponse>
 {
     public override void Configure()
@@ -49,6 +49,7 @@ sealed class TenantDeleteEndpoint(ITenantService tenantService, AppDbContext dbC
         // of every query - and the tenant filter then takes everything attributed to it out too.
         dbContext.Tenants.Remove(entity);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await sessionRevocationService.RevokeTenantAsync(entity.Id, cancellationToken);
 
         await Send.ResponseAsync(new() { Success = true }, cancellation: cancellationToken);
     }

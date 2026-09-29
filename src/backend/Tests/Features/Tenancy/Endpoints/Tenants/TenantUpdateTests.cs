@@ -25,7 +25,8 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 /// </para>
 /// </remarks>
 // Shares a collection with TenantReactivateTests: both write the bootstrap tenant's row, and this
-// class reads its UpdatedAt to prove a refused update changed nothing.
+// class reads its UpdatedAt to prove a refused update changed nothing. TenantSeedingTests joins it
+// because this class briefly marks a tenant of its own system-created.
 [Collection("BootstrapTenant")]
 public class TenantUpdateTests(App app) : TenancyTestsBase(app)
 {
@@ -221,50 +222,59 @@ public class TenantUpdateTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that the bootstrap tenant may still be put on a plan, even though it may not be
+    /// Verifies that a system-created tenant may still be put on a plan, even though it may not be
     /// renamed. The refusal above protects what the tenant is called and addressed by, because the
     /// seeded data and the upgrade path are pinned to it; the plan it is on is ordinary operational
     /// data, and in a real deployment the bootstrap tenant is a customer like any other - refusing
     /// that too would make it the one tenant nothing could ever be sold to.
     /// </summary>
     /// <remarks>
-    /// The tenant is put back on no plan afterwards, because every other test in the run reads it and
-    /// its entitlements decide what their sessions are minted with.
+    /// The rule is proved on a tenant this test makes and marks system-created rather than on the
+    /// bootstrap tenant itself: a plan change ends every session acting in the tenant, and the rest of
+    /// the run signs in to the bootstrap tenant in parallel. The mark is cleared afterwards, because the
+    /// seeding tests hold that the bootstrap tenant is the only system-created one.
     /// </remarks>
     [Fact]
     public async Task System_Created_Tenant_Can_Still_Be_Put_On_A_Plan()
     {
-        var before = await ReloadTenantAsync(TestTenants.BootstrapTenantId);
-        var edition = new Edition { Name = $"Plan {Guid.NewGuid():N}" };
-        DbContext.Editions.Add(edition);
-        await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
-
-        await SetPlatformAdminAuthTokenAsync();
+        var tenant = await CreateTenantAsync();
+        var edition = await CreateEditionAsync();
+        await MarkSystemCreatedAsync(tenant.Id, true);
 
         try
         {
+            await SetPlatformAdminAuthTokenAsync();
+
             var (response, result) = await Client
                 .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, TenantUpdateResponse>(new()
                 {
-                    Id = TestTenants.BootstrapTenantId,
-                    Name = before.Name,
-                    Identifier = before.Identifier,
+                    Id = tenant.Id,
+                    Name = tenant.Name,
+                    Identifier = tenant.Identifier,
                     EditionId = edition.Id
                 });
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
+            result.SystemCreated.Should().BeTrue("the rule under test is the one for a system-created tenant");
             result.EditionId.Should().Be(edition.Id);
         }
         finally
         {
-            await Client.PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, TenantUpdateResponse>(new()
-            {
-                Id = TestTenants.BootstrapTenantId,
-                Name = before.Name,
-                Identifier = before.Identifier,
-                EditionId = null
-            });
+            await MarkSystemCreatedAsync(tenant.Id, false);
         }
+    }
+
+    /// <summary>
+    /// Sets or clears the system-created mark on a tenant the test made, straight on the row.
+    /// </summary>
+    private async Task MarkSystemCreatedAsync(Guid tenantId, bool systemCreated)
+    {
+        using var platformScope = TenantContext.BeginPlatformScope();
+
+        await DbContext.Tenants
+            .Where(row => row.Id == tenantId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(row => row.SystemCreated, systemCreated),
+                                TestContext.Current.CancellationToken);
     }
 
     /// <summary>
