@@ -15,7 +15,8 @@ dotnet efn cp --help
 ```
 
 Prerequisites: the .NET SDK pinned in `global.json` (10.0.x), **git on PATH** (the tool clones the
-template), Node >= 24, and a reachable PostgreSQL on `localhost:5432` (user `postgres`).
+template), Node >= 24, a reachable PostgreSQL on `localhost:5432` (user `postgres`), and a Redis on
+`localhost:6379` (Docker is the easy way, see step 4).
 
 ## Generate
 
@@ -82,7 +83,18 @@ Run these from the new project's root.
 
    Development and Testing apply migrations on startup, so `dotnet ef database update --project
    src/backend/Source` is optional there. Commit the migration.
-4. **Run the API.**
+4. **Redis.** Outside the Testing environment the API needs Redis (`ConnectionStrings:Redis`,
+   default `localhost:6379`) and prefixes every key with `Redis:InstanceName`, which the generator set
+   to `<Name>:` (`<Name>Test:` in Testing) so several apps can share one Redis server. Start one:
+
+   ```sh
+   docker run -d --name redis -p 127.0.0.1:6379:6379 redis:7   # or `docker start redis` if it exists
+   ```
+
+   The port is bound to loopback because this Redis has no password; a shared or deployed Redis
+   needs a password or ACL (and TLS) in `ConnectionStrings:Redis`, supplied through secure
+   configuration. The backend tests (`dotnet test`) do not need Redis.
+5. **Run the API.**
 
    ```sh
    dotnet run --project src/backend/Source
@@ -96,7 +108,7 @@ Run these from the new project's root.
    - `admin` / `Admin#123` — the platform account: no tenant membership, signs in to platform scope
      (tenants, editions, platform roles, Hangfire);
    - `tenantadmin` / `Admin#123` — administrator of the Default tenant, with sample notifications.
-5. **Run the web app.**
+6. **Run the web app.**
 
    ```sh
    cd src/frontend/web
@@ -108,13 +120,13 @@ Run these from the new project's root.
    points `NEXT_PUBLIC_API_URL` at `http://localhost:5000/api`. On the sign-in page the tenant field
    is optional: `tenantadmin` lands in `default` through its only membership, and `admin` signs in
    with no tenant.
-6. **Tests and the gate.** `dotnet test src/backend/Tests` needs PostgreSQL reachable with the
+7. **Tests and the gate.** `dotnet test src/backend/Tests` needs PostgreSQL reachable with the
    `appsettings.Testing.json` connection string and the `Initial` migration in place; the run
-   migrates and seeds `<Name>Test` and deletes it at the end. From the root, `npm run gate`
+   migrates and seeds `<Name>Test` and deletes it at the end; it needs no Redis. From the root, `npm run gate`
    (`-- --fast` skips the production web build) runs the build, backend tests, web
    lint/typecheck/vitest, the engine and hook tests and `next build`; it runs `npm ci` in the web app
    when `node_modules` is missing.
-7. **Before deploying anywhere non-development**, supply `Auth:Jwt:Key` (>= 32 chars),
+8. **Before deploying anywhere non-development**, supply `Auth:Jwt:Key` (>= 32 chars),
    `Auth:Jwt:Issuer` and `Auth:Jwt:Audience` through secure configuration — startup refuses to boot
    with the placeholder key outside Development/Testing. `Web:Domains` must list the real front-end
    origins, `Database:ApplyMigrationsOnStartup` defaults to false there (run

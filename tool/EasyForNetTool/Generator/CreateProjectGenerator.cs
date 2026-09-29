@@ -15,6 +15,37 @@ using Microsoft.CodeAnalysis.Formatting;
 public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
 {
     /// <summary>
+    /// Rewrites the copied <c>appsettings.json</c>, <c>appsettings.Development.json</c> and
+    /// <c>appsettings.Testing.json</c> for a new project: its databases, fresh JWT keys for
+    /// Development and Testing, and its own Redis key prefix so several applications can share one
+    /// Redis server (<c>&lt;Name&gt;:</c>, and <c>&lt;Name&gt;Test:</c> for Testing).
+    /// </summary>
+    /// <param name="backendProjectTargetPath">The generated backend project directory holding the appsettings files.</param>
+    /// <param name="pascalCaseProjectName">The PascalCase project name.</param>
+    internal static async Task CustomizeAppSettingsAsync(string backendProjectTargetPath, string pascalCaseProjectName)
+    {
+        var appSettings = Path.Combine(backendProjectTargetPath, "appsettings.json");
+        var developmentSettings = Path.Combine(backendProjectTargetPath, "appsettings.Development.json");
+        var testingSettings = Path.Combine(backendProjectTargetPath, "appsettings.Testing.json");
+        var connectionString = $"Host=localhost;Port=5432;Database={pascalCaseProjectName};Username=postgres;Password={{password}}";
+        var testConnectionString = $"Host=localhost;Port=5432;Database={pascalCaseProjectName}Test;Username=postgres;Password={{password}}";
+
+        await JsonPropertyUpdater.UpdateJsonPropertyAsync(appSettings, "ConnectionStrings.DefaultConnection", connectionString);
+        await JsonPropertyUpdater.UpdateJsonPropertyAsync(appSettings, "Hangfire.Storage.ConnectionString", connectionString);
+        await JsonPropertyUpdater.UpdateJsonPropertyAsync(appSettings, "Redis.InstanceName", $"{pascalCaseProjectName}:");
+
+        await JsonPropertyUpdater.UpdateJsonPropertyAsync(developmentSettings, "Auth.Jwt.Key", Guid.NewGuid().ToString());
+        await JsonPropertyUpdater.UpdateJsonPropertyAsync(developmentSettings, "ConnectionStrings.DefaultConnection", connectionString);
+        await JsonPropertyUpdater.UpdateJsonPropertyAsync(developmentSettings, "Hangfire.Storage.ConnectionString", connectionString);
+        await JsonPropertyUpdater.UpdateJsonPropertyAsync(developmentSettings, "Redis.InstanceName", $"{pascalCaseProjectName}:");
+
+        await JsonPropertyUpdater.UpdateJsonPropertyAsync(testingSettings, "Auth.Jwt.Key", Guid.NewGuid().ToString());
+        await JsonPropertyUpdater.UpdateJsonPropertyAsync(testingSettings, "ConnectionStrings.DefaultConnection", testConnectionString);
+        await JsonPropertyUpdater.UpdateJsonPropertyAsync(testingSettings, "Hangfire.Storage.ConnectionString", testConnectionString);
+        await JsonPropertyUpdater.UpdateJsonPropertyAsync(testingSettings, "Redis.InstanceName", $"{pascalCaseProjectName}Test:");
+    }
+
+    /// <summary>
     /// Generates a new project from the template repository with the specified name and options.
     /// </summary>
     /// <param name="argument">The create-project argument containing name, output path, and multi-language flag.</param>
@@ -113,15 +144,8 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             {
                 throw new UserFriendlyException($"Failed to get root namespace from project '{backendTestProjectTargetPath}'. csproj file is not found.");
             }
-            // update connection string
-            await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(backendProjectTargetPath, "appsettings.json"), "ConnectionStrings.DefaultConnection", $"Host=localhost;Port=5432;Database={pascalCaseProjectName};Username=postgres;Password={{password}}");
-            await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(backendProjectTargetPath, "appsettings.json"), "Hangfire.Storage.ConnectionString", $"Host=localhost;Port=5432;Database={pascalCaseProjectName};Username=postgres;Password={{password}}");
-            await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(backendProjectTargetPath, "appsettings.Development.json"), "Auth.Jwt.Key", Guid.NewGuid().ToString());
-            await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(backendProjectTargetPath, "appsettings.Development.json"), "ConnectionStrings.DefaultConnection", $"Host=localhost;Port=5432;Database={pascalCaseProjectName};Username=postgres;Password={{password}}");
-            await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(backendProjectTargetPath, "appsettings.Development.json"), "Hangfire.Storage.ConnectionString", $"Host=localhost;Port=5432;Database={pascalCaseProjectName};Username=postgres;Password={{password}}");
-            await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(backendProjectTargetPath, "appsettings.Testing.json"), "Auth.Jwt.Key", Guid.NewGuid().ToString());
-            await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(backendProjectTargetPath, "appsettings.Testing.json"), "ConnectionStrings.DefaultConnection", $"Host=localhost;Port=5432;Database={pascalCaseProjectName}Test;Username=postgres;Password={{password}}");
-            await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(backendProjectTargetPath, "appsettings.Testing.json"), "Hangfire.Storage.ConnectionString", $"Host=localhost;Port=5432;Database={pascalCaseProjectName}Test;Username=postgres;Password={{password}}");
+            // update connection strings, the JWT keys and the Redis key prefixes
+            await CustomizeAppSettingsAsync(backendProjectTargetPath, pascalCaseProjectName);
             // update Meta.cs
             await ReplaceInFile(Path.Combine(backendProjectTargetPath, "Meta.cs"), $@"InternalsVisibleTo\s*\(\s*""{Regex.Escape(backendTestProjectName)}""\s*\)", $@"InternalsVisibleTo(""{pascalCaseProjectName}.Tests"")");
             // update Program.cs

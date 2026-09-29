@@ -14,5 +14,6 @@ To read the change itself: `git show <commit>`.
 | 2026-09-29 | [Keep sessions in a Redis session store and validate them on every request](01-redis-session-store-and-per-request-validation.md) | `af3d2e34` |
 | 2026-09-29 | [Revoke live sessions when a user, their password or a role's grants change](02-revoke-sessions-on-identity-access-changes.md) | `5a18f9c7` |
 | 2026-09-29 | [Revoke live sessions when a tenant member is removed or re-roled, or the tenant is suspended or deleted](03-revoke-sessions-on-tenant-membership-and-lifecycle.md) | `1a2ed74b` |
+| 2026-09-29 | [Revoke a tenant's live sessions when its edition or feature values change](04-revoke-sessions-on-plan-changes.md) | `61f560a2` |
 
-3 build(s) recorded.
+4 build(s) recorded.
