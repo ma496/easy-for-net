@@ -65,6 +65,14 @@ const cases = [
   { label: "per-env appsettings in PowerShell", command: `Get-Content src${BS}backend${BS}Source${BS}${DEV_SETTINGS}`, expect: "block" },
   { label: "base appsettings.json is shared", command: "cat src/backend/Source/appsettings.json", expect: "allow" },
   { label: "per-env appsettings existence check", command: `Test-Path src/backend/Source/${DEV_SETTINGS}`, expect: "allow" },
+  // An exemption covers its own segment, not the whole line: a leading `ls` used to excuse
+  // everything after it.
+  { label: "ls, then cat the env file", command: `ls . && cat ${DOTENV}`, expect: "block" },
+  { label: "test, then read per-env appsettings", command: `test -f x; cat src/backend/Source/${DEV_SETTINGS}`, expect: "block" },
+  { label: "ls piped into a read of the env file", command: `ls | cat ${DOTENV}`, expect: "block" },
+  { label: "two existence checks stay allowed", command: `ls ${DOTENV} && test -f ${DOTENV}`, expect: "allow" },
+  { label: "ls of the env file, then unrelated work", command: `ls -la ${DOTENV}; npm run build`, expect: "allow" },
+  { label: "existence check, then the bootstrap copy", command: `Test-Path ${DOTENV}; Copy-Item ${DOTENV}.example ${DOTENV}`, expect: "allow" },
 
   // --- database loss -------------------------------------------------------------
   { label: "TRUNCATE via psql", command: 'psql -c "TRUNCATE TABLE accounts"', expect: "block" },
@@ -92,6 +100,21 @@ const cases = [
   { label: "git add a path with a wildcard", command: "git add src/*.ts", expect: "allow" },
   { label: "git push --force", command: "git push --force origin feat/x", expect: "block" },
   { label: "git push --force-with-lease", command: "git push --force-with-lease origin feat/x", expect: "block" },
+  // Global options between `git` and its verb, bundled short flags, `+` refspecs, `--`.
+  { label: "git -C reset --hard", command: "git -C . reset --hard", expect: "block" },
+  { label: "git -C with a quoted path, reset --hard", command: 'git -C "my repo" reset --hard HEAD', expect: "block" },
+  { label: "git -C reset --soft keeps the tree", command: "git -C . reset --soft HEAD~1", expect: "allow" },
+  { label: "git --no-pager clean -fd", command: "git --no-pager clean -fd", expect: "block" },
+  { label: "git -C status only reads", command: "git -C src status", expect: "allow" },
+  { label: "bundled -uf is a force push", command: "git push -uf origin feat/x", expect: "block" },
+  { label: "a + refspec is a force push", command: "git push origin +feat/x", expect: "block" },
+  { label: "bundled -u alone is not force", command: "git push -u origin feat/fix-flags", expect: "allow" },
+  { label: "git add -- .", command: "git add -- .", expect: "block" },
+  { label: "git add -vA", command: "git add -vA", expect: "block" },
+  { label: "git add ./", command: "git add ./", expect: "block" },
+  { label: "git add -- one path", command: "git add -- src/app.ts", expect: "allow" },
+  { label: "git add -p one path", command: "git add -p src/app.ts", expect: "allow" },
+  { label: "git -c k=v add -A", command: "git -c core.autocrlf=false add -A", expect: "block" },
 
   // --- nothing lands on main except through a PR ------------------------------------
   { label: "refspec push to main", command: "git push origin HEAD:main", expect: "block" },
@@ -101,10 +124,14 @@ const cases = [
   { label: "normal feature-branch push", command: "git push -u origin feat/x", expect: "allow" },
   { label: "PowerShell refspec push to master", command: "git push origin HEAD:master; Write-Host done", expect: "block" },
   { label: "branch merely named like main", command: "git push -u origin feat/main-nav", expect: "allow" },
+  { label: "git -C . push to main by refspec", command: "git -C . push origin HEAD:main", expect: "block" },
+  { label: "a push option's value is not a refspec", command: "git push -o main origin feat/x", expect: "allow" },
 
   // --- merging is the owner's, always -------------------------------------------------
   { label: `git ${MERGE}`, command: `git ${MERGE} feat/x`, expect: "block" },
   { label: `git ${MERGE} --abort is recovery`, command: `git ${MERGE} --abort`, expect: "allow" },
+  { label: `git -c k=v ${MERGE}`, command: `git -c core.editor=true ${MERGE} feat/x`, expect: "block" },
+  { label: `git -C . ${MERGE}-base only reads`, command: `git -C . ${MERGE}-base HEAD origin/main`, expect: "allow" },
   {
     label: `git ${MERGE}-base only reads`,
     command: `git ${MERGE}-base HEAD origin/main`,
@@ -257,11 +284,20 @@ const branchCases = [
     command: "git merge --abort",
     expect: "allow",
   },
+  // A push with no refspec sends the current branch; so does `HEAD`. Only the refspecs a
+  // command named used to be checked, so a bare push from a checkout of main went through.
+  { label: "bare git push while on main", branch: "main", command: "git push", expect: "block" },
+  { label: "git push origin while on main", branch: "main", command: "git push origin", expect: "block" },
+  { label: "git push origin HEAD while on main", branch: "main", command: "git push -u origin HEAD", expect: "block" },
+  { label: "git -C . push while on main", branch: "main", command: "git -C . push", expect: "block" },
+  { label: "git push --all reaches main", branch: "main", command: "git push --all origin", expect: "block" },
   { label: "commit on a feature branch", branch: "feat/x", expect: "allow" },
+  { label: "bare git push from a feature branch", branch: "feat/x", command: "git push", expect: "allow" },
+  { label: "git push origin HEAD from a feature branch", branch: "feat/x", command: "git push -u origin HEAD", expect: "allow" },
 ];
 
 for (const c of branchCases) {
-  if (c.branch !== "main") git("checkout", "-b", c.branch);
+  if (c.branch !== "main") git("checkout", "-B", c.branch);
   const res = spawnSync("node", [HOOK], {
     input: JSON.stringify({ tool_input: { command: c.command ?? 'git commit -m "x"' } }),
     encoding: "utf8",
@@ -374,6 +410,9 @@ const pathCases = [
   { label: "writing per-env appsettings", file: `/repo/src/backend/Source/${DEV_SETTINGS}`, expect: "block" },
   { label: "writing base appsettings.json", file: "/repo/src/backend/Source/appsettings.json", expect: "allow" },
   { label: "a folder merely named like binary", file: "/repo/src/binaries/readme.md", expect: "allow" },
+  // Every dotenv file is a secret, not only `.env` and `.env.local`.
+  { label: "writing .env.production", file: `/repo/${DOTENV}.production`, expect: "block" },
+  { label: "writing a dotted env template", file: `/repo/${DOTENV}.production.example`, expect: "allow" },
 ];
 
 for (const c of pathCases) {
@@ -384,6 +423,29 @@ for (const c of pathCases) {
   const actual = res.status === 0 ? "allow" : "block";
   report(actual === c.expect, c.label, c.expect, actual);
 }
+
+// --- guard-secret-reads.mjs ----------------------------------------------------
+// The Read tool and Grep reach files the shell guard refuses to cat. Same list of secrets.
+const READS_GUARD = join(HOOKS_DIR, "guard-secret-reads.mjs");
+const readCases = [
+  { label: "Read the live env file", tool: "Read", input: { file_path: `D:${BS}repo${BS}${DOTENV}` }, expect: "block" },
+  { label: "Read .env.production", tool: "Read", input: { file_path: `/repo/${DOTENV}.production` }, expect: "block" },
+  { label: "Read the env template", tool: "Read", input: { file_path: `/repo/${DOTENV}.example` }, expect: "allow" },
+  { label: "Read per-env appsettings", tool: "Read", input: { file_path: `/repo/src/backend/Source/${DEV_SETTINGS}` }, expect: "block" },
+  { label: "Read base appsettings.json", tool: "Read", input: { file_path: "/repo/src/backend/Source/appsettings.json" }, expect: "allow" },
+  { label: "Grep inside the env file", tool: "Grep", input: { pattern: "KEY", path: `/repo/${DOTENV}` }, expect: "block" },
+  { label: "Grep across a directory", tool: "Grep", input: { pattern: "KEY", path: "/repo/src", glob: "*.json" }, expect: "allow" },
+  { label: "Read an ordinary source file", tool: "Read", input: { file_path: "/repo/src/environment.ts" }, expect: "allow" },
+];
+for (const c of readCases) {
+  const res = spawnSync("node", [READS_GUARD], {
+    input: JSON.stringify({ tool_name: c.tool, tool_input: c.input }),
+    encoding: "utf8",
+  });
+  const actual = res.status === 0 ? "allow" : "block";
+  report(actual === c.expect, c.label, c.expect, actual);
+}
+extraCases += readCases.length;
 
 console.log("");
 if (failures > 0) {
