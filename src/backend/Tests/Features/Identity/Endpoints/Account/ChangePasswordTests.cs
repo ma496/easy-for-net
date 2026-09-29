@@ -5,42 +5,68 @@ using Backend.Tests.Features.Tenancy;
 
 /// <summary>
 /// Tests for password changes: that the new password is what authenticates afterwards, that the old
-/// one stops doing so, and that the change is owed to a caller whatever tenant they are acting in
-///.
+/// one stops doing so, that every other session of the account ends while the one making the change
+/// survives, and that the change is owed to a caller whatever tenant they are acting in.
 /// </summary>
 /// <remarks>
-/// A password change does not end the sessions already issued. What a session may do is decided when
-/// its token is minted and trusted until that token is replaced, so an access token issued before the
-/// change goes on working for the rest of its validity. Revoking a session outright is what signing
-/// out is for; this is the trade-off that buys every other request its freedom from a database read.
+/// A password change ends every other session of the account - its access token answers 401 and its
+/// refresh token is refused - so whoever held the old password is locked out. The session making the
+/// change is kept, so the person changing the password is not signed out by doing so.
 /// </remarks>
-public class ChangePasswordTests(App app) : TenancyTestsBase(app)
+public class ChangePasswordTests(App app) : SessionRevocationTestsBase(app)
 {
     /// <summary>
-    /// Verifies that the change takes effect on the credentials rather than on the live session: the
-    /// new password authenticates, the old one stops, and the token already issued keeps working.
+    /// Verifies that the change replaces the credentials and ends the account's other sessions: the new
+    /// password authenticates, the old one stops, the session that made the change keeps working, and a
+    /// second session of the same account answers 401 without renewal and cannot be refreshed.
     /// </summary>
     [Fact]
     public async Task ChangePassword_Replaces_The_Credentials_And_Keeps_The_Session()
     {
-        var username = $"password-change-{Guid.NewGuid():N}";
-        const string currentPassword = "Current#123";
+        var tenant = await CreateTenantAsync();
+        var account = await CreateTenantUserAsync(tenant.Id);
+        var current = await SessionForAsync(account.Username, tenant.Id);
+        var other = await SessionForAsync(account.Username, tenant.Id);
+        var bystander = await SessionForAsync((await CreateTenantUserAsync(tenant.Id)).Username, tenant.Id);
         const string newPassword = "Changed#123";
-        await CreateAdminUserAsync(username, currentPassword);
-        await SetAuthTokenAsync(username, currentPassword);
 
-        var (changeResponse, _) = await Client.POSTAsync<ChangePasswordEndpoint, ChangePasswordRequest, EmptyResponse>(new()
+        var (changeResponse, _) = await current.Client.POSTAsync<ChangePasswordEndpoint, ChangePasswordRequest, EmptyResponse>(new()
         {
-            CurrentPassword = currentPassword,
+            CurrentPassword = TestUsers.DefaultPassword,
             NewPassword = newPassword
         });
         changeResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var (profileResponse, _) = await Client.GETAsync<ProfileEndpoint, UserProfileResponse>();
+        var (profileResponse, _) = await current.Client.GETAsync<ProfileEndpoint, UserProfileResponse>();
         profileResponse.StatusCode.Should().Be(HttpStatusCode.OK,
-            "the token was minted before the change and is trusted until it is replaced");
+            "the session that made the change is kept");
+        await AssertAliveAsync(current);
+        await AssertEndedAsync(other);
+        await AssertAliveAsync(bystander);
 
-        await AssertCredentialsReplacedAsync(username, currentPassword, newPassword);
+        await AssertCredentialsReplacedAsync(account.Username, TestUsers.DefaultPassword, newPassword);
+    }
+
+    /// <summary>
+    /// Verifies a change refused for a wrong current password ends no session.
+    /// </summary>
+    [Fact]
+    public async Task A_Refused_Change_Leaves_Every_Session_Working()
+    {
+        var tenant = await CreateTenantAsync();
+        var account = await CreateTenantUserAsync(tenant.Id);
+        var current = await SessionForAsync(account.Username, tenant.Id);
+        var other = await SessionForAsync(account.Username, tenant.Id);
+
+        var (response, _) = await current.Client.POSTAsync<ChangePasswordEndpoint, ChangePasswordRequest, ProblemDetails>(new()
+        {
+            CurrentPassword = "Wrong#1234",
+            NewPassword = "Changed#123"
+        });
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        await AssertAliveAsync(current);
+        await AssertAliveAsync(other);
     }
 
     /// <summary>

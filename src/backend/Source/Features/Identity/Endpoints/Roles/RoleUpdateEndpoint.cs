@@ -15,6 +15,10 @@ using Backend.Features.Identity.Core.Entities;
 /// the tenant the caller happens to be acting in. Uniqueness is per tenant, ignores case and
 /// surrounding whitespace, and counts the tenant's deleted roles too, because deleting a role does not
 /// release its name; the composite unique index enforces the same rule in the database.
+/// <para>
+/// Nothing written here alters what the role grants - permissions are the only authorization input, and
+/// they are replaced through <see cref="ChangePermissionsEndpoint"/> - so an update ends no session.
+/// </para>
 /// </remarks>
 sealed class RoleUpdateEndpoint(IRoleService roleService, AppDbContext dbContext)
     : Endpoint<RoleUpdateRequest, RoleUpdateResponse>

@@ -20,6 +20,8 @@ public class AuthTokenConfiguration : IEntityTypeConfiguration<AuthToken>
 
         builder.HasIndex(at => new { at.UserId, at.SessionId });
 
+        builder.HasIndex(at => at.TenantId);
+
         builder.HasOne(at => at.User)
             .WithMany(u => u.AuthTokens)
             .HasForeignKey(at => at.UserId);

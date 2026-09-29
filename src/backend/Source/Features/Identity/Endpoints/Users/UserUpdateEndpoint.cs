@@ -2,16 +2,23 @@ namespace Backend.Features.Identity.Endpoints.Users;
 
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// This endpoint that handles <c>PUT /users/{id}</c> to update a user's profile, active state, and role memberships.
 /// </summary>
+/// <remarks>
+/// A session carries the grants it was minted with, so once the change has committed the sessions it
+/// invalidates are ended: deactivating the account ends every session it holds, and changing its roles
+/// ends its sessions in the scope those roles belong to - the tenant being acted in, or platform scope.
+/// </remarks>
 sealed class UserUpdateEndpoint(IUserService userService,
                                 AppDbContext dbContext,
                                 ICurrentUserService currentUserService,
                                 ITenantAuthorizationService tenantAuthorizationService,
-                                ITenantContext tenantContext)
+                                ITenantContext tenantContext,
+                                ISessionRevocationService sessionRevocationService)
     : Endpoint<UserUpdateRequest, UserUpdateResponse>
 {
     public override void Configure()
@@ -86,8 +93,27 @@ sealed class UserUpdateEndpoint(IUserService userService,
             entity.UserRoles.Remove(role);
         }
 
+        // A new stamp on deactivation, so a refresh racing the revocation below is withdrawn by the stamp re-check in TokenService.
+        if (!entity.IsActive)
+        {
+            entity.SecurityStamp = Guid.NewGuid();
+        }
+
         // save entity to db
         await userService.UpdateAsync(entity);
+
+        // Only after the change is saved, so a refused or failed update revokes nothing. The roles just
+        // replaced are the tenant query filter's own - the scope being acted in - so that is the scope
+        // whose sessions carry the stale grants.
+        if (!entity.IsActive)
+        {
+            await sessionRevocationService.RevokeUserAsync(entity.Id, cancellationToken);
+        }
+        else if (rolesToAssign.Count > 0 || rolesToRemove.Count > 0)
+        {
+            await sessionRevocationService.RevokeUserInScopeAsync(entity.Id, tenantContext.CurrentTenantId, cancellationToken);
+        }
+
         var responseMapper = new UserUpdateResponseMapper();
         var response = responseMapper.Map(entity);
         // The roles echoed back are the tenant's own - the set just written - rather than every

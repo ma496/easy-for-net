@@ -43,6 +43,7 @@ public class IdentityFeature : IFeature
         // every authenticated request. The store is a singleton so every scope sees every session.
         services.AddScoped<ISessionIssuer, SessionIssuer>();
         services.AddScoped<ISessionPrincipalValidator, SessionPrincipalValidator>();
+        services.AddScoped<ISessionRevocationService, SessionRevocationService>();
         services.AddSessionValidation();
 
         // FastEndpoints builds the refresh-token service itself for the refresh endpoint and does not

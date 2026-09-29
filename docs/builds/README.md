@@ -1,12 +1,16 @@
-# docs/builds — the ledger
+# Build record
 
-One record per change that landed, written by the run that landed it. `npm run record --
---index` rebuilds the index below it.
+Every change that has landed through the task queue, newest first. One file per
+build, each preserving the brief the change was built from.
 
-This is the durable answer to "why does this exist?" long after the queue lane has been
-cleared and the spec has gone stale. A build record names the brief, the commit, and what
-the change actually did — including anything it deliberately did not do.
+These are written automatically — `scripts/record-build.mjs` runs as each task lands, so
+this directory cannot drift from what was actually committed. Do not hand-edit a record;
+correct the code that produced it.
 
-A row marked **nothing landed** is a task the queue filed as done without a commit to show
-for it. Each one is either work still worth doing or a brief worth deleting; neither
-resolves itself by being ignored.
+To read the change itself: `git show <commit>`.
+
+| Landed | Build | Commit |
+|--------|-------|--------|
+| 2026-09-29 | [Keep sessions in a Redis session store and validate them on every request](01-redis-session-store-and-per-request-validation.md) | `af3d2e34` |
+
+1 build(s) recorded.

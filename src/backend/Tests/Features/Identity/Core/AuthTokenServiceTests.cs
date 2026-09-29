@@ -142,7 +142,7 @@ public class AuthTokenServiceTests(App app) : TenancyTestsBase(app)
         var authTokenService = Service<IAuthTokenService>();
         var cancellationToken = TestContext.Current.CancellationToken;
         var token = NewToken(TestUsers.TestUserId, $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(1), $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(1));
-        await authTokenService.SaveTokenAsync(token, tenantId: null, sessionId: null);
+        await authTokenService.SaveTokenAsync(token, tenantId: null, sessionId: null, securityStamp: Guid.Empty);
         var request = new FastEndpoints.Security.TokenRequest { RefreshToken = token.RefreshToken, UserId = TestUsers.TestUserId.ToString() };
         var consumption = await authTokenService.ConsumeRefreshTokenAsync(request, cancellationToken);
         var replayConsumption = await authTokenService.ConsumeRefreshTokenAsync(request, cancellationToken);
@@ -161,7 +161,7 @@ public class AuthTokenServiceTests(App app) : TenancyTestsBase(app)
         var authTokenService = Service<IAuthTokenService>();
         var cancellationToken = TestContext.Current.CancellationToken;
         var token = NewToken(TestUsers.TestUserId, $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(-1), $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(-1));
-        await authTokenService.SaveTokenAsync(token, tenantId: null, sessionId: null);
+        await authTokenService.SaveTokenAsync(token, tenantId: null, sessionId: null, securityStamp: Guid.Empty);
         var consumption = await authTokenService.ConsumeRefreshTokenAsync(
             new FastEndpoints.Security.TokenRequest { RefreshToken = token.RefreshToken, UserId = TestUsers.TestUserId.ToString() }, cancellationToken);
 
@@ -178,7 +178,7 @@ public class AuthTokenServiceTests(App app) : TenancyTestsBase(app)
         var authTokenCleanService = Service<IAuthTokenCleanService>();
         // create expired token
         var expiredToken = NewToken(TestUsers.TestUserId, $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(-1), $"{Guid.NewGuid()}_{Faker.GlobalUniqueIndex}", DateTime.UtcNow.AddDays(-1));
-        var token = await authTokenService.SaveTokenAsync(expiredToken, tenantId: null, sessionId: null);
+        var token = await authTokenService.SaveTokenAsync(expiredToken, tenantId: null, sessionId: null, securityStamp: Guid.Empty);
         // delete expired tokens
         await authTokenCleanService.DeleteExpiredTokensAsync();
 

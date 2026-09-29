@@ -1,6 +1,7 @@
 namespace Backend.Features.Identity.Endpoints.Roles;
 
 using Backend.Features.Identity.Core;
+using Backend.Features.Identity.Core.Sessions;
 
 /// <summary>
 /// This endpoint that handles <c>DELETE /roles/{id}</c> to remove an existing role (refusing to delete a system-created role).
@@ -12,9 +13,13 @@ using Backend.Features.Identity.Core;
 /// exception and reaches any tenant's role. A tenant's system-created administrator role is refused
 /// outright, so a tenant cannot be left without one. Deletion is soft: the row is retained and stops
 /// being read anywhere, so the role grants nothing from the next request on while its name stays
-/// reserved within its tenant and cannot be taken by a role created afterwards.
+/// reserved within its tenant and cannot be taken by a role created afterwards. Once the deletion is
+/// saved, the sessions of every account that held the role end in the role's own scope, since each
+/// carries the permissions the role granted when it was minted.
 /// </remarks>
-sealed class RoleDeleteEndpoint(IRoleService roleService) : Endpoint<RoleDeleteRequest, RoleDeleteResponse>
+sealed class RoleDeleteEndpoint(IRoleService roleService,
+                                AppDbContext dbContext,
+                                ISessionRevocationService sessionRevocationService) : Endpoint<RoleDeleteRequest, RoleDeleteResponse>
 {
     public override void Configure()
     {
@@ -38,7 +43,13 @@ sealed class RoleDeleteEndpoint(IRoleService roleService) : Endpoint<RoleDeleteR
 
         // Delete the entity from the db - a soft delete, so the row survives to go on reserving the
         // role's name under the tenant's uniqueness constraint.
+        var holderIds = await dbContext.UserRoles
+            .AsNoTracking()
+            .Where(userRole => userRole.RoleId == entity.Id)
+            .Select(userRole => userRole.UserId)
+            .ToListAsync(cancellationToken);
         await roleService.DeleteAsync(entity);
+        await sessionRevocationService.RevokeUsersInScopeAsync(holderIds, entity.TenantId, cancellationToken);
         await Send.ResponseAsync(new() { Success = true }, cancellation: cancellationToken);
     }
 }

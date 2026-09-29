@@ -40,6 +40,13 @@ public class AuthToken : CreatableEntity<Guid>, IMayHaveTenant
     /// current one) can also delete the refresh row, leaving no refresh token able to renew it.
     /// </remarks>
     public string? SessionId { get; set; }
+
+    /// <summary>
+    /// The account's <see cref="User.SecurityStamp"/> when the chain this pair belongs to was signed in,
+    /// carried forward on every renewal. Rows that predate the column hold <see cref="Guid.Empty"/> and
+    /// stay refreshable until the account's first credential change or deactivation.
+    /// </summary>
+    public Guid SecurityStamp { get; set; }
     public Guid UserId { get; set; }
     public User User { get; set; } = null!;
 }

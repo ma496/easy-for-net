@@ -1,6 +1,7 @@
 namespace Backend.Features.Identity.Endpoints.Users;
 
 using Backend.Features.Identity.Core;
+using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
@@ -9,7 +10,8 @@ using Backend.Features.Tenancy.Core;
 sealed class UserDeleteEndpoint(IUserService userService,
                                 ICurrentUserService currentUserService,
                                 ITenantAuthorizationService tenantAuthorizationService,
-                                ITenantContext tenantContext) : Endpoint<UserDeleteRequest, UserDeleteResponse>
+                                ITenantContext tenantContext,
+                                ISessionRevocationService sessionRevocationService) : Endpoint<UserDeleteRequest, UserDeleteResponse>
 {
     public override void Configure()
     {
@@ -49,6 +51,9 @@ sealed class UserDeleteEndpoint(IUserService userService,
         // Delete the entity from the db - the account already read above, so the deletion cannot reach
         // one the caller may not administer.
         await userService.DeleteAsync(entity);
+
+        // A deleted account keeps no session anywhere, ended once the deletion has been saved.
+        await sessionRevocationService.RevokeUserAsync(entity.Id, cancellationToken);
         await Send.ResponseAsync(new() { Success = true }, cancellation: cancellationToken);
     }
 }

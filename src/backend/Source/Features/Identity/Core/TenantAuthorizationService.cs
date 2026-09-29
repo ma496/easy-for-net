@@ -603,6 +603,18 @@ public class TenantAuthorizationService(AppDbContext dbContext,
         var account = await userService.GetByIdAsync(userId)
             ?? throw new InvalidOperationException($"A session cannot be re-established for the unknown account '{userId}'.");
 
+        // The pair issued below is authorized by the session it replaces, not by the account as it stands
+        // now, so it carries that session's security stamp: when a password change has committed since that
+        // session was minted, the stamps differ and the issuer withdraws the new pair and refuses it. A
+        // session already gone - revoked while this request was in flight - authorizes nothing, and a stamp
+        // no account holds is recorded so the issuance is refused the same way.
+        var replacedSessionId = httpContextAccessor.HttpContext is { } caller && SessionClaims.ReadUserId(caller.User) == userId
+            ? SessionClaims.ReadSessionId(caller.User)
+            : null;
+        var authorizedStamp = replacedSessionId is null
+            ? account.SecurityStamp
+            : (await sessionStore.GetAsync(replacedSessionId, cancellationToken))?.SecurityStamp ?? Guid.NewGuid();
+
         // What the re-established session may do is read from current data for the tenant being
         // established and never copied from the session it replaces: the role assignments and the
         // roles' permissions as they stand at this moment decide it, so authority the caller held in
@@ -611,9 +623,17 @@ public class TenantAuthorizationService(AppDbContext dbContext,
 
         // The session being replaced is deleted once its successor exists, so the access token the caller
         // switched with stops working at once instead of remaining a second way in to the tenant it left.
-        if (httpContextAccessor.HttpContext is { } current
-            && SessionClaims.ReadUserId(current.User) == userId
-            && SessionClaims.ReadSessionId(current.User) is { } replacedSessionId)
+        // Its refresh-token row carries that tenant too, so leaving the row in place would leave the tenant
+        // redeemable until it expired, and every switch would leave another such row behind. Its pair goes
+        // first and its record second - the order every way of ending a session keeps - so a record being
+        // restored concurrently (a password change restamping this very session) sees the pair gone and
+        // withdraws it rather than bringing it back.
+        if (httpContextAccessor.HttpContext is { } replacing)
+        {
+            await RevokeSupersededSessionAsync(userId, replacing, cancellationToken);
+        }
+
+        if (replacedSessionId is not null)
         {
             await sessionStore.DeleteAsync(replacedSessionId, cancellationToken);
         }
@@ -626,17 +646,11 @@ public class TenantAuthorizationService(AppDbContext dbContext,
 
         if (httpContextAccessor.HttpContext is { } httpContext)
         {
-            // The session being replaced is ended before its successor is issued. Its refresh-token row
-            // carries the tenant the account was acting in a moment ago, so leaving the row in place
-            // would leave that tenant redeemable: whoever held the old refresh token could refresh back
-            // into it until it expired, and every switch would leave another such row behind.
-            await RevokeSupersededSessionAsync(userId, httpContext, cancellationToken);
-
             // Recorded before the pair is issued, because the row written for the new refresh token is
             // the only record a later refresh has of the tenant this session acts in - and it is what
             // stops that refresh from resurrecting the tenant the account acted in before.
             RefreshTokenIssuer.RecordSessionTenant(httpContext, tenantId);
-            RefreshTokenIssuer.RecordSessionId(httpContext, session.SessionId);
+            RefreshTokenIssuer.RecordSessionId(httpContext, session.SessionId, authorizedStamp);
         }
 
         // for jwt authentication. The issuer persists the pair, writes the recorded tenant onto its

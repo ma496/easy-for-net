@@ -77,7 +77,7 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, ISe
         // the token below is authorized on, until the session is renewed, switched, revoked or replaced
         // by a new sign-in. The token and the cookie carry only the account and the session's identifier.
         var session = await sessionIssuer.IssueAsync(user, tenantId, c);
-        TokenService.RecordSessionId(HttpContext, session.SessionId);
+        TokenService.RecordSessionId(HttpContext, session.SessionId, user.SecurityStamp);
 
         var claims = SessionClaims.ForToken(user.Id, session.SessionId);
 

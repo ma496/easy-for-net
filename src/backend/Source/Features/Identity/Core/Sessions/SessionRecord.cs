@@ -37,6 +37,13 @@ public sealed class SessionRecord
     /// <summary>Gets the names of the permissions those roles grant, narrowed to the scope and plan.</summary>
     public List<string> Permissions { get; init; } = [];
 
+    /// <summary>
+    /// Gets the account's security stamp when the session was minted. A tenant switch or exit carries it to
+    /// the session that replaces this one, so a session minted before a password change cannot be traded for
+    /// one that outlives it. Records stored before the property existed read as <see cref="Guid.Empty"/>.
+    /// </summary>
+    public Guid SecurityStamp { get; init; }
+
     /// <summary>Gets the moment the session was minted.</summary>
     public DateTimeOffset CreatedAt { get; init; }
 

@@ -49,6 +49,7 @@ public sealed class SessionIssuer(AppDbContext dbContext,
             TenantId = tenantId,
             Roles = grants.Roles,
             Permissions = grants.Permissions,
+            SecurityStamp = user.SecurityStamp,
             CreatedAt = now,
             ExpiresAt = now.AddHours(authSetting.Value.RefreshTokenValidity),
         };

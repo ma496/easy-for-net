@@ -2,6 +2,7 @@ namespace Backend.Features.Identity.Endpoints.Roles;
 
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Identity.Core.Sessions;
 
 /// <summary>
 /// This endpoint that handles <c>PUT /roles/change-permissions/{id}</c> to replace a role's permission set in a single operation.
@@ -24,11 +25,18 @@ using Backend.Features.Identity.Core.Entities;
 /// would revoke the grant for good, since re-enabling the feature restores nothing that was deleted.
 /// Such grants are carried through the replacement untouched.
 /// </para>
+/// <para>
+/// A change that alters what the role grants ends, once saved, the sessions of every account holding
+/// the role in the role's own scope, since each carries the permissions it was minted with. Resubmitting
+/// the set the role already holds changes nothing and ends nothing.
+/// </para>
 /// </remarks>
 sealed class ChangePermissionsEndpoint(
     IRoleService roleService,
     IPermissionService permissionService,
-    IPermissionFeatureFilter permissionFeatureFilter)
+    IPermissionFeatureFilter permissionFeatureFilter,
+    AppDbContext dbContext,
+    ISessionRevocationService sessionRevocationService)
     : Endpoint<ChangePermissionsRequest, ChangePermissionsResponse>
 {
     public override void Configure()
@@ -72,6 +80,16 @@ sealed class ChangePermissionsEndpoint(
 
         // save entity to db
         await roleService.UpdateAsync(entity);
+
+        if (permissionsToAssign.Count > 0 || permissionsToRemove.Count > 0)
+        {
+            var holderIds = await dbContext.UserRoles
+                .AsNoTracking()
+                .Where(userRole => userRole.RoleId == entity.Id)
+                .Select(userRole => userRole.UserId)
+                .ToListAsync(cancellationToken);
+            await sessionRevocationService.RevokeUsersInScopeAsync(holderIds, entity.TenantId, cancellationToken);
+        }
         await Send.ResponseAsync(
             new()
             {

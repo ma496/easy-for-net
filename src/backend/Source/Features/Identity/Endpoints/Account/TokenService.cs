@@ -52,6 +52,13 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
     private const string SessionIdItemKey = "Backend.Features.Identity.SessionId";
 
     /// <summary>
+    /// Key under which the account's security stamp the pair being issued was authorized under is carried
+    /// to the row written for it: the stamp read with the password at sign-in, off the consumed row at a
+    /// refresh, with the account at a tenant switch or exit.
+    /// </summary>
+    private const string SecurityStampItemKey = "Backend.Features.Identity.SecurityStamp";
+
+    /// <summary>
     /// Key under which the session a refresh replaces is carried from validating the request, which is
     /// where the consumed row is read, to building the renewed session, which is where it is deleted.
     /// </summary>
@@ -119,13 +126,21 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
 
     /// <summary>
     /// Records, for the request being handled, the session-store record the pair about to be issued belongs
-    /// to, so the refresh-token row written for it names that session. Every issuance point calls this
-    /// after minting the session and before asking for the pair.
+    /// to and the account's security stamp it was authorized under, so the refresh-token row written for it
+    /// names that session and carries that stamp. Every issuance point calls this after minting the session
+    /// and before asking for the pair.
     /// </summary>
     /// <param name="httpContext">The request the pair is being issued on.</param>
     /// <param name="sessionId">The session the pair belongs to.</param>
-    public static void RecordSessionId(HttpContext httpContext, string sessionId)
-        => httpContext.Items[SessionIdItemKey] = sessionId;
+    /// <param name="securityStamp">
+    /// The account's <c>SecurityStamp</c> as it stood when the issuance was authorized - read together with
+    /// the credentials or the row it was authorized on, never re-read afterwards.
+    /// </param>
+    public static void RecordSessionId(HttpContext httpContext, string sessionId, Guid securityStamp)
+    {
+        httpContext.Items[SessionIdItemKey] = sessionId;
+        httpContext.Items[SecurityStampItemKey] = securityStamp;
+    }
 
     /// <summary>
     /// this method will be called whenever a new access/refresh token pair is being generated.
@@ -138,7 +153,28 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
     {
         // The tenant is written onto the row alongside the tokens, because that row is all a later refresh
         // has to go on: the access token it renews has expired by then.
-        await _authTokenService.SaveTokenAsync(response, ReadSessionTenant(), ReadItem(SessionIdItemKey));
+        var securityStamp = ReadSecurityStamp()
+            ?? throw new InvalidOperationException("A token pair is issued only after its session and security stamp have been recorded.");
+        var sessionId = ReadItem(SessionIdItemKey);
+        var saved = await _authTokenService.SaveTokenAsync(response, ReadSessionTenant(), sessionId, securityStamp);
+
+        // The stamp is read again now that the row and the session both exist. A credential change that
+        // committed after this issuance was authorized - a password reset racing a refresh - may have swept
+        // the account's rows and sessions before these two were written, so they are withdrawn and the
+        // issuance refused. When the stamp still matches, both were stored before any such change
+        // committed, and the revocation that follows it reaches them.
+        var currentStamp = await _dbContext.Users
+            .AsNoTracking()
+            .Where(user => user.Id == saved.UserId)
+            .Select(user => (Guid?)user.SecurityStamp)
+            .FirstOrDefaultAsync();
+        if (currentStamp != securityStamp)
+        {
+            await _authTokenService.RevokeRefreshTokenAsync(saved.UserId, response.RefreshToken);
+            if (sessionId is not null)
+                await _sessionStore.DeleteAsync(sessionId);
+            ThrowError("The account's credentials changed while the session was being issued.", StatusCodes.Status401Unauthorized);
+        }
 
         // Retrieve claims stored during SetRenewalPrivilegesAsync
         if (_httpContextAccessor.HttpContext?.Items.TryGetValue(CurrentClaimsItemKey, out var claimsObj) is true &&
@@ -193,6 +229,7 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
         {
             RecordSessionTenant(httpContext, consumption.TenantId);
             httpContext.Items[ReplacedSessionIdItemKey] = consumption.SessionId;
+            httpContext.Items[SecurityStampItemKey] = consumption.SecurityStamp;
         }
     }
 
@@ -213,6 +250,18 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
             this.ThrowError(r => r.UserId, ErrorCodes.UserNotActive);
         if (_signinSetting.IsEmailVerificationRequired && !user.IsEmailVerified)
             this.ThrowError(r => r.UserId, ErrorCodes.EmailNotVerified);
+
+        // A row issued under credentials that have since changed renews nothing: a password change or reset
+        // rotates the stamp, so a refresh token that outlived the revocation - written by a renewal racing
+        // it - is refused here at its next use.
+        // The session being renewed goes with the refusal: its row is already consumed, so a revocation
+        // that looked for it through the rows can no longer find it.
+        if (ReadSecurityStamp() != user.SecurityStamp)
+        {
+            if (ReadItem(ReplacedSessionIdItemKey) is { } refusedSessionId)
+                await _sessionStore.DeleteAsync(refusedSessionId);
+            ThrowError(r => r.RefreshToken, "Refresh token is invalid!", StatusCodes.Status401Unauthorized);
+        }
 
         // The tenant of the session being renewed, read off the refresh-token row a moment ago, and then
         // asked whether this account may still act in it. This is the one place a live session's tenant is
@@ -246,7 +295,7 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
         if (_httpContextAccessor.HttpContext != null)
         {
             _httpContextAccessor.HttpContext.Items[CurrentClaimsItemKey] = claims;
-            RecordSessionId(_httpContextAccessor.HttpContext, session.SessionId);
+            RecordSessionId(_httpContextAccessor.HttpContext, session.SessionId, user.SecurityStamp);
         }
     }
 
@@ -298,6 +347,14 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
     private Guid? ReadSessionTenant()
         => _httpContextAccessor.HttpContext?.Items.TryGetValue(SessionTenantItemKey, out var recorded) is true && recorded is Guid tenantId
             ? tenantId
+            : null;
+
+    /// <summary>
+    /// Reads the security stamp recorded for the request being handled, or <see langword="null"/> when none was.
+    /// </summary>
+    private Guid? ReadSecurityStamp()
+        => _httpContextAccessor.HttpContext?.Items.TryGetValue(SecurityStampItemKey, out var recorded) is true && recorded is Guid stamp
+            ? stamp
             : null;
 
     /// <summary>
