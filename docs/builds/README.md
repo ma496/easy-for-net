@@ -16,5 +16,6 @@ To read the change itself: `git show <commit>`.
 | 2026-09-29 | [Revoke live sessions when a tenant member is removed or re-roled, or the tenant is suspended or deleted](03-revoke-sessions-on-tenant-membership-and-lifecycle.md) | `1a2ed74b` |
 | 2026-09-29 | [Revoke a tenant's live sessions when its edition or feature values change](04-revoke-sessions-on-plan-changes.md) | `61f560a2` |
 | 2026-09-29 | [Give generated projects their own Redis key prefix and a local Redis setup step](05-generator-redis-instance-name-and-local-redis.md) | `0b6f89c9` |
+| 2026-09-29 | [Document that sessions are validated on every request and revoked when access changes](06-document-session-validation-and-revocation.md) | `76c0ba6c` |
 
-5 build(s) recorded.
+6 build(s) recorded.
