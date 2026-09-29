@@ -72,12 +72,13 @@ function conventionsBlock() {
 }
 
 /**
- * @param {{ memory?: string, history?: string }} parts
+ * @param {{ memory?: string, history?: string, taskSlug?: string }} parts
  *   `memory` is what *other* tasks learned; `history` is this task's own failed attempts.
- *   Both are already formatted by their own modules and are pasted in as-is.
+ *   Both are already formatted by their own modules and are pasted in as-is. `taskSlug`
+ *   names the queued task, so a lesson it records says where it came from.
  * @returns {string} the brief, ending with `TASK:` — the caller appends the task itself.
  */
-export function buildBrief({ memory = "", history = "" } = {}) {
+export function buildBrief({ memory = "", history = "", taskSlug = "" } = {}) {
   const routing = routingTable();
   const design = designAgents();
   const guide = config.docs.guide ?? "CLAUDE.md";
@@ -94,7 +95,7 @@ running it. Do not commit or push — the runner handles that.
 
 ## The team this task goes through
 
-You are the lead, not the whole team. Route the work with the Task tool:
+You are the lead, not the whole team. Route the work with the Agent tool:
 
 ${routing || "  (this project declares no specialist builders — do the work yourself)"}
 ${skillLine()}
@@ -129,7 +130,7 @@ If this task teaches you something durable about THIS repository that a future u
 task would trip on too — a trap in the tooling, a convention no guide states, an assumption
 that turned out false — record it before you finish:
 
-  node scripts/record-lesson.mjs --title "<short imperative title>" --scope <a keyword a future task's brief would contain, or "always"> --body "<what to do instead, and why. two or three sentences.>"
+  node scripts/record-lesson.mjs --title "<short imperative title>" --scope <a keyword a future task's brief would contain, or "always"> --body "<what to do instead, and why. two or three sentences.>"${taskSlug ? ` --task ${taskSlug}` : ""}
 
 (One line on purpose: it has to run the same in bash and in PowerShell.)
 

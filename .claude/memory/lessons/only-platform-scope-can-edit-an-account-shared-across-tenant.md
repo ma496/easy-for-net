@@ -1,7 +1,7 @@
 ---
 scope: userupdateendpoint
 learned: 2026-09-29
-task: 
+task: 02-revoke-sessions-on-identity-access-changes
 ---
 
 # Only platform scope can edit an account shared across tenants

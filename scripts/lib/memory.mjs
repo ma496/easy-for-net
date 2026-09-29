@@ -206,7 +206,7 @@ export function writeLesson(memoryDir, { title, body, scope = "always", learned 
   const path = join(dir, `${slug}.md`);
   writeFileSync(
     path,
-    `---\nscope: ${scope}\nlearned: ${learned}\ntask: ${task}\n---\n\n# ${title}\n\n${body.trim()}\n`,
+    `---\nscope: ${scope}\nlearned: ${learned}\n${task ? `task: ${task}\n` : ""}---\n\n# ${title}\n\n${body.trim()}\n`,
   );
   return path;
 }
