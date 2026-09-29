@@ -1,7 +1,7 @@
 ---
 scope: always
 learned: 2026-09-29
-task: 
+task: 01-redis-session-store-and-per-request-validation
 ---
 
 # Check for a running Backend.exe before blaming the build

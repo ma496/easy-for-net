@@ -9,6 +9,7 @@
     "gate": "node scripts/gate.mjs",
     "test": "node scripts/test.mjs",
     "test:hooks": "node .claude/hooks/hook-tests.mjs",
+    "test:claude-contract": "node scripts/claude-contract.mjs",
     "verify": "node scripts/verify.mjs",
     "serve:api": "node scripts/serve-api.mjs",
     "auto": "node scripts/agent-run.mjs",

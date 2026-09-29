@@ -34,8 +34,8 @@
  * *merged*, so chains sat blocked behind the owner's merges. Serial-on-main trades the
  * parallelism for a queue that keeps moving.
  *
- * What it deliberately does NOT do: merge. Push is on by default after each verified
- * commit (`AGENT_AUTO_PUSH`, disable with `=0`). Merging a PR stays forever human.
+ * What it deliberately does NOT do: merge, or push unless asked. Push is off by default and
+ * happens after each verified commit only with `AGENT_AUTO_PUSH=1`. Merging a PR stays forever human.
  */
 import { spawn, spawnSync } from "node:child_process";
 import { findCommitFor, isDefinite } from "./lib/commit-pairing.mjs";
@@ -50,8 +50,10 @@ import {
 import { join, dirname, resolve, basename, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import { hasExecutable } from "./lib/proc.mjs";
-import { config, WORK_BRANCH } from "./lib/project-config.mjs";
+import { IS_WINDOWS, hasExecutable, isAlive, killTree, sleepSync, spawnPortable } from "./lib/proc.mjs";
+import { HEARTBEAT_MS, heartbeat, release, tryAcquire } from "./lib/queue-lock.mjs";
+import { dependencyState as depState } from "./lib/task-deps.mjs";
+import { assertValidConfig, config, modelArgs, positiveInt, resolveModel, WORK_BRANCH } from "./lib/project-config.mjs";
 
 /** Where landed tasks leave their build records, repository-relative. */
 const BUILDS_REL = String(config.docs.builds).replace(/[\\/]+$/, "");
@@ -91,6 +93,8 @@ const BASE_PORT = Number(config.verify.service?.port ?? 3000) + 1;
  * exactly what happened, and the drain crashed on ReferenceError mid-run.
  */
 const EXIT_BLOCKED = 4;
+/** The planner's model — the same rule as the runner's, so no session runs on an unchosen default. */
+const PLAN_MODEL = resolveModel({ env: process.env.AGENT_MODEL });
 // What one `claude` call is charged at when its stream carried no readable cost. Scripts
 // read the environment directly; the setting is documented in .env.example.
 const ASSUMED_USD = parseAssumedUsd(process.env.AGENT_ASSUMED_USD_PER_CALL);
@@ -101,6 +105,8 @@ const MAX_USD_PER_DRAIN = parseCeiling(
   process.env.AGENT_MAX_USD_PER_DRAIN,
   DEFAULT_MAX_USD_PER_DRAIN,
 );
+
+assertValidConfig();
 
 const argv = process.argv.slice(2);
 const action = argv.find((a) => !a.startsWith("--")) ?? "list";
@@ -123,62 +129,55 @@ const ensureLanes = () => {
  * ENOENT part-way through — taking its live slot with it. So the whole mutating path
  * (intake, claim, and the lane moves at the end) runs under one lock.
  *
- * The lock is a file holding the owner's pid, created with the "wx" flag so creation is
- * itself the test. A run killed with SIGKILL leaves the file behind, so a lock whose pid is
- * no longer alive is treated as stale and taken over — otherwise one hard kill would wedge
- * the queue until someone deleted the file by hand.
+ * The rules — atomic stale takeover, a heartbeat so a reused pid cannot hold it, a lock
+ * from another host judged by heartbeat alone — live in lib/queue-lock.mjs, where they are
+ * tested. This is only the process wiring around them.
  */
 const LOCK = join(QUEUE, "drain.lock");
 
-function alive(pid) {
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch (err) {
-    // EPERM means the pid exists but belongs to someone else — still alive.
-    return err.code === "EPERM";
-  }
-}
+/**
+ * The runner child the drain is waiting on, if any. A signal that stops the drain must stop
+ * it too: releasing the lock while it still ran let the next timer fire take the lock,
+ * requeue doing/, and park or revert the tree under a session that was still writing to it.
+ */
+let activeChild = null;
+let heldLock = null;
 
 function acquireLock(what) {
+  if (heldLock) return;
   mkdirSync(QUEUE, { recursive: true });
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      writeFileSync(LOCK, `${process.pid}\n`, { flag: "wx" });
-      const release = () => {
-        try {
-          if (readFileSync(LOCK, "utf8").trim() === String(process.pid)) unlinkSync(LOCK);
-        } catch {
-          // Already gone, or never ours to remove. Either way there is nothing to clean up.
-        }
-      };
-      process.on("exit", release);
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const res = tryAcquire(LOCK, { isAlive });
+    if (res.ok) {
+      heldLock = res.lock;
+      if (res.tookOver) {
+        console.log(`Took over a stale queue lock left by pid ${res.tookOver.pid} (no longer running).`);
+      }
+      const timer = setInterval(() => heartbeat(LOCK, heldLock), HEARTBEAT_MS);
+      timer.unref();
+      process.on("exit", () => release(LOCK, heldLock));
       for (const sig of ["SIGINT", "SIGTERM", "SIGHUP"]) {
         process.on(sig, () => {
-          release();
+          if (activeChild?.pid) {
+            console.error(`\nStopping the running task (pid ${activeChild.pid}) before releasing the queue.`);
+            killTree(activeChild.pid);
+          }
+          release(LOCK, heldLock);
           process.exit(130);
         });
       }
       return;
-    } catch (err) {
-      if (err.code !== "EEXIST") throw err;
-      const holder = Number(readFileSync(LOCK, "utf8").trim());
-      if (Number.isInteger(holder) && holder > 0 && alive(holder)) {
-        console.error(
-          `Another ${what} is already running (pid ${holder}).\n` +
-            "Two at once race over the same task files, so this one is stopping instead.\n" +
-            `Wait for it to finish, or if you are sure it is gone: rm ${LOCK.replace(ROOT, ".")}`,
-        );
-        process.exit(1);
-      }
-      // Stale: the holder is gone. Clear it and take the lock on the next pass.
-      console.log(`Clearing a stale queue lock left by pid ${holder} (no longer running).`);
-      try {
-        unlinkSync(LOCK);
-      } catch {
-        // Someone else cleared it first; the retry will find out.
-      }
     }
+    if (res.holder) {
+      console.error(
+        `Another ${what} is already running (pid ${res.holder.pid}${res.holder.host ? ` on ${res.holder.host}` : ""}).\n` +
+          "Two at once race over the same task files, so this one is stopping instead.\n" +
+          `Wait for it to finish, or if you are sure it is gone: rm ${LOCK.replace(ROOT, ".")}`,
+      );
+      process.exit(1);
+    }
+    // The lock changed hands mid-takeover; look again in a moment.
+    sleepSync(200);
   }
   console.error("Could not take the queue lock. Try again.");
   process.exit(1);
@@ -219,11 +218,17 @@ function dependenciesOf(lane, file) {
  * could not see work still sitting uncommitted in another worktree — so a chain stopped
  * dead until the owner merged. Nothing here waits on a human any more.
  */
+//
+// Names match exactly (lib/task-deps.mjs). A name no lane holds is reported as `unknown`
+// rather than waited on silently, since nothing will ever satisfy it.
 function dependencyState(stem) {
-  const done = listLane("done").some(
-    (f) => f.replace(/\.md$/, "") === stem || f.includes(stem),
-  );
-  return done ? "landed" : "unbuilt";
+  const state = depState(stem, {
+    todo: listLane("todo"),
+    doing: listLane("doing"),
+    done: listLane("done"),
+    failed: listLane("failed"),
+  });
+  return state === "landed" ? "landed" : state === "unknown" ? "unknown" : "unbuilt";
 }
 
 function blockedBy(file) {
@@ -298,15 +303,24 @@ async function planSpecs() {
 
     // stream-json so planning is watchable as it happens. With text the log sits unchanged
     // for the whole call, and an unattended planner that shows nothing looks broken.
-    const child = spawn(
+    //
+    // On the same model as the runner. The planner passed no `--model` at all and so ran on
+    // whatever the machine's CLI default was — the one session in the loop nobody chose.
+    // The spec goes in on stdin, like the runner's brief, so its length never meets
+    // Windows' command-line limit; the CLI is started through proc.mjs so a `claude.cmd`
+    // shim resolves too.
+    const child = spawnPortable(
       "claude",
       [
-        "-p", `${PLAN_BRIEF}${body}`,
+        "-p",
+        ...modelArgs(PLAN_MODEL),
         "--permission-mode", "bypassPermissions",
         "--output-format", "stream-json", "--verbose",
       ],
-      { cwd: ROOT, stdio: ["ignore", "pipe", "inherit"] },
+      { cwd: ROOT, stdio: ["pipe", "pipe", "inherit"] },
     );
+    child.stdin.on("error", () => {});
+    child.stdin.end(`${PLAN_BRIEF}${body}`);
     const startedAt = new Date().toISOString();
     const rendered = renderStream(child.stdout);
     const status = await new Promise((r) => {
@@ -434,7 +448,8 @@ const RETRY_LIMIT = 2;
  * the brief goes to `failed/` for a person to look at, which is exactly what "blocked, and
  * not by the account" means. `queue -- retry` puts it back when the blocker is cleared.
  */
-const RUN_LIMIT_PER_TASK = Number(process.env.AGENT_MAX_RUNS_PER_TASK ?? 3);
+// Validated: `abc` read as NaN, and `started >= NaN` is never true, so the limit vanished.
+const RUN_LIMIT_PER_TASK = positiveInt(process.env.AGENT_MAX_RUNS_PER_TASK, 3, "AGENT_MAX_RUNS_PER_TASK");
 
 const loadRetries = () => {
   try {
@@ -512,6 +527,8 @@ if (action === "audit") {
   // Reporting a correct problem and then waiting is still a stopped pipeline: one finished
   // task sitting in the wrong lane held up eight dependents until somebody noticed by hand.
   const FIX = process.argv.includes("--fix");
+  // Repairs move lane files, which is exactly what a running drain does too.
+  if (FIX) acquireLock("audit --fix");
   const buildsDir = join(ROOT, BUILDS_REL);
   const records = existsSync(buildsDir)
     ? readdirSync(buildsDir).filter((f) => f.endsWith(".md") && f !== "README.md")
@@ -732,7 +749,7 @@ if (action === "plan") {
 }
 
 if (action !== "drain") {
-  console.error(`Unknown action "${action}". Use: add | list | plan | drain | resume | clean`);
+  console.error(`Unknown action "${action}". Use: add | list | status | plan | drain | resume | retry | audit`);
   process.exit(1);
 }
 
@@ -749,10 +766,8 @@ if (argOf("parallel", null)) {
   process.exit(1);
 }
 const max = Number(argOf("max", "0")) || Infinity;
-// Two, matching agent-run's own default — this line was silently overriding it, so the
-// evidence-based drop from three never reached a drained task. Of the tasks that needed a
-// third attempt, the third did roughly a third of the total turns for a coin-flip chance of
-// landing; a task that has failed twice needs its brief changed, not a third identical run.
+// `budget.attempts` from the config (three — loop.mjs states the evidence), passed through so
+// the drain and a direct `npm run auto` agree.
 const attempts = argOf("attempts", String(config.budget.attempts));
 /**
  * Work happens on the work branch, in place. There is no base to choose and no branch to cut: each
@@ -976,7 +991,9 @@ function partitionTodo() {
 
 const firstPass = partitionTodo();
 for (const b of firstPass.blocked) {
-  const detail = b.waitingOn.map((w) => `${w.dep} (not built yet)`).join(", ");
+  const detail = b.waitingOn
+    .map((w) => `${w.dep} (${w.state === "unknown" ? "no task by that name in any lane — check the Depends-on line" : "not built yet"})`)
+    .join(", ");
   console.log(`holding  ${b.file} — waits on ${detail}`);
 }
 
@@ -1023,7 +1040,14 @@ console.log(
  */
 function runTask(file, index) {
   return new Promise((resolvePromise) => {
-    const slug = slugify(basename(file, ".md").replace(/^[\d-T]+-/, ""));
+    // The park is keyed on the whole file stem. It was keyed on the subject cut to 40
+    // characters with the stamp removed, so two sibling tasks with a long shared opening
+    // shared one park — and the second was handed the first one's patch as "prior work, do
+    // not start over". agent-run.mjs keys its own fallback restore on the stem too, which
+    // is what makes that fallback find anything at all. A park written under the old key
+    // is still restored, once, so work parked before this change is not stranded.
+    const slug = basename(file, ".md");
+    const legacySlug = slugify(slug.replace(/^[\d-T]+-/, ""));
     const taskPath = join(laneDir("doing"), file);
     renameSync(join(laneDir("todo"), file), taskPath);
 
@@ -1040,15 +1064,19 @@ function runTask(file, index) {
       "--task-file", taskPath,
       "--attempts", attempts,
       "--verify-port", String(BASE_PORT),
-      "--on-main",
     ];
 
     console.log(`\n[${index + 1}/${totalQueued}] ${slug}`);
 
     // Restore parked leftovers from a prior failed/blocked attempt *before* the runner
     // starts, so it sees a dirty tree of this task's work rather than a blank tree.
-    if (hasSalvage(join(ROOT, ".agent-runs", "interrupted", slug))) {
-      const restored = restoreSalvage(ROOT, slug);
+    const parkKey = hasSalvage(join(ROOT, ".agent-runs", "interrupted", slug))
+      ? slug
+      : hasSalvage(join(ROOT, ".agent-runs", "interrupted", legacySlug))
+        ? legacySlug
+        : null;
+    if (parkKey) {
+      const restored = restoreSalvage(ROOT, parkKey);
       if (restored) {
         console.log(
           `   Salvage restored from prior attempt` +
@@ -1060,9 +1088,14 @@ function runTask(file, index) {
       }
     }
 
-    const child = spawn("node", args, { cwd: ROOT, stdio: "inherit" });
+    // Detached on POSIX so the runner leads its own process group and a signal to the drain
+    // can end the whole tree (proc.mjs's killTree sends to the group); Windows reaches the
+    // tree with taskkill /T either way.
+    const child = spawn("node", args, { cwd: ROOT, stdio: "inherit", detached: !IS_WINDOWS });
+    activeChild = child;
 
     child.on("close", (code) => {
+      activeChild = null;
       // 4 means the account itself cannot run — a usage limit, an expired key. Every
       // remaining task would fail identically, so the drain stops rather than emptying the
       // queue into failed/ for a reason no task caused.

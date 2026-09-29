@@ -26,8 +26,9 @@ makes an unattended run safe to leave alone.
 
 | Hook | Blocks |
 |------|--------|
-| `guard-protected-paths.mjs` | Writes to `.env`, to the per-environment `appsettings.*.json`, to build output (`bin/`, `obj/`, `.next/`, `node_modules/`, …), and to anything in `hooks.protectedPaths` |
-| `guard-bash.mjs` | For **both** the Bash and PowerShell tools: reading `.env` or the per-environment appsettings through the shell, `dotnet ef database drop`, dropping a Docker volume, `DROP`/`TRUNCATE`/`DELETE`, `git reset --hard`, `git clean -f`, force-push, blind `git add -A`, **pushing to the protected branch by any refspec**, **merging any pull request**, plus every pattern in `hooks.deniedCommands` |
+| `guard-protected-paths.mjs` | Writes to any `.env*` but a template, to the per-environment `appsettings.*.json`, to build output (`bin/`, `obj/`, `.next/`, `node_modules/`, …), and to anything in `hooks.protectedPaths` |
+| `guard-secret-reads.mjs` | The Read and Grep tools opening those same secret files — `secret-paths.mjs` is the one list both guards read |
+| `guard-bash.mjs` | For **both** the Bash and PowerShell tools: reading `.env` or the per-environment appsettings through the shell, `dotnet ef database drop`, dropping a Docker volume, `DROP`/`TRUNCATE`/`DELETE`, `git reset --hard`, `git clean -f`, force-push (`-f` bundled or a `+` refspec included), blind `git add -A`, **pushing to the protected branch by any refspec — or by none, from a checkout of it**, **merging any pull request**, plus every pattern in `hooks.deniedCommands`. git's global options (`-C`, `-c`, `--no-pager`, …) are stripped before the git rules look, and an existence check (`ls`, `test`) excuses only its own segment of a compound command |
 | `project-conventions.mjs` | Nothing — reports the conventions in `hooks.conventions` back to the model after every edit |
 | `session-start.mjs` | Nothing — orients a fresh session |
 

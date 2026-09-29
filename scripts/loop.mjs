@@ -82,7 +82,11 @@ const readyServices = new Set();
 const probe = (command) => {
   if (!command) return true;
   const out = runCommandSync(command, { cwd: ROOT, encoding: "utf8" });
-  return (out.stdout ?? "").trim() !== "" || (out.status === 0 && !command.includes("--filter"));
+  // Healthy means the probe succeeded. Any output at all used to count, so a probe that
+  // printed "connection refused" read as a service that was up. A `--filter` listing (docker
+  // ps and friends) exits 0 whether or not anything matched, so there the output is the answer.
+  if (out.status !== 0) return false;
+  return command.includes("--filter") ? (out.stdout ?? "").trim() !== "" : true;
 };
 
 for (const service of preflight) {
@@ -141,6 +145,31 @@ if (!observeCommand) {
   runCommandSync(`${observeCommand}${DRY ? " --dry-run" : ""}`, { cwd: ROOT, stdio: "inherit" });
 }
 
+/**
+ * Before any task spends money, check that this Claude Code version still emits the stream
+ * the runner reads. Everything the runner decides — cost, turns, delegations, skills — is
+ * parsed out of it, and a CLI update that moved a field would otherwise surface as good work
+ * refused for "skipping" reviews it had in fact run, or a turn cap that stopped counting.
+ *
+ * Checked once per CLI version (the result is cached in .agent-runs/cli-contract.json), on
+ * the cheapest model, for a few cents. AGENT_SKIP_CLI_CONTRACT=1 skips it.
+ */
+function cliContract() {
+  if (process.env.AGENT_SKIP_CLI_CONTRACT === "1") return 0;
+  const res = run("node", [join(ROOT, "scripts", "claude-contract.mjs"), "--if-changed"]);
+  if (res.status === 0) return 0;
+  if (res.status === 4) {
+    console.log("\nThe CLI could not run the contract check, so nothing will build this cycle.");
+    return 4;
+  }
+  console.log(
+    "\nThis Claude Code version no longer emits what the runner reads. Nothing was built: every\n" +
+      "task would have been judged on a stream the runner can no longer parse. Fix\n" +
+      "scripts/lib/claude-events.mjs, then `npm run test:claude-contract -- --record`.",
+  );
+  return 1;
+}
+
 // --- 3 & 4. plan and build ---------------------------------------------------------------
 rule("3 · Plan new specs, then build what is ready");
 let drainStatus = 0;
@@ -152,13 +181,13 @@ if (DRY) {
   // meant a drain that stopped on its spend ceiling looked exactly like one that ran out of
   // work — and on a timer, where nobody watches the log, "the queue is empty" and "the
   // budget is gone" are the two conclusions it is worst to confuse.
+  //
+  // A drain killed by a signal has no status; that is a failure, not a success.
+  const contract = cliContract();
   drainStatus =
-    run("node", [
-      join(ROOT, "scripts", "agent-queue.mjs"),
-      "drain",
-      "--attempts",
-      ATTEMPTS,
-    ]).status ?? 0;
+    contract === 0
+      ? (run("node", [join(ROOT, "scripts", "agent-queue.mjs"), "drain", "--attempts", ATTEMPTS]).status ?? 1)
+      : contract;
 }
 
 // --- 5. what needs a human ----------------------------------------------------------------
@@ -226,3 +255,7 @@ if (!finalAhead || finalAhead === "0") {
 }
 
 console.log(`\nHistory: npm run auto:status`);
+
+// The cycle's status is the drain's. It always exited 0, so the timer's "last result" said
+// every run succeeded — including the ones that stopped on budget or an account refusal.
+process.exit(drainStatus);

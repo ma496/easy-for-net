@@ -37,14 +37,12 @@ import { chargeFor } from "./spend.mjs";
  * a ceiling that trips on ordinary work gets raised to infinity by the first person it
  * annoys, which leaves the loop worse off than having no ceiling at all.
  *
- * These are estimates, not measurements, and say so. The journal only began carrying costs
- * with task 19, so of its 26 entries exactly two name a figure. The anchors are therefore
- * attempt counts charged at the assumed per-call rate: the worst single task on record took
- * four attempts, and the busiest day on record ran twelve task runs — how many drains those
- * twelve were split across is not recoverable from the journal, so they are treated as one.
- * That is roughly $4 and $12 at the assumed rate, and these ceilings sit an order of
- * magnitude above both, which is the headroom a real call costing several times the assumed
- * rate needs.
+ * They were first set from attempt counts at the flat assumed rate, before the journal carried
+ * costs. Measured since: a landed task's median is about $13 (see agent-run.mjs), and single
+ * attempts have reached $20–$40 — so $50 is a few tasks' worth of headroom, not an order of
+ * magnitude. Re-measure with `npm run auto:status` before changing either. Each attempt is
+ * also handed what is left of the task ceiling as `--max-budget-usd`, so the ceiling bounds
+ * the attempt in flight as well as the ones after it.
  */
 export const DEFAULT_MAX_USD_PER_TASK = 50;
 export const DEFAULT_MAX_USD_PER_DRAIN = 200;
