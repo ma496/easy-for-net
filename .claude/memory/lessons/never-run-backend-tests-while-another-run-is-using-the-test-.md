@@ -1,7 +1,7 @@
 ---
 scope: always
 learned: 2026-09-29
-task: 
+task: 03-revoke-sessions-on-tenant-membership-and-lifecycle
 ---
 
 # Never run backend tests while another run is using the test database

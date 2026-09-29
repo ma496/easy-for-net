@@ -1,7 +1,7 @@
 ---
 scope: always
 learned: 2026-09-29
-task: 
+task: 06-document-session-validation-and-revocation
 ---
 
 # Check that a salvage brief's tree holds the task's own work

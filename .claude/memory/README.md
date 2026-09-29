@@ -20,7 +20,9 @@ the trap is the only party that knows what the trap was, so it records it:
 node scripts/record-lesson.mjs --title "Anchor grep acceptance checks with word boundaries" --scope grep --body "…what to do instead, and why…"
 ```
 
-One line, so the same command runs in bash and in PowerShell.
+One line, so the same command runs in bash and in PowerShell. The lesson's `task:` field names
+the task that taught it: the brief's copy of this command carries `--task <slug>`, and when a
+session leaves the flag out, `record-lesson.mjs` reads the `AGENT_TASK` the runner exports.
 
 **Read** by `agent-run.mjs`, which prepends every matching lesson to the next task's brief.
 A lesson scoped `always` reaches every task; any other scope reaches a task whose brief
