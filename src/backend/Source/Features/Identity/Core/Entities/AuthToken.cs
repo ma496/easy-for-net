@@ -29,6 +29,17 @@ public class AuthToken : CreatableEntity<Guid>, IMayHaveTenant
     /// tenant being entered while still acting in the one being left.
     /// </remarks>
     public Guid? TenantId { get; set; }
+
+    /// <summary>
+    /// The id of the session this token pair belongs to - the <c>sid</c> claim carried by both tokens,
+    /// an opaque string minted by the session store when the session is established.
+    /// Null for rows that predate the column.
+    /// </summary>
+    /// <remarks>
+    /// Rows are matched to their session so that revoking a session (or every session of a user but the
+    /// current one) can also delete the refresh row, leaving no refresh token able to renew it.
+    /// </remarks>
+    public string? SessionId { get; set; }
     public Guid UserId { get; set; }
     public User User { get; set; } = null!;
 }

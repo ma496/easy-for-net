@@ -23,8 +23,12 @@ public interface IAuthTokenService
     /// point states this explicitly, so that a session can never inherit whatever tenant happened to be
     /// recorded last.
     /// </param>
+    /// <param name="sessionId">
+    /// The session-store record the pair belongs to, or <see langword="null"/> for a pair with none. It is
+    /// written on the row so that a refresh can delete the session it replaces.
+    /// </param>
     /// <returns>The stored record.</returns>
-    Task<AuthToken> SaveTokenAsync(TokenResponse rsp, Guid? tenantId);
+    Task<AuthToken> SaveTokenAsync(TokenResponse rsp, Guid? tenantId, string? sessionId);
 
     /// <summary>
     /// Validates a refresh request against the stored pairs and consumes the matching one, so that a refresh
@@ -88,6 +92,13 @@ public sealed class RefreshTokenConsumption
     /// Meaningful only while <see cref="Consumed"/> is <see langword="true"/>.
     /// </summary>
     public Guid? TenantId { get; init; }
+
+    /// <summary>
+    /// Gets the identifier of the session-store record the consumed pair belonged to, or
+    /// <see langword="null"/> when the row named none. A refresh deletes that session as it mints its
+    /// replacement. Meaningful only while <see cref="Consumed"/> is <see langword="true"/>.
+    /// </summary>
+    public string? SessionId { get; init; }
 }
 
 /// <summary>
@@ -117,7 +128,7 @@ public sealed class RefreshTokenConsumption
 [NoDirectUse]
 public class AuthTokenService(AppDbContext dbContext, ITenantContext tenantContext) : IAuthTokenService
 {
-    public async Task<AuthToken> SaveTokenAsync(TokenResponse rsp, Guid? tenantId)
+    public async Task<AuthToken> SaveTokenAsync(TokenResponse rsp, Guid? tenantId, string? sessionId)
     {
         var authToken = new AuthToken
         {
@@ -126,6 +137,7 @@ public class AuthTokenService(AppDbContext dbContext, ITenantContext tenantConte
             RefreshToken = HashToken(rsp.RefreshToken),
             RefreshExpiry = rsp.RefreshExpiry,
             TenantId = tenantId,
+            SessionId = sessionId,
             UserId = Guid.Parse(rsp.UserId),
         };
 
@@ -158,7 +170,7 @@ public class AuthTokenService(AppDbContext dbContext, ITenantContext tenantConte
             .AsNoTracking()
             .AcrossAllTenants()
             .Where(at => at.UserId == userId && at.RefreshToken == refreshTokenHash && at.RefreshExpiry > DateTime.UtcNow)
-            .Select(at => new { at.Id, at.TenantId })
+            .Select(at => new { at.Id, at.TenantId, at.SessionId })
             .FirstOrDefaultAsync(cancellationToken);
         if (issued is null)
         {
@@ -174,7 +186,7 @@ public class AuthTokenService(AppDbContext dbContext, ITenantContext tenantConte
             .ExecuteDeleteAsync(cancellationToken);
 
         return deleted == 1
-            ? new RefreshTokenConsumption { Consumed = true, TenantId = issued.TenantId }
+            ? new RefreshTokenConsumption { Consumed = true, TenantId = issued.TenantId, SessionId = issued.SessionId }
             : RefreshTokenConsumption.Rejected;
     }
 

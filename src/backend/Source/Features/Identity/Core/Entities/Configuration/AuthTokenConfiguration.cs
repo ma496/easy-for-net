@@ -16,6 +16,10 @@ public class AuthTokenConfiguration : IEntityTypeConfiguration<AuthToken>
     {
         builder.ToTable("AuthTokens", "identity");
 
+        builder.Property(at => at.SessionId).HasMaxLength(64);
+
+        builder.HasIndex(at => new { at.UserId, at.SessionId });
+
         builder.HasOne(at => at.User)
             .WithMany(u => u.AuthTokens)
             .HasForeignKey(at => at.UserId);

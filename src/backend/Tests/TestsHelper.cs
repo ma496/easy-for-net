@@ -3,6 +3,7 @@ namespace Backend.Tests;
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Tenancy.Endpoints.Tenants;
 using System.Net.Http.Headers;
+using System.Text.Json;
 
 public static class TestsHelper
 {
@@ -31,6 +32,23 @@ public static class TestsHelper
     /// </summary>
     public static void SetAuthToken(HttpClient client, string token)
         => client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+    /// <summary>
+    /// The claims an access token carries, read out of the token itself - its payload, decoded, with no
+    /// signature check - so what is asserted is what the token was minted with rather than what a later
+    /// request made of it.
+    /// </summary>
+    /// <param name="accessToken">The token to read.</param>
+    /// <returns>Each payload property by its literal name.</returns>
+    public static Dictionary<string, JsonElement> PayloadOf(string accessToken)
+    {
+        var payload = accessToken.Split('.')[1].Replace('-', '+').Replace('_', '/');
+        payload = payload.PadRight(payload.Length + ((4 - (payload.Length % 4)) % 4), '=');
+
+        using var document = JsonDocument.Parse(Convert.FromBase64String(payload));
+
+        return document.RootElement.EnumerateObject().ToDictionary(property => property.Name, property => property.Value.Clone());
+    }
 
     public static void ClearAuthToken(HttpClient client)
         => client.DefaultRequestHeaders.Authorization = null;

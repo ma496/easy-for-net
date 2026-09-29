@@ -1,6 +1,7 @@
 namespace Backend.Features.Identity.Core;
 
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Tenancy.Core;
 using RefreshTokenIssuer = Backend.Features.Identity.Endpoints.Account.TokenService;
 
@@ -193,10 +194,10 @@ public interface ITenantAuthorizationService
 
     /// <summary>
     /// Re-establishes an authenticated account's session so that it carries the tenant named, leaving
-    /// the account signed in and asking for no credentials. The roles and permissions it embeds are
-    /// recomputed from the membership and role assignments as they stand at this moment for that
-    /// tenant alone, the cookie principal is re-signed with them, a fresh access/refresh pair is
-    /// issued, and the tenant is recorded on the refresh-token row so that a later refresh
+    /// the account signed in and asking for no credentials. A new session is minted and stored for
+    /// that tenant alone, its roles and permissions read from the membership and role assignments as
+    /// they stand at this moment; the session being replaced is deleted, the cookie principal is re-signed
+    /// naming the new session, a fresh access/refresh pair naming it is issued, and the tenant is recorded on the refresh-token row so that a later refresh
     /// re-establishes this tenant rather than the one the account was acting in before. The pair the
     /// request arrived with is revoked as the new one is issued, so the refresh token the caller held a
     /// moment ago cannot afterwards be redeemed for a session back in the previous tenant; the
@@ -227,7 +228,8 @@ public class TenantAuthorizationService(AppDbContext dbContext,
                                         IAuthTokenService authTokenService,
                                         RefreshTokenIssuer refreshTokenIssuer,
                                         ITenantMembershipQuery tenantMembershipQuery,
-                                        IPermissionFeatureFilter permissionFeatureFilter) : ITenantAuthorizationService
+                                        ISessionIssuer sessionIssuer,
+                                        ISessionStore sessionStore) : ITenantAuthorizationService
 {
     /// <summary>
     /// Name every tenant's system-created administrator role carries. A role name is unique within
@@ -605,9 +607,19 @@ public class TenantAuthorizationService(AppDbContext dbContext,
         // established and never copied from the session it replaces: the role assignments and the
         // roles' permissions as they stand at this moment decide it, so authority the caller held in
         // the tenant they acted in a moment ago is not carried into this one.
-        var grants = await SessionGrants.ReadAsync(dbContext, permissionFeatureFilter, userId, tenantId, account.IsPlatform, cancellationToken);
+        var session = await sessionIssuer.IssueAsync(account, tenantId, cancellationToken);
 
-        var claims = Helper.CreateClaims(account, grants.Roles, grants.Permissions, tenantId);
+        // The session being replaced is deleted once its successor exists, so the access token the caller
+        // switched with stops working at once instead of remaining a second way in to the tenant it left.
+        if (httpContextAccessor.HttpContext is { } current
+            && SessionClaims.ReadUserId(current.User) == userId
+            && SessionClaims.ReadSessionId(current.User) is { } replacedSessionId)
+        {
+            await sessionStore.DeleteAsync(replacedSessionId, cancellationToken);
+        }
+
+        // The token and the cookie carry only the account and the new session.
+        var claims = SessionClaims.ForToken(userId, session.SessionId);
 
         // for cookie authentication
         await CookieAuth.SignInAsync(user => user.Claims.AddRange(claims));
@@ -624,6 +636,7 @@ public class TenantAuthorizationService(AppDbContext dbContext,
             // the only record a later refresh has of the tenant this session acts in - and it is what
             // stops that refresh from resurrecting the tenant the account acted in before.
             RefreshTokenIssuer.RecordSessionTenant(httpContext, tenantId);
+            RefreshTokenIssuer.RecordSessionId(httpContext, session.SessionId);
         }
 
         // for jwt authentication. The issuer persists the pair, writes the recorded tenant onto its

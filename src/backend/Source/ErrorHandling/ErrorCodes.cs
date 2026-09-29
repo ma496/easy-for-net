@@ -57,4 +57,5 @@ public static class ErrorCodes
     public static readonly ErrorCode EditionNotFound = new("editionNotFound");
     public static readonly ErrorCode EditionNameAlreadyExists = new("editionNameAlreadyExists");
     public static readonly ErrorCode EditionInUse = new("editionInUse");
+    public static readonly ErrorCode SessionStoreUnavailable = new("sessionStoreUnavailable");
 }

@@ -1,6 +1,5 @@
 namespace Backend.Tests.Features.Identity.Endpoints.Account;
 
-using System.Text.Json;
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
@@ -125,7 +124,7 @@ public class SignupTests(App app) : TenancyTestsBase(app)
         platformPermissions.Should().NotBeEmpty(
             "the catalogue declares which permissions are platform level, and the comparison below is only meaningful if it declares some");
 
-        PermissionClaimsOf(AccessTokenOf(client)).Should().NotBeEmpty(
+        (await SessionOfAsync(AccessTokenOf(client)))!.Permissions.Should().NotBeEmpty(
                 "the account administers the tenant it created, so its session carries that tenant's authority")
             .And.NotIntersectWith(platformPermissions,
                 "the authority sign-up confers is the new tenant's own and reaches nothing platform-wide");
@@ -287,28 +286,5 @@ public class SignupTests(App app) : TenancyTestsBase(app)
         var token = client.DefaultRequestHeaders.Authorization?.Parameter;
         token.Should().NotBeNullOrWhiteSpace("the client was signed in, so it has a token to read");
         return token!;
-    }
-
-    /// <summary>
-    /// The permission claims an access token carries, read out of the token itself rather than out of
-    /// anything derived from it - so what is asserted is what the session was issued with.
-    /// </summary>
-    /// <param name="accessToken">The token to read.</param>
-    /// <returns>The permission names it carries, empty when it carries no permission claim at all.</returns>
-    private static List<string> PermissionClaimsOf(string accessToken)
-    {
-        var payload = accessToken.Split('.')[1].Replace('-', '+').Replace('_', '/');
-        payload = payload.PadRight(payload.Length + ((4 - (payload.Length % 4)) % 4), '=');
-
-        using var document = JsonDocument.Parse(Convert.FromBase64String(payload));
-
-        if (!document.RootElement.TryGetProperty(ClaimConstants.Permission, out var claims))
-        {
-            return [];
-        }
-
-        return claims.ValueKind == JsonValueKind.Array
-            ? [.. claims.EnumerateArray().Select(claim => claim.GetString()!).Where(name => name.Length > 0)]
-            : [claims.GetString()!];
     }
 }

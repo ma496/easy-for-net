@@ -249,7 +249,8 @@
       "unknownFeatureProvider": "Proveedor de funciones desconocido.",
       "editionNotFound": "Edición no encontrada.",
       "editionNameAlreadyExists": "Ya existe una edición con este nombre.",
-      "editionInUse": "Esta edición no se puede eliminar mientras haya inquilinos en ella."
+      "editionInUse": "Esta edición no se puede eliminar mientras haya inquilinos en ella.",
+      "sessionStoreUnavailable": "El servicio de sesiones no está disponible temporalmente. Inténtalo de nuevo en un momento."
     }
   },
   "table": {

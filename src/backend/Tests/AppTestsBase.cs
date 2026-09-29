@@ -2,6 +2,7 @@ namespace Backend.Tests;
 
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
@@ -58,6 +59,23 @@ public abstract class AppTestsBase(App app) : TestBase
     protected HttpClient Client => _client ??= App.CreateClient(new ClientOptions());
 
     protected AppDbContext DbContext => Service<AppDbContext>();
+
+    /// <summary>
+    /// The session store the host runs on. Under the Testing environment it is one in-memory store shared by
+    /// the whole run, so a session minted by a request is visible here and one deleted here is gone for
+    /// the request that follows.
+    /// </summary>
+    protected ISessionStore SessionStore => Service<ISessionStore>();
+
+    /// <summary>
+    /// The stored session an access token names, looked up by the token's own <c>sid</c> claim.
+    /// </summary>
+    /// <param name="accessToken">The access token a sign-in, refresh or switch issued.</param>
+    /// <returns>The stored session, or <see langword="null"/> when it no longer exists.</returns>
+    protected async Task<SessionRecord?> SessionOfAsync(string accessToken)
+        => await SessionStore.GetAsync(
+            TestsHelper.PayloadOf(accessToken)[ClaimConstants.SessionId].GetString()!,
+            TestContext.Current.CancellationToken);
 
     /// <summary>
     /// The tenant scope the current unit of work acts in. Establishing one is what lets a test

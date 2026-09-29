@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Backend.External.Email;
 using Backend.Features.Identity.Core;
+using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Localization.Core;
 using Backend.Features.Tenancy.Core;
 using Backend.Middleware;
@@ -26,6 +27,13 @@ if (!bld.Environment.IsDevelopment() &&
     bld.Configuration["Auth:Jwt:Key"] == JwtSetting.PlaceholderKey)
 {
     throw new InvalidOperationException("Auth:Jwt:Key must be supplied through secure configuration outside development and testing.");
+}
+// Sessions live in Redis everywhere but the test host, so a deployment without a connection string has
+// nowhere to keep them. Refused here, at startup, rather than as a 503 on the first sign-in.
+if (!bld.Environment.IsEnvironment("Testing") &&
+    string.IsNullOrWhiteSpace(bld.Configuration.GetConnectionString("Redis")))
+{
+    throw new InvalidOperationException("ConnectionStrings:Redis is required outside testing: sessions are stored in Redis.");
 }
 // Tests run the host hundreds of times over and log nothing anybody reads, while every statement
 // logged at Information is a SQL command formatted and written. Set here for the same reason as the
@@ -183,6 +191,10 @@ bld.Services.Configure<FormOptions>(o => o.MultipartBodyLengthLimit = maximumPay
 // configure features
 Helper.AddFeatures(bld.Services, bld.Configuration);
 
+// The session store is the one registration that depends on the environment: Redis in every deployment,
+// one shared in-memory store under Testing so the suite needs nothing but PostgreSQL. It is chosen here,
+// where the environment is known, because a feature's AddServices receives only the configuration.
+bld.Services.AddSessionStore(bld.Configuration, useInMemoryStore: bld.Environment.IsEnvironment("Testing"));
 
 // configure services 
 bld.Services.AddScoped<DataSeeder>();
@@ -241,6 +253,7 @@ if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"
 
 app.UseCors()
    .UseAuthentication()
+   .UseMiddleware<SessionStoreUnavailableMiddleware>()
    .UseRateLimiter()
    .UseAuthorization();
 

@@ -177,6 +177,11 @@
           "name": "postgres",
           "healthyWhen": "node scripts/pg-ready.mjs",
           "waitSeconds": 30
+        },
+        {
+          "name": "redis",
+          "healthyWhen": "node scripts/redis-ready.mjs",
+          "waitSeconds": 30
         }
       ]
     }
