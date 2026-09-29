@@ -112,8 +112,8 @@ so a permission declared without one belongs to the tenant tier:
 | `Platform` | only by a platform account acting in no tenant | operations about the installation itself |
 | `Both` | in either scope | an operation that answers about the platform's own data in platform scope and a tenant's inside a tenant |
 
-`SessionGrants` (`Features/Identity/Core/SessionGrants.cs`) narrows the permission claims a session is
-minted with to the scope it acts in — at sign-in, at every token renewal and on a tenant switch or
+`SessionGrants` (`Features/Identity/Core/SessionGrants.cs`) narrows the permissions a session is
+created with to the scope it acts in — at sign-in, at every refresh and on a tenant switch or
 exit — so the scope decides where a permission exists at all:
 
 - a platform account acting in no tenant carries `Platform` + `Both` from its platform roles
@@ -157,11 +157,13 @@ usersPermissions.AddChild(Allow.User_View, "View");
 
 Declared on a group node it reaches every permission beneath it, cumulatively with anything an
 ancestor already requires. `IPermissionFeatureFilter` is the one place the rule is applied, and its
-three consumers are `SessionGrants` (claims minted), `GetDefinePermissionsEndpoint` (the catalogue a
-role is edited from) and `GetInfoEndpoint` (what the web app gates on). So a permission whose feature
-is off for the acting tenant is not in the session, not offered on any role, and not reported to the
-web app — nothing else has to change: `Permissions(Allow.X)` and `isAllowed` already refuse. Platform
-scope narrows nothing. The change takes effect at the caller's next token renewal.
+two consumers are `SessionGrants` (the permissions a session is created with) and
+`GetDefinePermissionsEndpoint` (the catalogue a role is edited from); `GetInfoEndpoint` (what the web
+app gates on) reports the session's own permissions, so it agrees by construction. So a permission
+whose feature is off for the acting tenant is not in the session, not offered on any role, and not
+reported to the web app — nothing else has to change: `Permissions(Allow.X)` and `isAllowed` already
+refuse. Platform scope narrows nothing. A plan change ends the affected tenants' sessions at once, so
+their users come back under the new plan at their next sign-in (see the `feature-management` skill).
 
 Two rules the architecture tests in `Tests/Architect/PermissionFeatureDeclarationTests.cs` enforce:
 
@@ -193,9 +195,19 @@ first member — not on startup. So:
 - Deleting a permission: remove it from all five places, or the seeder will keep deleting a row the
   provider keeps re-adding.
 
-Permissions reach the API as `permission` claims (`ClaimConstants.Permission`) inside the JWT/cookie,
-decided once when the token is minted — a grant change bites at the holder's next renewal. The web app
-reads them from `/account/get-info` as `roles[].permissions[]`, which is what `isAllowed` checks.
+Permissions are **not** in the JWT or cookie, which carry only the account and `sid`. They are stored
+in the caller's session (`Backend.Features.Identity.Core.Sessions.SessionRecord`), read from the
+session store on every request and projected onto the request's principal as `permission` claims
+(`ClaimConstants.Permission`) by `SessionClaims.Project`, which is what `Permissions(Allow.X)` checks.
+A grant change ends the affected sessions at once, through
+`Backend.Features.Identity.Core.Sessions.ISessionRevocationService` after the change commits:
+`ChangePermissionsEndpoint` and `RoleDeleteEndpoint` end the role holders' sessions in the role's scope,
+and `UserUpdateEndpoint` ends a user's sessions in the acting scope when their roles change. The old
+access token answers 401 and its refresh is refused. A new endpoint that changes what a role grants or
+who holds it must revoke the same way. `DataSeeder`'s startup reconciliation revokes nothing, so a
+permission it adds or strips reaches a session only when that session is next replaced. The web app
+reads permissions from `/account/get-info` as `roles[].permissions[]` — the session's own — which is
+what `isAllowed` checks.
 
 ## Checklist
 

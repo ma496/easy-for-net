@@ -29,9 +29,14 @@ most expensive thing to learn late, and the cheapest point to hear it is before 
    endpoint gated on a feature alone calls `featureChecker.CheckEnabledAsync(...)`. No
    `Platform`-scoped permission requires a feature. Limits are checked under the tenant row
    lock, not before it.
-4. **Sessions.** Roles, permissions and tenant are minted into the token and trusted until it
-   is renewed. A change that re-reads them per request, or that lets a request pick its own
-   tenant, breaks that model.
+4. **Sessions.** A token carries only the account and `sid`; roles, permissions and tenant live
+   in the session store and are read on every request. Refuse: deactivating or deleting a
+   user, changing their password or roles, a role's permissions, a membership, or a tenant's
+   status or plan without revoking through `ISessionRevocationService` after it commits (a
+   username or email edit owes no revocation); code outside Identity touching `ISessionStore`;
+   a new issuance point that skips `ISessionIssuer`, `TokenService.RecordSessionTenant`, or
+   `TokenService.RecordSessionId` with its `SecurityStamp`; a store outage that falls through as anonymous instead of 503; and
+   a request that picks its own tenant.
 5. **Secrets.** No key, token, connection string or password in the diff, a log line, an
    error message or a fixture. New settings go into `appsettings.json` with a placeholder;
    `appsettings.Development.json`, `appsettings.Testing.json` and `.env*` files never

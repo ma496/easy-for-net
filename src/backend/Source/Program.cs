@@ -78,14 +78,15 @@ bld.Services
             : CookieSecurePolicy.Always;
         options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;
 
-        // Load-bearing, and the reason is not the cookie's lifetime but what expiring it forces.
-        // Roles, permissions and the tenant are decided when a session is minted and trusted until it
-        // is replaced, and the refresh is the only place they are read again - so a session that never
-        // expires is a session whose authority is never revisited. Sliding expiration re-issues the
-        // cookie carrying the ticket it already had, which would leave an open browser tab holding a
-        // revoked membership or a suspended tenant's permissions for as long as somebody kept clicking.
-        // Letting the cookie expire on the same clock as the access token is what sends the browser
-        // through the refresh endpoint, where the account and its tenant are re-read.
+        // Load-bearing, though not for revocation: the session a cookie names is read from the session
+        // store on every request and access changes revoke it at once, whatever the cookie's age.
+        // Expiring the cookie on the same clock as the access token (Auth:AccessTokenValidity) sends a
+        // browser through the refresh endpoint like a bearer client. That is where the account is
+        // re-examined (a deactivated account or stale SecurityStamp is refused, a suspended, deleted or
+        // left tenant is dropped) and the session re-created, which is how changes that revoke nothing
+        // (DataSeeder's startup reconciliation, the FeatureManagement configuration section) reach a
+        // browser session. Sliding expiration would re-issue the cookie with the same session for as
+        // long as somebody kept clicking.
         options.SlidingExpiration = false;
     })
     .AddAuthenticationJwtBearer(x => x.SigningKey = bld.Configuration["Auth:Jwt:Key"])
