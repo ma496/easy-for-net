@@ -1,5 +1,6 @@
 namespace Backend.Features.Tenancy.Endpoints.FeatureValues;
 
+using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
@@ -8,14 +9,26 @@ using Backend.Features.Tenancy.Core;
 /// </summary>
 /// <remarks>
 /// Only the features named are touched, and a <see langword="null"/> value clears the override rather
-/// than storing an empty one - which is how a value is put back to whatever it inherits. The change
-/// takes effect for a caller at their next session renewal, exactly as a role change does; nothing
-/// here ends a session that is already running.
+/// than storing an empty one - which is how a value is put back to whatever it inherits.
+/// <para>
+/// A session's permissions are narrowed by its tenant's plan when it is minted, so once a value has been
+/// written, the sessions minted under the old plan are ended: every session acting in the tenant, or in
+/// every tenant on the edition. Their members sign in again under the new plan - which is also how a
+/// feature switched back on restores its permissions, with nothing to re-grant. No session in platform
+/// scope is touched, because platform scope is inside no plan.
+/// </para>
+/// <para>
+/// Every write is followed by the revocation, even one that stores what was already stored: comparing
+/// first and revoking only on a difference would let a concurrent change slip between the read and the
+/// write unrevoked. Each value commits on its own, so the revocation runs even when a later write fails
+/// or the caller goes away, and is not itself cancelled - what has been committed has to be answered.
+/// </para>
 /// </remarks>
 sealed class FeatureValueUpdateEndpoint(IFeatureDefinitionService featureDefinitionService,
                                         IFeatureValueStore featureValueStore,
                                         IEditionService editionService,
-                                        ITenantService tenantService)
+                                        ITenantService tenantService,
+                                        ISessionRevocationService sessionRevocationService)
     : Endpoint<FeatureValueUpdateRequest, FeatureValueUpdateResponse>
 {
     public override void Configure()
@@ -63,14 +76,44 @@ sealed class FeatureValueUpdateEndpoint(IFeatureDefinitionService featureDefinit
             }
         }
 
+        // Marked before each write rather than after it: a write can commit even when its call is
+        // cancelled or fails on the way back, and revoking after a write that did not land costs nothing.
         var changed = 0;
-        foreach (var feature in request.Features)
+        var attempted = false;
+        try
         {
-            await featureValueStore.SetAsync(feature.Name, feature.Value, request.ProviderName, request.ProviderKey, cancellationToken);
-            changed++;
+            foreach (var feature in request.Features)
+            {
+                attempted = true;
+                await featureValueStore.SetAsync(feature.Name, feature.Value, request.ProviderName, request.ProviderKey, cancellationToken);
+                changed++;
+            }
+        }
+        finally
+        {
+            if (attempted)
+            {
+                await RevokeAffectedSessionsAsync(request.ProviderName, providerKey);
+            }
         }
 
         await Send.ResponseAsync(new FeatureValueUpdateResponse { Changed = changed }, cancellation: cancellationToken);
+    }
+
+    /// <summary>
+    /// Ends every session acting in the tenant named, or in every tenant on the edition named. Not
+    /// cancellable, because it answers writes that have already committed.
+    /// </summary>
+    private async Task RevokeAffectedSessionsAsync(string providerName, Guid providerKey)
+    {
+        IReadOnlyList<Guid> tenantIds = providerName == FeatureValueProviderNames.Tenant
+            ? [providerKey]
+            : await editionService.TenantIdsAsync(providerKey, CancellationToken.None);
+
+        foreach (var tenantId in tenantIds)
+        {
+            await sessionRevocationService.RevokeTenantAsync(tenantId, CancellationToken.None);
+        }
     }
 }
 

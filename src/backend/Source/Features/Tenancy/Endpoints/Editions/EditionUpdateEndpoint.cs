@@ -9,7 +9,9 @@ using Backend.Features.Tenancy.Core.Entities;
 /// </summary>
 /// <remarks>
 /// What the plan is worth is not changed here: its feature values live on the feature-management
-/// surface, so renaming a plan never silently alters what the tenants on it are entitled to.
+/// surface, so renaming a plan never silently alters what the tenants on it are entitled to - and so
+/// ends no session. <c>PUT /features</c> naming the edition is what changes its worth, and that is where
+/// the sessions of every tenant on it are ended.
 /// </remarks>
 sealed class EditionUpdateEndpoint(IEditionService editionService) : Endpoint<EditionUpdateRequest, EditionUpdateResponse>
 {

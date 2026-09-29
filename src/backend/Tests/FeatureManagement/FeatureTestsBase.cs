@@ -1,6 +1,5 @@
 namespace Backend.Tests.FeatureManagement;
 
-using Backend.Features.Tenancy.Core.Entities;
 using Backend.Tests.Features.Tenancy;
 
 /// <summary>
@@ -12,6 +11,10 @@ using Backend.Tests.Features.Tenancy;
 /// about entitlements is a claim about what a caller in some tenant may do, so the tenants, roles,
 /// accounts and sign-in helpers are exactly the ones needed here, and a second copy of them would be
 /// a second set of rules about parallel safety to keep in step.
+/// </para>
+/// <para>
+/// The editions a test puts tenants on come from <see cref="TenancyTestsBase"/> too, because an
+/// edition is a tenancy entity and suites outside this one put tenants on plans as well.
 /// </para>
 /// <para>
 /// Every tenant, edition and stored value a test asserts on is made by that test. The suite runs in
@@ -29,50 +32,6 @@ public abstract class FeatureTestsBase(App app) : TenancyTestsBase(app)
     protected IFeatureDefinitionService FeatureDefinitions => Service<IFeatureDefinitionService>();
 
     protected IPermissionFeatureFilter PermissionFeatureFilter => Service<IPermissionFeatureFilter>();
-
-    /// <summary>
-    /// Creates an edition with a name no other test will take.
-    /// </summary>
-    /// <param name="name">A name to use, or <see langword="null"/> to generate one.</param>
-    /// <returns>The created edition.</returns>
-    protected async Task<Edition> CreateEditionAsync(string? name = null)
-    {
-        var edition = new Edition
-        {
-            Name = name ?? $"Edition {Guid.NewGuid():N}",
-            Description = "Edition made by a feature-management test"
-        };
-        DbContext.Editions.Add(edition);
-        await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
-        return edition;
-    }
-
-    /// <summary>
-    /// Puts a tenant on an edition, or on none.
-    /// </summary>
-    /// <param name="tenantId">The tenant to move.</param>
-    /// <param name="editionId">The plan to put it on, or <see langword="null"/> to take it off one.</param>
-    protected async Task PutOnEditionAsync(Guid tenantId, Guid? editionId)
-    {
-        using var platformScope = TenantContext.BeginPlatformScope();
-
-        var tenant = await DbContext.Tenants.SingleAsync(row => row.Id == tenantId,
-                                                         TestContext.Current.CancellationToken);
-        tenant.EditionId = editionId;
-        await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
-    }
-
-    /// <summary>
-    /// Creates a tenant already on an edition.
-    /// </summary>
-    /// <param name="editionId">The plan to put it on.</param>
-    /// <returns>The created tenant.</returns>
-    protected async Task<Tenant> CreateTenantOnEditionAsync(Guid editionId)
-    {
-        var tenant = await CreateTenantAsync();
-        await PutOnEditionAsync(tenant.Id, editionId);
-        return tenant;
-    }
 
     /// <summary>
     /// Stores a feature value for a tenant.
