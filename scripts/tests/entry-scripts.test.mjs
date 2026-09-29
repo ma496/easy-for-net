@@ -35,6 +35,7 @@ const ENTRIES = [
   { file: "open-pr.mjs", args: [] },
   { file: "auto-ship.mjs", args: [] },
   { file: "loop.mjs", args: ["--dry-run"] },
+  { file: "claude-contract.mjs", args: ["--help"] },
 ];
 
 for (const { file, args } of ENTRIES) {

@@ -100,9 +100,29 @@ gesture, because requeueing by hand is the one signal that somebody looked.
 ## The model the session runs on is the largest single cost
 
 Every subagent declares its model in `.claude/agents/*.md`. The session that spawns them,
-reads the codebase, writes the code and runs the commands takes `AGENT_MODEL`. Measure before
-choosing: a weaker session can be both slower and more expensive, because it spends more
-turns reaching the same place — and turns are both the clock and the bill.
+reads the codebase, writes the code and runs the commands takes `budget.model`, overridden by
+`AGENT_MODEL`; the planner takes the same. All of them default to `opus`, the alias that always
+names the newest Opus. Measure before choosing otherwise: a weaker session can be both slower
+and more expensive, because it spends more turns reaching the same place — and turns are both
+the clock and the bill.
+
+## The CLI's output is a contract
+
+Everything the runner decides about a session is read out of `claude -p --output-format
+stream-json`: the cost from the `result` event, the parent's turns (distinct `message.id`s
+on events whose `parent_tool_use_id` is null — a subagent's events share the parent's
+session id), the delegations and skill loads from `Agent`/`Task` and `Skill` tool calls, a
+limit stop from the result's `subtype`. That format belongs to the CLI and moves between
+releases, so it is read in exactly one file, `scripts/lib/claude-events.mjs`.
+
+- `scripts/tests/claude-stream-contract.test.mjs` replays streams captured from real CLI
+  versions (`scripts/tests/fixtures/claude-stream/<version>/`) and fails naming the field
+  that moved.
+- `npm run test:claude-contract` runs short probes against the installed CLI on the cheapest
+  model; `npm run loop` runs it once per new CLI version and builds nothing when it fails.
+- After adapting `claude-events.mjs`, `npm run test:claude-contract -- --record` saves the new
+  version's fixtures, scrubbed of paths and content.
+- Each attempt's raw stream is kept in `.agent-runs/<run>-attempt-N.stream.jsonl`.
 
 `npm run auto:status` records turns and cost per attempt, which is what makes this
 answerable rather than arguable.
@@ -111,7 +131,8 @@ answerable rather than arguable.
 
 - **Pushing**, unless the operator sets `AGENT_AUTO_PUSH=1` deliberately.
 - **Merging a pull request.** No script, agent, or API call here does it, and the hooks
-  block every route.
+  block `git merge` (however git's global options are spelled around it), `gh pr merge` and
+  the hosting APIs' merge endpoints.
 - **Anything with blast radius the operator did not ask for** — dropping or rewriting a
   database, editing the per-environment settings that hold credentials, spending outside the
   ceilings.

@@ -225,3 +225,24 @@ test("a drain that measured nothing at all says unknown, not $0.00", () => {
   assert.match(lines.at(-1), /^\s+total\s+unknown$/);
   assert.doesNotMatch(lines.at(-1), /\$0\.00/);
 });
+
+// --- what an unmeasured attempt is charged -------------------------------------------------
+
+test("an unmeasured attempt is charged the median measured attempt once there is history", async () => {
+  const { assumedRateFromHistory } = await import("../lib/spend.mjs");
+  const entries = [{ attemptCostsUsd: [2, 10, null] }, { attemptCostsUsd: [4, 30] }, { attemptCostsUsd: [6] }];
+  assert.equal(assumedRateFromHistory(entries, 1), 6);
+});
+
+test("with too little history, or an explicit setting, the given rate stands", async () => {
+  const { assumedRateFromHistory } = await import("../lib/spend.mjs");
+  assert.equal(assumedRateFromHistory([{ attemptCostsUsd: [50] }], 1), 1);
+  const plenty = [{ attemptCostsUsd: [10, 10, 10, 10, 10, 10] }];
+  assert.equal(assumedRateFromHistory(plenty, 2, { explicit: true }), 2);
+  assert.equal(assumedRateFromHistory(plenty, 2), 10);
+});
+
+test("the learned rate never falls below the fallback", async () => {
+  const { assumedRateFromHistory } = await import("../lib/spend.mjs");
+  assert.equal(assumedRateFromHistory([{ attemptCostsUsd: [0.1, 0.1, 0.1, 0.1, 0.1] }], 1), 1);
+});

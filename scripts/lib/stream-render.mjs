@@ -18,7 +18,19 @@
  *
  * Every parse is defensive: an unrecognised or malformed event is skipped rather than
  * thrown. A renderer that can crash would take down the run it is only supposed to narrate.
+ *
+ * What the events mean is `claude-events.mjs`'s business; this file decides what to print
+ * and what to add up.
  */
+import {
+  DELEGATION_TOOLS,
+  LIMIT_SUBTYPES,
+  SKILL_TOOL,
+  isSubagentEvent,
+  normalizeEvent,
+  parseLine,
+  skillNameOf,
+} from "./claude-events.mjs";
 
 /**
  * The run could not happen at all, as the model or the client reports it. Two shapes, and
@@ -83,8 +95,8 @@ export function isRefusal(text) {
   return NETWORK_REFUSAL.test(t) || ENTITLEMENT_REFUSAL.test(withoutCode(t));
 }
 
-/** The tool names that mean "hand this to a specialist". Clients differ; both count. */
-export const DELEGATION_TOOLS = new Set(["Agent", "Task"]);
+/** Re-exported so callers that only render do not need to know the adapter exists. */
+export { DELEGATION_TOOLS };
 
 /** Tool calls worth a line, and the field that says what the call was actually about. */
 const TOOL_DETAIL = {
@@ -100,7 +112,7 @@ const TOOL_DETAIL = {
   // rejected twice for it.
   Agent: (i) => `${i.subagent_type ? `${i.subagent_type}: ` : ""}${i.description ?? ""}`,
   Task: (i) => `${i.subagent_type ? `${i.subagent_type}: ` : ""}${i.description ?? ""}`,
-  Skill: (i) => i.skill ?? i.name ?? "",
+  Skill: (i) => skillNameOf(i) ?? "",
   WebFetch: (i) => i.url,
 };
 
@@ -114,43 +126,34 @@ const truncate = (text, n = 96) => {
  * nothing a watcher needs.
  *
  * `state` is carried between calls so repeated prose deltas from one message collapse into a
- * single line rather than one line per token.
+ * single line rather than one line per token. A subagent's lines are indented under a bar,
+ * so a watcher can tell the lead's work from a specialist's.
  */
 export function renderEvent(line, state = {}) {
-  let event;
-  try {
-    event = JSON.parse(line);
-  } catch {
-    return null; // Not a JSON line — a warning on stderr, or a partial write. Ignore it.
+  const event = normalizeEvent(parseLine(line));
+  if (event.kind === "result") {
+    const { costUsd, numTurns, isError, subtype } = event.result;
+    const cost = typeof costUsd === "number" ? ` · $${costUsd.toFixed(2)}` : "";
+    const turns = typeof numTurns === "number" ? ` · ${numTurns} turns` : "";
+    const why = subtype && subtype !== "success" ? ` (${subtype})` : "";
+    return isError ? `  ✗ ended with an error${why}${turns}${cost}` : `  ✓ done${turns}${cost}`;
   }
-  if (!event || typeof event !== "object") return null;
+  if (event.kind !== "assistant") return null;
 
-  if (event.type === "result") {
-    const cost = typeof event.total_cost_usd === "number" ? ` · $${event.total_cost_usd.toFixed(2)}` : "";
-    const turns = typeof event.num_turns === "number" ? ` · ${event.num_turns} turns` : "";
-    return event.is_error
-      ? `  ✗ ended with an error${turns}${cost}`
-      : `  ✓ done${turns}${cost}`;
-  }
-
-  if (event.type !== "assistant") return null;
-
-  const content = event.message?.content;
-  if (!Array.isArray(content)) return null;
-
+  if (event.sessionId && !state.rootSession) state.rootSession = event.sessionId;
+  const lead = isSubagentEvent(event, state.rootSession) ? "  │ " : "  ";
   const out = [];
-  for (const block of content) {
-    if (block?.type === "text" && block.text?.trim()) {
-      const text = truncate(block.text, 140);
-      // Collapse a stream of deltas from the same message into one line.
-      if (text && text !== state.lastText) {
-        state.lastText = text;
-        out.push(`  · ${text}`);
-      }
-    } else if (block?.type === "tool_use") {
-      const detail = TOOL_DETAIL[block.name]?.(block.input ?? {});
-      out.push(`  → ${block.name}${detail ? `  ${truncate(detail, 84)}` : ""}`);
+  for (const text of event.texts) {
+    const one = truncate(text, 140);
+    // Collapse a stream of deltas from the same message into one line.
+    if (one && one !== state.lastText) {
+      state.lastText = one;
+      out.push(`${lead}· ${one}`);
     }
+  }
+  for (const use of event.toolUses) {
+    const detail = TOOL_DETAIL[use.name]?.(use.input);
+    out.push(`${lead}→ ${use.name}${detail ? `  ${truncate(detail, 84)}` : ""}`);
   }
   return out.length ? out.join("\n") : null;
 }
@@ -158,28 +161,37 @@ export function renderEvent(line, state = {}) {
 /**
  * Consume a stream-json feed, printing progress and returning what the run cost.
  *
- * Resolves with `{ costUsd, isError, subagents }`. `costUsd` is null when no parseable
- * result event arrived — a caller enforcing a spend ceiling must treat that as unknown,
- * never as zero, or the ceiling is bypassed by exactly the runs most likely to be
- * misbehaving. `subagents` lists every specialist the session delegated to, in order, which
- * is how the runner tells a task that reviewed its work from one that only said it would.
- * `skills` lists the procedures it loaded, checked the same way and for the same reason.
+ * `costUsd` is null when no parseable result event arrived — a caller enforcing a spend
+ * ceiling must treat that as unknown, never as zero, or the ceiling is bypassed by exactly
+ * the runs most likely to be misbehaving. `subagents` lists every specialist the *session
+ * itself* delegated to, in order, which is how the runner tells a task that reviewed its
+ * work from one that only said it would. `skills` lists the procedures loaded anywhere in
+ * the run — a builder loading the endpoint guide is the procedure being read, whoever read it.
+ *
+ * `limits.maxTurns` is a backstop. The runner passes `--max-turns` to the CLI, which stops
+ * the session itself and still reports what it cost; this only kills a session that went
+ * past it anyway. `limits.onLine` sees every raw line, which is how the runner keeps the
+ * stream on disk.
  */
 export function renderStream(readable, write = (s) => console.log(s), limits = {}) {
-  const { maxTurns = Infinity, onLimit = () => {} } = limits;
+  const { maxTurns = Infinity, onLimit = () => {}, onLine = () => {} } = limits;
   return new Promise((resolve) => {
     const state = {};
-    // Turns, counted as they stream. The dollar figure only arrives in the final event, so
-    // a run that never finishes never reports a cost — which is how one attempt reached 984
-    // turns and $240 against a $50 ceiling that is only checked between tasks. Turns are the
-    // one budget observable while a run is still going.
-    let turns = 0;
+    // Parent turns, counted as they stream. The dollar figure only arrives in the final
+    // event, so a run that never finishes never reports a cost — which is how one attempt
+    // reached 984 turns and $240 against a $50 ceiling. Turns are observable while the run
+    // is still going.
+    //
+    // A turn is one API message, and one message arrives as one event per content block,
+    // all with the same `message.id` — so turns are counted by distinct id. An event with
+    // no id at all (an older client, a hand-written feed) counts once by itself.
+    const parentMessages = new Set();
+    let anonymousTurns = 0;
+    // Subagents' turns, kept apart. Counting them against the parent killed nine runs that
+    // were delegating exactly as instructed.
+    const subagentMessages = new Set();
+    let anonymousSubagentTurns = 0;
     let stopped = false;
-    // Only the parent session's turns count. Every subagent streams through here too, so
-    // counting all of them meant a task that delegated to six departments blew the budget
-    // on their work rather than its own — punishing exactly the thorough runs the pipeline
-    // exists to produce. It killed nine of them. The first session id seen is the parent's.
-    let rootSession = null;
     // An account-level refusal — usage limit, expired credentials, a suspended key — is not
     // this task's failure. Every task after it fails the same way, so the caller has to be
     // able to tell "this change is wrong" from "nothing can run right now".
@@ -187,82 +199,112 @@ export function renderStream(readable, write = (s) => console.log(s), limits = {
     let buffer = "";
     let costUsd = null;
     let isError = false;
-    // Which specialists the session actually delegated to. Instructing a brief to route
-    // work is a request; this is the observation that says whether it happened, and it is
-    // what lets the runner refuse a task that skipped its review.
+    let resultSubtype = null;
+    let resultTurns = null;
+    let cliVersion = null;
+    // Which specialists the session actually delegated to, and when (seconds from the start
+    // of the attempt). Only the session's own calls: a specialist that spawned a helper has
+    // not put the change in front of another department. Names stay in `subagents`
+    // unchanged, because the department check reads that array.
     const subagents = [];
-    // When each of those delegations was dispatched, in seconds from the start of the
-    // attempt. Turns were journalled to answer "is the turn cap too high?"; this answers the
-    // question that replaced it — where does a 37-minute task spend 37 minutes? Without it,
-    // cutting a reviewer to go faster is a guess, and a guess is how this loop already lost
-    // 40% of its landed work once. Names stay in `subagents` unchanged, because the
-    // department check reads that array and a shape change there would fail a passing task.
-    const startedMs = Date.now();
     const subagentAtSec = [];
-    // Skills the session loaded. Same reasoning as the delegations: the brief names which
-    // skill fits the work, and this is the observation that says whether it was read.
     const skills = [];
+    // Each call is counted once, by its own id, however many events repeat its block.
+    const seenCalls = new Set();
+    const startedMs = Date.now();
+
+    const turns = () => parentMessages.size + anonymousTurns;
+
+    const consumeLine = (line) => {
+      if (!line.trim()) return;
+      onLine(line);
+      const raw = parseLine(line);
+      if (raw) {
+        const event = normalizeEvent(raw);
+        if (event.sessionId && !state.rootSession) state.rootSession = event.sessionId;
+        if (event.kind === "system" && event.subtype === "init" && typeof raw.claude_code_version === "string") {
+          cliVersion = raw.claude_code_version;
+        }
+        if (event.kind === "result") {
+          // Cumulative, and there can be several (a background subagent reporting after the
+          // first answer): the last one is the whole run.
+          if (event.result.costUsd !== null) costUsd = event.result.costUsd;
+          isError = event.result.isError;
+          resultSubtype = event.result.subtype;
+          resultTurns = event.result.numTurns;
+          if (!blocked && event.result.isError && isRefusal(event.result.text)) {
+            blocked = truncate(event.result.text, 160);
+          }
+        }
+        if (event.kind === "assistant") {
+          if (!blocked) {
+            const refusal = event.texts.find((t) => isRefusal(t));
+            if (refusal) blocked = truncate(refusal, 160);
+          }
+          const sub = isSubagentEvent(event, state.rootSession);
+          if (sub) {
+            if (event.messageId) subagentMessages.add(event.messageId);
+            else anonymousSubagentTurns += 1;
+          } else {
+            if (event.messageId) parentMessages.add(event.messageId);
+            else anonymousTurns += 1;
+            if (turns() > maxTurns && !stopped) {
+              stopped = true;
+              write(`  ✗ stopped: ${turns()} turns exceeds the per-attempt limit of ${maxTurns}`);
+              onLimit({ turns: turns(), maxTurns });
+            }
+          }
+          for (const use of event.toolUses) {
+            if (use.id) {
+              if (seenCalls.has(use.id)) continue;
+              seenCalls.add(use.id);
+            }
+            if (!sub && DELEGATION_TOOLS.has(use.name) && use.input.subagent_type) {
+              subagents.push(String(use.input.subagent_type));
+              subagentAtSec.push(Math.round((Date.now() - startedMs) / 1000));
+            }
+            if (use.name === SKILL_TOOL) {
+              const named = skillNameOf(use.input);
+              if (named) skills.push(named);
+            }
+          }
+        }
+      }
+      const rendered = renderEvent(line, state);
+      if (rendered) write(rendered);
+    };
 
     const consume = (chunk) => {
       buffer += chunk;
       const lines = buffer.split("\n");
       buffer = lines.pop() ?? "";
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        try {
-          const parsed = JSON.parse(line);
-          if (parsed?.type === "result") {
-            if (typeof parsed.total_cost_usd === "number") costUsd = parsed.total_cost_usd;
-            isError = Boolean(parsed.is_error);
-          }
-          if (parsed?.type === "assistant" && !blocked) {
-            for (const b of parsed.message?.content ?? []) {
-              if (b?.type !== "text" || !b.text) continue;
-              if (isRefusal(b.text)) blocked = truncate(b.text, 160);
-            }
-          }
-          if (parsed?.session_id && !rootSession) rootSession = parsed.session_id;
-          // An event with no session id at all is the parent's: some clients omit it, and
-          // a feed that never identifies a session is a single session by definition.
-          const isParent = !parsed?.session_id || parsed.session_id === rootSession;
-          if (parsed?.type === "assistant" && isParent) {
-            turns += 1;
-            if (turns > maxTurns && !stopped) {
-              stopped = true;
-              write(`  ✗ stopped: ${turns} turns exceeds the per-attempt limit of ${maxTurns}`);
-              onLimit({ turns, maxTurns });
-            }
-          }
-          if (parsed?.type === "assistant" && Array.isArray(parsed.message?.content)) {
-            for (const block of parsed.message.content) {
-              if (
-                block?.type === "tool_use" &&
-                DELEGATION_TOOLS.has(block.name) &&
-                block.input?.subagent_type
-              ) {
-                subagents.push(String(block.input.subagent_type));
-                subagentAtSec.push(Math.round((Date.now() - startedMs) / 1000));
-              }
-              if (block?.type === "tool_use" && block.name === "Skill") {
-                const named = block.input?.skill ?? block.input?.name;
-                if (named) skills.push(String(named));
-              }
-            }
-          }
-        } catch {
-          // Rendered below on a best-effort basis; unparseable lines carry no cost data.
-        }
-        const rendered = renderEvent(line, state);
-        if (rendered) write(rendered);
-      }
+      for (const line of lines) consumeLine(line);
     };
+
+    // One shape on every path, so a field added here never reads as undefined at the caller.
+    const outcome = () => ({
+      costUsd,
+      isError,
+      resultSubtype,
+      resultTurns,
+      stoppedByCli: LIMIT_SUBTYPES.has(resultSubtype),
+      cliVersion,
+      subagents,
+      subagentAtSec,
+      elapsedSec: Math.round((Date.now() - startedMs) / 1000),
+      skills,
+      turns: turns(),
+      subagentTurns: subagentMessages.size + anonymousSubagentTurns,
+      stoppedAtLimit: stopped,
+      blocked,
+    });
 
     readable.setEncoding("utf8");
     readable.on("data", consume);
     readable.on("end", () => {
       if (buffer.trim()) consume("\n");
-      resolve({ costUsd, isError, subagents, subagentAtSec, elapsedSec: Math.round((Date.now() - startedMs) / 1000), skills, turns, stoppedAtLimit: stopped, blocked });
+      resolve(outcome());
     });
-    readable.on("error", () => resolve({ costUsd, isError, subagents, skills, turns, stoppedAtLimit: stopped, blocked }));
+    readable.on("error", () => resolve(outcome()));
   });
 }

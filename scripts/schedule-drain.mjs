@@ -40,7 +40,7 @@ import {
   parseCeiling,
 } from "./lib/budget.mjs";
 import { isAlive, killTree } from "./lib/proc.mjs";
-import { config, WORK_BRANCH } from "./lib/project-config.mjs";
+import { config, resolveModel, WORK_BRANCH } from "./lib/project-config.mjs";
 import {
   launchdLabel,
   posixCommand,
@@ -196,7 +196,7 @@ const refuseDirty = argv.includes("--no-refuse-dirty")
     : wantsRefuseDirtyStart();
 
 const env = scheduleEnv({
-  model: argOf("model", process.env.AGENT_MODEL ?? config.budget.model ?? "opus"),
+  model: resolveModel({ env: process.env.AGENT_MODEL, arg: argOf("model", undefined) }),
   maxUsdPerTask: ceilingArg(maxUsdPerTask),
   maxUsdPerDrain: ceilingArg(maxUsdPerDrain),
   // How many times one brief may be started before it goes to failed/ for a person — it

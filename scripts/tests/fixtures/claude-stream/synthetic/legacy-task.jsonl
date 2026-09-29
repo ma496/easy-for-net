@@ -1,0 +1,8 @@
+{"type":"system","subtype":"init","session_id":"parent","claude_code_version":"1.0.0"}
+{"type":"assistant","session_id":"parent","message":{"content":[{"type":"text","text":"Delegating the migration."}]}}
+{"type":"assistant","session_id":"parent","message":{"content":[{"type":"tool_use","name":"Task","input":{"subagent_type":"data-engineer","description":"add tables"}}]}}
+{"type":"assistant","session_id":"sub-1","message":{"content":[{"type":"tool_use","name":"Read","input":{"file_path":"a.cs"}}]}}
+{"type":"assistant","session_id":"sub-1","message":{"content":[{"type":"text","text":"Done."}]}}
+{"type":"assistant","session_id":"parent","message":{"content":[{"type":"tool_use","name":"Task","input":{"subagent_type":"code-reviewer","description":"review"}}]}}
+{"type":"assistant","session_id":"parent","message":{"content":[{"type":"tool_use","name":"Skill","input":{"name":"backend-entity"}}]}}
+{"type":"result","subtype":"success","session_id":"parent","is_error":false,"num_turns":5,"total_cost_usd":1.5}

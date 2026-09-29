@@ -1,0 +1,9 @@
+{"type":"system","subtype":"init","session_id":"s","claude_code_version":"2.1.285"}
+{"type":"assistant","parent_tool_use_id":null,"session_id":"s","message":{"id":"msg_p1","content":[{"type":"thinking","thinking":"…"}]}}
+{"type":"assistant","parent_tool_use_id":null,"session_id":"s","message":{"id":"msg_p1","content":[{"type":"tool_use","id":"toolu_a","name":"Agent","input":{"subagent_type":"backend-engineer","description":"build"}}]}}
+{"type":"assistant","parent_tool_use_id":null,"session_id":"s","message":{"id":"msg_p1","content":[{"type":"tool_use","id":"toolu_a","name":"Agent","input":{"subagent_type":"backend-engineer","description":"build"}}]}}
+{"type":"assistant","parent_tool_use_id":"toolu_a","session_id":"s","message":{"id":"msg_s1","content":[{"type":"tool_use","id":"toolu_b","name":"Skill","input":{"skill":"backend-endpoint"}}]}}
+{"type":"assistant","parent_tool_use_id":"toolu_a","session_id":"s","message":{"id":"msg_s2","content":[{"type":"tool_use","id":"toolu_c","name":"Agent","input":{"subagent_type":"code-reviewer","description":"self-review"}}]}}
+{"type":"assistant","parent_tool_use_id":"toolu_c","session_id":"s","message":{"id":"msg_s3","content":[{"type":"text","text":"APPROVED"}]}}
+{"type":"assistant","parent_tool_use_id":null,"session_id":"s","message":{"id":"msg_p2","content":[{"type":"text","text":"Built."}]}}
+{"type":"result","subtype":"success","session_id":"s","is_error":false,"num_turns":2,"total_cost_usd":2.25}

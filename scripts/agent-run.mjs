@@ -38,14 +38,21 @@
  * anything stay blocked even here. Committing on the work branch is deliberately allowed —
  * that is how work accumulates for review. Pass --safe to require approval for edits.
  */
-import { spawn, spawnSync } from "node:child_process";
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { createWriteStream, readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
-import { appendRun, priorFailureBrief, priorTaskRuns, LOG_DIR } from "./run-journal.mjs";
+import { appendRun, priorFailureBrief, priorTaskRuns, readRuns, LOG_DIR } from "./run-journal.mjs";
 import { formatForBrief, readLessons, selectLessons } from "./lib/memory.mjs";
 import { renderStream } from "./lib/stream-render.mjs";
-import { describeSpend, formatUsd, journalCostFields, parseAssumedUsd, sumSpend } from "./lib/spend.mjs";
+import {
+  assumedRateFromHistory,
+  describeSpend,
+  formatUsd,
+  journalCostFields,
+  parseAssumedUsd,
+  sumSpend,
+} from "./lib/spend.mjs";
 import {
   BUDGET_EXIT_CODE,
   DEFAULT_MAX_USD_PER_TASK,
@@ -62,8 +69,10 @@ import {
   restoreSalvage,
   salvageBrief,
 } from "./lib/salvage.mjs";
-import { hasExecutable } from "./lib/proc.mjs";
-import { config, WORK_BRANCH } from "./lib/project-config.mjs";
+import { IS_WINDOWS, hasExecutable, killTree, spawnPortable } from "./lib/proc.mjs";
+import { assertValidConfig, config, modelArgs, positiveInt, resolveModel, WORK_BRANCH } from "./lib/project-config.mjs";
+import { workingTreePaths } from "./lib/changed-paths.mjs";
+import { attemptOutcome } from "./lib/attempt-outcome.mjs";
 import { buildBrief } from "./lib/brief.mjs";
 import {
   expectedSequence,
@@ -81,6 +90,8 @@ const SCRIPTS = dirname(fileURLToPath(import.meta.url));
 // Resolved from this file like SCRIPTS above, for the same reason: cwd is the task's
 // checkout, and the runner must find its own tooling regardless of where it is invoked.
 const MEMORY_DIR = join(SCRIPTS, "..", ".claude", "memory");
+
+assertValidConfig();
 
 const argv = process.argv.slice(2);
 const flag = (name) => argv.includes(`--${name}`);
@@ -107,14 +118,15 @@ if (!task || !task.trim()) {
 /**
  * The model the task's own session runs on.
  *
- * This was the single largest uncontrolled cost in the loop. Every subagent pins its model
- * in `.claude/agents/*.md`, but the session that spawns them pinned nothing, so it ran on
- * whatever the machine's default happened to be — and it is the session that does the most
- * work by far: it reads the codebase, writes the code, runs the commands, and drives all
- * eight agents. Its turns dwarf theirs.
+ * This was the single largest uncontrolled cost in the loop. The session that spawns the
+ * subagents pinned nothing, so it ran on whatever the machine's default happened to be —
+ * and it is the session that does the most work by far: it reads the codebase, writes the
+ * code, runs the commands, and drives every agent. Its turns dwarf theirs.
  *
- * Opus by default, on the evidence. It was set to sonnet to save tokens and that was wrong in
- * both directions — measured across 23 landed tasks:
+ * `opus` by default — the alias, which always names the newest Opus, so a new release is
+ * picked up without an edit. Every agent in `.claude/agents/` pins the same alias. The lead
+ * was set to sonnet once to save tokens and that was wrong in both directions — measured
+ * across 23 landed tasks:
  *
  *   opus      2.3 attempts   24 min median   $12.74 per task
  *   sonnet    2.4 attempts   67 min median   $19.33 per task
@@ -129,49 +141,78 @@ if (!task || !task.trim()) {
  *   AGENT_MODEL=sonnet    slower and dearer here; measure before assuming otherwise
  *   AGENT_MODEL=inherit   pass no flag at all and take the CLI's own default
  */
-const MODEL = (process.env.AGENT_MODEL ?? argOf("model", config.budget.model)).trim();
+const MODEL = resolveModel({ env: process.env.AGENT_MODEL, arg: argOf("model", undefined) });
 
 /**
  * How many times one task may be attempted before it is filed as failed.
  *
- * Two, on the evidence. Of 27 build runs, 11 went to a third attempt: they cost $211 —
- * nearly a third of all build spend — and 4 of them landed. Seven paid three times over and
- * produced nothing.
+ * `budget.attempts` in the config — three, on measurement (see loop.mjs, which states the
+ * evidence: 14 of 35 landed runs landed on attempt three). What bounds the spend of those
+ * attempts is AGENT_MAX_USD_PER_TASK, not a lower count.
  *
- * This is the rule `queue -- retry` already applies at the other end, where RETRY_LIMIT is
- * 2 because "a task failing the same way a third time will not pass on the fourth, and every
- * attempt costs real money". A task that has failed twice needs its brief changed or its
- * blocker cleared, not a third identical run.
- *
- * Nothing is lost by stopping earlier: the task goes to `failed/`, where `queue -- retry`
- * puts it back — with a person having looked at why, which is the step that actually
- * changes the outcome. Raise it per run with `--attempts 3` when you have reason to.
+ * Nothing is lost by stopping: the task goes to `failed/`, where `queue -- retry` puts it
+ * back — with a person having looked at why, which is the step that actually changes the
+ * outcome. Override per run with `--attempts N`.
  */
-const MAX_ATTEMPTS = Number(argOf("attempts", config.budget.attempts));
+const MAX_ATTEMPTS = positiveInt(argOf("attempts", undefined), config.budget.attempts, "--attempts");
 /**
  * Turns one attempt may take before it is stopped — the *parent's* turns only, since every
  * subagent streams through the same feed and counting theirs punished the thorough runs.
  *
- * Set high on purpose. The real guard is the dollar ceiling, which is measured rather than
- * inferred and is what anyone actually cares about; this exists solely to catch a run that
- * has stopped converging, and the one it was written for reached 984. Every task it has
- * stopped since was inside its money budget — one at 401 turns had spent $17 of $50 — so a
- * tighter number was costing good work to prevent nothing.
+ * Passed to the CLI as `--max-turns`, so the session stops itself and still reports what it
+ * cost; the stream-side count in lib/stream-render.mjs is only a backstop for a session that
+ * went past it anyway. Killing the process was the old mechanism, and a killed session
+ * reports no cost at all — the ledger then charged a runaway attempt one dollar.
+ *
+ * Set high on purpose. The real guard is the dollar ceiling; this exists solely to catch a
+ * run that has stopped converging. The figures it was first tuned on (984, 401) counted
+ * every content block of every agent's messages as a turn, which overstated the parent's
+ * real turns roughly threefold — the default was recalibrated to real turns when that was
+ * found.
  */
 /** Exit code meaning "the account cannot run", distinct from a task that failed. */
 const EXIT_BLOCKED = 4;
-const MAX_TURNS = Number(
-  process.env.AGENT_MAX_TURNS_PER_ATTEMPT ?? argOf("max-turns", String(config.budget.maxTurns)),
+const MAX_TURNS = positiveInt(
+  process.env.AGENT_MAX_TURNS_PER_ATTEMPT ?? argOf("max-turns", undefined),
+  config.budget.maxTurns,
+  "AGENT_MAX_TURNS_PER_ATTEMPT",
 );
+/** The stream-side backstop, a little past the CLI's own stop so the CLI stops first. */
+const BACKSTOP_TURNS = Math.ceil(MAX_TURNS * 1.1) + 5;
+/**
+ * Wall-clock minutes one attempt may run. Turns and dollars are both reported by the
+ * session, so a session that hangs — a tool call that never returns, a stalled connection —
+ * reports neither and would hold the queue for ever. `off` disables it.
+ */
+const MAX_MINUTES = (() => {
+  const raw = process.env.AGENT_MAX_MINUTES_PER_ATTEMPT ?? argOf("max-minutes", undefined);
+  if (raw !== undefined && String(raw).trim().toLowerCase() === "off") return Infinity;
+  return positiveInt(raw, config.budget.maxMinutesPerAttempt, "AGENT_MAX_MINUTES_PER_ATTEMPT");
+})();
 /** The port a live check prefers; it moves off it when a stranger is already there. */
 const DEFAULT_VERIFY_PORT = String(config.verify.service?.port ?? 3000);
 const PERMISSION_MODE = flag("safe") ? "acceptEdits" : "bypassPermissions";
 const RUN_ID = `run-${new Date().toISOString().replace(/[:.]/g, "-")}`;
 const startedAt = new Date().toISOString();
+// Handed to the session's environment. `record-lesson.mjs` reads AGENT_TASK, so a lesson
+// says which task taught it whether or not the session remembered to pass `--task`.
+const childEnv = { AGENT_TASK: taskSlug ?? "", AGENT_RUN_ID: RUN_ID };
 
 // What one `claude` call is charged at when its stream carried no readable cost. Scripts
 // read the environment directly; the setting is documented in .env.example.
-const ASSUMED_USD = parseAssumedUsd(process.env.AGENT_ASSUMED_USD_PER_CALL);
+// Unset, it is learned from the journal: the median measured attempt, since the attempts
+// that go unmeasured are the killed ones and those are the long ones.
+const ASSUMED_USD = assumedRateFromHistory(
+  (() => {
+    try {
+      return readRuns();
+    } catch {
+      return [];
+    }
+  })(),
+  parseAssumedUsd(process.env.AGENT_ASSUMED_USD_PER_CALL),
+  { explicit: Boolean(String(process.env.AGENT_ASSUMED_USD_PER_CALL ?? "").trim()) },
+);
 
 // One entry per attempt, in order, holding what that attempt's call reported — or null
 // when it reported nothing. Kept for the journal rather than summed as we go: the
@@ -183,13 +224,16 @@ const attemptCosts = [];
 const attemptTurns = [];
 /** Per attempt: how long it ran, and when each specialist was dispatched within it. */
 const attemptPhases = [];
+/** Per attempt: the result subtype the session ended on, and the CLI version that ran it. */
+const attemptEndings = [];
 
 // What this task may spend in total, across every attempt. Read from the environment like
 // the assumed figure above and documented in .env.example; `off` means no ceiling.
 //
-// The ceiling bounds *retrying*, not the attempt in flight: an attempt that has already
-// been paid for runs to its end and is accepted if it verifies. Killing it halfway would
-// leave a dirty tree and a half-finished change, and would have spent the money anyway.
+// It bounds the attempt in flight too, but without killing it: the CLI is handed what is
+// left as `--max-budget-usd` and stops the session itself, reporting what it spent, with its
+// work left in the tree for verification and the next attempt's salvage. An attempt that
+// crosses the line on its last turn still finishes that turn and is accepted if it verifies.
 const MAX_USD_PER_TASK = parseCeiling(
   process.env.AGENT_MAX_USD_PER_TASK,
   DEFAULT_MAX_USD_PER_TASK,
@@ -201,8 +245,38 @@ const MAX_USD_PER_TASK = parseCeiling(
 let taskSpentUsd = 0;
 let budgetExhausted = false;
 
+// A full gate — build, every test suite, lint, a production web build — writes far more
+// than Node's default 1 MiB capture. Past it the child is killed with ENOBUFS and the task
+// reads as failed on truncated output that says nothing about why.
+const CAPTURE_BYTES = 64 * 1024 * 1024;
 const run = (cmd, args, opts = {}) =>
-  spawnSync(cmd, args, { encoding: "utf8", stdio: "pipe", ...opts });
+  spawnSync(cmd, args, { encoding: "utf8", stdio: "pipe", maxBuffer: CAPTURE_BYTES, ...opts });
+/**
+ * Verify, bounded in time: a test run that hangs would otherwise hold the queue for ever.
+ * Generous, because a cold gate with a production web build is slow. `timedOut` is reported
+ * so the feedback can say so rather than presenting a killed run as a failing one.
+ */
+const VERIFY_TIMEOUT_MS = positiveInt(process.env.AGENT_VERIFY_TIMEOUT_MINUTES, 60, "AGENT_VERIFY_TIMEOUT_MINUTES") * 60_000;
+function runVerify(extraArgs = []) {
+  const args = [
+    join(SCRIPTS, "verify.mjs"),
+    "--port",
+    argOf("verify-port", DEFAULT_VERIFY_PORT),
+    // The branch this task was based on. Judging against a stale base would report every
+    // file on the base branch as part of this change.
+    "--base",
+    argOf("verify-base", WORK_BRANCH),
+    ...extraArgs,
+  ];
+  if (!flag("no-autostart")) args.push("--autostart");
+  const res = run("node", args, { timeout: VERIFY_TIMEOUT_MS, killSignal: "SIGKILL" });
+  const timedOut = res.error?.code === "ETIMEDOUT";
+  const output =
+    `${res.stdout ?? ""}\n${res.stderr ?? ""}` +
+    (timedOut ? `\nverify did not finish within ${VERIFY_TIMEOUT_MS / 60_000} minutes and was stopped.\n` : "") +
+    (res.error && !timedOut ? `\nverify could not run: ${res.error.message}\n` : "");
+  return { status: res.status ?? 1, output, timedOut };
+}
 const runLive = (cmd, args) => spawnSync(cmd, args, { stdio: "inherit", encoding: "utf8" });
 
 /**
@@ -212,25 +286,67 @@ const runLive = (cmd, args) => spawnSync(cmd, args, { stdio: "inherit", encoding
  * until it returns — which is the whole problem this replaces. stderr stays inherited so
  * real errors land in the log untouched.
  */
-async function runStreaming(cmd, args) {
-  const child = spawn(cmd, args, { stdio: ["ignore", "pipe", "inherit"] });
+async function runStreaming(cmd, args, { input, streamFile }) {
+  // Through proc.mjs, so an npm-installed `claude.cmd` starts on Windows as the native
+  // binary does. The prompt goes in on stdin rather than as an argument: brief, memory,
+  // history and feedback together can pass Windows' 32,767-character command line, and a
+  // spawn that fails on length reads downstream as "nothing ran" — the account-blocked path.
+  const child = spawnPortable(cmd, args, {
+    stdio: ["pipe", "pipe", "inherit"],
+    env: { ...process.env, ...childEnv },
+    // Its own process group on POSIX, so killTree reaches everything the session started.
+    detached: !IS_WINDOWS,
+  });
+  // Detached, it no longer hears the terminal's Ctrl-C or the drain's SIGTERM — so this
+  // process passes them on rather than leaving a session writing to a tree it abandoned.
+  const forward = () => {
+    killTree(child.pid);
+    process.exit(130);
+  };
+  const signals = ["SIGINT", "SIGTERM", "SIGHUP"];
+  for (const sig of signals) process.on(sig, forward);
+  child.stdin.on("error", () => {}); // A child that exits early closes the pipe; that is not ours to throw.
+  child.stdin.end(input);
+  // Every raw line, kept beside the rendered log. The rendered log is lossy by design, and
+  // when the CLI's format moves this is the file a new fixture is cut from.
+  const raw = streamFile ? createWriteStream(streamFile) : null;
+  let killedFor = null;
+  const stop = (why) => {
+    if (killedFor) return;
+    killedFor = why;
+    // The whole tree: on Windows `child.kill` ends only the shell or the CLI itself and
+    // leaves the dotnet and node processes it started holding the ports and the files.
+    if (!killTree(child.pid)) child.kill("SIGTERM");
+  };
   // The dollar ceilings in lib/budget.mjs are checked between tasks, deliberately: killing
   // a task mid-edit leaves a half-finished tree. But that leaves a single attempt able to
-  // spend without limit, and one did — 984 turns and $240 against a $50 per-task ceiling.
-  // Turns are observable while the run is still going, so they are the guard that can act.
+  // spend without limit, and one did — $240 against a $50 per-task ceiling. So the CLI is
+  // given the remaining budget and turn cap itself (see the call site), and this is the
+  // backstop for a session that ignores them.
   const rendered = renderStream(child.stdout, undefined, {
-    maxTurns: MAX_TURNS,
-    onLimit: () => child.kill("SIGTERM"),
+    maxTurns: BACKSTOP_TURNS,
+    onLimit: () => stop("turns"),
+    onLine: raw ? (line) => raw.write(`${line}\n`) : undefined,
   });
+  const timer = Number.isFinite(MAX_MINUTES)
+    ? setTimeout(() => {
+        console.error(`\n  ✗ stopped: the attempt ran past ${MAX_MINUTES} minutes (AGENT_MAX_MINUTES_PER_ATTEMPT)`);
+        stop("time");
+      }, MAX_MINUTES * 60_000)
+    : null;
   const status = await new Promise((res) => {
     child.on("error", () => res(1));
     child.on("close", (code) => res(code ?? 1));
   });
+  if (timer) clearTimeout(timer);
+  for (const sig of signals) process.off(sig, forward);
+  const outcome = await rendered;
+  if (raw) await new Promise((res) => raw.end(res));
   // Spread rather than cherry-pick. Naming the fields here meant that adding `subagents`
   // to renderStream left them undefined at the call site: a task passed verify, then the
   // enforcement that reads them crashed on it. A field added at one end must not need
   // remembering at the other.
-  return { status, ...(await rendered) };
+  return { status, ...outcome, timedOut: killedFor === "time" };
 }
 const branchName = () => run("git", ["rev-parse", "--abbrev-ref", "HEAD"]).stdout.trim();
 
@@ -262,6 +378,7 @@ function finish(outcome, { attempts, failure }) {
     turns: attemptTurns.slice(),
     // What each attempt's time was spent on. Turns say how much happened; this says when.
     phases: attemptPhases.slice(),
+    endings: attemptEndings.slice(),
   });
 }
 
@@ -285,19 +402,7 @@ function dirtyOutsideQueue(porcelain) {
   return dirtyOutsideQueueLines(porcelain);
 }
 
-function runVerifyCapture() {
-  const verifyArgs = [
-    join(SCRIPTS, "verify.mjs"),
-    "--port",
-    argOf("verify-port", DEFAULT_VERIFY_PORT),
-    "--base",
-    argOf("verify-base", WORK_BRANCH),
-  ];
-  if (!flag("no-autostart")) verifyArgs.push("--autostart");
-  const verify = run("node", verifyArgs, { stdio: "pipe" });
-  const output = `${verify.stdout ?? ""}\n${verify.stderr ?? ""}`;
-  return { status: verify.status ?? 1, output };
-}
+const runVerifyCapture = () => runVerify();
 
 // Work happens on the work branch, in place — no task branch, no worktree.
 {
@@ -356,13 +461,12 @@ const memory = (() => {
   }
 })();
 
-const BRIEF = buildBrief({ memory, history });
+const BRIEF = buildBrief({ memory, history, taskSlug: taskSlug ?? "" });
 
 let feedback = "";
 // Guidance that belongs to *how* the last attempt ended rather than to what verification
 // said. Kept apart from `feedback` so both reach the retry, in the right order.
 let turnLimitNote = "";
-let stoppedAtLimitThisAttempt = false;
 let passed = false;
 let attempt = 0;
 
@@ -403,8 +507,6 @@ if (Number.isFinite(MAX_USD_PER_TASK) && taskSpentUsd >= MAX_USD_PER_TASK) {
 // stops is the attempt that would have come after it.
 while (attempt < MAX_ATTEMPTS && !passed && !budgetExhausted) {
   attempt++;
-  turnLimitNote = "";
-  stoppedAtLimitThisAttempt = false;
 
   // Salvage-on-retry: if the tree already has WIP (restored park or prior attempt in this
   // run), verify it *before* spending another full Claude build. Reviews-only when green;
@@ -438,11 +540,17 @@ while (attempt < MAX_ATTEMPTS && !passed && !budgetExhausted) {
         : "";
 
   const carried = [turnLimitNote, feedback].filter(Boolean).join("\n\n");
+  // Consumed here, once. It used to be cleared at the top of the loop — before this line
+  // read it — so the note about how the last attempt ended never reached the next one.
+  turnLimitNote = "";
   // BRIEF already ends with `TASK:\n` — insert salvage *before* that marker so Claude sees
-  // the salvage rules as part of the standing instructions, then the task text.
+  // the salvage rules as part of the standing instructions, then the task text. A salvage
+  // retry still hears how the previous attempt ended: an attempt stopped at its limit
+  // leaves its work in the tree, so the attempt after it is always a salvage.
   const briefHead = BRIEF.replace(/\nTASK:\s*$/, "\n");
+  const endedNote = attempt > 1 && carried ? `\n\nHow the previous attempt ended:\n\n${carried.slice(-6000)}` : "";
   const prompt = salvagePrefix
-    ? `${briefHead}${salvagePrefix}\nTASK:\n${task}`
+    ? `${briefHead}${salvagePrefix}\nTASK:\n${task}${endedNote}`
     : attempt === 1
       ? `${BRIEF}${task}`
       : `${BRIEF}${task}
@@ -457,19 +565,39 @@ ${carried.slice(-6000)}`;
   // the call returns, so a healthy run can sit silent for many minutes and read as a hang —
   // which is exactly when somebody kills it. The final event also carries total_cost_usd,
   // which is what a spend ceiling will need.
-  const claudeRes = await runStreaming("claude", [
-    "-p",
-    prompt,
-    ...(MODEL && MODEL !== "inherit" ? ["--model", MODEL] : []),
-    "--permission-mode",
-    PERMISSION_MODE,
-    "--output-format",
-    "stream-json",
-    "--verbose",
-  ]);
+  //
+  // The CLI enforces two limits itself, which is what keeps a stopped attempt's cost on the
+  // record: `--max-turns` for the parent's turns, and `--max-budget-usd` for what is left of
+  // this task's ceiling — so one attempt can no longer spend the whole ceiling several times
+  // over before anything between attempts gets to look. A session stopped by either leaves
+  // its work in the tree, and verification below decides whether it was enough.
+  const remainingUsd = Number.isFinite(MAX_USD_PER_TASK) ? Math.max(0.01, MAX_USD_PER_TASK - taskSpentUsd) : null;
+  const claudeRes = await runStreaming(
+    "claude",
+    [
+      "-p",
+      ...modelArgs(MODEL),
+      "--permission-mode",
+      PERMISSION_MODE,
+      "--max-turns",
+      String(MAX_TURNS),
+      ...(remainingUsd !== null ? ["--max-budget-usd", remainingUsd.toFixed(2)] : []),
+      "--output-format",
+      "stream-json",
+      "--verbose",
+    ],
+    { input: prompt, streamFile: join(LOG_DIR, `${RUN_ID}-attempt-${attempt}.stream.jsonl`) },
+  );
 
   attemptCosts.push(typeof claudeRes.costUsd === "number" ? claudeRes.costUsd : null);
   attemptTurns.push(typeof claudeRes.turns === "number" ? claudeRes.turns : 0);
+  // How the session itself said it ended (`success`, `error_max_turns`, …) and which CLI
+  // produced it — so a change of behaviour after an update can be traced to the update.
+  attemptEndings.push({
+    subtype: claudeRes.resultSubtype ?? null,
+    cli: claudeRes.cliVersion ?? null,
+    timedOut: Boolean(claudeRes.timedOut),
+  });
   // Where this attempt's wall clock went: each delegation paired with the second it was
   // dispatched, and how long the attempt ran in total. One line per attempt, so the question
   // "which phase costs the 37 minutes" has an answer next time somebody asks instead of an
@@ -522,20 +650,28 @@ ${carried.slice(-6000)}`;
   // unverified threw away a correct, reviewable change that cost $22.82 and then blocked
   // every later drain with its own leftovers. So verify what it produced before judging it,
   // and fall through to the same acceptance path any other attempt takes.
-  if (claudeRes.stoppedAtLimit) {
-    console.error(`\nAttempt ${attempt} was stopped at ${claudeRes.turns} turns.`);
+  const ending = attemptOutcome(claudeRes);
+  if (ending === "limit") {
+    const why = claudeRes.timedOut
+      ? `after ${MAX_MINUTES} minutes, the per-attempt time limit`
+      : claudeRes.resultSubtype === "error_max_budget_usd"
+        ? "on what was left of the task's spend ceiling"
+        : `after ${claudeRes.turns} turns, the per-attempt limit`;
+    console.error(`\nAttempt ${attempt} was stopped ${why}.`);
     console.error("Its work is left in the tree — the next attempt continues from it rather");
     console.error("than starting over, and verification decides whether it was enough.");
     console.error("Verifying what it produced before calling it a failure.");
     turnLimitNote =
-      `The previous attempt was stopped after ${claudeRes.turns} turns, which is the ` +
-      "per-attempt limit. It was not failing — it was not converging. Work in smaller " +
-      "steps: make the change, verify, and delegate the reviews rather than re-reading the " +
-      "same files. If the task genuinely cannot be done within that budget, say so and stop.";
-    stoppedAtLimitThisAttempt = true;
+      `The previous attempt was stopped ${why}. It was not failing — it was not ` +
+      "converging. Work in smaller steps: make the change, verify, and delegate the reviews " +
+      "rather than re-reading the same files. If the task genuinely cannot be done within " +
+      "that budget, say so and stop.";
   }
 
-  if (claudeRes.status !== 0) {
+  // A limit stop exits non-zero by design and is judged by what it left, below — sending it
+  // down this path meant the verification the comment above promises never happened. Any
+  // other non-zero exit crashed; its tree, if any, is the next attempt's salvage.
+  if (ending === "crashed") {
     console.error(`\nClaude Code exited with status ${claudeRes.status}.`);
     feedback = `Claude Code itself exited non-zero (${claudeRes.status}).`;
     continue;
@@ -556,17 +692,8 @@ ${carried.slice(-6000)}`;
   }
 
   log(`Attempt ${attempt} — verifying`);
-  const verifyArgs = [
-    join(SCRIPTS, "verify.mjs"),
-    "--port", argOf("verify-port", DEFAULT_VERIFY_PORT),
-    // The branch this task was based on. Judging a worktree against
-    // a stale base would report every file on the base branch as part of this change.
-    "--base", argOf("verify-base", WORK_BRANCH),
-  ];
-  if (!flag("no-autostart")) verifyArgs.push("--autostart");
-
-  const verify = run("node", verifyArgs, { stdio: "pipe" });
-  const output = `${verify.stdout ?? ""}\n${verify.stderr ?? ""}`;
+  const verify = runVerify();
+  const output = verify.output;
   process.stdout.write(output);
   writeFileSync(join(LOG_DIR, `${RUN_ID}-attempt-${attempt}.log`), output);
 
@@ -577,17 +704,17 @@ ${carried.slice(-6000)}`;
     // tempted to do. So a review by an agent that did not write the code is required, and
     // required means checked: the brief asks, and this refuses.
     //
-    // Detection is on the Task tool calls actually observed in the stream, not on the
+    // Detection is on the Agent tool calls actually observed in the stream, not on the
     // session's own account of what it did. An agent that says it reviewed and did not is
     // the case this exists to catch.
     // Which departments this change actually belongs to is derived from the paths in the
     // diff, not from the brief's prose. A brief describes intent; the diff is what
     // happened, and a task that promised not to touch the schema and did must still answer
     // to the migrator.
-    const changedPaths = (spawnSync("git", ["status", "--porcelain"], { encoding: "utf8" }).stdout ?? "")
-      .split("\n")
-      .map((l) => l.slice(3).trim())
-      .filter(Boolean);
+    //
+    // Untracked files are listed one by one: a new directory is otherwise a single line
+    // that no path rule matches, and a whole new page owed no design review.
+    const changedPaths = workingTreePaths();
 
     // Before asking who reviewed it, ask whether there is an "it". Verification on an
     // untouched tree passes — of course it does, the branch is green — so an attempt that
@@ -629,7 +756,7 @@ ${carried.slice(-6000)}`;
           )
           .join("\n") +
         "\n\nDo not redo the work. Delegate the diff you already have to each agent named " +
-        "above with the Task tool, act on what they return, and then finish. A reviewing " +
+        "above with the Agent tool, act on what they return, and then finish. A reviewing " +
         "agent reports; you make the changes it asks for.";
       continue;
     }
@@ -737,8 +864,10 @@ if (!passed) {
     console.error(`\nGave up after ${MAX_ATTEMPTS} attempt(s), but ${left.length} file(s) are changed.`);
     console.error("Verifying them before calling this a failure — it may be finished work.\n");
 
-    const salvage = run("node", [join(SCRIPTS, "verify.mjs"), "--autostart"], { stdio: "pipe" });
-    process.stdout.write(`${salvage.stdout ?? ""}\n${salvage.stderr ?? ""}`);
+    // The same port and base as every other verify in this run; this one used to drop both
+    // and judge the work against a different branch on the default port.
+    const salvage = runVerify();
+    process.stdout.write(salvage.output);
 
     if (salvage.status === 0) {
       console.log("\nIt verifies. Accepting the work rather than discarding it.");
