@@ -1,6 +1,7 @@
 namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
 using Backend.ShareData.Entities;
+using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
 
@@ -10,14 +11,14 @@ using Backend.Features.Tenancy.Core;
 /// exactly as they were, and only its lifecycle status changes.
 /// </summary>
 /// <remarks>
-/// Suspension is not enforced here. Members of a suspended tenant keep their sessions and stay
-/// signed in; their next tenant-scoped request is refused by <c>TenantContextProcessor</c> with
-/// <see cref="ErrorCodes.TenantSuspended"/>, which leaves their access to every other tenant they
-/// belong to intact and lets the web app offer them one of those instead. Suspending a tenant that
-/// is already suspended is accepted and changes nothing, because suspension describes a state to
-/// reach rather than a transition to make.
+/// Once the status is saved, every session acting in the tenant is ended: access tokens answer 401 on
+/// the next request and refresh tokens are refused, so members sign in again - to another tenant they
+/// belong to, since sign-in into a suspended one is refused. Sessions in other tenants and in platform
+/// scope are untouched. Suspending a tenant that is already suspended is accepted and changes nothing
+/// but revokes again, harmlessly, because suspension describes a state to reach rather than a
+/// transition to make.
 /// </remarks>
-sealed class TenantSuspendEndpoint(ITenantService tenantService, AppDbContext dbContext) : Endpoint<TenantSuspendRequest, TenantSuspendResponse>
+sealed class TenantSuspendEndpoint(ITenantService tenantService, AppDbContext dbContext, ISessionRevocationService sessionRevocationService) : Endpoint<TenantSuspendRequest, TenantSuspendResponse>
 {
     public override void Configure()
     {
@@ -45,6 +46,7 @@ sealed class TenantSuspendEndpoint(ITenantService tenantService, AppDbContext db
         // rewritten, so reactivating later restores the tenant exactly as it was left.
         tenant.Status = TenantStatus.Suspended;
         await dbContext.SaveChangesAsync(cancellationToken);
+        await sessionRevocationService.RevokeTenantAsync(tenant.Id, cancellationToken);
 
         await Send.ResponseAsync(new TenantSuspendResponseMapper().Map(tenant), cancellation: cancellationToken);
     }

@@ -110,13 +110,8 @@ public class FileGetTests(App app) : FileTestsBase(app)
     /// </summary>
     /// <remarks>
     /// The file is served to the same client before the deletion, so the refusal that follows is provably
-    /// the deletion's doing rather than a read that was never admissible. The refusal is stated over the
-    /// file's tenant rather than over the caller's session: this endpoint is exempt from the global tenant
-    /// requirement - an account-owned file has to be readable while the owner acts in any tenant or in none
-    /// - so the request reaches the file's own attribution, which reports that there is no live tenant left
-    /// to serve it in. That is a different verdict from the session-level refusal the tenant-scoped
-    /// endpoints answer with, and it is the one the criterion is about, because it is reached by looking
-    /// the file up rather than by refusing the caller before any file is considered.
+    /// the deletion's doing rather than a read that was never admissible. Deleting the tenant ends every
+    /// session acting in it, so the member's token answers 401 before any file is looked up.
     /// </remarks>
     [Fact]
     public async Task Deleted_Tenant_Files_Are_Not_Served_But_Are_Retained()
@@ -140,7 +135,16 @@ public class FileGetTests(App app) : FileTestsBase(app)
 
         deleteResponse.StatusCode.Should().Be(HttpStatusCode.OK, "a test that cannot delete the tenant cannot arrange what it asserts on");
 
-        var (refused, refusal) = await memberClient
+        var (ended, _) = await memberClient
+            .GETAsync<FileGetEndpoint, FileGetRequest, ProblemDetails>(new() { FileName = storedName });
+
+        ended.StatusCode.Should().Be(
+            HttpStatusCode.Unauthorized,
+            "the deletion ended the member's session, so the read is refused before any file is considered");
+
+        // A session the deletion did not end - the platform administrator's, in platform scope - reaches
+        // the file lookup itself, which reports that the owning tenant is gone.
+        var (refused, refusal) = await Client
             .GETAsync<FileGetEndpoint, FileGetRequest, ProblemDetails>(new() { FileName = storedName });
 
         refused.StatusCode.Should().Be(
@@ -151,7 +155,7 @@ public class FileGetTests(App app) : FileTestsBase(app)
             ErrorCodes.TenantNotFound.Value,
             "the refusal names the state the file's tenant is in, which is a verdict about the file rather than about the caller's session");
 
-        var raw = await RequestContentAsync(memberClient, storedName);
+        var raw = await RequestContentAsync(Client, storedName);
 
         raw.StatusCode.Should().Be(refused.StatusCode, "the same request answers the same way however it is read");
         (await raw.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).Should().NotContain(

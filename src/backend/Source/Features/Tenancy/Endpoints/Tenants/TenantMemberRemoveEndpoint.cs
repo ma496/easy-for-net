@@ -1,6 +1,7 @@
 namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
 using Backend.Features.Identity.Core;
+using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
@@ -22,11 +23,10 @@ using Backend.Features.Tenancy.Core;
 /// every membership read stops finding it.
 /// </para>
 /// <para>
-/// The removed member's live sessions lose access to this tenant on their next request and to nothing
-/// else: no password is changed, no session is ended, and a session acting in another tenant they
-/// still belong to carries on. Nothing is pushed to those sessions for that to happen - what a session
-/// may do is recomputed from the membership and the role assignments on every request, and this
-/// removes both.
+/// The removed member's sessions in this tenant are ended once the removal has committed: their access
+/// tokens answer 401 on the very next request and their refresh tokens are refused. Nothing else is
+/// touched: no password is changed, and a session acting in another tenant they still belong to, or
+/// in platform scope, carries on. A refused removal ends no session.
 /// </para>
 /// <para>
 /// A tenant is never left with nobody able to administer it: a removal that would withdraw the last
@@ -38,7 +38,8 @@ sealed class TenantMemberRemoveEndpoint(ITenantService tenantService,
                                         ITenantMembershipService tenantMembershipService,
                                         ITenantAuthorizationService tenantAuthorizationService,
                                         ICurrentUserService currentUserService,
-                                        ITenantContext tenantContext)
+                                        ITenantContext tenantContext,
+                                        ISessionRevocationService sessionRevocationService)
     : Endpoint<TenantMemberRemoveRequest, TenantMemberRemoveResponse>
 {
     public override void Configure()
@@ -109,6 +110,10 @@ sealed class TenantMemberRemoveEndpoint(ITenantService tenantService,
         {
             this.ThrowError(ErrorCodes.LastTenantAdministrator);
         }
+
+        // The removal has committed inside the service, which revocation requires. Only the sessions
+        // acting in this tenant are ended; the account's other tenants are untouched.
+        await sessionRevocationService.RevokeUserInScopeAsync(request.UserId, request.TenantId, cancellationToken);
 
         await Send.ResponseAsync(new() { Success = true }, cancellation: cancellationToken);
     }

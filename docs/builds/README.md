@@ -12,5 +12,6 @@ To read the change itself: `git show <commit>`.
 | Landed | Build | Commit |
 |--------|-------|--------|
 | 2026-09-29 | [Keep sessions in a Redis session store and validate them on every request](01-redis-session-store-and-per-request-validation.md) | `af3d2e34` |
+| 2026-09-29 | [Revoke live sessions when a user, their password or a role's grants change](02-revoke-sessions-on-identity-access-changes.md) | `5a18f9c7` |
 
-1 build(s) recorded.
+2 build(s) recorded.
