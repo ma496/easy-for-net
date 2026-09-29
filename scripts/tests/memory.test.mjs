@@ -1,7 +1,9 @@
 import { strict as assert } from "node:assert";
-import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 
 import {
@@ -163,4 +165,44 @@ test("scopeReach counts the briefs a scope would actually reach", () => {
   // The case this exists to catch: a plausible word no brief uses.
   assert.equal(scopeReach("frontend", briefs), 0);
   assert.equal(scopeReach("always", briefs), 3);
+});
+
+// --- provenance ---------------------------------------------------------------------------
+//
+// Every lesson on record once had an empty `task:` — the session was never told which task
+// it was building, and the brief's command left the flag out. These hold the three ways it
+// is now filled, and the one way an empty value is written.
+
+test("a lesson written with a task records it, and one without leaves the field out", () => {
+  const dir = mkdtempSync(join(tmpdir(), "memory-task-"));
+  const withTask = writeLesson(dir, { title: "With task", body: "b", learned: "2026-09-30", task: "07-x" });
+  assert.match(readFileSync(withTask, "utf8"), /^task: 07-x$/m);
+  const without = writeLesson(dir, { title: "Without task", body: "b", learned: "2026-09-30" });
+  assert.doesNotMatch(readFileSync(without, "utf8"), /^task:/m);
+  assert.equal(readLessons(dir).find((l) => l.title === "With task").task, "07-x");
+});
+
+test("record-lesson takes the task from AGENT_TASK when --task is not given, and --task wins", () => {
+  const dir = mkdtempSync(join(tmpdir(), "memory-env-"));
+  const script = join(dirname(fileURLToPath(import.meta.url)), "..", "record-lesson.mjs");
+  const record = (title, extra, env) =>
+    spawnSync(process.execPath, [script, "--title", title, "--scope", "always", "--body", "b", ...extra], {
+      encoding: "utf8",
+      env: { ...process.env, AGENT_MEMORY_DIR: dir, AGENT_TASK: env },
+    });
+  try {
+    assert.equal(record("From env", [], "08-from-env").status, 0);
+    assert.equal(record("From flag", ["--task", "09-from-flag"], "08-from-env").status, 0);
+    const byTitle = Object.fromEntries(readLessons(dir).map((l) => [l.title, l.task]));
+    assert.equal(byTitle["From env"], "08-from-env");
+    assert.equal(byTitle["From flag"], "09-from-flag");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("the brief's record-lesson command carries the task slug", async () => {
+  const { buildBrief } = await import("../lib/brief.mjs");
+  assert.match(buildBrief({ taskSlug: "10-some-task" }), /record-lesson\.mjs [^\n]*--task 10-some-task/);
+  assert.doesNotMatch(buildBrief({}), /--task/);
 });

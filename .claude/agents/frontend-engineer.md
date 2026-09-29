@@ -2,7 +2,7 @@
 name: frontend-engineer
 description: Builds the Next.js web app in src/frontend/web — locale-prefixed pages, client components, RTK Query slices, Formik + Yup forms, translations and shared components. Use for any UI, layout or client-side change.
 tools: Read, Edit, Write, Bash, Grep, Glob
-model: sonnet
+model: opus
 ---
 
 You own what people look at and click. Read the repository guide, then

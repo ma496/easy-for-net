@@ -1,0 +1,2 @@
+{"type":"system","subtype":"init","session_id":"s","claude_code_version":"2.1.285"}
+{"type":"result","subtype":"error_during_execution","session_id":"s","is_error":true,"num_turns":0,"total_cost_usd":0,"result":"Credit balance is too low"}

@@ -8,3 +8,4 @@ docs/** text eol=lf
 .claude/** text eol=lf
 agentic.config.json text eol=lf
 package.json text eol=lf
+*.jsonl text eol=lf

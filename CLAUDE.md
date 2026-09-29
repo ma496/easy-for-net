@@ -83,6 +83,7 @@ npm run schedule -- install         # run the loop on a timer (Task Scheduler / 
 npm run auto:status                 # every attempt, its turns, cost and why it failed
 npm run lessons                     # what past runs recorded for future ones
 npm run pr                          # the pull-request URL for the current branch
+npm run test:claude-contract        # check the installed Claude CLI still emits what the runner reads
 ```
 
 - **`agentic.config.json` is the one project-specific file.** It names the conventions every brief
@@ -100,14 +101,29 @@ npm run pr                          # the pull-request URL for the current branc
   pushes unless `AGENT_AUTO_PUSH=1`** — and nothing here merges. Pull requests go to
   `project.baseBranch` (else `origin/HEAD`); `auto-ship` opens one with `gh` when it is installed.
 - **Spend is bounded** by `AGENT_MAX_USD_PER_TASK` (default 50), `AGENT_MAX_USD_PER_DRAIN` (200) and
-  `AGENT_MAX_RUNS_PER_TASK` (3); `AGENT_MODEL` picks the session model.
+  `AGENT_MAX_RUNS_PER_TASK` (3). Each attempt is also stopped by the CLI itself at `budget.maxTurns`
+  parent turns (`--max-turns`) and at what is left of the task's ceiling (`--max-budget-usd`), and
+  after `AGENT_MAX_MINUTES_PER_ATTEMPT` (120) of wall clock.
+- **Every session runs on `opus`**, the alias for the newest Opus: the runner and the planner
+  through `budget.model` (overridden by `AGENT_MODEL`; `inherit` passes no `--model`), and every
+  agent in `.claude/agents/` through its `model:` line.
+- **The CLI's output is a contract.** Everything the runner decides — cost, turns, delegations,
+  skills, limit stops, account refusals — is parsed from `claude -p --output-format stream-json`
+  in `scripts/lib/claude-events.mjs`, and nowhere else. `scripts/tests/claude-stream-contract.test.mjs`
+  replays streams captured from real CLI versions (`scripts/tests/fixtures/claude-stream/<version>/`).
+  `npm run loop` runs `npm run test:claude-contract` once per new CLI version and builds nothing
+  when it fails; after fixing the adapter, `npm run test:claude-contract -- --record` captures the
+  new version's fixtures.
 - **Guards run in every permission mode.** `.claude/hooks/` refuses reading or writing `.env*` and the
   per-environment `appsettings.*.json`, edits to build output, `dotnet ef database drop`, destructive
   SQL, `git reset --hard`, `git add -A`, force-pushes, pushes to a protected branch and every merge
-  route — for the Bash and PowerShell tools alike. `npm run test:hooks` holds a block case and a
-  neighbouring allow case for each rule; add both when you add a rule.
-- **Records.** `.agent-runs/` (git-ignored) is every attempt; `docs/builds/` is one committed record
-  per landed task; `.claude/memory/lessons/` is what runs learned, injected into later briefs.
+  route — for the Bash and PowerShell tools alike, with git's global options (`git -C …`) seen
+  through — and reading the secret files through the Read and Grep tools. `npm run test:hooks`
+  holds a block case and a neighbouring allow case for each rule; add both when you add a rule.
+- **Records.** `.agent-runs/` (git-ignored) is every attempt, with its raw stream beside its log
+  (`<run>-attempt-N.stream.jsonl`); `docs/builds/` is one committed record per landed task;
+  `.claude/memory/lessons/` is what runs learned, injected into later briefs, each naming the task
+  that taught it (the runner exports `AGENT_TASK` to the session).
 
 ## Backend architecture
 

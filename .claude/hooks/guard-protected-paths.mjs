@@ -10,20 +10,7 @@
  * straight through.
  */
 import { compileRules, config } from "../../scripts/lib/project-config.mjs";
-
-/** Files holding live credentials. Their shared templates stay editable. */
-const SECRETS = [
-  {
-    re: /(^|\/)\.env(\.local)?$/,
-    message: "holds live secrets. Edit .env.example instead, and ask the user to copy any new key across themselves.",
-  },
-  {
-    re: /(^|\/)appsettings\.(Development|Testing|Production|Staging)\.json$/i,
-    message:
-      "is a per-machine settings file holding live credentials, and it is not in source control. " +
-      "Add the setting to appsettings.json with a safe default, and ask the user to copy any real value across themselves.",
-  },
-];
+import { secretRuleFor } from "./secret-paths.mjs";
 
 /** Generated output: editing it is lost on the next build, and hides the real fix. */
 const BUILD_OUTPUT = /(^|\/)(dist|build|\.output|\.next|node_modules|coverage|bin|obj)\//;
@@ -33,8 +20,10 @@ export function refusalFor(rawPath, extraPatterns = compileRules(config.hooks.pr
   const path = String(rawPath ?? "").replace(/\\/g, "/");
   if (!path) return null;
 
-  for (const { re, message } of SECRETS) {
-    if (re.test(path)) return `Blocked: '${rawPath}' ${message}`;
+  // Files holding live credentials; their shared templates stay editable.
+  const secret = secretRuleFor(path);
+  if (secret) {
+    return `Blocked: '${rawPath}' ${secret.what}. Put new settings in the shared template, and ask the user to copy any real value across themselves.`;
   }
   if (BUILD_OUTPUT.test(path)) {
     return `Blocked: '${rawPath}' is generated build output. Edit the source it is built from and rebuild.`;

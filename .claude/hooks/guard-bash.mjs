@@ -166,15 +166,15 @@ function commandHead(tokens) {
  * secrets rule. And only when nothing downstream could execute what the search prints, so
  * `grep DROP dump.sql | psql` keeps its text and stays blocked.
  */
-function blankSearchPatterns(input) {
-  const isPipe = (t, i) => (t[i] === "|" && t[i + 1] !== "|" && t[i - 1] !== "|" ? 1 : 0);
-  const isBreak = (t, i) => {
-    if (t[i] === "\n" || t[i] === ";") return 1;
-    if ((t[i] === "&" || t[i] === "|") && t[i + 1] === t[i]) return 2;
-    if (t[i] === "&") return 1;
-    return 0;
-  };
+const isPipe = (t, i) => (t[i] === "|" && t[i + 1] !== "|" && t[i - 1] !== "|" ? 1 : 0);
+const isBreak = (t, i) => {
+  if (t[i] === "\n" || t[i] === ";") return 1;
+  if ((t[i] === "&" || t[i] === "|") && t[i + 1] === t[i]) return 2;
+  if (t[i] === "&") return 1;
+  return 0;
+};
 
+function blankSearchPatterns(input) {
   const blanks = [];
 
   for (const piece of splitTopLevel(input, isBreak)) {
@@ -243,6 +243,56 @@ function stripHereStrings(input) {
 
 const scanned = blankSearchPatterns(stripHereStrings(stripHeredocs(command)));
 
+/**
+ * Every simple command in the line, separately: split at `;`, `&&`, `||`, `&`, newlines and
+ * pipes. An exemption is judged per segment. Judged on the whole line, `ls . && cat .env`
+ * was an "existence check" because it happened to start with `ls`.
+ */
+const segments = [];
+for (const piece of splitTopLevel(scanned, isBreak)) {
+  const text = scanned.slice(piece.start, piece.end);
+  for (const stage of splitTopLevel(text, isPipe)) {
+    const s = text.slice(stage.start, stage.end).trim();
+    if (s) segments.push(s);
+  }
+}
+const EXISTENCE_CHECK = /^\s*(ls|stat|test|\[|Test-Path)\s/i;
+
+/**
+ * The line with git's global options removed, so a rule anchored on `git <verb>` sees the
+ * verb. `git -C . reset --hard`, `git -c k=v merge x` and `git -C . push origin HEAD:main`
+ * each put an option between `git` and its verb, and every git rule below missed them.
+ */
+const GIT_OPTION_WITH_VALUE =
+  /^\s+(?:-C|-c|--git-dir|--work-tree|--namespace|--exec-path|--config-env)(?:=(?:"[^"]*"|'[^']*'|\S+)|\s+(?:"[^"]*"|'[^']*'|\S+))/;
+const GIT_OPTION_FLAG = /^\s+(?:--no-pager|--paginate|--bare|--no-replace-objects|--literal-pathspecs|--no-optional-locks|-P|-p)(?=\s|$)/;
+function stripGitGlobals(text) {
+  let out = "";
+  let cursor = 0;
+  const git = /\bgit(?=\s)/g;
+  for (let m = git.exec(text); m; m = git.exec(text)) {
+    const after = m.index + 3;
+    out += text.slice(cursor, after);
+    let rest = text.slice(after);
+    for (let opt = rest.match(GIT_OPTION_WITH_VALUE) ?? rest.match(GIT_OPTION_FLAG); opt; opt = rest.match(GIT_OPTION_WITH_VALUE) ?? rest.match(GIT_OPTION_FLAG)) {
+      rest = rest.slice(opt[0].length);
+    }
+    cursor = text.length - rest.length;
+    git.lastIndex = cursor;
+  }
+  return out + text.slice(cursor);
+}
+const gitScanned = stripGitGlobals(scanned);
+
+/** The branch checked out here — what a bare `git push` sends, under git's default push mode. */
+function currentBranch() {
+  try {
+    return execSync("git rev-parse --abbrev-ref HEAD", { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+  } catch {
+    return "";
+  }
+}
+
 const block = (reason) => {
   console.error(`Blocked: ${reason}`);
   process.exit(2);
@@ -260,12 +310,13 @@ const envRefs = [...scanned.matchAll(ENV_REF)]
 
 if (envRefs.length > 0) {
   // Existence checks reveal nothing, and creating .env from the template is the
-  // documented bootstrap step — both stay allowed.
-  const harmless =
-    /^\s*(ls|stat|test|\[|Test-Path)\s/i.test(scanned) ||
-    /^\s*(cp|Copy-Item)\s+(-[\w-]+\s+)*\.env\.example\s+\.env\s*$/i.test(scanned.trim());
+  // documented bootstrap step — both stay allowed. Judged per segment: each segment that
+  // names a dotenv file must itself be one of the two.
+  const harmless = (s) =>
+    EXISTENCE_CHECK.test(s) || /^\s*(cp|Copy-Item)\s+(-[\w-]+\s+)*\.env\.example\s+\.env\s*$/i.test(s);
+  const offending = segments.find((s) => [...s.matchAll(ENV_REF)].some((m) => !/\.example$/.test(m[1])) && !harmless(s));
 
-  if (!harmless) {
+  if (offending) {
     block(
       `this command touches ${envRefs[0]}, which holds live credentials. Never read, copy, ` +
         "or print it — not with cat, grep, sed, cp, or anything else. `.env.example` is the " +
@@ -278,7 +329,7 @@ if (envRefs.length > 0) {
 // password and signing keys, and are not in source control. The base appsettings.json
 // carries placeholders only and stays readable.
 const APPSETTINGS_REF = /appsettings\.(Development|Testing|Production|Staging)\.json\b/i;
-if (APPSETTINGS_REF.test(scanned) && !/^\s*(ls|stat|test|\[|Test-Path)\s/i.test(scanned)) {
+if (segments.some((s) => APPSETTINGS_REF.test(s) && !EXISTENCE_CHECK.test(s))) {
   block(
     `this command touches ${scanned.match(APPSETTINGS_REF)[0]}, which holds live credentials. ` +
       "Never read, copy, or print it. appsettings.json is the shared template; use that. If you " +
@@ -336,7 +387,7 @@ if (/\bpsql\b/.test(scanned) && /\bDELETE\s+FROM\b/i.test(scanned)) {
 }
 
 // --- destroying uncommitted work ----------------------------------------------
-if (/\bgit\s+reset\b[^\n]*--hard\b/.test(scanned)) {
+if (/\bgit\s+reset\b[^\n]*--hard\b/.test(gitScanned)) {
   block(
     "`git reset --hard` throws away every uncommitted change in the working tree, " +
       "including work this session has not shown the user yet. Use `git stash` if you need " +
@@ -344,7 +395,7 @@ if (/\bgit\s+reset\b[^\n]*--hard\b/.test(scanned)) {
   );
 }
 
-if (/\bgit\s+clean\b[^\n]*-[a-z]*[fx]/.test(scanned)) {
+if (/\bgit\s+clean\b[^\n]*-[a-z]*[fx]/.test(gitScanned)) {
   block(
     "`git clean -f` deletes untracked files outright — including anything written this " +
       "session that was never staged. Remove the specific paths you meant instead.",
@@ -352,14 +403,24 @@ if (/\bgit\s+clean\b[^\n]*-[a-z]*[fx]/.test(scanned)) {
 }
 
 // --- history rewrites and blind staging --------------------------------------
-if (/\bgit\s+push\b[^\n]*(--force\b|(^|\s)-f(\s|$))/.test(scanned)) {
+// `-f` bundled with other short flags (`-uf`) and a `+` on a refspec force just the same.
+const pushSegments = [...gitScanned.matchAll(/\bgit\s+push\b([^\n;&|]*)/g)].map((m) => m[1]);
+if (
+  pushSegments.some(
+    (args) =>
+      /(--force\b|--force-with-lease\b|--force-if-includes\b|(^|\s)-[a-zA-Z]*f[a-zA-Z]*(\s|$))/.test(args) ||
+      args.trim().split(/\s+/).some((t) => /^\+\S/.test(t)),
+  )
+) {
   block(
     "`git push --force` rewrites remote history. Push normally, or if the branch really " +
       "needs a rewrite, ask the user first.",
   );
 }
 
-if (/\bgit\s+add\s+(-A\b|--all\b|\.(\s|$)|\*(\s|$))/.test(scanned)) {
+// Blind staging, however it is spelled: `-A`, `--all`, bundled (`-vA`), or `.`/`*` after a
+// `--` separator.
+if (/\bgit\s+add\b(?:\s+-[\w-]+)*(?:\s+--)?\s+(-[a-zA-Z]*A[a-zA-Z]*\b|--all\b|\.\/?(\s|$)|\*(\s|$))/.test(gitScanned)) {
   block(
     "`git add -A` / `git add .` / `git add *` stages everything, including unrelated edits " +
       "and scratch " +
@@ -373,14 +434,29 @@ if (/\bgit\s+add\s+(-A\b|--all\b|\.(\s|$)|\*(\s|$))/.test(scanned)) {
 // of every refspec is inspected instead. Which branches are protected: the base branch pull
 // requests target, `project.branch` when agentic.config.json names one, and the usual
 // default names.
+//
+// A push that names no refspec — `git push`, `git push origin` — sends the current branch,
+// and so does a refspec of `HEAD`. Checking only named refspecs let a bare `git push` from a
+// checkout of main through, and main is the work branch whenever `project.branch` is unset.
 const PROTECTED_BRANCHES = new Set([BASE_BRANCH, config.project.branch, "main", "master"].filter(Boolean));
-for (const segment of scanned.matchAll(/\bgit\s+push\b([^\n;&|]*)/g)) {
-  const tokens = segment[1].trim().split(/\s+/).filter(Boolean);
-  const positional = tokens.filter((t) => !t.startsWith("-"));
-  for (const token of positional.slice(1)) {
-    const destination = (token.includes(":") ? token.split(":").pop() : token)
-      .replace(/^refs\/heads\//, "")
-      .replace(/^\+/, "");
+for (const args of pushSegments) {
+  const tokens = args.trim().split(/\s+/).filter(Boolean);
+  // Options that take a value, so the value is not read as a remote or refspec.
+  const positional = [];
+  for (let i = 0; i < tokens.length; i++) {
+    if (/^(-o|--push-option|--repo|--receive-pack|--exec)$/.test(tokens[i])) {
+      i++;
+      continue;
+    }
+    if (!tokens[i].startsWith("-")) positional.push(tokens[i]);
+  }
+  const refspecs = positional.length > 1 ? positional.slice(1) : ["HEAD"];
+  const pushesAll = tokens.some((t) => /^--(all|mirror)$/.test(t));
+  for (const token of pushesAll ? [...PROTECTED_BRANCHES] : refspecs) {
+    let destination = (token.includes(":") ? token.split(":").pop() : token)
+      .replace(/^\+/, "")
+      .replace(/^refs\/heads\//, "");
+    if (destination === "HEAD" || destination === "@") destination = currentBranch();
     if (PROTECTED_BRANCHES.has(destination)) {
       block(
         `this pushes straight to \`${destination}\`. That branch only ever moves when the ` +
@@ -410,7 +486,7 @@ if (/(?:api\.bitbucket\.org|api\.github\.com)[^\n]*\/(?:pullrequests|pulls)\/[^\
 // `\b` after the verb also fires on the read-only plumbing — `merge-base`, `merge-tree`,
 // `merge-file` — none of which move a branch. Require the next character to be neither a
 // word character nor a hyphen, so only the real merge is caught.
-if (/\bgit\s+merge(?![-\w])/.test(scanned) && !MERGE_RECOVERY.test(scanned)) {
+if (/\bgit\s+merge(?![-\w])/.test(gitScanned) && !MERGE_RECOVERY.test(gitScanned)) {
   block(
     "merging branches is the repo owner's call. Leave the branch as it is and give them " +
       "the PR URL (`npm run pr`) so they can review and merge it themselves.",

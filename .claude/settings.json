@@ -46,6 +46,12 @@
     "deny": [
       "Read(./.env)",
       "Read(./.env.local)",
+      "Read(**/.env)",
+      "Read(**/.env.local)",
+      "Read(**/appsettings.Development.json)",
+      "Read(**/appsettings.Testing.json)",
+      "Read(**/appsettings.Production.json)",
+      "Read(**/appsettings.Staging.json)",
       "Bash(cat .env)",
       "Bash(cat ./.env)",
       "Bash(grep * .env)",
@@ -67,6 +73,15 @@
           {
             "type": "command",
             "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/guard-protected-paths.mjs"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node $CLAUDE_PROJECT_DIR/.claude/hooks/guard-secret-reads.mjs"
           }
         ]
       },

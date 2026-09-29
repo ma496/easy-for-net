@@ -107,7 +107,11 @@ const DEFAULTS = {
   },
   budget: {
     attempts: 3,
-    maxTurns: 900,
+    /** The parent session's turns per attempt, counted as real API turns (see agent-run.mjs). */
+    maxTurns: 350,
+    /** Wall-clock minutes per attempt, for a session that hangs and so reports neither turns nor cost. */
+    maxMinutesPerAttempt: 120,
+    /** `opus` is the alias for the newest Opus. `inherit` passes no `--model` at all. */
     model: "opus",
   },
   hooks: {
@@ -158,6 +162,135 @@ function readConfigFile() {
 }
 
 export const config = merge(DEFAULTS, readConfigFile());
+
+const isPositiveInt = (n) => Number.isInteger(n) && n > 0;
+
+/** Every entry of `list` that is not a usable regular expression, as a problem message. */
+function regexProblems(list, where, flags = "") {
+  if (list === undefined || list === null) return [];
+  if (!Array.isArray(list)) return [`${where} must be an array of regular expressions`];
+  const problems = [];
+  for (const p of list) {
+    try {
+      new RegExp(p, flags);
+    } catch (err) {
+      problems.push(`${where}: invalid regular expression ${JSON.stringify(p)} (${err.message})`);
+    }
+  }
+  return problems;
+}
+
+/**
+ * Everything wrong with a merged config, one message per problem.
+ *
+ * Parsing alone let through the values that do the most damage precisely because nothing
+ * notices them: `budget.attempts: 0` or `"three"` meant the attempt loop never ran, the run
+ * exited as "account blocked", the drain requeued it, and it went round every minute for
+ * ever; an invalid department regex was logged once and dropped, silently removing that
+ * reviewer's requirement from every unattended run. Both are now refusals at startup.
+ */
+export function validateConfig(cfg) {
+  const problems = [];
+  const budget = cfg.budget ?? {};
+  for (const key of ["attempts", "maxTurns", "maxMinutesPerAttempt"]) {
+    if (!isPositiveInt(budget[key])) {
+      problems.push(`budget.${key} must be a positive integer (got ${JSON.stringify(budget[key])})`);
+    }
+  }
+  if (typeof budget.model !== "string" || !budget.model.trim()) {
+    problems.push("budget.model must be a model name or alias");
+  }
+  for (const key of ["gate", "verify"]) {
+    if (typeof cfg.commands?.[key] !== "string" || !cfg.commands[key].trim()) {
+      problems.push(`commands.${key} must be a command`);
+    }
+  }
+
+  if (!Array.isArray(cfg.departments)) problems.push("departments must be an array");
+  const agents = new Set();
+  for (const [i, d] of (Array.isArray(cfg.departments) ? cfg.departments : []).entries()) {
+    const where = `departments[${i}]${d?.agent ? ` (${d.agent})` : ""}`;
+    // An agent may appear once per phase — a designer that briefs first and reviews after is
+    // two entries by design — but twice in one phase is a copy-paste that shadows itself.
+    const key = `${d?.agent}\0${d?.phase ?? "review"}`;
+    if (typeof d?.agent !== "string" || !d.agent) problems.push(`${where}.agent is required`);
+    else if (agents.has(key)) problems.push(`${where}: ${d.agent} is listed twice in the ${d.phase ?? "review"} phase`);
+    else agents.add(key);
+    if (!d?.always && !Array.isArray(d?.match)) problems.push(`${where} needs \`match\` paths or \`always: true\``);
+    problems.push(...regexProblems(d?.match, `${where}.match`));
+    if (d?.phase !== undefined && !["design", "build", "review"].includes(d.phase)) {
+      problems.push(`${where}.phase must be design, build or review (got ${JSON.stringify(d.phase)})`);
+    }
+  }
+
+  for (const [i, sk] of (Array.isArray(cfg.skills) ? cfg.skills : []).entries()) {
+    const where = `skills[${i}]${sk?.skill ? ` (${sk.skill})` : ""}`;
+    if (typeof sk?.skill !== "string" || !sk.skill) problems.push(`${where}.skill is required`);
+    problems.push(...regexProblems(sk?.match, `${where}.match`));
+    if (sk?.brief !== undefined) problems.push(...regexProblems([sk.brief], `${where}.brief`));
+  }
+
+  problems.push(...regexProblems(cfg.unownedPaths, "unownedPaths"));
+  for (const [i, c] of (cfg.verify?.checks ?? []).entries()) {
+    problems.push(...regexProblems(c?.when, `verify.checks[${i}]${c?.name ? ` (${c.name})` : ""}.when`));
+  }
+  problems.push(...regexProblems(cfg.hooks?.protectedPaths, "hooks.protectedPaths"));
+  for (const [i, rule] of (cfg.hooks?.deniedCommands ?? []).entries()) {
+    const pattern = typeof rule === "string" ? rule : rule?.pattern;
+    const flags = typeof rule === "object" ? (rule?.flags ?? "") : "";
+    problems.push(...regexProblems([pattern], `hooks.deniedCommands[${i}]`, flags));
+  }
+  for (const [i, rule] of (cfg.hooks?.conventions ?? []).entries()) {
+    problems.push(...regexProblems(rule?.paths, `hooks.conventions[${i}].paths`));
+    problems.push(...regexProblems(rule?.except, `hooks.conventions[${i}].except`));
+    problems.push(...regexProblems([rule?.forbid], `hooks.conventions[${i}].forbid`, rule?.flags ?? "g"));
+  }
+  if (!Array.isArray(cfg.tests?.roots)) problems.push("tests.roots must be an array");
+  problems.push(...regexProblems([cfg.tests?.pattern], "tests.pattern"));
+  return problems;
+}
+
+/**
+ * Refuse to run on an invalid config. Called by the engine's entry points — not on import,
+ * because the hooks import this module too, and a hook that exits on a config typo stops
+ * guarding rather than stopping the session. The unit suite holds the committed config valid.
+ */
+export function assertValidConfig(cfg = config) {
+  const problems = validateConfig(cfg);
+  if (problems.length === 0) return;
+  console.error(`agentic.config.json is invalid:\n${problems.map((p) => `  - ${p}`).join("\n")}`);
+  process.exit(1);
+}
+
+/**
+ * A positive integer from an environment variable or flag, else the fallback. A value that
+ * is set but is not one stops the run: `AGENT_MAX_RUNS_PER_TASK=abc` read as NaN, and every
+ * comparison with NaN is false, so the limit it named silently stopped existing.
+ */
+export function positiveInt(raw, fallback, label = "value") {
+  if (raw === undefined || raw === null || String(raw).trim() === "") return fallback;
+  const n = Number(raw);
+  if (isPositiveInt(n)) return n;
+  console.error(`${label} must be a positive integer (got ${JSON.stringify(raw)}).`);
+  process.exit(1);
+}
+
+/**
+ * The model a session runs on: the environment, then a flag, then `budget.model`. Blank
+ * means unset. `inherit` is returned as-is; `modelArgs` turns it into no `--model` at all.
+ *
+ * One rule for every place that starts a session — the runner, the planner, the timer — so
+ * the planner can no longer be the one call quietly left on the CLI's default.
+ */
+export function resolveModel({ env, arg, configured = config.budget.model } = {}) {
+  for (const v of [env, arg, configured]) {
+    if (typeof v === "string" && v.trim()) return v.trim();
+  }
+  return "opus";
+}
+
+/** The `--model` arguments for a resolved model — none for `inherit`. */
+export const modelArgs = (model) => (model && model !== "inherit" ? ["--model", model] : []);
 
 /** Compile an array of regular-expression strings, skipping anything unusable. */
 export function compileRules(patterns, label = "rule") {

@@ -25,6 +25,7 @@ import {
   spendOfRun,
   sumSpend,
 } from "./lib/spend.mjs";
+import { isUnfinished, markOf, tally } from "./lib/outcomes.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 export const LOG_DIR = join(ROOT, ".agent-runs");
@@ -154,8 +155,9 @@ export function priorFailures(task, limit = 3) {
   return readRuns()
     // Planning entries record what `queue -- plan` spent; they are not attempts at any
     // task, so a failed one must never be fed back to an unrelated task as its own history.
-    .filter((r) => r.kind !== "plan")
-    .filter((r) => r.outcome && r.outcome !== "verified" && r.outcome !== "shipped")
+    // `isUnfinished` also leaves out every other bookkeeping kind, and every landed outcome
+    // — `committed` included, which is what the runner writes when a task lands.
+    .filter(isUnfinished)
     .filter((r) => {
       const other = new Set(taskKey(r.task ?? "").split(" ").filter((w) => w.length > 3));
       if (other.size === 0) return false;
@@ -181,13 +183,18 @@ export function priorFailureBrief(task) {
   const lines = prior.map((r) => {
     const when = r.finishedAt ?? r.startedAt ?? "unknown time";
     const why = (r.failure ?? "no detail recorded").slice(0, 400);
-    return r.outcome === "budget"
-      ? `- ${when} on branch ${r.branch ?? "?"}: stopped on its spend ceiling after ` +
-        `${r.attempts ?? "?"} attempt(s), so the work was never judged. ${why}`
-      : `- ${when} on branch ${r.branch ?? "?"} after ${r.attempts ?? "?"} attempt(s): ${why}`;
+    if (r.outcome === "budget") {
+      return `- ${when} on branch ${r.branch ?? "?"}: stopped on its spend ceiling after ` +
+        `${r.attempts ?? "?"} attempt(s), so the work was never judged. ${why}`;
+    }
+    if (r.outcome === "blocked") {
+      return `- ${when} on branch ${r.branch ?? "?"}: stopped because the account or the network ` +
+        `could not run it — not a verdict on the approach. ${why}`;
+    }
+    return `- ${when} on branch ${r.branch ?? "?"} after ${r.attempts ?? "?"} attempt(s): ${why}`;
   });
 
-  const anyFailed = prior.some((r) => r.outcome !== "budget");
+  const anyFailed = prior.some((r) => r.outcome === "failed" || r.outcome === "abandoned");
   const advice = anyFailed
     ? `Do not repeat a failed *approach*. If prior work may still be in
 .agent-runs/interrupted/ or the working tree, the runner restores and verifies it first —
@@ -222,9 +229,6 @@ if (process.argv[1] && process.argv[1].endsWith("run-journal.mjs")) {
   // `budget` is its own outcome, not a kind of failure: "ran out of money" and "could not
   // make the tests pass" call for opposite responses from whoever reads this — one needs a
   // bigger ceiling or a smaller task, the other needs the code fixed.
-  const mark = {
-    verified: "✓", shipped: "⇪", planned: "◇", failed: "✗", abandoned: "–", budget: "○",
-  };
   // Scripts read the environment directly. This only affects how a call that reported no
   // cost is charged; a measured run reads the same whatever it is set to.
   const assumedUsd = parseAssumedUsd(process.env.AGENT_ASSUMED_USD_PER_CALL);
@@ -233,7 +237,7 @@ if (process.argv[1] && process.argv[1].endsWith("run-journal.mjs")) {
 
   console.log(`${runs.length} run(s):\n`);
   listed.forEach((r, i) => {
-    const head = `${mark[r.outcome] ?? "?"} ${(r.finishedAt ?? r.startedAt ?? "").slice(0, 19)}`;
+    const head = `${r.kind ? "·" : markOf(r.outcome)} ${(r.finishedAt ?? r.startedAt ?? "").slice(0, 19)}`;
     const cost = spends[i].recorded ? formatUsd(spends[i].usd) : "unknown";
     console.log(
       `${head}  ${(r.branch ?? "-").padEnd(34)} ${r.attempts ?? "?"} attempt(s)  ${cost.padStart(8)}` +
@@ -245,13 +249,13 @@ if (process.argv[1] && process.argv[1].endsWith("run-journal.mjs")) {
 
   // Planning calls are journal entries too — they spend real money — but they are not
   // attempts at a task, so they are counted apart from the verified/failed tally.
-  const tasks = runs.filter((r) => r.kind !== "plan");
-  const plans = runs.length - tasks.length;
-  const failed = tasks.filter((r) => r.outcome === "failed").length;
-  const budget = tasks.filter((r) => r.outcome === "budget").length;
+  // Other bookkeeping (a budget reset) is neither, and is left out of both.
+  const plans = runs.filter((r) => r.kind === "plan").length;
+  const { landed, failed, budget, blocked } = tally(runs);
   console.log(
-    `\n${tasks.length - failed - budget} verified, ${failed} failed` +
+    `\n${landed} landed, ${failed} failed` +
       `${budget ? `, ${budget} stopped on a spend ceiling` : ""}` +
+      `${blocked ? `, ${blocked} blocked by the account or network` : ""}` +
       `${plans ? `, plus ${plans} planning call(s)` : ""}.`,
   );
   if (budget) {
