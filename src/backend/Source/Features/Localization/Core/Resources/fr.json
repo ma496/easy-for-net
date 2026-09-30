@@ -79,7 +79,8 @@
     "editionsUpdate": "Mettre à jour",
     "editionsFeatures": "Fonctionnalités",
     "tenantsFeatures": "Fonctionnalités",
-    "localization": "Localisation"
+    "localization": "Localisation",
+    "settings": "Paramètres"
   },
   "search": {
     "dashboard": "Tableau de bord",
@@ -102,7 +103,8 @@
     "tenantsCreate": "Créer un locataire",
     "editions": "Éditions",
     "editionsCreate": "Créer une édition",
-    "localization": "Localisation"
+    "localization": "Localisation",
+    "settings": "Paramètres"
   },
   "form": {
     "label": {
@@ -691,6 +693,57 @@
         "currentWillSwitch": "La langue dans laquelle vous consultez cet écran est en cours de désactivation — vous serez basculé vers la langue par défaut.",
         "unsaved": "Vous avez des modifications non enregistrées",
         "saveSuccess": "Langues mises à jour"
+      }
+    },
+    "settings": {
+      "title": "Paramètres",
+      "scope": {
+        "platform": "Vous modifiez les paramètres de toute la plateforme. Chaque locataire en hérite, sauf s'il définit les siens.",
+        "tenant": "Vous modifiez les paramètres de ${tenant}. Tout ce qui n'est pas défini ici est hérité de la plateforme."
+      },
+      "readOnly": "Vous pouvez consulter ces paramètres, mais pas les modifier.",
+      "empty": "Aucun paramètre disponible",
+      "customized": "Personnalisé ici",
+      "inherited": "Hérité",
+      "source": {
+        "own": "Défini ici",
+        "platform": "Plateforme",
+        "default": "Par défaut"
+      },
+      "changed": "Modifié",
+      "unsaved": "Modifications non enregistrées",
+      "discard": "Annuler les modifications",
+      "resetToInherited": "Rétablir la valeur héritée",
+      "resetTitle": "Réinitialiser les paramètres ${setting} ?",
+      "resetConfirmTenant": "Les paramètres ${setting} propres à ce locataire seront supprimés, et les valeurs de la plateforme s'appliqueront à la place.",
+      "resetConfirmPlatform": "Les paramètres ${setting} propres à la plateforme seront supprimés, et les valeurs par défaut s'appliqueront à la place. Les locataires qui ont défini leurs propres valeurs les conservent.",
+      "resetConfirmButton": "Oui, réinitialiser",
+      "resetSuccess": "Paramètres ${setting} rétablis aux valeurs héritées",
+      "saveSuccess": "Paramètres ${setting} enregistrés",
+      "signin": {
+        "title": "Connexion",
+        "description": "Règles appliquées lorsque les utilisateurs se connectent.",
+        "isEmailVerificationRequired": "Exiger une adresse e-mail vérifiée pour se connecter",
+        "isEmailVerificationRequiredHelp": "Lorsque cette option est activée, un compte doit confirmer son adresse e-mail avant de pouvoir se connecter."
+      },
+      "email": {
+        "title": "E-mail",
+        "description": "Le serveur SMTP et l'expéditeur par lesquels les e-mails sortants sont envoyés.",
+        "smtpServer": "Serveur SMTP",
+        "smtpPort": "Port SMTP",
+        "smtpUsername": "Nom d'utilisateur SMTP",
+        "smtpPassword": "Mot de passe SMTP",
+        "senderEmail": "E-mail de l'expéditeur",
+        "senderName": "Nom de l'expéditeur",
+        "portInvalid": "Saisissez un nombre entier compris entre 1 et 65535",
+        "passwordSet": "Défini",
+        "passwordNotSet": "Non défini",
+        "passwordKeepPlaceholder": "Laissez vide pour conserver le mot de passe actuel",
+        "passwordNotSetPlaceholder": "Non défini",
+        "passwordClear": "Effacer",
+        "passwordWillClear": "Sera effacé lors de l'enregistrement",
+        "passwordUndo": "Annuler",
+        "passwordInheritHint": "Le mot de passe n'est hérité qu'avec le serveur, le port et le nom d'utilisateur. Si vous modifiez l'un d'eux ici sans saisir de mot de passe, aucun mot de passe n'est utilisé."
       }
     }
   },

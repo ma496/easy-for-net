@@ -61,6 +61,10 @@ export const searchableItems: SearchableItem[] = [
     url: '/admin/localization',
   },
   {
+    title: 'search.settings',
+    url: '/admin/settings',
+  },
+  {
     title: 'search.notifications',
     url: '/admin/notifications/list',
   },

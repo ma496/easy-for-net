@@ -1,4 +1,4 @@
-import { Users, Shield, Home, User, Lock, Palette, Zap, Calendar, TreePine, FormInput, Upload, Clock, Bell, Building2, Layers, Languages } from 'lucide-react'
+import { Users, Shield, Home, User, Lock, Palette, Zap, Calendar, TreePine, FormInput, Upload, Clock, Bell, Building2, Layers, Languages, Settings } from 'lucide-react'
 import type { ElementType } from 'react'
 
 
@@ -152,6 +152,11 @@ export const navItems: (NavItem | NavItemGroup)[] = [
         title: 'navigation.localization',
         url: '/admin/localization',
         icon: Languages,
+      },
+      {
+        title: 'navigation.settings',
+        url: '/admin/settings',
+        icon: Settings,
       },
       {
         title: 'navigation.notifications',

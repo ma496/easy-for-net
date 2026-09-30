@@ -79,7 +79,8 @@
     "editionsUpdate": "Actualizar",
     "editionsFeatures": "Funciones",
     "tenantsFeatures": "Funciones",
-    "localization": "Localización"
+    "localization": "Localización",
+    "settings": "Configuración"
   },
   "search": {
     "dashboard": "Tablero",
@@ -102,7 +103,8 @@
     "tenantsCreate": "Crear Inquilino",
     "editions": "Ediciones",
     "editionsCreate": "Crear edición",
-    "localization": "Localización"
+    "localization": "Localización",
+    "settings": "Configuración"
   },
   "form": {
     "label": {
@@ -691,6 +693,57 @@
         "currentWillSwitch": "El idioma en el que está viendo esta pantalla se está deshabilitando; se le cambiará al predeterminado.",
         "unsaved": "Tiene cambios sin guardar",
         "saveSuccess": "Idiomas actualizados"
+      }
+    },
+    "settings": {
+      "title": "Configuración",
+      "scope": {
+        "platform": "Está editando la configuración de toda la plataforma. Todos los inquilinos la heredan a menos que definan la suya propia.",
+        "tenant": "Está editando la configuración de ${tenant}. Todo lo que no se defina aquí se hereda de la plataforma."
+      },
+      "readOnly": "Puede ver esta configuración, pero no modificarla.",
+      "empty": "No hay configuraciones disponibles",
+      "customized": "Personalizado aquí",
+      "inherited": "Heredado",
+      "source": {
+        "own": "Definido aquí",
+        "platform": "Plataforma",
+        "default": "Predeterminado"
+      },
+      "changed": "Modificado",
+      "unsaved": "Cambios sin guardar",
+      "discard": "Descartar cambios",
+      "resetToInherited": "Restablecer a heredado",
+      "resetTitle": "¿Restablecer la configuración de ${setting}?",
+      "resetConfirmTenant": "Se eliminará la configuración de ${setting} propia de este inquilino y se aplicarán en su lugar los valores de la plataforma.",
+      "resetConfirmPlatform": "Se eliminará la configuración de ${setting} propia de la plataforma y se aplicarán en su lugar los valores predeterminados. Los inquilinos que hayan definido sus propios valores los conservan.",
+      "resetConfirmButton": "Sí, restablecer",
+      "resetSuccess": "Configuración de ${setting} restablecida a los valores heredados",
+      "saveSuccess": "Configuración de ${setting} guardada",
+      "signin": {
+        "title": "Inicio de sesión",
+        "description": "Reglas que se aplican cuando las personas inician sesión.",
+        "isEmailVerificationRequired": "Exigir un correo electrónico verificado para iniciar sesión",
+        "isEmailVerificationRequiredHelp": "Si está activado, una cuenta debe confirmar su correo electrónico antes de poder iniciar sesión."
+      },
+      "email": {
+        "title": "Correo electrónico",
+        "description": "El servidor SMTP y el remitente a través de los cuales se envía el correo saliente.",
+        "smtpServer": "Servidor SMTP",
+        "smtpPort": "Puerto SMTP",
+        "smtpUsername": "Usuario SMTP",
+        "smtpPassword": "Contraseña SMTP",
+        "senderEmail": "Correo del remitente",
+        "senderName": "Nombre del remitente",
+        "portInvalid": "Introduzca un número entero entre 1 y 65535",
+        "passwordSet": "Definida",
+        "passwordNotSet": "No definida",
+        "passwordKeepPlaceholder": "Déjelo en blanco para conservar la contraseña actual",
+        "passwordNotSetPlaceholder": "No definida",
+        "passwordClear": "Borrar",
+        "passwordWillClear": "Se borrará al guardar",
+        "passwordUndo": "Deshacer",
+        "passwordInheritHint": "La contraseña solo se hereda junto con el servidor, el puerto y el usuario. Si cambia alguno de ellos aquí sin introducir una contraseña, no se usará ninguna contraseña."
       }
     }
   },
