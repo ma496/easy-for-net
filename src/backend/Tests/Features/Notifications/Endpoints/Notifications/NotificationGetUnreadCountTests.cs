@@ -1,5 +1,7 @@
 namespace Backend.Tests.Features.Notifications.Endpoints.Notifications;
 
+using Backend.Features.Notifications.Core;
+using Backend.Features.Notifications.Core.Entities;
 using Backend.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
@@ -104,6 +106,43 @@ public class NotificationGetUnreadCountTests(App app) : NotificationsTestsBase(a
         afterRsp.StatusCode.Should().Be(HttpStatusCode.OK);
         after.Count.Should().Be(raised.Count,
             "and the count taken in the other tenant is unchanged by it, so what the reading is taken over is the tenant the recipient acts in");
+    }
+
+    /// <summary>
+    /// Verifies that the count stops at the cap however many notifications are unread.
+    /// </summary>
+    /// <remarks>
+    /// The notifications are addressed to an account of a tenant the test creates, so nothing another test
+    /// raises reaches the tenant's rows, and they are written in one save because what is under test is
+    /// the count, not how the rows were raised.
+    /// </remarks>
+    [Fact]
+    public async Task Count_Never_Exceeds_The_Cap()
+    {
+        var tenant = await CreateTenantAsync();
+        var recipient = await CreateTenantUserAsync(tenant.Id);
+
+        using (TenantContext.BeginTenant(tenant.Id))
+        {
+            for (var i = 0; i < NotificationQueries.UnreadCountCap + 5; i++)
+            {
+                DbContext.Notifications.Add(new Notification
+                {
+                    TenantId = tenant.Id,
+                    UserId = recipient.Id,
+                    Type = NotificationType.Info,
+                    TitleKey = $"test.title.cap.{Guid.NewGuid()}",
+                    MessageKey = $"test.message.cap.{Guid.NewGuid()}"
+                });
+            }
+
+            await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        var client = await ClientForAsync(recipient.Username, tenant.Id);
+
+        (await UnreadCountAsync(client)).Should().Be(NotificationQueries.UnreadCountCap,
+            "more notifications than the cap are unread, and the count stops at the cap");
     }
 
     /// <summary>

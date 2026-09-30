@@ -11,8 +11,8 @@ using Backend.Features.Notifications.Endpoints.Notifications;
 ///.
 /// </summary>
 /// <remarks>
-/// The endpoint marks rows through two statements that no query filter reaches - one <c>ExecuteUpdate</c>
-/// and one hand-written <c>INSERT ... ON CONFLICT</c> for the visit rows of audience notifications - so
+/// The endpoint marks rows through bulk statements that no tenant filter reaches - one <c>ExecuteUpdate</c>
+/// and hand-written <c>INSERT ... ON CONFLICT</c> statements for the read cursors of audience notifications - so
 /// the tests here are written against one recipient who is a member of two tenants. That is what makes
 /// the restriction observable: the same recipient's rows exist in both, and only the active tenant's may
 /// change, which is a claim no single-tenant arrangement could state.
@@ -43,7 +43,76 @@ public class NotificationMarkAllAsReadTests(App app) : NotificationsTestsBase(ap
 
         (await StoredNotificationAsync(userNotification1.Id)).IsRead.Should().BeTrue();
         (await StoredNotificationAsync(userNotification2.Id)).IsRead.Should().BeTrue();
-        (await IsVisitedAsync(globalNotification.Id, newUser.Id)).Should().BeTrue();
+        (await IsReadForAsync(Client, globalNotification.Id)).Should().BeTrue();
+    }
+
+    /// <summary>
+    /// Verifies that mark-all-as-read covers the audience notifications raised up to the call and no later
+    /// one: afterwards the older tenant-wide and platform-wide notifications read as read, while ones raised
+    /// after the call read as unread and are counted.
+    /// </summary>
+    [Fact]
+    public async Task Audience_Notifications_Raised_After_The_Call_Are_Unread()
+    {
+        var tenant = await CreateTenantAsync();
+        var recipient = await CreateTenantUserAsync(tenant.Id);
+        var olderTenantWide = await CreateTenantNotificationAsync(tenantId: tenant.Id);
+        var olderPlatformWide = await CreateGlobalNotificationAsync();
+        var client = await ClientForAsync(recipient.Username, tenant.Id);
+
+        var (rsp, _) = await client.POSTAsync<NotificationMarkAllAsReadEndpoint, NotificationMarkAllAsReadResponse>();
+        rsp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var newerTenantWide = await CreateTenantNotificationAsync(tenantId: tenant.Id);
+        var newerPlatformWide = await CreateGlobalNotificationAsync();
+
+        (await IsReadForAsync(client, olderTenantWide.Id)).Should().BeTrue("the tenant's read cursor covers it");
+        (await IsReadForAsync(client, olderPlatformWide.Id)).Should().BeTrue("the platform-wide read cursor covers it");
+        (await IsReadForAsync(client, newerTenantWide.Id)).Should().BeFalse("it was raised after the cursor was set");
+        (await IsReadForAsync(client, newerPlatformWide.Id)).Should().BeFalse("it was raised after the cursor was set");
+        (await UnreadCountAsync(client)).Should().Be(2, "only the two notifications raised after the call are unread");
+    }
+
+    /// <summary>
+    /// Verifies that mark-all-as-read writes no per-notification rows: however many audience notifications
+    /// it covers, the caller is left holding no visit rows, the ones they had included.
+    /// </summary>
+    /// <remarks>
+    /// Two visits are arranged beforehand - one read, one marked unread - to show that both kinds are removed
+    /// once the cursor covers them: a read one would be redundant and an unread one would contradict the call.
+    /// </remarks>
+    [Fact]
+    public async Task Visit_Rows_Do_Not_Grow_With_The_Audience_Notifications()
+    {
+        var tenant = await CreateTenantAsync();
+        var recipient = await CreateTenantUserAsync(tenant.Id);
+        var audience = new List<Guid>();
+        for (var i = 0; i < 5; i++)
+        {
+            audience.Add((await CreateTenantNotificationAsync(tenantId: tenant.Id)).Id);
+        }
+
+        audience.Add((await CreateGlobalNotificationAsync()).Id);
+        var client = await ClientForAsync(recipient.Username, tenant.Id);
+
+        (await client.POSTAsync<NotificationMarkAsReadEndpoint, NotificationMarkAsReadRequest, NotificationMarkAsReadResponse>(
+            new() { Id = audience[0] })).Response.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await client.POSTAsync<NotificationMarkAsUnreadEndpoint, NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>(
+            new() { Id = audience[1] })).Response.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await VisitCountAsync(recipient.Id)).Should().Be(2, "one read and one unread visit were arranged");
+
+        var (rsp, _) = await client.POSTAsync<NotificationMarkAllAsReadEndpoint, NotificationMarkAllAsReadResponse>();
+        rsp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        (await VisitCountAsync(recipient.Id)).Should().Be(0,
+            "read state after mark-all-as-read is carried by the read cursors, not by one row per notification");
+
+        foreach (var notificationId in audience)
+        {
+            (await IsReadForAsync(client, notificationId)).Should().BeTrue("every audience notification up to the call is read");
+        }
+
+        (await UnreadCountAsync(client)).Should().Be(0);
     }
 
     /// <summary>
@@ -151,6 +220,7 @@ public class NotificationMarkAllAsReadTests(App app) : NotificationsTestsBase(ap
         var audienceInOther = await CreateTenantNotificationAsync(tenantId: other.Id);
 
         var client = await ClientForAsync(recipient.Username, acted.Id);
+        var otherClient = await ClientForAsync(recipient.Username, other.Id);
 
         var (rsp, res) = await client.POSTAsync<NotificationMarkAllAsReadEndpoint, NotificationMarkAllAsReadResponse>();
 
@@ -159,13 +229,81 @@ public class NotificationMarkAllAsReadTests(App app) : NotificationsTestsBase(ap
 
         (await StoredNotificationAsync(personalInActed.Id)).IsRead.Should().BeTrue(
             "the bulk update marks the caller's own notifications of the tenant being acted in");
-        (await IsVisitedAsync(audienceInActed.Id, recipient.Id)).Should().BeTrue(
-            "and the visit insert reaches the active tenant's notification addressed to its whole membership");
+        (await IsReadForAsync(client, audienceInActed.Id)).Should().BeTrue(
+            "and the cursor upsert covers the active tenant's notification addressed to its whole membership");
 
         (await StoredNotificationAsync(personalInOther.Id)).IsRead.Should().BeFalse(
             "the same recipient's own notification of another tenant is outside the bulk update's restriction");
-        (await IsVisitedAsync(audienceInOther.Id, recipient.Id)).Should().BeFalse(
-            "and no visit is written for a notification of another tenant, which is what keeps it unread when the recipient acts there");
+        (await IsReadForAsync(otherClient, audienceInOther.Id)).Should().BeFalse(
+            "and no cursor is written for another tenant, which is what keeps its notification unread when the recipient acts there");
+    }
+
+    /// <summary>
+    /// Verifies that calling mark-all-as-read a second time moves the caller's existing read cursors rather
+    /// than adding new ones, so the notifications raised between the two calls read as read afterwards.
+    /// </summary>
+    /// <remarks>
+    /// The second call is what reaches the conflict branch of the cursor upserts. The platform-wide cursor
+    /// names no tenant, so only a unique index treating nulls as equal lets its upsert find the existing row;
+    /// with nulls distinct each call would add another platform-wide cursor. It is run in a tenant, where
+    /// both a tenant cursor and the platform-wide one are written, and in platform scope, where only the
+    /// platform-wide one is, by a platform account the test creates.
+    /// </remarks>
+    /// <param name="platformScope">Whether the caller acts in platform scope rather than in its tenant.</param>
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Second_Call_Moves_The_Existing_Cursors(bool platformScope)
+    {
+        var tenant = await CreateTenantAsync();
+        var recipient = await CreateTenantUserAsync(tenant.Id);
+        if (platformScope)
+        {
+            await MarkAsPlatformAccountAsync(recipient.Id);
+        }
+
+        var client = platformScope
+            ? await ClientForAsync(recipient.Username)
+            : await ClientForAsync(recipient.Username, tenant.Id);
+
+        var (firstRsp, _) = await client.POSTAsync<NotificationMarkAllAsReadEndpoint, NotificationMarkAllAsReadResponse>();
+        firstRsp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var firstCursors = await CursorsOfAsync(recipient.Id);
+
+        var between = new List<Guid> { (await CreateGlobalNotificationAsync()).Id };
+        if (!platformScope)
+        {
+            between.Add((await CreateTenantNotificationAsync(tenantId: tenant.Id)).Id);
+        }
+
+        var (secondRsp, _) = await client.POSTAsync<NotificationMarkAllAsReadEndpoint, NotificationMarkAllAsReadResponse>();
+        secondRsp.StatusCode.Should().Be(HttpStatusCode.OK);
+        var cursors = await CursorsOfAsync(recipient.Id);
+
+        cursors.Should().ContainSingle(cursor => cursor.TenantId == null,
+            "the platform-wide cursor is found by the second upsert and moved, not added again");
+        if (platformScope)
+        {
+            cursors.Should().HaveCount(1, "platform scope writes no tenant cursor");
+        }
+        else
+        {
+            cursors.Should().ContainSingle(cursor => cursor.TenantId == tenant.Id, "the tenant's cursor is moved, not added again");
+            cursors.Should().HaveCount(2);
+        }
+
+        foreach (var cursor in cursors)
+        {
+            cursor.ReadAllAt.Should().BeAfter(firstCursors.Single(first => first.TenantId == cursor.TenantId).ReadAllAt,
+                "the second call moves each cursor forward");
+        }
+
+        foreach (var notificationId in between)
+        {
+            (await IsReadForAsync(client, notificationId)).Should().BeTrue("the second call's cursor covers what was raised between the calls");
+        }
+
+        (await UnreadCountAsync(client)).Should().Be(0);
     }
 
     /// <summary>
@@ -180,4 +318,17 @@ public class NotificationMarkAllAsReadTests(App app) : NotificationsTestsBase(ap
 
         rsp.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
+
+    /// <summary>
+    /// Reads a user's read cursors across every tenant, because the platform-wide one names no tenant and
+    /// the tenant filter alone would hide it.
+    /// </summary>
+    /// <param name="userId">The user whose cursors are wanted.</param>
+    /// <returns>The cursors as the database holds them.</returns>
+    private async Task<List<NotificationReadCursor>> CursorsOfAsync(Guid userId)
+        => await DbContext.NotificationReadCursors
+            .AcrossAllTenants()
+            .AsNoTracking()
+            .Where(cursor => cursor.UserId == userId)
+            .ToListAsync(TestContext.Current.CancellationToken);
 }

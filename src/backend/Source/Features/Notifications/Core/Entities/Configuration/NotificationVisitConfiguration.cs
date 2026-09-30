@@ -6,8 +6,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 /// <summary>
 /// EF Core entity configuration for <see cref="NotificationVisit"/>. Maps the entity to the
-/// "NotificationVisits" table in the "notifications" schema and defines a unique composite index
-/// on (NotificationId, UserId) and a secondary index on (UserId, VisitedAt) for fast read-state lookups.
+/// "NotificationVisits" table in the "notifications" schema with a single index, the unique
+/// (NotificationId, UserId): it serves every per-notification read-state lookup and also backs the
+/// cascading foreign key to <see cref="Notification"/>, so no separate foreign-key index is created.
 /// </summary>
 public class NotificationVisitConfiguration : IEntityTypeConfiguration<NotificationVisit>
 {
@@ -18,7 +19,6 @@ public class NotificationVisitConfiguration : IEntityTypeConfiguration<Notificat
         builder.HasKey(x => x.Id);
 
         builder.HasIndex(x => new { x.NotificationId, x.UserId }).IsUnique();
-        builder.HasIndex(x => new { x.UserId, x.VisitedAt });
 
         builder.HasOne(x => x.Notification)
                .WithMany(x => x.Visits)

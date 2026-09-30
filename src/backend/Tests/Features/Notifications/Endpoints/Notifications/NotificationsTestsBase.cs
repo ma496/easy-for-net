@@ -74,7 +74,8 @@ public abstract class NotificationsTestsBase(App app) : TenancyTestsBase(app)
         => await ArrangeNotificationAsync(null, type, tenantId: null, "global");
 
     /// <summary>
-    /// Records a visit for a notification by a specific user, used for testing global notification read tracking.
+    /// Records a read visit for a notification by a specific user, used for testing audience notification
+    /// read tracking.
     /// </summary>
     /// <param name="notificationId">The notification being visited.</param>
     /// <param name="userId">The user visiting it.</param>
@@ -84,7 +85,8 @@ public abstract class NotificationsTestsBase(App app) : TenancyTestsBase(app)
         {
             NotificationId = notificationId,
             UserId = userId,
-            VisitedAt = DateTime.UtcNow
+            VisitedAt = DateTime.UtcNow,
+            IsRead = true
         };
         DbContext.NotificationVisits.Add(visit);
         await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
@@ -103,19 +105,60 @@ public abstract class NotificationsTestsBase(App app) : TenancyTestsBase(app)
             .SingleAsync(notification => notification.Id == notificationId, TestContext.Current.CancellationToken);
 
     /// <summary>
-    /// Whether a user has visited a notification - which is where the read state of a notification
-    /// addressed to an audience lives, the notification's own read flag being the one for a single
-    /// recipient.
+    /// Whether a user holds a visit row marking a notification read - the explicit per-notification read
+    /// state of a notification addressed to an audience, which overrides the user's read cursor. A
+    /// notification the cursor alone covers has no visit row, so a test asking whether an audience
+    /// notification reads as read asks the API instead, through <see cref="IsReadForAsync"/>.
     /// </summary>
-    /// <param name="notificationId">The notification whose read state is wanted.</param>
-    /// <param name="userId">The user whose read state is wanted.</param>
-    /// <returns><see langword="true"/> when that user has visited the notification.</returns>
+    /// <param name="notificationId">The notification whose visit is wanted.</param>
+    /// <param name="userId">The user whose visit is wanted.</param>
+    /// <returns><see langword="true"/> when that user has a visit row marking the notification read.</returns>
     protected async Task<bool> IsVisitedAsync(Guid notificationId, Guid userId)
         => await DbContext.NotificationVisits
             .AsNoTracking()
             .AnyAsync(
-                visit => visit.NotificationId == notificationId && visit.UserId == userId,
+                visit => visit.NotificationId == notificationId && visit.UserId == userId && visit.IsRead,
                 TestContext.Current.CancellationToken);
+
+    /// <summary>
+    /// The number of visit rows a user holds, across every notification.
+    /// </summary>
+    /// <param name="userId">The user whose visit rows are counted.</param>
+    /// <returns>The number of visit rows, read and unread alike.</returns>
+    protected async Task<int> VisitCountAsync(Guid userId)
+        => await DbContext.NotificationVisits
+            .AsNoTracking()
+            .CountAsync(visit => visit.UserId == userId, TestContext.Current.CancellationToken);
+
+    /// <summary>
+    /// Whether a notification reads as read to a caller, as <c>GET notifications/{id}</c> answers through
+    /// that caller's own client - so the scope and the read rule are the ones the API applies, visit row
+    /// and read cursor included.
+    /// </summary>
+    /// <param name="client">The client presenting the caller's token.</param>
+    /// <param name="notificationId">The notification to read.</param>
+    /// <returns>The read state the API answered with.</returns>
+    protected static async Task<bool> IsReadForAsync(HttpClient client, Guid notificationId)
+    {
+        var (rsp, res) = await client
+            .GETAsync<NotificationGetEndpoint, NotificationGetRequest, NotificationGetResponse>(new() { Id = notificationId });
+
+        rsp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        return res.IsRead;
+    }
+
+    /// <summary>
+    /// Reads the unread count through a caller's own client, so the scope counted is that caller's.
+    /// </summary>
+    /// <param name="client">The client presenting the caller's token.</param>
+    /// <returns>The unread count the API answered with.</returns>
+    protected static async Task<int> UnreadCountAsync(HttpClient client)
+    {
+        var (rsp, res) = await client.GETAsync<NotificationGetUnreadCountEndpoint, NotificationGetUnreadCountResponse>();
+        rsp.StatusCode.Should().Be(HttpStatusCode.OK);
+        return res.Count;
+    }
 
     /// <summary>
     /// The notifications the list answers with for a term, read through a caller's own client so that the
