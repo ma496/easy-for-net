@@ -1,5 +1,6 @@
 namespace Backend.Extensions;
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using FluentValidation.Results;
@@ -64,6 +65,24 @@ public static class EndpointExtension
         endpoint.AddError(endpoint.HttpContext.ResolveEnglishFallback(errorCode), errorCode.Value);
 
         throw new ValidationFailureException(endpoint.ValidationFailures, $"{nameof(ThrowError)}() called!");
+    }
+
+    /// <summary>
+    /// Raises a request-level error exactly as <see cref="ThrowError{TRequest,TResponse}(Endpoint{TRequest,TResponse}, ErrorCode)"/>
+    /// does, but answered with <paramref name="statusCode"/> rather than 400 - for a refusal whose
+    /// status is not "the request is malformed", such as a coded 404 naming what was not found.
+    /// </summary>
+    /// <param name="endpoint">The FastEndpoints endpoint raising the error.</param>
+    /// <param name="errorCode">Machine-readable error code from <see cref="ErrorHandling.ErrorCodes"/>.</param>
+    /// <param name="statusCode">The HTTP status the error response is sent with.</param>
+    [DoesNotReturn]
+    public static void ThrowError<TRequest, TResponse>(this Endpoint<TRequest, TResponse> endpoint, ErrorCode errorCode, int statusCode)
+        where TRequest : notnull
+    {
+        endpoint.AddError(endpoint.HttpContext.ResolveEnglishFallback(errorCode), errorCode.Value);
+
+        endpoint.ThrowIfAnyErrors(statusCode);
+        throw new UnreachableException("ThrowIfAnyErrors returned with an error recorded.");
     }
 
     /// <summary>

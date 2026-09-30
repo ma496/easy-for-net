@@ -250,7 +250,11 @@
       "editionNotFound": "未找到版本。",
       "editionNameAlreadyExists": "同名版本已存在。",
       "editionInUse": "该版本下仍有租户，无法删除。",
-      "sessionStoreUnavailable": "会话服务暂时不可用，请稍后重试。"
+      "sessionStoreUnavailable": "会话服务暂时不可用，请稍后重试。",
+      "settingNotFound": "未找到该设置。",
+      "settingPropertyUnknown": "此设置没有该属性。",
+      "settingPropertyInvalid": "该值对此设置属性无效。",
+      "settingValueInvalid": "设置的值无效。"
     }
   },
   "table": {

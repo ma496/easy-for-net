@@ -250,7 +250,11 @@
       "editionNotFound": "संस्करण नहीं मिला।",
       "editionNameAlreadyExists": "इस नाम का संस्करण पहले से मौजूद है।",
       "editionInUse": "जब तक इस संस्करण पर किरायेदार हैं, इसे हटाया नहीं जा सकता।",
-      "sessionStoreUnavailable": "सत्र सेवा अस्थायी रूप से उपलब्ध नहीं है। कृपया थोड़ी देर बाद पुनः प्रयास करें।"
+      "sessionStoreUnavailable": "सत्र सेवा अस्थायी रूप से उपलब्ध नहीं है। कृपया थोड़ी देर बाद पुनः प्रयास करें।",
+      "settingNotFound": "सेटिंग नहीं मिली।",
+      "settingPropertyUnknown": "इस सेटिंग में ऐसी कोई प्रॉपर्टी नहीं है।",
+      "settingPropertyInvalid": "यह मान इस सेटिंग प्रॉपर्टी के लिए मान्य नहीं है।",
+      "settingValueInvalid": "सेटिंग के मान मान्य नहीं हैं।"
     }
   },
   "table": {

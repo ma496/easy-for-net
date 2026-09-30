@@ -4,6 +4,7 @@ using Backend.Features.Tenancy.Core;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Core.Sessions;
+using Backend.Features.Settings.Core;
 
 /// <summary>
 /// Anonymous POST endpoint that authenticates a user by username/email and password and
@@ -35,7 +36,7 @@ using Backend.Features.Identity.Core.Sessions;
 /// standing inside a tenant: a platform account works in one only once it has been made a member.
 /// </para>
 /// </remarks>
-sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, ISessionIssuer sessionIssuer, IOptions<SigninSetting> signinSetting, IOptions<AuthSetting> authSetting) : Endpoint<TokenRequest, TokenResponse>
+sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, ISessionIssuer sessionIssuer, ISettingProvider settingProvider, IOptions<AuthSetting> authSetting) : Endpoint<TokenRequest, TokenResponse>
 {
     public override void Configure()
     {
@@ -60,12 +61,16 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, ISe
         // nor written to: they wait untouched for the account to be reactivated.
         if (!user.IsActive)
             this.ThrowError(ErrorCodes.UserNotActive);
-        if (signinSetting.Value?.IsEmailVerificationRequired == true && !user.IsEmailVerified)
-            this.ThrowError(ErrorCodes.EmailNotVerified);
-
         var tenantId = string.IsNullOrWhiteSpace(req.TenantIdentifier)
             ? await ResolveUnnamedTenantAsync(user, c)
             : await ResolveNamedTenantAsync(user, req.TenantIdentifier, c);
+
+        // Whether the email must be verified is the setting of the tenant being entered - its own override,
+        // else the platform's, else the default - so it is asked only once that tenant is known. A platform
+        // account entering no tenant is held to the platform's value.
+        var signinSettings = await settingProvider.GetAsync<SigninSettings>(tenantId, c);
+        if (signinSettings.IsEmailVerificationRequired && !user.IsEmailVerified)
+            this.ThrowError(ErrorCodes.EmailNotVerified);
 
         // Recorded before the token pair is asked for, because the refresh-token row written for this
         // session is all a later refresh has to go on: recording the tenant here is what makes a refresh

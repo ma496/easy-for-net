@@ -250,7 +250,11 @@
       "editionNotFound": "الإصدار غير موجود.",
       "editionNameAlreadyExists": "يوجد إصدار بهذا الاسم بالفعل.",
       "editionInUse": "لا يمكن حذف هذا الإصدار ما دام هناك مستأجرون عليه.",
-      "sessionStoreUnavailable": "خدمة الجلسات غير متاحة مؤقتًا. يرجى المحاولة مرة أخرى بعد قليل."
+      "sessionStoreUnavailable": "خدمة الجلسات غير متاحة مؤقتًا. يرجى المحاولة مرة أخرى بعد قليل.",
+      "settingNotFound": "الإعداد غير موجود.",
+      "settingPropertyUnknown": "هذا الإعداد لا يحتوي على هذه الخاصية.",
+      "settingPropertyInvalid": "القيمة غير صالحة لخاصية هذا الإعداد.",
+      "settingValueInvalid": "قيم الإعداد غير صالحة."
     }
   },
   "table": {
