@@ -6,6 +6,7 @@ using Backend.External.Email;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Localization.Core;
+using Backend.Features.Notifications.Core;
 using Backend.Features.Tenancy.Core;
 using Backend.Middleware;
 using Backend.Settings;
@@ -354,6 +355,7 @@ using (app.Services.CreateScope())
 {
     RecurringJob.AddOrUpdate<IAuthTokenCleanService>("delete-expired-auth-tokens", service => service.DeleteExpiredTokensAsync(), Cron.Daily);
     RecurringJob.AddOrUpdate<ITokenCleanService>("delete-expired-tokens", service => service.DeleteExpiredTokensAsync(), Cron.Daily);
+    RecurringJob.AddOrUpdate<INotificationRetentionService>("delete-expired-notifications", service => service.DeleteExpiredAsync(CancellationToken.None), Cron.Daily);
 }
 
 app.Run();

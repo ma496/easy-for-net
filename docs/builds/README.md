@@ -11,6 +11,7 @@ To read the change itself: `git show <commit>`.
 
 | Landed | Build | Commit |
 |--------|-------|--------|
+| 2026-10-01 | [Bound notification read state with a per-user read cursor and read-shaped indexes](01-notification-read-cursor-and-indexes.md) | `2a9eb95a` |
 | 2026-09-30 | [Add the Features/Settings slice with platform and tenant overrides, and move Signin onto it](01-settings-slice-and-signin-setting.md) | `e0b27add` |
 | 2026-09-30 | [Move EmailSettings onto the settings system, with configuration defaults and encrypted secrets](02-email-setting-with-configuration-default-and-secrets.md) | `3d3f6ad8` |
 | 2026-09-30 | [Add the admin settings page for editing sign-in and email overrides in the acting scope](03-admin-settings-page.md) | `0c61bb5e` |
@@ -22,4 +23,4 @@ To read the change itself: `git show <commit>`.
 | 2026-09-29 | [Give generated projects their own Redis key prefix and a local Redis setup step](05-generator-redis-instance-name-and-local-redis.md) | `0b6f89c9` |
 | 2026-09-29 | [Document that sessions are validated on every request and revoked when access changes](06-document-session-validation-and-revocation.md) | `76c0ba6c` |
 
-10 build(s) recorded.
+11 build(s) recorded.
