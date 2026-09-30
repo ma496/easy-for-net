@@ -254,7 +254,10 @@
       "settingNotFound": "Настройка не найдена.",
       "settingPropertyUnknown": "У этой настройки нет такого свойства.",
       "settingPropertyInvalid": "Значение недопустимо для этого свойства настройки.",
-      "settingValueInvalid": "Значения настройки недопустимы."
+      "settingValueInvalid": "Значения настройки недопустимы.",
+      "emailSmtpServerRequired": "Требуется SMTP-сервер.",
+      "emailSmtpPortInvalid": "Порт SMTP должен быть от 1 до 65535.",
+      "emailSenderEmailInvalid": "Адрес отправителя должен быть действительным адресом электронной почты."
     }
   },
   "table": {

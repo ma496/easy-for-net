@@ -6,7 +6,8 @@ using Backend.Features.Tenancy.Core;
 /// <summary>
 /// This endpoint that handles <c>GET /settings</c> to list every declared setting as the acting scope
 /// resolves it: each property's effective value and whether it came from the tenant's own override,
-/// the platform's, or the code default. In platform scope there is no tenant layer, so a value is the
+/// the platform's, or the default (code or configured). A secret property is
+/// reported with no value, only whether one is set. In platform scope there is no tenant layer, so a value is the
 /// platform's or the default.
 /// </summary>
 sealed class SettingListEndpoint(ISettingDefinitionCatalogue catalogue, ISettingValueService settingValueService, ITenantContext tenantContext)

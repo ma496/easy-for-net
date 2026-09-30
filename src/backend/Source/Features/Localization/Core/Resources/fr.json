@@ -254,7 +254,10 @@
       "settingNotFound": "Paramètre introuvable.",
       "settingPropertyUnknown": "Ce paramètre ne possède pas cette propriété.",
       "settingPropertyInvalid": "La valeur n'est pas valide pour cette propriété du paramètre.",
-      "settingValueInvalid": "Les valeurs du paramètre ne sont pas valides."
+      "settingValueInvalid": "Les valeurs du paramètre ne sont pas valides.",
+      "emailSmtpServerRequired": "Un serveur SMTP est requis.",
+      "emailSmtpPortInvalid": "Le port SMTP doit être compris entre 1 et 65535.",
+      "emailSenderEmailInvalid": "L'adresse de l'expéditeur doit être une adresse e-mail valide."
     }
   },
   "table": {

@@ -254,7 +254,10 @@
       "settingNotFound": "Configuración no encontrada.",
       "settingPropertyUnknown": "Esta configuración no tiene esa propiedad.",
       "settingPropertyInvalid": "El valor no es válido para esta propiedad de la configuración.",
-      "settingValueInvalid": "Los valores de la configuración no son válidos."
+      "settingValueInvalid": "Los valores de la configuración no son válidos.",
+      "emailSmtpServerRequired": "Se requiere un servidor SMTP.",
+      "emailSmtpPortInvalid": "El puerto SMTP debe estar entre 1 y 65535.",
+      "emailSenderEmailInvalid": "El correo del remitente debe ser una dirección de correo electrónico válida."
     }
   },
   "table": {

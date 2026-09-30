@@ -11,6 +11,7 @@ To read the change itself: `git show <commit>`.
 
 | Landed | Build | Commit |
 |--------|-------|--------|
+| 2026-09-30 | [Add the Features/Settings slice with platform and tenant overrides, and move Signin onto it](01-settings-slice-and-signin-setting.md) | `e0b27add` |
 | 2026-09-29 | [Keep sessions in a Redis session store and validate them on every request](01-redis-session-store-and-per-request-validation.md) | `af3d2e34` |
 | 2026-09-29 | [Revoke live sessions when a user, their password or a role's grants change](02-revoke-sessions-on-identity-access-changes.md) | `5a18f9c7` |
 | 2026-09-29 | [Revoke live sessions when a tenant member is removed or re-roled, or the tenant is suspended or deleted](03-revoke-sessions-on-tenant-membership-and-lifecycle.md) | `1a2ed74b` |
@@ -18,4 +19,4 @@ To read the change itself: `git show <commit>`.
 | 2026-09-29 | [Give generated projects their own Redis key prefix and a local Redis setup step](05-generator-redis-instance-name-and-local-redis.md) | `0b6f89c9` |
 | 2026-09-29 | [Document that sessions are validated on every request and revoked when access changes](06-document-session-validation-and-revocation.md) | `76c0ba6c` |
 
-6 build(s) recorded.
+7 build(s) recorded.

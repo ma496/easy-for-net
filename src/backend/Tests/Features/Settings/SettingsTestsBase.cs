@@ -11,11 +11,13 @@ using Backend.Tests.Fakes;
 /// Base class for the settings suite. A tenant's own overrides are isolated by giving every test a
 /// fresh tenant, but a platform row is read by every tenant - so every test that writes one shares this
 /// class's collection, and every platform row is removed after each test so the next one starts from the
-/// code defaults.
+/// defaults.
 /// </summary>
 /// <remarks>
 /// The platform rows written here are of <see cref="ProbeSettings"/>, which exists only in the test host
-/// and which nothing in the application reads, so they cannot change what another class's requests do.
+/// and which nothing in the application reads, and of <c>Email</c>, which only a sending email job reads -
+/// and no Hangfire worker runs under Testing, so the only jobs that ever send are the ones this suite runs
+/// itself. Neither can change what another class's requests do.
 /// No test writes the platform <c>Signin</c> row: the accounts the suite creates are unverified, and a
 /// platform row requiring verification would refuse sign-ins across the whole suite while it stood. What
 /// a platform <c>Signin</c> override does to a tenant is shown through <see cref="PlatformSettingOverlays"/>
@@ -89,7 +91,7 @@ public abstract class SettingsTestsBase(App app) : TenancyTestsBase(app)
 
     /// <summary>
     /// Removes every platform row this test may have written - directly or through an endpoint - so the
-    /// next test in the collection starts from the code defaults.
+    /// next test in the collection starts from the defaults (code or configured).
     /// </summary>
     protected override async ValueTask TearDownAsync()
     {

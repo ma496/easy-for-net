@@ -15,13 +15,15 @@ using Backend.Features.Settings.Core;
 public static class TestDoubles
 {
     /// <summary>
-    /// Substitutes the cheap password hasher and the mail service that sends nothing, adds the probe
-    /// setting the settings suite writes freely, and lets a test overlay platform settings per tenant.
+    /// Substitutes the cheap password hasher and a mail transport that delivers nothing but records what
+    /// it was handed (<see cref="RecordingEmailTransport"/>, behind the real <see cref="IEmailService"/>), adds
+    /// the probe setting the settings suite writes freely, and lets a test overlay platform settings per tenant.
     /// </summary>
     public static IServiceCollection RegisterTestDoubles(this IServiceCollection services)
     {
         services.AddScoped<IPasswordHasher, TestPasswordHasher>();
-        services.AddScoped<IEmailService, NoOpEmailService>();
+        services.AddSingleton<RecordingEmailTransport>();
+        services.AddSingleton<IEmailTransport>(provider => provider.GetRequiredService<RecordingEmailTransport>());
         services.AddSessionStoreFaults();
         services.AddSingleton<ISettingDefinitionProvider, ProbeSettingsProvider>();
         services.AddPlatformSettingOverlays();

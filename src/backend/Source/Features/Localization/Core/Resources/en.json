@@ -254,7 +254,10 @@
       "settingNotFound": "Setting not found.",
       "settingPropertyUnknown": "This setting has no such property.",
       "settingPropertyInvalid": "The value is not valid for this setting property.",
-      "settingValueInvalid": "The setting's values are not valid."
+      "settingValueInvalid": "The setting's values are not valid.",
+      "emailSmtpServerRequired": "An SMTP server is required.",
+      "emailSmtpPortInvalid": "The SMTP port must be between 1 and 65535.",
+      "emailSenderEmailInvalid": "The sender email must be a valid email address."
     }
   },
   "table": {

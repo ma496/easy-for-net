@@ -22,7 +22,7 @@ public sealed class SettingDefinitionContext
     /// </typeparam>
     /// <param name="name">The stable name the setting is stored and addressed under (<c>/settings/{name}</c>).</param>
     /// <param name="validator">
-    /// The rules every resolved value of the setting must satisfy. The code default is held to them at
+    /// The rules every resolved value of the setting must satisfy. The default - code or configured - is held to them at
     /// startup, and every write is held to them against the value it would produce.
     /// </param>
     /// <returns>A builder for the rest of the definition, so later options chain onto the registration.</returns>

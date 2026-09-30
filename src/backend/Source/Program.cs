@@ -210,7 +210,7 @@ foreach (var provider in permissionProviders)
 bld.Services.AddScoped<IPermissionDefinitionService, PermissionDefinitionService>();
 
 // Configure email services
-bld.Services.Configure<EmailSetting>(bld.Configuration.GetSection("EmailSettings"));
+bld.Services.AddScoped<IEmailTransport, SmtpEmailTransport>();
 bld.Services.AddScoped<IEmailService, EmailService>();
 bld.Services.AddScoped<IEmailBackgroundJobs, EmailBackgroundJobs>();
 

@@ -254,7 +254,10 @@
       "settingNotFound": "ترتیب نہیں ملی۔",
       "settingPropertyUnknown": "اس ترتیب میں ایسی کوئی خاصیت نہیں ہے۔",
       "settingPropertyInvalid": "یہ قدر اس ترتیب کی خاصیت کے لیے درست نہیں ہے۔",
-      "settingValueInvalid": "ترتیب کی اقدار درست نہیں ہیں۔"
+      "settingValueInvalid": "ترتیب کی اقدار درست نہیں ہیں۔",
+      "emailSmtpServerRequired": "SMTP سرور درکار ہے۔",
+      "emailSmtpPortInvalid": "SMTP پورٹ 1 اور 65535 کے درمیان ہونا چاہیے۔",
+      "emailSenderEmailInvalid": "بھیجنے والے کی ای میل ایک درست ای میل پتہ ہونی چاہیے۔"
     }
   },
   "table": {

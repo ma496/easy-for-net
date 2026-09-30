@@ -7,7 +7,9 @@ using Backend.Features.Tenancy.Core;
 /// </summary>
 /// <remarks>
 /// Every read returns a new instance of the setting class, resolved property by property: the tenant's
-/// own override, then the platform's, then the class's property initializers. Values are read from the
+/// own override, then the platform's, then the default (the configured one when the setting names a
+/// configuration section the deployment supplies, else the class's property initializers). A
+/// <see cref="SecretSettingAttribute"/> property is returned decrypted. Values are read from the
 /// database on the first read of a setting in a request (or job) and reused for the rest of it; a read
 /// in the next request sees whatever was saved in between. Changing a setting revokes no session: a
 /// caller that decides something at sign-in or refresh (as <c>SigninSettings</c> does) reads the value
