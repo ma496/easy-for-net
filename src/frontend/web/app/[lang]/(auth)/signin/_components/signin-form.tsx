@@ -154,7 +154,7 @@ export const SigninForm = () => {
               <div className="flex-1 space-y-2">
                 <p className="text-danger-dark font-semibold dark:text-danger">{t('page.verifyEmail.notVerifiedTitle')}</p>
                 <p className="text-danger-dark/80 dark:text-danger/80">{t('page.verifyEmail.notVerifiedMessage')}</p>
-                <Button type="button" className="btn btn-outline-primary" onClick={handleResendEmail} disabled={countdown > 0 || isResending} isLoading={isResending}>
+                <Button type="button" variant="outline" onClick={handleResendEmail} disabled={countdown > 0 || isResending} isLoading={isResending}>
                   {countdown > 0 ? t('page.verifyEmail.resendWait', { seconds: countdown }) : t('page.verifyEmail.resendButton')}
                 </Button>
               </div>
