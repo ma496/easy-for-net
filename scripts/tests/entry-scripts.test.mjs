@@ -36,6 +36,7 @@ const ENTRIES = [
   { file: "auto-ship.mjs", args: [] },
   { file: "loop.mjs", args: ["--dry-run"] },
   { file: "claude-contract.mjs", args: ["--help"] },
+  { file: "stop-api.mjs", args: ["--list"] },
 ];
 
 for (const { file, args } of ENTRIES) {

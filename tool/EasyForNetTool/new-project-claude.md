@@ -18,6 +18,7 @@ dotnet build EasyForNet.slnx
 dotnet ef migrations add <Name> --project src/backend/Source
 dotnet ef database update --project src/backend/Source
 dotnet run --project src/backend/Source   # needs PostgreSQL and Redis (ConnectionStrings:Redis)
+npm run stop:api                         # from the repository root: stop this checkout's running API before a build (it locks bin/ on Windows)
 ```
 
 Backend tests — **require a running PostgreSQL** matching `appsettings.Testing.json` (not Redis: the Testing host keeps sessions in memory); the Testing environment migrates and seeds the database on startup:
@@ -203,7 +204,7 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
 - **`agentic.config.json` is the one project-specific file.** It names the conventions every brief
   repeats, the departments (which agent owns which paths), the skills a diff owes, the gate and live
   checks, the service verify starts, and the hook rules. `scripts/lib/project-config.mjs` reads it;
-  the rest of `scripts/` is stack-agnostic, except `gate.mjs`, `serve-api.mjs`, `pg-ready.mjs`,
+  the rest of `scripts/` is stack-agnostic, except `gate.mjs`, `serve-api.mjs`, `stop-api.mjs`, `pg-ready.mjs`,
   `redis-ready.mjs` and `smoke.mjs`, which are how this stack builds and runs.
 - **Delegation is checked, not trusted.** The departments a change owes are derived from its finished
   diff and compared with the subagents actually seen in the run's stream: `ui-ux-reviewer` designs a

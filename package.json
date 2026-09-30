@@ -12,6 +12,7 @@
     "test:claude-contract": "node scripts/claude-contract.mjs",
     "verify": "node scripts/verify.mjs",
     "serve:api": "node scripts/serve-api.mjs",
+    "stop:api": "node scripts/stop-api.mjs",
     "auto": "node scripts/agent-run.mjs",
     "auto:ship": "node scripts/auto-ship.mjs",
     "auto:status": "node scripts/run-journal.mjs",
