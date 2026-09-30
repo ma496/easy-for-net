@@ -79,7 +79,8 @@
     "editionsUpdate": "更新",
     "editionsFeatures": "功能",
     "tenantsFeatures": "功能",
-    "localization": "本地化"
+    "localization": "本地化",
+    "settings": "设置"
   },
   "search": {
     "dashboard": "仪表板",
@@ -102,7 +103,8 @@
     "tenantsCreate": "创建租户",
     "editions": "版本",
     "editionsCreate": "创建版本",
-    "localization": "本地化"
+    "localization": "本地化",
+    "settings": "设置"
   },
   "form": {
     "label": {
@@ -250,7 +252,14 @@
       "editionNotFound": "未找到版本。",
       "editionNameAlreadyExists": "同名版本已存在。",
       "editionInUse": "该版本下仍有租户，无法删除。",
-      "sessionStoreUnavailable": "会话服务暂时不可用，请稍后重试。"
+      "sessionStoreUnavailable": "会话服务暂时不可用，请稍后重试。",
+      "settingNotFound": "未找到该设置。",
+      "settingPropertyUnknown": "此设置没有该属性。",
+      "settingPropertyInvalid": "该值对此设置属性无效。",
+      "settingValueInvalid": "设置的值无效。",
+      "emailSmtpServerRequired": "必须提供 SMTP 服务器。",
+      "emailSmtpPortInvalid": "SMTP 端口必须介于 1 到 65535 之间。",
+      "emailSenderEmailInvalid": "发件人邮箱必须是有效的电子邮件地址。"
     }
   },
   "table": {
@@ -684,6 +693,57 @@
         "currentWillSwitch": "您正在使用的语言即将被禁用 — 您将被切换到默认语言。",
         "unsaved": "您有未保存的更改",
         "saveSuccess": "语言设置已更新"
+      }
+    },
+    "settings": {
+      "title": "设置",
+      "scope": {
+        "platform": "您正在编辑整个平台的设置。除非租户自行设置，否则所有租户都会继承这些设置。",
+        "tenant": "您正在编辑 ${tenant} 的设置。此处未设置的内容将从平台继承。"
+      },
+      "readOnly": "您可以查看这些设置，但无法更改。",
+      "empty": "没有可用的设置",
+      "customized": "已在此处自定义",
+      "inherited": "继承",
+      "source": {
+        "own": "在此处设置",
+        "platform": "平台",
+        "default": "默认"
+      },
+      "changed": "已更改",
+      "unsaved": "未保存的更改",
+      "discard": "放弃更改",
+      "resetToInherited": "重置为继承值",
+      "resetTitle": "重置 ${setting} 设置？",
+      "resetConfirmTenant": "此租户自己的 ${setting} 设置将被删除，改为应用平台的值。",
+      "resetConfirmPlatform": "平台自己的 ${setting} 设置将被删除，改为应用默认值。已设置自己值的租户将保留这些值。",
+      "resetConfirmButton": "是，重置",
+      "resetSuccess": "${setting} 设置已重置为继承值",
+      "saveSuccess": "${setting} 设置已保存",
+      "signin": {
+        "title": "登录",
+        "description": "用户登录时适用的规则。",
+        "isEmailVerificationRequired": "登录需要已验证的电子邮件地址",
+        "isEmailVerificationRequiredHelp": "开启后，账户必须先确认其电子邮件地址才能登录。"
+      },
+      "email": {
+        "title": "电子邮件",
+        "description": "发送外发电子邮件所使用的 SMTP 服务器和发件人。",
+        "smtpServer": "SMTP 服务器",
+        "smtpPort": "SMTP 端口",
+        "smtpUsername": "SMTP 用户名",
+        "smtpPassword": "SMTP 密码",
+        "senderEmail": "发件人电子邮件",
+        "senderName": "发件人名称",
+        "portInvalid": "请输入 1 到 65535 之间的整数",
+        "passwordSet": "已设置",
+        "passwordNotSet": "未设置",
+        "passwordKeepPlaceholder": "留空以保留当前密码",
+        "passwordNotSetPlaceholder": "未设置",
+        "passwordClear": "清除",
+        "passwordWillClear": "保存时将被清除",
+        "passwordUndo": "撤销",
+        "passwordInheritHint": "密码只会与服务器、端口和用户名一起继承。如果您在此处更改了其中任何一项而未输入密码，则不会使用任何密码。"
       }
     }
   },

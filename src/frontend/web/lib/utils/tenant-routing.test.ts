@@ -142,6 +142,7 @@ describe('isPlatformAccessiblePath', () => {
     '/admin/tenants/list',
     '/admin/tenants/detail/abc',
     '/admin/localization',
+    '/admin/settings',
   ])('lets a platform administrator with no tenant use %s', (pathname) => {
     expect(isPlatformAccessiblePath(pathname)).toBe(true)
   })
@@ -181,6 +182,15 @@ describe('isPathAvailable', () => {
     // open to a caller inside the tenant they are about.
     expect(isPathAvailable(memberInside, '/admin/tenants/detail/a')).toBe(true)
     expect(isPathAvailable(memberInside, '/admin/tenants/members/a')).toBe(true)
+  })
+
+  it('opens settings in both scopes: the platform in no tenant, and a tenant from inside it', () => {
+    const platformInside = userInfo({ isPlatform: true, tenants: [tenant('a')], activeTenant: tenant('a') })
+    const memberInside = userInfo({ tenants: [tenant('a')], activeTenant: tenant('a') })
+
+    expect(isPathAvailable(platformAdmin, '/admin/settings')).toBe(true)
+    expect(isPathAvailable(platformInside, '/admin/settings')).toBe(true)
+    expect(isPathAvailable(memberInside, '/admin/settings')).toBe(true)
   })
 
   it("leaves the platform's own screens open to a caller acting in no tenant", () => {

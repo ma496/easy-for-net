@@ -165,6 +165,10 @@ public async Task RecalculateAsync(Guid tenantId, CancellationToken ct)
 - `IFeatureChecker` needs a resolved scope; outside a request use `IFeatureValueResolver` with a named
   target (`feature-management` skill). Jobs over many tenants use one DI scope (and so one
   `ITenantContext`) per tenant, never one shared context across concurrent branches.
+- Settings likewise: the slice's `Core/<X>SettingsProvider.cs` declares them beside its permissions and
+  features providers, and `ISettingProvider.GetAsync<T>()` reads the acting scope, so outside a
+  request call `GetAsync<T>(tenantId)` with the tenant the job was given (`null` for the platform's
+  value) — see the `settings` skill.
 
 ## 5. Platform accounts (`User.IsPlatform`)
 
@@ -247,6 +251,10 @@ platform account inside a tenant); `ClientForAsync` gives a second identity its 
 
 - An exemption in `TenantScopingTests` to silence a missing marker — only for kinds with no tenant.
 - `AcrossAllTenants()` without a tenant predicate, or a tenant id taken from the request: a leak.
+- An anonymous endpoint reading a per-tenant setting or sending mail from the ambient scope: a
+  signed-in caller still carries its tenant scope there, so name the target — the platform for
+  account-level work (sign-up, password reset, verification: `GetAsync<T>(null)`,
+  `EnqueueForPlatform`), or the tenant being entered once its membership is checked (sign-in).
 - A new endpoint that changes a membership, a tenant's status or its plan without revoking the
   affected sessions through `ISessionRevocationService` after it commits: the sessions keep acting on
   what they were created with until they are replaced.

@@ -41,6 +41,8 @@ and you should say so rather than inventing it.
 
 ## Before you report done
 
-Run `npm run verify` — it runs eslint, `tsc --noEmit` and vitest for the web app, then the
-production build. State which screens you changed, which states you handled, and what the
+From `src/frontend/web`, run `npx tsc --noEmit`, `npm run lint` and the vitest files for what you
+changed (`npx vitest run <file>`) — vitest and eslint both pass on code that fails `tsc`, so
+all three. The full `npm run verify`, with the production build, is the lead's to run once the
+writers are done. State which screens you changed, which states you handled, and what the
 checks printed.

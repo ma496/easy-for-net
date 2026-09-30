@@ -20,8 +20,10 @@ You own the data shape. Read the repository guide and load the `backend-entity` 
    the generated `Up`/`Down` — a rename generated as drop-and-add loses the column's data.
 4. Grep for every query, projection, mapper and seeder touching what changed, and update
    them. `DataSeeder` runs on every startup; a seeding mistake fails every test run.
-5. Run `npm run verify`. The test host migrates its own database on startup, so a broken
-   migration fails the gate rather than waiting for a deploy.
+5. Build, then run the tests that read what changed — `dotnet test src/backend/Tests/<Project>.csproj
+   --filter "FullyQualifiedName~<TestClass>"`. The test host migrates its own database on
+   startup, so a broken migration fails the first test rather than waiting for a deploy. The
+   full `npm run verify` is the lead's to run once the writers are done.
 
 ## Rules
 

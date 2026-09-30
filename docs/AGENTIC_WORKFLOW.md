@@ -57,7 +57,9 @@ ignored, because two tasks sharing a working tree would overwrite each other.
 
 ## What a task must survive
 
-1. **The gate.** Typecheck, unit tests, hook tests, build — whatever `verify.gate` names.
+1. **The gate.** Typecheck, unit tests, hook tests, build — whatever `verify.gate` names. Here
+   that is `gate.mjs --changed`: the steps the diff's paths can break, all of them when a path
+   is watched by none. `npm run verify -- --full` runs every step.
 2. **The live checks its diff demands.** From `verify.checks`. A required check that could
    not run counts as a failure, not as a pass with a footnote.
 3. **A non-empty diff.** Verification passing over an untouched tree is the gate proving the
@@ -143,6 +145,9 @@ answerable rather than arguable.
 - **PostgreSQL running** where `appsettings.Testing.json` points. The gate runs the backend
   integration tests, which migrate and seed their own database; with the server down every
   task fails its gate, and `npm run loop` says so in its preflight.
+- **Redis running** where `ConnectionStrings:Redis` points, for the live check's API.
+- The runner probes both before an attempt starts and, when one is down and has no `start`
+  command, exits 4 having spent nothing; the drain puts the task back in `todo/` and stops.
 - `src/frontend/web/node_modules` — the gate runs `npm ci` there on a fresh checkout.
 
 ## The queue repairs its own bookkeeping

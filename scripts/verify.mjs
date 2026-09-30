@@ -6,6 +6,7 @@
  *   npm run verify -- --autostart   # bring the service up if a live check needs it
  *   npm run verify -- --json        # machine-readable summary for the runner
  *   npm run verify -- --scope working   # judge only uncommitted changes
+ *   npm run verify -- --full        # every gate step, not only those the diff reaches
  *
  * A static gate proves the code compiles, the unit suite passes, and everything builds.
  * For most products that is a weak signal on its own: a green gate says nothing about
@@ -74,8 +75,10 @@ const BASE = argOf("base", WORK_BRANCH);
 // "working" narrows to uncommitted changes, for quick iteration on a long-lived branch.
 const SCOPE = argOf("scope", "branch");
 const JSON_OUT = flag("json");
+const RUNS_DIR = join(CWD, ".agent-runs");
 const AUTOSTART = flag("autostart");
 const KEEP_STACK = flag("keep-stack");
+const FULL = flag("full");
 
 const say = (msg) => { if (!JSON_OUT) console.log(msg); };
 const run = (cmd, args, opts = {}) =>
@@ -123,8 +126,17 @@ const record = (name, status, detail) => {
   say(`\n[${status.toUpperCase()}] ${name}${detail ? ` — ${detail}` : ""}`);
 };
 
-say(`\n=== gate: ${config.verify.gate} ===`);
-const gate = runCommand(config.verify.gate);
+// The gate is handed the paths this run judges, so a gate that scopes its steps to the diff
+// (`gate.mjs --changed`) sees the committed half of a branch as well as the working tree.
+// `--full` tells it to ignore them and run everything.
+mkdirSync(RUNS_DIR, { recursive: true });
+const changedFile = join(RUNS_DIR, `verify-changed-${process.pid}.txt`);
+writeFileSync(changedFile, changed.map((p) => `${p}\n`).join(""));
+say(`\n=== gate: ${config.verify.gate}${FULL ? " (--full)" : ""} ===`);
+const gate = runCommand(config.verify.gate, {
+  env: { ...process.env, GATE_CHANGED_PATHS_FILE: changedFile, ...(FULL ? { GATE_FULL: "1" } : {}) },
+});
+rmSync(changedFile, { force: true });
 if (gate.status !== 0) {
   record("gate", "fail", "the static gate failed");
   if (JSON_OUT) console.log(JSON.stringify({ ok: false, results, changed }, null, 2));
@@ -153,7 +165,6 @@ const verdictFor = (health) => apiAdoptionVerdict(health, CWD, SERVICE?.identity
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 /** The service this run started, if it started one: `{ port, pid, url }`. */
 let ownService = null;
-const RUNS_DIR = join(CWD, ".agent-runs");
 const recordPath = (port) => join(RUNS_DIR, `dev-service-${port}.json`);
 
 /**
@@ -257,6 +268,14 @@ function ensureDependencies() {
     if (healthy()) {
       say(`${dep.name} is already up — starting the service only.`);
       continue;
+    }
+    // With no start command there is nothing to run, and announcing a start and then waiting
+    // out the health timeout only hides that. Say which dependency, and stop.
+    if (!String(dep.start ?? "").trim()) {
+      liveFailure =
+        `${dep.name} is down, and agentic.config.json gives no command to start it, so the ` +
+        "required check(s) could not run. Start it and verify again.";
+      return false;
     }
     say(`${dep.name} is down — starting it.`);
     const started = runCommand(dep.start, { cwd: ROOT });

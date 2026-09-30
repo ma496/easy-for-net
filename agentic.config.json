@@ -93,8 +93,9 @@
       "agent": "code-reviewer",
       "label": "Code review",
       "phase": "review",
-      "order": 2,
+      "order": 1,
       "always": true,
+      "exceptWhenOnly": ["\\.md$"],
       "why": "Sees what a green gate cannot: a tenant filter missing, a permission unchecked, a test weakened to pass."
     }
   ],
@@ -154,7 +155,7 @@
   ],
   "unownedPaths": ["^\\.agent-queue/", "^\\.agent-runs/", "^docs/builds/"],
   "verify": {
-    "gate": "node scripts/gate.mjs",
+    "gate": "node scripts/gate.mjs --changed",
     "checks": [
       {
         "name": "smoke",
@@ -192,6 +193,11 @@
         "name": "Postgres",
         "healthyWhen": "node scripts/pg-ready.mjs Testing",
         "whenMissing": "start the PostgreSQL service — the backend tests and live checks need it, so every task fails its gate until it is up"
+      },
+      {
+        "name": "Redis",
+        "healthyWhen": "node scripts/redis-ready.mjs",
+        "whenMissing": "start Redis — the live check starts the API, which keeps its sessions there, so every API task fails its verify until it is up"
       }
     ],
     "observe": null,

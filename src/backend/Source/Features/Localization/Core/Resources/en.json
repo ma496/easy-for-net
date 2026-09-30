@@ -79,7 +79,8 @@
     "editionsUpdate": "Update",
     "editionsFeatures": "Features",
     "tenantsFeatures": "Features",
-    "localization": "Localization"
+    "localization": "Localization",
+    "settings": "Settings"
   },
   "search": {
     "dashboard": "Dashboard",
@@ -102,7 +103,8 @@
     "tenantsCreate": "Create Tenant",
     "editions": "Editions",
     "editionsCreate": "Create Edition",
-    "localization": "Localization"
+    "localization": "Localization",
+    "settings": "Settings"
   },
   "form": {
     "label": {
@@ -250,7 +252,14 @@
       "editionNotFound": "Edition not found.",
       "editionNameAlreadyExists": "An edition with this name already exists.",
       "editionInUse": "This edition cannot be deleted while tenants are on it.",
-      "sessionStoreUnavailable": "The session service is temporarily unavailable. Please try again in a moment."
+      "sessionStoreUnavailable": "The session service is temporarily unavailable. Please try again in a moment.",
+      "settingNotFound": "Setting not found.",
+      "settingPropertyUnknown": "This setting has no such property.",
+      "settingPropertyInvalid": "The value is not valid for this setting property.",
+      "settingValueInvalid": "The setting's values are not valid.",
+      "emailSmtpServerRequired": "An SMTP server is required.",
+      "emailSmtpPortInvalid": "The SMTP port must be between 1 and 65535.",
+      "emailSenderEmailInvalid": "The sender email must be a valid email address."
     }
   },
   "table": {
@@ -684,6 +693,57 @@
         "currentWillSwitch": "The language you are viewing this screen in is being disabled — you will be switched to the default.",
         "unsaved": "You have unsaved changes",
         "saveSuccess": "Languages updated"
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "scope": {
+        "platform": "You are editing platform-wide settings. Every tenant inherits these unless it sets its own.",
+        "tenant": "You are editing settings for ${tenant}. Anything not set here is inherited from the platform."
+      },
+      "readOnly": "You can view these settings but not change them.",
+      "empty": "No settings are available",
+      "customized": "Customized here",
+      "inherited": "Inherited",
+      "source": {
+        "own": "Set here",
+        "platform": "Platform",
+        "default": "Default"
+      },
+      "changed": "Changed",
+      "unsaved": "Unsaved changes",
+      "discard": "Discard changes",
+      "resetToInherited": "Reset to inherited",
+      "resetTitle": "Reset ${setting} settings?",
+      "resetConfirmTenant": "This tenant's own ${setting} settings will be removed, and the platform's values will apply instead.",
+      "resetConfirmPlatform": "The platform's own ${setting} settings will be removed, and the defaults will apply instead. Tenants that set their own values keep them.",
+      "resetConfirmButton": "Yes, reset",
+      "resetSuccess": "${setting} settings reset to inherited values",
+      "saveSuccess": "${setting} settings saved",
+      "signin": {
+        "title": "Sign-in",
+        "description": "Rules applied when people sign in.",
+        "isEmailVerificationRequired": "Require a verified email address to sign in",
+        "isEmailVerificationRequiredHelp": "When on, an account must confirm its email address before it can sign in."
+      },
+      "email": {
+        "title": "Email",
+        "description": "The SMTP server and sender that outgoing email is delivered through.",
+        "smtpServer": "SMTP server",
+        "smtpPort": "SMTP port",
+        "smtpUsername": "SMTP username",
+        "smtpPassword": "SMTP password",
+        "senderEmail": "Sender email",
+        "senderName": "Sender name",
+        "portInvalid": "Enter a whole number between 1 and 65535",
+        "passwordSet": "Set",
+        "passwordNotSet": "Not set",
+        "passwordKeepPlaceholder": "Leave blank to keep the current password",
+        "passwordNotSetPlaceholder": "Not set",
+        "passwordClear": "Clear",
+        "passwordWillClear": "Will be cleared when you save",
+        "passwordUndo": "Undo",
+        "passwordInheritHint": "The password is only inherited together with the server, port and username. If you change any of those here without entering a password, no password is used."
       }
     }
   },

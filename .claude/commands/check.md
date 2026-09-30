@@ -4,7 +4,8 @@ allowed-tools: Bash, Read
 ---
 
 Run `npm run gate` (`commands.gate` in `agentic.config.json`). `npm run gate -- --fast`
-skips the production web build; `npm run gate -- --only api|web|engine` runs one area.
+skips the production web build; `npm run gate -- --only api|web|engine` runs one area;
+`npm run gate -- --changed` runs only the steps the working tree's changes can break.
 
 It is the static half of verification: it proves the solution builds, the backend tests pass
 (they need PostgreSQL running), the web app lints, typechecks and passes vitest, the hooks
