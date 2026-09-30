@@ -2,7 +2,6 @@ namespace Backend.Features.Notifications.Endpoints.Notifications;
 
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
-using Backend.Features.Notifications.Core.Entities;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
@@ -35,11 +34,14 @@ sealed class NotificationGetEndpoint(AppDbContext dbContext, ICurrentUserService
         // platform-wide notification back in: the filter alone would hide every row naming no tenant.
         var activeTenantId = tenantContext.CurrentTenantId;
 
+        // The read state comes from the same WithReadState the list and the unread count use, so the row
+        // reads as read or unread here exactly as it does there.
         var query = dbContext.Notifications
             .AsNoTracking()
             .AcrossAllTenants()
             .VisibleTo(userId.Value, activeTenantId)
-            .Where(x => x.Id == request.Id);
+            .Where(x => x.Id == request.Id)
+            .WithReadState(dbContext, userId.Value);
 
         var notification = await NotificationGetResponseMapper.ProjectTo(query)
             .FirstOrDefaultAsync(cancellationToken);
@@ -48,12 +50,6 @@ sealed class NotificationGetEndpoint(AppDbContext dbContext, ICurrentUserService
         {
             await Send.NotFoundAsync(cancellationToken);
             return;
-        }
-
-        if (notification.UserId == null)
-        {
-            notification.IsRead = await dbContext.NotificationVisits
-                .AnyAsync(v => v.NotificationId == notification.Id && v.UserId == userId.Value, cancellationToken);
         }
 
         await Send.ResponseAsync(notification, cancellation: cancellationToken);
@@ -80,12 +76,14 @@ public sealed class NotificationGetResponse : AuditableDto<Guid>
 }
 
 /// <summary>
-/// Mapper that projects a <see cref="Notification"/> query into <see cref="NotificationGetResponse"/> DTOs.
+/// Mapper that projects notifications paired with the caller's read state into <see cref="NotificationGetResponse"/>
+/// DTOs: the notification's own members, and <c>IsRead</c> from the resolved read state rather than the row's flag.
 /// </summary>
 [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
-public static partial class NotificationGetResponseMapper
+static partial class NotificationGetResponseMapper
 {
-    public static partial IQueryable<NotificationGetResponse> ProjectTo(IQueryable<Notification> query);
+    public static partial IQueryable<NotificationGetResponse> ProjectTo(IQueryable<NotificationWithReadState> query);
 
-    private static partial NotificationGetResponse Map(Notification entity);
+    [MapNestedProperties(nameof(NotificationWithReadState.Notification))]
+    private static partial NotificationGetResponse Map(NotificationWithReadState source);
 }

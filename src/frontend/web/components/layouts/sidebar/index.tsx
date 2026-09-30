@@ -59,11 +59,12 @@ export const Sidebar = () => {
         return undefined
       }
 
-      // If item has children, recursively filter them
-      if (item.children && item.children.length > 0) {
+      // If item has a submenu, recursively filter it. Hidden children (`show: false`) are kept as they are:
+      // they are no submenu entries, only the pages the parent's link stays active on.
+      if (item.children?.some((child) => child.show !== false)) {
         const filteredChildren = item.children.map(filterNavItem).filter((child): child is NavItem => child !== undefined)
 
-        // If no children remain after filtering, don't show the parent
+        // If no submenu entries remain after filtering, don't show the parent
         if (filteredChildren.length === 0) {
           return undefined
         }
@@ -71,7 +72,7 @@ export const Sidebar = () => {
         // Return a new item with filtered children
         return {
           ...item,
-          children: filteredChildren,
+          children: [...filteredChildren, ...item.children.filter((child) => child.show === false)],
         }
       }
 

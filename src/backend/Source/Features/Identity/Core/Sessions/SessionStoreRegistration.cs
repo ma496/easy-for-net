@@ -10,7 +10,10 @@ using StackExchange.Redis;
 public static class SessionStoreRegistration
 {
     /// <summary>
-    /// Registers the session store as a singleton, and the Redis settings it reads.
+    /// Registers the session store as a singleton, and the Redis settings it reads, together with how the
+    /// sessions it deletes are announced to every <see cref="ISessionEndedHandler"/>: the store is wrapped in
+    /// <see cref="PublishingSessionStore"/>, which announces in process under <c>Testing</c> and over Redis
+    /// pub/sub - to every API instance - everywhere else.
     /// </summary>
     /// <param name="services">The service collection to extend.</param>
     /// <param name="configuration">The application's configuration.</param>
@@ -22,10 +25,15 @@ public static class SessionStoreRegistration
     public static IServiceCollection AddSessionStore(this IServiceCollection services, IConfiguration configuration, bool useInMemoryStore)
     {
         services.Configure<RedisSetting>(configuration.GetSection("Redis"));
+        services.AddSingleton<LocalSessionEndedDispatcher>();
 
         if (useInMemoryStore)
         {
-            services.AddSingleton<ISessionStore, InMemorySessionStore>();
+            services.AddSingleton<ISessionEndedPublisher, InProcessSessionEndedPublisher>();
+            services.AddSingleton<ISessionStore>(provider => new PublishingSessionStore(
+                ActivatorUtilities.CreateInstance<InMemorySessionStore>(provider),
+                provider.GetRequiredService<ISessionEndedPublisher>(),
+                provider.GetRequiredService<ILogger<PublishingSessionStore>>()));
             return services;
         }
 
@@ -41,7 +49,15 @@ public static class SessionStoreRegistration
         options.BacklogPolicy = BacklogPolicy.FailFast;
 
         services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(options));
-        services.AddSingleton<ISessionStore, RedisSessionStore>();
+        services.AddSingleton<ISessionEndedPublisher, RedisSessionEndedPublisher>();
+        services.AddSingleton<ISessionStore>(provider => new PublishingSessionStore(
+            ActivatorUtilities.CreateInstance<RedisSessionStore>(provider),
+            provider.GetRequiredService<ISessionEndedPublisher>(),
+            provider.GetRequiredService<ILogger<PublishingSessionStore>>()));
+
+        // Every instance hears the sessions the others end. It subscribes in the background and keeps
+        // retrying while Redis is down, so the host starts regardless.
+        services.AddHostedService<RedisSessionEndedSubscriber>();
 
         return services;
     }

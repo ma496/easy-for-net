@@ -3,6 +3,7 @@ namespace Backend.Features.Notifications.Endpoints.Notifications;
 using Backend.Base.Dto;
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
+using Backend.Features.Notifications.Core.Push;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
@@ -12,9 +13,10 @@ using Backend.Features.Tenancy.Core;
 /// The notification is sought among the ones the caller can see while acting in the active tenant, so a
 /// notification of another tenant answers as one that does not exist, while a platform-wide notification
 /// is reachable from whichever tenant the caller acts in - which is what lets a recipient put a broadcast
-/// back among their unread ones.
+/// back among their unread ones. For an audience notification the caller's visit row is upserted as unread
+/// rather than deleted, because an unread visit is what overrides a read cursor that already covers it.
 /// </remarks>
-sealed class NotificationMarkAsUnreadEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext) : Endpoint<NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>
+sealed class NotificationMarkAsUnreadEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext, INotificationPublisher publisher) : Endpoint<NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>
 {
     public override void Configure()
     {
@@ -48,15 +50,18 @@ sealed class NotificationMarkAsUnreadEndpoint(AppDbContext dbContext, ICurrentUs
 
         if (notification.UserId == null)
         {
-            await dbContext.NotificationVisits
-                .Where(v => v.NotificationId == notification.Id && v.UserId == userId.Value)
-                .ExecuteDeleteAsync(cancellationToken);
+            // Removing the visit row would not be enough: a notification the caller's read cursor covers
+            // would still read as read. An unread visit row overrides the cursor, so it is written instead.
+            await NotificationQueries.SetAudienceReadStateAsync(dbContext, notification.Id, userId.Value, isRead: false, cancellationToken);
         }
         else
         {
             notification.IsRead = false;
             await dbContext.SaveChangesAsync(cancellationToken);
         }
+
+        // The caller's other connections in this scope learn the new count; nobody else's changes.
+        await publisher.PublishUnreadCountAsync(userId.Value, activeTenantId, cancellationToken);
 
         await Send.ResponseAsync(new NotificationMarkAsUnreadResponse { Id = request.Id, Success = true, Message = "Notification marked as unread" }, cancellation: cancellationToken);
     }

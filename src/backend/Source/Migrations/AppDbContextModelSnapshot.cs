@@ -534,15 +534,44 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedAt");
-
-                    b.HasIndex("MessageKey");
-
-                    b.HasIndex("TitleKey");
+                    b.HasIndex("TenantId", "CreatedAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("IX_Notifications_Audience")
+                        .HasFilter("\"UserId\" IS NULL AND NOT \"IsDeleted\"");
 
                     b.HasIndex("TenantId", "UserId");
 
+                    b.HasIndex("TenantId", "UserId", "IsRead", "CreatedAt")
+                        .IsDescending(false, false, false, true)
+                        .HasDatabaseName("IX_Notifications_Personal")
+                        .HasFilter("\"UserId\" IS NOT NULL AND NOT \"IsDeleted\"");
+
                     b.ToTable("Notifications", "notifications");
+                });
+
+            modelBuilder.Entity("Backend.Features.Notifications.Core.Entities.NotificationReadCursor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ReadAllAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "TenantId")
+                        .IsUnique();
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("UserId", "TenantId"), false);
+
+                    b.ToTable("NotificationReadCursors", "notifications");
                 });
 
             modelBuilder.Entity("Backend.Features.Notifications.Core.Entities.NotificationVisit", b =>
@@ -550,6 +579,9 @@ namespace Backend.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("NotificationId")
                         .HasColumnType("uuid");
@@ -564,8 +596,6 @@ namespace Backend.Migrations
 
                     b.HasIndex("NotificationId", "UserId")
                         .IsUnique();
-
-                    b.HasIndex("UserId", "VisitedAt");
 
                     b.ToTable("NotificationVisits", "notifications");
                 });

@@ -58,6 +58,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options,
     // Notifications
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NotificationVisit> NotificationVisits => Set<NotificationVisit>();
+    public DbSet<NotificationReadCursor> NotificationReadCursors => Set<NotificationReadCursor>();
 
     // FileManagement
     public DbSet<StoredFile> StoredFiles => Set<StoredFile>();
