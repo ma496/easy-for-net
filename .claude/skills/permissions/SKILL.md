@@ -47,6 +47,11 @@ public class InvoicesPermissionsProvider : IPermissionDefinitionProvider
 `GroupName` is the section heading on the "change role permissions" screen. `Program.cs` registers
 every `IPermissionDefinitionProvider` in the assembly by reflection, so there is nothing to register.
 
+The provider sits beside the slice's other declarations — `<Feature>FeaturesProvider.cs` for plan
+entitlements (`feature-management`) and `<Feature>SettingsProvider.cs` for run-time settings
+(`settings`). A setting needs no permission of its own: every setting is read and edited through
+`/settings` under `Settings.View` / `Settings.Update`.
+
 A child takes its parent's scope unless it states its own, so the group is the place to declare the
 scope once and the child is the place to make an exception (`TenancyPermissionsProvider`):
 

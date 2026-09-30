@@ -82,6 +82,7 @@ public class UserCreateTests(App app) : AppTestsBase(app)
 | `AppTestsBase` | client, scope, sign-in, `TenantContext` (table below) |
 | `TenancyTestsBase` (`Tests/Features/Tenancy`) | `CreateTenantAsync`, `CreateTenantRoleAsync(tenantId, params permissions)`, `CreateTenantUserAsync(tenantId, params roleIds)`, `CreateAccountWithoutMembershipAsync`, `SignInAsAsync(username, tenantId?)`, `ClientForAsync(username, tenantId?)`, `TenantScopedAsync`, `SessionForAsync` (a renewable session), `SignInAsPlatformAdministratorEnteringAsync`, `NewTenantIdentifier()` |
 | `FeatureTestsBase` (`Tests/FeatureManagement`) | editions and stored feature values: `CreateEditionAsync`, `PutOnEditionAsync`, `CreateTenantOnEditionAsync`, `SetForTenantAsync`, `SetForEditionAsync`, `ResolveForTenantAsync` |
+| `SettingsTestsBase` (`Tests/Features/Settings`) | the `Settings` collection and its layers: `SetPlatformValuesAsync`, `SetTenantValuesAsync`, `TenantClientAsync`, `PlatformClientAsync`, `StoredValuesAsync`, and a teardown that removes every platform row (see the `settings` skill) |
 | `NotificationsTestsBase`, `FileTestsBase` | the arrangements those suites repeat, and their `[Collection]` |
 
 Anything that needs its own tenant, role or account should derive from `TenancyTestsBase` and create
@@ -177,15 +178,18 @@ says otherwise. This is what keeps the suite fast, so it is worth writing for:
 - If a class genuinely shares a resource with another, give both the same `[Collection]` and say why
   in a comment. The ones that exist are `Notifications` (platform-wide notices reach every account),
   `FileManagement` (one uploads directory), `BootstrapTenant` (tests that modify the default tenant
-  row) and `FeatureManagement` (feature-value pruning spans the whole table).
+  row), `FeatureManagement` (feature-value pruning spans the whole table) and `Settings` (a platform
+  settings row changes what every tenant resolves to).
 
 ## Why the suite is fast
 
 Worth knowing before changing the fixtures, because each of these is load-bearing:
 
 - `Tests/Fakes/TestDoubles.RegisterTestDoubles` substitutes `TestPasswordHasher` for the production
-  hasher and `NoOpEmailService` for `IEmailService`. The real hasher is deliberately slow and the
-  suite signs in hundreds of times; `PasswordHasherTests` still pins the production parameters.
+  hasher and `RecordingEmailTransport` for `IEmailTransport` — behind the real `IEmailService`, it
+  sends nothing but records each message with the settings it was sent with — and adds the test-only
+  probe setting and `PlatformSettingOverlays`. The real hasher is deliberately slow and the suite
+  signs in hundreds of times; `PasswordHasherTests` still pins the production parameters.
 - No Hangfire worker runs under `Testing`, so enqueued jobs are stored but never executed — assert
   on what the endpoint wrote, not on a job's effect.
 - Under `Testing`, `Program.cs` drops the log level to `Warning` and lifts the request rate limit.

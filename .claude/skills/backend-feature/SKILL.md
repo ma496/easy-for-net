@@ -17,6 +17,7 @@ Features/<Feature>/
   Core/
     <Feature>PermissionsProvider.cs      # IPermissionDefinitionProvider (only if it owns permissions)
     <Feature>FeaturesProvider.cs         # IFeatureDefinitionProvider (only if it owns entitlements)
+    <Feature>SettingsProvider.cs         # ISettingDefinitionProvider (only if it owns run-time settings)
     <Name>Service.cs                     # interface + implementation in one file
     <Name>Query.cs                       # optional narrow read contract for other features
     <Entity>ValidationRules.cs           # optional FluentValidation rules shared by several endpoints
@@ -71,6 +72,9 @@ services.AddOptions<AuthSetting>()
 Add the section to `src/backend/Source/appsettings.json` with a safe default. The per-environment
 `appsettings.*.json` files are git-ignored and the hooks refuse to touch them — ask the user to
 copy any real value across; a default the Testing host needs belongs in `Program.cs`.
+
+Options are fixed per deployment. A value the platform or a tenant should change at run time is a
+**setting** instead — see step 4 and the `settings` skill.
 
 ## 2. Services
 
@@ -131,7 +135,7 @@ Configurations are applied automatically, but the `DbSet` is added by hand to
 be tenant-scoped (`IMayHaveTenant` / `IHaveTenant`) or explicitly exempted in
 `Tests/Architect/TenantScopingTests`. See the `backend-entity` skill.
 
-## 4. Permissions and entitlements
+## 4. Permissions, entitlements and settings
 
 If the feature guards anything, add `Core/<Feature>PermissionsProvider.cs` implementing
 `IPermissionDefinitionProvider`, and give each permission the right `PermissionScope` (`Tenant`,
@@ -140,7 +144,12 @@ skill for the full checklist.
 
 If the capability should depend on the tenant's plan, add `Core/<Feature>FeaturesProvider.cs`
 implementing `IFeatureDefinitionProvider` (discovered by `TenancyFeature`) — see the
-`feature-management` skill. Both providers are separate from `<Feature>Feature.cs`, the DI module.
+`feature-management` skill.
+
+If an administrator should be able to change how it behaves — for the platform or per tenant — add
+`Core/<Feature>SettingsProvider.cs` implementing `ISettingDefinitionProvider` (discovered by
+`SettingsFeature`) and read the value through `ISettingProvider` — see the `settings` skill. All three
+providers are separate from `<Feature>Feature.cs`, the DI module.
 
 ## 5. Endpoints
 
@@ -191,6 +200,7 @@ are not real features, so do not model new code on them or "fix" their intention
 - [ ] Entities (tenant-scoped or exempted) + configurations, `DbSet` added, migration created
 - [ ] Permission provider + constants in `Permissions/Allow.cs` + mirror in `src/frontend/web/allow.ts`
 - [ ] Features provider + `FeatureNames.cs` + `src/frontend/web/feature-names.ts`, if plan-gated
+- [ ] Settings provider + setting class + validator, if administrators change its behaviour at run time
 - [ ] Endpoints with a group, permissions and validators
 - [ ] Tests under `src/backend/Tests/Features/<Feature>/…`
 - [ ] `dotnet build EasyForNet.slnx` and `dotnet test src/backend/Tests/Backend.Tests.csproj` pass
