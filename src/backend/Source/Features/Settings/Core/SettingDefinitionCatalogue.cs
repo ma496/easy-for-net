@@ -26,8 +26,11 @@ interface ISettingDefinitionCatalogue
 /// Composition is where a declaration is refused, and each refusal throws, so a bad declaration stops
 /// the application from starting rather than surfacing on the first read: a name declared twice
 /// (compared case-insensitively, as the route and the lookup compare it), a class registered twice (a
-/// typed read could not tell which definition it meant), and a code default its own validator rejects
-/// (every tenant without an override would resolve to a value the setting itself calls invalid).
+/// typed read could not tell which definition it meant), a configuration section that cannot be bound
+/// to the setting class, and a default its own validator rejects - the code default, or the configured
+/// default when the setting names a section the deployment supplies (every tenant without an override
+/// would resolve to a value the setting itself calls invalid). A <see cref="SecretSettingAttribute"/> on a
+/// property that is not a string is refused as the setting is registered, which is also composition.
 /// <c>SettingDefinitionStartupCheck</c> resolves the catalogue while the host starts to make sure
 /// composition happens then.
 /// </remarks>
@@ -38,7 +41,7 @@ class SettingDefinitionCatalogue : ISettingDefinitionCatalogue
     private readonly Dictionary<string, SettingDefinition> _byName = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<Type, SettingDefinition> _byType = [];
 
-    public SettingDefinitionCatalogue(IEnumerable<ISettingDefinitionProvider> providers)
+    public SettingDefinitionCatalogue(IEnumerable<ISettingDefinitionProvider> providers, IConfiguration configuration)
     {
         var all = new List<SettingDefinition>();
         foreach (var provider in providers)
@@ -62,12 +65,16 @@ class SettingDefinitionCatalogue : ISettingDefinitionCatalogue
                     $"The setting class '{definition.Type.FullName}' is registered as both '{_byType[definition.Type].Name}' and '{definition.Name}'. A class may back one setting only.");
             }
 
+            var defaultKind = definition.ApplyConfiguredDefault(configuration)
+                ? $"configured default (section '{definition.ConfigurationSection}')"
+                : "code default";
+
             var result = definition.Validate(definition.Materialize(definition.CreateDefaultValues()));
             if (!result.IsValid)
             {
                 var failures = string.Join("; ", result.Errors.Select(failure => $"{failure.PropertyName}: {failure.ErrorMessage}"));
                 throw new InvalidOperationException(
-                    $"The code default of the setting '{definition.Name}' fails its own validator: {failures}");
+                    $"The {defaultKind} of the setting '{definition.Name}' fails its own validator: {failures}");
             }
         }
 

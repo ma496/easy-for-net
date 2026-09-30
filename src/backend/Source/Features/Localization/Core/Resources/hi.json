@@ -254,7 +254,10 @@
       "settingNotFound": "सेटिंग नहीं मिली।",
       "settingPropertyUnknown": "इस सेटिंग में ऐसी कोई प्रॉपर्टी नहीं है।",
       "settingPropertyInvalid": "यह मान इस सेटिंग प्रॉपर्टी के लिए मान्य नहीं है।",
-      "settingValueInvalid": "सेटिंग के मान मान्य नहीं हैं।"
+      "settingValueInvalid": "सेटिंग के मान मान्य नहीं हैं।",
+      "emailSmtpServerRequired": "SMTP सर्वर आवश्यक है।",
+      "emailSmtpPortInvalid": "SMTP पोर्ट 1 और 65535 के बीच होना चाहिए।",
+      "emailSenderEmailInvalid": "प्रेषक ईमेल एक मान्य ईमेल पता होना चाहिए।"
     }
   },
   "table": {

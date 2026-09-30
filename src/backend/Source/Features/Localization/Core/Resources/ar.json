@@ -254,7 +254,10 @@
       "settingNotFound": "الإعداد غير موجود.",
       "settingPropertyUnknown": "هذا الإعداد لا يحتوي على هذه الخاصية.",
       "settingPropertyInvalid": "القيمة غير صالحة لخاصية هذا الإعداد.",
-      "settingValueInvalid": "قيم الإعداد غير صالحة."
+      "settingValueInvalid": "قيم الإعداد غير صالحة.",
+      "emailSmtpServerRequired": "خادم SMTP مطلوب.",
+      "emailSmtpPortInvalid": "يجب أن يكون منفذ SMTP بين 1 و65535.",
+      "emailSenderEmailInvalid": "يجب أن يكون بريد المرسل عنوان بريد إلكتروني صالحًا."
     }
   },
   "table": {

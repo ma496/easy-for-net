@@ -254,7 +254,10 @@
       "settingNotFound": "未找到该设置。",
       "settingPropertyUnknown": "此设置没有该属性。",
       "settingPropertyInvalid": "该值对此设置属性无效。",
-      "settingValueInvalid": "设置的值无效。"
+      "settingValueInvalid": "设置的值无效。",
+      "emailSmtpServerRequired": "必须提供 SMTP 服务器。",
+      "emailSmtpPortInvalid": "SMTP 端口必须介于 1 到 65535 之间。",
+      "emailSenderEmailInvalid": "发件人邮箱必须是有效的电子邮件地址。"
     }
   },
   "table": {

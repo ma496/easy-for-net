@@ -62,4 +62,7 @@ public static class ErrorCodes
     public static readonly ErrorCode SettingPropertyUnknown = new("settingPropertyUnknown");
     public static readonly ErrorCode SettingPropertyInvalid = new("settingPropertyInvalid");
     public static readonly ErrorCode SettingValueInvalid = new("settingValueInvalid");
+    public static readonly ErrorCode EmailSmtpServerRequired = new("emailSmtpServerRequired");
+    public static readonly ErrorCode EmailSmtpPortInvalid = new("emailSmtpPortInvalid");
+    public static readonly ErrorCode EmailSenderEmailInvalid = new("emailSenderEmailInvalid");
 }

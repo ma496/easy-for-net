@@ -116,7 +116,7 @@ sealed class SignupEndpoint(IUserService userService,
             // naming a token row that a rollback had just discarded.
             if (verificationToken is not null)
             {
-                emailBackgroundJobs.Enqueue(user.Email, "Verify Email",
+                emailBackgroundJobs.EnqueueForPlatform(user.Email, "Verify Email",
                     @$"
             <div>
                 <p>Click the link below to verify your email:</p>

@@ -59,7 +59,7 @@ sealed class ResendVerifyEmailEndpoint(IUserService userService,
         var token = await tokenService.GenerateTokenAsync(user, TokenPurpose.EmailVerification);
 
         // Send verification email
-        emailBackgroundJobs.Enqueue(user.Email, "Verify Email",
+        emailBackgroundJobs.EnqueueForPlatform(user.Email, "Verify Email",
             @$"
             <div>
                 <p>Click the link below to verify your email:</p>
