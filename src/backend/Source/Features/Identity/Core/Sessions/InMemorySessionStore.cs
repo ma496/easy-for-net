@@ -56,15 +56,15 @@ public sealed class InMemorySessionStore(TimeProvider? timeProvider = null) : IS
     }
 
     /// <inheritdoc />
-    public Task RevokeByUserAsync(Guid userId, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<string>> RevokeByUserAsync(Guid userId, CancellationToken cancellationToken = default)
         => Revoke(_byUser, userId, _ => true);
 
     /// <inheritdoc />
-    public Task RevokeByUserInTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<string>> RevokeByUserInTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken = default)
         => Revoke(_byUser, userId, session => session.TenantId == tenantId);
 
     /// <inheritdoc />
-    public Task RevokeByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<string>> RevokeByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
         => Revoke(_byTenant, tenantId, _ => true);
 
     /// <summary>
@@ -109,13 +109,15 @@ public sealed class InMemorySessionStore(TimeProvider? timeProvider = null) : IS
     /// Deletes the live sessions of one index that match, and drops from that index every entry that
     /// names no live session - the expired ones a Redis index would also have outlived.
     /// </summary>
-    private Task Revoke(ConcurrentDictionary<Guid, ConcurrentDictionary<string, byte>> index,
+    /// <returns>The identifiers of the sessions deleted.</returns>
+    private Task<IReadOnlyList<string>> Revoke(ConcurrentDictionary<Guid, ConcurrentDictionary<string, byte>> index,
                         Guid key,
                         Func<SessionRecord, bool> matches)
     {
+        var revoked = new List<string>();
         if (!index.TryGetValue(key, out var members))
         {
-            return Task.CompletedTask;
+            return Task.FromResult<IReadOnlyList<string>>(revoked);
         }
 
         foreach (var sessionId in members.Keys)
@@ -128,10 +130,11 @@ public sealed class InMemorySessionStore(TimeProvider? timeProvider = null) : IS
             else if (matches(session) && _sessions.TryRemove(sessionId, out var removed))
             {
                 Unindex(removed);
+                revoked.Add(sessionId);
             }
         }
 
-        return Task.CompletedTask;
+        return Task.FromResult<IReadOnlyList<string>>(revoked);
     }
 
     private static void Index(ConcurrentDictionary<Guid, ConcurrentDictionary<string, byte>> index, Guid key, string sessionId)

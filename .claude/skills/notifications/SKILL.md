@@ -193,6 +193,15 @@ per-instance singleton) tracks open connections by connection, account and sessi
 Hub options: keep-alive and client timeout at SignalR's defaults, a 4 KB `MaximumReceiveMessageSize`
 (clients send only the handshake and pings).
 
+**Connection lifecycle.** A connection lives no longer than the session that authenticated it. Identity
+announces every ended session id - revocation, sign-out, the session replaced by refresh or tenant
+switch/exit - to each `[AllowOutside]` `ISessionEndedHandler`, on every API instance (Redis pub/sub outside
+`Testing`, in process under it). `NotificationSessionEndedHandler` aborts each connection
+`registry.OfSession(sid)` returns here; the client sees the connection close and reconnects with its
+renewed credential, if it has one. A failed announcement is logged and never fails the change that ended
+the session. Identity never references this slice. The connection also closes when its access token
+expires (`CloseOnAuthenticationExpiration`).
+
 ## Endpoints
 
 Under `Features/Notifications/Endpoints/Notifications` with the `notifications` prefix: list
