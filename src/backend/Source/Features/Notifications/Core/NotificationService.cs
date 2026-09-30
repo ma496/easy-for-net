@@ -19,14 +19,14 @@ using Backend.Features.Tenancy.Core;
 public interface INotificationService
 {
     /// <summary>
-    /// Returns the number of unread notifications visible to the given user in the active scope: their own
-    /// unread notifications raised in that scope, the notifications addressed to the whole tenant they have
-    /// not visited, and the platform-wide notifications they have not visited. Personal notifications
-    /// raised in the user's other tenants, or in platform scope while they act in a tenant, are not counted.
+    /// Returns the number of unread notifications visible to the given user in the active scope, counting no
+    /// further than 100: their own unread notifications raised in that scope, and the notifications addressed
+    /// to the whole tenant or to the whole platform that they have not read. Personal notifications raised in
+    /// the user's other tenants, or in platform scope while they act in a tenant, are not counted.
     /// </summary>
     /// <param name="userId">Identifier of the user whose unread notifications are counted.</param>
     /// <param name="cancellationToken">Token used to cancel the asynchronous operation.</param>
-    /// <returns>The total number of unread notifications for the user in the active scope.</returns>
+    /// <returns>The number of unread notifications for the user in the active scope, at most 100.</returns>
     /// <exception cref="TenantScopeNotEstablishedException">No tenant scope has been established.</exception>
     Task<int> GetUnreadCountAsync(Guid userId, CancellationToken cancellationToken = default);
 
@@ -86,12 +86,12 @@ public class NotificationService(AppDbContext dbContext, ITenantContext tenantCo
     /// Counts the unread notifications the user can see in the active scope. The set is the one
     /// <see cref="NotificationQueries.VisibleTo"/> defines, read over an <c>AcrossAllTenants()</c> source
     /// because the tenant query filter on its own would drop the platform-wide rows; each row is then
-    /// unread by its own rule - the row's flag for a personal notification, a missing visit for an
-    /// audience one.
+    /// unread by the one rule <see cref="NotificationQueries.WithReadState"/> writes. The count is one
+    /// statement that stops at <see cref="NotificationQueries.UnreadCountCap"/>.
     /// </summary>
     /// <param name="userId">Identifier of the user whose unread notifications are counted.</param>
     /// <param name="cancellationToken">Token used to cancel the asynchronous operation.</param>
-    /// <returns>The total number of unread notifications for the user in the active scope.</returns>
+    /// <returns>The number of unread notifications for the user in the active scope, at most <see cref="NotificationQueries.UnreadCountCap"/>.</returns>
     public async Task<int> GetUnreadCountAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         // Reading the active tenant here rather than leaning on the query filter makes the scope
@@ -99,19 +99,7 @@ public class NotificationService(AppDbContext dbContext, ITenantContext tenantCo
         // caller is not acting for.
         var activeTenantId = tenantContext.CurrentTenantId;
 
-        var visitedNotificationIds = await dbContext.NotificationVisits
-            .Where(v => v.UserId == userId)
-            .Select(v => v.NotificationId)
-            .ToListAsync(cancellationToken);
-
-        var newCount = await dbContext.Notifications
-            .AcrossAllTenants()
-            .VisibleTo(userId, activeTenantId)
-            .CountAsync(x =>
-                (x.UserId == userId && !x.IsRead) ||
-                (x.UserId == null && !visitedNotificationIds.Contains(x.Id)),
-                cancellationToken);
-        return newCount;
+        return await NotificationQueries.CountUnreadAsync(dbContext, userId, activeTenantId, cancellationToken);
     }
 
     /// <summary>

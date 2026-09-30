@@ -2,7 +2,6 @@ namespace Backend.Features.Notifications.Endpoints.Notifications;
 
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
-using Backend.Features.Notifications.Core.Entities;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
@@ -11,13 +10,23 @@ using Backend.Features.Tenancy.Core;
 /// platform-wide ones. Personal notifications raised in another scope are left unread.
 /// </summary>
 /// <remarks>
-/// Both halves below are bulk statements rather than per-record saves - one <c>ExecuteUpdate</c> and one
-/// hand-written <c>INSERT ... ON CONFLICT</c> - so each carries its tenant restriction in a predicate of its
-/// own. The hand-written statement is reached by no query filter at all, and the bulk update deliberately
-/// relaxes the tenant filter so that the platform-wide rows stay reachable, which leaves the written
-/// predicate as the only thing keeping another tenant's rows out of both. The two predicates together
-/// describe exactly the set <c>INotificationService.GetUnreadCountAsync</c> counts, so the unread badge
-/// reads zero afterwards instead of being left standing by a row this endpoint could not see.
+/// <para>
+/// The work is three bulk statements in one transaction, and none of them grows with the number of audience
+/// notifications: the caller's personal rows are flipped by one <c>ExecuteUpdate</c>; the caller's read
+/// cursors - for the active tenant's tenant-wide notifications when acting in a tenant, and for the
+/// platform-wide ones always - are moved to one instant by hand-written <c>INSERT ... ON CONFLICT</c>
+/// statements; and the caller's visit rows those cursors now cover are deleted by one <c>ExecuteDelete</c>,
+/// the read ones because the cursor makes them redundant and the unread ones because "mark all as read"
+/// means that everything up to now is read.
+/// </para>
+/// <para>
+/// Each statement carries its tenant restriction in a predicate of its own. The cursor statements are reached
+/// by no query filter at all, and the other two deliberately relax the tenant filter so that the platform-wide
+/// rows stay reachable, which leaves the written predicates as the only thing keeping another tenant's rows
+/// out. Together they cover exactly the set <c>INotificationService.GetUnreadCountAsync</c> counts, so the
+/// unread badge reads zero afterwards. The platform-wide cursor names no tenant, so platform-wide
+/// notifications marked read here read as read in every scope the caller acts in.
+/// </para>
 /// </remarks>
 sealed class NotificationMarkAllAsReadEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext) : EndpointWithoutRequest<NotificationMarkAllAsReadResponse>
 {
@@ -41,12 +50,9 @@ sealed class NotificationMarkAllAsReadEndpoint(AppDbContext dbContext, ICurrentU
         // With no scope established this throws instead of marking rows the caller is not acting for.
         var activeTenantId = tenantContext.CurrentTenantId;
 
-        // Platform scope names no tenant, and a database parameter carrying no value cannot be typed for
-        // the comparison in the hand-written statement below, so the empty identifier stands in for it. It
-        // matches no tenant's rows, which leaves the "names no tenant" half of the predicate as the only
-        // one that can match - exactly the set platform scope should mark. No real tenant is ever
-        // identified by the empty identifier, so the stand-in cannot collide with one.
-        var tenantIdParameter = activeTenantId ?? Guid.Empty;
+        // One instant for every cursor and for the visits they cover, so what the cursors say is read and
+        // what the delete removes are the same set. It is taken the way a notification's CreatedAt is.
+        var readAllAt = DateTime.UtcNow;
 
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -60,18 +66,43 @@ sealed class NotificationMarkAllAsReadEndpoint(AppDbContext dbContext, ICurrentU
             .Where(x => x.UserId == userId.Value && !x.IsRead)
             .ExecuteUpdateAsync(setters => setters.SetProperty(notification => notification.IsRead, true), cancellationToken);
 
-        // Read state for a notification addressed to an audience rather than to one user lives in a visit
-        // row, so the second half is an insert. No query filter reaches a hand-written statement, which is
-        // why its tenant predicate is spelled out: it admits the active tenant's own audience notifications
-        // and the platform-wide ones, so an audience notification of another tenant is never visited here.
-        await dbContext.Database.ExecuteSqlInterpolatedAsync($$"""
-            INSERT INTO notifications."NotificationVisits" ("Id", "UserId", "VisitedAt", "NotificationId")
-            SELECT gen_random_uuid(), {{userId.Value}}, NOW(), notification."Id"
-            FROM notifications."Notifications" AS notification
-            WHERE notification."UserId" IS NULL AND notification."IsDeleted" = FALSE
-              AND (notification."TenantId" = {{tenantIdParameter}} OR notification."TenantId" IS NULL)
-            ON CONFLICT ("NotificationId", "UserId") DO NOTHING
+        // Read state for a notification addressed to an audience is the caller's read cursor for that
+        // audience. The cursors are written by hand rather than through the change tracker because a
+        // cursor is tenant-attributed at save time, and the platform-wide one - naming no tenant - would be
+        // refused or stamped with the active tenant when saved while acting in one. No query filter reaches
+        // these statements, which is why the tenant each names is spelled out: the active tenant, which
+        // comes from the session and never from the request, and no tenant at all. GREATEST keeps a cursor
+        // from moving backwards when two requests race.
+        if (activeTenantId is { } tenantId)
+        {
+            await dbContext.Database.ExecuteSqlInterpolatedAsync($"""
+                INSERT INTO notifications."NotificationReadCursors" AS existing ("Id", "UserId", "TenantId", "ReadAllAt")
+                VALUES (gen_random_uuid(), {userId.Value}, {tenantId}, {readAllAt})
+                ON CONFLICT ("UserId", "TenantId") DO UPDATE SET "ReadAllAt" = GREATEST(existing."ReadAllAt", EXCLUDED."ReadAllAt")
+                """, cancellationToken);
+        }
+
+        // The platform-wide cursor's tenant is written as a literal NULL: a parameter carrying no value
+        // cannot be typed for the column, and the unique index treats nulls as equal, so the conflict
+        // clause finds the caller's one platform-wide cursor.
+        await dbContext.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO notifications."NotificationReadCursors" AS existing ("Id", "UserId", "TenantId", "ReadAllAt")
+            VALUES (gen_random_uuid(), {userId.Value}, NULL, {readAllAt})
+            ON CONFLICT ("UserId", "TenantId") DO UPDATE SET "ReadAllAt" = GREATEST(existing."ReadAllAt", EXCLUDED."ReadAllAt")
             """, cancellationToken);
+
+        // The caller's visit rows on the audience notifications the cursors now cover are removed, read and
+        // unread alike: a read one only repeats what the cursor says, and an unread one would contradict
+        // "mark all as read". The join to the notification brings its tenant filter with it, so that is
+        // relaxed by name and the covered audiences - the active tenant's and the platform-wide - are named
+        // explicitly; with platform scope active, the tenant comparison matches the platform-wide rows only.
+        await dbContext.NotificationVisits
+            .AcrossAllTenants()
+            .Where(visit => visit.UserId == userId.Value &&
+                            visit.Notification.UserId == null &&
+                            (visit.Notification.TenantId == activeTenantId || visit.Notification.TenantId == null) &&
+                            visit.Notification.CreatedAt <= readAllAt)
+            .ExecuteDeleteAsync(cancellationToken);
 
         await transaction.CommitAsync(cancellationToken);
 

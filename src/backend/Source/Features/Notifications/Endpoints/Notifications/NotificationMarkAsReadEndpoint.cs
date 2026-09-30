@@ -3,7 +3,6 @@ namespace Backend.Features.Notifications.Endpoints.Notifications;
 using Backend.Base.Dto;
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
-using Backend.Features.Notifications.Core.Entities;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
@@ -13,7 +12,9 @@ using Backend.Features.Tenancy.Core;
 /// The notification is sought among the ones the caller can see while acting in the active tenant, so a
 /// notification of another tenant answers as one that does not exist, while a platform-wide notification
 /// is reachable from whichever tenant the caller acts in - which is what lets a broadcast be marked read
-/// by one of its recipients.
+/// by one of its recipients. A personal notification's own flag is set; for an audience notification the
+/// caller's visit row is upserted as read, and since the visit row belongs to the user rather than to a
+/// scope, a platform-wide notification marked read in one scope reads as read in every scope.
 /// </remarks>
 sealed class NotificationMarkAsReadEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext) : Endpoint<NotificationMarkAsReadRequest, NotificationMarkAsReadResponse>
 {
@@ -49,18 +50,10 @@ sealed class NotificationMarkAsReadEndpoint(AppDbContext dbContext, ICurrentUser
 
         if (notification.UserId == null)
         {
-            var isVisit = await dbContext.NotificationVisits
-                .AnyAsync(v => v.NotificationId == notification.Id && v.UserId == userId.Value, cancellationToken);
-            if (!isVisit)
-            {
-                dbContext.NotificationVisits.Add(new NotificationVisit
-                {
-                    NotificationId = notification.Id,
-                    UserId = userId.Value,
-                    VisitedAt = DateTime.UtcNow
-                });
-                await dbContext.SaveChangesAsync(cancellationToken);
-            }
+            // An audience notification is shared by all its readers, so the caller's read state lives in
+            // their visit row, which overrides their read cursor either way. Upserting it keeps two
+            // concurrent marks from colliding on the unique (NotificationId, UserId) index.
+            await NotificationQueries.SetAudienceReadStateAsync(dbContext, notification.Id, userId.Value, isRead: true, cancellationToken);
         }
         else
         {

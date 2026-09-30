@@ -78,22 +78,41 @@ string for details the UI may show; keep it small and stable.
 | --- | --- | --- | --- |
 | user, in a tenant | active tenant | recipient | `IsRead` on the row |
 | user, in platform scope | null | recipient | `IsRead` on the row |
-| tenant-wide | active tenant | null | one `NotificationVisit` per user |
-| platform-wide | null | null | one `NotificationVisit` per user |
+| tenant-wide | active tenant | null | the user's visit row, else their read cursor for that tenant |
+| platform-wide | null | null | the user's visit row, else their platform-wide read cursor |
 
-`NotificationVisits` is unique on (`NotificationId`, `UserId`), because one audience row is shared by
-all its readers.
+One audience row is shared by all its readers, so its read state is the reader's, kept in two places:
+
+- **`NotificationReadCursor`** (`UserId`, `TenantId`, `ReadAllAt`) — a user's "mark all as read" point for
+  one audience, unique on (`UserId`, `TenantId`) with nulls not distinct: one per tenant, and one
+  platform-wide cursor (`TenantId` null). An audience row is read when the cursor for its audience was set
+  at or after its `CreatedAt`. Mark-all-as-read moves the cursors; it never writes a row per notification.
+- **`NotificationVisit`** (`NotificationId`, `UserId`, `IsRead`), unique on (`NotificationId`, `UserId`) —
+  an explicit per-notification state that **overrides the cursor either way**: `IsRead = true` for one
+  marked read above the cursor, `IsRead = false` for one marked unread below it. Mark-as-read and
+  mark-as-unread upsert it (`INSERT ... ON CONFLICT`); mark-all-as-read deletes the visits its cursors
+  cover.
+
+Both belong to the user rather than the scope acted in, so a platform-wide row marked read inside one
+tenant reads as read everywhere.
 
 What a caller sees is "rows of the active scope addressed to them or to nobody, plus the platform-wide
 rows" — so a personal row never crosses between a tenant and platform scope, and only the platform-wide
 broadcast is seen everywhere. That is the internal `VisibleTo(userId, activeTenantId)` in
 `Core/NotificationQueries.cs`, applied over `.AcrossAllTenants()` because the tenant filter alone would
-hide the platform-wide rows from a caller acting in a tenant. Anything that reads, counts or marks
-notifications goes through it (the one hand-written SQL statement in mark-all-as-read spells the same
-rule out for audience rows) and handles both read-state branches:
-`GetUnreadCountAsync` combines "my unread rows" with "audience rows I have not visited", and
-`NotificationMarkAsReadEndpoint` either flips `IsRead` or inserts a visit row. Copy it rather than
-inventing a third scheme.
+hide the platform-wide rows from a caller acting in a tenant. **Whether a visible row is read is decided in
+one place too**: `WithReadState(dbContext, userId)` beside it pairs each notification with `IsRead`
+(`NotificationWithReadState`), and the unread count, the list's `isRead` filter, its default ordering
+(unread first, then newest) and its projection, and `GET {id}` all filter, order and project on that
+`.IsRead`. Never restate the rule in a query of your own — chain `.VisibleTo(...).WithReadState(...)`.
+Writes go through `SetAudienceReadStateAsync` for one audience row, and the hand-written statements in
+mark-all-as-read spell out their tenant predicate, since no query filter reaches them.
+
+**The unread count is capped.** `NotificationQueries.CountUnreadAsync(dbContext, userId, activeTenantId, ct)`
+counts at most `UnreadCountCap` (100) rows in a single statement — a count over a `LIMIT`ed subquery,
+with no identifiers read into memory — and takes the user and scope as arguments, so it can be computed
+for any user in any scope. `INotificationService.GetUnreadCountAsync` calls it for the active scope; the
+web badge shows "99+" above 99.
 
 Notifications are `AuditableEntity<Guid>` + `ISoftDelete` + `IMayHaveTenant`; deleting soft-deletes
 and the global query filter hides the row. The delete endpoint removes only the caller's own
@@ -130,9 +149,12 @@ with the platform-wide broadcasts alone; that is harmless, and the web app sends
 Derive from `NotificationsTestsBase` (it carries `[Collection("Notifications")]`, because
 platform-wide rows reach every account) and use its `CreateUserNotificationAsync`,
 `CreateTenantNotificationAsync`, `CreatePlatformUserNotificationAsync`, `CreateGlobalNotificationAsync`
-and `IsVisitedAsync` helpers. `NotificationPlatformScopeTests` shows asking one platform account from
-both sides of the boundary: `ClientForAsync(username)` signs it in to platform scope,
-`ClientForAsync(username, tenantId)` to its tenant.
+helpers. Assert an audience row's read state through the API — `IsReadForAsync(client, id)` and
+`UnreadCountAsync(client)` — because a row the read cursor covers has no visit row at all;
+`IsVisitedAsync` (a read visit row exists) and `VisitCountAsync` are for asserting what was stored.
+Anything that depends on unread state belongs to a user and tenant the test creates. `NotificationPlatformScopeTests`
+shows asking one platform account from both sides of the boundary: `ClientForAsync(username)` signs it in
+to platform scope, `ClientForAsync(username, tenantId)` to its tenant.
 
 ## Checklist
 
@@ -140,4 +162,6 @@ both sides of the boundary: `ClientForAsync(username)` signs it in to platform s
 - [ ] The scope the recipient will read it in is active: their tenant, or platform scope for a platform account (jobs and cross-tenant callers open one explicitly)
 - [ ] `notifications.<name>.title` and `.message` added to every backend resource file
 - [ ] `notifications.groups.<slug>` added if a new group was introduced
-- [ ] Any new endpoint reads through `AcrossAllTenants().VisibleTo(...)` and handles both read-state branches
+- [ ] Any new endpoint reads through `AcrossAllTenants().VisibleTo(...)`, and takes read state from `.WithReadState(...)` rather than restating the visit / cursor rule
+- [ ] An audience row's read state is written by upserting the visit row (`SetAudienceReadStateAsync`), never by inserting one visit per notification in bulk
+- [ ] Unread counts go through `NotificationQueries.CountUnreadAsync` and stay capped at `UnreadCountCap`

@@ -3,7 +3,6 @@ namespace Backend.Features.Notifications.Endpoints.Notifications;
 using Backend.Base.Dto;
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
-using Backend.Features.Notifications.Core.Entities;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
@@ -43,19 +42,6 @@ sealed class NotificationListEndpoint(AppDbContext dbContext, ICurrentUserServic
             .AcrossAllTenants()
             .VisibleTo(userId.Value, activeTenantId);
 
-        if (request.IsRead == true)
-        {
-            query = query.Where(x => x.UserId == null
-                ? dbContext.NotificationVisits.Any(v => v.UserId == userId.Value && v.NotificationId == x.Id)
-                : x.IsRead);
-        }
-        else if (request.IsRead == false)
-        {
-            query = query.Where(x => x.UserId == null
-                ? !dbContext.NotificationVisits.Any(v => v.UserId == userId.Value && v.NotificationId == x.Id)
-                : !x.IsRead);
-        }
-
         if (!string.IsNullOrWhiteSpace(request.Group))
         {
             query = query.Where(x => x.Group == request.Group);
@@ -70,37 +56,34 @@ sealed class NotificationListEndpoint(AppDbContext dbContext, ICurrentUserServic
                 x.Type.ToString().ToLower().Contains(search.ToLower()));
         }
 
-        var total = await query.CountAsync(cancellationToken);
+        // Read state, for the filter, the default ordering and the projection alike, is the one
+        // WithReadState resolves - the row's own flag for a personal notification, the caller's visit or
+        // read cursor for an audience one - so the list cannot disagree with the unread count.
+        var withReadState = query.WithReadState(dbContext, userId.Value);
+
+        if (request.IsRead is { } isRead)
+        {
+            withReadState = withReadState.Where(x => x.IsRead == isRead);
+        }
+
+        var total = await withReadState.CountAsync(cancellationToken);
 
         if (string.IsNullOrWhiteSpace(request.SortField))
         {
-            query = query
-                .OrderBy(x => x.UserId == null
-                    ? dbContext.NotificationVisits.Any(v => v.UserId == userId.Value && v.NotificationId == x.Id)
-                    : x.IsRead)
-                .ThenByDescending(x => x.CreatedAt);
+            withReadState = withReadState
+                .OrderBy(x => x.IsRead)
+                .ThenByDescending(x => x.Notification.CreatedAt);
         }
 
-        query = query.Process(request, applyDefaultOrdering: false);
+        // Sorting by a whitelisted field and paging are applied to the notifications themselves, which is
+        // what Process works over; the default ordering above survives it because Process adds none of its
+        // own. The page is then paired with its read state again for the projection.
+        var page = withReadState
+            .Select(x => x.Notification)
+            .Process(request, applyDefaultOrdering: false)
+            .WithReadState(dbContext, userId.Value);
 
-        var notifications = await query
-            .Select(notification => new NotificationListDto
-            {
-                Id = notification.Id,
-                CreatedAt = notification.CreatedAt,
-                CreatedBy = notification.CreatedBy,
-                UpdatedAt = notification.UpdatedAt,
-                UpdatedBy = notification.UpdatedBy,
-                Type = notification.Type,
-                TitleKey = notification.TitleKey,
-                MessageKey = notification.MessageKey,
-                IsRead = notification.UserId == null
-                    ? dbContext.NotificationVisits.Any(visit => visit.UserId == userId.Value && visit.NotificationId == notification.Id)
-                    : notification.IsRead,
-                Group = notification.Group,
-                Metadata = notification.Metadata,
-                UserId = notification.UserId
-            })
+        var notifications = await NotificationListDtoMapper.ProjectTo(page)
             .ToListAsync(cancellationToken);
 
         await Send.ResponseAsync(new NotificationListResponse
@@ -160,12 +143,14 @@ public sealed class NotificationListDto : AuditableDto<Guid>
 }
 
 /// <summary>
-/// Mapper that projects a <see cref="Notification"/> query into <see cref="NotificationListDto"/> DTOs.
+/// Mapper that projects notifications paired with the caller's read state into <see cref="NotificationListDto"/>
+/// DTOs: the notification's own members, and <c>IsRead</c> from the resolved read state rather than the row's flag.
 /// </summary>
 [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
-public static partial class NotificationListDtoMapper
+static partial class NotificationListDtoMapper
 {
-    public static partial IQueryable<NotificationListDto> ProjectTo(IQueryable<Notification> query);
+    public static partial IQueryable<NotificationListDto> ProjectTo(IQueryable<NotificationWithReadState> query);
 
-    private static partial NotificationListDto Map(Notification entity);
+    [MapNestedProperties(nameof(NotificationWithReadState.Notification))]
+    private static partial NotificationListDto Map(NotificationWithReadState source);
 }
