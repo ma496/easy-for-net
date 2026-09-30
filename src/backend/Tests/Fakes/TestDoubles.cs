@@ -25,6 +25,8 @@ public static class TestDoubles
         services.AddSingleton<RecordingEmailTransport>();
         services.AddSingleton<IEmailTransport>(provider => provider.GetRequiredService<RecordingEmailTransport>());
         services.AddSessionStoreFaults();
+        services.AddSingleton<SessionEndedHandlerFaults>();
+        services.AddSingleton<ISessionEndedHandler, FaultingSessionEndedHandler>();
         services.AddSingleton<ISettingDefinitionProvider, ProbeSettingsProvider>();
         services.AddPlatformSettingOverlays();
         return services;
@@ -48,9 +50,10 @@ public static class TestDoubles
     }
 
     /// <summary>
-    /// Decorates the session store the host registered (the shared in-memory one) with one that can be told
-    /// to fail for particular sessions and accounts - the only way a test can make the store "unreachable"
-    /// without touching any other test running beside it.
+    /// Decorates the session store the host registered (the shared in-memory one, behind the decorator that
+    /// announces ended sessions) with one that can be told to fail for particular sessions and accounts - the
+    /// only way a test can make the store "unreachable" without touching any other test running beside it. A
+    /// failure injected here stops the call before it reaches the announcing store, as an outage would.
     /// </summary>
     private static IServiceCollection AddSessionStoreFaults(this IServiceCollection services)
     {
@@ -59,7 +62,9 @@ public static class TestDoubles
 
         services.AddSingleton<SessionStoreFaults>();
         services.AddSingleton<ISessionStore>(provider => new FaultInjectingSessionStore(
-            (ISessionStore)ActivatorUtilities.CreateInstance(provider, registered.ImplementationType!),
+            (ISessionStore)(registered.ImplementationFactory?.Invoke(provider)
+                            ?? registered.ImplementationInstance
+                            ?? ActivatorUtilities.CreateInstance(provider, registered.ImplementationType!)),
             provider.GetRequiredService<SessionStoreFaults>()));
 
         return services;

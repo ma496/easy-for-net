@@ -1,6 +1,7 @@
 namespace Backend.Features.Notifications.Core.Push;
 
 using System.Text.Json.Serialization;
+using Backend.Features.Identity.Core.Sessions;
 using Backend.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Connections;
@@ -43,6 +44,9 @@ public static class NotificationHubRegistration
     public static IServiceCollection AddNotificationHub(this IServiceCollection services, IConfiguration configuration, bool useBackplane)
     {
         services.AddSingleton<NotificationConnectionRegistry>();
+
+        // Identity tells every instance when a session ends; this closes the connections it authenticated.
+        services.AddSingleton<ISessionEndedHandler, NotificationSessionEndedHandler>();
 
         // Keep-alive and client timeout stay at SignalR's defaults (15 s / 30 s): nothing here needs them
         // tighter, and the web client is written against the defaults.
