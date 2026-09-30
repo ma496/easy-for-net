@@ -2,6 +2,7 @@ namespace Backend.Features.Identity.Core;
 
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Core.Sessions;
+using Backend.Features.Settings.Core;
 using Backend.Features.Tenancy.Core;
 using RefreshTokenIssuer = Backend.Features.Identity.Endpoints.Account.TokenService;
 
@@ -201,7 +202,9 @@ public interface ITenantAuthorizationService
     /// re-establishes this tenant rather than the one the account was acting in before. The pair the
     /// request arrived with is revoked as the new one is issued, so the refresh token the caller held a
     /// moment ago cannot afterwards be redeemed for a session back in the previous tenant; the
-    /// account's sessions on other devices are untouched.
+    /// account's sessions on other devices are untouched. Entering a scope is held to that scope's
+    /// <see cref="SigninSettings"/> exactly as signing in to it is: an account whose email is unverified is
+    /// refused with <c>emailNotVerified</c> when the scope requires verification, and nothing is replaced.
     /// </summary>
     /// <param name="userId">The account whose session is re-established.</param>
     /// <param name="tenantId">The tenant the session is to act in, or <see langword="null"/> for none.</param>
@@ -229,7 +232,8 @@ public class TenantAuthorizationService(AppDbContext dbContext,
                                         RefreshTokenIssuer refreshTokenIssuer,
                                         ITenantMembershipQuery tenantMembershipQuery,
                                         ISessionIssuer sessionIssuer,
-                                        ISessionStore sessionStore) : ITenantAuthorizationService
+                                        ISessionStore sessionStore,
+                                        ISettingProvider settingProvider) : ITenantAuthorizationService
 {
     /// <summary>
     /// Name every tenant's system-created administrator role carries. A role name is unique within
@@ -602,6 +606,17 @@ public class TenantAuthorizationService(AppDbContext dbContext,
     {
         var account = await userService.GetByIdAsync(userId)
             ?? throw new InvalidOperationException($"A session cannot be re-established for the unknown account '{userId}'.");
+
+        // Entering a scope is held to the sign-in setting of the scope being entered - the target tenant's,
+        // or the platform's when leaving for no tenant - exactly as signing in to it is, so an unverified
+        // account cannot sign in where verification is not required and then switch to where it is. Asked
+        // before anything is issued or replaced, so a refusal leaves the caller's session as it was.
+        var signinSettings = await settingProvider.GetAsync<SigninSettings>(tenantId, cancellationToken);
+        if (signinSettings.IsEmailVerificationRequired && !account.IsEmailVerified)
+        {
+            var code = ErrorCodes.EmailNotVerified;
+            ValidationContext.Instance.ThrowError(httpContextAccessor.HttpContext?.ResolveEnglishFallback(code) ?? code.Value, code.Value);
+        }
 
         // The pair issued below is authorized by the session it replaces, not by the account as it stands
         // now, so it carries that session's security stamp: when a password change has committed since that

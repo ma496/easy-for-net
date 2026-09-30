@@ -22,9 +22,6 @@ public class IdentityFeature : IFeature
             .Validate(setting => setting.AccessTokenValidity > 0 && setting.RefreshTokenValidity > 0,
                 "Authentication token lifetimes must be positive.")
             .ValidateOnStart();
-        services.AddOptions<SigninSetting>()
-            .Bind(configuration.GetRequiredSection("Signin"))
-            .ValidateOnStart();
         
         // configure services
         services.AddScoped<IUserService, UserService>();

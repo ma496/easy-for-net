@@ -250,7 +250,11 @@
       "editionNotFound": "Édition introuvable.",
       "editionNameAlreadyExists": "Une édition portant ce nom existe déjà.",
       "editionInUse": "Cette édition ne peut pas être supprimée tant que des locataires y sont rattachés.",
-      "sessionStoreUnavailable": "Le service de sessions est temporairement indisponible. Veuillez réessayer dans un instant."
+      "sessionStoreUnavailable": "Le service de sessions est temporairement indisponible. Veuillez réessayer dans un instant.",
+      "settingNotFound": "Paramètre introuvable.",
+      "settingPropertyUnknown": "Ce paramètre ne possède pas cette propriété.",
+      "settingPropertyInvalid": "La valeur n'est pas valide pour cette propriété du paramètre.",
+      "settingValueInvalid": "Les valeurs du paramètre ne sont pas valides."
     }
   },
   "table": {

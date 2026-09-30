@@ -44,4 +44,7 @@ public partial class Allow
 
     public const string Localization_View = "Localization.View";
     public const string Localization_Update = "Localization.Update";
+
+    public const string Settings_View = "Settings.View";
+    public const string Settings_Update = "Settings.Update";
 }

@@ -42,6 +42,15 @@ const localizationPermissions = {
   Localization_Update: 'Localization.Update',
 } as const
 
+/**
+ * The settings permissions, restated the same way. Both are scoped `Both`: a platform administrator
+ * edits the platform's own settings, a tenant administrator edits its tenant's.
+ */
+const settingsPermissions = {
+  Settings_View: 'Settings.View',
+  Settings_Update: 'Settings.Update',
+} as const
+
 describe('Allow', () => {
   it.each(Object.entries(tenancyPermissions))('mirrors %s as %s', (name, value) => {
     expect(Allow[name as keyof typeof tenancyPermissions]).toBe(value)
@@ -80,6 +89,19 @@ describe('Allow', () => {
       .sort()
 
     expect(carried).toEqual(localizationNames)
+  })
+
+  it.each(Object.entries(settingsPermissions))('mirrors %s as %s', (name, value) => {
+    expect(Allow[name as keyof typeof settingsPermissions]).toBe(value)
+  })
+
+  it('carries every settings permission the API enforces, and no others', () => {
+    const settingsNames = Object.keys(settingsPermissions).sort()
+    const carried = Object.keys(Allow)
+      .filter((name) => name.startsWith('Settings'))
+      .sort()
+
+    expect(carried).toEqual(settingsNames)
   })
 
   it('gives no two permissions the same value', () => {

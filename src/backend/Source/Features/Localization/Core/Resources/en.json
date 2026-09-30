@@ -250,7 +250,11 @@
       "editionNotFound": "Edition not found.",
       "editionNameAlreadyExists": "An edition with this name already exists.",
       "editionInUse": "This edition cannot be deleted while tenants are on it.",
-      "sessionStoreUnavailable": "The session service is temporarily unavailable. Please try again in a moment."
+      "sessionStoreUnavailable": "The session service is temporarily unavailable. Please try again in a moment.",
+      "settingNotFound": "Setting not found.",
+      "settingPropertyUnknown": "This setting has no such property.",
+      "settingPropertyInvalid": "The value is not valid for this setting property.",
+      "settingValueInvalid": "The setting's values are not valid."
     }
   },
   "table": {
