@@ -106,3 +106,23 @@ export interface NotificationGetGroupsRequest extends RequestBase { }
 export interface NotificationGetGroupsResponse {
   groups: string[]
 }
+
+/**
+ * Payload of the notification hub's `notificationReceived` message: a notification just committed for an
+ * audience the connection belongs to. Always unread, since nobody has read it yet.
+ */
+export interface NotificationReceivedMessage {
+  id: string
+  type: NotificationType
+  titleKey: string
+  messageKey: string
+  group?: string | null
+  metadata?: string | null
+  createdAt: string
+  isRead: boolean
+}
+
+/** Payload of the notification hub's `unreadCountChanged` message: the caller's recomputed, capped unread count. */
+export interface UnreadCountChangedMessage {
+  count: number
+}
