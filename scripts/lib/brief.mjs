@@ -39,18 +39,29 @@ function designAgents() {
   return (config.departments ?? []).filter((d) => d.phase === "design").map((d) => d.agent);
 }
 
+/** When a reviewer is owed, in words: always, always but for some paths, or for its paths. */
+function owedWhen(d) {
+  if (d.always) {
+    return d.exceptWhenOnly?.length
+      ? `every change, except one touching only ${d.exceptWhenOnly.map(readablePath).join(", ")}`
+      : "every change";
+  }
+  return `only when the diff touches ${(d.match ?? []).map(readablePath).join(", ")}`;
+}
+
 function reviewTiers() {
   const reviewers = (config.departments ?? []).filter((d) => d.phase === "review");
   const tiers = [...new Set(reviewers.map((d) => d.order ?? 1))].sort((a, b) => a - b);
   return tiers.map((tier, i) => {
-    const agents = reviewers.filter((d) => (d.order ?? 1) === tier).map((d) => d.agent);
+    const inTier = reviewers.filter((d) => (d.order ?? 1) === tier);
     const note =
-      agents.length > 1
+      inTier.length > 1
         ? "INDEPENDENT — dispatch together"
         : i === 0
           ? ""
           : "after the tier above has reported";
-    return `  ${i + 1}. ${agents.join(" · ")}${note ? `   ${note}` : ""}`;
+    const when = inTier.map((d) => `       ${d.agent}: ${owedWhen(d)}`).join("\n");
+    return `  ${i + 1}. ${inTier.map((d) => d.agent).join(" · ")}${note ? `   ${note}` : ""}\n${when}`;
   });
 }
 
@@ -89,9 +100,15 @@ your final message, and finish the task.
 
 Read ${guide} first and follow its conventions exactly.
 ${conventionsBlock()}
-When you are done, \`${config.commands.verify}\` must pass. It runs the static gate and
-adds whatever live checks the paths you touched demand. Do not report success without
-running it. Do not commit or push — the runner handles that.
+When you are done, \`${config.commands.verify}\` must pass. It runs the gate steps the paths
+you touched can break, and adds whatever live checks they demand. Do not commit or push —
+the runner handles that.
+
+**Run \`${config.commands.verify}\` once, when the writers have finished and before the
+reviews.** Each run costs minutes. While building, and after fixing what a review names, run
+the narrow check for what changed instead — one test class or file, the typecheck, the lint —
+and tell every specialist you delegate to the same. The runner verifies the finished tree
+itself and hands back anything that fails, so a second full run only repeats its work.
 
 ## The team this task goes through
 
@@ -120,11 +137,15 @@ The writers first, then \`${config.commands.verify}\`, then:
 }
 ${reviewTiers().join("\n")}
 
-**Send each tier in a single message.** Reviewers in the same tier ask unrelated questions,
-so waiting for each in turn spends wall-clock for nothing. Read their verdicts together.
+**Delegate only the reviewers this diff owes**, by the rule beside each name — the runner
+derives the same set from the finished diff, and a reviewer it does not owe is time spent for
+no verdict. **Send each tier in a single message.** Reviewers in the same tier ask unrelated
+questions, so waiting for each in turn spends wall-clock for nothing. Read their verdicts
+together.
 
-If one returns CHANGES NEEDED, fix what it names and run that tier again before moving on.
-Repeating a review is expected and is not an ordering mistake.
+If one returns CHANGES NEEDED, fix what it names and send the fix back to that reviewer — not
+to the reviewers who already approved — before moving on. A later tier that has already
+reported runs again after it. Repeating a review is expected and is not an ordering mistake.
 ${memory}
 If this task teaches you something durable about THIS repository that a future unrelated
 task would trip on too — a trap in the tooling, a convention no guide states, an assumption

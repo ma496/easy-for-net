@@ -33,10 +33,21 @@ import { compileRules, config } from "./project-config.mjs";
 export const DEPARTMENTS = (config.departments ?? []).map((d) => ({
   ...d,
   match: compileRules(d.match, `department match for ${d.agent}`),
+  exceptWhenOnly: compileRules(d.exceptWhenOnly, `department exceptWhenOnly for ${d.agent}`),
 }));
 
 /** Paths that belong to no department: queue bookkeeping and generated records. */
 const UNOWNED = compileRules(config.unownedPaths, "unownedPaths entry");
+
+/**
+ * Whether a universal department sits this change out: `exceptWhenOnly` names the paths it
+ * has nothing to add to, and every owned path in the diff is one of them. A change that owns
+ * no path at all is not excused — there is nothing to be excused *from*, and the runner
+ * refuses an empty diff before it asks anyway.
+ */
+function excused(dept, owned) {
+  return dept.exceptWhenOnly.length > 0 && owned.length > 0 && owned.every((p) => dept.exceptWhenOnly.some((re) => re.test(p)));
+}
 
 export function requiredAgents(paths) {
   const owned = (paths ?? []).filter((p) => p && !UNOWNED.some((re) => re.test(p)));
@@ -44,7 +55,7 @@ export function requiredAgents(paths) {
 
   for (const dept of DEPARTMENTS) {
     if (dept.always) {
-      required.push(dept.agent);
+      if (!excused(dept, owned)) required.push(dept.agent);
       continue;
     }
     if (owned.some((p) => dept.match.some((re) => re.test(p)))) required.push(dept.agent);
@@ -70,9 +81,33 @@ export function missingAgents(paths, delegated) {
   return requiredAgents(paths).filter((agent) => !seen.has(agent));
 }
 
-/** A human-readable explanation of why each missing agent was required. */
-export function explainMissing(paths, delegated) {
-  const missing = new Set(missingAgents(paths, delegated));
+/**
+ * The delegations of earlier attempts that still count for this one.
+ *
+ * A retry keeps what earlier attempts of the same run wrote, so a specialist who designed or
+ * built part of it has already done its part: asking it again only because the retry did not
+ * happen to call it cost a whole extra attempt and verify, once, for work that was finished.
+ * A verdict is different — it was given on a diff the retry may since have changed — so the
+ * review requirement is checked against the current attempt alone (see `explainMissing`).
+ */
+export function carriedDelegations(prior) {
+  const writers = new Set(DEPARTMENTS.filter((d) => d.phase === "build" || d.phase === "design").map((d) => d.agent));
+  return (prior ?? []).map((d) => String(d).trim()).filter((agent) => writers.has(agent));
+}
+
+/**
+ * A human-readable explanation of why each missing agent was required.
+ *
+ * `current` is the delegations of the attempt being judged, when `delegated` also carries
+ * earlier attempts' writers: an agent with a review role must appear in `current`, since only
+ * a review of this diff counts. Omitted, the two are the same list.
+ */
+export function explainMissing(paths, delegated, current = delegated) {
+  const reviewers = new Set(DEPARTMENTS.filter((d) => d.phase === "review").map((d) => d.agent));
+  const missing = new Set([
+    ...missingAgents(paths, delegated),
+    ...missingAgents(paths, current).filter((agent) => reviewers.has(agent)),
+  ]);
   return DEPARTMENTS.filter((d) => missing.has(d.agent)).map((d) => ({
     agent: d.agent,
     label: d.label,

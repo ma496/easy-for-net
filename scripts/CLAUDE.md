@@ -25,11 +25,11 @@ loop.mjs            the whole cycle: look → observe → plan → drain → rep
 | `schedule-drain.mjs` | Installs (or removes) the timer that runs the cycle hands-off. |
 | `auto-ship.mjs` | Stages deliberately and commits, with the task trailer that lets the audit pair a commit to its brief. |
 | `open-pr.mjs` | Prints (or opens) the pull-request page for the current branch. Never merges. |
-| `gate.mjs` | The static gate: solution build, backend and tool tests, web lint + `tsc` + vitest, engine and hook tests, web build. |
+| `gate.mjs` | The static gate: solution build, backend and tool tests, web lint + `tsc` + vitest, engine and hook tests, web build. `--changed` runs only the steps whose watched paths changed (`lib/gate-scope.mjs` decides). |
 | `serve-api.mjs` | Starts the API on `$PORT` as Development — what verify starts for a live check. |
 | `pg-ready.mjs` | Whether PostgreSQL accepts connections — the dependency probe for verify and the loop. |
 | `smoke.mjs` | The live check: health, the OpenAPI document, and an anonymous caller refused. |
-| `lib/` | The pure parts: the department map, spend and budget arithmetic, salvage, memory selection, cross-platform process helpers (`proc.mjs`), the timer's files (`schedule.mjs`), remote and PR URLs (`remote.mjs`), the config and its validation (`project-config.mjs`), the queue lock (`queue-lock.mjs`), `Depends-on:` resolution (`task-deps.mjs`), changed-path listing (`changed-paths.mjs`), journal outcomes (`outcomes.mjs`), how an attempt ended (`attempt-outcome.mjs`). |
+| `lib/` | The pure parts: the department map, spend and budget arithmetic, salvage, memory selection, cross-platform process helpers (`proc.mjs`), the timer's files (`schedule.mjs`), remote and PR URLs (`remote.mjs`), the config and its validation (`project-config.mjs`), the queue lock (`queue-lock.mjs`), `Depends-on:` resolution (`task-deps.mjs`), changed-path listing and the tree fingerprint a passing verify is reused on (`changed-paths.mjs`), the services a task needs before it may start (`dependencies.mjs`), which gate steps a diff reaches (`gate-scope.mjs`), journal outcomes (`outcomes.mjs`), how an attempt ended (`attempt-outcome.mjs`). |
 | `lib/claude-events.mjs` | **The only reader of the Claude CLI's stream-json.** `stream-render.mjs` renders and adds up what it normalises. A CLI release that moves a field is fixed here, and `tests/claude-stream-contract.test.mjs` holds it against captured streams. |
 
 **Two kinds of file live here.** The engine — everything above except `gate`, `serve-api`,

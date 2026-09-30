@@ -59,8 +59,12 @@ Everything at once, from the repository root (the gate needs PostgreSQL running;
 ```sh
 npm run gate                        # build, backend + tool tests, web lint/tsc/vitest, engine + hook tests, next build
 npm run gate -- --fast              # the same without the production web build
-npm run verify -- --autostart       # the gate, plus the live API smoke check when src/backend/Source changed
+npm run gate -- --changed --plan    # which steps the working tree's changes reach, without running them
+npm run verify -- --autostart       # the gate steps the diff reaches, plus the live API smoke check when src/backend/Source changed
+npm run verify -- --full            # the same with every gate step
 ```
+
+`verify` runs `gate.mjs --changed`: each gate step names the paths that can break it, only the steps a changed path reaches run, a documentation-only diff runs none, and a changed path no step watches (and `INERT` in `gate.mjs` does not name) runs them all. A new file type or top-level directory that a suite reads belongs in that step's `watches`.
 
 The API that `verify` starts for the live check waits on `scripts/pg-ready.mjs` and `scripts/redis-ready.mjs` (a TCP probe of `ConnectionStrings:Redis`), both listed under `verify.service.dependsOn` in `agentic.config.json`.
 
@@ -93,9 +97,17 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
   `redis-ready.mjs` and `smoke.mjs`, which are how this stack builds and runs.
 - **Delegation is checked, not trusted.** The departments a change owes are derived from its finished
   diff and compared with the subagents actually seen in the run's stream: `ui-ux-reviewer` designs a
-  screen first; `data-engineer`, `backend-engineer`, `frontend-engineer` build; `qa-engineer` and
-  `security-reviewer` (when owned paths changed) review, then `code-reviewer`. The agents are in
-  `.claude/agents/`.
+  screen first; `data-engineer`, `backend-engineer`, `frontend-engineer` build; `qa-engineer`,
+  `security-reviewer` (when owned paths changed) and `code-reviewer` (unless the diff is markdown
+  alone, `exceptWhenOnly`) review together, in one tier. A retry keeps the design and build
+  delegations of the run's earlier attempts, since their work is still in the tree; a review counts
+  only in the attempt it judged. The agents are in `.claude/agents/`.
+- **Verification is paid once per tree.** Specialists run the tests for what they changed; the lead
+  runs `npm run verify` once, before the reviews; the runner verifies the finished tree and reuses
+  that pass while the tree is byte-for-byte unchanged. Before an attempt starts, the runner probes
+  every service `cycle.preflight` and `verify.service.dependsOn` name and exits 4 without
+  spending anything (the drain puts the task back in `todo/`) when one is down and cannot be
+  started; `--no-preflight` skips that.
 - **The work branch** is `project.branch`, or whichever branch is checked out when that is `null`.
   The runner refuses a dirty tree, commits each task with a `Task: <brief>` trailer, and **never
   pushes unless `AGENT_AUTO_PUSH=1`** — and nothing here merges. Pull requests go to

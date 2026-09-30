@@ -28,6 +28,12 @@ that reads it, a helper and its test. Split apart work that touches different ar
 could ship in either order. If the spec is genuinely one feature, write one task; do not
 manufacture splits.
 
+Every task pays a fixed cost before its own work counts — a verification run and a round of
+reviews — so a task too small to be worth that is part of its neighbour. In particular,
+documentation belongs to the task whose change it describes: that task updates the guide,
+the skills and the docs its change makes out of date. Do not end a batch with a task that
+only writes down what the others built, unless the spec asks for documentation alone.
+
 Order matters. Tasks are built one at a time and each is committed before the next starts,
 so a task CAN see the code of any task that ran before it — and none of the code of a task
 that has not run yet. Every task that needs another task's code must declare it on a

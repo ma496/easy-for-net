@@ -47,8 +47,8 @@ Add unit tests for any pure helper you add or change.
 
 ## 4. Review — also not optional
 
-After the writers finish, dispatch the first review tier together, then `code-reviewer`
-last, once the others have reported.
+After the writers finish, dispatch each review tier the diff owes in a single message, a later
+tier (where one is declared) once the earlier has reported.
 
 `npm run auto` refuses an attempt that skipped a department owed by the finished diff. Hold
 yourself to the same bar here.
