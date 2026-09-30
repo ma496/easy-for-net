@@ -98,6 +98,12 @@ export const authUrls: AuthUrl[] = [
     url: '/admin/localization',
     permissions: [Allow.Localization_View],
   },
+  {
+    // Both-scoped like localization: the platform edits the values every tenant inherits, a tenant
+    // administrator its own tenant's overrides, on the same route and permission.
+    url: '/admin/settings',
+    permissions: [Allow.Settings_View],
+  },
 ]
 
 /**

@@ -3,6 +3,7 @@ namespace Backend.Tests.Fakes;
 using Backend.External.Email;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Sessions;
+using Backend.Features.Settings.Core;
 
 /// <summary>
 /// Registers the implementations the test host substitutes for production ones.
@@ -14,13 +15,35 @@ using Backend.Features.Identity.Core.Sessions;
 public static class TestDoubles
 {
     /// <summary>
-    /// Substitutes the cheap password hasher and the mail service that sends nothing.
+    /// Substitutes the cheap password hasher and a mail transport that delivers nothing but records what
+    /// it was handed (<see cref="RecordingEmailTransport"/>, behind the real <see cref="IEmailService"/>), adds
+    /// the probe setting the settings suite writes freely, and lets a test overlay platform settings per tenant.
     /// </summary>
     public static IServiceCollection RegisterTestDoubles(this IServiceCollection services)
     {
         services.AddScoped<IPasswordHasher, TestPasswordHasher>();
-        services.AddScoped<IEmailService, NoOpEmailService>();
+        services.AddSingleton<RecordingEmailTransport>();
+        services.AddSingleton<IEmailTransport>(provider => provider.GetRequiredService<RecordingEmailTransport>());
         services.AddSessionStoreFaults();
+        services.AddSingleton<ISettingDefinitionProvider, ProbeSettingsProvider>();
+        services.AddPlatformSettingOverlays();
+        return services;
+    }
+
+    /// <summary>
+    /// Decorates the setting store the host registered with one that reports, for the tenants a test
+    /// names, the platform overrides that test chose - see <see cref="PlatformSettingOverlays"/>.
+    /// </summary>
+    private static IServiceCollection AddPlatformSettingOverlays(this IServiceCollection services)
+    {
+        var registered = services.Last(descriptor => descriptor.ServiceType == typeof(ISettingValueStore));
+        services.Remove(registered);
+
+        services.AddSingleton<PlatformSettingOverlays>();
+        services.AddScoped<ISettingValueStore>(provider => new OverlayingSettingValueStore(
+            (ISettingValueStore)ActivatorUtilities.CreateInstance(provider, registered.ImplementationType!),
+            provider.GetRequiredService<PlatformSettingOverlays>()));
+
         return services;
     }
 

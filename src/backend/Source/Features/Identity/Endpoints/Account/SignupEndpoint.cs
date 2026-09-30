@@ -4,6 +4,7 @@ using Backend.ShareData.Entities;
 using Backend.External.Email;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Settings.Core;
 using Backend.Features.Tenancy.Core;
 using Backend.Settings;
 using Microsoft.Extensions.Options;
@@ -29,7 +30,7 @@ sealed class SignupEndpoint(IUserService userService,
                             ITenantService tenantService,
                             IEmailBackgroundJobs emailBackgroundJobs,
                             IOptions<WebSetting> webSetting,
-                            IOptions<SigninSetting> signinSetting,
+                            ISettingProvider settingProvider,
                             ITenantContext tenantContext,
                             AppDbContext dbContext)
     : Endpoint<SignupRequest, SignupResponse>
@@ -43,6 +44,9 @@ sealed class SignupEndpoint(IUserService userService,
 
     public override async Task HandleAsync(SignupRequest request, CancellationToken cancellationToken)
     {
+        // The platform's value: the tenant this sign-up creates has no override of its own yet.
+        var signinSettings = await settingProvider.GetAsync<SigninSettings>((Guid?)null, cancellationToken);
+
         var usernameExists = await dbContext.Users
             .AnyAsync(x => x.UsernameNormalized == request.Username.Trim().ToLowerInvariant(), cancellationToken);
         if (usernameExists)
@@ -101,7 +105,7 @@ sealed class SignupEndpoint(IUserService userService,
                 user.Id,
                 cancellationToken);
 
-            var verificationToken = signinSetting.Value.IsEmailVerificationRequired
+            var verificationToken = signinSettings.IsEmailVerificationRequired
                 ? await tokenService.GenerateTokenAsync(user, TokenPurpose.EmailVerification)
                 : null;
 
@@ -112,7 +116,7 @@ sealed class SignupEndpoint(IUserService userService,
             // naming a token row that a rollback had just discarded.
             if (verificationToken is not null)
             {
-                emailBackgroundJobs.Enqueue(user.Email, "Verify Email",
+                emailBackgroundJobs.EnqueueForPlatform(user.Email, "Verify Email",
                     @$"
             <div>
                 <p>Click the link below to verify your email:</p>

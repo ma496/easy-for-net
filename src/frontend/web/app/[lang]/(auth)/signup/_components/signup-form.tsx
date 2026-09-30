@@ -115,7 +115,8 @@ export const SignupForm = () => {
         {isVerificationRequired && (
           <Button
             type="button"
-            className="btn btn-outline-primary w-full mt-2"
+            variant="outline"
+            className="w-full mt-2"
             onClick={handleResendEmail}
             disabled={countdown > 0 || isResendingVerifyEmail}
             isLoading={isResendingVerifyEmail}

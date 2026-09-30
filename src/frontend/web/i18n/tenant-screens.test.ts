@@ -117,7 +117,7 @@ describe('tenant screen copy', () => {
  */
 
 /** The directory trees holding the screens and pieces held to the logical-utility rule. */
-const rtlScreenDirectories = ['app/[lang]/admin/(tenancy)', 'app/[lang]/(auth)/select-tenant', 'app/[lang]/admin/localization']
+const rtlScreenDirectories = ['app/[lang]/admin/(tenancy)', 'app/[lang]/(auth)/select-tenant', 'app/[lang]/admin/localization', 'app/[lang]/admin/settings']
 
 /** Shared pieces outside those trees that are part of the tenant experience. */
 const rtlScreenFiles = ['components/custom/tenant-switcher.tsx']

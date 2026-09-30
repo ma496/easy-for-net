@@ -12,6 +12,8 @@ describe('getMatchedAuthUrl', () => {
     // Both-scoped, so this one route serves a platform administrator editing the platform's own
     // overrides and a tenant administrator editing its tenant's, gated on the same permission.
     ['/admin/localization', Allow.Localization_View],
+    // Both-scoped as well: the platform's settings in no tenant, the tenant's own inside one.
+    ['/admin/settings', Allow.Settings_View],
   ])('guards %s with the permission the screen requires', (url, permission) => {
     expect(getMatchedAuthUrl(url)?.permissions).toEqual([permission])
   })

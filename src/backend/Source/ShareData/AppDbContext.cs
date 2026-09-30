@@ -8,6 +8,7 @@ using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Localization.Core.Entities;
 using Backend.Features.Notifications.Core.Entities;
+using Backend.Features.Settings.Core.Entities;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -64,6 +65,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options,
     // Localization
     public DbSet<LocalizationText> LocalizationTexts => Set<LocalizationText>();
     public DbSet<LanguageSetting> LanguageSettings => Set<LanguageSetting>();
+
+    // Settings
+    public DbSet<SettingValue> SettingValues => Set<SettingValue>();
 
     /// <summary>
     /// Gets the tenant the <c>Tenant</c> query filter restricts to. The filter reads this property

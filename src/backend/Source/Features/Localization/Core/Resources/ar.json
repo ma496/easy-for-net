@@ -79,7 +79,8 @@
     "editionsUpdate": "تحديث",
     "editionsFeatures": "الميزات",
     "tenantsFeatures": "الميزات",
-    "localization": "التوطين"
+    "localization": "التوطين",
+    "settings": "الإعدادات"
   },
   "search": {
     "dashboard": "لوحة القيادة",
@@ -102,7 +103,8 @@
     "tenantsCreate": "إنشاء مستأجر",
     "editions": "الإصدارات",
     "editionsCreate": "إنشاء إصدار",
-    "localization": "التوطين"
+    "localization": "التوطين",
+    "settings": "الإعدادات"
   },
   "form": {
     "label": {
@@ -250,7 +252,14 @@
       "editionNotFound": "الإصدار غير موجود.",
       "editionNameAlreadyExists": "يوجد إصدار بهذا الاسم بالفعل.",
       "editionInUse": "لا يمكن حذف هذا الإصدار ما دام هناك مستأجرون عليه.",
-      "sessionStoreUnavailable": "خدمة الجلسات غير متاحة مؤقتًا. يرجى المحاولة مرة أخرى بعد قليل."
+      "sessionStoreUnavailable": "خدمة الجلسات غير متاحة مؤقتًا. يرجى المحاولة مرة أخرى بعد قليل.",
+      "settingNotFound": "الإعداد غير موجود.",
+      "settingPropertyUnknown": "هذا الإعداد لا يحتوي على هذه الخاصية.",
+      "settingPropertyInvalid": "القيمة غير صالحة لخاصية هذا الإعداد.",
+      "settingValueInvalid": "قيم الإعداد غير صالحة.",
+      "emailSmtpServerRequired": "خادم SMTP مطلوب.",
+      "emailSmtpPortInvalid": "يجب أن يكون منفذ SMTP بين 1 و65535.",
+      "emailSenderEmailInvalid": "يجب أن يكون بريد المرسل عنوان بريد إلكتروني صالحًا."
     }
   },
   "table": {
@@ -684,6 +693,57 @@
         "currentWillSwitch": "اللغة التي تشاهد بها هذه الشاشة قيد التعطيل — سيتم تحويلك إلى اللغة الافتراضية.",
         "unsaved": "لديك تغييرات غير محفوظة",
         "saveSuccess": "تم تحديث اللغات"
+      }
+    },
+    "settings": {
+      "title": "الإعدادات",
+      "scope": {
+        "platform": "أنت تعدّل إعدادات المنصة بأكملها. يرث كل مستأجر هذه الإعدادات ما لم يحدد إعداداته الخاصة.",
+        "tenant": "أنت تعدّل إعدادات ${tenant}. أي إعداد غير محدد هنا يُورث من المنصة."
+      },
+      "readOnly": "يمكنك عرض هذه الإعدادات ولكن لا يمكنك تغييرها.",
+      "empty": "لا توجد إعدادات متاحة",
+      "customized": "مخصص هنا",
+      "inherited": "موروث",
+      "source": {
+        "own": "محدد هنا",
+        "platform": "المنصة",
+        "default": "الافتراضي"
+      },
+      "changed": "تم التغيير",
+      "unsaved": "تغييرات غير محفوظة",
+      "discard": "تجاهل التغييرات",
+      "resetToInherited": "إعادة التعيين إلى الموروث",
+      "resetTitle": "إعادة تعيين إعدادات ${setting}؟",
+      "resetConfirmTenant": "ستُزال إعدادات ${setting} الخاصة بهذا المستأجر، وستُطبَّق قيم المنصة بدلاً منها.",
+      "resetConfirmPlatform": "ستُزال إعدادات ${setting} الخاصة بالمنصة، وستُطبَّق القيم الافتراضية بدلاً منها. يحتفظ المستأجرون الذين حددوا قيمهم الخاصة بها.",
+      "resetConfirmButton": "نعم، أعد التعيين",
+      "resetSuccess": "تمت إعادة تعيين إعدادات ${setting} إلى القيم الموروثة",
+      "saveSuccess": "تم حفظ إعدادات ${setting}",
+      "signin": {
+        "title": "تسجيل الدخول",
+        "description": "القواعد المطبقة عند تسجيل دخول المستخدمين.",
+        "isEmailVerificationRequired": "اشتراط بريد إلكتروني مُتحقق منه لتسجيل الدخول",
+        "isEmailVerificationRequiredHelp": "عند التفعيل، يجب على الحساب تأكيد بريده الإلكتروني قبل أن يتمكن من تسجيل الدخول."
+      },
+      "email": {
+        "title": "البريد الإلكتروني",
+        "description": "خادم SMTP والمرسل اللذان يُرسل عبرهما البريد الإلكتروني الصادر.",
+        "smtpServer": "خادم SMTP",
+        "smtpPort": "منفذ SMTP",
+        "smtpUsername": "اسم مستخدم SMTP",
+        "smtpPassword": "كلمة مرور SMTP",
+        "senderEmail": "بريد المرسل الإلكتروني",
+        "senderName": "اسم المرسل",
+        "portInvalid": "أدخل عددًا صحيحًا بين 1 و65535",
+        "passwordSet": "محددة",
+        "passwordNotSet": "غير محددة",
+        "passwordKeepPlaceholder": "اتركه فارغًا للاحتفاظ بكلمة المرور الحالية",
+        "passwordNotSetPlaceholder": "غير محددة",
+        "passwordClear": "مسح",
+        "passwordWillClear": "سيتم مسحها عند الحفظ",
+        "passwordUndo": "تراجع",
+        "passwordInheritHint": "لا تُورث كلمة المرور إلا مع الخادم والمنفذ واسم المستخدم معًا. إذا غيّرت أيًا منها هنا دون إدخال كلمة مرور، فلن تُستخدم أي كلمة مرور."
       }
     }
   },

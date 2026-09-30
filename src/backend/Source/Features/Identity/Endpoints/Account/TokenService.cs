@@ -4,6 +4,7 @@ using Backend.Features.Tenancy.Core;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Core.Sessions;
+using Backend.Features.Settings.Core;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
 
@@ -68,7 +69,7 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
     private readonly IAuthTokenService _authTokenService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly AppDbContext _dbContext;
-    private readonly SigninSetting _signinSetting;
+    private readonly ISettingProvider _settingProvider;
     private readonly ISessionIssuer _sessionIssuer;
     private readonly ISessionStore _sessionStore;
     private readonly int _refreshTokenValidity;
@@ -79,7 +80,7 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
     /// </summary>
     public TokenService(IUserService userService,
                        IOptions<AuthSetting> authSetting,
-                       IOptions<SigninSetting> signinSetting,
+                       ISettingProvider settingProvider,
                        IAuthTokenService authTokenService,
                        IHttpContextAccessor httpContextAccessor,
                        AppDbContext dbContext,
@@ -93,7 +94,7 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
         _dbContext = dbContext;
         _sessionIssuer = sessionIssuer;
         _sessionStore = sessionStore;
-        _signinSetting = signinSetting.Value;
+        _settingProvider = settingProvider;
         _refreshTokenValidity = authSettingValue.RefreshTokenValidity;
 
         Setup(o =>
@@ -248,9 +249,6 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
             this.ThrowError(r => r.UserId, ErrorCodes.UserNotFound);
         if (!user.IsActive)
             this.ThrowError(r => r.UserId, ErrorCodes.UserNotActive);
-        if (_signinSetting.IsEmailVerificationRequired && !user.IsEmailVerified)
-            this.ThrowError(r => r.UserId, ErrorCodes.EmailNotVerified);
-
         // A row issued under credentials that have since changed renews nothing: a password change or reset
         // rotates the stamp, so a refresh token that outlived the revocation - written by a renewal racing
         // it - is refused here at its next use.
@@ -270,6 +268,13 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
         // did not ask would hand the same tenant back for as long as the session was refreshed.
         var sessionTenantId = ReadSessionTenant();
         var actingTenantId = await UsableSessionTenantAsync(user, sessionTenantId);
+
+        // Held to the sign-in setting of the tenant the renewed session will act in - or the platform's
+        // when it acts in none, the tenant having been dropped above - read as it stands now, so a change
+        // to the setting reaches a live session at its next renewal without revoking it.
+        var signinSettings = await _settingProvider.GetAsync<SigninSettings>(actingTenantId);
+        if (signinSettings.IsEmailVerificationRequired && !user.IsEmailVerified)
+            this.ThrowError(r => r.UserId, ErrorCodes.EmailNotVerified);
 
         // Only the claims lose the tenant; the row keeps it, because the recorded tenant is left as it was
         // and PersistTokenAsync writes that one forward. The row records which tenant this session belongs

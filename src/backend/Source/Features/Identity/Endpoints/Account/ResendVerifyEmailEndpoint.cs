@@ -3,6 +3,7 @@ namespace Backend.Features.Identity.Endpoints.Account;
 using Backend.External.Email;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Settings.Core;
 using Backend.Settings;
 using Microsoft.Extensions.Options;
 
@@ -20,7 +21,7 @@ sealed class ResendVerifyEmailEndpoint(IUserService userService,
                                ITokenService tokenService,
                                IEmailBackgroundJobs emailBackgroundJobs,
                                IOptions<WebSetting> webSetting,
-                               IOptions<SigninSetting> signinSetting)
+                               ISettingProvider settingProvider)
     : Endpoint<ResendVerifyEmailRequest, EmptyResponse>
 {
     public override void Configure()
@@ -32,7 +33,9 @@ sealed class ResendVerifyEmailEndpoint(IUserService userService,
 
     public override async Task HandleAsync(ResendVerifyEmailRequest request, CancellationToken cancellationToken)
     {
-        if (!signinSetting.Value.IsEmailVerificationRequired)
+        // The platform's value: the flow runs before, and independently of, any tenant.
+        var signinSettings = await settingProvider.GetAsync<SigninSettings>((Guid?)null, cancellationToken);
+        if (!signinSettings.IsEmailVerificationRequired)
         {
             await Send.OkAsync(cancellationToken);
             return;
@@ -56,7 +59,7 @@ sealed class ResendVerifyEmailEndpoint(IUserService userService,
         var token = await tokenService.GenerateTokenAsync(user, TokenPurpose.EmailVerification);
 
         // Send verification email
-        emailBackgroundJobs.Enqueue(user.Email, "Verify Email",
+        emailBackgroundJobs.EnqueueForPlatform(user.Email, "Verify Email",
             @$"
             <div>
                 <p>Click the link below to verify your email:</p>

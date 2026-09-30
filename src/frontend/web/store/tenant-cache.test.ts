@@ -8,6 +8,9 @@ import { setUnreadCount, setUserInfo } from '@/store/slices'
 // A value import, so the account endpoints this file puts in the cache are registered on appApi.
 import { accountApi } from '@/store/api/identity'
 import type { GetUserInfoResponse } from '@/store/api/identity'
+// A value import too, so the settings endpoints - and their 'Settings' tag - are registered on appApi.
+import { settingsApi } from '@/store/api/settings'
+import type { SettingListResponse } from '@/store/api/settings'
 import { dispatchTenantChanged, tenantChangedActions } from './tenant-cache'
 
 const resetApiState = appApi.util.resetApiState()
@@ -88,6 +91,34 @@ describe('the dispatch helpers', () => {
     dispatchTenantChanged(store.dispatch, userInfo)
 
     expect(cachedQueries()).toEqual([])
+  })
+
+  /** The settings a tenant administrator had loaded: tenant-scoped overrides that must not outlive the tenant. */
+  const tenantSettings: SettingListResponse = {
+    items: [
+      {
+        name: 'Email',
+        properties: [{ name: 'smtpServer', value: 'smtp.tenant-a.example', source: 'tenant', isSecret: false, isSet: null }],
+      },
+    ],
+  }
+
+  /** The cache keys still tagged 'Settings', whichever id they were provided under. */
+  const settingsTaggedKeys = (): string[] => {
+    // The store types appApi before any slice added its tags, so the tag map is read by name.
+    const tags: { [tag: string]: { [id: string]: string[] } | undefined } = store.getState().appApi.provided.tags
+    return Object.values(tags.Settings ?? {}).flat()
+  }
+
+  it("drops the previous tenant's cached settings, and every 'Settings' tag with them", async () => {
+    await store.dispatch(settingsApi.util.upsertQueryData('settingList', undefined, tenantSettings))
+    expect(cachedQueries(), 'the settings have to be cached for the reset to be provable').toEqual(['settingList(undefined)'])
+    expect(settingsTaggedKeys(), "the cached settings have to carry the 'Settings' tag").not.toEqual([])
+
+    dispatchTenantChanged(store.dispatch, userInfo)
+
+    expect(cachedQueries()).toEqual([])
+    expect(settingsTaggedKeys()).toEqual([])
   })
 
   it('puts the freshly read tenant in the session state, so the selection is the new one', async () => {

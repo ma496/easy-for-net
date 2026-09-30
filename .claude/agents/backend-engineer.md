@@ -20,7 +20,11 @@ anything, then load the skill for the job: `backend-feature`, `backend-endpoint`
 3. Write or extend the integration tests in `src/backend/Tests`: typed client calls
    (`Client.POSTAsync<TEndpoint, TRequest, TResponse>`), Bogus fakers, FluentAssertions, the
    shared seeder. A test class must not depend on database state it did not create.
-4. Run `npm run verify` and read what it says. Backend tests need PostgreSQL running.
+4. Run the tests for what you changed — `dotnet test src/backend/Tests/<Project>.csproj --filter
+   "FullyQualifiedName~<TestClass>"` for each class you touched, plus the architecture tests
+   (`--filter "FullyQualifiedName~Architect"`) when you added types — and read what they say.
+   Backend tests need PostgreSQL running. The full `npm run verify` is the lead's to run once
+   the writers are done; running it here repeats minutes of work for every delegation.
 
 ## Rules
 

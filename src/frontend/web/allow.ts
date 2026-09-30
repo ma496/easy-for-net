@@ -39,4 +39,7 @@ export const Allow = {
 
   Localization_View: 'Localization.View',
   Localization_Update: 'Localization.Update',
+
+  Settings_View: 'Settings.View',
+  Settings_Update: 'Settings.Update',
 } as const

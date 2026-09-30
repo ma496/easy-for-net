@@ -78,9 +78,12 @@ repeat is the design closing its own loop, not a duplicate.
 
 **The rest of the order is enforced too.** Everything that writes finishes before anything
 that judges; reviewers sharing a tier run together, because they ask unrelated questions and
-running them in sequence spends wall-clock for nothing; the last tier runs once the others
-have reported. A reviewer returning CHANGES NEEDED means the run fixes and reviews again, so
-the check reads each reviewer's *last* delegation — a repeat is expected, not a violation.
+running them in sequence spends wall-clock for nothing; a later tier, where a project declares
+one, runs once the earlier ones have reported. A reviewer returning CHANGES NEEDED means the run
+fixes and reviews again, so the check reads each reviewer's *last* delegation — a repeat is
+expected, not a violation. A department marked `always` may name `exceptWhenOnly` paths it has
+nothing to add to (the code reviewer and markdown), and a retry keeps its earlier attempts'
+design and build delegations but never their reviews.
 
 ## Memory is the only part that changes by itself
 

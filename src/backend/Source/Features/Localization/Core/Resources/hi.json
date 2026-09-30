@@ -79,7 +79,8 @@
     "editionsUpdate": "अपडेट करें",
     "editionsFeatures": "सुविधाएँ",
     "tenantsFeatures": "सुविधाएँ",
-    "localization": "स्थानीयकरण"
+    "localization": "स्थानीयकरण",
+    "settings": "सेटिंग्स"
   },
   "search": {
     "dashboard": "डैशबोर्ड",
@@ -102,7 +103,8 @@
     "tenantsCreate": "टेनेंट बनाएं",
     "editions": "संस्करण",
     "editionsCreate": "संस्करण बनाएँ",
-    "localization": "स्थानीयकरण"
+    "localization": "स्थानीयकरण",
+    "settings": "सेटिंग्स"
   },
   "form": {
     "label": {
@@ -250,7 +252,14 @@
       "editionNotFound": "संस्करण नहीं मिला।",
       "editionNameAlreadyExists": "इस नाम का संस्करण पहले से मौजूद है।",
       "editionInUse": "जब तक इस संस्करण पर किरायेदार हैं, इसे हटाया नहीं जा सकता।",
-      "sessionStoreUnavailable": "सत्र सेवा अस्थायी रूप से उपलब्ध नहीं है। कृपया थोड़ी देर बाद पुनः प्रयास करें।"
+      "sessionStoreUnavailable": "सत्र सेवा अस्थायी रूप से उपलब्ध नहीं है। कृपया थोड़ी देर बाद पुनः प्रयास करें।",
+      "settingNotFound": "सेटिंग नहीं मिली।",
+      "settingPropertyUnknown": "इस सेटिंग में ऐसी कोई प्रॉपर्टी नहीं है।",
+      "settingPropertyInvalid": "यह मान इस सेटिंग प्रॉपर्टी के लिए मान्य नहीं है।",
+      "settingValueInvalid": "सेटिंग के मान मान्य नहीं हैं।",
+      "emailSmtpServerRequired": "SMTP सर्वर आवश्यक है।",
+      "emailSmtpPortInvalid": "SMTP पोर्ट 1 और 65535 के बीच होना चाहिए।",
+      "emailSenderEmailInvalid": "प्रेषक ईमेल एक मान्य ईमेल पता होना चाहिए।"
     }
   },
   "table": {
@@ -684,6 +693,57 @@
         "currentWillSwitch": "जिस भाषा में आप यह स्क्रीन देख रहे हैं वह अक्षम की जा रही है — आपको डिफ़ॉल्ट भाषा पर बदल दिया जाएगा।",
         "unsaved": "आपके पास असहेजे परिवर्तन हैं",
         "saveSuccess": "भाषाएँ अपडेट की गईं"
+      }
+    },
+    "settings": {
+      "title": "सेटिंग्स",
+      "scope": {
+        "platform": "आप पूरे प्लेटफ़ॉर्म की सेटिंग्स संपादित कर रहे हैं। हर टेनेंट इन्हें विरासत में लेता है, जब तक कि वह अपनी सेटिंग्स तय न करे।",
+        "tenant": "आप ${tenant} की सेटिंग्स संपादित कर रहे हैं। जो कुछ यहाँ तय नहीं है, वह प्लेटफ़ॉर्म से विरासत में मिलता है।"
+      },
+      "readOnly": "आप ये सेटिंग्स देख सकते हैं, लेकिन बदल नहीं सकते।",
+      "empty": "कोई सेटिंग उपलब्ध नहीं है",
+      "customized": "यहाँ अनुकूलित",
+      "inherited": "विरासत में मिला",
+      "source": {
+        "own": "यहाँ तय किया गया",
+        "platform": "प्लेटफ़ॉर्म",
+        "default": "डिफ़ॉल्ट"
+      },
+      "changed": "बदला गया",
+      "unsaved": "असहेजे परिवर्तन",
+      "discard": "परिवर्तन त्यागें",
+      "resetToInherited": "विरासत में मिले मान पर रीसेट करें",
+      "resetTitle": "${setting} सेटिंग्स रीसेट करें?",
+      "resetConfirmTenant": "इस टेनेंट की अपनी ${setting} सेटिंग्स हटा दी जाएँगी, और उनकी जगह प्लेटफ़ॉर्म के मान लागू होंगे।",
+      "resetConfirmPlatform": "प्लेटफ़ॉर्म की अपनी ${setting} सेटिंग्स हटा दी जाएँगी, और उनकी जगह डिफ़ॉल्ट मान लागू होंगे। जिन टेनेंट ने अपने मान तय किए हैं, वे उन्हें बनाए रखते हैं।",
+      "resetConfirmButton": "हाँ, रीसेट करें",
+      "resetSuccess": "${setting} सेटिंग्स विरासत में मिले मानों पर रीसेट की गईं",
+      "saveSuccess": "${setting} सेटिंग्स सहेजी गईं",
+      "signin": {
+        "title": "साइन-इन",
+        "description": "लोगों के साइन इन करते समय लागू होने वाले नियम।",
+        "isEmailVerificationRequired": "साइन इन के लिए सत्यापित ईमेल पता आवश्यक करें",
+        "isEmailVerificationRequiredHelp": "चालू होने पर, किसी खाते को साइन इन करने से पहले अपने ईमेल पते की पुष्टि करनी होगी।"
+      },
+      "email": {
+        "title": "ईमेल",
+        "description": "वह SMTP सर्वर और प्रेषक जिसके माध्यम से आउटगोइंग ईमेल भेजे जाते हैं।",
+        "smtpServer": "SMTP सर्वर",
+        "smtpPort": "SMTP पोर्ट",
+        "smtpUsername": "SMTP उपयोगकर्ता नाम",
+        "smtpPassword": "SMTP पासवर्ड",
+        "senderEmail": "प्रेषक ईमेल",
+        "senderName": "प्रेषक का नाम",
+        "portInvalid": "1 और 65535 के बीच कोई पूर्ण संख्या दर्ज करें",
+        "passwordSet": "सेट है",
+        "passwordNotSet": "सेट नहीं है",
+        "passwordKeepPlaceholder": "वर्तमान पासवर्ड रखने के लिए खाली छोड़ें",
+        "passwordNotSetPlaceholder": "सेट नहीं है",
+        "passwordClear": "साफ़ करें",
+        "passwordWillClear": "सहेजने पर साफ़ कर दिया जाएगा",
+        "passwordUndo": "पूर्ववत करें",
+        "passwordInheritHint": "पासवर्ड केवल सर्वर, पोर्ट और उपयोगकर्ता नाम के साथ ही विरासत में मिलता है। यदि आप पासवर्ड दर्ज किए बिना यहाँ इनमें से कोई भी बदलते हैं, तो कोई पासवर्ड उपयोग नहीं किया जाता।"
       }
     }
   },

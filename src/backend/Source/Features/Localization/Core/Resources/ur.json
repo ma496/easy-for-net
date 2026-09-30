@@ -79,7 +79,8 @@
     "editionsUpdate": "اپ ڈیٹ",
     "editionsFeatures": "خصوصیات",
     "tenantsFeatures": "خصوصیات",
-    "localization": "لوکلائزیشن"
+    "localization": "لوکلائزیشن",
+    "settings": "ترتیبات"
   },
   "search": {
     "dashboard": "ڈیش بورڈ",
@@ -102,7 +103,8 @@
     "tenantsCreate": "ٹیننٹ بنائیں",
     "editions": "ایڈیشنز",
     "editionsCreate": "ایڈیشن بنائیں",
-    "localization": "لوکلائزیشن"
+    "localization": "لوکلائزیشن",
+    "settings": "ترتیبات"
   },
   "form": {
     "label": {
@@ -250,7 +252,14 @@
       "editionNotFound": "ایڈیشن نہیں ملا۔",
       "editionNameAlreadyExists": "اس نام کا ایڈیشن پہلے سے موجود ہے۔",
       "editionInUse": "جب تک اس ایڈیشن پر کرایہ دار موجود ہیں، اسے حذف نہیں کیا جا سکتا۔",
-      "sessionStoreUnavailable": "سیشن سروس عارضی طور پر دستیاب نہیں ہے۔ براہ کرم کچھ دیر بعد دوبارہ کوشش کریں۔"
+      "sessionStoreUnavailable": "سیشن سروس عارضی طور پر دستیاب نہیں ہے۔ براہ کرم کچھ دیر بعد دوبارہ کوشش کریں۔",
+      "settingNotFound": "ترتیب نہیں ملی۔",
+      "settingPropertyUnknown": "اس ترتیب میں ایسی کوئی خاصیت نہیں ہے۔",
+      "settingPropertyInvalid": "یہ قدر اس ترتیب کی خاصیت کے لیے درست نہیں ہے۔",
+      "settingValueInvalid": "ترتیب کی اقدار درست نہیں ہیں۔",
+      "emailSmtpServerRequired": "SMTP سرور درکار ہے۔",
+      "emailSmtpPortInvalid": "SMTP پورٹ 1 اور 65535 کے درمیان ہونا چاہیے۔",
+      "emailSenderEmailInvalid": "بھیجنے والے کی ای میل ایک درست ای میل پتہ ہونی چاہیے۔"
     }
   },
   "table": {
@@ -684,6 +693,57 @@
         "currentWillSwitch": "جس زبان میں آپ یہ اسکرین دیکھ رہے ہیں وہ غیر فعال کی جا رہی ہے — آپ کو ڈیفالٹ زبان پر منتقل کر دیا جائے گا۔",
         "unsaved": "آپ کے پاس غیر محفوظ تبدیلیاں ہیں",
         "saveSuccess": "زبانیں اپ ڈیٹ ہو گئیں"
+      }
+    },
+    "settings": {
+      "title": "ترتیبات",
+      "scope": {
+        "platform": "آپ پورے پلیٹ فارم کی ترتیبات میں ترمیم کر رہے ہیں۔ ہر ٹیننٹ انہیں وراثت میں لیتا ہے جب تک کہ وہ اپنی ترتیبات مقرر نہ کرے۔",
+        "tenant": "آپ ${tenant} کی ترتیبات میں ترمیم کر رہے ہیں۔ جو کچھ یہاں مقرر نہیں ہے وہ پلیٹ فارم سے وراثت میں ملتا ہے۔"
+      },
+      "readOnly": "آپ یہ ترتیبات دیکھ سکتے ہیں لیکن انہیں تبدیل نہیں کر سکتے۔",
+      "empty": "کوئی ترتیبات دستیاب نہیں ہیں",
+      "customized": "یہاں حسب ضرورت بنایا گیا",
+      "inherited": "وراثتی",
+      "source": {
+        "own": "یہاں مقرر",
+        "platform": "پلیٹ فارم",
+        "default": "طے شدہ"
+      },
+      "changed": "تبدیل شدہ",
+      "unsaved": "غیر محفوظ تبدیلیاں",
+      "discard": "تبدیلیاں مسترد کریں",
+      "resetToInherited": "وراثتی قدر پر ری سیٹ کریں",
+      "resetTitle": "${setting} کی ترتیبات ری سیٹ کریں؟",
+      "resetConfirmTenant": "اس ٹیننٹ کی اپنی ${setting} ترتیبات ہٹا دی جائیں گی، اور ان کی جگہ پلیٹ فارم کی اقدار لاگو ہوں گی۔",
+      "resetConfirmPlatform": "پلیٹ فارم کی اپنی ${setting} ترتیبات ہٹا دی جائیں گی، اور ان کی جگہ طے شدہ اقدار لاگو ہوں گی۔ جن ٹیننٹس نے اپنی اقدار مقرر کی ہیں وہ انہیں برقرار رکھیں گے۔",
+      "resetConfirmButton": "ہاں، ری سیٹ کریں",
+      "resetSuccess": "${setting} کی ترتیبات وراثتی اقدار پر ری سیٹ کر دی گئیں",
+      "saveSuccess": "${setting} کی ترتیبات محفوظ ہو گئیں",
+      "signin": {
+        "title": "سائن ان",
+        "description": "لوگوں کے سائن ان کرتے وقت لاگو ہونے والے قواعد۔",
+        "isEmailVerificationRequired": "سائن ان کے لیے تصدیق شدہ ای میل پتہ لازمی کریں",
+        "isEmailVerificationRequiredHelp": "فعال ہونے پر، کسی اکاؤنٹ کو سائن ان کرنے سے پہلے اپنے ای میل پتے کی تصدیق کرنی ہوگی۔"
+      },
+      "email": {
+        "title": "ای میل",
+        "description": "وہ SMTP سرور اور بھیجنے والا جس کے ذریعے جانے والی ای میل بھیجی جاتی ہے۔",
+        "smtpServer": "SMTP سرور",
+        "smtpPort": "SMTP پورٹ",
+        "smtpUsername": "SMTP صارف نام",
+        "smtpPassword": "SMTP پاس ورڈ",
+        "senderEmail": "بھیجنے والے کی ای میل",
+        "senderName": "بھیجنے والے کا نام",
+        "portInvalid": "1 اور 65535 کے درمیان کوئی مکمل عدد درج کریں",
+        "passwordSet": "مقرر ہے",
+        "passwordNotSet": "مقرر نہیں",
+        "passwordKeepPlaceholder": "موجودہ پاس ورڈ برقرار رکھنے کے لیے خالی چھوڑ دیں",
+        "passwordNotSetPlaceholder": "مقرر نہیں",
+        "passwordClear": "صاف کریں",
+        "passwordWillClear": "محفوظ کرنے پر صاف ہو جائے گا",
+        "passwordUndo": "واپس کریں",
+        "passwordInheritHint": "پاس ورڈ صرف سرور، پورٹ اور صارف نام کے ساتھ ہی وراثت میں ملتا ہے۔ اگر آپ پاس ورڈ درج کیے بغیر یہاں ان میں سے کوئی بھی تبدیل کرتے ہیں تو کوئی پاس ورڈ استعمال نہیں ہوتا۔"
       }
     }
   },

@@ -42,7 +42,7 @@ sealed class ForgetPasswordEndpoint(ITokenService tokenService,
         var resetToken = await tokenService.GenerateTokenAsync(user, TokenPurpose.PasswordReset);
 
         // Send email with reset token
-        emailBackgroundJobs.Enqueue(user.Email, "Reset Password",
+        emailBackgroundJobs.EnqueueForPlatform(user.Email, "Reset Password",
             @$"
             <div>
                 <p>Click the link below to reset your password:</p>
