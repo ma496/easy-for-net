@@ -321,6 +321,7 @@ public class SessionTokenTests(App app) : TenancyTestsBase(app)
     public void Testing_Host_Runs_On_The_In_Memory_Store()
     {
         Service<ISessionStore>().Should().BeOfType<Fakes.FaultInjectingSessionStore>()
+            .Which.Inner.Should().BeOfType<PublishingSessionStore>()
             .Which.Inner.Should().BeOfType<InMemorySessionStore>();
     }
 

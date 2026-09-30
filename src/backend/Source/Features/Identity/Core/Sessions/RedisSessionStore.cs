@@ -80,27 +80,29 @@ public sealed class RedisSessionStore(IConnectionMultiplexer multiplexer, IOptio
         });
 
     /// <inheritdoc />
-    public Task RevokeByUserAsync(Guid userId, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<string>> RevokeByUserAsync(Guid userId, CancellationToken cancellationToken = default)
         => RunAsync(database => RevokeAsync(database, UserIndexKey(userId), _ => true));
 
     /// <inheritdoc />
-    public Task RevokeByUserInTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<string>> RevokeByUserInTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken = default)
         => RunAsync(database => RevokeAsync(database, UserIndexKey(userId), session => session.TenantId == tenantId));
 
     /// <inheritdoc />
-    public Task RevokeByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<string>> RevokeByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
         => RunAsync(database => RevokeAsync(database, TenantIndexKey(tenantId), _ => true));
 
     /// <summary>
     /// Reads one index, deletes the live sessions in it that match, and removes from it every member
     /// whose record is gone - the expired sessions an index tolerates until it is read.
     /// </summary>
-    private async Task RevokeAsync(IDatabase database, RedisKey indexKey, Func<SessionRecord, bool> matches)
+    /// <returns>The identifiers of the sessions deleted.</returns>
+    private async Task<IReadOnlyList<string>> RevokeAsync(IDatabase database, RedisKey indexKey, Func<SessionRecord, bool> matches)
     {
+        var revoked = new List<string>();
         var members = await database.SetMembersAsync(indexKey);
         if (members.Length == 0)
         {
-            return;
+            return revoked;
         }
 
         var sessionKeys = members.Select(member => (RedisKey)SessionKey(member.ToString())).ToArray();
@@ -119,11 +121,13 @@ public sealed class RedisSessionStore(IConnectionMultiplexer multiplexer, IOptio
             {
                 writes.Add(batch.KeyDeleteAsync(sessionKeys[i]));
                 writes.AddRange(Unindex(batch, session));
+                revoked.Add(session.SessionId);
             }
         }
 
         batch.Execute();
         await Task.WhenAll(writes);
+        return revoked;
     }
 
     /// <summary>

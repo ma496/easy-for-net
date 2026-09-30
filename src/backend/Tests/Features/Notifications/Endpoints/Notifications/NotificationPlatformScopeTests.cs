@@ -92,7 +92,7 @@ public class NotificationPlatformScopeTests(App app) : NotificationsTestsBase(ap
 
     /// <summary>
     /// Verifies that marking a platform-scope personal notification read and unread in platform scope
-    /// flips the row's own read flag, and that marking a platform-wide one read records a visit.
+    /// flips the row's own read flag, and that marking a platform-wide one read records a read visit.
     /// </summary>
     [Fact]
     public async Task Mark_As_Read_And_Unread_Work_In_Platform_Scope()
@@ -131,16 +131,54 @@ public class NotificationPlatformScopeTests(App app) : NotificationsTestsBase(ap
         var tenantPersonal = await CreateUserNotificationAsync(account.Id, tenantId: tenantId);
         var tenantWide = await CreateTenantNotificationAsync(tenantId: tenantId);
         var client = await ClientForAsync(account.Username);
+        var tenantClient = await ClientForAsync(account.Username, tenantId);
 
         var (rsp, _) = await client.POSTAsync<NotificationMarkAllAsReadEndpoint, NotificationMarkAllAsReadResponse>();
         rsp.StatusCode.Should().Be(HttpStatusCode.OK);
 
         (await StoredNotificationAsync(personal.Id)).IsRead.Should().BeTrue();
-        (await IsVisitedAsync(platformWide.Id, account.Id)).Should().BeTrue();
+        (await IsReadForAsync(client, platformWide.Id)).Should().BeTrue();
         (await StoredNotificationAsync(tenantPersonal.Id)).IsRead.Should().BeFalse(
             "a notification raised inside the tenant is not one platform scope can see, so it is not marked from there");
-        (await IsVisitedAsync(tenantWide.Id, account.Id)).Should().BeFalse();
+        (await IsReadForAsync(tenantClient, tenantWide.Id)).Should().BeFalse(
+            "platform scope moves only the platform-wide read cursor, never a tenant's");
         (await UnreadCountAsync(client)).Should().Be(0, "nothing platform scope shows the account is left unread");
+    }
+
+    /// <summary>
+    /// Verifies that a platform-wide notification marked read while acting in a tenant reads as read in
+    /// platform scope too, whether it was marked on its own or through mark-all-as-read.
+    /// </summary>
+    /// <remarks>
+    /// The two notifications are marked through different mechanisms - a visit row for the single mark, the
+    /// platform-wide read cursor for mark-all - and each is asked about from the other side of the boundary,
+    /// since the read state of a platform-wide notification belongs to the user and not to the scope.
+    /// </remarks>
+    [Fact]
+    public async Task Platform_Wide_Read_In_A_Tenant_Is_Read_In_Platform_Scope()
+    {
+        var (account, tenantId) = await CreatePlatformAccountAsync();
+        var markedSingly = await CreateGlobalNotificationAsync();
+        var tenantClient = await ClientForAsync(account.Username, tenantId);
+        var platformClient = await ClientForAsync(account.Username);
+
+        var (singleRsp, _) = await tenantClient.POSTAsync<NotificationMarkAsReadEndpoint, NotificationMarkAsReadRequest, NotificationMarkAsReadResponse>(
+            new() { Id = markedSingly.Id });
+        singleRsp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        (await IsReadForAsync(platformClient, markedSingly.Id)).Should().BeTrue(
+            "a platform-wide notification marked read inside a tenant is read wherever the account acts");
+
+        var markedByAll = await CreateGlobalNotificationAsync();
+        (await IsReadForAsync(platformClient, markedByAll.Id)).Should().BeFalse("it has not been read anywhere yet");
+
+        var (allRsp, _) = await tenantClient.POSTAsync<NotificationMarkAllAsReadEndpoint, NotificationMarkAllAsReadResponse>();
+        allRsp.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        (await IsReadForAsync(platformClient, markedByAll.Id)).Should().BeTrue(
+            "mark-all-as-read inside a tenant moves the platform-wide read cursor, which platform scope reads too");
+        (await UnreadCountAsync(platformClient)).Should().Be(0,
+            "every platform-wide notification is read, and the account has nothing personal in platform scope");
     }
 
     /// <summary>
@@ -176,17 +214,5 @@ public class NotificationPlatformScopeTests(App app) : NotificationsTestsBase(ap
         var account = await CreateTenantUserAsync(tenant.Id);
         await MarkAsPlatformAccountAsync(account.Id);
         return (account, tenant.Id);
-    }
-
-    /// <summary>
-    /// Reads the unread count through a caller's own client, so the scope counted is that caller's.
-    /// </summary>
-    /// <param name="client">The client presenting the caller's token.</param>
-    /// <returns>The unread count the API answered with.</returns>
-    private static async Task<int> UnreadCountAsync(HttpClient client)
-    {
-        var (rsp, res) = await client.GETAsync<NotificationGetUnreadCountEndpoint, NotificationGetUnreadCountResponse>();
-        rsp.StatusCode.Should().Be(HttpStatusCode.OK);
-        return res.Count;
     }
 }

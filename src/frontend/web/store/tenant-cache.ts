@@ -1,6 +1,7 @@
 import { appApi } from '@/store/api/_app-api'
 import { GetUserInfoResponse } from '@/store/api/identity'
 import { setUnreadCount, setUserInfo } from '@/store/slices'
+import { markLeavingSignedOut } from '@/store/signed-out-navigation'
 
 /** One of the actions a tenant cache-reset sequence dispatches, in the order its builder returns them. */
 export type TenantCacheAction =
@@ -47,8 +48,10 @@ export const dispatchTenantChanged = (
  * record, tenant selection or unread badge survives for the next user of this browser. Resetting the
  * RTK Query cache in place instead would make every query on the still-mounted page refetch against
  * the dead session and show its 401 before the navigation completed. `replace` keeps the page just
- * left out of the history, so Back does not return to it.
+ * left out of the history, so Back does not return to it. It is marked first, so no request still in
+ * flight - nor the notification hub's reconnect probe - can replace this navigation with its own.
  */
 export const leaveSignedOut = (signinHref: string): void => {
+  markLeavingSignedOut()
   window.location.replace(signinHref)
 }

@@ -53,15 +53,15 @@ public sealed class FaultInjectingSessionStore(ISessionStore inner, SessionStore
         => faults.IsUnreachable(sessionId) ? throw Outage() : inner.DeleteAsync(sessionId, cancellationToken);
 
     /// <inheritdoc />
-    public Task RevokeByUserAsync(Guid userId, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<string>> RevokeByUserAsync(Guid userId, CancellationToken cancellationToken = default)
         => inner.RevokeByUserAsync(userId, cancellationToken);
 
     /// <inheritdoc />
-    public Task RevokeByUserInTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<string>> RevokeByUserInTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken = default)
         => inner.RevokeByUserInTenantAsync(userId, tenantId, cancellationToken);
 
     /// <inheritdoc />
-    public Task RevokeByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<string>> RevokeByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default)
         => inner.RevokeByTenantAsync(tenantId, cancellationToken);
 
     private static SessionStoreUnavailableException Outage()

@@ -71,7 +71,9 @@ public class InMemorySessionStoreTests
         _store.IndexedForUser(userId).Should().Be(2);
 
         _clock.Advance(TimeSpan.FromMinutes(5));
-        await _store.RevokeByUserAsync(userId, TestContext.Current.CancellationToken);
+        var revoked = await _store.RevokeByUserAsync(userId, TestContext.Current.CancellationToken);
+
+        revoked.Should().Equal([lasting.SessionId], "only a live session is deleted, so only it is reported");
 
         _store.IndexedForUser(userId).Should().Be(0, "the expired entry was pruned and the live one revoked");
         (await _store.GetAsync(lasting.SessionId, TestContext.Current.CancellationToken)).Should().BeNull();
@@ -91,8 +93,9 @@ public class InMemorySessionStoreTests
             await _store.CreateAsync(session, TestContext.Current.CancellationToken);
         }
 
-        await _store.RevokeByUserAsync(user, TestContext.Current.CancellationToken);
+        var revoked = await _store.RevokeByUserAsync(user, TestContext.Current.CancellationToken);
 
+        revoked.Should().BeEquivalentTo(mine.Select(session => session.SessionId));
         foreach (var session in mine)
         {
             (await _store.GetAsync(session.SessionId, TestContext.Current.CancellationToken)).Should().BeNull();
@@ -117,8 +120,9 @@ public class InMemorySessionStoreTests
             await _store.CreateAsync(session, TestContext.Current.CancellationToken);
         }
 
-        await _store.RevokeByUserInTenantAsync(user, tenant, TestContext.Current.CancellationToken);
+        var revoked = await _store.RevokeByUserInTenantAsync(user, tenant, TestContext.Current.CancellationToken);
 
+        revoked.Should().Equal([inTenant.SessionId]);
         (await _store.GetAsync(inTenant.SessionId, TestContext.Current.CancellationToken)).Should().BeNull();
         (await _store.GetAsync(elsewhere.SessionId, TestContext.Current.CancellationToken)).Should().NotBeNull();
         (await _store.GetAsync(platform.SessionId, TestContext.Current.CancellationToken)).Should().NotBeNull();
@@ -139,8 +143,9 @@ public class InMemorySessionStoreTests
             await _store.CreateAsync(session, TestContext.Current.CancellationToken);
         }
 
-        await _store.RevokeByTenantAsync(tenant, TestContext.Current.CancellationToken);
+        var revoked = await _store.RevokeByTenantAsync(tenant, TestContext.Current.CancellationToken);
 
+        revoked.Should().BeEquivalentTo([first.SessionId, second.SessionId]);
         (await _store.GetAsync(first.SessionId, TestContext.Current.CancellationToken)).Should().BeNull();
         (await _store.GetAsync(second.SessionId, TestContext.Current.CancellationToken)).Should().BeNull();
         (await _store.GetAsync(otherTenant.SessionId, TestContext.Current.CancellationToken)).Should().NotBeNull();
@@ -152,9 +157,9 @@ public class InMemorySessionStoreTests
     [Fact]
     public async Task Revoking_Nothing_Is_Fine()
     {
-        await _store.RevokeByUserAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
-        await _store.RevokeByUserInTenantAsync(Guid.NewGuid(), Guid.NewGuid(), TestContext.Current.CancellationToken);
-        await _store.RevokeByTenantAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+        (await _store.RevokeByUserAsync(Guid.NewGuid(), TestContext.Current.CancellationToken)).Should().BeEmpty();
+        (await _store.RevokeByUserInTenantAsync(Guid.NewGuid(), Guid.NewGuid(), TestContext.Current.CancellationToken)).Should().BeEmpty();
+        (await _store.RevokeByTenantAsync(Guid.NewGuid(), TestContext.Current.CancellationToken)).Should().BeEmpty();
     }
 
     private SessionRecord NewSession(Guid userId, Guid? tenantId, TimeSpan? lifetime = null)

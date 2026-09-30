@@ -9,9 +9,11 @@ const initialState: NotificationsState = {
 };
 
 /**
- * Notifications slice holding the current unread notification count,
- * used by the UI to render the badge. Updated via the setUnreadCount
- * reducer (e.g. by useNotificationHub polling).
+ * Notifications slice holding the current unread notification count, which the header bell renders as
+ * its badge. `useNotificationHub` keeps it live: `notificationReceived` counts one more for each
+ * notification the hub pushes, and `setUnreadCount` replaces the count with an authoritative one - the
+ * hub's `unreadCountChanged` message, or a fetch of the unread-count endpoint after every connect and
+ * while the hub is disconnected.
  */
 export const notificationsSlice = createSlice({
   name: 'notifications',
@@ -20,7 +22,12 @@ export const notificationsSlice = createSlice({
     setUnreadCount(state, action: PayloadAction<number>) {
       state.unreadCount = action.payload;
     },
+    // A notification just raised is unread for everyone it reaches, so it is one more unread without
+    // asking the API; the next authoritative count corrects any drift.
+    notificationReceived(state) {
+      state.unreadCount += 1;
+    },
   },
 });
 
-export const { setUnreadCount } = notificationsSlice.actions;
+export const { setUnreadCount, notificationReceived } = notificationsSlice.actions;

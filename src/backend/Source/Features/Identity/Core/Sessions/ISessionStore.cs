@@ -34,16 +34,19 @@ public interface ISessionStore
     /// <summary>Deletes every session of one account, in every tenant.</summary>
     /// <param name="userId">The account whose sessions are revoked.</param>
     /// <param name="cancellationToken">Token used to cancel the delete.</param>
-    Task RevokeByUserAsync(Guid userId, CancellationToken cancellationToken = default);
+    /// <returns>The identifiers of the sessions it deleted.</returns>
+    Task<IReadOnlyList<string>> RevokeByUserAsync(Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>Deletes the sessions of one account that act in one tenant, leaving its others alone.</summary>
     /// <param name="userId">The account whose sessions are revoked.</param>
     /// <param name="tenantId">The tenant the revoked sessions act in.</param>
     /// <param name="cancellationToken">Token used to cancel the delete.</param>
-    Task RevokeByUserInTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken = default);
+    /// <returns>The identifiers of the sessions it deleted.</returns>
+    Task<IReadOnlyList<string>> RevokeByUserInTenantAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken = default);
 
     /// <summary>Deletes every session acting in one tenant, whoever holds it.</summary>
     /// <param name="tenantId">The tenant whose sessions are revoked.</param>
     /// <param name="cancellationToken">Token used to cancel the delete.</param>
-    Task RevokeByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default);
+    /// <returns>The identifiers of the sessions it deleted.</returns>
+    Task<IReadOnlyList<string>> RevokeByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default);
 }

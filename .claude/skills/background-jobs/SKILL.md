@@ -101,8 +101,15 @@ using (app.Services.CreateScope())
 {
     RecurringJob.AddOrUpdate<IAuthTokenCleanService>("delete-expired-auth-tokens", service => service.DeleteExpiredTokensAsync(), Cron.Daily);
     RecurringJob.AddOrUpdate<ITokenCleanService>("delete-expired-tokens", service => service.DeleteExpiredTokensAsync(), Cron.Daily);
+    RecurringJob.AddOrUpdate<INotificationRetentionService>("delete-expired-notifications", service => service.DeleteExpiredAsync(CancellationToken.None), Cron.Daily);
 }
 ```
+
+`delete-expired-notifications` hard-deletes notifications older than `Notifications:RetentionDays`
+(`NotificationOptions`, default 90, validated on start) and prunes read visit rows a read cursor already
+covers, in batches of hand-written SQL across every tenant (see the `notifications` skill). A job method
+taking a `CancellationToken` is registered with `CancellationToken.None` - an expression tree cannot omit an
+optional argument - and Hangfire substitutes its own shutdown token when it runs.
 
 To add one: put the work in a feature service (`I<Name>CleanService` / `I<Name>Job` with a single
 `Task` method), register it in that feature's `AddServices`, then add an `AddOrUpdate` line with a
