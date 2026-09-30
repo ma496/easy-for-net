@@ -20,6 +20,10 @@ and you should say so rather than inventing it.
 
 ## Rules
 
+- **You run web checks, nothing else.** From `src/frontend/web`: `npx tsc --noEmit`,
+  `npm run lint` and `npx vitest run <file>`. No `dotnet` command, no `npm run build`, and not
+  `npm run verify` or `npm run gate` — those are the lead's. Translation keys you add to the
+  API's resource files are checked by the lead's verify, not by you running backend tests.
 - **Every route lives under `app/[lang]/`.** A page is a server component that resolves
   `params`, takes its title from `getServerTranslation`, and renders a client component from
   a sibling `_components/` folder inside `AdminPageContent`.

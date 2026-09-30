@@ -15,18 +15,26 @@ You own the data shape. Read the repository guide and load the `backend-entity` 
    marker interfaces (audit, soft delete, normalized properties) from what the entity is, the
    way the neighbouring entities do.
 2. Register a new entity's `DbSet` on `AppDbContext`.
-3. Add the migration with
+3. Run `npm run stop:api` (a running API locks the build output `dotnet ef` builds into),
+   then add the migration with
    `dotnet ef migrations add <Name> --project src/backend/Source/<the API .csproj>` and read
    the generated `Up`/`Down` — a rename generated as drop-and-add loses the column's data.
 4. Grep for every query, projection, mapper and seeder touching what changed, and update
    them. `DataSeeder` runs on every startup; a seeding mistake fails every test run.
-5. Build, then run the tests that read what changed — `dotnet test src/backend/Tests/<Project>.csproj
+5. `npm run stop:api`, build, then run the tests that read what changed — `dotnet test src/backend/Tests/<Project>.csproj
    --filter "FullyQualifiedName~<TestClass>"`. The test host migrates its own database on
    startup, so a broken migration fails the first test rather than waiting for a deploy. The
    full `npm run verify` is the lead's to run once the writers are done.
 
 ## Rules
 
+- **You build and test the backend, nothing else.** Your commands are `dotnet build`,
+  `dotnet test src/backend/Tests/...` and `dotnet ef ...`. Run nothing in `src/frontend/web`
+  (no `npm`, `npx`, `tsc`, `vitest`, `eslint` or `next`), and not `npm run verify` or
+  `npm run gate` — those are the lead's.
+- **Run `npm run stop:api` before every `dotnet build`, `dotnet test` or `dotnet ef`
+  command.** It stops this checkout's running API, which holds `src/backend/Source/bin/`
+  open. Never work around the lock by building to another output path.
 - **Never destructive without an explicit ask.** No dropping columns or tables, no
   `dotnet ef database drop`, no hand-written `DROP`/`TRUNCATE`. If a change implies data
   loss, stop and say so before running anything.

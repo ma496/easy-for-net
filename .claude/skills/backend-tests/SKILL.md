@@ -11,6 +11,7 @@ Stack: xUnit v3 + `FastEndpoints.Testing` + FluentAssertions + Bogus. Tests boot
 `TestsDataSeeder`, and `App.TearDownAsync` drops the database at the end of the run.
 
 ```sh
+npm run stop:api    # a running API locks the build output the test run rebuilds
 dotnet test src/backend/Tests/Backend.Tests.csproj
 dotnet test src/backend/Tests/Backend.Tests.csproj --filter "FullyQualifiedName~UserCreateTests"
 dotnet test src/backend/Tests/Backend.Tests.csproj --filter "FullyQualifiedName~UserCreateTests.Valid_Input"

@@ -88,7 +88,16 @@ const INERT = [
 
 /** Each step: the area it belongs to, what it is called, how to run it, and what it watches. */
 const steps = [
-  { area: "api", name: "dotnet build", cmd: "dotnet", args: ["build", buildTarget(), "-nologo", "-v", "q"], watches: DOTNET },
+  {
+    area: "api",
+    name: "dotnet build",
+    cmd: "dotnet",
+    args: ["build", buildTarget(), "-nologo", "-v", "q"],
+    watches: DOTNET,
+    // A running API from this checkout holds its bin/ open, and on Windows the build then
+    // fails with MSB3027 for a reason that has nothing to do with the change.
+    before: () => runSync("node", ["scripts/stop-api.mjs"], { cwd: REPO_ROOT, stdio: "inherit" }),
+  },
   { area: "api", name: "backend tests", cmd: "dotnet", args: ["test", relative(REPO_ROOT, API_TESTS), "--no-build", "-nologo"], watches: DOTNET },
   ...toolTestDirs.map((dir) => ({ area: "api", name: `tests: ${dir}`, cmd: "dotnet", args: ["test", dir, "-nologo"], watches: TOOL_PATHS })),
   {
@@ -140,6 +149,7 @@ const results = [];
 for (const step of planned) {
   console.log(`\n=== gate: ${step.name} ===`);
   const started = Date.now();
+  step.before?.();
   const res = runSync(step.cmd, step.args, { cwd: step.cwd ?? REPO_ROOT, stdio: "inherit" });
   const seconds = ((Date.now() - started) / 1000).toFixed(1);
   const ok = res.status === 0;
