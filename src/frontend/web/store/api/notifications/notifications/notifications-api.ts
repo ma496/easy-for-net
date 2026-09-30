@@ -19,6 +19,13 @@ import {
 } from './notifications-dtos'
 
 /**
+ * The tag every notification list (and the group list) provides, and the one the hub's
+ * `notificationReceived` push invalidates. Invalidating the bare `Notifications` type would refetch the
+ * unread count as well, which the push has already counted.
+ */
+export const NOTIFICATIONS_LIST_TAG = { type: 'Notifications' as const, id: 'LIST' }
+
+/**
  * RTK Query API for notifications: CRUD endpoints, listing with filters
  * (read state, group), mark-as-read / mark-as-unread for individual
  * notifications, mark-all-as-read, unread count, and grouped listing.
@@ -69,7 +76,13 @@ export const notificationsApi = appApi
           },
           method: 'GET',
         }),
-        providesTags: (result) => ['Notifications', ...(result?.items?.map((item) => ({ type: 'Notifications' as const, id: item.id })) ?? [])],
+        // The LIST id lets a hub push refresh every list without also refetching the unread count, which
+        // the push has already counted; the mutations above still reach it through the bare type.
+        providesTags: (result) => [
+          'Notifications',
+          NOTIFICATIONS_LIST_TAG,
+          ...(result?.items?.map((item) => ({ type: 'Notifications' as const, id: item.id })) ?? []),
+        ],
       }),
       notificationMarkAsRead: builder.mutation<NotificationMarkAsReadResponse, { id: string }>({
         query: (input) => ({
@@ -100,7 +113,7 @@ export const notificationsApi = appApi
           method: 'GET',
         }),
         // Tagged so that every mutation above - each invalidates the whole 'Notifications' type - refetches
-        // the badge at once instead of leaving it stale until the next poll.
+        // the badge at once instead of leaving it stale until the hub or the fallback poll reports it.
         providesTags: [{ type: 'Notifications', id: 'UNREAD_COUNT' }],
       }),
       notificationGetGroups: builder.query<NotificationGetGroupsResponse, NotificationGetGroupsRequest>({
@@ -108,7 +121,8 @@ export const notificationsApi = appApi
           url: '/notifications/groups',
           method: 'GET',
         }),
-        providesTags: ['Notifications'],
+        // A pushed notification may bring a group nobody has seen yet.
+        providesTags: ['Notifications', NOTIFICATIONS_LIST_TAG],
       }),
     }),
   })

@@ -211,22 +211,47 @@ create endpoint — notifications are raised by server code. They are authentica
 permission** — every signed-in user sees their own notifications. Follow that when adding one. An
 ordinary account whose tenant was dropped at token renewal acts in platform scope and is answered
 with the platform-wide broadcasts alone; that is harmless, and the web app sends it to
-`/select-tenant` rather than polling.
+`/select-tenant` rather than connecting to the hub.
 
 ## Web side
 
 - `notificationsApi` (`store/api/notifications/notifications`) uses the `Notifications` tag type;
   mutations invalidate the collection plus the touched row. `notificationGetUnreadCount` provides
   `{ type: 'Notifications', id: 'UNREAD_COUNT' }`, so every mutation refetches the badge at once;
-  a notification mutation must keep invalidating the `Notifications` type, or the badge waits for the poll.
-- `useNotificationHub()` polls the unread count every 30 s and mirrors it into
-  `notificationsSlice.unreadCount`. It skips polling when the caller has no active tenant and is not
-  a platform account acting in none (that caller is on `/select-tenant`). It is mounted once, in `components/layouts/header.tsx` — do not
-  mount it per screen.
-- `components/notifications/` holds `NotificationBell` (badge), `NotificationPanel` (dropdown list)
-  and `NotificationItem` (single row, renders `t(titleKey, notificationVariables(metadata))` and the
-  same for `messageKey`), with full pages under
-  `app/[lang]/admin/notifications/` (`list`, `[id]`).
+  a notification mutation must keep invalidating the `Notifications` type, or while the hub is down the
+  badge waits for the fallback poll. Every list (and the group list) also provides
+  `NOTIFICATIONS_LIST_TAG` (`{ type: 'Notifications', id: 'LIST' }`), which a push invalidates without
+  touching the unread count.
+- `useNotificationHub()` (`hooks/`) is mounted once, in `components/layouts/header.tsx` - do not mount it
+  per screen. It holds **one** SignalR connection (`@microsoft/signalr`) to the hub on the API host
+  (`lib/notifications/hub-url.ts` drops the API route prefix), WebSockets only with negotiation skipped,
+  authenticated by the auth cookie - no token in the URL, so the web origin must be one of the `Web`
+  domains and the cookie must reach the API host. It connects only while the caller has an active tenant
+  or is a platform account acting in none (anyone else is on `/select-tenant`), and stops on sign-out,
+  when that stops holding, and on unmount; a tenant switch or exit stops it and opens a new one, since
+  groups are joined on connect.
+- Messages: `notificationReceived` dispatches `notificationsSlice.notificationReceived` (one more unread)
+  and invalidates `NOTIFICATIONS_LIST_TAG`; `unreadCountChanged` dispatches `setUnreadCount(count)`. The
+  unread count is fetched once after every connect and reconnect, since pushes sent while it was down
+  are lost.
+- Reconnect: `withAutomaticReconnect` with `reconnectDelayMs` (`lib/notifications/hub-reconnect.ts`) -
+  exponential back-off with jitter, capped at 60 s, never giving up. A failed first start, or a close the
+  server does not let reconnect, is retried by the hook on the same schedule.
+- 401: a refused WebSocket upgrade shows the browser no status, so every failed attempt to connect (a
+  start, or one of automatic reconnect's attempts) is answered by one unread-count fetch through RTK Query.
+  It carries the same cookie, so it answers 401 exactly when the upgrade was refused for authentication,
+  and `baseQueryWithReauth` then refreshes the session under its mutex - or signs out, which stops the
+  connection. A connection merely being lost is not probed, only a failed attempt. Sign-out closes the
+  connection server-side at once, so a probe then would find no session to refresh: `leaveSignedOut`
+  marks the navigation to sign-in first (`store/signed-out-navigation.ts`), after which the hook probes
+  nothing and a failed refresh redirects nowhere. Never refresh from the hook by any other route.
+- Fallback polling: none while connected; while disconnected, the unread count every
+  `fallbackPollDelayMs` (60 s, give or take 10%), paused while the tab is hidden, with one fetch when it
+  becomes visible again.
+- `components/notifications/` holds `NotificationBell` (the badge, whose text is
+  `formatUnreadBadge(count)`: no badge at zero or below, `99+` above 99), `NotificationPanel` (dropdown
+  list) and `NotificationItem` (single row, renders `t(titleKey, notificationVariables(metadata))` and the
+  same for `messageKey`), with full pages under `app/[lang]/admin/notifications/` (`list`, `[id]`).
 
 ## Testing
 

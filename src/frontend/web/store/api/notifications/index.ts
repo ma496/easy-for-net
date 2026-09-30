@@ -1,6 +1,7 @@
 export { NotificationType } from './enums'
 export {
   notificationsApi,
+  NOTIFICATIONS_LIST_TAG,
   useNotificationCreateMutation,
   useNotificationDeleteMutation,
   useNotificationGetQuery,
@@ -34,4 +35,6 @@ export type {
   NotificationGetUnreadCountResponse,
   NotificationGetGroupsRequest,
   NotificationGetGroupsResponse,
+  NotificationReceivedMessage,
+  UnreadCountChangedMessage,
 } from './notifications/notifications-dtos'

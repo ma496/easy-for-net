@@ -3,7 +3,7 @@ import { environment } from '@/config'
 import { Mutex } from 'async-mutex'
 import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { setUserInfo, signout } from '../slices/authSlice'
-import { isAuthRequired } from '@/auth-urls'
+import { signinRedirectAfterFailedRefresh } from '../signed-out-navigation'
 // Imported straight from the DTO file rather than through the feature barrel, and as a type alone,
 // so this module gains no runtime edge back to the feature APIs that are injected into it.
 import type { GetUserInfoResponse } from './identity/account/account-dtos'
@@ -89,11 +89,11 @@ const baseQueryWithReauth: BaseQueryFn<
           }
         } else {
           api.dispatch(signout())
-          const pathname = typeof window !== 'undefined' ? window.location.pathname : undefined
-          if (pathname && isAuthRequired(pathname)) {
-            const signinUrl = new URL('/signin', window.location.origin)
-            signinUrl.searchParams.set('redirect', pathname)
-            window.location.href = signinUrl.toString()
+          const signinUrl = typeof window !== 'undefined'
+            ? signinRedirectAfterFailedRefresh(window.location.pathname, window.location.origin)
+            : null
+          if (signinUrl) {
+            window.location.href = signinUrl
           }
         }
       } finally {
