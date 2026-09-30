@@ -207,6 +207,38 @@ made inside a tenant, account-owned ones included, to `FileManagement.Enabled` a
 On the web, `FileUpload` and `MultiFileUpload` apply the stricter of their `maxSizeBytes` and
 `usePlanMaxUploadBytes()`.
 
+**Settings** answer a third question: not *may this caller do it*, nor *does the plan include it*, but
+*how does it behave here* — a typed value the platform and each tenant may override at run time. The
+system is the `Settings` slice (`Features/Settings`); what other slices use — `ISettingDefinitionProvider`,
+`SettingDefinitionContext`, `SettingDefinitionBuilder<T>`, `SecretSettingAttribute` and `ISettingProvider`
+— is published with `[AllowOutside]`, and everything that resolves or stores a value stays private to it.
+A setting is a plain class whose read-write properties are its values and whose initializers are its
+code default, with a FluentValidation validator beside it; each slice registers its settings in
+`Core/<X>SettingsProvider.cs` (`context.Add<T>(name, validator)`), beside its permission and features
+providers, discovered by reflection. Chaining `.FromConfiguration("Section")` makes that configuration
+section, bound onto `new T()` once at startup, the default whenever the deployment supplies it —
+`EmailSettings` (`External/Email`, setting `Email`) is defaulted from the `EmailSettings` section this way.
+A value resolves **property by property**, first answer winning: the tenant's own override → the
+platform's (`TenantId == null`) → the default; the overrides are `SettingValue` rows (`IMayHaveTenant`)
+holding only the properties that scope set. A duplicate name, a class registered twice, an unbindable
+section or a default its own validator rejects stops startup. A `[SecretSetting]` property is a string
+stored encrypted with ASP.NET Data Protection, never returned by the API (only `isSet`), and — when it
+names the properties it is bound to — resolves to `""` wherever a higher layer overrides one of them
+without supplying its own, so a tenant that repoints a server does not inherit the platform's password.
+A resolved setting carries its secrets in plaintext, so it is never returned from another endpoint,
+logged, put in an exception message, or passed as a job argument; a setting naming where the server connects must be validated against
+internal addresses, because every tenant administrator chooses it.
+Code reads a setting through `ISettingProvider.GetAsync<T>()` for the acting scope, or
+`GetAsync<T>(tenantId)` for an explicit target (`null` meaning the platform) — the form a Hangfire job
+must use, and an anonymous endpoint too, which names the platform for account-level work or the tenant
+being entered once its membership is checked, never the caller's ambient scope. `GET /settings`, `PUT /settings/{name}`
+and `DELETE /settings/{name}` list every declared setting with each property's source and replace or
+remove the acting scope's own overrides, under `Settings.View` / `Settings.Update` (`PermissionScope.Both`,
+gated on no feature); `app/[lang]/admin/settings` edits them, one card per setting it knows. A settings
+change revokes no session: what sign-in or refresh decides from one (as `SigninSettings` does) reaches a
+session when it is next replaced. Test classes that write a platform row share the `Settings` collection
+through `SettingsTestsBase`, which removes every platform row after each test.
+
 **Localization.** Translations are served by the API, not bundled with the web app. The shipped strings are nested JSON files in `Features/Localization/Core/Resources/<code>.json`, embedded in the assembly and flattened to dotted keys (`common.save`) once by `LocalizationResourceStore`; `LanguageCatalog` holds each code's display name and `isRtl`. On top of them sit two tenant-optional (`IMayHaveTenant`, `TenantId == null` meaning the platform) tables: `LocalizationText` overrides one key in one culture, and `LanguageSetting` holds a scope's enabled cultures and default. A text resolves first answer wins: the acting tenant's override → the platform's → the shipped value for the culture → the shipped English value. Languages resolve per row, not per key: the tenant's own `LanguageSetting` row → the platform's → every shipped culture enabled with no default. The culture served is the one requested if enabled, else the scope's default, else `en`, else the first enabled. The `/localization` endpoints go through `ILocalizationService`, feature-internal like every other slice service: `GET resources/{culture}` is anonymous (an anonymous caller or a session in no tenant sees platform overrides only), and `GET/PUT/DELETE texts` and `GET/PUT/DELETE languages` edit the acting scope's own overrides under `Localization.View` / `Localization.Update`, both `PermissionScope.Both` and gated on no feature. `Tests/Features/Localization/Core/LocalizationResourceStoreTests` keeps every shipped file on English's exact key set, with no empty value, no value equal to its key, and a `LanguageCatalog` entry per file. The same resolution chain, through the narrow `[AllowOutside]` `IErrorMessageLocalizer` (`ErrorMessageLocalizer` is a thin wrapper over `ILocalizationService`, so the global error plumbing outside the feature never depends on the full service), is what puts a coded API error's message into the request's own culture — see Errors below.
 
 **Data access.** `AppDbContext` applies entity configurations from the assembly, installs a global soft-delete query filter for `ISoftDelete`, and fills audit/normalized properties on save. List endpoints take a `ListRequestDto<TId>` and call `IQueryableExtension.Process(request)` for sorting/paging; sortable fields must be whitelisted in the request validator.
@@ -235,7 +267,7 @@ A new endpoint that changes what a session may do — an account's activity, cre
 
 ## Backend tests
 
-xUnit v3 + `FastEndpoints.Testing`. `App : AppFixture<Program>` runs the host with environment `Testing` and is registered as an **assembly fixture** in `Tests/Meta.cs`, so it is built, migrated and seeded once for the whole run. `AppTestsBase` gives each test its own `Client` and its own DI scope — `DbContext`, `TenantContext` and `Service<T>()` all resolve from it — plus `SetAuthTokenAsync()` (defaults to the default tenant's administrator `tenantadmin` / `Admin#123`; `SetPlatformAdminAuthTokenAsync()` signs in as the platform administrator `admin`) and `CreateAdminUserAsync`. Tests call endpoints type-safely — `Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request)` — assert with FluentAssertions, and build payloads with Bogus `Faker<T>`. Shared fixtures live in `Tests/Seeder` (`TestRoles`, `TestUsers`, `TestsDataSeeder`); reuse them instead of creating ad-hoc roles. **Test classes run in parallel**, one collection per class, so a test must not depend on global database state it did not create; a class that shares a resource with another names a `[Collection]` for itself (`Notifications`, `FileManagement`, `BootstrapTenant`, `FeatureManagement`, `Localization`). The test host substitutes a cheap password hasher, a mail service that sends nothing, and a wrapper over the in-memory session store that a test can make unreachable for sessions or accounts it created itself (`Tests/Fakes`); `SessionOfAsync(accessToken)` reads the session a token names, since the token holds nothing but `sid`. Under `Testing`, `Program.cs` also runs no Hangfire worker, logs at `Warning` and lifts the request rate limit.
+xUnit v3 + `FastEndpoints.Testing`. `App : AppFixture<Program>` runs the host with environment `Testing` and is registered as an **assembly fixture** in `Tests/Meta.cs`, so it is built, migrated and seeded once for the whole run. `AppTestsBase` gives each test its own `Client` and its own DI scope — `DbContext`, `TenantContext` and `Service<T>()` all resolve from it — plus `SetAuthTokenAsync()` (defaults to the default tenant's administrator `tenantadmin` / `Admin#123`; `SetPlatformAdminAuthTokenAsync()` signs in as the platform administrator `admin`) and `CreateAdminUserAsync`. Tests call endpoints type-safely — `Client.POSTAsync<UserCreateEndpoint, UserCreateRequest, UserCreateResponse>(request)` — assert with FluentAssertions, and build payloads with Bogus `Faker<T>`. Shared fixtures live in `Tests/Seeder` (`TestRoles`, `TestUsers`, `TestsDataSeeder`); reuse them instead of creating ad-hoc roles. **Test classes run in parallel**, one collection per class, so a test must not depend on global database state it did not create; a class that shares a resource with another names a `[Collection]` for itself (`Notifications`, `FileManagement`, `BootstrapTenant`, `FeatureManagement`, `Localization`, `Settings`). The test host substitutes a cheap password hasher, a mail transport that sends nothing but records each message (`RecordingEmailTransport`), a test-only probe setting, and a wrapper over the in-memory session store that a test can make unreachable for sessions or accounts it created itself (`Tests/Fakes`); `SessionOfAsync(accessToken)` reads the session a token names, since the token holds nothing but `sid`. Under `Testing`, `Program.cs` also runs no Hangfire worker, logs at `Warning` and lifts the request rate limit.
 
 ## Frontend architecture
 
@@ -256,7 +288,7 @@ Adding a language means a resource file `Features/Localization/Core/Resources/<c
 `.claude/skills/` holds step-by-step guides for the recurring tasks here. Consult the matching one before writing code.
 
 - Cross-cutting: `coding-conventions`
-- API: `backend-feature`, `backend-endpoint`, `backend-entity`, `backend-tests`, `multi-tenancy`, `permissions`, `feature-management`, `background-jobs`, `file-storage`, `notifications`
+- API: `backend-feature`, `backend-endpoint`, `backend-entity`, `backend-tests`, `multi-tenancy`, `permissions`, `feature-management`, `settings`, `background-jobs`, `file-storage`, `notifications`
 - Web: `rtk-query-api`, `frontend-page`, `frontend-crud`, `ui-component`, `redux-state`, `localization`, `frontend-tests`
 - Spanning both: `api-error-handling`
 - Process: spec-driven development — `specs/README.md`, the `.claude/commands` (`/feature`, `/fix`, `/auto`, `/queue`, `/spec-split`, `/verify`, `/ship`, `/review-diff`), and the agents in `.claude/agents`
