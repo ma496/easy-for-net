@@ -3,6 +3,7 @@ namespace Backend.Features.Notifications.Endpoints.Notifications;
 using Backend.Base.Dto;
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
+using Backend.Features.Notifications.Core.Push;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
@@ -16,7 +17,7 @@ using Backend.Features.Tenancy.Core;
 /// caller's visit row is upserted as read, and since the visit row belongs to the user rather than to a
 /// scope, a platform-wide notification marked read in one scope reads as read in every scope.
 /// </remarks>
-sealed class NotificationMarkAsReadEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext) : Endpoint<NotificationMarkAsReadRequest, NotificationMarkAsReadResponse>
+sealed class NotificationMarkAsReadEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext, INotificationPublisher publisher) : Endpoint<NotificationMarkAsReadRequest, NotificationMarkAsReadResponse>
 {
     public override void Configure()
     {
@@ -60,6 +61,9 @@ sealed class NotificationMarkAsReadEndpoint(AppDbContext dbContext, ICurrentUser
             notification.IsRead = true;
             await dbContext.SaveChangesAsync(cancellationToken);
         }
+
+        // The caller's other connections in this scope learn the new count; nobody else's changes.
+        await publisher.PublishUnreadCountAsync(userId.Value, activeTenantId, cancellationToken);
 
         await Send.ResponseAsync(new NotificationMarkAsReadResponse { Id = request.Id, Success = true, Message = "Notification marked as read" }, cancellation: cancellationToken);
     }

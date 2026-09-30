@@ -1,6 +1,6 @@
 ---
 name: notifications
-description: Raise an in-app notification from the API and make it render in the web app — INotificationService, user / tenant-wide / platform-wide addressing and the tenant scope each needs, the translation-key contract for title/message, groups and metadata, and the polling badge. Use when a feature needs to tell users something happened.
+description: Raise an in-app notification from the API and make it render in the web app — INotificationService, user / tenant-wide / platform-wide addressing and the tenant scope each needs, the translation-key contract for title/message, groups and metadata, the SignalR hub each committed notification is pushed through (its groups, publishing after commit, NewUserNotificationsAsync), and the badge. Use when a feature needs to tell users something happened.
 ---
 
 # In-app notifications
@@ -31,6 +31,18 @@ await notificationService.NewGlobalNotificationAsync(NotificationType.Info,
 ```
 
 `NotificationType` is `Info | Warning | Error | Success` and drives the icon/colour in the UI.
+
+To tell many accounts the same thing, call `NewUserNotificationsAsync(userIds, ...)` rather than looping
+over `NewUserNotificationAsync`: one personal row per distinct recipient in the active scope, inserted in
+batches of at most 1,000 inside one transaction (the caller's, when one is open), and one push per
+recipient.
+
+```csharp
+await notificationService.NewUserNotificationsAsync(
+    approverIds, NotificationType.Info,
+    "notifications.approvalRequested.title", "notifications.approvalRequested.message",
+    group: "approvals", cancellationToken: cancellationToken);
+```
 
 **Scope.** Attribution comes from `ITenantContext`, never from an argument, and every method throws
 `TenantScopeNotEstablishedException` with no scope at all. `NewUser…` stamps the active scope: inside
@@ -131,6 +143,56 @@ information and is kept. The job establishes no tenant scope: its hand-written S
 and spans every tenant and platform scope by design, and deletes nothing else. A test of it asserts only on
 rows it created, dates "old" rows far past any retention period, and stays in the `Notifications` collection.
 
+## Pushing to connections
+
+`NotificationHub` (`Core/Push`) is mapped at `/hubs/notifications`, outside the API route prefix, behind
+the same `Jwt_Or_Cookie` authentication and session validation as every endpoint: the upgrade request is
+refused with 401 exactly when an HTTP request with the same credential would be, and with 503
+`sessionStoreUnavailable` when the session store is down. A browser authenticates with the auth cookie; a
+bearer client passes its token as `?access_token=`, which is read on the hub's path alone
+(`NotificationHubRegistration.CarriesQueryAccessToken`) and kept out of the request log. An upgrade
+whose `Origin` is not one of the `Web` domains (`WebSetting.AllowedDomains()`, the list the CORS policy
+allows) is refused with 403 by the WebSocket middleware (`WebSocketOptions.AllowedOrigins`), so another
+host on the same site cannot open the hub with a visitor's cookie; one with no `Origin` - a non-browser
+client - is let through. It is **WebSockets only** (long polling and server-sent events are refused; clients skip negotiation),
+**server-to-client only** (no client-callable method), and closes when its credential expires.
+
+On connect the hub joins the connection to groups built from the projected session alone - the client
+never names one (`NotificationGroups`). SignalR answers the handshake before those joins run, so a
+client's start completing does not mean it is in its groups; the account's own `u:` group is joined
+last, so a message arriving on it proves the others are joined too:
+
+| Group | Joined by | Receives |
+| --- | --- | --- |
+| `u:{userId}:{tenantId\|platform}` | every connection, for its account in its scope | personal rows raised in that scope; the caller's `unreadCountChanged` |
+| `t:{tenantId}` | connections acting in a tenant | that tenant's tenant-wide rows |
+| `all` | every connection | platform-wide rows |
+
+These are the audiences `VisibleTo` reads, so a connection receives exactly the rows its session would
+list. `INotificationService` publishes `notificationReceived` - the list row's fields (`id`, `type`,
+`titleKey`, `messageKey`, `group`, `metadata`, `createdAt`, `isRead: false`) - to the one group of the
+audience, **one message per notification whatever the audience's size**. Mark-as-read, mark-as-unread,
+mark-all-as-read and delete publish `unreadCountChanged` (`{ count }`, the capped
+`NotificationQueries.CountUnreadAsync`) to the caller's own `u:` group only; nothing is recomputed per
+member of an audience.
+
+**Publishing happens after commit.** `INotificationPublisher` (slice-private) sends at once when the
+`AppDbContext` has no open transaction, and otherwise hands the send to `NotificationCommitInterceptor`,
+a `DbTransactionInterceptor` that runs it when that transaction commits and drops it on rollback, failure,
+or disposal without a commit. So raise inside the caller's transaction freely - nothing reaches a
+connection for a row that does not exist. Not covered: a `System.Transactions` ambient scope (sent straight
+after the save) and a savepoint rollback inside a transaction that then commits. A push that fails is
+logged and never fails the raise or the commit. A Hangfire job raises exactly as a request does; the push
+goes through the Redis backplane (`ConnectionStrings:Redis`, channels prefixed with `Redis:InstanceName`)
+from whichever process runs it. Under `Testing` there is no backplane - pushes stay in process.
+
+**Connection cap.** `Notifications:MaxConnectionsPerUser` (`NotificationOptions`, default 20, validated on
+start) caps one account's concurrent connections **per API instance**; the connection over it is closed
+with `connectionLimitExceeded` before joining any group, and logged. `NotificationConnectionRegistry` (a
+per-instance singleton) tracks open connections by connection, account and session (`OfSession(sid)`).
+Hub options: keep-alive and client timeout at SignalR's defaults, a 4 KB `MaximumReceiveMessageSize`
+(clients send only the handshake and pings).
+
 ## Endpoints
 
 Under `Features/Notifications/Endpoints/Notifications` with the `notifications` prefix: list
@@ -169,6 +231,18 @@ Anything that depends on unread state belongs to a user and tenant the test crea
 shows asking one platform account from both sides of the boundary: `ClientForAsync(username)` signs it in
 to platform scope, `ClientForAsync(username, tenantId)` to its tenant.
 
+Hub tests (`Tests/Features/Notifications/Core/NotificationHubTests`) open real connections with
+`HubProbe.ConnectAsync(App.Server, accessToken, userId, tenantId)` - WebSockets over the test server,
+negotiation skipped, the token as `access_token`, returning only once a sentinel sent to the connection's
+`u:` group has arrived (so every group is joined) - and wait for a message with
+`WaitForNotificationAsync(predicate)` / `WaitForUnreadCountAsync()`. Show that a message did **not** arrive
+with `probe.DrainAsync(sender)` first: it sends a sentinel to the connection's own group, and messages to
+one connection arrive in order, so once the sentinel is in, an earlier push would be too - never sleep.
+Sentinels are kept out of `Notifications` and `WaitForNotificationAsync`. A connection expected to be
+refused is built with `HubProbe.Create` and started by the test, never through `ConnectAsync`. The
+test server's WebSocket client bypasses the middleware's origin check, so that is tested by driving
+`WebSocketMiddleware` directly. Always dispose probes (`await using`).
+
 ## Checklist
 
 - [ ] Called `NewUserNotificationAsync` / `NewTenantNotificationAsync` / `NewGlobalNotificationAsync` with key strings, not text
@@ -178,3 +252,8 @@ to platform scope, `ClientForAsync(username, tenantId)` to its tenant.
 - [ ] Any new endpoint reads through `AcrossAllTenants().VisibleTo(...)`, and takes read state from `.WithReadState(...)` rather than restating the visit / cursor rule
 - [ ] An audience row's read state is written by upserting the visit row (`SetAudienceReadStateAsync`), never by inserting one visit per notification in bulk
 - [ ] Unread counts go through `NotificationQueries.CountUnreadAsync` and stay capped at `UnreadCountCap`
+- [ ] Many recipients of the same notice go through `NewUserNotificationsAsync`, not a loop
+- [ ] New notification rows are written through `INotificationService` (which publishes), never added to `dbContext.Notifications` directly
+- [ ] An endpoint that changes the caller's read state calls `INotificationPublisher.PublishUnreadCountAsync(userId, activeTenantId, ...)` after its change, and publishes to nobody else
+- [ ] A push is published through `INotificationPublisher` (after commit, failures logged), never through `IHubContext` directly
+- [ ] Hub groups come from the session alone; no client-callable hub method is added

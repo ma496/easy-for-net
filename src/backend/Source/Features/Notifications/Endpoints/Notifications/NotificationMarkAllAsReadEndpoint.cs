@@ -2,6 +2,7 @@ namespace Backend.Features.Notifications.Endpoints.Notifications;
 
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
+using Backend.Features.Notifications.Core.Push;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
@@ -28,7 +29,7 @@ using Backend.Features.Tenancy.Core;
 /// notifications marked read here read as read in every scope the caller acts in.
 /// </para>
 /// </remarks>
-sealed class NotificationMarkAllAsReadEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext) : EndpointWithoutRequest<NotificationMarkAllAsReadResponse>
+sealed class NotificationMarkAllAsReadEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext, INotificationPublisher publisher) : EndpointWithoutRequest<NotificationMarkAllAsReadResponse>
 {
     public override void Configure()
     {
@@ -105,6 +106,10 @@ sealed class NotificationMarkAllAsReadEndpoint(AppDbContext dbContext, ICurrentU
             .ExecuteDeleteAsync(cancellationToken);
 
         await transaction.CommitAsync(cancellationToken);
+
+        // Only the caller's own group in this scope is told: marking everything read changes nobody else's
+        // count, so nothing is recomputed per member of any audience.
+        await publisher.PublishUnreadCountAsync(userId.Value, activeTenantId, cancellationToken);
 
         await Send.ResponseAsync(new NotificationMarkAllAsReadResponse { Success = true, Message = "All notifications marked as read" }, cancellation: cancellationToken);
     }

@@ -14,4 +14,11 @@ public class NotificationOptions
     /// soft-deleted or not. Must be greater than zero.
     /// </summary>
     public int RetentionDays { get; set; } = 90;
+
+    /// <summary>
+    /// How many notification hub connections one account may hold at once on one API instance - a browser
+    /// holds one per open tab. A connection over the cap is refused and logged. Counted per instance, not
+    /// across the deployment. Must be greater than zero.
+    /// </summary>
+    public int MaxConnectionsPerUser { get; set; } = 20;
 }

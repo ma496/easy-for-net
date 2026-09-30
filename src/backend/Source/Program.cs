@@ -7,6 +7,7 @@ using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Localization.Core;
 using Backend.Features.Notifications.Core;
+using Backend.Features.Notifications.Core.Push;
 using Backend.Features.Tenancy.Core;
 using Backend.Middleware;
 using Backend.Settings;
@@ -20,6 +21,7 @@ using Microsoft.Net.Http.Headers;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Backend.Processors;
 
 var bld = WebApplication.CreateBuilder(args);
@@ -44,6 +46,14 @@ if (bld.Environment.IsEnvironment("Testing"))
 {
     bld.Logging.SetMinimumLevel(LogLevel.Warning);
 }
+// A bearer client connecting to the notification hub passes its access token in the query string, and
+// the hosting layer's "Request starting" line - the only log written with the query string in it, and
+// written before any middleware could strip it - would record the token. Pinned here, in code, so no
+// environment's appsettings brings it back to Information for every provider; the per-request
+// Information lines it held are what the DevelopmentEndpointLoggingMiddleware and the endpoint logs
+// already give without the query string. (A provider-specific rule, `Logging:Console:LogLevel:...`,
+// would still outrank this, and must not be set to below Warning for this category.)
+bld.Logging.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Warning);
 
 var maximumPayloadSize = bld.Configuration.GetValue<long?>("Payload:MaximumSize") ?? 25 * 1024 * 1024;
 var defaultConnection = bld.Configuration.GetConnectionString("DefaultConnection")
@@ -67,8 +77,12 @@ bld.Services.AddCors(options =>
     });
 });
 
-bld.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(defaultConnection));
+// Every IInterceptor a feature registers (a singleton, so EF builds one internal service provider for
+// them all) is added to the context - the notifications slice's, which holds hub pushes raised inside a
+// transaction until it commits, among them.
+bld.Services.AddDbContext<AppDbContext>((provider, options) =>
+    options.UseNpgsql(defaultConnection)
+           .AddInterceptors(provider.GetServices<IInterceptor>()));
 
 bld.Services
     .AddAuthenticationCookie(TimeSpan.FromMinutes(bld.Configuration.GetValue<int>("Auth:AccessTokenValidity")), options =>
@@ -102,6 +116,13 @@ bld.Services
        {
            if (ctx.Request.Headers.TryGetValue(HeaderNames.Authorization, out var authHeader) &&
                authHeader.FirstOrDefault()?.StartsWith("Bearer ") is true)
+           {
+               return JwtBearerDefaults.AuthenticationScheme;
+           }
+           // A WebSocket cannot carry a header from a browser-style client, so a bearer client of the
+           // notification hub passes its token as ?access_token=. That is honoured on the hub's path alone;
+           // anywhere else the parameter is ignored and the request falls through to the cookie.
+           if (NotificationHubRegistration.CarriesQueryAccessToken(ctx.Request))
            {
                return JwtBearerDefaults.AuthenticationScheme;
            }
@@ -197,6 +218,11 @@ Helper.AddFeatures(bld.Services, bld.Configuration);
 // one shared in-memory store under Testing so the suite needs nothing but PostgreSQL. It is chosen here,
 // where the environment is known, because a feature's AddServices receives only the configuration.
 bld.Services.AddSessionStore(bld.Configuration, useInMemoryStore: bld.Environment.IsEnvironment("Testing"));
+
+// The notification hub scales out through the same Redis, for the same reason chosen here: every
+// deployment publishes through the backplane, so a push from any instance - or from the Hangfire job
+// that raised it - reaches every connection; the test host is one process and runs without one.
+bld.Services.AddNotificationHub(bld.Configuration, useBackplane: !bld.Environment.IsEnvironment("Testing"));
 
 // configure services 
 bld.Services.AddScoped<DataSeeder>();
@@ -343,6 +369,11 @@ if (app.Environment.IsDevelopment())
         ? app.MapHealthChecks("/health", DevelopmentHealthResponse.Options(app.Environment.ContentRootPath))
         : app.MapHealthChecks("/health"))
     .AllowAnonymous();
+
+// Behind the same authentication and session validation as every endpoint above, and the same
+// SessionStoreUnavailableMiddleware: the upgrade request is refused with 401 or 503 exactly as an HTTP
+// request with the same credential would be.
+app.MapNotificationHub();
 
 // Configure Hangfire dashboard after database is ready
 app.UseHangfireDashboard("/hangfire", new DashboardOptions

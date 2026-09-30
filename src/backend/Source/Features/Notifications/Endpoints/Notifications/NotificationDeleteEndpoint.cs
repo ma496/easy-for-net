@@ -2,11 +2,13 @@ namespace Backend.Features.Notifications.Endpoints.Notifications;
 
 using Backend.Base.Dto;
 using Backend.Features.Identity.Core;
+using Backend.Features.Notifications.Core.Push;
+using Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// DELETE endpoint that removes a user-targeted notification owned by the current user.
 /// </summary>
-sealed class NotificationDeleteEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService) : Endpoint<NotificationDeleteRequest, NotificationDeleteResponse>
+sealed class NotificationDeleteEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext, INotificationPublisher publisher) : Endpoint<NotificationDeleteRequest, NotificationDeleteResponse>
 {
     public override void Configure()
     {
@@ -33,6 +35,11 @@ sealed class NotificationDeleteEndpoint(AppDbContext dbContext, ICurrentUserServ
 
         dbContext.Notifications.Remove(notification);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        // Deleting an unread notification lowers the caller's count, so their other connections in this
+        // scope are told the recomputed one. The row was found through the tenant filter, so the scope
+        // counted is the one it belongs to.
+        await publisher.PublishUnreadCountAsync(userId.Value, tenantContext.CurrentTenantId, cancellationToken);
 
         await Send.ResponseAsync(new NotificationDeleteResponse { Id = request.Id, Success = true, Message = "Notification deleted successfully" }, cancellation: cancellationToken);
     }

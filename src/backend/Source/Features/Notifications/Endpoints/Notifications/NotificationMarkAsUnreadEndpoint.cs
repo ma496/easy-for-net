@@ -3,6 +3,7 @@ namespace Backend.Features.Notifications.Endpoints.Notifications;
 using Backend.Base.Dto;
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
+using Backend.Features.Notifications.Core.Push;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
@@ -15,7 +16,7 @@ using Backend.Features.Tenancy.Core;
 /// back among their unread ones. For an audience notification the caller's visit row is upserted as unread
 /// rather than deleted, because an unread visit is what overrides a read cursor that already covers it.
 /// </remarks>
-sealed class NotificationMarkAsUnreadEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext) : Endpoint<NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>
+sealed class NotificationMarkAsUnreadEndpoint(AppDbContext dbContext, ICurrentUserService currentUserService, ITenantContext tenantContext, INotificationPublisher publisher) : Endpoint<NotificationMarkAsUnreadRequest, NotificationMarkAsUnreadResponse>
 {
     public override void Configure()
     {
@@ -58,6 +59,9 @@ sealed class NotificationMarkAsUnreadEndpoint(AppDbContext dbContext, ICurrentUs
             notification.IsRead = false;
             await dbContext.SaveChangesAsync(cancellationToken);
         }
+
+        // The caller's other connections in this scope learn the new count; nobody else's changes.
+        await publisher.PublishUnreadCountAsync(userId.Value, activeTenantId, cancellationToken);
 
         await Send.ResponseAsync(new NotificationMarkAsUnreadResponse { Id = request.Id, Success = true, Message = "Notification marked as unread" }, cancellation: cancellationToken);
     }
