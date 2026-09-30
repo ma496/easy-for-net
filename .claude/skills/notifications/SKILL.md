@@ -118,6 +118,19 @@ Notifications are `AuditableEntity<Guid>` + `ISoftDelete` + `IMayHaveTenant`; de
 and the global query filter hides the row. The delete endpoint removes only the caller's own
 user-targeted rows — an audience row cannot be deleted by one reader.
 
+## Retention
+
+`Notifications:RetentionDays` (`NotificationOptions`, default 90, must be greater than zero, checked by
+`ValidateOnStart`) bounds how long a notification lives. The daily `delete-expired-notifications` job
+(`INotificationRetentionService.DeleteExpiredAsync`, registered in `Program.cs`) hard-deletes every
+notification whose `CreatedAt` is older than that - read or unread, soft-deleted too - in batches of at most
+5,000 rows per statement, and its visit rows go with it through the cascading foreign key. It then prunes the
+`IsRead = true` visits on audience notifications that the visiting user's cursor for that audience already
+covers (`CreatedAt <= ReadAllAt`); an `IsRead = false` visit, or a read one above the cursor, carries
+information and is kept. The job establishes no tenant scope: its hand-written SQL has no tenant predicate
+and spans every tenant and platform scope by design, and deletes nothing else. A test of it asserts only on
+rows it created, dates "old" rows far past any retention period, and stays in the `Notifications` collection.
+
 ## Endpoints
 
 Under `Features/Notifications/Endpoints/Notifications` with the `notifications` prefix: list
