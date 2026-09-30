@@ -1,6 +1,6 @@
 'use client'
 import { useEffect } from 'react'
-import { HttpTransportType, HubConnectionBuilder, LogLevel } from '@microsoft/signalr'
+import { HttpTransportType, HubConnectionBuilder, LogLevel, type ILogger } from '@microsoft/signalr'
 import { environment } from '@/config'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { notificationReceived, setUnreadCount } from '@/store/slices'
@@ -146,6 +146,20 @@ export function useNotificationHub() {
       }
     }
 
+    // Every failed attempt is expected and handled, so outside development the console stays quiet. Once
+    // this effect is disposed nothing is logged at all: stopping a connection mid-start makes SignalR log
+    // an error ("Failed to start the HttpConnection before stop() was called") for a stop we asked for.
+    const minLogLevel = environment.isDevelopment ? LogLevel.Warning : LogLevel.None
+    const logger: ILogger = {
+      log: (level, message) => {
+        if (disposed || level < minLogLevel) return
+        const line = `[${new Date().toISOString()}] SignalR: ${message}`
+        if (level >= LogLevel.Error) console.error(line)
+        else if (level === LogLevel.Warning) console.warn(line)
+        else console.log(line)
+      },
+    }
+
     const connection = new HubConnectionBuilder()
       .withUrl(notificationHubUrl(environment.apiUrl, window.location.origin), {
         transport: HttpTransportType.WebSockets,
@@ -159,8 +173,7 @@ export function useNotificationHub() {
           return reconnectDelayMs(previousRetryCount)
         },
       })
-      // Every failed attempt is expected and handled; outside development the console stays quiet.
-      .configureLogging(environment.isDevelopment ? LogLevel.Warning : LogLevel.None)
+      .configureLogging(logger)
       .build()
 
     const start = async () => {
@@ -207,7 +220,9 @@ export function useNotificationHub() {
     })
 
     document.addEventListener('visibilitychange', onVisibilityChange)
-    void start()
+    // Deferred a tick rather than started here, so an effect torn down at once - React's development
+    // double-mount, or a dependency changing again in the same render pass - never opens a socket.
+    startTimer = setTimeout(() => void start(), 0)
 
     return () => {
       disposed = true
