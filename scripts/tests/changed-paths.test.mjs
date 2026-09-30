@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { parsePorcelainZ, workingTreePaths } from "../lib/changed-paths.mjs";
+import { parsePorcelainZ, treeFingerprint, workingTreePaths } from "../lib/changed-paths.mjs";
 
 test("modified, added and untracked entries each yield their path", () => {
   const out = " M src/a.ts\0A  src/b.ts\0?? src/c d.ts\0";
@@ -39,6 +39,34 @@ test("a new directory is listed file by file, so path rules can match what is in
       "app/reports/_components/table.tsx",
       "app/reports/page.tsx",
     ]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("the tree fingerprint is stable for the same bytes and moves with any edit", () => {
+  const dir = mkdtempSync(join(tmpdir(), "fingerprint-"));
+  try {
+    const git = (...args) => spawnSync("git", args, { cwd: dir, encoding: "utf8" });
+    git("init", "-q");
+    git("config", "user.email", "t@example.com");
+    git("config", "user.name", "t");
+    writeFileSync(join(dir, "keep.txt"), "x");
+    git("add", "keep.txt");
+    git("commit", "-qm", "init");
+
+    const clean = treeFingerprint(dir);
+    assert.equal(treeFingerprint(dir), clean);
+
+    writeFileSync(join(dir, "keep.txt"), "y");
+    const edited = treeFingerprint(dir);
+    assert.notEqual(edited, clean);
+
+    writeFileSync(join(dir, "new.txt"), "1");
+    const added = treeFingerprint(dir);
+    assert.notEqual(added, edited);
+    writeFileSync(join(dir, "new.txt"), "2");
+    assert.notEqual(treeFingerprint(dir), added, "an untracked file's content counts, not only its name");
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

@@ -45,8 +45,8 @@ actual output. A passing typecheck alone does not prove behaviour.
 
 ## 6. Review
 
-Dispatch the first review tier together, then `code-reviewer` last. Fix CHANGES NEEDED
-before committing.
+Dispatch each review tier the diff owes in a single message. Fix CHANGES NEEDED, and send
+the fix back to the reviewer that asked for it, before committing.
 
 ## 7. Commit, then stop
 

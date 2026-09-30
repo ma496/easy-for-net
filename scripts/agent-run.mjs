@@ -8,6 +8,7 @@
  *   npm run auto -- "..." --no-commit        # verify only, leave the work uncommitted
  *   npm run auto -- "..." --no-autostart     # never start the stack for a live check
  *   npm run auto -- "..." --verify-port 5100 # live checks against a dedicated API port
+ *   npm run auto -- "..." --no-preflight     # start even when a service verify needs is down
  *
  * Work happens on the work branch (`project.branch`, or whichever is checked out), in this
  * checkout. There is no task branch: the run starts from a clean tree, builds, verifies,
@@ -71,10 +72,12 @@ import {
 } from "./lib/salvage.mjs";
 import { IS_WINDOWS, hasExecutable, killTree, spawnPortable } from "./lib/proc.mjs";
 import { assertValidConfig, config, modelArgs, positiveInt, resolveModel, WORK_BRANCH } from "./lib/project-config.mjs";
-import { workingTreePaths } from "./lib/changed-paths.mjs";
+import { treeFingerprint, workingTreePaths } from "./lib/changed-paths.mjs";
 import { attemptOutcome } from "./lib/attempt-outcome.mjs";
 import { buildBrief } from "./lib/brief.mjs";
+import { ensureDependencies, taskDependencies } from "./lib/dependencies.mjs";
 import {
+  carriedDelegations,
   expectedSequence,
   explainMissing,
   explainMissingSkills,
@@ -277,6 +280,30 @@ function runVerify(extraArgs = []) {
     (res.error && !timedOut ? `\nverify could not run: ${res.error.message}\n` : "");
   return { status: res.status ?? 1, output, timedOut };
 }
+
+/**
+ * Verify, unless this run already watched verify pass on exactly this tree.
+ *
+ * An attempt refused only for a missed delegation leaves a tree that verified; the next
+ * attempt opened by verifying it again (the salvage check), and again after a session that
+ * only ran the owed reviews and changed nothing. Each was a full gate, minutes long, on
+ * bytes the last one had already passed. Only a pass is reused: a failure can come from the
+ * environment — a service that was down — and deserves a fresh look once it is back.
+ */
+let lastPass = null;
+function verifyTree() {
+  const fingerprint = treeFingerprint();
+  if (lastPass?.fingerprint === fingerprint) {
+    return {
+      ...lastPass.result,
+      output: "verify: nothing has changed since it passed on this tree earlier in this run — reusing that result.\n",
+      reused: true,
+    };
+  }
+  const result = runVerify();
+  if (result.status === 0) lastPass = { fingerprint, result };
+  return result;
+}
 const runLive = (cmd, args) => spawnSync(cmd, args, { stdio: "inherit", encoding: "utf8" });
 
 /**
@@ -402,7 +429,7 @@ function dirtyOutsideQueue(porcelain) {
   return dirtyOutsideQueueLines(porcelain);
 }
 
-const runVerifyCapture = () => runVerify();
+const runVerifyCapture = () => verifyTree();
 
 // Work happens on the work branch, in place — no task branch, no worktree.
 {
@@ -441,6 +468,26 @@ const runVerifyCapture = () => runVerify();
   }
 }
 
+// --- dependencies ---------------------------------------------------------------------
+// Verify needs its database and cache, and it asks for them only after the attempt has
+// spent its quarter of an hour and its dollars. A dependency that is down then fails the
+// attempt for a reason the change did not cause. So ask now, while refusing costs nothing:
+// start what can be started, and stop with EXIT_BLOCKED — the drain puts the task back in
+// todo/ untouched and stops — when something is still down. Nothing is journalled, because
+// nothing about the task was tried. `--no-preflight` skips this.
+if (!flag("no-preflight")) {
+  const down = ensureDependencies(taskDependencies(config), {
+    cwd: join(SCRIPTS, ".."),
+    log: (message) => console.log(message),
+  });
+  if (down.length > 0) {
+    console.error(`\nNot started: ${down.length} service(s) verification needs are down.`);
+    for (const dep of down) console.error(`  ${dep.name}: ${dep.whenMissing ?? "start it"}`);
+    console.error("\nNothing was spent. Start them and run the task again (or pass --no-preflight).");
+    process.exit(EXIT_BLOCKED);
+  }
+}
+
 // --- the loop -----------------------------------------------------------------------
 const history = priorFailureBrief(task);
 if (history) log("This task has failed before — feeding the history into the brief");
@@ -469,6 +516,8 @@ let feedback = "";
 let turnLimitNote = "";
 let passed = false;
 let attempt = 0;
+/** Every delegation observed in this run's earlier attempts, in order. */
+const earlierDelegations = [];
 
 console.log(`Model: ${MODEL === "inherit" ? "the CLI default (AGENT_MODEL=inherit)" : MODEL} (AGENT_MODEL)`);
 if (Number.isFinite(MAX_USD_PER_TASK)) {
@@ -589,6 +638,11 @@ ${carried.slice(-6000)}`;
     { input: prompt, streamFile: join(LOG_DIR, `${RUN_ID}-attempt-${attempt}.stream.jsonl`) },
   );
 
+  // What the specialists of earlier attempts wrote is still in the tree, so their delegations
+  // still count for this one (lib/departments.mjs, carriedDelegations); reviews do not carry.
+  const delegated = [...carriedDelegations(earlierDelegations), ...(claudeRes.subagents ?? [])];
+  earlierDelegations.push(...(claudeRes.subagents ?? []));
+
   attemptCosts.push(typeof claudeRes.costUsd === "number" ? claudeRes.costUsd : null);
   attemptTurns.push(typeof claudeRes.turns === "number" ? claudeRes.turns : 0);
   // How the session itself said it ended (`success`, `error_max_turns`, …) and which CLI
@@ -692,7 +746,7 @@ ${carried.slice(-6000)}`;
   }
 
   log(`Attempt ${attempt} — verifying`);
-  const verify = runVerify();
+  const verify = verifyTree();
   const output = verify.output;
   process.stdout.write(output);
   writeFileSync(join(LOG_DIR, `${RUN_ID}-attempt-${attempt}.log`), output);
@@ -735,7 +789,7 @@ ${carried.slice(-6000)}`;
       continue;
     }
 
-    const owed = explainMissing(changedPaths, claudeRes.subagents);
+    const owed = explainMissing(changedPaths, delegated, claudeRes.subagents);
     if (owed.length > 0) {
       const used = claudeRes.subagents.length
         ? `You delegated to: ${claudeRes.subagents.join(", ")}.`
@@ -778,7 +832,7 @@ ${carried.slice(-6000)}`;
     // Order matters as much as attendance. A reviewer reading a half-finished diff reports
     // findings the next edit would have removed anyway, and a specialist called in after the
     // reviewers is a specialist who did not do the work.
-    const outOfOrder = sequenceProblems(changedPaths, claudeRes.subagents);
+    const outOfOrder = sequenceProblems(changedPaths, delegated);
     if (outOfOrder.length > 0) {
       console.log(`\nAttempt ${attempt} used every department, but out of sequence.`);
       for (const p of outOfOrder) console.log(`   ${p}`);
@@ -866,7 +920,7 @@ if (!passed) {
 
     // The same port and base as every other verify in this run; this one used to drop both
     // and judge the work against a different branch on the default port.
-    const salvage = runVerify();
+    const salvage = verifyTree();
     process.stdout.write(salvage.output);
 
     if (salvage.status === 0) {

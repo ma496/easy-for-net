@@ -218,6 +218,10 @@ export function validateConfig(cfg) {
     else agents.add(key);
     if (!d?.always && !Array.isArray(d?.match)) problems.push(`${where} needs \`match\` paths or \`always: true\``);
     problems.push(...regexProblems(d?.match, `${where}.match`));
+    problems.push(...regexProblems(d?.exceptWhenOnly, `${where}.exceptWhenOnly`));
+    if (d?.exceptWhenOnly !== undefined && !d?.always) {
+      problems.push(`${where}.exceptWhenOnly only applies to an \`always: true\` department`);
+    }
     if (d?.phase !== undefined && !["design", "build", "review"].includes(d.phase)) {
       problems.push(`${where}.phase must be design, build or review (got ${JSON.stringify(d.phase)})`);
     }
