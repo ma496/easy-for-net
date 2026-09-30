@@ -10,17 +10,18 @@ import {
   NotificationType,
   useNotificationListQuery,
   useNotificationMarkAsReadMutation,
+  useNotificationMarkAsUnreadMutation,
   useNotificationMarkAllAsReadMutation,
   useNotificationDeleteMutation
 } from '@/store/api/notifications'
 import { formatDistanceToNow } from 'date-fns'
-import { Check, Trash2, CheckCheck, AlertCircle, AlertTriangle, CheckCircle, Info } from 'lucide-react'
+import { Check, Trash2, Mail, CheckCheck, AlertCircle, AlertTriangle, CheckCircle, Info } from 'lucide-react'
 import { NotificationFilterPanel, NotificationFilters } from './notification-filter-panel'
 import { useTableUrlState } from '@/hooks'
 import { parseAsString, parseAsStringEnum } from 'nuqs'
 
 /**
- * Interactive client-side data table that lists notifications with pagination, search, read/group filters synced to the URL, and per-row mark-as-read/delete plus a bulk mark-all-as-read action.
+ * Interactive client-side data table that lists notifications with pagination, search, read/group filters synced to the URL, and per-row mark-as-read/mark-as-unread/delete plus a bulk mark-all-as-read action.
  */
 export const NotificationTable = () => {
   const url = useTableUrlState({
@@ -79,6 +80,7 @@ export const NotificationTable = () => {
   })
 
   const [markAsRead, { isLoading: isMarkingAsRead }] = useNotificationMarkAsReadMutation()
+  const [markAsUnread, { isLoading: isMarkingAsUnread }] = useNotificationMarkAsUnreadMutation()
   const [markAllAsRead, { isLoading: isMarkingAllAsRead }] = useNotificationMarkAllAsReadMutation()
   const [deleteNotification, { isLoading: isDeletingNotification }] = useNotificationDeleteMutation()
 
@@ -109,6 +111,18 @@ export const NotificationTable = () => {
     } else {
       successToast.fire({
         text: t('notifications.markedAsRead')
+      })
+    }
+  }
+
+  const handleMarkAsUnread = async (id: string) => {
+    const { error } = await markAsUnread({ id })
+    if (error) {
+      apiErrorAlert(error)
+      return
+    } else {
+      successToast.fire({
+        text: t('notifications.markedAsUnread')
       })
     }
   }
@@ -174,6 +188,8 @@ export const NotificationTable = () => {
         return <Badge variant="primary">{t('notifications.types.info')}</Badge>
     }
   }
+
+  const isRowActionPending = isMarkingAsRead || isMarkingAsUnread || isMarkingAllAsRead || isDeletingNotification
 
   const columnHelper = createColumnHelper<NotificationDto>()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -250,15 +266,22 @@ export const NotificationTable = () => {
               label: t('notifications.markAsRead'),
               icon: <Check className="h-4 w-4" />,
               onClick: () => handleMarkAsRead(info.row.original.id),
-              disabled: isMarkingAsRead || isMarkingAllAsRead || isDeletingNotification,
+              disabled: isRowActionPending,
               hidden: info.row.original.isRead,
+            },
+            {
+              label: t('notifications.markAsUnread'),
+              icon: <Mail className="h-4 w-4" />,
+              onClick: () => handleMarkAsUnread(info.row.original.id),
+              disabled: isRowActionPending,
+              hidden: !info.row.original.isRead,
             },
             {
               label: t('notifications.delete'),
               icon: <Trash2 className="h-4 w-4" />,
               variant: 'danger',
               onClick: () => handleDelete(info.row.original.id),
-              disabled: isMarkingAsRead || isMarkingAllAsRead || isDeletingNotification,
+              disabled: isRowActionPending,
             },
           ]}
         />
