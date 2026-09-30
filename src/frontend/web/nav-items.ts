@@ -8,7 +8,7 @@ export interface NavItemGroup {
   items: NavItem[]
 }
 
-/** Describes a single navigation entry, including its i18n title, target url, optional icon, badge, group, visibility, active state, and nested children. */
+/** Describes a single navigation entry, including its i18n title, target url, optional icon, badge, group, visibility, active state, and nested children. An item whose children are all `show: false` renders in the sidebar as a single link that stays active on them; the breadcrumbs still trail through them. */
 export interface NavItem {
   title: string
   url: string
@@ -163,10 +163,6 @@ export const navItems: (NavItem | NavItemGroup)[] = [
         url: '/admin/notifications/list',
         icon: Bell,
         children: [
-          {
-            title: 'navigation.notificationsList',
-            url: '/admin/notifications/list',
-          },
           {
             title: 'navigation.notificationsDetail',
             url: '/admin/notifications/{id}',
