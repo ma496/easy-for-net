@@ -13,7 +13,10 @@ export const getTranslation = () => {
   const t = (key: string, variables?: Record<string, string | number>) => translate(dictionary.resources, key, variables)
 
   const changeLanguage = (locale: string) => {
-    window.location.href = `${withLocale(window.location.pathname, locale)}${window.location.search}`
+    // No router outside React, and globalDictionary only refreshes on a reload, so this is a full
+    // document navigation on purpose — built as an absolute URL on the current origin.
+    const target = new URL(`${withLocale(window.location.pathname, locale)}${window.location.search}`, window.location.origin)
+    window.location.assign(target.href)
   }
 
   const i18n = {
