@@ -1,0 +1,50 @@
+{
+  "en": {
+    "brand.name": "Easy For Net",
+    "error.serviceUnavailable.title": "Service Unavailable",
+    "error.serviceUnavailable.message": "The server is currently unreachable. Please try again in a few moments.",
+    "error.serviceUnavailable.retry": "Retry"
+  },
+  "ur": {
+    "brand.name": "Easy For Net",
+    "error.serviceUnavailable.title": "سروس دستیاب نہیں",
+    "error.serviceUnavailable.message": "سرور فی الحال ناقابل رسائی ہے۔ براہ کرم کچھ لمحوں میں دوبارہ کوشش کریں۔",
+    "error.serviceUnavailable.retry": "دوبارہ کوشش کریں"
+  },
+  "zh": {
+    "brand.name": "Easy For Net",
+    "error.serviceUnavailable.title": "服务不可用",
+    "error.serviceUnavailable.message": "服务器当前无法访问。请稍后再试。",
+    "error.serviceUnavailable.retry": "重试"
+  },
+  "ar": {
+    "brand.name": "Easy For Net",
+    "error.serviceUnavailable.title": "الخدمة غير متوفرة",
+    "error.serviceUnavailable.message": "الخادم غير قابل للوصول حالياً. يرجى المحاولة مرة أخرى بعد قليل.",
+    "error.serviceUnavailable.retry": "إعادة المحاولة"
+  },
+  "hi": {
+    "brand.name": "Easy For Net",
+    "error.serviceUnavailable.title": "सेवा अनुपलब्ध",
+    "error.serviceUnavailable.message": "सर्वर इस समय अनुपलब्ध है। कृपया कुछ क्षणों में पुनः प्रयास करें।",
+    "error.serviceUnavailable.retry": "पुनः प्रयास करें"
+  },
+  "es": {
+    "brand.name": "Easy For Net",
+    "error.serviceUnavailable.title": "Servicio No Disponible",
+    "error.serviceUnavailable.message": "El servidor no está accesible en este momento. Intente de nuevo en unos momentos.",
+    "error.serviceUnavailable.retry": "Reintentar"
+  },
+  "fr": {
+    "brand.name": "Easy For Net",
+    "error.serviceUnavailable.title": "Service Indisponible",
+    "error.serviceUnavailable.message": "Le serveur est actuellement inaccessible. Veuillez réessayer dans quelques instants.",
+    "error.serviceUnavailable.retry": "Réessayer"
+  },
+  "ru": {
+    "brand.name": "Easy For Net",
+    "error.serviceUnavailable.title": "Сервис Недоступен",
+    "error.serviceUnavailable.message": "Сервер в настоящее время недоступен. Пожалуйста, попробуйте через несколько минут.",
+    "error.serviceUnavailable.retry": "Повторить"
+  }
+}
