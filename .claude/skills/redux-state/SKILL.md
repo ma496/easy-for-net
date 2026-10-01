@@ -107,9 +107,11 @@ Select the narrowest value a component needs so unrelated updates do not re-rend
   drop a suspended or left tenant), and dispatches `signout()` then redirects to
   `/signin?redirect=…` when the refresh fails.
 - **Changing the acting tenant** goes through `useTenantSwitch()` (`enterTenant(id)` /
-  `exitTenant()`), which calls `dispatchTenantChanged(dispatch, userInfo)` from `store/tenant-cache.ts`:
-  `appApi.util.resetApiState()` → `setUserInfo` → `setUnreadCount(0)`, in that order, so nothing
-  cached for the previous tenant can render. Do not write a second switch path; see `multi-tenancy`.
+  `exitTenant()`), which calls `leaveForTenantChange(href, notice)` from `store/tenant-cache.ts`: a
+  full page load to `/admin`, so the new document starts with a fresh store and nothing cached for the
+  previous tenant can render; `TenantChangeNotice` shows the success toast on arrival. Never reset the
+  cache in place — the still-mounted page refetches under the new session and flashes a 403. Do not
+  write a second switch path; see `multi-tenancy`.
 - **Ending the session** (sign-out, password change) calls `leaveSignedOut(signinHref)` — a full page
   load, so the next user of the browser starts with a fresh store.
 - Permission checks read this slice through `isAllowed(authState, [Allow.X])` and scope checks through

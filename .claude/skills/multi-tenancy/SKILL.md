@@ -206,8 +206,10 @@ await transaction.CommitAsync(ct);
 `POST /tenants/switch` (`TenantSwitchEndpoint`) requires a live membership and an active tenant, then
 reissues the session via `ITenantAuthorizationService.ReissueSessionAsync(userId, tenantId)`.
 `POST /tenants/exit` does the same with `null`, platform accounts only. On the web, always go through
-`useTenantSwitch()` (`hooks/use-tenant-switch.ts`): it resets the whole RTK Query cache, re-reads
-account info and lands on `/admin`. `lib/utils/tenant-routing.ts` decides which `/admin` screens work
+`useTenantSwitch()` (`hooks/use-tenant-switch.ts`): it lands on `/admin` through a full page load
+(`leaveForTenantChange` in `store/tenant-cache.ts`), so the store, session state, hub and layout all
+start again in the new scope — resetting the cache in place would refetch the mounted page's queries
+under the new session and flash a 403 on a page the new scope may not open. `lib/utils/tenant-routing.ts` decides which `/admin` screens work
 without a tenant (`platformAccessiblePathPrefixes`), which are platform-only
 (`platformOnlyPathPrefixes`), and where a caller with a stale or missing tenant lands
 (`resolveTenantLanding` → `/select-tenant`); a new screen is tenant-only until listed there.

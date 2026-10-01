@@ -11,8 +11,8 @@ import { LocalizedLink } from '@/components/ui'
 /**
  * Interactive client-side chooser that lists the tenants the signed-in user holds an active membership in and
  * switches the session to the one chosen, without asking them to sign in again. The switch
- * drops every cached record before reading the fresh user info, so nothing belonging to the tenant just left can
- * still be rendered while requests go to the new one.
+ * lands through a full page load, so nothing belonging to the tenant just left can still be rendered
+ * while requests go to the new one.
  */
 export const SelectTenantView = () => {
   const { t } = useTranslation()

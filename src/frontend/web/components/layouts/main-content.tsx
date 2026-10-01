@@ -5,6 +5,7 @@ import { ContentAnimation } from './content-animation'
 import { Header } from './header'
 import { Portals } from '@/components'
 import { Footer } from './footer'
+import { TenantChangeNotice } from './tenant-change-notice'
 
 /**
  * Primary page shell that stacks the header, animated content area (with breadcrumbs), footer, and global portals around the routed children.
@@ -27,6 +28,7 @@ export const MainContent = ({ children }: { children: React.ReactNode }) => {
       <Footer />
       {/* END FOOTER */}
       <Portals />
+      <TenantChangeNotice />
     </div>
   )
 }
