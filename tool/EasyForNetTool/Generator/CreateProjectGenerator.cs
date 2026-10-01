@@ -1,6 +1,9 @@
 namespace EasyForNetTool.Generator;
 
 using System.Diagnostics;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using EasyForNetTool.Extensions;
 using EasyForNetTool.Parsing;
@@ -43,6 +46,26 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(testingSettings, "ConnectionStrings.DefaultConnection", testConnectionString);
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(testingSettings, "Hangfire.Storage.ConnectionString", testConnectionString);
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(testingSettings, "Redis.InstanceName", $"{pascalCaseProjectName}Test:");
+    }
+
+    /// <summary>
+    /// Removes every culture but <paramref name="keptLocales"/> from the web app's
+    /// <c>i18n/offline-resources.json</c> - the strings bundled for when the API is down, keyed by
+    /// culture - so it names exactly the locales the project routes to.
+    /// </summary>
+    /// <param name="offlineResourcesPath">The path of the generated web app's offline resources file.</param>
+    /// <param name="keptLocales">The culture codes to keep.</param>
+    internal static async Task KeepOfflineResourceLocalesAsync(string offlineResourcesPath, IReadOnlyCollection<string> keptLocales)
+    {
+        if (!File.Exists(offlineResourcesPath))
+            return;
+
+        var resources = JsonNode.Parse(await File.ReadAllTextAsync(offlineResourcesPath))!.AsObject();
+        foreach (var locale in resources.Select(entry => entry.Key).Where(locale => !keptLocales.Contains(locale)).ToList())
+            resources.Remove(locale);
+
+        var options = new JsonSerializerOptions { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+        await File.WriteAllTextAsync(offlineResourcesPath, resources.ToJsonString(options) + "\n");
     }
 
     /// <summary>
@@ -204,6 +227,9 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
                     content = Regex.Replace(content, @"locales: \[[^\]]+\]", "locales: ['en']");
                     await File.WriteAllTextAsync(configTsPath, content);
                 }
+
+                // 3. Keep only English in the web app's offline fallback strings
+                await KeepOfflineResourceLocalesAsync(Path.Combine(webTargetPath, "i18n", "offline-resources.json"), ["en"]);
             }
 
             // create solution file

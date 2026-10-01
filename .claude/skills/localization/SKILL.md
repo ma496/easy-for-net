@@ -32,7 +32,10 @@ On the web, `getDictionary(locale)` in `i18n/server.ts` is a `cache()`d server f
 that forwards the request's cookies — one fetch per request, shared by the root layout and every
 `getServerTranslation` call. The root layout hands the whole response to `TranslationProvider`, which
 publishes it to `useTranslation` (via context) and `getTranslation` (via a module-level copy). When the
-API cannot be reached the dictionary is empty and keys render as-is.
+API cannot be reached the dictionary holds only `i18n/offline-resources.json` — the brand name and the
+service-unavailable screen, per locale — and every other key renders as-is. A string the outage path
+shows belongs in that file too, with the backend's exact value: `i18n/offline-resources.test.ts`
+compares the two.
 
 ## Three ways to translate
 
