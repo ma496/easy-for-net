@@ -45,7 +45,7 @@ describe('isTenantScopedPath', () => {
     expect(isTenantScopedPath(pathname)).toBe(false)
   })
 
-  it.each(['/admin/tenants', '/admin/tenants/list', '/admin/tenants/create', '/admin/tenants/members/abc', '/admin/tenants/detail/abc'])(
+  it.each(['/admin/tenants', '/admin/tenants/list', '/admin/tenants/create', '/admin/tenants/abc/members', '/admin/tenants/abc/detail'])(
     'treats the platform tenancy screen %s as reachable with no tenant at all',
     (pathname) => {
       expect(isTenantScopedPath(pathname)).toBe(false)
@@ -136,11 +136,11 @@ describe('isPlatformAccessiblePath', () => {
   it.each([
     '/admin',
     '/admin/users/list',
-    '/admin/roles/update/abc',
+    '/admin/roles/abc/update',
     '/admin/notifications/list',
     '/admin/ui/buttons',
     '/admin/tenants/list',
-    '/admin/tenants/detail/abc',
+    '/admin/tenants/abc/detail',
     '/admin/localization',
     '/admin/settings',
   ])('lets a platform administrator with no tenant use %s', (pathname) => {
@@ -177,11 +177,14 @@ describe('isPathAvailable', () => {
     expect(isPathAvailable(platformInside, '/admin/tenants/list')).toBe(false)
     expect(isPathAvailable(platformInside, '/admin/tenants/create')).toBe(false)
     expect(isPathAvailable(memberInside, '/admin/tenants/list')).toBe(false)
+    // A tenant's entitlements are the platform's to edit, even though the id sits before the screen.
+    expect(isPathAvailable(platformInside, '/admin/tenants/a/features')).toBe(false)
+    expect(isPathAvailable(memberInside, '/admin/tenants/a/features')).toBe(false)
 
     // Reading one tenant and administering its members are exercisable in either scope, so they stay
     // open to a caller inside the tenant they are about.
-    expect(isPathAvailable(memberInside, '/admin/tenants/detail/a')).toBe(true)
-    expect(isPathAvailable(memberInside, '/admin/tenants/members/a')).toBe(true)
+    expect(isPathAvailable(memberInside, '/admin/tenants/a/detail')).toBe(true)
+    expect(isPathAvailable(memberInside, '/admin/tenants/a/members')).toBe(true)
   })
 
   it('opens settings in both scopes: the platform in no tenant, and a tenant from inside it', () => {
@@ -196,6 +199,7 @@ describe('isPathAvailable', () => {
   it("leaves the platform's own screens open to a caller acting in no tenant", () => {
     expect(isPathAvailable(platformAdmin, '/admin/tenants/list')).toBe(true)
     expect(isPathAvailable(userInfo(), '/admin/tenants/list')).toBe(true)
+    expect(isPathAvailable(platformAdmin, '/admin/tenants/a/features')).toBe(true)
   })
 })
 

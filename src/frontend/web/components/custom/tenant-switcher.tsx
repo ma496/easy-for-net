@@ -65,7 +65,7 @@ export const TenantSwitcher = ({ className = '' }: TenantSwitcherProps) => {
     return null
   }
 
-  const detailHref = activeTenant ? `/admin/tenants/detail/${activeTenant.id}` : undefined
+  const detailHref = activeTenant ? `/admin/tenants/${activeTenant.id}/detail` : undefined
 
   const switchTenant = async (tenant: GetUserInfoTenant) => {
     if (tenant.id === activeTenant?.id) {
@@ -80,7 +80,7 @@ export const TenantSwitcher = ({ className = '' }: TenantSwitcherProps) => {
 
   const openDetail = (tenantId: string) => {
     dropdownRef.current?.close()
-    router.push(`/admin/tenants/detail/${tenantId}`)
+    router.push(`/admin/tenants/${tenantId}/detail`)
   }
 
   const name = (

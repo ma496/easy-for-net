@@ -128,13 +128,13 @@ export const RoleTable = () => {
             {
               label: t('common.edit'),
               icon: <Pencil className="h-4 w-4" />,
-              href: `/admin/roles/update/${info.row.original.id}`,
+              href: `/admin/roles/${info.row.original.id}/update`,
               hidden: !canUpdate,
             },
             {
               label: t('page.roles.permissions'),
               icon: <Shield className="h-4 w-4" />,
-              href: `/admin/roles/change-permissions/${info.row.original.id}`,
+              href: `/admin/roles/${info.row.original.id}/change-permissions`,
               hidden: !canChangePermissions,
             },
             {

@@ -126,7 +126,16 @@ export const isPlatformWithoutTenant = (user: GetUserInfoResponse | undefined): 
  * members are not here, because those are exercisable in either scope - a tenant administrator opens
  * its own tenant's detail and members from inside it.
  */
-const platformOnlyPathPrefixes = ['/admin/tenants/list', '/admin/tenants/create', '/admin/tenants/features', '/admin/editions']
+const platformOnlyPathPrefixes = ['/admin/tenants/list', '/admin/tenants/create', '/admin/editions']
+
+/**
+ * The platform's own screens about one record, which a prefix cannot name because the record's id
+ * comes before the screen: editing a tenant's entitlements is a platform act, not something a tenant
+ * does to itself. `{id}` stands for exactly one path segment, as it does in `auth-urls.ts`.
+ */
+const platformOnlyPathPatterns = ['/admin/tenants/{id}/features'].map(
+  (pattern) => new RegExp(`^${pattern.replace(/\{[^}]+\}/g, '[^/]+')}(/|$)`),
+)
 
 /**
  * Returns true when the (locale-stripped) path names one of the platform's own screens, which a
@@ -134,7 +143,10 @@ const platformOnlyPathPrefixes = ['/admin/tenants/list', '/admin/tenants/create'
  */
 export const isPlatformOnlyPath = (pathname: string): boolean => {
   const path = normalizePath(pathname)
-  return platformOnlyPathPrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
+  return (
+    platformOnlyPathPrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`)) ||
+    platformOnlyPathPatterns.some((pattern) => pattern.test(path))
+  )
 }
 
 /**

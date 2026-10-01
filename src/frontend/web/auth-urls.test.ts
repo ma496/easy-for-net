@@ -19,9 +19,9 @@ describe('getMatchedAuthUrl', () => {
   })
 
   it.each([
-    ['/admin/tenants/update/6f5c1f1e-0000-0000-0000-000000000000', Allow.Tenant_Update],
-    ['/admin/tenants/members/6f5c1f1e-0000-0000-0000-000000000000', Allow.TenantMember_View],
-    ['/admin/tenants/detail/6f5c1f1e-0000-0000-0000-000000000000', Allow.Tenant_Detail],
+    ['/admin/tenants/6f5c1f1e-0000-0000-0000-000000000000/update', Allow.Tenant_Update],
+    ['/admin/tenants/6f5c1f1e-0000-0000-0000-000000000000/members', Allow.TenantMember_View],
+    ['/admin/tenants/6f5c1f1e-0000-0000-0000-000000000000/detail', Allow.Tenant_Detail],
   ])('guards %s with the permission the screen requires', (url, permission) => {
     expect(getMatchedAuthUrl(url)?.permissions).toEqual([permission])
   })

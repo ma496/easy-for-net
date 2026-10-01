@@ -16,7 +16,7 @@ const findActivePathItems = (items: (NavItem | NavItemGroup)[], pathname: string
 
   const findInItems = (items: NavItem[], currentPath: string) => {
     for (const item of items) {
-      if (item.url === currentPath || (item.url.includes('{id}') && currentPath.match(new RegExp(item.url.replace('{id}', '[^/]+'))))) {
+      if (item.url === currentPath || (item.url.includes('{id}') && new RegExp(`^${item.url.replace('{id}', '[^/]+')}$`).test(currentPath))) {
         result.push(item)
         return true
       }

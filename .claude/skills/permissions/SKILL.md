@@ -103,7 +103,9 @@ you add one of those.
 - Scope routing in `lib/utils/tenant-routing.ts`: a screen under `/admin` is tenant-only by default.
   If its permission is `Both` and the screen should work for a platform account acting in no tenant,
   add its prefix to `platformAccessiblePathPrefixes`; if it is `Platform`-only, add it to
-  `platformOnlyPathPrefixes` as well so a caller inside a tenant is not offered it. `isPathAvailable`
+  `platformOnlyPathPrefixes` as well (or, for a screen about one record such as
+  `/admin/tenants/{id}/features`, to `platformOnlyPathPatterns`) so a caller inside a tenant is not
+  offered it. `isPathAvailable`
   drives the sidebar, search, breadcrumbs and the `App.tsx` redirect.
 
 ## Scopes

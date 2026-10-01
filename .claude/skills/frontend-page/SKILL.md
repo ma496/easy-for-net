@@ -15,7 +15,8 @@ Every route is locale-prefixed: `app/[lang]/…`. Route groups:
   `admin/(identity)` and `admin/(tenancy)` group a feature's screens without adding a URL segment
 
 A screen is a folder with `page.tsx` plus a sibling `_components/` folder holding the interactive
-client parts. Dynamic segments are folders: `update/[id]/page.tsx`, `detail/[id]/page.tsx`. A client
+client parts. Dynamic segments are folders, and a screen about one record puts the id first:
+`[id]/update/page.tsx`, `[id]/detail/page.tsx` (`/admin/tenants/{id}/detail`). A client
 component shared by several screens of one group sits in the group's own `_components/`
 (`admin/(tenancy)/_components/feature-value-editor.tsx`).
 
@@ -98,7 +99,7 @@ Three layers decide whether a screen opens; register the route with each that ap
    `/unauthorized`; the sidebar and global search hide the same entries.
 
    ```ts
-   { url: '/admin/tenants/detail/{id}', permissions: [Allow.Tenant_Detail] },
+   { url: '/admin/tenants/{id}/detail', permissions: [Allow.Tenant_Detail] },
    ```
 
    `{id}` in a url acts as a wildcard segment. Two entries must not match the same pathname — the
@@ -110,7 +111,9 @@ Three layers decide whether a screen opens; register the route with each that ap
    screen is **tenant-only by default**: a platform account acting in no tenant is sent to `/admin`
    and never sees it in the menu. Add the path prefix to `platformAccessiblePathPrefixes` if the
    screen also answers in platform scope, or to `platformOnlyPathPrefixes` if it belongs to the
-   platform alone (a caller acting inside a tenant is then kept out). See the `multi-tenancy` skill.
+   platform alone (a caller acting inside a tenant is then kept out) — or to
+   `platformOnlyPathPatterns` for a platform-only screen about one record, whose id comes before
+   the screen so no prefix can name it (`/admin/tenants/{id}/features`). See the `multi-tenancy` skill.
 
 In-page, gate actions with `isAllowed(authState, [Allow.X])` — see the `permissions` skill. Reach for
 `useFeature(FeatureNames.X)` (`@/hooks`, `@/feature-names`) only where there is no permission to gate
