@@ -16,7 +16,7 @@ import { Input, Select } from '@/components/ui/form'
 import { isAllowed, apiErrorAlert, successToast, cn } from '@/lib/utils'
 import { useAppSelector } from '@/store/hooks'
 import { Allow } from '@/allow'
-import { RotateCcw, Info, Search, Layers, Settings2 } from 'lucide-react'
+import { RotateCcw, Search, Layers, Settings2 } from 'lucide-react'
 
 /**
  * Props for the FeatureValueEditor, naming whose entitlements are being edited.
@@ -186,13 +186,6 @@ export const FeatureValueEditor = ({ providerName, providerKey, returnUrl }: Fea
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Changing an entitlement does not end a session that is already running, so the screen says
-          so rather than leaving an administrator to wonder why nothing happened. */}
-      <div className="flex items-start gap-2 rounded-md border border-info/30 bg-info/10 p-3 text-sm text-info">
-        <Info className="mt-0.5 h-4 w-4 shrink-0" />
-        <span>{t('page.features.mintTimeNotice')}</span>
-      </div>
-
       <div className="grid min-h-100 grid-cols-1 gap-4 md:grid-cols-4">
         <div className="flex flex-col border-gray-200 pt-2 border-e pe-4 dark:border-gray-700 md:col-span-1">
           <div className="mb-3 flex items-center gap-2 text-xs font-semibold tracking-wider text-gray-800 uppercase dark:text-gray-100">

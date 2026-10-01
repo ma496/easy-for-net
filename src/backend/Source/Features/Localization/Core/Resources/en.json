@@ -620,7 +620,6 @@
       "editionTitle": "Edition Features",
       "saveSuccess": "Features updated successfully",
       "none": "No features have been defined",
-      "mintTimeNotice": "Changes take effect for a user the next time their session is renewed.",
       "setHere": "Set here",
       "fromEdition": "From edition",
       "fromDefault": "Default",
