@@ -122,9 +122,9 @@ Do **not** add tags when there is nothing to invalidate:
 - `files-api.ts` — uploads/downloads/deletes are addressed by file name, and nothing lists them.
 - Polled endpoints such as `notificationGetUnreadCount`, which refetch on their own interval.
 - `tenantSwitch` / `tenantExit` — changing the acting tenant changes what **every** cached query would
-  answer, so the caller drops the whole cache instead (`appApi.util.resetApiState()` through
-  `useTenantSwitch` / `dispatchTenantChanged` in `store/tenant-cache.ts`). Invalidating would refetch
-  the previous tenant's data mid-switch. See the `multi-tenancy` skill.
+  answer, so the caller discards the whole store with a full page load instead (`useTenantSwitch` /
+  `leaveForTenantChange` in `store/tenant-cache.ts`). Invalidating or resetting in place would refetch
+  the mounted page's queries mid-switch. See the `multi-tenancy` skill.
 
 Those slices use plain `appApi.injectEndpoints({ overrideExisting: false, endpoints })`.
 

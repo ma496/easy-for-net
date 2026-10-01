@@ -1,44 +1,55 @@
-import { appApi } from '@/store/api/_app-api'
-import { GetUserInfoResponse } from '@/store/api/identity'
-import { setUnreadCount, setUserInfo } from '@/store/slices'
 import { markLeavingSignedOut } from '@/store/signed-out-navigation'
 
-/** One of the actions a tenant cache-reset sequence dispatches, in the order its builder returns them. */
-export type TenantCacheAction =
-  | ReturnType<typeof appApi.util.resetApiState>
-  | ReturnType<typeof setUserInfo>
-  | ReturnType<typeof setUnreadCount>
+/** The success message to show once the page loaded by {@link leaveForTenantChange} has rendered. */
+export interface TenantChangeNotice {
+  /** Translation key of the message, resolved after the load so it is read in the new scope's language. */
+  messageKey: string
+  /** The tenant entered, interpolated as `${tenant}`; empty when the session left for platform scope. */
+  tenant: string
+}
+
+/** Where {@link TenantChangeNotice} waits for the next document; session storage, so it never outlives the tab. */
+const tenantChangeNoticeKey = 'tenant-change-notice'
 
 /**
- * Actions to dispatch, in order, once the active tenant has changed - on a switch from the header,
- * the chooser or the tenants table. The RTK Query cache is discarded first, so no record cached for the previous
- * tenant is displayed afterwards; the freshly read user info then replaces the session state
- * and the unread notification badge starts again from zero for the new tenant.
+ * Lands on `href` once the acting tenant has changed - on a switch from the header, the chooser or the
+ * tenants table, and on leaving a tenant for platform scope. It is a full page load rather than a
+ * client-side navigation, for the same reason {@link leaveSignedOut} is: the new document starts with a
+ * fresh store, so no record cached for the scope just left can be displayed, and the session state, the
+ * unread badge, the notification hub and the root layout's texts and languages are all read again for
+ * the scope just entered. Resetting the RTK Query cache in place instead makes every query on the
+ * still-mounted page refetch under the new session, and a page the new scope may not open (the tenants
+ * table inside a tenant, a tenant's users in platform scope) shows its 403 until the navigation lands.
+ * `replace` keeps that page out of the history too, so Back does not return to it in the wrong scope.
  */
-export const tenantChangedActions = (userInfo: GetUserInfoResponse | undefined): TenantCacheAction[] => [
-  appApi.util.resetApiState(),
-  setUserInfo(userInfo),
-  setUnreadCount(0),
-]
+export const leaveForTenantChange = (href: string, notice: TenantChangeNotice): void => {
+  try {
+    window.sessionStorage.setItem(tenantChangeNoticeKey, JSON.stringify(notice))
+  } catch {
+    // Storage refused (a private window, blocked site data): the change still lands, only unannounced.
+  }
+  window.location.replace(href)
+}
 
-/**
- * The part of a store the sequences above are dispatched through. Only `dispatch`
- * is asked for, so a caller - a component, a listener, a test - can hand in the
- * store's own dispatch without the module having to know how the store is built.
- */
-export type TenantCacheDispatcher = (action: TenantCacheAction) => unknown
-
-/**
- * Dispatches the tenant-changed sequence, so every screen that changes the active
- * tenant drops the previous tenant's cached records through one call rather than
- * repeating the sequence: the switcher, the chooser and the tenants table all
- * reach the reset only this way.
- */
-export const dispatchTenantChanged = (
-  dispatch: TenantCacheDispatcher,
-  userInfo: GetUserInfoResponse | undefined
-): void => {
-  tenantChangedActions(userInfo).forEach((action) => dispatch(action))
+/** Reads and removes the notice {@link leaveForTenantChange} left for this document, so it is shown once. */
+export const takeTenantChangeNotice = (): TenantChangeNotice | null => {
+  try {
+    const stored = window.sessionStorage.getItem(tenantChangeNoticeKey)
+    if (stored === null) return null
+    window.sessionStorage.removeItem(tenantChangeNoticeKey)
+    const notice: unknown = JSON.parse(stored)
+    if (
+      typeof notice === 'object' &&
+      notice !== null &&
+      typeof (notice as TenantChangeNotice).messageKey === 'string' &&
+      typeof (notice as TenantChangeNotice).tenant === 'string'
+    ) {
+      return notice as TenantChangeNotice
+    }
+  } catch {
+    // Unreadable or malformed: nothing to announce.
+  }
+  return null
 }
 
 /**
