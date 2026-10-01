@@ -18,7 +18,7 @@ export const authUrls: AuthUrl[] = [
     url: '/admin',
   },
   {
-    url: '/admin/users/list',
+    url: '/admin/users',
     permissions: [Allow.User_View],
   },
   {
@@ -30,7 +30,7 @@ export const authUrls: AuthUrl[] = [
     permissions: [Allow.User_Update],
   },
   {
-    url: '/admin/roles/list',
+    url: '/admin/roles',
     permissions: [Allow.Role_View],
   },
   {
@@ -50,7 +50,7 @@ export const authUrls: AuthUrl[] = [
     // is gated on Tenant.View, which the API declares platform-scoped: a session carries it only
     // while acting in no tenant, so a tenant administrator never holds it however their roles are
     // granted. They reach their own tenant through the detail screen below instead.
-    url: '/admin/tenants/list',
+    url: '/admin/tenants',
     permissions: [Allow.Tenant_View],
   },
   {
@@ -64,7 +64,7 @@ export const authUrls: AuthUrl[] = [
     permissions: [Allow.FeatureValue_View],
   },
   {
-    url: '/admin/editions/list',
+    url: '/admin/editions',
     permissions: [Allow.Edition_View],
   },
   {

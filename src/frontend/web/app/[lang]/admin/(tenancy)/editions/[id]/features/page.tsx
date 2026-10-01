@@ -27,7 +27,7 @@ const EditionFeatures = async ({ params }: EditionFeaturesPageProps) => {
       <FeatureValueEditor
         providerName={FeatureValueProvider.Edition}
         providerKey={id}
-        returnUrl="/admin/editions/list"
+        returnUrl="/admin/editions"
       />
     </AdminPageContent>
   )

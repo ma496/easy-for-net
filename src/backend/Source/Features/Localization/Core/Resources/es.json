@@ -408,9 +408,6 @@
       "create": {
         "title": "Crear usuario"
       },
-      "list": {
-        "title": "Lista de usuarios"
-      },
       "update": {
         "title": "Actualizar usuario"
       }
@@ -430,9 +427,6 @@
       },
       "create": {
         "title": "Crear rol"
-      },
-      "list": {
-        "title": "Lista de roles"
       },
       "update": {
         "title": "Actualizar rol"
@@ -554,9 +548,6 @@
       "reactivateTitle": "Reactivar Inquilino",
       "reactivateConfirm": "¿Está seguro de que desea reactivar este inquilino?",
       "reactivateSuccess": "Inquilino reactivado exitosamente",
-      "list": {
-        "title": "Lista de inquilinos"
-      },
       "create": {
         "title": "Crear inquilino"
       },
@@ -617,9 +608,6 @@
       "deleteConfirm": "¿Está seguro de que desea eliminar esta edición?",
       "deleteSuccess": "Edición eliminada correctamente",
       "notFound": "Edición no encontrada",
-      "list": {
-        "title": "Lista de ediciones"
-      },
       "create": {
         "title": "Crear edición"
       },

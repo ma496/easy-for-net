@@ -408,9 +408,6 @@
       "create": {
         "title": "Create User"
       },
-      "list": {
-        "title": "Users List"
-      },
       "update": {
         "title": "Update User"
       }
@@ -430,9 +427,6 @@
       },
       "create": {
         "title": "Create Role"
-      },
-      "list": {
-        "title": "Roles List"
       },
       "update": {
         "title": "Update Role"
@@ -554,9 +548,6 @@
       "reactivateTitle": "Reactivate Tenant",
       "reactivateConfirm": "Are you sure you want to reactivate this tenant?",
       "reactivateSuccess": "Tenant reactivated successfully",
-      "list": {
-        "title": "Tenants List"
-      },
       "create": {
         "title": "Create Tenant"
       },
@@ -617,9 +608,6 @@
       "deleteConfirm": "Are you sure you want to delete this edition?",
       "deleteSuccess": "Edition deleted successfully",
       "notFound": "Edition not found",
-      "list": {
-        "title": "Editions List"
-      },
       "create": {
         "title": "Create Edition"
       },

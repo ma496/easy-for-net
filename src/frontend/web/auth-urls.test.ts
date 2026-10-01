@@ -7,7 +7,7 @@ describe('getMatchedAuthUrl', () => {
     // The list answers about every tenant there is, so Tenant.View is platform-scoped on the API: a
     // session carries it only while acting in no tenant, which is what keeps this the platform's
     // screen rather than one a tenant administrator reaches.
-    ['/admin/tenants/list', Allow.Tenant_View],
+    ['/admin/tenants', Allow.Tenant_View],
     ['/admin/tenants/create', Allow.Tenant_Create],
     // Both-scoped, so this one route serves a platform administrator editing the platform's own
     // overrides and a tenant administrator editing its tenant's, gated on the same permission.
@@ -41,20 +41,20 @@ describe('getMatchedAuthUrl', () => {
   })
 
   it('matches a path whatever query string it is reached with', () => {
-    expect(getMatchedAuthUrl('/admin/tenants/list?page=2&search=acme')?.permissions).toEqual([Allow.Tenant_View])
+    expect(getMatchedAuthUrl('/admin/tenants?page=2&search=acme')?.permissions).toEqual([Allow.Tenant_View])
   })
 
   it('matches nothing outside the registry', () => {
-    expect(getMatchedAuthUrl('/admin/tenants')).toBeUndefined()
+    expect(getMatchedAuthUrl('/admin/tenants/list')).toBeUndefined()
     expect(getMatchedAuthUrl('/signin')).toBeUndefined()
   })
 
   it('refuses to answer when two entries match the same path', () => {
-    const duplicate: AuthUrl = { url: '/admin/tenants/list', permissions: [Allow.Tenant_Detail] }
+    const duplicate: AuthUrl = { url: '/admin/tenants', permissions: [Allow.Tenant_Detail] }
     authUrls.push(duplicate)
 
     try {
-      expect(() => getMatchedAuthUrl('/admin/tenants/list')).toThrow(/Multiple auth URLs matched/)
+      expect(() => getMatchedAuthUrl('/admin/tenants')).toThrow(/Multiple auth URLs matched/)
     } finally {
       authUrls.splice(authUrls.indexOf(duplicate), 1)
     }
@@ -62,7 +62,7 @@ describe('getMatchedAuthUrl', () => {
 })
 
 describe('isAuthRequired', () => {
-  it.each(['/admin/tenants/list', '/admin/tenants/create', '/select-tenant'])(
+  it.each(['/admin/tenants', '/admin/tenants/create', '/select-tenant'])(
     'requires a signed-in caller for %s',
     (url) => {
       expect(isAuthRequired(url)).toBe(true)

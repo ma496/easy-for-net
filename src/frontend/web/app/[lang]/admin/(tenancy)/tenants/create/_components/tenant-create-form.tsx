@@ -60,7 +60,7 @@ export const TenantCreateForm = () => {
     successToast.fire({
       text: t('page.tenants.createSuccess'),
     })
-    router.push('/admin/tenants/list')
+    router.push('/admin/tenants')
   }
 
   return (
@@ -101,7 +101,7 @@ export const TenantCreateForm = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push('/admin/tenants/list')}
+              onClick={() => router.push('/admin/tenants')}
               disabled={isSavingTenant}
             >
               {t('common.cancel')}

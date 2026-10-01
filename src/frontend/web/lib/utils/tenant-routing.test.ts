@@ -26,7 +26,7 @@ const userInfo = (overrides: Partial<GetUserInfoResponse> = {}): GetUserInfoResp
 describe('isTenantScopedPath', () => {
   it.each([
     '/admin',
-    '/admin/users/list',
+    '/admin/users',
     '/admin/roles/create',
     '/admin/notifications',
     '/admin/tenant-settings',
@@ -45,7 +45,7 @@ describe('isTenantScopedPath', () => {
     expect(isTenantScopedPath(pathname)).toBe(false)
   })
 
-  it.each(['/admin/tenants', '/admin/tenants/list', '/admin/tenants/create', '/admin/tenants/abc/members', '/admin/tenants/abc/detail'])(
+  it.each(['/admin/tenants', '/admin/tenants/create', '/admin/tenants/abc/members', '/admin/tenants/abc/detail'])(
     'treats the platform tenancy screen %s as reachable with no tenant at all',
     (pathname) => {
       expect(isTenantScopedPath(pathname)).toBe(false)
@@ -135,11 +135,11 @@ describe('isActiveTenantStale', () => {
 describe('isPlatformAccessiblePath', () => {
   it.each([
     '/admin',
-    '/admin/users/list',
+    '/admin/users',
     '/admin/roles/abc/update',
-    '/admin/notifications/list',
+    '/admin/notifications',
     '/admin/ui/buttons',
-    '/admin/tenants/list',
+    '/admin/tenants',
     '/admin/tenants/abc/detail',
     '/admin/localization',
     '/admin/settings',
@@ -157,7 +157,7 @@ describe('isPathAvailable', () => {
 
   it('hides tenant-only screens from a platform administrator acting in no tenant', () => {
     expect(isPathAvailable(platformAdmin, '/admin/some-new-feature')).toBe(false)
-    expect(isPathAvailable(platformAdmin, '/admin/users/list')).toBe(true)
+    expect(isPathAvailable(platformAdmin, '/admin/users')).toBe(true)
     expect(isPathAvailable(platformAdmin, '/profile')).toBe(true)
   })
 
@@ -174,9 +174,9 @@ describe('isPathAvailable', () => {
 
     // The permissions these declare are platform-scoped, so a tenant session never carries them:
     // the caller is in the other scope rather than short of a grant.
-    expect(isPathAvailable(platformInside, '/admin/tenants/list')).toBe(false)
+    expect(isPathAvailable(platformInside, '/admin/tenants')).toBe(false)
     expect(isPathAvailable(platformInside, '/admin/tenants/create')).toBe(false)
-    expect(isPathAvailable(memberInside, '/admin/tenants/list')).toBe(false)
+    expect(isPathAvailable(memberInside, '/admin/tenants')).toBe(false)
     // A tenant's entitlements are the platform's to edit, even though the id sits before the screen.
     expect(isPathAvailable(platformInside, '/admin/tenants/a/features')).toBe(false)
     expect(isPathAvailable(memberInside, '/admin/tenants/a/features')).toBe(false)
@@ -197,8 +197,8 @@ describe('isPathAvailable', () => {
   })
 
   it("leaves the platform's own screens open to a caller acting in no tenant", () => {
-    expect(isPathAvailable(platformAdmin, '/admin/tenants/list')).toBe(true)
-    expect(isPathAvailable(userInfo(), '/admin/tenants/list')).toBe(true)
+    expect(isPathAvailable(platformAdmin, '/admin/tenants')).toBe(true)
+    expect(isPathAvailable(userInfo(), '/admin/tenants')).toBe(true)
     expect(isPathAvailable(platformAdmin, '/admin/tenants/a/features')).toBe(true)
   })
 })
@@ -212,7 +212,7 @@ describe('resolvePlatformLanding', () => {
   it('honours a redirect they can use and ignores one that needs a tenant', () => {
     const user = userInfo({ isPlatform: true })
 
-    expect(resolvePlatformLanding(user, '/admin/users/list')).toBe('/admin/users/list')
+    expect(resolvePlatformLanding(user, '/admin/users')).toBe('/admin/users')
     expect(resolvePlatformLanding(user, '/admin/some-new-feature')).toBe('/admin')
   })
 

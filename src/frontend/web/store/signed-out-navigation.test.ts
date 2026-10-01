@@ -12,11 +12,11 @@ describe('signinRedirectAfterFailedRefresh', () => {
   afterEach(() => resetLeavingSignedOutForTests())
 
   it('sends a guarded page to sign-in, returning to it afterwards', () => {
-    const url = new URL(signinRedirectAfterFailedRefresh('/en/admin/users/list', origin)!)
+    const url = new URL(signinRedirectAfterFailedRefresh('/en/admin/users', origin)!)
 
     expect(url.origin).toBe(origin)
     expect(url.pathname).toBe('/signin')
-    expect(url.searchParams.get('redirect')).toBe('/en/admin/users/list')
+    expect(url.searchParams.get('redirect')).toBe('/en/admin/users')
   })
 
   it('leaves a public page where it is', () => {
@@ -31,6 +31,6 @@ describe('signinRedirectAfterFailedRefresh', () => {
     markLeavingSignedOut()
 
     expect(isLeavingSignedOut()).toBe(true)
-    expect(signinRedirectAfterFailedRefresh('/en/admin/users/list', origin)).toBeNull()
+    expect(signinRedirectAfterFailedRefresh('/en/admin/users', origin)).toBeNull()
   })
 })

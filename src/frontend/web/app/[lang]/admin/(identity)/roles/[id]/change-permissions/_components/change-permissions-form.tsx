@@ -157,7 +157,7 @@ export const ChangePermissionsForm = ({ roleId }: ChangePermissionsFormProps) =>
     successToast.fire({
       text: t('page.roles.permissionsUpdateSuccess'),
     })
-    router.push('/admin/roles/list')
+    router.push('/admin/roles')
   }
 
   const handleSelectionChange = useCallback((selectedIds: string[]) => {

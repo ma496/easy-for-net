@@ -80,7 +80,7 @@ export const RoleUpdateForm = ({ roleId }: RoleUpdateFormProps) => {
     successToast.fire({
       text: t('page.roles.updateSuccess'),
     })
-    router.push('/admin/roles/list')
+    router.push('/admin/roles')
   }
 
   return (
@@ -111,7 +111,7 @@ export const RoleUpdateForm = ({ roleId }: RoleUpdateFormProps) => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push('/admin/roles/list')}
+              onClick={() => router.push('/admin/roles')}
               disabled={isSavingRole}
             >
               {t('common.cancel')}

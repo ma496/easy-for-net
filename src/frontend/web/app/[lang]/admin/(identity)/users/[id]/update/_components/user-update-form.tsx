@@ -87,7 +87,7 @@ export const UserUpdateForm = ({ userId }: UserUpdateFormProps) => {
     successToast.fire({
       text: t('page.users.updateSuccess'),
     })
-    router.push('/admin/users/list')
+    router.push('/admin/users')
   }
 
   return (
@@ -141,7 +141,7 @@ export const UserUpdateForm = ({ userId }: UserUpdateFormProps) => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push('/admin/users/list')}
+              onClick={() => router.push('/admin/users')}
               disabled={isUserSaving || isLoadingUser}
             >
               {t('common.cancel')}

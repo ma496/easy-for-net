@@ -27,7 +27,7 @@ const TenantFeatures = async ({ params }: TenantFeaturesPageProps) => {
       <FeatureValueEditor
         providerName={FeatureValueProvider.Tenant}
         providerKey={id}
-        returnUrl="/admin/tenants/list"
+        returnUrl="/admin/tenants"
       />
     </AdminPageContent>
   )

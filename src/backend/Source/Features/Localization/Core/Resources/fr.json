@@ -408,9 +408,6 @@
       "create": {
         "title": "Créer un utilisateur"
       },
-      "list": {
-        "title": "Liste des utilisateurs"
-      },
       "update": {
         "title": "Mettre à jour l'utilisateur"
       }
@@ -430,9 +427,6 @@
       },
       "create": {
         "title": "Créer un rôle"
-      },
-      "list": {
-        "title": "Liste des rôles"
       },
       "update": {
         "title": "Mettre à jour le rôle"
@@ -554,9 +548,6 @@
       "reactivateTitle": "Réactiver le locataire",
       "reactivateConfirm": "Êtes-vous sûr de vouloir réactiver ce locataire ?",
       "reactivateSuccess": "Locataire réactivé avec succès",
-      "list": {
-        "title": "Liste des locataires"
-      },
       "create": {
         "title": "Créer un locataire"
       },
@@ -617,9 +608,6 @@
       "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette édition ?",
       "deleteSuccess": "Édition supprimée avec succès",
       "notFound": "Édition introuvable",
-      "list": {
-        "title": "Liste des éditions"
-      },
       "create": {
         "title": "Créer une édition"
       },

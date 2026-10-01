@@ -15,7 +15,7 @@ interface EditionListPageProps {
  */
 const EditionList = async ({ params }: EditionListPageProps) => {
   const { lang } = await params
-  const title = await getServerTranslation(lang, 'page.editions.list.title')
+  const title = await getServerTranslation(lang, 'page.editions.title')
 
   return (
     <AdminPageContent title={title}>
