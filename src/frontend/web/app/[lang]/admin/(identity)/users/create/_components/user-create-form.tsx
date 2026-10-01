@@ -65,7 +65,7 @@ export const UserCreateForm = () => {
     successToast.fire({
       text: t('page.users.createSuccess'),
     })
-    router.push('/admin/users/list')
+    router.push('/admin/users')
   }
 
   return (
@@ -144,7 +144,7 @@ export const UserCreateForm = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push('/admin/users/list')}
+              onClick={() => router.push('/admin/users')}
               disabled={isCreatingUser}
             >
               {t('common.cancel')}

@@ -87,7 +87,7 @@ const webDirectory = fileURLToPath(new URL('..', import.meta.url))
 const tenantChangedSites = [
   'components/custom/tenant-switcher.tsx',
   'app/[lang]/(auth)/select-tenant/_components/select-tenant-view.tsx',
-  'app/[lang]/admin/(tenancy)/tenants/list/_components/tenant-table.tsx',
+  'app/[lang]/admin/(tenancy)/tenants/_components/tenant-table.tsx',
 ]
 
 /** The hook every screen above changes the acting tenant through. */

@@ -408,9 +408,6 @@
       "create": {
         "title": "创建用户"
       },
-      "list": {
-        "title": "用户列表"
-      },
       "update": {
         "title": "更新用户"
       }
@@ -430,9 +427,6 @@
       },
       "create": {
         "title": "创建角色"
-      },
-      "list": {
-        "title": "角色列表"
       },
       "update": {
         "title": "更新角色"
@@ -554,9 +548,6 @@
       "reactivateTitle": "重新启用租户",
       "reactivateConfirm": "您确定要重新启用此租户吗？",
       "reactivateSuccess": "租户重新启用成功",
-      "list": {
-        "title": "租户列表"
-      },
       "create": {
         "title": "创建租户"
       },
@@ -617,9 +608,6 @@
       "deleteConfirm": "确定要删除此版本吗？",
       "deleteSuccess": "版本删除成功",
       "notFound": "未找到版本",
-      "list": {
-        "title": "版本列表"
-      },
       "create": {
         "title": "创建版本"
       },

@@ -12,7 +12,7 @@ export const searchableItems: SearchableItem[] = [
   },
   {
     title: 'search.users',
-    url: '/admin/users/list',
+    url: '/admin/users',
 
   },
   {
@@ -22,7 +22,7 @@ export const searchableItems: SearchableItem[] = [
   },
   {
     title: 'search.editions',
-    url: '/admin/editions/list',
+    url: '/admin/editions',
 
   },
   {
@@ -32,7 +32,7 @@ export const searchableItems: SearchableItem[] = [
   },
   {
     title: 'search.roles',
-    url: '/admin/roles/list',
+    url: '/admin/roles',
 
   },
   {
@@ -42,7 +42,7 @@ export const searchableItems: SearchableItem[] = [
   },
   {
     title: 'search.tenants',
-    url: '/admin/tenants/list',
+    url: '/admin/tenants',
   },
   {
     title: 'search.tenantsCreate',
@@ -66,7 +66,7 @@ export const searchableItems: SearchableItem[] = [
   },
   {
     title: 'search.notifications',
-    url: '/admin/notifications/list',
+    url: '/admin/notifications',
   },
 
   {

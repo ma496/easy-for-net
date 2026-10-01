@@ -223,7 +223,7 @@ before the round trip. Then:
       />
       <FormCheckbox name="isActive" label={t('form.label.isActive')} />
       <div className="flex justify-end gap-4 sm:col-span-2">
-        <Button type="button" variant="outline" onClick={() => router.push('/admin/users/list')} disabled={isSaving}>
+        <Button type="button" variant="outline" onClick={() => router.push('/admin/users')} disabled={isSaving}>
           {t('common.cancel')}
         </Button>
         <Button type="submit" isLoading={isSaving}>{t('common.submit')}</Button>
@@ -246,7 +246,7 @@ Submit handler:
 const result = await createUser(payload)
 if (result.error) { apiErrorAlert(result.error); return }
 successToast.fire({ text: t('page.users.createSuccess') })
-router.push('/admin/users/list')          // useLocalizedRouter, unprefixed path
+router.push('/admin/users')          // useLocalizedRouter, unprefixed path
 ```
 
 The **update** form additionally loads the row and guards the render order:

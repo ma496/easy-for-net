@@ -88,7 +88,7 @@ export const EditionUpdateForm = ({ editionId }: EditionUpdateFormProps) => {
     successToast.fire({
       text: t('page.editions.updateSuccess'),
     })
-    router.push('/admin/editions/list')
+    router.push('/admin/editions')
   }
 
   return (
@@ -125,7 +125,7 @@ export const EditionUpdateForm = ({ editionId }: EditionUpdateFormProps) => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push('/admin/editions/list')}
+              onClick={() => router.push('/admin/editions')}
               disabled={isSavingEdition}
             >
               {t('common.cancel')}

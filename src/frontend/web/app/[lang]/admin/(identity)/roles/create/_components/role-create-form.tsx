@@ -47,7 +47,7 @@ export const RoleCreateForm = () => {
     successToast.fire({
       text: t('page.roles.createSuccess'),
     })
-    router.push('/admin/roles/list')
+    router.push('/admin/roles')
   }
 
   return (
@@ -78,7 +78,7 @@ export const RoleCreateForm = () => {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push('/admin/roles/list')}
+              onClick={() => router.push('/admin/roles')}
               disabled={isSavingRole}
             >
               {t('common.cancel')}

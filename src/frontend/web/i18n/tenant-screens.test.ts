@@ -60,7 +60,6 @@ const tenantScreenKeys = [
   'form.placeholder.tenantIdentifier',
   'validation.tenantIdentifier',
   'page.tenants.title',
-  'page.tenants.list.title',
   'page.tenants.create.title',
   'page.tenants.update.title',
   'page.tenants.members.title',

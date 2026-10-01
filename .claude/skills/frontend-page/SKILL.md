@@ -83,7 +83,7 @@ Anything that loads data renders in this order: `isLoading` → `<Loader />`, `e
 each state wrapped in `<div className="flex justify-center items-center">`.
 
 **Navigation must stay locale-aware** — use `useLocalizedRouter()` instead of `next/navigation`'s
-router, and `<LocalizedLink href="/admin/users/list">` instead of `next/link`. Pass unprefixed
+router, and `<LocalizedLink href="/admin/users">` instead of `next/link`. Pass unprefixed
 paths; the helpers add the locale segment (`router.localize(href)` gives the prefixed path for a
 full page load).
 
@@ -141,7 +141,7 @@ translator, overrides and adding a language.
   without appearing in the menu. There is no permission field: the sidebar drops an item whose `url`
   exactly matches an `auth-urls.ts` entry the caller fails or that `isPathAvailable` rejects, and a
   parent whose children are all dropped.
-- `searchable-items.ts` — global search entry (`{ title: 'search.users', url: '/admin/users/list' }`),
+- `searchable-items.ts` — global search entry (`{ title: 'search.users', url: '/admin/users' }`),
   filtered the same way. Routes with an `{id}` segment are not listed.
 
 ## Checklist

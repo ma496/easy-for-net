@@ -38,12 +38,12 @@ export const navItems: (NavItem | NavItemGroup)[] = [
     items: [
       {
         title: 'navigation.users',
-        url: '/admin/users/list',
+        url: '/admin/users',
         icon: Users,
         children: [
           {
             title: 'navigation.usersList',
-            url: '/admin/users/list',
+            url: '/admin/users',
 
           },
           {
@@ -61,12 +61,12 @@ export const navItems: (NavItem | NavItemGroup)[] = [
       },
       {
         title: 'navigation.roles',
-        url: '/admin/roles/list',
+        url: '/admin/roles',
         icon: Shield,
         children: [
           {
             title: 'navigation.rolesList',
-            url: '/admin/roles/list',
+            url: '/admin/roles',
 
           },
           {
@@ -90,12 +90,12 @@ export const navItems: (NavItem | NavItemGroup)[] = [
       },
       {
         title: 'navigation.tenants',
-        url: '/admin/tenants/list',
+        url: '/admin/tenants',
         icon: Building2,
         children: [
           {
             title: 'navigation.tenantsList',
-            url: '/admin/tenants/list',
+            url: '/admin/tenants',
           },
           {
             title: 'navigation.tenantsCreate',
@@ -125,12 +125,12 @@ export const navItems: (NavItem | NavItemGroup)[] = [
       },
       {
         title: 'navigation.editions',
-        url: '/admin/editions/list',
+        url: '/admin/editions',
         icon: Layers,
         children: [
           {
             title: 'navigation.editionsList',
-            url: '/admin/editions/list',
+            url: '/admin/editions',
           },
           {
             title: 'navigation.editionsCreate',
@@ -160,7 +160,7 @@ export const navItems: (NavItem | NavItemGroup)[] = [
       },
       {
         title: 'navigation.notifications',
-        url: '/admin/notifications/list',
+        url: '/admin/notifications',
         icon: Bell,
         children: [
           {

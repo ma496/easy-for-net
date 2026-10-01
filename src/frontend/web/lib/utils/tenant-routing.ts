@@ -126,7 +126,14 @@ export const isPlatformWithoutTenant = (user: GetUserInfoResponse | undefined): 
  * members are not here, because those are exercisable in either scope - a tenant administrator opens
  * its own tenant's detail and members from inside it.
  */
-const platformOnlyPathPrefixes = ['/admin/tenants/list', '/admin/tenants/create', '/admin/editions']
+const platformOnlyPathPrefixes = ['/admin/tenants/create', '/admin/editions']
+
+/**
+ * The platform's own screens that sit at the root of a section whose deeper screens are not all
+ * platform-only, so they match exactly rather than as a prefix: the tenants list is `/admin/tenants`,
+ * while a tenant's detail and members beneath it stay open inside that tenant.
+ */
+const platformOnlyPaths = ['/admin/tenants']
 
 /**
  * The platform's own screens about one record, which a prefix cannot name because the record's id
@@ -144,6 +151,7 @@ const platformOnlyPathPatterns = ['/admin/tenants/{id}/features'].map(
 export const isPlatformOnlyPath = (pathname: string): boolean => {
   const path = normalizePath(pathname)
   return (
+    platformOnlyPaths.includes(path) ||
     platformOnlyPathPrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`)) ||
     platformOnlyPathPatterns.some((pattern) => pattern.test(path))
   )
