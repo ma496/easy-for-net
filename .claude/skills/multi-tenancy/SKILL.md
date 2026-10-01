@@ -211,7 +211,8 @@ reissues the session via `ITenantAuthorizationService.ReissueSessionAsync(userId
 start again in the new scope — resetting the cache in place would refetch the mounted page's queries
 under the new session and flash a 403 on a page the new scope may not open. `lib/utils/tenant-routing.ts` decides which `/admin` screens work
 without a tenant (`platformAccessiblePathPrefixes`), which are platform-only
-(`platformOnlyPathPrefixes`), and where a caller with a stale or missing tenant lands
+(`platformOnlyPathPrefixes`, and `platformOnlyPathPatterns` for one record's screens such as
+`/admin/tenants/{id}/features`), and where a caller with a stale or missing tenant lands
 (`resolveTenantLanding` → `/select-tenant`); a new screen is tenant-only until listed there.
 
 ## 8. Testing isolation

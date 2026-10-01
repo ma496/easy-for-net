@@ -265,25 +265,25 @@ export const TenantTable = () => {
                 {
                   label: t('common.edit'),
                   icon: <Pencil className="h-4 w-4" />,
-                  href: `/admin/tenants/update/${tenant.id}`,
+                  href: `/admin/tenants/${tenant.id}/update`,
                   hidden: !(canUpdate && canChangeLifecycle),
                 },
                 {
                   label: t('page.tenants.actions.detail'),
                   icon: <Eye className="h-4 w-4" />,
-                  href: `/admin/tenants/detail/${tenant.id}`,
+                  href: `/admin/tenants/${tenant.id}/detail`,
                   hidden: !canViewDetail,
                 },
                 {
                   label: t('page.tenants.actions.members'),
                   icon: <Users className="h-4 w-4" />,
-                  href: `/admin/tenants/members/${tenant.id}`,
+                  href: `/admin/tenants/${tenant.id}/members`,
                   hidden: !canViewMembers,
                 },
                 {
                   label: t('page.features.actionLabel'),
                   icon: <SlidersHorizontal className="h-4 w-4" />,
-                  href: `/admin/tenants/features/${tenant.id}`,
+                  href: `/admin/tenants/${tenant.id}/features`,
                   hidden: !canViewFeatures,
                 },
                 {

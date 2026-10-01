@@ -15,12 +15,14 @@ app/[lang]/admin/(<group>)/<entity>/
   list/_components/<entity>-filter-panel.tsx
   create/page.tsx
   create/_components/<entity>-create-form.tsx
-  update/[id]/page.tsx
-  update/[id]/_components/<entity>-update-form.tsx
+  [id]/update/page.tsx
+  [id]/update/_components/<entity>-update-form.tsx
 ```
 
-The filter panel is optional (roles and editions have none); further row screens such as
-`detail/[id]` or `members/[id]` are added the same way and linked from the row actions.
+A screen about one record puts the id before the screen: `/admin/<entity>/{id}/<action>`
+(`/admin/users/{id}/update`), so the id names the record and the last segment the screen. The
+filter panel is optional (roles and editions have none); further row screens such as
+`[id]/detail` or `[id]/members` are added the same way and linked from the row actions.
 
 Page components (server) are covered by the `frontend-page` skill; the API slice by
 `rtk-query-api`. This skill covers the client components.
@@ -94,7 +96,7 @@ for a mutation; `variant` is `default | primary | success | warning | danger`:
 cell: (info) => (
   <DataTableRowActions
     actions={[
-      { label: t('common.edit'), icon: <Pencil className="h-4 w-4" />, href: `/admin/users/update/${info.row.original.id}`, hidden: !canUpdate },
+      { label: t('common.edit'), icon: <Pencil className="h-4 w-4" />, href: `/admin/users/${info.row.original.id}/update`, hidden: !canUpdate },
       { label: t('common.delete'), icon: <Trash2 className="h-4 w-4" />, variant: 'danger', onClick: () => handleDelete(info.row.original.id), disabled: isDeletingUser, hidden: !canDelete },
     ]}
   />

@@ -76,7 +76,7 @@ export const TenantDetailView = ({ tenantId }: TenantDetailViewProps) => {
         <div className="mb-4 flex items-center justify-between gap-4">
           <h2 className="text-lg font-semibold dark:text-white-light">{t('page.tenants.detail.information')}</h2>
           {canOpenUpdate && (
-            <LocalizedLink href={`/admin/tenants/update/${tenant.id}`} className="btn btn-secondary btn-sm">
+            <LocalizedLink href={`/admin/tenants/${tenant.id}/update`} className="btn btn-secondary btn-sm">
               <Pencil className="me-1 h-3 w-3" />
               {t('common.edit')}
             </LocalizedLink>

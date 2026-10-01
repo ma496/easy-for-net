@@ -26,7 +26,7 @@ export const authUrls: AuthUrl[] = [
     permissions: [Allow.User_Create],
   },
   {
-    url: '/admin/users/update/{id}',
+    url: '/admin/users/{id}/update',
     permissions: [Allow.User_Update],
   },
   {
@@ -38,11 +38,11 @@ export const authUrls: AuthUrl[] = [
     permissions: [Allow.Role_Create],
   },
   {
-    url: '/admin/roles/update/{id}',
+    url: '/admin/roles/{id}/update',
     permissions: [Allow.Role_Update],
   },
   {
-    url: '/admin/roles/change-permissions/{id}',
+    url: '/admin/roles/{id}/change-permissions',
     permissions: [Allow.Role_ChangePermissions],
   },
   {
@@ -60,7 +60,7 @@ export const authUrls: AuthUrl[] = [
   {
     // Editing a tenant's entitlements is a platform act, not something a tenant does to itself, so
     // every screen below is gated on a permission the API declares platform-scoped.
-    url: '/admin/tenants/features/{id}',
+    url: '/admin/tenants/{id}/features',
     permissions: [Allow.FeatureValue_View],
   },
   {
@@ -72,23 +72,23 @@ export const authUrls: AuthUrl[] = [
     permissions: [Allow.Edition_Create],
   },
   {
-    url: '/admin/editions/update/{id}',
+    url: '/admin/editions/{id}/update',
     permissions: [Allow.Edition_Update],
   },
   {
-    url: '/admin/editions/features/{id}',
+    url: '/admin/editions/{id}/features',
     permissions: [Allow.FeatureValue_View],
   },
   {
-    url: '/admin/tenants/update/{id}',
+    url: '/admin/tenants/{id}/update',
     permissions: [Allow.Tenant_Update],
   },
   {
-    url: '/admin/tenants/members/{id}',
+    url: '/admin/tenants/{id}/members',
     permissions: [Allow.TenantMember_View],
   },
   {
-    url: '/admin/tenants/detail/{id}',
+    url: '/admin/tenants/{id}/detail',
     permissions: [Allow.Tenant_Detail],
   },
   {

@@ -53,7 +53,7 @@ export const navItems: (NavItem | NavItemGroup)[] = [
           },
           {
             title: 'navigation.usersUpdate',
-            url: '/admin/users/update/{id}',
+            url: '/admin/users/{id}/update',
 
             show: false,
           },
@@ -76,13 +76,13 @@ export const navItems: (NavItem | NavItemGroup)[] = [
           },
           {
             title: 'navigation.rolesUpdate',
-            url: '/admin/roles/update/{id}',
+            url: '/admin/roles/{id}/update',
 
             show: false,
           },
           {
             title: 'navigation.rolesChangePermissions',
-            url: '/admin/roles/change-permissions/{id}',
+            url: '/admin/roles/{id}/change-permissions',
 
             show: false,
           },
@@ -103,22 +103,22 @@ export const navItems: (NavItem | NavItemGroup)[] = [
           },
           {
             title: 'navigation.tenantsUpdate',
-            url: '/admin/tenants/update/{id}',
+            url: '/admin/tenants/{id}/update',
             show: false,
           },
           {
             title: 'navigation.tenantsMembers',
-            url: '/admin/tenants/members/{id}',
+            url: '/admin/tenants/{id}/members',
             show: false,
           },
           {
             title: 'navigation.tenantsDetail',
-            url: '/admin/tenants/detail/{id}',
+            url: '/admin/tenants/{id}/detail',
             show: false,
           },
           {
             title: 'navigation.tenantsFeatures',
-            url: '/admin/tenants/features/{id}',
+            url: '/admin/tenants/{id}/features',
             show: false,
           },
         ],
@@ -138,12 +138,12 @@ export const navItems: (NavItem | NavItemGroup)[] = [
           },
           {
             title: 'navigation.editionsUpdate',
-            url: '/admin/editions/update/{id}',
+            url: '/admin/editions/{id}/update',
             show: false,
           },
           {
             title: 'navigation.editionsFeatures',
-            url: '/admin/editions/features/{id}',
+            url: '/admin/editions/{id}/features',
             show: false,
           },
         ],

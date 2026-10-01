@@ -221,7 +221,7 @@ export const UserTable = () => {
             {
               label: t('common.edit'),
               icon: <Pencil className="h-4 w-4" />,
-              href: `/admin/users/update/${info.row.original.id}`,
+              href: `/admin/users/${info.row.original.id}/update`,
               hidden: !canUpdate,
             },
             {

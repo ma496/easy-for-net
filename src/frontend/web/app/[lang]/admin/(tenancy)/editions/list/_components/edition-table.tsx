@@ -136,13 +136,13 @@ export const EditionTable = () => {
               {
                 label: t('common.edit'),
                 icon: <Pencil className="h-4 w-4" />,
-                href: `/admin/editions/update/${edition.id}`,
+                href: `/admin/editions/${edition.id}/update`,
                 hidden: !canUpdate,
               },
               {
                 label: t('page.features.actionLabel'),
                 icon: <SlidersHorizontal className="h-4 w-4" />,
-                href: `/admin/editions/features/${edition.id}`,
+                href: `/admin/editions/${edition.id}/features`,
                 hidden: !canViewFeatures,
               },
               {
