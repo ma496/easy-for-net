@@ -13,10 +13,10 @@ public static class TestsHelper
     /// membership stands, and refuses an ordinary account outright when none or several do, so an
     /// account holding anything other than one membership has to name the tenant it means here.
     /// </summary>
-    public static async Task<string> GetNewAuthTokenAsync(HttpClient client, string username = TestUsers.TenantAdminUsername, string password = TestUsers.AdminPassword, string? tenantIdentifier = null)
+    public static async Task<string> GetNewAuthTokenAsync(HttpClient client, string username = TestUsers.TenantAdminUsername, string? password = null, string? tenantIdentifier = null)
     {
         var (_, res) = await client.POSTAsync<TokenEndpoint, TokenRequest, TokenResponse>(
-            new() { Username = username, Password = password, TenantIdentifier = tenantIdentifier });
+            new() { Username = username, Password = password ?? TestUsers.AdminPassword, TenantIdentifier = tenantIdentifier });
 
         return res.AccessToken;
     }
@@ -24,7 +24,7 @@ public static class TestsHelper
     /// <summary>
     /// Signs in, naming a tenant when one is given, and leaves the client presenting the resulting token.
     /// </summary>
-    public static async Task SetNewAuthTokenAsync(HttpClient client, string username = TestUsers.TenantAdminUsername, string password = TestUsers.AdminPassword, string? tenantIdentifier = null)
+    public static async Task SetNewAuthTokenAsync(HttpClient client, string username = TestUsers.TenantAdminUsername, string? password = null, string? tenantIdentifier = null)
         => SetAuthToken(client, await GetNewAuthTokenAsync(client, username, password, tenantIdentifier));
 
     /// <summary>

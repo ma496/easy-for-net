@@ -106,7 +106,7 @@ public abstract class AppTestsBase(App app) : TestBase
     /// several, so a tenant is named here whenever the account holds anything but one. With no
     /// arguments the caller is the bootstrap tenant's administrator, acting in that tenant.
     /// </summary>
-    protected async Task SetAuthTokenAsync(string username = TestUsers.TenantAdminUsername, string password = TestUsers.AdminPassword, Guid? tenantId = null)
+    protected async Task SetAuthTokenAsync(string username = TestUsers.TenantAdminUsername, string? password = null, Guid? tenantId = null)
     {
         await TestsHelper.SetNewAuthTokenAsync(Client, username, password, await TenantIdentifierOfAsync(tenantId));
     }
@@ -134,7 +134,7 @@ public abstract class AppTestsBase(App app) : TestBase
     /// </summary>
     protected async Task SetPlatformAdminAuthTokenAsync()
     {
-        await TestsHelper.SetNewAuthTokenAsync(Client, TestUsers.PlatformAdminUsername, TestUsers.AdminPassword);
+        await TestsHelper.SetNewAuthTokenAsync(Client, TestUsers.PlatformAdminUsername, TestUsers.PlatformAdminPassword);
     }
 
     /// <summary>

@@ -41,7 +41,7 @@ public abstract class SettingsTestsBase(App app) : TenancyTestsBase(app)
     protected async Task<HttpClient> PlatformClientAsync()
     {
         var client = App.CreateClient(new ClientOptions { HandleCookies = false });
-        await TestsHelper.SetNewAuthTokenAsync(client, TestUsers.PlatformAdminUsername, TestUsers.AdminPassword);
+        await TestsHelper.SetNewAuthTokenAsync(client, TestUsers.PlatformAdminUsername, TestUsers.PlatformAdminPassword);
         return client;
     }
 

@@ -6,6 +6,7 @@ using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Notifications.Core;
 using Backend.Features.Notifications.Core.Entities;
+using Backend.Settings;
 
 /// <summary>
 /// Populates the database with baseline data on first run and keeps the permission catalogue, the
@@ -28,6 +29,7 @@ public class DataSeeder(IUserService userService,
                         ITenantContext tenantContext,
                         IFeatureDefinitionService featureDefinitionService,
                         IFeatureValueStore featureValueStore,
+                        IOptions<SeedSetting> seedSetting,
                         AppDbContext dbContext)
 {
     /// <summary>
@@ -46,7 +48,6 @@ public class DataSeeder(IUserService userService,
     /// </summary>
     private const string PlatformAdminUsername = "admin";
     private const string PlatformAdminEmail = "admin@example.com";
-    private const string PlatformAdminPassword = "Admin#123";
 
     /// <summary>
     /// The bootstrap tenant's administrator account - an identity separate from the platform
@@ -54,7 +55,6 @@ public class DataSeeder(IUserService userService,
     /// </summary>
     private const string TenantAdminUsername = "tenantadmin";
     private const string TenantAdminEmail = "tenantadmin@example.com";
-    private const string TenantAdminPassword = "Admin#123";
 
     /// <summary>
     /// Reconciles persisted permissions, tenants, roles, users and memberships with the definitions
@@ -67,8 +67,8 @@ public class DataSeeder(IUserService userService,
 
         var permissions = await ReconcilePermissionsAsync();
         await PruneOrphanFeatureValuesAsync();
-        var platformAdminUser = await SeedUserAsync(PlatformAdminUsername, PlatformAdminEmail, PlatformAdminPassword, isPlatform: true);
-        var tenantAdminUser = await SeedUserAsync(TenantAdminUsername, TenantAdminEmail, TenantAdminPassword, isPlatform: false);
+        var platformAdminUser = await SeedUserAsync(PlatformAdminUsername, PlatformAdminEmail, seedSetting.Value.PlatformAdminPassword, isPlatform: true);
+        var tenantAdminUser = await SeedUserAsync(TenantAdminUsername, TenantAdminEmail, seedSetting.Value.TenantAdminPassword, isPlatform: false);
 
         await ReconcilePlatformAdminRoleAsync(permissions, platformAdminUser);
         await ReconcileBootstrapTenantAdministrationAsync(permissions, tenantAdminUser);

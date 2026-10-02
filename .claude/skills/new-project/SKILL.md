@@ -29,7 +29,7 @@ dotnet efn createproject --name my-shop --output projects
 | --- | --- |
 | `-n`, `--name` (required) | Letters, `-` and `_` only, at least two characters, starting and ending with a letter. Parts split on `-`/`_` are joined in PascalCase (`my-shop` → `MyShop`) for namespaces, project files and the solution; the kebab-case form (`my-shop`) names the folder and the npm packages. |
 | `-o`, `--output` | Parent directory (relative to the current directory, or absolute). The project is created in `<output>/<kebab-name>`, which must not exist yet. Defaults to the current directory. |
-| `-m`, `--multilanguage` | Meant to keep all eight locales when `true`. **Currently unusable:** passing it with any value crashes with `Multilanguage not found in ...CreateProjectArgument`. Omit it; the project then ships English only. |
+| `-m`, `--multilanguage` | `true` keeps all eight locales; `false` (the default) ships English only. Any other value is refused. |
 
 The tool clones `https://github.com/ma496/EasyForNet.git` into
 `%LOCALAPPDATA%/EasyForNet/Templates/<tool version>` and checks out the tag `v<tool version>`, so the
@@ -42,6 +42,12 @@ What you get:
   backend projects added.
 - `appsettings.Development.json` / `appsettings.Testing.json` copied from `appsettings.json`, and
   `src/frontend/web/.env.development` copied from `.env.example`.
+- A root `.env` for `docker-compose.prod.yml` (git-ignored), written from `.env.docker.example` with the
+  project's names, `DOMAIN=localhost` and fresh random database, Redis and administrator passwords and
+  JWT key, plus a `README.md` for the project.
+- A git repository holding everything generated in one commit, `Initial project` (skipped with a
+  message when git is missing; when the commit is refused — no `user.name` — the repository is left
+  initialized for you to commit).
 - Root files `.editorconfig`, `.gitignore`, `.gitattributes`, `global.json`, `package.json` (the gate
   and task-loop scripts) and `agentic.config.json`, plus `.config` (pinned `dotnet-ef`) and `.vscode`.
 - `CLAUDE.md` and the agentic layer: `.claude` (agents, commands, hooks, `settings.json`, status
@@ -52,32 +58,33 @@ What you get:
 
 Namespaces, project file names, `InternalsVisibleTo`, the `ReflectionCache.AddFrom…` call, the npm
 package names (web and root), `agentic.config.json`'s `project.name`, the app's display name and the
-`.claude` markdown are rewritten to the project name. The generator does **not** run `git init`,
-`npm install` or `dotnet ef`.
+`.claude` markdown are rewritten to the project name. The generator does **not** run `npm install`
+or `dotnet ef`. It prints the seeded administrators' generated password and the next steps when done.
 
 ## Post-create setup
 
 Run these from the new project's root.
 
-1. **Database password.** Connection strings (`ConnectionStrings:DefaultConnection` and
-   `Hangfire:Storage:ConnectionString`) carry a literal `{password}` placeholder in
-   `src/backend/Source/appsettings.json`, `appsettings.Development.json` and
-   `appsettings.Testing.json`. The databases are `<Name>` and `<Name>Test`. Ask the developer to
-   replace it themselves: the hooks refuse Claude reading or editing the per-environment
-   `appsettings.*.json` and `.env*` files. Development and Testing already have a generated
-   `Auth:Jwt:Key`.
-2. **Git repository.** The task loop reads diffs and commits, and the runner refuses a dirty tree:
+1. **Database password.** Development and Testing connect as `postgres` / `postgres` — the
+   `docker-compose.yml` default — to the databases `<Name>` and `<Name>Test`; the tracked
+   `appsettings.json` keeps a literal `{password}` placeholder. If the developer uses their own
+   PostgreSQL, ask them to change the per-environment files themselves: the hooks refuse Claude
+   reading or editing `appsettings.*.json` and `.env*`. Development and Testing already have a
+   generated `Auth:Jwt:Key`.
+2. **Git repository.** Already initialized with one commit. If the generator reported that the commit
+   failed, finish it (the task loop reads diffs and the runner refuses a dirty tree):
 
    ```sh
-   git init
    git add .
    git commit -m "Initial project"
    ```
 
-3. **Initial migration.**
+3. **Initial migration.** Build first: `dotnet ef` reads project metadata without restoring, so it
+   fails on a project whose packages were never restored.
 
    ```sh
    dotnet tool restore
+   dotnet build <Name>.slnx
    dotnet ef migrations add Initial --project src/backend/Source
    ```
 
@@ -108,9 +115,13 @@ Run these from the new project's root.
    only. Every start — in every environment — reconciles the permission catalogue and seeds, when
    absent:
    - the **Default** tenant (identifier `default`);
-   - `admin` / `Admin#123` — the platform account: no tenant membership, signs in to platform scope
+   - `admin` — the platform account: no tenant membership, signs in to platform scope
      (tenants, editions, platform roles, Hangfire);
-   - `tenantadmin` / `Admin#123` — administrator of the Default tenant, with sample notifications.
+   - `tenantadmin` — administrator of the Default tenant, with sample notifications.
+
+   Both take the password the generator printed: the `Seed` section (`PlatformAdminPassword`,
+   `TenantAdminPassword`) of `appsettings.json` and the Development/Testing files, random per project
+   and applied only when an account is created.
 6. **Run the web app.**
 
    ```sh
@@ -133,8 +144,11 @@ Run these from the new project's root.
    `Auth:Jwt:Issuer` and `Auth:Jwt:Audience` through secure configuration — startup refuses to boot
    with the placeholder key outside Development/Testing. `Web:Domains` must list the real front-end
    origins, `Database:ApplyMigrationsOnStartup` defaults to false there (run
-   `dotnet ef database update` explicitly), and the seeded accounts' `Admin#123` passwords must be
-   changed.
+   `dotnet ef database update` explicitly), and the seeded accounts' passwords should be changed in the
+   app. For the Docker stack, the generated root `.env` already holds every secret
+   `docker-compose.prod.yml` needs (`SEED_ADMIN_PASSWORD` for the administrators); set `DOMAIN`,
+   `PUBLIC_URL` and the SMTP values, then
+   `docker compose -f docker-compose.prod.yml --env-file .env up -d --build`.
 
 ## Then
 

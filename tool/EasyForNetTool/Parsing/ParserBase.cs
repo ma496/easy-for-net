@@ -58,7 +58,7 @@ public abstract class ParserBase
     private static void SetProperty(Argument argument, string value, ArgumentOption opt)
     {
         value = opt.NormalizeMethod != null ? opt.NormalizeMethod.Invoke(value) : value;
-        var propertyName = opt.Name.Substring(2).ToPascalCase();
+        var propertyName = opt.PropertyName ?? opt.Name.Substring(2).ToPascalCase();
         var property = argument.GetType().GetProperty(propertyName);
         if (property == null)
             throw new Exception($"{propertyName} not found in {argument.GetType().FullName}");
@@ -66,6 +66,13 @@ public abstract class ParserBase
             value = opt.Default;
         if (opt.Required && string.IsNullOrWhiteSpace(value))
             throw new UserFriendlyException($"{opt.ShortName} or {opt.Name} can not be empty.");
+        if (property.PropertyType == typeof(bool))
+        {
+            if (!bool.TryParse(value, out var flag))
+                throw new UserFriendlyException($"{opt.ShortName} or {opt.Name} must be true or false.");
+            property.SetValue(argument, flag);
+            return;
+        }
         property.SetValue(argument, value);
     }
 

@@ -55,6 +55,9 @@ services:
       ConnectionStrings__Redis: redis:6379,password=${REDIS_PASSWORD}
       Redis__InstanceName: ${REDIS_INSTANCE_NAME:-app:}
       Auth__Jwt__Key: ${JWT_KEY:?set JWT_KEY}
+      # Passwords of the seeded administrators, applied only when the accounts are first created
+      Seed__PlatformAdminPassword: ${SEED_ADMIN_PASSWORD:?set SEED_ADMIN_PASSWORD}
+      Seed__TenantAdminPassword: ${SEED_ADMIN_PASSWORD}
       Web__DefaultDomain: ${PUBLIC_URL:?set PUBLIC_URL}
       Web__Domains__0: ${PUBLIC_URL}
       Database__ApplyMigrationsOnStartup: "true"

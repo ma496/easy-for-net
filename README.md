@@ -79,9 +79,13 @@ takes effect only when its volume is first created.
 serving both apps from one HTTPS origin (certificates are obtained automatically for `DOMAIN`):
 
 ```sh
-cp .env.docker.example .env      # fill in every value: DOMAIN, PUBLIC_URL, passwords, JWT_KEY (32+ characters), SMTP
 docker compose -f docker-compose.prod.yml --env-file .env up -d --build
 ```
+
+A generated project already has the root `.env` (git-ignored): random database, Redis and administrator
+(`SEED_ADMIN_PASSWORD`) passwords, a JWT key, and `DOMAIN=localhost`, so the stack starts as generated.
+Before deploying for real, set `DOMAIN`, `PUBLIC_URL` and the SMTP values. `.env.docker.example`
+documents every value; copy it to `.env` and fill it in if the file is missing.
 
 The API applies migrations on startup, so add the initial migration first (see **Add Migration**).
 `NEXT_PUBLIC_API_URL` is built into the web image from `PUBLIC_URL`, so changing the domain means
@@ -90,7 +94,7 @@ volumes; back up those and the database volume.
 
 ## Change Connection Strings
 
-Go to `{name}/src/backend/Source` directory. By default, the EasyForNet sets up connection strings for PostgreSQL in the `appsettings.json`, `appsettings.Development.json` and `appsettings.Testing.json` files. To change the connection strings, follow these steps:
+Go to `{name}/src/backend/Source` directory. By default, the EasyForNet sets up connection strings for PostgreSQL in the `appsettings.json`, `appsettings.Development.json` and `appsettings.Testing.json` files. Development and Testing connect as `postgres` / `postgres`, the `docker compose` default; `appsettings.json` keeps a `{password}` placeholder. To use another PostgreSQL, follow these steps:
 
 1. Open the `appsettings.Development.json` file. Update the `DefaultConnection` and `Hangfire` connection strings with your PostgreSQL connection details:
 
@@ -119,9 +123,10 @@ Go to `{name}/src/backend/Source` directory. By default, the EasyForNet sets up 
 
 ## Add Migration
 
-Go to `{name}/src/backend/Source` directory and run the following command:
+Go to `{name}/src/backend/Source` directory and run the following commands. Build first: `dotnet ef` fails on a project whose packages were never restored.
 
 ```sh
+dotnet build
 dotnet ef migrations add Initial
 ```
 
@@ -151,10 +156,13 @@ To run the project, navigate to the `{name}/src/frontend/web` directory and exec
 npm run dev
 ```
 
-Default credentials:
+Seeded accounts:
 
-- Platform administrator (manages tenants, belongs to no tenant): `admin` / `Admin#123`
-- Default tenant administrator: `tenantadmin` / `Admin#123`
+- Platform administrator (manages tenants, belongs to no tenant): `admin`
+- Default tenant administrator: `tenantadmin`
+
+Their password is generated for each project and printed when it is created. It is in the `Seed`
+section of `src/backend/Source/appsettings.json` and applied only when an account is first created.
 
 ## Run the Tests
 

@@ -288,7 +288,7 @@ public class TenantConcurrencyTests(App app) : TenancyTestsBase(app)
     private async Task<HttpClient> PlatformAdministratorClientAsync()
     {
         var client = App.CreateClient(new ClientOptions { HandleCookies = false });
-        await TestsHelper.SetNewAuthTokenAsync(client, TestUsers.PlatformAdminUsername, TestUsers.AdminPassword);
+        await TestsHelper.SetNewAuthTokenAsync(client, TestUsers.PlatformAdminUsername, TestUsers.PlatformAdminPassword);
         return client;
     }
 }
