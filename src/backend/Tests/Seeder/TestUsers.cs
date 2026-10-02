@@ -20,9 +20,16 @@ public static class TestUsers
     public const string TenantAdminUsername = "tenantadmin";
 
     /// <summary>
-    /// The password <c>DataSeeder</c> gives both seeded administrators.
+    /// The password <c>DataSeeder</c> gives <c>tenantadmin</c> - the <c>Seed:TenantAdminPassword</c>
+    /// setting, read once the host has started.
     /// </summary>
-    public const string AdminPassword = "Admin#123";
+    public static string AdminPassword { get; private set; } = null!;
+
+    /// <summary>
+    /// The password <c>DataSeeder</c> gives <c>admin</c> - the <c>Seed:PlatformAdminPassword</c>
+    /// setting, read once the host has started.
+    /// </summary>
+    public static string PlatformAdminPassword { get; private set; } = null!;
 
     public static Guid PlatformAdminUserId { get; private set; } = default;
     public static Guid TenantAdminUserId { get; private set; } = default;
@@ -50,6 +57,15 @@ public static class TestUsers
     /// because sign-in auto-selects a tenant only when exactly one active membership exists.
     /// </summary>
     public static Guid DualTenantUserId { get; private set; } = default;
+
+    /// <summary>
+    /// Sets the seeded administrators' passwords from the configuration <c>DataSeeder</c> read them from.
+    /// </summary>
+    public static void SetAdminPasswords(string platformAdminPassword, string tenantAdminPassword)
+    {
+        PlatformAdminPassword = platformAdminPassword;
+        AdminPassword = tenantAdminPassword;
+    }
 
     /// <summary>
     /// Sets the user IDs after they have been created in the database during seeding.

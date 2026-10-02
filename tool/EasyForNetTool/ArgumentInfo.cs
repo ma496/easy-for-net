@@ -47,6 +47,7 @@ public class ArgumentInfo
                     {
                         Name = "--multilanguage",
                         ShortName = "-m",
+                        PropertyName = nameof(CreateProjectArgument.MultiLanguage),
                         Description = "Enable multi-language support.",
                         Required = false,
                         Default = "false",
@@ -69,4 +70,8 @@ public class ArgumentOption
     public string Default { get; set; } = null!;
     public bool IsInternal { get; set; }
     public Func<string, string>? NormalizeMethod { get; set; } = null!;
+    /// <summary>
+    /// The argument property the option sets, when it is not the PascalCase form of <see cref="Name"/>.
+    /// </summary>
+    public string? PropertyName { get; init; }
 }

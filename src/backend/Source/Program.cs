@@ -215,6 +215,12 @@ bld.Services.AddOptions<WebSetting>()
     .Validate(setting => setting.AllowedDomains().Length > 0 && setting.AllowedDomains().All(domain => Uri.TryCreate(domain, UriKind.Absolute, out _)),
         "Web domains must be valid absolute URLs.")
     .ValidateOnStart();
+// the seeded administrators must be able to sign in, so their passwords meet the sign-in validator's bounds
+bld.Services.AddOptions<SeedSetting>()
+    .Bind(bld.Configuration.GetRequiredSection("Seed"))
+    .Validate(setting => setting.PlatformAdminPassword is { Length: >= 8 and <= 50 } && setting.TenantAdminPassword is { Length: >= 8 and <= 50 },
+        "Seed administrator passwords must be between 8 and 50 characters.")
+    .ValidateOnStart();
 
 // rely on middleware and FormOptions to enforce limits to avoid abrupt connection resets
 bld.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = maximumPayloadSize);

@@ -6,6 +6,8 @@ using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
+using Backend.Settings;
+using Microsoft.Extensions.Options;
 
 /// <summary>
 /// Seeds test data into the database including tenants, users, roles, memberships and permissions.
@@ -35,6 +37,7 @@ public class TestsDataSeeder(IUserService userService,
                              ITenantService tenantService,
                              ITenantAuthorizationService tenantAuthorizationService,
                              ITenantContext tenantContext,
+                             IOptions<SeedSetting> seedSetting,
                              AppDbContext dbContext)
 {
     /// <summary>
@@ -45,6 +48,8 @@ public class TestsDataSeeder(IUserService userService,
     /// </summary>
     public async Task SeedAsync()
     {
+        TestUsers.SetAdminPasswords(seedSetting.Value.PlatformAdminPassword, seedSetting.Value.TenantAdminPassword);
+
         var permissions = await permissionService.Permissions().ToListAsync();
 
         var (testUserId, testRoleId) = await CreateUserWithRoleAsync(permissions, "test", "Test");

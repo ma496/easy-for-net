@@ -18,34 +18,93 @@ using Microsoft.CodeAnalysis.Formatting;
 public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
 {
     /// <summary>
+    /// The PostgreSQL password the Development and Testing connection strings are written with - the
+    /// default the project's own <c>docker-compose.yml</c> starts PostgreSQL with.
+    /// </summary>
+    internal const string DevelopmentDatabasePassword = "postgres";
+
+    /// <summary>
     /// Rewrites the copied <c>appsettings.json</c>, <c>appsettings.Development.json</c> and
     /// <c>appsettings.Testing.json</c> for a new project: its databases, fresh JWT keys for
-    /// Development and Testing, and its own Redis key prefix so several applications can share one
-    /// Redis server (<c>&lt;Name&gt;:</c>, and <c>&lt;Name&gt;Test:</c> for Testing).
+    /// Development and Testing, its own Redis key prefix so several applications can share one
+    /// Redis server (<c>&lt;Name&gt;:</c>, and <c>&lt;Name&gt;Test:</c> for Testing), and a random
+    /// password for the seeded administrators in all three files.
     /// </summary>
+    /// <remarks>
+    /// Development and Testing connect with the <c>docker-compose.yml</c> default password, so the
+    /// project runs against <c>docker compose up -d</c> as generated; the tracked
+    /// <c>appsettings.json</c> keeps its <c>{password}</c> placeholder.
+    /// </remarks>
     /// <param name="backendProjectTargetPath">The generated backend project directory holding the appsettings files.</param>
     /// <param name="pascalCaseProjectName">The PascalCase project name.</param>
-    internal static async Task CustomizeAppSettingsAsync(string backendProjectTargetPath, string pascalCaseProjectName)
+    /// <returns>The seeded administrators' password.</returns>
+    internal static async Task<string> CustomizeAppSettingsAsync(string backendProjectTargetPath, string pascalCaseProjectName)
     {
         var appSettings = Path.Combine(backendProjectTargetPath, "appsettings.json");
         var developmentSettings = Path.Combine(backendProjectTargetPath, "appsettings.Development.json");
         var testingSettings = Path.Combine(backendProjectTargetPath, "appsettings.Testing.json");
         var connectionString = $"Host=localhost;Port=5432;Database={pascalCaseProjectName};Username=postgres;Password={{password}}";
-        var testConnectionString = $"Host=localhost;Port=5432;Database={pascalCaseProjectName}Test;Username=postgres;Password={{password}}";
+        var developmentConnectionString = $"Host=localhost;Port=5432;Database={pascalCaseProjectName};Username=postgres;Password={DevelopmentDatabasePassword}";
+        var testConnectionString = $"Host=localhost;Port=5432;Database={pascalCaseProjectName}Test;Username=postgres;Password={DevelopmentDatabasePassword}";
+        var adminPassword = Secrets.Password(16);
 
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(appSettings, "ConnectionStrings.DefaultConnection", connectionString);
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(appSettings, "Hangfire.Storage.ConnectionString", connectionString);
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(appSettings, "Redis.InstanceName", $"{pascalCaseProjectName}:");
 
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(developmentSettings, "Auth.Jwt.Key", Guid.NewGuid().ToString());
-        await JsonPropertyUpdater.UpdateJsonPropertyAsync(developmentSettings, "ConnectionStrings.DefaultConnection", connectionString);
-        await JsonPropertyUpdater.UpdateJsonPropertyAsync(developmentSettings, "Hangfire.Storage.ConnectionString", connectionString);
+        await JsonPropertyUpdater.UpdateJsonPropertyAsync(developmentSettings, "ConnectionStrings.DefaultConnection", developmentConnectionString);
+        await JsonPropertyUpdater.UpdateJsonPropertyAsync(developmentSettings, "Hangfire.Storage.ConnectionString", developmentConnectionString);
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(developmentSettings, "Redis.InstanceName", $"{pascalCaseProjectName}:");
 
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(testingSettings, "Auth.Jwt.Key", Guid.NewGuid().ToString());
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(testingSettings, "ConnectionStrings.DefaultConnection", testConnectionString);
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(testingSettings, "Hangfire.Storage.ConnectionString", testConnectionString);
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(testingSettings, "Redis.InstanceName", $"{pascalCaseProjectName}Test:");
+
+        foreach (var settings in new[] { appSettings, developmentSettings, testingSettings })
+        {
+            await JsonPropertyUpdater.UpdateJsonPropertyAsync(settings, "Seed.PlatformAdminPassword", adminPassword);
+            await JsonPropertyUpdater.UpdateJsonPropertyAsync(settings, "Seed.TenantAdminPassword", adminPassword);
+        }
+
+        return adminPassword;
+    }
+
+    /// <summary>
+    /// Writes the project's root <c>.env</c> - the values <c>docker-compose.prod.yml</c> reads - from
+    /// the template's <c>.env.docker.example</c>, keeping its comments: the project's own Compose
+    /// project, database and Redis key prefix, fresh random database, Redis and administrator
+    /// passwords and JWT signing key, and <c>localhost</c> as the domain so the stack starts as
+    /// generated. Values the example leaves for the developer (SMTP) are copied as they are.
+    /// </summary>
+    /// <param name="examplePath">The template's <c>.env.docker.example</c>.</param>
+    /// <param name="envPath">The <c>.env</c> file to create.</param>
+    /// <param name="kebabCaseProjectName">The kebab-case project name.</param>
+    /// <param name="pascalCaseProjectName">The PascalCase project name.</param>
+    internal static async Task WriteDockerEnvAsync(string examplePath, string envPath, string kebabCaseProjectName, string pascalCaseProjectName)
+    {
+        var snakeCaseProjectName = kebabCaseProjectName.Replace('-', '_');
+        var values = new Dictionary<string, string>
+        {
+            ["PROD_PROJECT_NAME"] = kebabCaseProjectName,
+            ["DOMAIN"] = "localhost",
+            ["PUBLIC_URL"] = "https://localhost",
+            ["POSTGRES_DB"] = snakeCaseProjectName,
+            ["POSTGRES_USER"] = snakeCaseProjectName,
+            ["POSTGRES_PASSWORD"] = Secrets.Alphanumeric(32),
+            ["REDIS_PASSWORD"] = Secrets.Alphanumeric(32),
+            ["REDIS_INSTANCE_NAME"] = $"{pascalCaseProjectName}:",
+            ["JWT_KEY"] = Secrets.Base64(48),
+            // letters and digits only: a "#" could be read as the start of a comment by an env-file parser
+            ["SEED_ADMIN_PASSWORD"] = Secrets.Alphanumeric(20),
+        };
+
+        var content = await File.ReadAllTextAsync(examplePath);
+        foreach (var (key, value) in values)
+            content = Regex.Replace(content, $@"(?m)^{Regex.Escape(key)}=[^\r\n]*", $"{key}={value.Replace("$", "$$")}");
+
+        await File.WriteAllTextAsync(envPath, content);
     }
 
     /// <summary>
@@ -145,6 +204,8 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             CopyFrom(webProjectPath, webTargetPath, ".env.example", ".env.development");
             CopyFiles(versionedTemplateDir, targetPath, ".editorconfig", ".gitignore", ".gitattributes", "global.json", "package.json", "agentic.config.json",
                 "docker-compose.yml", "docker-compose.prod.yml", ".env.docker.example");
+            // .env is git-ignored in the template, so it is written from the tracked example with this project's values
+            await WriteDockerEnvAsync(Path.Combine(versionedTemplateDir, ".env.docker.example"), Path.Combine(targetPath, ".env"), kebabCaseProjectName, pascalCaseProjectName);
             CopyDirectory($"{versionedTemplateDir}/docker", $"{targetPath}/docker", true);
             CopyDirectory($"{versionedTemplateDir}/.config", $"{targetPath}/.config", true);
             CopyDirectory($"{versionedTemplateDir}/.vscode", $"{targetPath}/.vscode", true);
@@ -153,6 +214,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             // the task loop recorded are about the template repository too
             CopyDirectory($"{versionedTemplateDir}/.claude", $"{targetPath}/.claude", true, ["new-project", "template-maintenance", "lessons"]);
             WriteEmbeddedFile("new-project-claude.md", Path.Combine(targetPath, "CLAUDE.md"));
+            WriteEmbeddedFile("new-project-readme.md", Path.Combine(targetPath, "README.md"));
             // the spec-driven task loop: its engine ships whole, and the places it records work
             // ship empty, so a new project starts with no specs, queue, build records or lessons
             CopyDirectory($"{versionedTemplateDir}/scripts", $"{targetPath}/scripts", true);
@@ -169,8 +231,8 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             {
                 throw new UserFriendlyException($"Failed to get root namespace from project '{backendTestProjectTargetPath}'. csproj file is not found.");
             }
-            // update connection strings, the JWT keys and the Redis key prefixes
-            await CustomizeAppSettingsAsync(backendProjectTargetPath, pascalCaseProjectName);
+            // update connection strings, the JWT keys, the Redis key prefixes and the seeded administrators' password
+            var adminPassword = await CustomizeAppSettingsAsync(backendProjectTargetPath, pascalCaseProjectName);
             // update Meta.cs
             await ReplaceInFile(Path.Combine(backendProjectTargetPath, "Meta.cs"), $@"InternalsVisibleTo\s*\(\s*""{Regex.Escape(backendTestProjectName)}""\s*\)", $@"InternalsVisibleTo(""{pascalCaseProjectName}.Tests"")");
             // update Program.cs
@@ -198,8 +260,10 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             // the workspace scripts and the task loop name the project in briefs, the status line and the scheduled task
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(targetPath, "package.json"), "name", kebabCaseProjectName);
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(targetPath, "agentic.config.json"), "project.name", kebabCaseProjectName);
-            // update CLAUDE.md
+            // update CLAUDE.md and README.md
             await ReplaceInFile(Path.Combine(targetPath, "CLAUDE.md"), @"EasyForNet\.slnx", $@"{pascalCaseProjectName}.slnx");
+            await ReplaceInFile(Path.Combine(targetPath, "README.md"), @"\{\{Name\}\}", pascalCaseProjectName);
+            await ReplaceInFile(Path.Combine(targetPath, "README.md"), @"\{\{name\}\}", kebabCaseProjectName);
             // update the skill guides, which reference the template's namespaces and solution file
             var claudeSkillsPath = Path.Combine(targetPath, ".claude");
             await ReplaceInFiles(claudeSkillsPath, $@"{Regex.Escape(backendProjectRootNamespace)}\.", $@"{pascalCaseProjectName}.", ".md");
@@ -247,7 +311,24 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
                 await ExecuteCommand("dotnet", $"sln \"{solutionPath}\" add \"{projectFile}\"");
             }
 
+            // the task loop reads diffs and refuses a dirty tree, so the project starts as a repository with one commit
+            await InitializeGitRepositoryAsync(targetPath);
+
             Console.WriteLine("Project creation completed successfully!");
+            Console.WriteLine();
+            Console.WriteLine($"  Seeded accounts: admin and tenantadmin, password {adminPassword}");
+            Console.WriteLine("  (the Seed section of the appsettings files; .env holds the production stack's own secrets)");
+            Console.WriteLine();
+            Console.WriteLine("  Next steps:");
+            Console.WriteLine($"    cd {kebabCaseProjectName}");
+            Console.WriteLine("    docker compose up -d");
+            Console.WriteLine("    dotnet tool restore");
+            Console.WriteLine($"    dotnet build {pascalCaseProjectName}.slnx");
+            Console.WriteLine("    dotnet ef migrations add Initial --project src/backend/Source");
+            Console.WriteLine("    dotnet run --project src/backend/Source");
+            Console.WriteLine("    cd src/frontend/web && npm install && npm run dev");
+            Console.WriteLine();
+            Console.WriteLine("  README.md has the rest.");
         }
         catch (UserFriendlyException)
         {
@@ -318,6 +399,44 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
         catch (Exception ex) when (ex is not InvalidOperationException)
         {
             throw new Exception($"Failed to execute command: {command} {arguments}\nError: {ex.Message}", ex);
+        }
+    }
+
+    /// <summary>
+    /// Makes the generated project a git repository holding everything generated in one commit. The
+    /// project is complete either way, so a failure here is reported and generation carries on: with
+    /// no git, nothing is done; when the commit is refused (no <c>user.name</c> configured, say), the
+    /// repository is left initialized with the command to finish it.
+    /// </summary>
+    /// <param name="targetPath">The generated project's root directory.</param>
+    private static async Task InitializeGitRepositoryAsync(string targetPath)
+    {
+        if (!IsGitInstalled())
+        {
+            Console.WriteLine("Git was not found, so no repository was created. Run `git init` in the project before using the task loop.");
+            return;
+        }
+
+        Console.WriteLine("Creating git repository...");
+        try
+        {
+            await ExecuteCommand("git", $"-C \"{targetPath}\" init");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: could not create a git repository: {ex.Message}");
+            return;
+        }
+
+        try
+        {
+            await ExecuteCommand("git", $"-C \"{targetPath}\" add .");
+            await ExecuteCommand("git", $"-C \"{targetPath}\" commit -m \"Initial project\"");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: the repository was created but the initial commit failed: {ex.Message}");
+            Console.WriteLine("Finish it with: git add . && git commit -m \"Initial project\"");
         }
     }
 

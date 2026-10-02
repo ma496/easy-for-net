@@ -98,7 +98,7 @@ abstract `<Area>TestsBase` on top of the closest of these.
 | `Service<T>()` | resolve a service in this test's scope (`Service<IRoleService>()`) |
 | `DbContext` | direct EF access for arranging/asserting state, in the same scope |
 | `TenantContext` | this scope's `ITenantContext`; `using var _ = TenantContext.BeginTenant(tenantId);` before writing tenant-scoped rows through `DbContext` (save-time attribution refuses them otherwise); read across tenants with `.AcrossAllTenants()` |
-| `SetAuthTokenAsync(username, password, tenantId?)` | sets the Bearer header; defaults to the default tenant's administrator `tenantadmin` / `Admin#123`, acting in that tenant |
+| `SetAuthTokenAsync(username, password, tenantId?)` | sets the Bearer header; defaults to the default tenant's administrator `tenantadmin` with `TestUsers.AdminPassword`, acting in that tenant |
 | `SetPlatformAdminAuthTokenAsync()` | signs in as the platform administrator `admin`, who holds no membership and so acts in no tenant; a platform account inside a tenant is created with a membership (`SignInAsPlatformAdministratorEnteringAsync`) |
 | `SwitchTenantAsync(tenantId)` | re-mints the signed-in caller's session in another tenant it belongs to |
 | `MarkAsPlatformAccountAsync(userId)` | sets `User.IsPlatform` on an account the test created |
@@ -145,7 +145,7 @@ permission as 403 `PermissionDenied`. `ErrorCodes` members are `ErrorCode` struc
 `Tests/Seeder` exposes what seeding created — reuse it instead of creating ad-hoc rows:
 
 - `TestUsers`: `PlatformAdminUsername` (`admin`), `TenantAdminUsername` (`tenantadmin`),
-  `AdminPassword` (`Admin#123`), `DefaultPassword` (`Test#123`), `PlatformAdminUserId`,
+  `AdminPassword` / `PlatformAdminPassword` (the `Seed` configuration section, read when the fixture seeds — never hardcode them), `DefaultPassword` (`Test#123`), `PlatformAdminUserId`,
   `TenantAdminUserId`, `TestUserId`, `TestOneUserId`, `TestTwoUserId`, plus `LimitedUserId`
   (one-permission member), `NoMembershipUserId` (no tenant at all) and `DualTenantUserId` (member of
   both seeded tenants).

@@ -40,20 +40,30 @@ would want.
   clone)
 - `appsettings.json` duplicated into `appsettings.Development.json` / `appsettings.Testing.json`
 - `src/frontend/web/.env.example` copied to `.env.development`
+- the root `.env` written from `.env.docker.example` by `WriteDockerEnvAsync`: the project's Compose
+  project, database and Redis key prefix, `DOMAIN=localhost`, and fresh random database, Redis and
+  administrator passwords and JWT key (a key added to the example ships as it is unless it is named
+  there)
 - root files `.editorconfig`, `.gitignore`, `.gitattributes`, `global.json`, `package.json`,
   `agentic.config.json`, `docker-compose.yml`, `docker-compose.prod.yml`, `.env.docker.example`
   (`CopyFiles` throws if one is missing)
 - directories `.config`, `.vscode`, `docker`, `scripts` (whole), and `.claude` minus any directory named
   `new-project`, `template-maintenance` or `lessons`
-- `CLAUDE.md`, written from the embedded resource `tool/EasyForNetTool/new-project-claude.md`
+- `CLAUDE.md` and `README.md`, written from the embedded resources
+  `tool/EasyForNetTool/new-project-claude.md` and `new-project-readme.md` (`{{Name}}` / `{{name}}`
+  replaced with the project name)
 - **the task loop's records as an empty skeleton** (`CopyTaskLoopSkeleton`): `specs/README.md`,
   `specs/TEMPLATE.md`, `docs/AGENTIC_WORKFLOW.md`, `docs/builds/README.md`,
   `docs/capabilities/README.md`, the `.agent-queue/{todo,doing,done,failed}` lanes with only a
   `.gitkeep`, `planned.json` as `{}`, and `.claude/memory/lessons/.gitkeep`.
 
-Not copied: `README.md`, `LICENSE`, `EasyForNet.slnx` (a new `<Name>.slnx` is created with
+Not copied: this repository's `README.md`, `LICENSE`, `EasyForNet.slnx` (a new `<Name>.slnx` is created with
 `dotnet new sln -f slnx` and both `.csproj` files added), `publish-package.sh`, `tool/`, and this
 repository's own specs, build records, queued tasks and lessons.
+
+Last, the generator runs `git init`, `git add .` and `git commit -m "Initial project"` in the new
+project, since the task loop needs a repository and a clean tree; no git, or a refused commit (no
+`user.name`), is reported and generation still succeeds.
 
 **A new root-level file or directory reaches generated projects only if it is added to that list.**
 A new file under `scripts/` ships automatically; one under `specs/`, `docs/` or `.agent-queue/`
@@ -117,9 +127,11 @@ own `Initial`. Data a migration inserts (rather than the seeder) never reaches a
 ## Seeded first run
 
 `ShareData/DataSeeder` runs on every start in every environment and seeds, when absent: the
-**Default** tenant (identifier `default`), the platform account `admin` / `Admin#123` (no
-membership) and the Default tenant's administrator `tenantadmin` / `Admin#123`. Tests sign in with
-these, and `new-project`, `CLAUDE.md` and `new-project-claude.md` document them — change them in
+**Default** tenant (identifier `default`), the platform account `admin` (no
+membership) and the Default tenant's administrator `tenantadmin`, with the passwords in the `Seed`
+section of `appsettings.json` (`Admin#123` here; `CustomizeAppSettingsAsync` writes one random
+password into all three appsettings files of a generated project). Tests sign in with
+these through `TestUsers.AdminPassword` / `PlatformAdminPassword`, and `new-project`, `CLAUDE.md` and `new-project-claude.md` document them — change them in
 all places together.
 
 ## Documentation that ships
