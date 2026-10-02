@@ -77,7 +77,10 @@
         "^src/backend/Source/Middleware/",
         "^src/backend/Source/appsettings[^/]*\\.json$",
         "^src/frontend/web/(proxy|auth-urls|allow)\\.ts$",
-        "\\.env\\.example$"
+        "\\.env(\\.docker)?\\.example$",
+        "(^|/)Dockerfile$",
+        "^docker-compose[^/]*\\.ya?ml$",
+        "^docker/"
       ],
       "why": "Authentication, permissions, tenant isolation, plan gating and configuration are where a mistake is not local."
     },
@@ -192,12 +195,12 @@
       {
         "name": "Postgres",
         "healthyWhen": "node scripts/pg-ready.mjs Testing",
-        "whenMissing": "start the PostgreSQL service — the backend tests and live checks need it, so every task fails its gate until it is up"
+        "whenMissing": "start the PostgreSQL service (`docker compose up -d`) — the backend tests and live checks need it, so every task fails its gate until it is up"
       },
       {
         "name": "Redis",
         "healthyWhen": "node scripts/redis-ready.mjs",
-        "whenMissing": "start Redis — the live check starts the API, which keeps its sessions there, so every API task fails its verify until it is up"
+        "whenMissing": "start Redis (`docker compose up -d`) — the live check starts the API, which keeps its sessions there, so every API task fails its verify until it is up"
       }
     ],
     "observe": null,

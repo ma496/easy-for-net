@@ -41,8 +41,9 @@ would want.
 - `appsettings.json` duplicated into `appsettings.Development.json` / `appsettings.Testing.json`
 - `src/frontend/web/.env.example` copied to `.env.development`
 - root files `.editorconfig`, `.gitignore`, `.gitattributes`, `global.json`, `package.json`,
-  `agentic.config.json` (`CopyFiles` throws if one is missing)
-- directories `.config`, `.vscode`, `scripts` (whole), and `.claude` minus any directory named
+  `agentic.config.json`, `docker-compose.yml`, `docker-compose.prod.yml`, `.env.docker.example`
+  (`CopyFiles` throws if one is missing)
+- directories `.config`, `.vscode`, `docker`, `scripts` (whole), and `.claude` minus any directory named
   `new-project`, `template-maintenance` or `lessons`
 - `CLAUDE.md`, written from the embedded resource `tool/EasyForNetTool/new-project-claude.md`
 - **the task loop's records as an empty skeleton** (`CopyTaskLoopSkeleton`): `specs/README.md`,

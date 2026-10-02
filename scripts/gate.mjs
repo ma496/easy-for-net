@@ -84,6 +84,9 @@ const INERT = [
   /^\.git(ignore|attributes)$/,
   /^LICENSE$/,
   /\.DotSettings(\.user)?$/,
+  /^docker-compose[^/]*\.ya?ml$/,
+  /^docker\//,
+  /^\.env\.docker\.example$/,
 ];
 
 /** Each step: the area it belongs to, what it is called, how to run it, and what it watches. */

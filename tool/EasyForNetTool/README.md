@@ -60,6 +60,34 @@ dotnet ef database update --project src/backend/Source/Backend.csproj
 Automatic migrations remain enabled for Development and Testing. Set
 `Database:ApplyMigrationsOnStartup` explicitly if a different environment needs that behavior.
 
+## Docker
+
+**Development** runs only PostgreSQL and Redis in containers; the API and the web app run on the host
+(`dotnet run`, `npm run dev`). From the project root:
+
+```sh
+docker compose up -d        # PostgreSQL on localhost:5432 (user/password postgres), Redis on localhost:6379 (password redis)
+docker compose down         # stop, keeping the data
+```
+
+To use other passwords, set `DEV_POSTGRES_PASSWORD` / `DEV_REDIS_PASSWORD` (in the shell or the root
+`.env`) and put the same values in `appsettings.Development.json`: the PostgreSQL connection strings
+below, and `ConnectionStrings:Redis` (`localhost:6379,password=<password>`). A PostgreSQL password
+takes effect only when its volume is first created.
+
+**Production** builds and runs the whole application — API, web app, PostgreSQL, Redis, and Caddy
+serving both apps from one HTTPS origin (certificates are obtained automatically for `DOMAIN`):
+
+```sh
+cp .env.docker.example .env      # fill in every value: DOMAIN, PUBLIC_URL, passwords, JWT_KEY (32+ characters), SMTP
+docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+```
+
+The API applies migrations on startup, so add the initial migration first (see **Add Migration**).
+`NEXT_PUBLIC_API_URL` is built into the web image from `PUBLIC_URL`, so changing the domain means
+rebuilding. Uploaded files and the Data Protection keys (which encrypt secret settings) live in named
+volumes; back up those and the database volume.
+
 ## Change Connection Strings
 
 Go to `{name}/src/backend/Source` directory. By default, the EasyForNet sets up connection strings for PostgreSQL in the `appsettings.json`, `appsettings.Development.json` and `appsettings.Testing.json` files. To change the connection strings, follow these steps:

@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+Tests/
+**/uploads/
+# Per-environment settings hold local secrets; production is configured through environment variables
+**/appsettings.*.json
+**/*.user
+**/.vs/

@@ -1,0 +1,49 @@
+# Development services only: PostgreSQL and Redis. The API (dotnet run) and the web app (npm run dev)
+# run on the host. Ports are bound to loopback, so nothing here is reachable from the network.
+#
+#   docker compose up -d      start (the databases themselves are created by EF migrations)
+#   docker compose down       stop, keeping the data
+#
+# The passwords must match the connection strings in appsettings.Development.json / appsettings.Testing.json
+# (defaults: PostgreSQL postgres/postgres, Redis password "redis"). To change them, set DEV_POSTGRES_USER,
+# DEV_POSTGRES_PASSWORD or DEV_REDIS_PASSWORD - deliberately not the names docker-compose.prod.yml reads,
+# because Compose loads the root .env for this file too.
+#
+# The volumes carry a dev- prefix so this stack can never mount the production stack's data, even when
+# both run under one Compose project name.
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DEV_POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${DEV_POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "127.0.0.1:${DEV_POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - dev-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${DEV_REDIS_PASSWORD:-redis}"]
+    environment:
+      REDISCLI_AUTH: ${DEV_REDIS_PASSWORD:-redis}
+    ports:
+      - "127.0.0.1:${DEV_REDIS_PORT:-6379}:6379"
+    volumes:
+      - dev-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  dev-postgres-data:
+  dev-redis-data:
