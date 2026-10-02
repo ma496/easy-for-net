@@ -16,7 +16,7 @@ dotnet efn cp --help
 
 Prerequisites: the .NET SDK pinned in `global.json` (10.0.x), **git on PATH** (the tool clones the
 template), Node >= 24, a reachable PostgreSQL on `localhost:5432` (user `postgres`), and a Redis on
-`localhost:6379` (Docker is the easy way, see step 4).
+`localhost:6379` (`docker compose up -d` in the project root starts both, see step 4).
 
 ## Generate
 
@@ -85,15 +85,18 @@ Run these from the new project's root.
    src/backend/Source` is optional there. Commit the migration.
 4. **Redis.** Outside the Testing environment the API needs Redis (`ConnectionStrings:Redis`,
    default `localhost:6379`) and prefixes every key with `Redis:InstanceName`, which the generator set
-   to `<Name>:` (`<Name>Test:` in Testing) so several apps can share one Redis server. Start one:
+   to `<Name>:` (`<Name>Test:` in Testing) so several apps can share one Redis server. The project's
+   `docker-compose.yml` runs PostgreSQL (user and password `postgres`, unless `DEV_POSTGRES_PASSWORD`
+   says otherwise — match it in the connection strings) and Redis with the password `redis` (or
+   `DEV_REDIS_PASSWORD`, matched in `ConnectionStrings:Redis` as `localhost:6379,password=<password>`) for development:
 
    ```sh
-   docker run -d --name redis -p 127.0.0.1:6379:6379 redis:7   # or `docker start redis` if it exists
+   docker compose up -d
    ```
 
-   The port is bound to loopback because this Redis has no password; a shared or deployed Redis
-   needs a password or ACL (and TLS) in `ConnectionStrings:Redis`, supplied through secure
-   configuration. The backend tests (`dotnet test`) do not need Redis.
+   The ports are bound to loopback and the passwords are development defaults; a shared or deployed
+   Redis needs a strong password or ACL (and TLS) in `ConnectionStrings:Redis`, supplied through
+   secure configuration. The backend tests (`dotnet test`) do not need Redis.
 5. **Run the API.**
 
    ```sh

@@ -148,6 +148,15 @@ bld.Services.AddHealthChecks();
 bld.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    // Only loopback proxies are trusted by default. Behind a reverse proxy in another container (the
+    // production compose file) the proxy's address is not loopback, so its X-Forwarded-Proto would be
+    // ignored and every request would look like plain HTTP. `ForwardedHeaders:TrustAllProxies` is for a
+    // deployment whose API port is reachable only through that proxy - never one exposed directly.
+    if (bld.Configuration.GetValue<bool>("ForwardedHeaders:TrustAllProxies"))
+    {
+        options.KnownIPNetworks.Clear();
+        options.KnownProxies.Clear();
+    }
 });
 // `RateLimit:PermitLimit` and `RateLimit:WindowMinutes` override these, and the Testing default is
 // effectively no limit on purpose: permits are counted per identity, and a test suite is one

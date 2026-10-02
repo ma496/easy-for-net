@@ -1,6 +1,7 @@
 namespace Backend.Features.Settings;
 
 using Backend.Features.Settings.Core;
+using Microsoft.AspNetCore.DataProtection;
 
 /// <summary>
 /// Feature module that registers the settings services with the DI container.
@@ -31,7 +32,14 @@ public class SettingsFeature : IFeature
         services.AddSingleton<ISettingDefinitionCatalogue, SettingDefinitionCatalogue>();
         services.AddHostedService<SettingDefinitionStartupCheck>();
 
-        services.AddDataProtection();
+        // Without `DataProtection:KeysPath` the key ring lives in the user profile, which a container
+        // loses on every rebuild - and with it every stored secret. A container mounts a volume there.
+        var dataProtection = services.AddDataProtection();
+        var keysPath = configuration["DataProtection:KeysPath"];
+        if (!string.IsNullOrWhiteSpace(keysPath))
+        {
+            dataProtection.PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+        }
 
         services.AddScoped<ISettingValueStore, SettingValueStore>();
         services.AddScoped<ISettingValueService, SettingValueService>();

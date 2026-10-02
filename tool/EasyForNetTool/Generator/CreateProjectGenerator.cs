@@ -143,7 +143,9 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             CopyDirectory(webProjectPath, webTargetPath, true);
             // .env.development is git-ignored in the template, so seed it from the tracked example file
             CopyFrom(webProjectPath, webTargetPath, ".env.example", ".env.development");
-            CopyFiles(versionedTemplateDir, targetPath, ".editorconfig", ".gitignore", ".gitattributes", "global.json", "package.json", "agentic.config.json");
+            CopyFiles(versionedTemplateDir, targetPath, ".editorconfig", ".gitignore", ".gitattributes", "global.json", "package.json", "agentic.config.json",
+                "docker-compose.yml", "docker-compose.prod.yml", ".env.docker.example");
+            CopyDirectory($"{versionedTemplateDir}/docker", $"{targetPath}/docker", true);
             CopyDirectory($"{versionedTemplateDir}/.config", $"{targetPath}/.config", true);
             CopyDirectory($"{versionedTemplateDir}/.vscode", $"{targetPath}/.vscode", true);
             // the new-project and template-maintenance skills describe working on the template

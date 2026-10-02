@@ -274,6 +274,8 @@ settings.local.json
 appsettings.Development.json
 appsettings.Testing.json
 appsettings.Production.json
+# Production secrets for docker-compose.prod.yml (the template is .env.docker.example)
+/.env
 
 # Custom directories
 uploads/

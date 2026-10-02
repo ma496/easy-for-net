@@ -1,0 +1,14 @@
+# One origin for the web app and the API. Caddy obtains and renews the certificate for DOMAIN,
+# redirects HTTP to HTTPS, sets X-Forwarded-For/Proto, and proxies WebSockets (the notification hub).
+{$DOMAIN} {
+	encode zstd gzip
+
+	@api path /api/* /hubs/* /hangfire /hangfire/* /health
+	handle @api {
+		reverse_proxy api:8080
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}

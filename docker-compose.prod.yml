@@ -1,0 +1,113 @@
+# The whole application: API, web app, PostgreSQL, Redis, and Caddy in front of them.
+#
+#   cp .env.docker.example .env        then fill in every value
+#   docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+#
+# Caddy serves the web app and the API from one origin over HTTPS (certificates are obtained
+# automatically for DOMAIN), which the API's SameSite=Strict, Secure auth cookies require.
+# Only Caddy publishes ports; the API, the database and Redis are reachable only inside the network.
+# Not COMPOSE_PROJECT_NAME: Compose would apply that to the development docker-compose.yml as well,
+# putting both stacks in one project
+name: ${PROD_PROJECT_NAME:-app}
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?set REDIS_PASSWORD}", "--appendonly", "yes"]
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./src/backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__Redis: redis:6379,password=${REDIS_PASSWORD}
+      Redis__InstanceName: ${REDIS_INSTANCE_NAME:-app:}
+      Auth__Jwt__Key: ${JWT_KEY:?set JWT_KEY}
+      Web__DefaultDomain: ${PUBLIC_URL:?set PUBLIC_URL}
+      Web__Domains__0: ${PUBLIC_URL}
+      Database__ApplyMigrationsOnStartup: "true"
+      # The API port is reachable only through Caddy, so its forwarded headers can be trusted
+      ForwardedHeaders__TrustAllProxies: "true"
+      DataProtection__KeysPath: /app/keys
+      Hangfire__Storage__ConnectionString: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      # The deployment's default email settings; administrators can override them at run time
+      EmailSettings__SmtpServer: ${SMTP_SERVER:-smtp.gmail.com}
+      EmailSettings__SmtpPort: ${SMTP_PORT:-587}
+      EmailSettings__SmtpUsername: ${SMTP_USERNAME:-your-email@gmail.com}
+      EmailSettings__SmtpPassword: ${SMTP_PASSWORD:-your-app-password}
+      EmailSettings__SenderEmail: ${SMTP_SENDER_EMAIL:-your-email@gmail.com}
+      EmailSettings__SenderName: ${SMTP_SENDER_NAME:-Sender Name}
+    volumes:
+      - api-uploads:/app/uploads
+      - api-keys:/app/keys
+
+  web:
+    build:
+      context: ./src/frontend/web
+      args:
+        # Inlined into the browser bundle at build time: change it and rebuild
+        NEXT_PUBLIC_API_URL: ${PUBLIC_URL}/api
+        NEXT_PUBLIC_APP_ENV: production
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      # Server-side fetches go straight to the API container
+      API_INTERNAL_URL: http://api:8080/api
+
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - api
+      - web
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  postgres-data:
+  redis-data:
+  api-uploads:
+  api-keys:
+  caddy-data:
+  caddy-config:
