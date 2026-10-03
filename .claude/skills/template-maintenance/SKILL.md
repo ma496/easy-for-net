@@ -45,7 +45,8 @@ would want.
   administrator passwords and JWT key (a key added to the example ships as it is unless it is named
   there)
 - root files `.editorconfig`, `.gitignore`, `.gitattributes`, `global.json`, `package.json`,
-  `agentic.config.json`, `docker-compose.yml`, `docker-compose.prod.yml`, `.env.docker.example`
+  `agentic.config.json`, `docker-compose.yml`, `docker-compose.prod.yml`, `docker-compose.coolify.yml`
+  (what `npm run deploy:vps` points Coolify at), `.env.docker.example`
   (`CopyFiles` throws if one is missing)
 - directories `.config`, `.vscode`, `docker`, `scripts` (whole), and `.claude` minus any directory named
   `new-project`, `template-maintenance` or `lessons`

@@ -1,0 +1,23 @@
+# The router behind Coolify (docker-compose.coolify.yml). Coolify's Traefik terminates TLS for the
+# domain and forwards plain HTTP here; this keeps the one-origin routing of docker/Caddyfile.
+{
+	auto_https off
+	servers {
+		# Only Traefik reaches this server, from Docker's private network: keep the
+		# X-Forwarded-For/Proto it sets, so the API sees the browser's address and https scheme.
+		trusted_proxies static private_ranges
+	}
+}
+
+:80 {
+	encode zstd gzip
+
+	@api path /api/* /hubs/* /hangfire /hangfire/* /health
+	handle @api {
+		reverse_proxy api:8080
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}
