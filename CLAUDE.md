@@ -28,6 +28,7 @@ dotnet ef database update --project src/backend/Source/Backend.csproj
 dotnet run --project src/backend/Source/Backend.csproj   # needs PostgreSQL and Redis (ConnectionStrings:Redis)
 npm run stop:api                    # from the repository root: stop this checkout's running API before a build (it locks bin/ on Windows)
 docker compose up -d                # from the repository root: PostgreSQL + Redis for development (docker-compose.yml)
+npm run deploy:vps -- --host <ip> --domain <domain> --email <email>   # deploy to a VPS through Coolify (scripts/deploy-vps.mjs + scripts/deploy/vps/remote.sh, docker-compose.coolify.yml)
 ```
 
 Backend tests (`src/backend/Tests`) — **require a running PostgreSQL** matching `appsettings.Testing.json` (not Redis: the Testing host keeps sessions in memory); the Testing environment migrates and seeds on startup:
@@ -309,7 +310,7 @@ Adding a language means a resource file `Features/Localization/Core/Resources/<c
 - API: `backend-feature`, `backend-endpoint`, `backend-entity`, `backend-tests`, `multi-tenancy`, `permissions`, `feature-management`, `settings`, `background-jobs`, `file-storage`, `notifications`
 - Web: `rtk-query-api`, `frontend-page`, `frontend-crud`, `ui-component`, `redux-state`, `localization`, `frontend-tests`
 - Spanning both: `api-error-handling`
-- Process: spec-driven development — `specs/README.md`, the `.claude/commands` (`/feature`, `/fix`, `/auto`, `/queue`, `/spec-split`, `/verify`, `/ship`, `/review-diff`), and the agents in `.claude/agents`
+- Process: spec-driven development — `specs/README.md`, the `.claude/commands` (`/feature`, `/fix`, `/auto`, `/queue`, `/spec-split`, `/verify`, `/ship`, `/review-diff`, `/commit-msg`), and the agents in `.claude/agents`
 - This repository and the CLI: `new-project` (scaffolding), `template-maintenance`
 
 Every skill except those last two ships to generated projects, so keep them generic.

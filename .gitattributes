@@ -9,3 +9,6 @@ docs/** text eol=lf
 agentic.config.json text eol=lf
 package.json text eol=lf
 *.jsonl text eol=lf
+# Run by a Linux shell (scripts/deploy/vps/remote.sh) or copied into a Linux image (docker/)
+*.sh text eol=lf
+docker/** text eol=lf
