@@ -203,7 +203,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             // .env.development is git-ignored in the template, so seed it from the tracked example file
             CopyFrom(webProjectPath, webTargetPath, ".env.example", ".env.development");
             CopyFiles(versionedTemplateDir, targetPath, ".editorconfig", ".gitignore", ".gitattributes", "global.json", "package.json", "agentic.config.json",
-                "docker-compose.yml", "docker-compose.prod.yml", ".env.docker.example");
+                "docker-compose.yml", "docker-compose.prod.yml", "docker-compose.coolify.yml", ".env.docker.example");
             // .env is git-ignored in the template, so it is written from the tracked example with this project's values
             await WriteDockerEnvAsync(Path.Combine(versionedTemplateDir, ".env.docker.example"), Path.Combine(targetPath, ".env"), kebabCaseProjectName, pascalCaseProjectName);
             CopyDirectory($"{versionedTemplateDir}/docker", $"{targetPath}/docker", true);
