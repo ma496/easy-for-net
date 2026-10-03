@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 public class DevelopmentEndpointLoggingMiddlewareTests
 {
     [Fact]
-    public async Task Logs_Matched_FastEndpoint_Entry_And_Exit_With_Safe_Diagnostics()
+    public async Task Logs_One_Line_Per_Matched_FastEndpoint_Without_Query_String()
     {
         var logger = new RecordingLogger<DevelopmentEndpointLoggingMiddleware>();
         var middleware = new DevelopmentEndpointLoggingMiddleware(
@@ -23,20 +23,15 @@ public class DevelopmentEndpointLoggingMiddlewareTests
 
         await middleware.InvokeAsync(context);
 
-        logger.Records.Should().HaveCount(2);
-        logger.Records.Should().OnlyContain(record => record.Level == LogLevel.Information);
-
-        var entry = logger.Records[0];
-        entry.Properties["EndpointName"].Should().Be("TestEndpoint");
-        entry.Properties["HttpMethod"].Should().Be("POST");
-        entry.Properties["Path"].Should().Be("/api/test");
-        entry.Properties["TraceId"].Should().Be("test-trace-id");
-
-        var exit = logger.Records[1];
-        exit.Properties["StatusCode"].Should().Be(StatusCodes.Status201Created);
-        exit.Properties["ElapsedMilliseconds"].Should().BeOfType<double>().Which.Should().BeGreaterThanOrEqualTo(0);
-        logger.Records.Should().NotContain(record => record.Message.Contains("secret", StringComparison.Ordinal));
-        logger.Records.SelectMany(record => record.Properties.Values).Should().NotContain("do-not-log");
+        var record = logger.Records.Should().ContainSingle().Which;
+        record.Level.Should().Be(LogLevel.Information);
+        record.Properties["HttpMethod"].Should().Be("POST");
+        record.Properties["Path"].Should().Be("/api/test");
+        record.Properties["StatusCode"].Should().Be(StatusCodes.Status201Created);
+        record.Properties["ElapsedMilliseconds"].Should().BeOfType<double>().Which.Should().BeGreaterThanOrEqualTo(0);
+        record.Message.Should().StartWith("POST /api/test 201 in ");
+        record.Message.Should().NotContain("secret");
+        record.Properties.Values.Should().NotContain("do-not-log");
     }
 
     [Fact]
@@ -59,7 +54,7 @@ public class DevelopmentEndpointLoggingMiddlewareTests
     }
 
     [Fact]
-    public async Task Logs_Exit_And_Rethrows_When_Endpoint_Fails()
+    public async Task Logs_And_Rethrows_When_Endpoint_Fails()
     {
         var logger = new RecordingLogger<DevelopmentEndpointLoggingMiddleware>();
         var expectedException = new InvalidOperationException("Endpoint failed");
@@ -68,8 +63,7 @@ public class DevelopmentEndpointLoggingMiddlewareTests
         var act = () => middleware.InvokeAsync(CreateHttpContext(fastEndpoint: true));
 
         (await act.Should().ThrowAsync<InvalidOperationException>()).Which.Should().BeSameAs(expectedException);
-        logger.Records.Should().HaveCount(2);
-        logger.Records[1].Properties.Should().ContainKey("ElapsedMilliseconds");
+        logger.Records.Should().ContainSingle().Which.Properties.Should().ContainKey("ElapsedMilliseconds");
     }
 
     private static DefaultHttpContext CreateHttpContext(bool fastEndpoint)
