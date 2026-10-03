@@ -1,7 +1,6 @@
 namespace Backend.Features.Identity.Endpoints.Users;
 
 using Backend.Features.Identity.Core;
-using Backend.Features.Identity.Core.Entities;
 
 /// <summary>
 /// This endpoint that handles <c>GET /users/{id}</c> to return a single user with their role assignments.
@@ -20,18 +19,39 @@ sealed class UserGetEndpoint(IUserService userService) : Endpoint<UserGetRequest
         // The account is read from the set the caller may administer, so one holding no membership of
         // the tenant being acted in is simply not there and answers exactly as an account that does not
         // exist does. A platform administrator reads every account irrespective of membership.
-        var entity = await userService.TenantUsers()
+        var response = await userService.TenantUsers()
             .AsNoTracking()
-            .Include(x => x.UserRoles)
-            .ThenInclude(x => x.Role)
-            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
-        if (entity == null)
+            .Where(x => x.Id == request.Id)
+            .Select(x => new UserGetResponse
+            {
+                Id = x.Id,
+                CreatedAt = x.CreatedAt,
+                CreatedBy = x.CreatedBy,
+                UpdatedAt = x.UpdatedAt,
+                UpdatedBy = x.UpdatedBy,
+                SystemCreated = x.SystemCreated,
+                Username = x.Username,
+                UsernameNormalized = x.UsernameNormalized,
+                Email = x.Email,
+                EmailNormalized = x.EmailNormalized,
+                FirstName = x.FirstName,
+                LastName = x.LastName,
+                IsActive = x.IsActive,
+                // Only the roles the caller may see are reported: a role of another tenant is hidden by the
+                // tenant query filter, and naming it here would offer the update endpoint a role it refuses.
+                Roles = x.UserRoles
+                    .Where(userRole => userRole.Role != null)
+                    .Select(userRole => userRole.RoleId)
+                    .ToList()
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (response == null)
         {
             await Send.NotFoundAsync(cancellationToken);
             return;
         }
 
-        await Send.ResponseAsync(new UserGetResponseMapper().Map(entity), cancellation: cancellationToken);
+        await Send.ResponseAsync(response, cancellation: cancellationToken);
     }
 }
 
@@ -68,19 +88,4 @@ public sealed class UserGetResponse : AuditableDto<Guid>, ISystemCreatedDto
     public bool IsActive { get; set; }
 
     public List<Guid> Roles { get; set; } = [];
-}
-
-/// <summary>
-/// This mapper that projects a <see cref="User"/> entity into a <see cref="UserGetResponse"/>, collapsing <see cref="UserRole"/> join rows into role ids.
-/// </summary>
-[Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
-public partial class UserGetResponseMapper
-{
-    [MapProperty("UserRoles", "Roles", Use = nameof(UserRolesToRoles))]
-    public partial UserGetResponse Map(User entity);
-
-    // Only the roles the caller may see are reported: an assignment to a role of another tenant comes
-    // back with no role attached, and naming it here would offer the update endpoint a role it refuses.
-    private static List<Guid> UserRolesToRoles(ICollection<UserRole> userRoles)
-        => [.. userRoles.Where(x => x.Role != null).Select(x => x.RoleId)];
 }

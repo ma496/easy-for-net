@@ -72,8 +72,11 @@ sealed class TenantMemberRemoveEndpoint(ITenantService tenantService,
 
         // Read through the service, so a tenant that never existed, one that has been deleted and one
         // a platform administrator may see but this caller may not are all the same answer.
-        var tenant = await tenantService.GetByIdAsync(request.TenantId, cancellationToken);
-        if (tenant == null)
+        // Only whether it exists is asked, so no row is loaded.
+        var tenantExists = await tenantService.Tenants()
+            .AsNoTracking()
+            .AnyAsync(tenant => tenant.Id == request.TenantId, cancellationToken);
+        if (!tenantExists)
         {
             this.ThrowError(ErrorCodes.TenantNotFound);
         }

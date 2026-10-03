@@ -224,7 +224,6 @@ public interface ITenantAuthorizationService
 public class TenantAuthorizationService(AppDbContext dbContext,
                                         IUserService userService,
                                         IRoleService roleService,
-                                        IPermissionService permissionService,
                                         IPermissionDefinitionService permissionDefinitionService,
                                         ITenantContext tenantContext,
                                         IHttpContextAccessor httpContextAccessor,
@@ -281,14 +280,19 @@ public class TenantAuthorizationService(AppDbContext dbContext,
         // of the same name in another tenant is neither found nor disturbed.
         using (tenantContext.BeginTenant(tenantId))
         {
-            var administratorRole = await dbContext.Roles
-                    .FirstOrDefaultAsync(role => role.NameNormalized == AdministratorRoleNameNormalized, cancellationToken)
-                ?? await roleService.CreateAsync(new Role
+            // Only the role's identifier is needed: the role row itself is never changed here, only the
+            // permissions it holds.
+            var administratorRoleId = await dbContext.Roles
+                    .AsNoTracking()
+                    .Where(role => role.NameNormalized == AdministratorRoleNameNormalized)
+                    .Select(role => (Guid?)role.Id)
+                    .FirstOrDefaultAsync(cancellationToken)
+                ?? (await roleService.CreateAsync(new Role
                 {
                     SystemCreated = true,
                     Name = AdministratorRoleName,
                     Description = AdministratorRoleDescription
-                });
+                })).Id;
 
             var tenantPermissionIds = await dbContext.Permissions
                 .AsNoTracking()
@@ -296,14 +300,16 @@ public class TenantAuthorizationService(AppDbContext dbContext,
                 .Select(permission => permission.Id)
                 .ToListAsync(cancellationToken);
 
-            var heldPermissionIds = (await permissionService.GetRolePermissionsAsync(administratorRole.Id))
-                .Select(permission => permission.Id)
-                .ToList();
+            var heldPermissionIds = await dbContext.RolePermissions
+                .AsNoTracking()
+                .Where(rolePermission => rolePermission.RoleId == administratorRoleId)
+                .Select(rolePermission => rolePermission.PermissionId)
+                .ToListAsync(cancellationToken);
 
             var missingPermissionIds = tenantPermissionIds.Except(heldPermissionIds).ToList();
             if (missingPermissionIds.Count > 0)
             {
-                await roleService.AssignPermissionsAsync(administratorRole.Id, missingPermissionIds);
+                await roleService.AssignPermissionsAsync(administratorRoleId, missingPermissionIds);
             }
 
             // Reconciliation runs both ways, exactly as the seeder reconciles the bootstrap tenant's
@@ -313,10 +319,10 @@ public class TenantAuthorizationService(AppDbContext dbContext,
             var withdrawnPermissionIds = heldPermissionIds.Except(tenantPermissionIds).ToList();
             if (withdrawnPermissionIds.Count > 0)
             {
-                await roleService.RemovePermissionsAsync(administratorRole.Id, withdrawnPermissionIds);
+                await roleService.RemovePermissionsAsync(administratorRoleId, withdrawnPermissionIds);
             }
 
-            return administratorRole.Id;
+            return administratorRoleId;
         }
     }
 

@@ -18,6 +18,7 @@ sealed class GetPermissionsEndpoint(IPermissionService permissionService) : Endp
     {
         var permissions = await permissionService
             .Permissions()
+            .AsNoTracking()
             .Select(p => new PermissionDto
             {
                 Id = p.Id,

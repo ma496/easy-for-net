@@ -30,7 +30,13 @@ sealed class ForgetPasswordEndpoint(ITokenService tokenService,
 
     public override async Task HandleAsync(ForgetPasswordRequest request, CancellationToken cancellationToken)
     {
-        var user = await userService.GetByEmailAsync(request.Email);
+        // Only the identifier the token is issued to and the address it is mailed to are read.
+        var normalizedEmail = request.Email.ToLowerInvariant();
+        var user = await userService.Users()
+            .AsNoTracking()
+            .Where(u => u.EmailNormalized == normalizedEmail)
+            .Select(u => new { u.Id, u.Email })
+            .FirstOrDefaultAsync(cancellationToken);
         if (user == null)
         {
             // Return success even if email doesn't exist to prevent email enumeration
@@ -39,7 +45,7 @@ sealed class ForgetPasswordEndpoint(ITokenService tokenService,
         }
 
         // Generate reset token
-        var resetToken = await tokenService.GenerateTokenAsync(user, TokenPurpose.PasswordReset);
+        var resetToken = await tokenService.GenerateTokenAsync(user.Id, TokenPurpose.PasswordReset);
 
         // Send email with reset token
         emailBackgroundJobs.EnqueueForPlatform(user.Email, "Reset Password",

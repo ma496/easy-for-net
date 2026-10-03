@@ -68,7 +68,7 @@ sealed class TenantUpdateEndpoint(ITenantService tenantService,
         }
 
         if (request.EditionId is { } editionId
-            && await editionService.GetByIdAsync(editionId, cancellationToken) is null)
+            && !await editionService.Editions().AnyAsync(edition => edition.Id == editionId, cancellationToken))
         {
             this.ThrowError(x => x.EditionId, ErrorCodes.EditionNotFound);
         }

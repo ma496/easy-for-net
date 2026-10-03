@@ -17,7 +17,7 @@ public static class IQueryableExtension
     /// </summary>
     /// <param name="query">The source queryable of <see cref="IBaseEntity{TId}"/> instances.</param>
     /// <param name="request">The list request describing sorting and pagination.</param>
-    /// <param name="applyDefaultOrdering">Whether to apply default ordering by CreatedAt or UpdatedAt when no explicit sort field is provided; defaults to true.</param>
+    /// <param name="applyDefaultOrdering">Whether to apply default ordering (UpdatedAt, else CreatedAt, else Id - always with Id as tie-breaker) when no explicit sort field is provided; defaults to true. Pass false only when the query already carries its own ordering, since a page of an unordered query is unpredictable.</param>
     /// <returns>A new <see cref="IQueryable{T}"/> with the requested ordering, filter, and paging applied.</returns>
     public static IQueryable<T> Process<T, TId>(this IQueryable<T> query, ListRequestDto<TId> request,
         bool applyDefaultOrdering = true)
@@ -34,15 +34,20 @@ public static class IQueryableExtension
                 throw new ArgumentException($"'{request.SortField}' is not a sortable field.", nameof(request.SortField));
             }
 
-            processQuery = processQuery.OrderBy($"{sortProperty.Name} {(request.SortDirection == SortDirection.Desc ? "DESC" : "ASC")}");
+            var direction = request.SortDirection == SortDirection.Desc ? "DESC" : "ASC";
+            processQuery = processQuery.OrderBy(WithIdTieBreaker(sortProperty.Name, direction));
         }
         else if (applyDefaultOrdering && typeof(IUpdatableEntity).IsAssignableFrom(typeof(T)))
         {
-            processQuery = processQuery.OrderBy($"{nameof(IUpdatableEntity.UpdatedAt)} DESC");
+            processQuery = processQuery.OrderBy(WithIdTieBreaker(nameof(IUpdatableEntity.UpdatedAt), "DESC"));
         }
         else if (applyDefaultOrdering && typeof(ICreatableEntity).IsAssignableFrom(typeof(T)))
         {
-            processQuery = processQuery.OrderBy($"{nameof(ICreatableEntity.CreatedAt)} DESC");
+            processQuery = processQuery.OrderBy(WithIdTieBreaker(nameof(ICreatableEntity.CreatedAt), "DESC"));
+        }
+        else if (applyDefaultOrdering)
+        {
+            processQuery = processQuery.OrderBy(x => x.Id);
         }
 
         if (request.IncludeIds?.Count > 0)
@@ -60,6 +65,15 @@ public static class IQueryableExtension
 
         return processQuery;
     }
+
+    /// <summary>
+    /// Builds a dynamic ordering on <paramref name="propertyName"/> followed by <c>Id</c>, so rows sharing
+    /// a sort value still have one fixed order and a page never repeats or skips a row of its neighbour.
+    /// </summary>
+    private static string WithIdTieBreaker(string propertyName, string direction)
+        => propertyName == nameof(IBaseEntity<Guid>.Id)
+            ? $"{propertyName} {direction}"
+            : $"{propertyName} {direction}, {nameof(IBaseEntity<Guid>.Id)} {direction}";
 
     private static bool IsSortableType(Type type)
     {

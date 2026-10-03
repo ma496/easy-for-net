@@ -47,6 +47,9 @@ You own the data shape. Read the repository guide and load the `backend-entity` 
 - **Foreign keys state their delete behaviour explicitly**, matching the surrounding
   configurations.
 - **Never edit an existing migration** that has shipped; add a new one.
+- **Queries read only what they use.** A query you touch that only reads is `.AsNoTracking()`
+  and projects the columns it needs; one that updates an entity loads it tracked with no
+  `Include` the update does not need. An index serves the projection and its `OrderBy`.
 
 ## Before you report done
 

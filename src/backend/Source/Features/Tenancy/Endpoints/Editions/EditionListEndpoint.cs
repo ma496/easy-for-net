@@ -1,7 +1,6 @@
 namespace Backend.Features.Tenancy.Endpoints.Editions;
 
 using Backend.Features.Tenancy.Core;
-using Backend.Features.Tenancy.Core.Entities;
 
 /// <summary>
 /// This endpoint that handles <c>GET /editions</c> to return a paginated and searchable list of the
@@ -34,24 +33,35 @@ sealed class EditionListEndpoint(IEditionService editionService) : Endpoint<Edit
 
         // Counted before paging, so the total describes the whole filtered set rather than the page.
         var total = await query.CountAsync(cancellationToken);
+        // Sorting and paging run on the editions themselves, which is what Process works over; the page
+        // is then projected, so only the columns a row reports are read.
         var items = await query
             .Process(request)
+            .Select(edition => new EditionListDto
+            {
+                Id = edition.Id,
+                CreatedAt = edition.CreatedAt,
+                CreatedBy = edition.CreatedBy,
+                UpdatedAt = edition.UpdatedAt,
+                UpdatedBy = edition.UpdatedBy,
+                Name = edition.Name,
+                Description = edition.Description,
+                DisplayOrder = edition.DisplayOrder
+            })
             .ToListAsync(cancellationToken);
 
         // How many tenants are on a plan is asked once for the whole page rather than row by row. A
         // plan nobody is on is absent from the result, which reads as the zero the row shows.
         var tenantCounts = await editionService.TenantCountsAsync(
             [.. items.Select(edition => edition.Id)], cancellationToken);
+        foreach (var item in items)
+        {
+            item.TenantCount = tenantCounts.GetValueOrDefault(item.Id);
+        }
 
-        var dtoMapper = new EditionListDtoMapper();
         var response = new EditionListResponse
         {
-            Items = [.. items.Select(edition =>
-            {
-                var dto = dtoMapper.Map(edition);
-                dto.TenantCount = tenantCounts.GetValueOrDefault(edition.Id);
-                return dto;
-            })],
+            Items = items,
             Total = total
         };
 
@@ -105,18 +115,8 @@ public sealed class EditionListDto : AuditableDto<Guid>
     public int DisplayOrder { get; set; }
 
     /// <summary>
-    /// How many tenants are on this plan. Filled by the endpoint rather than the mapper, because the
+    /// How many tenants are on this plan. Filled by the endpoint rather than the projection, because the
     /// edition row itself knows nothing about the tenants that reference it.
     /// </summary>
     public int TenantCount { get; set; }
-}
-
-/// <summary>
-/// This mapper that projects an <see cref="Edition"/> entity into an <see cref="EditionListDto"/>.
-/// </summary>
-[Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
-public partial class EditionListDtoMapper
-{
-    [MapperIgnoreTarget(nameof(EditionListDto.TenantCount))]
-    public partial EditionListDto Map(Edition entity);
 }

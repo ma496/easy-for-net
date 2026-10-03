@@ -41,7 +41,14 @@ sealed class ResendVerifyEmailEndpoint(IUserService userService,
             return;
         }
 
-        var user = await userService.GetByEmailOrUsernameAsync(request.EmailOrUsername);
+        // Only what this flow reads: the account to issue the token to, its address, and whether it is
+        // already verified.
+        var emailOrUsername = request.EmailOrUsername.ToLowerInvariant();
+        var user = await userService.Users()
+            .AsNoTracking()
+            .Where(u => u.EmailNormalized == emailOrUsername || u.UsernameNormalized == emailOrUsername)
+            .Select(u => new { u.Id, u.Email, u.IsEmailVerified })
+            .FirstOrDefaultAsync(cancellationToken);
         if (user == null)
         {
             // For security reasons, don't reveal that the user doesn't exist
@@ -56,7 +63,7 @@ sealed class ResendVerifyEmailEndpoint(IUserService userService,
         }
 
         // Generate verification token
-        var token = await tokenService.GenerateTokenAsync(user, TokenPurpose.EmailVerification);
+        var token = await tokenService.GenerateTokenAsync(user.Id, TokenPurpose.EmailVerification);
 
         // Send verification email
         emailBackgroundJobs.EnqueueForPlatform(user.Email, "Verify Email",

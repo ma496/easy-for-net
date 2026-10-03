@@ -1,7 +1,6 @@
 namespace Backend.Features.Tenancy.Endpoints.Editions;
 
 using Backend.Features.Tenancy.Core;
-using Backend.Features.Tenancy.Core.Entities;
 
 /// <summary>
 /// This endpoint that handles <c>GET /editions/{id}</c> to return one plan in detail, together with
@@ -18,16 +17,29 @@ sealed class EditionGetEndpoint(IEditionService editionService) : Endpoint<Editi
 
     public override async Task HandleAsync(EditionGetRequest request, CancellationToken cancellationToken)
     {
-        var entity = await editionService.GetByIdAsync(request.Id, cancellationToken);
-        if (entity == null)
+        // Projected in the query, so only the columns the response reports are read.
+        var response = await editionService.Editions()
+            .AsNoTracking()
+            .Where(edition => edition.Id == request.Id)
+            .Select(edition => new EditionGetResponse
+            {
+                Id = edition.Id,
+                CreatedAt = edition.CreatedAt,
+                CreatedBy = edition.CreatedBy,
+                UpdatedAt = edition.UpdatedAt,
+                UpdatedBy = edition.UpdatedBy,
+                Name = edition.Name,
+                Description = edition.Description,
+                DisplayOrder = edition.DisplayOrder
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (response == null)
         {
             await Send.NotFoundAsync(cancellationToken);
             return;
         }
 
-        var mapper = new EditionGetResponseMapper();
-        var response = mapper.Map(entity);
-        response.TenantCount = await editionService.TenantCountAsync(entity.Id, cancellationToken);
+        response.TenantCount = await editionService.TenantCountAsync(response.Id, cancellationToken);
 
         await Send.ResponseAsync(response, cancellation: cancellationToken);
     }
@@ -50,14 +62,4 @@ public sealed class EditionGetResponse : AuditableDto<Guid>
     public string? Description { get; set; }
     public int DisplayOrder { get; set; }
     public int TenantCount { get; set; }
-}
-
-/// <summary>
-/// This mapper that projects an <see cref="Edition"/> entity into an <see cref="EditionGetResponse"/>.
-/// </summary>
-[Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
-public partial class EditionGetResponseMapper
-{
-    [MapperIgnoreTarget(nameof(EditionGetResponse.TenantCount))]
-    public partial EditionGetResponse Map(Edition entity);
 }

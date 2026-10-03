@@ -64,6 +64,11 @@ no readonly backing fields.
 **Modern C# is expected:** `var` everywhere, collection expressions (`[]`, `[.. items.Select(x => …)]`),
 target-typed `new()`, pattern matching, expression-bodied members for one-liners.
 
+**EF Core reads are untracked projections.** `.AsNoTracking()` + `.Select(...)` to the columns the
+code uses, `AnyAsync`/`CountAsync` rather than loading rows, and an `OrderBy` before every
+`Skip`/`Take`; only an entity being updated is loaded tracked. The `backend-endpoint` skill has the
+details.
+
 **XML documentation on every type** — the whole codebase carries `/// <summary>` on classes,
 interfaces, and non-obvious public methods. Add it; do not leave new types undocumented.
 

@@ -88,10 +88,19 @@ bld.Services.AddCors(options =>
 
 // Every IInterceptor a feature registers (a singleton, so EF builds one internal service provider for
 // them all) is added to the context - the notifications slice's, which holds hub pushes raised inside a
-// transaction until it commits, among them.
+// transaction until it commits, among them. Outside production a page taken from an unordered query
+// fails rather than warns: rows split across pages unpredictably, and the test suite is what catches it.
+var throwOnUnorderedPaging = bld.Environment.IsDevelopment() || bld.Environment.IsEnvironment("Testing");
 bld.Services.AddDbContext<AppDbContext>((provider, options) =>
     options.UseNpgsql(defaultConnection)
-           .AddInterceptors(provider.GetServices<IInterceptor>()));
+           .AddInterceptors(provider.GetServices<IInterceptor>())
+           .ConfigureWarnings(warnings =>
+           {
+               if (throwOnUnorderedPaging)
+               {
+                   warnings.Throw(CoreEventId.RowLimitingOperationWithoutOrderByWarning);
+               }
+           }));
 
 bld.Services
     .AddAuthenticationCookie(TimeSpan.FromMinutes(bld.Configuration.GetValue<int>("Auth:AccessTokenValidity")), options =>

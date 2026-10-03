@@ -111,6 +111,7 @@ internal static class NotificationQueries
             .VisibleTo(userId, activeTenantId)
             .WithReadState(dbContext, userId)
             .Where(row => !row.IsRead)
+            .OrderBy(row => row.Notification.Id)
             .Take(UnreadCountCap);
 
     /// <summary>

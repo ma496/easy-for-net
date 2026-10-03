@@ -10,7 +10,7 @@ using System.Text;
 /// </summary>
 public interface ITokenService
 {
-    Task<Token> GenerateTokenAsync(User user, TokenPurpose purpose);
+    Task<Token> GenerateTokenAsync(Guid userId, TokenPurpose purpose);
     bool ValidateToken(Token token);
     Task<bool> UseTokenAsync(Token token, CancellationToken cancellationToken = default);
     Task<Token?> GetTokenAsync(string token, TokenPurpose purpose, CancellationToken cancellationToken = default);
@@ -23,14 +23,14 @@ public interface ITokenService
 [NoDirectUse]
 public class TokenService(AppDbContext dbContext) : ITokenService
 {
-    public async Task<Token> GenerateTokenAsync(User user, TokenPurpose purpose)
+    public async Task<Token> GenerateTokenAsync(Guid userId, TokenPurpose purpose)
     {
         var rawValue = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
         var token = new Token
         {
             Value = HashToken(rawValue),
             Expiry = DateTime.UtcNow.AddMinutes(15),
-            UserId = user.Id,
+            UserId = userId,
             Purpose = purpose
         };
         dbContext.Tokens.Add(token);
@@ -60,7 +60,10 @@ public class TokenService(AppDbContext dbContext) : ITokenService
 
     public async Task<Token?> GetTokenAsync(string token, TokenPurpose purpose, CancellationToken cancellationToken = default)
     {
+        // Read-only: a caller checks the token and consumes it through UseTokenAsync, which updates the
+        // row by identifier rather than through the change tracker.
         return await dbContext.Tokens
+            .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Value == HashToken(token) && t.Purpose == purpose, cancellationToken);
     }
 

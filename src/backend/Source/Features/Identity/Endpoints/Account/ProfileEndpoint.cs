@@ -24,6 +24,7 @@ sealed class ProfileEndpoint(AppDbContext dbContext, ICurrentUserService current
     {
         var userId = currentUserService.GetCurrentUserId();
         var user = await dbContext.Users
+                .AsNoTracking()
                 .Where(x => x.Id == userId)
                 .Select(x => new UserProfileResponse
                 {

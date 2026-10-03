@@ -155,6 +155,7 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, ISe
                                  && dbContext.Tenants.Any(tenant => tenant.Id == membership.TenantId && tenant.Status == TenantStatus.Active))
             .Select(membership => membership.TenantId)
             .Distinct()
+            .OrderBy(tenantId => tenantId)
             .Take(2)
             .ToListAsync(cancellationToken);
 
@@ -196,7 +197,9 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, ISe
         var tenant = await dbContext.Tenants
             .AsNoTracking()
             .AcrossAllTenants()
-            .FirstOrDefaultAsync(candidate => candidate.IdentifierNormalized == normalizedIdentifier, cancellationToken);
+            .Where(candidate => candidate.IdentifierNormalized == normalizedIdentifier)
+            .Select(candidate => new { candidate.Id, candidate.Status })
+            .FirstOrDefaultAsync(cancellationToken);
         if (tenant == null)
         {
             this.ThrowError(ErrorCodes.TenantNotFound);
