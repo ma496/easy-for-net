@@ -21,6 +21,7 @@
     "schedule": "node scripts/schedule-drain.mjs",
     "record": "node scripts/record-build.mjs",
     "lessons": "node scripts/record-lesson.mjs --list",
-    "pr": "node scripts/open-pr.mjs"
+    "pr": "node scripts/open-pr.mjs",
+    "deploy:vps": "node scripts/deploy-vps.mjs"
   }
 }
