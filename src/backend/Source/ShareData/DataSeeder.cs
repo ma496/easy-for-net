@@ -9,8 +9,8 @@ using Backend.Features.Notifications.Core.Entities;
 using Backend.Settings;
 
 /// <summary>
-/// Populates the database with baseline data on first run and keeps the permission catalogue, the
-/// bootstrap tenant, the platform administrator role, the bootstrap tenant's administrator role, the
+/// Populates the database with baseline data on first run - including the default edition the
+/// bootstrap tenant starts on - and keeps the permission catalogue, the bootstrap tenant, the platform administrator role, the bootstrap tenant's administrator role, the
 /// platform administrator account, the bootstrap tenant's administrator account and that account's
 /// membership in sync with the definitions declared in code.
 /// </summary>
@@ -64,6 +64,7 @@ public class DataSeeder(IUserService userService,
     public async Task SeedAsync()
     {
         await SeedBootstrapTenantAsync();
+        await SeedDefaultEditionAsync();
 
         var permissions = await ReconcilePermissionsAsync();
         await PruneOrphanFeatureValuesAsync();
@@ -122,6 +123,46 @@ public class DataSeeder(IUserService userService,
             Identifier = TenancyConstants.BootstrapTenantIdentifier,
             Status = TenantStatus.Active
         });
+        await dbContext.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Creates the default edition when the database has never had it, and puts the bootstrap tenant on
+    /// it if that tenant is on no edition yet.
+    /// </summary>
+    /// <remarks>
+    /// The edition carries no feature values, so every feature still resolves to what the deployment
+    /// configured and what the definitions declare - it only gives a fresh installation a plan to edit.
+    /// Both writes happen once, when the edition is first created: the read counts deleted editions, so
+    /// an edition an administrator deleted is not brought back, and a tenant an administrator later
+    /// moved to another plan, or to none, is left where it was put. An edition that already holds the
+    /// name is left alone too, since the unique name index covers deleted editions and creating a
+    /// second would stop startup.
+    /// </remarks>
+    private async Task SeedDefaultEditionAsync()
+    {
+        var defaultEditionName = TenancyConstants.DefaultEditionName.ToLowerInvariant();
+        var editionExists = await dbContext.Editions
+            .IgnoreQueryFilters()
+            .AnyAsync(e => e.Id == TenancyConstants.DefaultEditionId || e.NameNormalized == defaultEditionName);
+        if (editionExists)
+        {
+            return;
+        }
+
+        dbContext.Editions.Add(new Edition
+        {
+            Id = TenancyConstants.DefaultEditionId,
+            Name = TenancyConstants.DefaultEditionName,
+            Description = "Default Edition",
+            DisplayOrder = 0
+        });
+
+        var bootstrapTenant = await dbContext.Tenants
+            .AcrossAllTenants()
+            .FirstAsync(t => t.Id == TenancyConstants.BootstrapTenantId);
+        bootstrapTenant.EditionId ??= TenancyConstants.DefaultEditionId;
+
         await dbContext.SaveChangesAsync();
     }
 
