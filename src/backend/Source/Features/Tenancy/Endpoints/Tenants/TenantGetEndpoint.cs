@@ -1,7 +1,6 @@
 namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
 using Backend.ShareData.Entities;
-using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
@@ -25,7 +24,7 @@ using Backend.Features.Tenancy.Core;
 /// answers only with tenants the caller has standing in.
 /// </para>
 /// </remarks>
-sealed class TenantGetEndpoint(ITenantService tenantService, IEditionService editionService) : Endpoint<TenantGetRequest, TenantGetResponse>
+sealed class TenantGetEndpoint(ITenantService tenantService) : Endpoint<TenantGetRequest, TenantGetResponse>
 {
     public override void Configure()
     {
@@ -38,16 +37,31 @@ sealed class TenantGetEndpoint(ITenantService tenantService, IEditionService edi
     {
         // Read through the service rather than off the set, so a tenant the caller has no standing in
         // reads as missing here exactly as a deleted or an absent one does.
-        var tenant = await tenantService.GetByIdAsync(request.Id, cancellationToken);
-        if (tenant == null)
+        // Projected in the query, so only the columns the response reports are read - the plan's name
+        // included, through the edition the tenant references, which reads as none when that edition
+        // has been deleted.
+        var response = await tenantService.Tenants()
+            .AsNoTracking()
+            .Where(tenant => tenant.Id == request.Id)
+            .Select(tenant => new TenantGetResponse
+            {
+                Id = tenant.Id,
+                CreatedAt = tenant.CreatedAt,
+                CreatedBy = tenant.CreatedBy,
+                UpdatedAt = tenant.UpdatedAt,
+                UpdatedBy = tenant.UpdatedBy,
+                SystemCreated = tenant.SystemCreated,
+                Name = tenant.Name,
+                Identifier = tenant.Identifier,
+                IdentifierNormalized = tenant.IdentifierNormalized,
+                Status = tenant.Status,
+                EditionId = tenant.EditionId,
+                EditionName = tenant.Edition != null ? tenant.Edition.Name : null
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (response == null)
         {
             this.ThrowError(ErrorCodes.TenantNotFound);
-        }
-
-        var response = new TenantGetResponseMapper().Map(tenant);
-        if (tenant.EditionId is { } editionId)
-        {
-            response.EditionName = (await editionService.GetByIdAsync(editionId, cancellationToken))?.Name;
         }
 
         await Send.ResponseAsync(response, cancellation: cancellationToken);
@@ -89,18 +103,8 @@ public sealed class TenantGetResponse : AuditableDto<Guid>, ISystemCreatedDto
     public Guid? EditionId { get; set; }
 
     /// <summary>
-    /// What that plan is called. Filled by the endpoint rather than the mapper, so the screen can name
+    /// What that plan is called. Read through the tenant's edition in the same query, so the screen can name
     /// the plan without a second request.
     /// </summary>
     public string? EditionName { get; set; }
-}
-
-/// <summary>
-/// Maps a <see cref="Tenant"/> onto its <see cref="TenantGetResponse"/>.
-/// </summary>
-[Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
-public partial class TenantGetResponseMapper
-{
-    [MapperIgnoreTarget(nameof(TenantGetResponse.EditionName))]
-    public partial TenantGetResponse Map(Tenant entity);
 }

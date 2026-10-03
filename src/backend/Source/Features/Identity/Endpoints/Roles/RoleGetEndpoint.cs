@@ -1,7 +1,6 @@
 namespace Backend.Features.Identity.Endpoints.Roles;
 
 using Backend.Features.Identity.Core;
-using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
@@ -32,18 +31,31 @@ sealed class RoleGetEndpoint(IRoleService roleService, ITenantContext tenantCont
         // Inside a tenant the user count leaves platform accounts out, as the tenant's user list does:
         // a platform account holding the role there is nobody the tenant administers.
         var includePlatformAccounts = tenantContext.IsPlatformScope();
-        var entity = await roleService.Roles()
-            .Include(x => x.RolePermissions)
-            .Include(x => x.UserRoles.Where(assignment => includePlatformAccounts || !assignment.User.IsPlatform))
-            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
-        if (entity == null)
+        var response = await roleService.Roles()
+            .AsNoTracking()
+            .Where(x => x.Id == request.Id)
+            .Select(x => new RoleGetResponse
+            {
+                Id = x.Id,
+                CreatedAt = x.CreatedAt,
+                CreatedBy = x.CreatedBy,
+                UpdatedAt = x.UpdatedAt,
+                UpdatedBy = x.UpdatedBy,
+                SystemCreated = x.SystemCreated,
+                Name = x.Name,
+                NameNormalized = x.NameNormalized,
+                Description = x.Description,
+                Permissions = x.RolePermissions.Select(rolePermission => rolePermission.PermissionId).ToList(),
+                UserCount = x.UserRoles.Count(assignment => includePlatformAccounts || !assignment.User.IsPlatform)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (response == null)
         {
             await Send.NotFoundAsync(cancellationToken);
             return;
         }
 
-        var responseMapper = new RoleGetResponseMapper();
-        await Send.ResponseAsync(responseMapper.Map(entity), cancellation: cancellationToken);
+        await Send.ResponseAsync(response, cancellation: cancellationToken);
     }
 }
 
@@ -76,22 +88,6 @@ public sealed class RoleGetResponse : AuditableDto<Guid>, ISystemCreatedDto
     public string? Description { get; set; }
     public List<Guid> Permissions { get; set; } = [];
     public int UserCount { get; set; }
-}
-
-/// <summary>
-/// This mapper that projects a <see cref="Role"/> entity into a <see cref="RoleGetResponse"/>, collapsing <see cref="RolePermission"/> join rows into permission ids and computing the user count.
-/// </summary>
-[Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
-public partial class RoleGetResponseMapper
-{
-    [MapProperty(nameof(Role.RolePermissions), nameof(RoleGetResponse.Permissions), Use = nameof(RolePermissionsToPermissions)),
-     MapProperty(nameof(Role.UserRoles.Count), nameof(RoleGetResponse.UserCount))]
-    public partial RoleGetResponse Map(Role entity);
-
-    private static List<Guid> RolePermissionsToPermissions(ICollection<RolePermission> rolePermissions)
-    {
-        return [.. rolePermissions.Select(x => x.PermissionId)];
-    }
 }
 
 

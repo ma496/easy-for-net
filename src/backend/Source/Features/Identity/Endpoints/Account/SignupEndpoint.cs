@@ -48,6 +48,7 @@ sealed class SignupEndpoint(IUserService userService,
         var signinSettings = await settingProvider.GetAsync<SigninSettings>((Guid?)null, cancellationToken);
 
         var usernameExists = await dbContext.Users
+            .AsNoTracking()
             .AnyAsync(x => x.UsernameNormalized == request.Username.Trim().ToLowerInvariant(), cancellationToken);
         if (usernameExists)
         {
@@ -55,6 +56,7 @@ sealed class SignupEndpoint(IUserService userService,
         }
 
         var emailExists = await dbContext.Users
+            .AsNoTracking()
             .AnyAsync(x => x.EmailNormalized == request.Email.Trim().ToLowerInvariant(), cancellationToken);
         if (emailExists)
         {
@@ -106,7 +108,7 @@ sealed class SignupEndpoint(IUserService userService,
                 cancellationToken);
 
             var verificationToken = signinSettings.IsEmailVerificationRequired
-                ? await tokenService.GenerateTokenAsync(user, TokenPurpose.EmailVerification)
+                ? await tokenService.GenerateTokenAsync(user.Id, TokenPurpose.EmailVerification)
                 : null;
 
             await transaction.CommitAsync(cancellationToken);

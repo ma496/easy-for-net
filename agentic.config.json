@@ -7,7 +7,8 @@
     "conventions": [
       "Features are isolated vertical slices: a type under Features/X never references a type under Features/Y unless that type is marked [AllowOutside]. Cross-feature access goes through a service interface, never through another feature's entities — the architecture tests fail the gate otherwise.",
       "One endpoint is one file: the Endpoint, its Request, Validator, Response/DTOs and the Mapperly mapper live together. Global usings live in Meta.cs, and every C# file opens with its file-scoped namespace, then a blank line, then its using directives.",
-      "A new permission is three edits that must agree: the constant in Permissions/Allow.cs, its definition in the feature's PermissionsProvider, and the mirror in src/frontend/web/allow.ts. A new feature (entitlement) is the same triple: FeatureNames.cs, the slice's FeaturesProvider, and feature-names.ts."
+      "A new permission is three edits that must agree: the constant in Permissions/Allow.cs, its definition in the feature's PermissionsProvider, and the mirror in src/frontend/web/allow.ts. A new feature (entitlement) is the same triple: FeatureNames.cs, the slice's FeaturesProvider, and feature-names.ts.",
+      "An EF Core query reads only what it uses: a query whose rows are not modified and saved is AsNoTracking() and projects with Select (or a Mapperly ProjectTo) to the columns the response needs — never a whole entity loaded with Include and mapped afterwards; existence is AnyAsync, a count is CountAsync. A query that updates an entity loads it tracked, with no Include the update does not need. Every Skip/Take follows an OrderBy ending on a unique column (Process adds Id as tie-breaker); in Development and Testing an unordered row limit throws."
     ]
   },
   "commands": {

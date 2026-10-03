@@ -1,7 +1,6 @@
 namespace Backend.Features.Identity.Endpoints.Roles;
 
 using Backend.Features.Identity.Core;
-using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
@@ -48,11 +47,7 @@ sealed class RoleListEndpoint(IRoleService roleService,
         // the platform's roles, or a named tenant's being administered from the tenants table - every
         // holder is counted, as the tenant's member list shows them all there.
         var includePlatformAccounts = tenantContext.IsPlatformScope();
-        var query = roles
-            .AsNoTracking()
-            .Include(x => x.RolePermissions)
-            .Include(x => x.UserRoles.Where(assignment => includePlatformAccounts || !assignment.User.IsPlatform))
-            .AsQueryable();
+        var query = roles.AsNoTracking();
 
         var search = request.Search?.Trim().ToLowerInvariant();
         if (!string.IsNullOrWhiteSpace(search))
@@ -63,14 +58,30 @@ sealed class RoleListEndpoint(IRoleService roleService,
         }
 
         var total = await query.CountAsync(cancellationToken);
+        // Sorting and paging run on the roles themselves, which is what Process works over; the page is
+        // then projected, so only the columns a row reports are read and the holders are counted in the
+        // database rather than loaded.
         var items = await query
             .Process(request)
+            .Select(x => new RoleListDto
+            {
+                Id = x.Id,
+                CreatedAt = x.CreatedAt,
+                CreatedBy = x.CreatedBy,
+                UpdatedAt = x.UpdatedAt,
+                UpdatedBy = x.UpdatedBy,
+                SystemCreated = x.SystemCreated,
+                Name = x.Name,
+                NameNormalized = x.NameNormalized,
+                Description = x.Description,
+                Permissions = x.RolePermissions.Select(rolePermission => rolePermission.PermissionId).ToList(),
+                UserCount = x.UserRoles.Count(assignment => includePlatformAccounts || !assignment.User.IsPlatform)
+            })
             .ToListAsync(cancellationToken);
 
-        var dtoMapper = new RoleListDtoMapper();
         var response = new RoleListResponse
         {
-            Items = [.. items.Select(dtoMapper.Map)],
+            Items = items,
             Total = total
         };
 
@@ -122,22 +133,6 @@ public sealed class RoleListDto : AuditableDto<Guid>, ISystemCreatedDto
     public string? Description { get; set; }
     public List<Guid> Permissions { get; set; } = [];
     public int UserCount { get; set; }
-}
-
-/// <summary>
-/// This mapper that projects a <see cref="Role"/> entity into a <see cref="RoleListDto"/>, collapsing <see cref="RolePermission"/> join rows into permission ids and computing the user count.
-/// </summary>
-[Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
-public partial class RoleListDtoMapper
-{
-    [MapProperty(nameof(Role.RolePermissions), nameof(RoleListDto.Permissions), Use = nameof(RolePermissionsToPermissions)),
-     MapProperty(nameof(Role.UserRoles.Count), nameof(RoleListDto.UserCount))]
-    public partial RoleListDto Map(Role entity);
-
-    private static List<Guid> RolePermissionsToPermissions(ICollection<RolePermission> rolePermissions)
-    {
-        return [.. rolePermissions.Select(x => x.PermissionId)];
-    }
 }
 
 

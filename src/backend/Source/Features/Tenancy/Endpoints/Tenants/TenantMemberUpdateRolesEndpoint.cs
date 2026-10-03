@@ -72,13 +72,18 @@ sealed class TenantMemberUpdateRolesEndpoint(ITenantService tenantService,
 
         // Read through the service, so a tenant that never existed, one that has been deleted and one
         // a platform administrator may see but this caller may not are all the same answer.
-        var tenant = await tenantService.GetByIdAsync(request.TenantId, cancellationToken);
-        if (tenant == null)
+        // Only the lifecycle status is read, and none when the tenant is not visible.
+        var tenantStatus = await tenantService.Tenants()
+            .AsNoTracking()
+            .Where(tenant => tenant.Id == request.TenantId)
+            .Select(tenant => (TenantStatus?)tenant.Status)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (tenantStatus == null)
         {
             this.ThrowError(ErrorCodes.TenantNotFound);
         }
 
-        if (tenant.Status == TenantStatus.Suspended)
+        if (tenantStatus == TenantStatus.Suspended)
         {
             this.ThrowError(ErrorCodes.TenantSuspended);
         }

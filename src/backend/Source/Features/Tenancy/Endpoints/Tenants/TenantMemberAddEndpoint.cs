@@ -69,7 +69,12 @@ sealed class TenantMemberAddEndpoint(ITenantService tenantService,
         // Read through the service, so a deleted tenant and one the caller has no standing in read as
         // missing here exactly as an absent one does. A caller who reached this line already has
         // standing in the tenant, so in practice only a platform administrator's route id fails it.
-        var tenant = await tenantService.GetByIdAsync(request.TenantId, cancellationToken);
+        // Only the status checked below and the name the notification carries are read.
+        var tenant = await tenantService.Tenants()
+            .AsNoTracking()
+            .Where(x => x.Id == request.TenantId)
+            .Select(x => new { x.Status, x.Name })
+            .FirstOrDefaultAsync(cancellationToken);
         if (tenant == null)
         {
             this.ThrowError(ErrorCodes.TenantNotFound);

@@ -2,7 +2,6 @@ namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
 using Backend.ShareData.Entities;
 using Backend.Features.Identity.Core;
-using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
 
 /// <summary>
@@ -16,8 +15,7 @@ using Backend.Features.Tenancy.Core;
 /// need it.
 /// </remarks>
 sealed class TenantListEndpoint(ITenantService tenantService,
-                                ITenantAuthorizationService tenantAuthorizationService,
-                                IEditionService editionService) : Endpoint<TenantListRequest, TenantListResponse>
+                                ITenantAuthorizationService tenantAuthorizationService) : Endpoint<TenantListRequest, TenantListResponse>
 {
     public override void Configure()
     {
@@ -52,8 +50,27 @@ sealed class TenantListEndpoint(ITenantService tenantService,
 
         // Counted before paging, so the total describes the whole filtered set rather than the page.
         var total = await query.CountAsync(cancellationToken);
+        // Sorting and paging run on the tenants themselves, which is what Process works over; the page is
+        // then projected, so only the columns a row reports are read. The plan's name comes through the
+        // edition the tenant references in the same query, and reads as none when that edition has been
+        // deleted.
         var items = await query
             .Process(request)
+            .Select(tenant => new TenantListDto
+            {
+                Id = tenant.Id,
+                CreatedAt = tenant.CreatedAt,
+                CreatedBy = tenant.CreatedBy,
+                UpdatedAt = tenant.UpdatedAt,
+                UpdatedBy = tenant.UpdatedBy,
+                SystemCreated = tenant.SystemCreated,
+                Name = tenant.Name,
+                Identifier = tenant.Identifier,
+                IdentifierNormalized = tenant.IdentifierNormalized,
+                Status = tenant.Status,
+                EditionId = tenant.EditionId,
+                EditionName = tenant.Edition != null ? tenant.Edition.Name : null
+            })
             .ToListAsync(cancellationToken);
 
         // How many accounts a tenant holds is user-account data owned by the identity slice, so it is
@@ -62,30 +79,14 @@ sealed class TenantListEndpoint(ITenantService tenantService,
         // the zero the row shows.
         var memberCounts = await tenantAuthorizationService.GetTenantMemberCountsAsync(
             [.. items.Select(tenant => tenant.Id)], cancellationToken);
+        foreach (var item in items)
+        {
+            item.UserCount = memberCounts.GetValueOrDefault(item.Id);
+        }
 
-        // The plan's name is read once for the whole page rather than row by row, and only for the
-        // plans this page actually references.
-        var editionIds = items.Where(tenant => tenant.EditionId.HasValue)
-                              .Select(tenant => tenant.EditionId!.Value)
-                              .Distinct()
-                              .ToList();
-        var editionNames = editionIds.Count == 0
-            ? []
-            : await editionService.Editions()
-                .AsNoTracking()
-                .Where(edition => editionIds.Contains(edition.Id))
-                .ToDictionaryAsync(edition => edition.Id, edition => edition.Name, cancellationToken);
-
-        var dtoMapper = new TenantListDtoMapper();
         var response = new TenantListResponse
         {
-            Items = [.. items.Select(tenant =>
-            {
-                var dto = dtoMapper.Map(tenant);
-                dto.UserCount = memberCounts.GetValueOrDefault(tenant.Id);
-                dto.EditionName = tenant.EditionId is { } editionId ? editionNames.GetValueOrDefault(editionId) : null;
-                return dto;
-            })],
+            Items = items,
             Total = total
         };
 
@@ -155,19 +156,8 @@ public sealed class TenantListDto : AuditableDto<Guid>, ISystemCreatedDto
 
     /// <summary>
     /// The number of accounts holding an active membership of the tenant. It is filled by the endpoint
-    /// from the identity slice's count rather than by the mapper, because the tenant row itself knows
-    /// nothing about its members.
+    /// from the identity slice's count rather than by the projection, because the tenant row itself
+    /// knows nothing about its members.
     /// </summary>
     public int UserCount { get; set; }
-}
-
-/// <summary>
-/// This mapper that projects a <see cref="Tenant"/> entity into a <see cref="TenantListDto"/>.
-/// </summary>
-[Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
-public partial class TenantListDtoMapper
-{
-    [MapperIgnoreTarget(nameof(TenantListDto.UserCount))]
-    [MapperIgnoreTarget(nameof(TenantListDto.EditionName))]
-    public partial TenantListDto Map(Tenant entity);
 }

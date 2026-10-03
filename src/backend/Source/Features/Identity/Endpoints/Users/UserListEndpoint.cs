@@ -1,7 +1,6 @@
 namespace Backend.Features.Identity.Endpoints.Users;
 
 using Backend.Features.Identity.Core;
-using Backend.Features.Identity.Core.Entities;
 
 /// <summary>
 /// This endpoint that handles <c>GET /users</c> to return a paginated, filterable list of the user accounts the caller may administer, with their role assignments.
@@ -22,10 +21,7 @@ sealed class UserListEndpoint(IUserService userService) : Endpoint<UserListReque
         // filters and the total below all narrow from this one query, so none of them can report an
         // account the caller is not entitled to see.
         var query = userService.TenantUsers()
-            .AsNoTracking()
-            .Include(x => x.UserRoles)
-            .ThenInclude(x => x.Role)
-            .AsQueryable();
+            .AsNoTracking();
 
         var search = request.Search?.Trim().ToLowerInvariant();
         if (!string.IsNullOrWhiteSpace(search))
@@ -48,14 +44,37 @@ sealed class UserListEndpoint(IUserService userService) : Endpoint<UserListReque
         }
 
         var total = await query.CountAsync(cancellationToken);
+        // Sorting and paging run on the accounts themselves, which is what Process works over; the page is
+        // then projected, so only the columns a row reports are read - its role names included.
         var items = await query
             .Process(request)
+            .Select(x => new UserListDto
+            {
+                Id = x.Id,
+                CreatedAt = x.CreatedAt,
+                CreatedBy = x.CreatedBy,
+                UpdatedAt = x.UpdatedAt,
+                UpdatedBy = x.UpdatedBy,
+                SystemCreated = x.SystemCreated,
+                Username = x.Username,
+                UsernameNormalized = x.UsernameNormalized,
+                Email = x.Email,
+                EmailNormalized = x.EmailNormalized,
+                FirstName = x.FirstName,
+                LastName = x.LastName,
+                IsActive = x.IsActive,
+                // A role of another tenant is hidden by the tenant query filter, so its assignment names
+                // nothing the caller may see and is not reported.
+                Roles = x.UserRoles
+                    .Where(userRole => userRole.Role != null)
+                    .Select(userRole => new UserRoleDto { Id = userRole.RoleId, Name = userRole.Role.Name })
+                    .ToList()
+            })
             .ToListAsync(cancellationToken);
 
-        var dtoMapper = new UserListDtoMapper();
         var response = new UserListResponse
         {
-            Items = [.. items.Select(dtoMapper.Map)],
+            Items = items,
             Total = total
         };
 
@@ -117,19 +136,4 @@ public sealed class UserListDto : AuditableDto<Guid>, ISystemCreatedDto
 public sealed class UserRoleDto : BaseDto<Guid>
 {
     public string Name { get; set; } = null!;
-}
-
-/// <summary>
-/// This mapper that projects a <see cref="User"/> entity into a <see cref="UserListDto"/>, collapsing <see cref="UserRole"/> join rows into <see cref="UserRoleDto"/> entries.
-/// </summary>
-[Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
-public partial class UserListDtoMapper
-{
-    [MapProperty("UserRoles", "Roles", Use = nameof(UserRolesToRoles))]
-    public partial UserListDto Map(User entity);
-
-    // A role of another tenant is filtered out of the include, which leaves its assignment row with
-    // no role attached; such an assignment names nothing the caller may see, so it is not reported.
-    private static List<UserRoleDto> UserRolesToRoles(ICollection<UserRole> userRoles)
-        => [.. userRoles.Where(x => x.Role != null).Select(x => new UserRoleDto { Id = x.RoleId, Name = x.Role.Name })];
 }

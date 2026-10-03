@@ -51,6 +51,10 @@ anything, then load the skill for the job: `backend-feature`, `backend-endpoint`
   English message — from `ErrorHandling/ErrorCodes.cs`. A new code needs its
   `error.server.<code>` key in every resource file (`api-error-handling`).
 - **Sortable list fields are whitelisted in the request validator.**
+- **Queries read only what they use.** A read is `.AsNoTracking()` and projects with
+  `.Select(...)` into the response DTO — no `.Include(...)` mapped afterwards; existence is
+  `AnyAsync`. Only a query that updates and saves an entity loads it tracked. Every
+  `Skip`/`Take` follows an `OrderBy` — under Testing an unordered one throws.
 - **Do not widen a public surface silently.** A new response field, route or status code
   goes in your report: the web app's DTOs mirror these by name.
 

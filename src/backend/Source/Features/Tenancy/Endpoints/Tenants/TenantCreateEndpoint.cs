@@ -66,7 +66,7 @@ sealed class TenantCreateEndpoint(ITenantService tenantService, IEditionService 
             return;
         }
 
-        if (await editionService.GetByIdAsync(id, cancellationToken) is null)
+        if (!await editionService.Editions().AnyAsync(edition => edition.Id == id, cancellationToken))
         {
             this.ThrowError(x => x.EditionId, ErrorCodes.EditionNotFound);
         }

@@ -187,7 +187,7 @@ public class FileService(
     /// </summary>
     public async Task<FileDownloadResult> DownloadAsync(string fileName, CancellationToken cancellationToken = default)
     {
-        var (status, storedFile) = await ResolveAsync(fileName, cancellationToken);
+        var (status, storedFile) = await ResolveAsync(fileName, tracked: false, cancellationToken);
         if (storedFile is null)
         {
             return new FileDownloadResult { Status = status };
@@ -218,7 +218,7 @@ public class FileService(
     /// </summary>
     public async Task<FileDeleteResult> DeleteAsync(string fileName, CancellationToken cancellationToken = default)
     {
-        var (status, storedFile) = await ResolveAsync(fileName, cancellationToken);
+        var (status, storedFile) = await ResolveAsync(fileName, tracked: true, cancellationToken);
         if (storedFile is null)
         {
             return new FileDeleteResult { Status = status };
@@ -241,6 +241,11 @@ public class FileService(
     /// telling those two apart is the whole point of recording attribution.
     /// </summary>
     /// <param name="fileName">The stored file name the request supplied.</param>
+    /// <param name="tracked">
+    /// <see langword="true"/> when the caller goes on to remove the record, which needs the whole
+    /// entity tracked; <see langword="false"/> reads, untracked, only the columns access is judged
+    /// on and a download serves.
+    /// </param>
     /// <param name="cancellationToken">Token used to cancel the asynchronous operation.</param>
     /// <returns>
     /// The verdict, together with the record when - and only when - access is granted, so that no
@@ -249,11 +254,26 @@ public class FileService(
     /// <exception cref="TenantScopeNotEstablishedException">
     /// The file is tenant-scoped and no scope has been established to compare it against.
     /// </exception>
-    private async Task<(FileAccessStatus Status, StoredFile? File)> ResolveAsync(string fileName, CancellationToken cancellationToken)
+    private async Task<(FileAccessStatus Status, StoredFile? File)> ResolveAsync(string fileName, bool tracked, CancellationToken cancellationToken)
     {
-        var storedFile = await dbContext.StoredFiles
+        var query = dbContext.StoredFiles
             .AcrossAllTenants()
-            .FirstOrDefaultAsync(f => f.FileName == fileName, cancellationToken);
+            .Where(f => f.FileName == fileName);
+
+        var storedFile = tracked
+            ? await query.FirstOrDefaultAsync(cancellationToken)
+            : await query
+                .AsNoTracking()
+                .Select(f => new StoredFile
+                {
+                    Id = f.Id,
+                    TenantId = f.TenantId,
+                    OwnerUserId = f.OwnerUserId,
+                    FileName = f.FileName,
+                    OriginalFileName = f.OriginalFileName,
+                    ContentType = f.ContentType
+                })
+                .FirstOrDefaultAsync(cancellationToken);
 
         if (storedFile is null)
         {
@@ -274,6 +294,7 @@ public class FileService(
         // tenant's files stop being served to anybody while their content is retained. A deleted
         // tenant is a soft-deleted row, which this query does not see, so it answers as missing.
         var owningTenant = await dbContext.Tenants
+            .AsNoTracking()
             .Where(t => t.Id == storedFile.TenantId)
             .Select(t => new { t.Status })
             .FirstOrDefaultAsync(cancellationToken);

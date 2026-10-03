@@ -134,6 +134,7 @@ internal class LocalizationService(AppDbContext dbContext, ITenantContext tenant
             .AsNoTracking()
             .AcrossAllTenants()
             .Where(x => x.Culture == servedCulture && (x.TenantId == effectiveTenantId || x.TenantId == null))
+            .Select(x => new { x.TenantId, x.Key, x.Value })
             .ToListAsync(cancellationToken);
 
         var resources = new Dictionary<string, string>(resourceStore.EnglishResources, StringComparer.Ordinal);
@@ -240,6 +241,7 @@ internal class LocalizationService(AppDbContext dbContext, ITenantContext tenant
             .AsNoTracking()
             .AcrossAllTenants()
             .Where(x => x.Culture == culture && (x.TenantId == effectiveTenantId || x.TenantId == null))
+            .Select(x => new { x.TenantId, x.Key, x.Value })
             .ToListAsync(cancellationToken);
 
         var ownOverrides = overrides
@@ -385,10 +387,13 @@ internal class LocalizationService(AppDbContext dbContext, ITenantContext tenant
 
         // AcrossAllTenants because this must work with no scope resolved at all (a genuinely anonymous
         // caller of the resources endpoint), which the automatic "Tenant" filter cannot do.
+        // Only the two columns resolution reads are selected, into an untracked LanguageSetting.
         var own = await dbContext.LanguageSettings
             .AsNoTracking()
             .AcrossAllTenants()
-            .FirstOrDefaultAsync(x => x.TenantId == effectiveTenantId, cancellationToken);
+            .Where(x => x.TenantId == effectiveTenantId)
+            .Select(x => new LanguageSetting { EnabledCultures = x.EnabledCultures, DefaultCulture = x.DefaultCulture })
+            .FirstOrDefaultAsync(cancellationToken);
 
         LanguageSetting? platform = null;
         if (isTenantScope)
@@ -396,7 +401,9 @@ internal class LocalizationService(AppDbContext dbContext, ITenantContext tenant
             platform = await dbContext.LanguageSettings
                 .AsNoTracking()
                 .AcrossAllTenants()
-                .FirstOrDefaultAsync(x => x.TenantId == null, cancellationToken);
+                .Where(x => x.TenantId == null)
+                .Select(x => new LanguageSetting { EnabledCultures = x.EnabledCultures, DefaultCulture = x.DefaultCulture })
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
         var shippedCultures = resourceStore.ShippedCultures.ToList();

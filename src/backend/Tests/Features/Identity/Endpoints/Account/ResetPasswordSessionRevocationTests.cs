@@ -22,7 +22,7 @@ public class ResetPasswordSessionRevocationTests(App app) : SessionRevocationTes
         var first = await SessionForAsync(account.Username, tenant.Id);
         var second = await SessionForAsync(account.Username, tenant.Id);
         var bystander = await SessionForAsync((await CreateTenantUserAsync(tenant.Id)).Username, tenant.Id);
-        var token = await Service<ITokenService>().GenerateTokenAsync(account, TokenPurpose.PasswordReset);
+        var token = await Service<ITokenService>().GenerateTokenAsync(account.Id, TokenPurpose.PasswordReset);
 
         var response = await Client.POSTAsync<ResetPasswordEndpoint, ResetPasswordRequest>(
             new() { Token = token.Value, Password = "Reset#12345" });

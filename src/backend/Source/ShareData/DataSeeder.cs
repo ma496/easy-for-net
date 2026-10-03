@@ -214,27 +214,32 @@ public class DataSeeder(IUserService userService,
         var platformPermissionNames = permissionDefinitionService.GetPermissionNamesInScope(PermissionScope.Platform);
         var platformPermissions = permissions.Where(p => platformPermissionNames.Contains(p.Name)).ToList();
 
-        var platformAdminRole = await dbContext.Roles
+        // Only the role's identifier is used, so only that is read.
+        var platformAdminRoleId = await dbContext.Roles
+            .AsNoTracking()
             .AcrossAllTenants()
-            .FirstOrDefaultAsync(r => r.TenantId == null && r.NameNormalized == AdminRoleNameNormalized);
+            .Where(r => r.TenantId == null && r.NameNormalized == AdminRoleNameNormalized)
+            .Select(r => (Guid?)r.Id)
+            .FirstOrDefaultAsync();
 
-        if (platformAdminRole is null)
+        if (platformAdminRoleId is null)
         {
             // A row that names no tenant is only ever written in platform scope: with nothing
             // established the save refuses the write rather than storing an unattributed row.
             using (tenantContext.BeginPlatformScope())
             {
-                platformAdminRole = await roleService.CreateAsync(new Role
+                var platformAdminRole = await roleService.CreateAsync(new Role
                 {
                     SystemCreated = true,
                     Name = AdminRoleName,
                     Description = PlatformAdminRoleDescription
                 });
+                platformAdminRoleId = platformAdminRole.Id;
             }
         }
 
-        await ReconcileRolePermissionsAsync(platformAdminRole.Id, platformPermissions);
-        await AssignRoleIfMissingAsync(platformAdminUser.Id, platformAdminRole.Id);
+        await ReconcileRolePermissionsAsync(platformAdminRoleId.Value, platformPermissions);
+        await AssignRoleIfMissingAsync(platformAdminUser.Id, platformAdminRoleId.Value);
     }
 
     /// <summary>
@@ -255,15 +260,19 @@ public class DataSeeder(IUserService userService,
         {
             // Inside the scope the tenant filter restricts the read to the bootstrap tenant and the
             // save attributes the new row to it, so neither has to name the tenant a second time.
-            var tenantAdminRole = await dbContext.Roles.FirstOrDefaultAsync(r => r.NameNormalized == AdminRoleNameNormalized) ??
-                await roleService.CreateAsync(new Role
+            var tenantAdminRoleId = await dbContext.Roles
+                .AsNoTracking()
+                .Where(r => r.NameNormalized == AdminRoleNameNormalized)
+                .Select(r => (Guid?)r.Id)
+                .FirstOrDefaultAsync() ??
+                (await roleService.CreateAsync(new Role
                 {
                     SystemCreated = true,
                     Name = AdminRoleName,
                     Description = TenantAdminRoleDescription
-                });
+                })).Id;
 
-            await ReconcileRolePermissionsAsync(tenantAdminRole.Id, tenantPermissions);
+            await ReconcileRolePermissionsAsync(tenantAdminRoleId, tenantPermissions);
 
             if (!await dbContext.TenantMemberships.AnyAsync(m => m.UserId == tenantAdminUser.Id))
             {
@@ -271,7 +280,7 @@ public class DataSeeder(IUserService userService,
                 await dbContext.SaveChangesAsync();
             }
 
-            await AssignRoleIfMissingAsync(tenantAdminUser.Id, tenantAdminRole.Id);
+            await AssignRoleIfMissingAsync(tenantAdminUser.Id, tenantAdminRoleId);
         }
     }
 

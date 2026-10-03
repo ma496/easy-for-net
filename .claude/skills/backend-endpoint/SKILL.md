@@ -221,9 +221,10 @@ RuleFor(request => request.SortField)
 ```
 
 3. Start from the service's composable query when it defines who may be listed
-   (`userService.TenantUsers()`), else the `DbSet`; add `.AsNoTracking()` + `.Include(...)`, apply
-   search/filters, take `CountAsync` for the total **before** paging, then `query.Process(request)`
-   for sort + `IncludeIds` + paging (the entity must be `IBaseEntity<TId>`).
+   (`userService.TenantUsers()`), else the `DbSet`; add `.AsNoTracking()`, apply search/filters,
+   take `CountAsync` for the total **before** paging, then `query.Process(request)` for sort +
+   `IncludeIds` + paging (the entity must be `IBaseEntity<TId>`), and only then project with
+   `.Select(...)` (or a Mapperly `ProjectTo`) into the list DTO — no `.Include(...)`.
 4. Respond with `<Entity>ListResponse : ListDto<<Entity>ListDto>` (`Items` + `Total`).
 
 Search uses the normalized columns: `EF.Functions.Like(x.UsernameNormalized, $"%{search}%")` with
@@ -239,6 +240,16 @@ fails otherwise. Several writes that must stand or fall together share
 
 `AppDbContext` already stamps audit fields, runs `NormalizeProperties()`, attributes tenant-scoped
 rows, and converts deletes of `ISoftDelete` entities into soft deletes — do not do any of that by hand.
+
+**Read only what you use.** A query whose rows are not modified and saved is `.AsNoTracking()` and
+projects with `.Select(...)` into the response DTO, a small record or a scalar — never a whole entity
+with `.Include(...)` mapped afterwards. Test existence with `AnyAsync` and count with `CountAsync`.
+A query that updates an entity loads it tracked (SaveChanges is what stamps audit fields), with no
+`Include` the update does not need.
+
+**Every `Skip`/`Take` follows an `OrderBy`** that ends on a unique column (`Id`), so pages are
+stable — `Process` does this for list endpoints. In Development and Testing an unordered row limit
+throws (`RowLimitingOperationWithoutOrderByWarning`), so the tests catch one.
 
 ## Finish the change
 

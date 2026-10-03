@@ -72,7 +72,8 @@ sealed class NotificationListEndpoint(AppDbContext dbContext, ICurrentUserServic
         {
             withReadState = withReadState
                 .OrderBy(x => x.IsRead)
-                .ThenByDescending(x => x.Notification.CreatedAt);
+                .ThenByDescending(x => x.Notification.CreatedAt)
+                .ThenByDescending(x => x.Notification.Id);
         }
 
         // Sorting by a whitelisted field and paging are applied to the notifications themselves, which is

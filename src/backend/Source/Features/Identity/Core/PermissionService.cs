@@ -89,6 +89,7 @@ public class PermissionService(AppDbContext dbContext) : IPermissionService
     public async Task<List<Permission>> GetRolePermissionsAsync(Guid roleId)
     {
         return await dbContext.RolePermissions
+            .AsNoTracking()
             .Where(rp => rp.RoleId == roleId)
             .Select(rp => rp.Permission)
             .ToListAsync();

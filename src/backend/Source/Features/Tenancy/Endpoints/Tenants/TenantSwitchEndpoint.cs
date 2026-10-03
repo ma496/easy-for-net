@@ -72,9 +72,12 @@ sealed class TenantSwitchEndpoint(AppDbContext dbContext,
         // nothing but the soft-delete filter: a deleted tenant is absent here exactly as a tenant that
         // never existed is, which is what makes the one selection failure indistinguishable from the
         // other.
+        // Only the columns the checks and the response below use are read.
         var tenant = await dbContext.Tenants
             .AsNoTracking()
-            .FirstOrDefaultAsync(candidate => candidate.Id == request.TenantId, cancellationToken);
+            .Where(candidate => candidate.Id == request.TenantId)
+            .Select(candidate => new { candidate.Id, candidate.Name, candidate.Identifier, candidate.Status })
+            .FirstOrDefaultAsync(cancellationToken);
         if (tenant == null)
         {
             this.ThrowError(ErrorCodes.TenantNotFound);
