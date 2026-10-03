@@ -27,6 +27,7 @@ loop.mjs            the whole cycle: look → observe → plan → drain → rep
 | `open-pr.mjs` | Prints (or opens) the pull-request page for the current branch. Never merges. |
 | `gate.mjs` | The static gate: solution build, backend and tool tests, web lint + `tsc` + vitest, engine and hook tests, web build. `--changed` runs only the steps whose watched paths changed (`lib/gate-scope.mjs` decides). |
 | `serve-api.mjs` | Starts the API on `$PORT` as Development — what verify starts for a live check. |
+| `dev.mjs` | `npm run dev`: the whole app for a developer — PostgreSQL and Redis through `docker compose` when the probes say they are down, then the API (via `serve-api.mjs`) and `next dev` side by side, each line prefixed. Not part of the loop or the gate. |
 | `stop-api.mjs` | Stops this checkout's running API (anything running from `src/backend/Source/bin/`), which on Windows locks the build output. The gate runs it before `dotnet build`; `npm run stop:api`. |
 | `pg-ready.mjs` | Whether PostgreSQL accepts connections — the dependency probe for verify and the loop. |
 | `smoke.mjs` | The live check: health, the OpenAPI document, and an anonymous caller refused. |
@@ -34,9 +35,9 @@ loop.mjs            the whole cycle: look → observe → plan → drain → rep
 | `lib/` | The pure parts: the department map, spend and budget arithmetic, salvage, memory selection, cross-platform process helpers (`proc.mjs`), the timer's files (`schedule.mjs`), remote and PR URLs (`remote.mjs`), the config and its validation (`project-config.mjs`), the queue lock (`queue-lock.mjs`), `Depends-on:` resolution (`task-deps.mjs`), changed-path listing and the tree fingerprint a passing verify is reused on (`changed-paths.mjs`), the services a task needs before it may start (`dependencies.mjs`), which gate steps a diff reaches (`gate-scope.mjs`), journal outcomes (`outcomes.mjs`), how an attempt ended (`attempt-outcome.mjs`). |
 | `lib/claude-events.mjs` | **The only reader of the Claude CLI's stream-json.** `stream-render.mjs` renders and adds up what it normalises. A CLI release that moves a field is fixed here, and `tests/claude-stream-contract.test.mjs` holds it against captured streams. |
 
-**Two kinds of file live here.** The engine — everything above except `gate`, `serve-api`, `deploy`,
+**Two kinds of file live here.** The engine — everything above except `gate`, `serve-api`, `dev`, `deploy`,
 `stop-api`, `pg-ready` and `smoke` — knows nothing about the stack; it asks `lib/project-config.mjs`,
-which reads `agentic.config.json`. Those six are the stack-specific half: they are what the
+which reads `agentic.config.json`. Those seven are the stack-specific half: they are what the
 config's commands name, and they are where a change to how this repository builds or runs
 belongs.
 

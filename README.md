@@ -70,6 +70,9 @@ docker compose up -d        # PostgreSQL on localhost:5432 (user/password postgr
 docker compose down         # stop, keeping the data
 ```
 
+`npm run dev` from the root starts these containers when PostgreSQL or Redis is not already answering, then
+runs the API and the web app together in one terminal (Ctrl+C stops both, the containers keep running).
+
 To use other passwords, set `DEV_POSTGRES_PASSWORD` / `DEV_REDIS_PASSWORD` (in the shell or the root
 `.env`) and put the same values in `appsettings.Development.json`: the PostgreSQL connection strings
 below, and `ConnectionStrings:Redis` (`localhost:6379,password=<password>`). A PostgreSQL password

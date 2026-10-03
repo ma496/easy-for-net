@@ -26,6 +26,10 @@ npm install
 npm run dev                                               # http://localhost:3000
 ```
 
+After the first migration, `npm run dev` from the root does all of this in one terminal: it starts PostgreSQL and
+Redis with Docker when they are not already answering, then runs the API and the web app together (Ctrl+C stops
+both; `-- --no-docker`, `-- --api-only` and `-- --web-only` narrow it).
+
 Development and Testing apply migrations on startup. If you use your own PostgreSQL or Redis instead
 of `docker compose`, update the connection strings in `src/backend/Source/appsettings.Development.json`
 and `appsettings.Testing.json` (both git-ignored).
