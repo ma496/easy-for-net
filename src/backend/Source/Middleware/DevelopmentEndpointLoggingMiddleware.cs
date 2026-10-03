@@ -3,35 +3,24 @@ namespace Backend.Middleware;
 using System.Diagnostics;
 
 /// <summary>
-/// Logs entry, exit, and execution time for matched FastEndpoints during development.
+/// Logs one line per matched FastEndpoint during development - method, path, status and time - the
+/// way the web app's dev server logs a page.
 /// </summary>
 public sealed class DevelopmentEndpointLoggingMiddleware(
     RequestDelegate next,
     ILogger<DevelopmentEndpointLoggingMiddleware> logger)
 {
     /// <summary>
-    /// Logs safe request diagnostics around the execution of a matched FastEndpoint.
+    /// Times the matched FastEndpoint and logs it once it has answered. The query string is left out:
+    /// a bearer client connecting to the notification hub passes its access token there.
     /// </summary>
     public async Task InvokeAsync(HttpContext context)
     {
-        var endpoint = context.GetEndpoint();
-        if (endpoint?.Metadata.GetMetadata<EndpointDefinition>() == null)
+        if (context.GetEndpoint()?.Metadata.GetMetadata<EndpointDefinition>() == null)
         {
             await next(context);
             return;
         }
-
-        var endpointName = endpoint.DisplayName ?? "UnknownEndpoint";
-        var method = context.Request.Method;
-        var path = context.Request.Path.Value ?? "/";
-        var traceId = context.TraceIdentifier;
-
-        logger.LogInformation(
-            "Entering endpoint {EndpointName}: {HttpMethod} {Path} [TraceId: {TraceId}]",
-            endpointName,
-            method,
-            path,
-            traceId);
 
         var startedAt = Stopwatch.GetTimestamp();
 
@@ -41,15 +30,12 @@ public sealed class DevelopmentEndpointLoggingMiddleware(
         }
         finally
         {
-            var elapsedMilliseconds = Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds;
             logger.LogInformation(
-                "Exiting endpoint {EndpointName}: {HttpMethod} {Path} returned {StatusCode} in {ElapsedMilliseconds:F2} ms [TraceId: {TraceId}]",
-                endpointName,
-                method,
-                path,
+                "{HttpMethod} {Path} {StatusCode} in {ElapsedMilliseconds:F0}ms",
+                context.Request.Method,
+                context.Request.Path.Value ?? "/",
                 context.Response.StatusCode,
-                elapsedMilliseconds,
-                traceId);
+                Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds);
         }
     }
 }

@@ -8,7 +8,6 @@ using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Localization.Core;
 using Backend.Features.Notifications.Core;
 using Backend.Features.Notifications.Core.Push;
-using Backend.Features.Tenancy.Core;
 using Backend.Middleware;
 using Backend.Settings;
 using Hangfire;
@@ -20,8 +19,8 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.Net.Http.Headers;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging.Console;
 using Backend.Processors;
 
 var bld = WebApplication.CreateBuilder(args);
@@ -54,6 +53,16 @@ if (bld.Environment.IsEnvironment("Testing"))
 // already give without the query string. (A provider-specific rule, `Logging:Console:LogLevel:...`,
 // would still outrank this, and must not be set to below Warning for this category.)
 bld.Logging.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Warning);
+// Every SQL command EF Core runs is an Information line several dozen lines long, which buries the
+// one line per request. A more specific category in configuration still outranks this - setting
+// `Logging:LogLevel:Microsoft.EntityFrameworkCore.Database.Command` to Information brings the SQL back.
+bld.Logging.AddFilter("Microsoft.EntityFrameworkCore", LogLevel.Warning);
+if (bld.Environment.IsDevelopment())
+{
+    // One line per message, like the web app's dev server; warnings and errors keep their category.
+    bld.Logging.AddConsoleFormatter<DevelopmentConsoleFormatter, ConsoleFormatterOptions>();
+    bld.Logging.AddConsole(o => o.FormatterName = DevelopmentConsoleFormatter.FormatterName);
+}
 
 var maximumPayloadSize = bld.Configuration.GetValue<long?>("Payload:MaximumSize") ?? 25 * 1024 * 1024;
 var defaultConnection = bld.Configuration.GetConnectionString("DefaultConnection")
