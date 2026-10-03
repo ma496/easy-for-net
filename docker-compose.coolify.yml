@@ -1,0 +1,109 @@
+# The production stack as Coolify runs it: what `npm run deploy:vps` points a Coolify application at.
+#
+# It is docker-compose.prod.yml with two changes, because Coolify's own Traefik proxy already
+# holds ports 80 and 443 and obtains the certificate for the domain:
+#   - the proxy publishes no ports; Coolify routes the domain to its port 80
+#   - Caddy serves plain HTTP there (docker/Caddyfile.coolify, built into the image)
+# Coolify supplies the ${...} values as the application's environment variables; deploy-vps.mjs fills
+# them in. Keep the services and variables in step with docker-compose.prod.yml
+# (scripts/tests/deploy-vps.test.mjs fails when they drift apart).
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?set REDIS_PASSWORD}", "--appendonly", "yes"]
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./src/backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__Redis: redis:6379,password=${REDIS_PASSWORD}
+      Redis__InstanceName: ${REDIS_INSTANCE_NAME:-app:}
+      Auth__Jwt__Key: ${JWT_KEY:?set JWT_KEY}
+      # Passwords of the seeded administrators, applied only when the accounts are first created
+      Seed__PlatformAdminPassword: ${SEED_ADMIN_PASSWORD:?set SEED_ADMIN_PASSWORD}
+      Seed__TenantAdminPassword: ${SEED_ADMIN_PASSWORD}
+      Web__DefaultDomain: ${PUBLIC_URL:?set PUBLIC_URL}
+      Web__Domains__0: ${PUBLIC_URL}
+      Database__ApplyMigrationsOnStartup: "true"
+      # The API port is reachable only through Caddy, so its forwarded headers can be trusted
+      ForwardedHeaders__TrustAllProxies: "true"
+      DataProtection__KeysPath: /app/keys
+      Hangfire__Storage__ConnectionString: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      # The deployment's default email settings; administrators can override them at run time
+      EmailSettings__SmtpServer: ${SMTP_SERVER:-smtp.gmail.com}
+      EmailSettings__SmtpPort: ${SMTP_PORT:-587}
+      EmailSettings__SmtpUsername: ${SMTP_USERNAME:-your-email@gmail.com}
+      EmailSettings__SmtpPassword: ${SMTP_PASSWORD:-your-app-password}
+      EmailSettings__SenderEmail: ${SMTP_SENDER_EMAIL:-your-email@gmail.com}
+      EmailSettings__SenderName: ${SMTP_SENDER_NAME:-Sender Name}
+    volumes:
+      - api-uploads:/app/uploads
+      - api-keys:/app/keys
+
+  web:
+    build:
+      context: ./src/frontend/web
+      args:
+        # Inlined into the browser bundle at build time: change it and redeploy
+        NEXT_PUBLIC_API_URL: ${PUBLIC_URL}/api
+        NEXT_PUBLIC_APP_ENV: production
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      # Server-side fetches go straight to the API container
+      API_INTERNAL_URL: http://api:8080/api
+
+  proxy:
+    build:
+      context: ./docker
+      dockerfile: coolify-proxy.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+      - web
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  postgres-data:
+  redis-data:
+  api-uploads:
+  api-keys:
+  caddy-data:
+  caddy-config:

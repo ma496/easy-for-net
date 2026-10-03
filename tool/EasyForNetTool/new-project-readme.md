@@ -67,6 +67,35 @@ Before deploying for real:
 
 `SEED_ADMIN_PASSWORD` is the administrators' password in that stack.
 
+## Deploy to a VPS (Coolify)
+
+`npm run deploy:vps` puts the application on a Linux VPS behind [Coolify](https://coolify.io), from
+Windows, macOS or Linux. It needs Node and the OpenSSH client here (both ship with Windows 10+ and
+macOS), and on the server only SSH access as root (or a sudo user) and the domain's DNS A record
+pointing at it.
+
+```sh
+npm run deploy:vps -- --host 203.0.113.10 --domain app.example.com --email you@example.com
+npm run deploy:vps -- --domain app.example.com          # later deploys: the other answers are remembered
+npm run deploy:vps -- --host 203.0.113.10 --check       # only report the server's prerequisites
+npm run deploy:vps -- --help                            # every option (--user, --port, --identity, --repo, --branch, --name)
+```
+
+Over SSH it checks the server first (distribution, CPU, memory, disk, ports 80/443/8000, an existing
+Docker) and stops if anything would fail. It then installs only what is missing: the tools it needs, a
+swap file on a small server, firewall rules, Coolify itself and an API token. After that it creates
+a Coolify project and application named after the domain, attaches the domain (Coolify obtains the
+HTTPS certificate), fills in the environment variables, and deploys. Ubuntu, Debian, RHEL-family,
+SUSE, Arch and Alpine servers are supported. Running it again redeploys and changes nothing else:
+passwords and the JWT key are generated once, on the server, and are never overwritten.
+
+Coolify builds from the Git repository with `docker-compose.coolify.yml`, so it deploys what is
+**pushed** to the branch (the repository's base branch by default). A private repository gets a
+read-only deploy key: the script adds it with `gh` when that is installed, or prints it for you to
+add. Each domain is its own Coolify application, so several apps can share one server. The Coolify
+dashboard is at `http://<server>:8000`; its login and the app's administrator password are saved on
+the server in `/root/.efn-deploy/`.
+
 ## Spec-driven development
 
 Save a spec under `specs/` and run `npm run loop`, or build one task with `npm run auto -- "<task>"`.
