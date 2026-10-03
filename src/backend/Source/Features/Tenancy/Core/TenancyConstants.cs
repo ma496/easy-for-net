@@ -22,4 +22,15 @@ public static class TenancyConstants
     /// Stable, url-safe identifier of the system-created bootstrap tenant.
     /// </summary>
     public const string BootstrapTenantIdentifier = "default";
+
+    /// <summary>
+    /// Identity of the edition the seeder creates and first puts the bootstrap tenant on. Fixed so the
+    /// seeder recognises the row on every later start even after it has been renamed.
+    /// </summary>
+    public static readonly Guid DefaultEditionId = new("6728fb5d-b801-4692-9289-6de9d8a16f40");
+
+    /// <summary>
+    /// Name the default edition is created with.
+    /// </summary>
+    public const string DefaultEditionName = "Default";
 }

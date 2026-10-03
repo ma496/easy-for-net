@@ -72,6 +72,31 @@ public class TenantSeedingTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
+    /// Verifies that the seeder creates the default edition and puts the bootstrap tenant on it.
+    /// </summary>
+    [Fact]
+    public async Task Bootstrap_Tenant_Is_On_The_Default_Edition()
+    {
+        var edition = await DbContext.Editions
+            .AsNoTracking()
+            .Where(candidate => candidate.Id == TenancyConstants.DefaultEditionId)
+            .Select(candidate => new { candidate.Id, candidate.Name })
+            .SingleOrDefaultAsync(TestContext.Current.CancellationToken);
+
+        edition.Should().NotBeNull("the seeder creates the default edition so a fresh installation has a plan to edit");
+
+        var bootstrapEditionId = await DbContext.Tenants
+            .AcrossAllTenants()
+            .AsNoTracking()
+            .Where(tenant => tenant.Id == TenancyConstants.BootstrapTenantId)
+            .Select(tenant => tenant.EditionId)
+            .SingleAsync(TestContext.Current.CancellationToken);
+
+        bootstrapEditionId.Should().Be(TenancyConstants.DefaultEditionId,
+            "the bootstrap tenant is put on the default edition when the seeder creates it");
+    }
+
+    /// <summary>
     /// Verifies that the seeded platform administrator is a platform administrator - that it holds
     /// the platform tier, and that the role granting its platform-scoped permissions belongs to no tenant, so no tenant
     /// role could ever have conferred it - and that it belongs to no tenant itself, the
