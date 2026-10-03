@@ -18,6 +18,7 @@ dotnet build EasyForNet.slnx
 dotnet ef migrations add <Name> --project src/backend/Source
 dotnet ef database update --project src/backend/Source
 dotnet run --project src/backend/Source   # needs PostgreSQL and Redis (ConnectionStrings:Redis)
+npm run dev                              # from the repository root: the whole app — PostgreSQL + Redis (Docker), the API on :5000, the web app on :3000 (scripts/dev.mjs; --no-docker, --api-only, --web-only)
 npm run stop:api                         # from the repository root: stop this checkout's running API before a build (it locks bin/ on Windows)
 docker compose up -d                     # from the repository root: PostgreSQL + Redis for development (docker-compose.yml)
 npm run deploy:vps -- --host <ip> --domain <domain> --email <email>   # deploy to a VPS through Coolify (scripts/deploy-vps.mjs + scripts/deploy/vps/remote.sh, docker-compose.coolify.yml)
