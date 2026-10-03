@@ -447,7 +447,7 @@ deploy() {
   api_must GET /projects
   project_uuid=$(printf '%s' "$API_BODY" | jq -r --arg n "$app" '[.[] | select(.name == $n)][0].uuid // empty')
   if [ -z "$project_uuid" ]; then
-    api_must POST /projects "$(jq -cn --arg n "$app" '{name: $n, description: "Deployed by npm run deploy:vps"}')"
+    api_must POST /projects "$(jq -cn --arg n "$app" '{name: $n, description: "Deployed by the deploy-vps script"}')"
     project_uuid=$(printf '%s' "$API_BODY" | jq -r '.uuid')
     ok "created project $app"
   else
