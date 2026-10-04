@@ -5,9 +5,11 @@ import { useField, useFormikContext } from 'formik'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/i18n'
 import { ChevronDown, Search, X } from 'lucide-react'
+import { Portal } from '@headlessui/react'
 import { Input } from './input'
 import { OptionsScrollArea } from './options-scroll-area'
 import { useAppSelector } from '@/store/hooks'
+import { useDropdownPosition } from '@/hooks'
 
 /** Single label/value option used by the multi-select components. */
 interface Option {
@@ -55,13 +57,13 @@ export const FormMultiSelect = ({
   const placeholder = placeholderProp ?? t('common.selectPlaceholder')
   const [field, meta, helpers] = useField(name)
   const { submitCount } = useFormikContext()
-  const isDirty = (Array.isArray(meta.initialValue) && Array.isArray(meta.value))
-    ? JSON.stringify(meta.initialValue) !== JSON.stringify(meta.value)
-    : meta.initialValue !== meta.value
+  const isDirty = Array.isArray(meta.initialValue) && Array.isArray(meta.value) ? JSON.stringify(meta.initialValue) !== JSON.stringify(meta.value) : meta.initialValue !== meta.value
   const hasError = (isDirty || submitCount > 0) && meta.error
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const containerRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLDivElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const isRTL = useAppSelector((s) => s.theme.rtlClass) === 'rtl'
   const generatedId = useId()
   const controlId = id ?? generatedId
@@ -76,13 +78,21 @@ export const FormMultiSelect = ({
   useEffect(() => {
     if (!open) return
     const handleClick = (e: MouseEvent) => {
-      if (!containerRef.current?.contains(e.target as Node)) {
+      // The panel is portalled out of the field, so it has to be asked as well before a click counts as "outside".
+      if (!containerRef.current?.contains(e.target as Node) && !dropdownRef.current?.contains(e.target as Node)) {
         setOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [open])
+
+  // The panel is drawn in a portal at viewport coordinates, so the height it would like is decided here and the
+  // height it actually gets comes back from the positioning hook, capped to the room on the side it opened into.
+  const preferredMaxHeight = maxVisibleItems * 40 + 8 + (searchable ? 50 : 0)
+  const position = useDropdownPosition(triggerRef, open, preferredMaxHeight)
+  const panelMaxHeight = position?.maxHeight ?? preferredMaxHeight
+  const listMaxHeight = Math.max(panelMaxHeight - (searchable ? 50 : 0) - 8, 40)
 
   // Value helpers
   const isSelected = (val: string) => (Array.isArray(field.value) ? field.value.includes(val) : false)
@@ -113,7 +123,7 @@ export const FormMultiSelect = ({
           {options
             .filter((opt) => field.value.includes(opt.value))
             .map((opt) => (
-              <span key={opt.value} className="badge flex items-center gap-1 badge-outline-secondary pe-1">
+              <span key={opt.value} className="badge badge-outline-secondary flex items-center gap-1 pe-1">
                 {opt.label}
                 <div
                   role="button"
@@ -142,7 +152,7 @@ export const FormMultiSelect = ({
           {required && <span className="ms-1 text-danger">*</span>}
         </label>
       )}
-      <div className={cn('relative text-muted-foreground', 'custom-select')}>
+      <div className={cn('relative text-muted-foreground', 'custom-select')} ref={triggerRef}>
         <button
           type="button"
           className={cn(
@@ -150,8 +160,7 @@ export const FormMultiSelect = ({
             icon && 'ps-10',
             size === 'sm' && 'min-h-8 py-0.5 text-[13px]',
             size === 'lg' && 'py-1.75 text-base',
-          )
-          }
+          )}
           id={controlId}
           disabled={disabled}
           style={{ backgroundImage: 'none' }}
@@ -170,49 +179,59 @@ export const FormMultiSelect = ({
             <ChevronDown className={cn('h-4 w-4 transition-transform', open && 'rotate-180')} />
           </span>
         </button>
+        {/* Rendered through a portal so a container that clips its overflow - a modal panel, a card, a scrolling table -
+            cannot cut the panel off; inside a headless-ui Dialog the portal is registered as part of the dialog, so
+            clicking the panel neither closes the modal nor fights its focus trap. */}
         {open && (
-          <div
-            className={cn(
-              'absolute start-0 z-50 mt-1 min-w-full overflow-hidden rounded-lg border border-border bg-surface text-foreground shadow-lg',
-              'custom-select',
-            )}
-            style={{ maxHeight: `${maxVisibleItems * 40 + 8 + (searchable ? 50 : 0)}px` }}
-          >
-            {searchable && (
-              <div className="sticky top-0 z-10 flex items-center border-b border-border bg-surface p-1.5" onClick={(e) => e.stopPropagation()}>
-                <Input
-                  name={name}
-                  id={`${controlId}-search`}
-                  type="text"
-                  icon={<Search className="pointer-events-none h-4 w-4 text-subtle-foreground" />}
-                  placeholder={t('common.search')}
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  autoFocus
-                  showError={false}
-                />
-              </div>
-            )}
-            <OptionsScrollArea maxHeight={maxVisibleItems * 40} isRTL={isRTL}>
-              <ul>
-                {filteredOptions.length === 0 && <li className="px-3 py-6 text-center text-sm text-subtle-foreground">{t('common.noOptions')}</li>}
-                {filteredOptions.map((opt) => (
-                  <li
-                    key={opt.value}
-                    className={cn(
-                      'mx-1 my-0.5 flex cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 hover:bg-surface-2',
-                      isSelected(opt.value) && 'bg-primary/10 text-primary',
-                      opt.disabled && 'pointer-events-none opacity-50',
-                    )}
-                    onClick={() => handleSelect(opt.value)}
-                  >
-                    {isSelected(opt.value) && <input type="checkbox" checked={isSelected(opt.value)} readOnly className="form-checkbox h-4 w-4 text-primary" />}
-                    <span>{opt.label}</span>
-                  </li>
-                ))}
-              </ul>
-            </OptionsScrollArea>
-          </div>
+          <Portal>
+            <div
+              ref={dropdownRef}
+              className={cn('fixed z-999 overflow-hidden rounded-lg border border-border bg-surface text-foreground shadow-lg', 'custom-select')}
+              style={{
+                top: position?.bottom === undefined ? `${position?.top ?? 0}px` : undefined,
+                bottom: position?.bottom === undefined ? undefined : `${position.bottom}px`,
+                left: `${position?.left ?? 0}px`,
+                width: `${position?.width ?? 0}px`,
+                maxHeight: `${panelMaxHeight}px`,
+                zIndex: position?.zIndex,
+              }}
+            >
+              {searchable && (
+                <div className="sticky top-0 z-10 flex items-center border-b border-border bg-surface p-1.5" onClick={(e) => e.stopPropagation()}>
+                  <Input
+                    name={name}
+                    id={`${controlId}-search`}
+                    type="text"
+                    icon={<Search className="pointer-events-none h-4 w-4 text-subtle-foreground" />}
+                    placeholder={t('common.search')}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    autoFocus
+                    showError={false}
+                  />
+                </div>
+              )}
+              <OptionsScrollArea maxHeight={listMaxHeight} isRTL={isRTL}>
+                <ul>
+                  {filteredOptions.length === 0 && <li className="px-3 py-6 text-center text-sm text-subtle-foreground">{t('common.noOptions')}</li>}
+                  {filteredOptions.map((opt) => (
+                    <li
+                      key={opt.value}
+                      className={cn(
+                        'mx-1 my-0.5 flex cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 hover:bg-surface-2',
+                        isSelected(opt.value) && 'bg-primary/10 text-primary',
+                        opt.disabled && 'pointer-events-none opacity-50',
+                      )}
+                      onClick={() => handleSelect(opt.value)}
+                    >
+                      {isSelected(opt.value) && <input type="checkbox" checked={isSelected(opt.value)} readOnly className="form-checkbox h-4 w-4 text-primary" />}
+                      <span>{opt.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              </OptionsScrollArea>
+            </div>
+          </Portal>
         )}
       </div>
       {showValidation && (isDirty || submitCount > 0) && hasError && <div className="mt-1.5 text-xs font-medium text-danger">{meta.error}</div>}
