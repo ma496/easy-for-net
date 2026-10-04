@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { useLocalizedRouter } from '@/hooks'
 import { useResetPasswordMutation } from '@/store/api/identity'
 import { Form, Formik } from 'formik'
-import { Button } from '@/components/ui'
+import { Button, LocalizedLink } from '@/components/ui'
 import { FormPasswordInput } from '@/components/ui/form'
 import { Lock } from 'lucide-react'
 import { apiErrorAlert, errorAlert, successAlert } from '@/lib/utils'
@@ -64,27 +64,28 @@ export const ResetPasswordForm = () => {
   }
 
   return (
-    <div className="panel flex min-w-75 flex-col gap-4 sm:min-w-125">
-      <Formik
-        initialValues={{
-          password: '',
-          confirmPassword: '',
-        }}
-        validationSchema={validationSchema}
-        onSubmit={onSubmit}
-      >
-        {() => (
-          <Form noValidate className="flex flex-col gap-4">
-            <FormPasswordInput name="password" label={t('form.label.newPassword')} placeholder={t('form.placeholder.newPassword')} icon={<Lock size={16} />} autoFocus={true} required={true} />
-            <FormPasswordInput name="confirmPassword" label={t('form.label.confirmPassword')} placeholder={t('form.placeholder.confirmPassword')} icon={<Lock size={16} />} required={true} />
-            <div className="flex justify-end">
-              <Button type="submit" isLoading={isResettingPassword}>
-                {t('page.auth.resetPassword.button')}
-              </Button>
-            </div>
-          </Form>
-        )}
-      </Formik>
-    </div>
+    <Formik
+      initialValues={{
+        password: '',
+        confirmPassword: '',
+      }}
+      validationSchema={validationSchema}
+      onSubmit={onSubmit}
+    >
+      {() => (
+        <Form noValidate className="space-y-5">
+          <FormPasswordInput name="password" label={t('form.label.newPassword')} placeholder={t('form.placeholder.newPassword')} icon={<Lock size={16} />} autoFocus={true} required={true} />
+          <FormPasswordInput name="confirmPassword" label={t('form.label.confirmPassword')} placeholder={t('form.placeholder.confirmPassword')} icon={<Lock size={16} />} required={true} />
+          <Button type="submit" size="lg" className="w-full" isLoading={isResettingPassword}>
+            {t('page.auth.resetPassword.button')}
+          </Button>
+          <p className="text-center text-sm">
+            <LocalizedLink href="/signin" className="font-medium text-primary hover:underline">
+              {t('page.auth.signin.backToSignin')}
+            </LocalizedLink>
+          </p>
+        </Form>
+      )}
+    </Formik>
   )
 }

@@ -34,14 +34,14 @@ const ModalHeader = ({ children, className = '', showCloseButton = true }: Modal
   const context = useContext(ModalContext)
 
   return (
-    <div className={`flex items-center justify-between bg-[#fbfbfb] px-5 py-3 dark:bg-[#121c2c] ${className}`}>
-      <div className="text-lg font-bold">{children}</div>
+    <div className={`flex items-center justify-between gap-4 border-b border-border px-5 py-4 ${className}`}>
+      <div className="text-base font-semibold tracking-tight text-foreground">{children}</div>
       {showCloseButton && context?.onClose && (
-        <button onClick={context.onClose} type="button" className="cursor-pointer text-white-dark transition-colors duration-200 hover:text-dark" aria-label="Close modal">
+        <button onClick={context.onClose} type="button" className="icon-btn -me-2 size-8" aria-label="Close modal">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
+            width="18"
+            height="18"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -63,7 +63,7 @@ const ModalHeader = ({ children, className = '', showCloseButton = true }: Modal
  * ModalFooter renders the bottom bar of a Modal as a right-aligned flex row, typically used for action buttons.
  */
 const ModalFooter = ({ children, className = '' }: ModalFooterProps) => {
-  return <div className={`flex items-center justify-end gap-2 px-5 py-3 ${className}`}>{children}</div>
+  return <div className={`flex items-center justify-end gap-2 border-t border-border bg-surface-2/50 px-5 py-3.5 ${className}`}>{children}</div>
 }
 
 /**
@@ -99,27 +99,27 @@ export const Modal = ({ isOpen, onClose, children, size = 'lg', className = '' }
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" open={isOpen} onClose={onClose}>
-        <div className="fixed inset-0 z-998 overflow-y-auto">
+        <div className="fixed inset-0 z-[90] overflow-y-auto">
           {/* Overlay */}
-          <TransitionChild as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
-            <div className="fixed inset-0 bg-black/60" aria-hidden="true" />
+          <TransitionChild as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
+            <div className="fixed inset-0 bg-overlay backdrop-blur-sm" aria-hidden="true" />
           </TransitionChild>
 
           {/* Modal */}
           <div className="flex min-h-screen items-center justify-center p-4">
             <TransitionChild
               as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
+              enter="ease-out duration-200"
+              enterFrom="opacity-0 scale-[0.97] translate-y-1"
+              enterTo="opacity-100 scale-100 translate-y-0"
+              leave="ease-in duration-150"
               leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
+              leaveTo="opacity-0 scale-[0.97]"
             >
-              <DialogPanel className={`w-full ${maxWidthClass} panel my-8 overflow-hidden rounded-lg border-0 bg-white p-0 text-black shadow-xl dark:bg-gray-800 dark:text-white-dark ${className}`}>
+              <DialogPanel className={`w-full ${maxWidthClass} relative my-8 overflow-hidden rounded-xl border border-border bg-surface text-foreground shadow-lg ${className}`}>
                 <ModalContext.Provider value={{ onClose }}>
                   {header}
-                  {content.length > 0 && <div className="p-5 text-base font-medium text-[#1f2937] ltr:text-left rtl:text-right dark:text-white-dark/70">{content}</div>}
+                  {content.length > 0 && <div className="p-5 text-sm text-foreground ltr:text-left rtl:text-right">{content}</div>}
                   {footer}
                 </ModalContext.Provider>
               </DialogPanel>

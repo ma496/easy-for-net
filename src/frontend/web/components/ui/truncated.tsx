@@ -27,7 +27,7 @@ export const Truncated = ({ text, limit = 40, className, animate = false, underl
 
   const truncatedText = text.substring(0, limit) + '...'
 
-  const underlineClass = underline ? 'border-b border-dashed border-gray-300 dark:border-gray-600 hover:border-primary' : ''
+  const underlineClass = underline ? 'border-b border-dashed border-input hover:border-primary' : ''
 
   return (
     <Tooltip content={text} animate={animate} className="max-w-xs wrap-break-word">

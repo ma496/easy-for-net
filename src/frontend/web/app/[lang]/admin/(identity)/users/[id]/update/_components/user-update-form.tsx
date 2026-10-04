@@ -7,6 +7,7 @@ import { Form, Formik } from 'formik'
 import { Button, ApiErrorMessages, Loader } from '@/components/ui'
 import { FormInput, FormCheckbox, FormLazyMultiSelect } from '@/components/ui/form'
 import { apiErrorAlert, successToast } from '@/lib/utils'
+import { FormSection, FormActions, FormState } from '../../../../_components/form-layout'
 
 /**
  * Builds a Yup validation schema for the user update form using the supplied translation function for error messages.
@@ -49,25 +50,25 @@ export const UserUpdateForm = ({ userId }: UserUpdateFormProps) => {
 
   if (isLoadingUser) {
     return (
-      <div className="flex justify-center items-center">
-        <Loader />
-      </div>
+      <FormState>
+        <Loader size="lg" />
+      </FormState>
     )
   }
 
   if (getUserError) {
     return (
-      <div className="flex justify-center items-center">
-        <ApiErrorMessages error={getUserError} />
-      </div>
+      <FormState>
+        <ApiErrorMessages error={getUserError} className="w-full" dismissible={false} />
+      </FormState>
     )
   }
 
   if (!isLoadingUser && !getUserError && !userData) {
     return (
-      <div className="flex justify-center items-center">
+      <FormState>
         {t('error.server.userNotFound')}
-      </div>
+      </FormState>
     )
   }
 
@@ -103,41 +104,50 @@ export const UserUpdateForm = ({ userId }: UserUpdateFormProps) => {
       onSubmit={onSubmit}
     >
       {() => (
-        <Form noValidate className="grid grid-cols-1 gap-4">
-          <FormInput
-            name="username"
-            label={t('form.label.username')}
-            placeholder={t('form.placeholder.username')}
-            disabled={true}
-          />
-          <FormInput
-            name="firstName"
-            label={t('form.label.firstName')}
-            placeholder={t('form.placeholder.firstName')}
-            autoFocus={true}
-          />
-          <FormInput
-            name="lastName"
-            label={t('form.label.lastName')}
-            placeholder={t('form.placeholder.lastName')}
-          />
-          <FormLazyMultiSelect
-            name="roles"
-            label={t('form.label.roles')}
-            placeholder={t('form.placeholder.roles')}
-            selectedItemIds={userData.roles}
-            useLazyQuery={useLazyRoleListQuery}
-            getLabel={(role) => role.name}
-            getValue={(role) => role.id}
-            size="sm"
-            pageSize={20}
-            required={true}
-          />
-          <FormCheckbox
-            name="isActive"
-            label={t('form.label.isActive')}
-          />
-          <div className="flex justify-end gap-4">
+        <Form noValidate>
+          <FormSection title={t('page.users.accountDetails')}>
+            <div className="sm:col-span-2">
+              <FormInput
+                name="username"
+                label={t('form.label.username')}
+                placeholder={t('form.placeholder.username')}
+                disabled={true}
+              />
+            </div>
+            <FormInput
+              name="firstName"
+              label={t('form.label.firstName')}
+              placeholder={t('form.placeholder.firstName')}
+              autoFocus={true}
+            />
+            <FormInput
+              name="lastName"
+              label={t('form.label.lastName')}
+              placeholder={t('form.placeholder.lastName')}
+            />
+          </FormSection>
+          <FormSection columns={1}>
+            <FormLazyMultiSelect
+              name="roles"
+              label={t('form.label.roles')}
+              placeholder={t('form.placeholder.roles')}
+              selectedItemIds={userData.roles}
+              useLazyQuery={useLazyRoleListQuery}
+              getLabel={(role) => role.name}
+              getValue={(role) => role.id}
+              size="sm"
+              pageSize={20}
+              required={true}
+            />
+            <div className="rounded-lg border border-border px-4 py-3">
+              <FormCheckbox
+                name="isActive"
+                label={t('form.label.isActive')}
+              />
+              <p className="mt-1 ps-5 text-xs text-muted-foreground">{t('page.users.isActiveDescription')}</p>
+            </div>
+          </FormSection>
+          <FormActions>
             <Button
               type="button"
               variant="outline"
@@ -153,7 +163,7 @@ export const UserUpdateForm = ({ userId }: UserUpdateFormProps) => {
             >
               {t('common.submit')}
             </Button>
-          </div>
+          </FormActions>
         </Form>
       )}
     </Formik>

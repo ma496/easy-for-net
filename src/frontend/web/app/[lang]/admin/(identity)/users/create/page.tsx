@@ -19,7 +19,7 @@ const UserCreate = async ({ params }: UserCreatePageProps) => {
   return (
     <AdminPageContent
       title={title}
-      innerClassName='max-w-187.5'
+      innerClassName='max-w-3xl'
     >
       <UserCreateForm />
     </AdminPageContent>

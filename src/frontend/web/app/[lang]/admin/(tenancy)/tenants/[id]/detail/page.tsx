@@ -21,7 +21,7 @@ const TenantDetail = async ({ params }: TenantDetailPageProps) => {
   const title = await getServerTranslation(lang, 'page.tenants.detail.title')
 
   return (
-    <AdminPageContent title={title}>
+    <AdminPageContent title={title} plain>
       <TenantDetailView tenantId={id} />
     </AdminPageContent>
   )

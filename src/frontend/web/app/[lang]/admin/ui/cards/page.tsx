@@ -1,5 +1,5 @@
 import { getServerTranslation } from '@/i18n'
-import { CardsExample } from "./_components/cards-example"
+import { CardsExample } from './_components/cards-example'
 import { AdminPageContent } from '@/components/layouts'
 
 /**
@@ -18,7 +18,7 @@ const CardsPage = async ({ params }: CardsPageProps) => {
   const title = await getServerTranslation(lang, 'page.ui.cards.title')
 
   return (
-    <AdminPageContent title={title}>
+    <AdminPageContent title={title} description="The card surface and the compositions built from its header, content and footer." plain>
       <CardsExample />
     </AdminPageContent>
   )

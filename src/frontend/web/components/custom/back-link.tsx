@@ -25,9 +25,9 @@ export const BackLink = ({ label }: BackLinkProps) => {
     <a
       href="#"
       onClick={handleClick}
-      className="inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary/80"
+      className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
     >
-      <ArrowLeft className="h-4 w-4" />
+      <ArrowLeft className="h-4 w-4 rtl:-scale-x-100" />
       {label}
     </a>
   )

@@ -36,7 +36,17 @@
     "deleteConfirm": "نعم، احذفه",
     "notifications": "الإشعارات",
     "viewAll": "عرض الكل",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "menu": "القائمة",
+    "theme": "المظهر",
+    "themeLight": "فاتح",
+    "themeDark": "داكن",
+    "themeSystem": "النظام",
+    "noResults": "لا توجد نتائج",
+    "selectPlaceholder": "اختر…",
+    "noOptions": "لا توجد خيارات",
+    "scrollToTop": "العودة إلى الأعلى",
+    "collapseSidebar": "طي الشريط الجانبي"
   },
   "navigation": {
     "home": "الرئيسية",
@@ -324,7 +334,9 @@
       "tenantStatus": "حالة المستأجر",
       "allStatuses": "كل الحالات",
       "suspended": "معلّق"
-    }
+    },
+    "loadFailed": "تعذر تحميل السجلات",
+    "loadFailedHint": "تحقق من الاتصال وحاول مرة أخرى."
   },
   "file": {
     "upload": "رفع الملف",
@@ -401,7 +413,8 @@
       "viewReport": "عرض التقرير",
       "editReport": "تعديل التقرير",
       "markAsDone": "تحديد كمكتمل",
-      "goToColumns": "اذهب إلى الأعمدة للتفاصيل"
+      "goToColumns": "اذهب إلى الأعمدة للتفاصيل",
+      "description": "نظرة عامة على الإيرادات والطلبات والمبيعات."
     },
     "users": {
       "title": "المستخدمين",
@@ -416,7 +429,10 @@
       },
       "update": {
         "title": "تحديث المستخدم"
-      }
+      },
+      "accountDetails": "تفاصيل الحساب",
+      "passwordDescription": "كلمة المرور التي يسجل بها هذا المستخدم الدخول.",
+      "isActiveDescription": "لا يمكن للمستخدم غير النشط تسجيل الدخول."
     },
     "roles": {
       "title": "الأدوار",
@@ -589,7 +605,8 @@
       "detail": {
         "title": "تفاصيل المستأجر",
         "information": "معلومات المستأجر",
-        "membersTitle": "الأعضاء"
+        "membersTitle": "الأعضاء",
+        "seats": "المقاعد"
       },
       "enterButton": "دخول",
       "enterCurrent": "الحالي",

@@ -17,3 +17,4 @@ export {
 } from './tenant-routing'
 export { planMegabytesToBytes, effectiveMaxUploadBytes, formatMegabytes } from './upload-limit'
 export { notificationVariables } from './notification-variables'
+export { formatRelativeTime } from './relative-time'

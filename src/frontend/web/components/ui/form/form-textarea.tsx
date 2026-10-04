@@ -32,10 +32,10 @@ export const FormTextarea = ({ label, name, id, showValidation = true, className
           {required && <span className="ms-1 text-danger">*</span>}
         </label>
       )}
-      <div className="relative text-white-dark">
-        <textarea {...field} {...props} name={name} id={inputId} autoComplete={autoComplete} className="form-input" />
+      <div className="relative text-muted-foreground">
+        <textarea {...field} {...props} name={name} id={inputId} autoComplete={autoComplete} className="form-textarea" />
       </div>
-      {showValidation && (isDirty || submitCount > 0) && hasError && <div className="mt-1 text-danger">{meta.error}</div>}
+      {showValidation && (isDirty || submitCount > 0) && hasError && <div className="mt-1.5 text-xs font-medium text-danger">{meta.error}</div>}
     </div>
   )
 }

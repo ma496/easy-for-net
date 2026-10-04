@@ -74,7 +74,7 @@ export const TenantCreateForm = () => {
       onSubmit={onSubmit}
     >
       {() => (
-        <Form noValidate className="grid grid-cols-1 gap-4">
+        <Form noValidate className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <FormInput
             name="name"
             label={t('form.label.tenantName')}
@@ -90,6 +90,7 @@ export const TenantCreateForm = () => {
           />
           <FormLazySelect<EditionListDto, EditionListRequest>
             name="editionId"
+            className="sm:col-span-2"
             label={t('navigation.editions')}
             placeholder={t('form.placeholder.edition')}
             useLazyQuery={useLazyEditionListQuery}
@@ -97,7 +98,7 @@ export const TenantCreateForm = () => {
             getValue={(edition) => edition.id}
             pageSize={20}
           />
-          <div className="flex justify-end gap-4">
+          <div className="mt-1 flex justify-end gap-2 border-t border-border pt-5 sm:col-span-2">
             <Button
               type="button"
               variant="outline"

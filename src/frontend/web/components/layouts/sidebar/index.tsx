@@ -1,18 +1,18 @@
 'use client'
 
-import PerfectScrollbar from 'react-perfect-scrollbar'
 import { LocalizedLink as Link } from '@/components/ui'
-import { toggleSidebar } from '@/store/slices'
+import { setSidebar, toggleSidebar } from '@/store/slices'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { useState, useEffect, useMemo } from 'react'
-import { ChevronsDown } from 'lucide-react'
+import { PanelLeftClose, X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useTranslation } from '@/i18n'
 import { navItems, NavItem, NavItemGroup } from '@/nav-items'
 import { authUrls } from '@/auth-urls'
 import { SidebarNavGroup } from './nav-group'
-import { isAllowed, isPathAvailable } from '@/lib/utils'
+import { cn, isAllowed, isPathAvailable } from '@/lib/utils'
 import Image from 'next/image'
+import { useMediaQuery } from '@/hooks'
 
 /**
  * Type guard that narrows a {@link NavItem} | {@link NavItemGroup} union to {@link NavItemGroup} by checking for the `items` property.
@@ -22,16 +22,22 @@ const isNavItemGroup = (item: NavItem | NavItemGroup): item is NavItemGroup => {
 }
 
 /**
- * Client-side sidebar navigation: filters nav items by the current user's permissions, manages which group is open, auto-expands the active parent on route change, and renders the logo plus a scrollable list of {@link SidebarNavGroup}s.
+ * Client-side sidebar navigation: filters nav items by the current user's permissions, manages which group is open, and auto-expands the active parent on route change.
+ *
+ * From lg up it is a fixed column that the theme's `sidebar` flag collapses to an icon rail. The rail
+ * stays narrow: hovering an entry opens a flyout beside it with the entry's name, or its submenu.
+ * Below lg the same flag opens it as an off-canvas drawer, and every navigation closes it.
  */
 export const Sidebar = () => {
   const dispatch = useAppDispatch()
   const { t } = useTranslation()
   const pathname = usePathname()
   const [currentMenu, setCurrentMenu] = useState<string>('')
-  const themeConfig = useAppSelector((state) => state.theme)
-  const semidark = useAppSelector((state) => state.theme.semidark)
+  const sidebarFlag = useAppSelector((state) => state.theme.sidebar)
   const authState = useAppSelector((state) => state.auth)
+  const isDesktop = useMediaQuery('(min-width: 1024px)')
+  // On a desktop the flag means "collapsed to the rail"; below lg it means "drawer open", where submenus expand inline.
+  const compact = sidebarFlag && isDesktop
 
   const toggleMenu = (value: string) => {
     setCurrentMenu((oldValue) => {
@@ -39,7 +45,6 @@ export const Sidebar = () => {
     })
   }
 
-  // Replace the useState initialization with a useMemo that depends on auth state
   const filteredNavItems = useMemo(() => {
     // Helper function to recursively filter children
     const filterNavItem = (item: NavItem): NavItem | undefined => {
@@ -69,21 +74,17 @@ export const Sidebar = () => {
           return undefined
         }
 
-        // Return a new item with filtered children
         return {
           ...item,
           children: [...filteredChildren, ...item.children.filter((child) => child.show === false)],
         }
       }
 
-      // Item has no children and passes the conditions
       return item
     }
 
-    // Process the navItems array
     return navItems.reduce<(NavItem | NavItemGroup)[]>((filtered, item) => {
       if (isNavItemGroup(item)) {
-        // For groups, filter each item in the group
         const filteredItems = item.items.map(filterNavItem).filter((groupItem): groupItem is NavItem => groupItem !== undefined)
 
         // Only include the group if it has at least one valid item
@@ -94,7 +95,6 @@ export const Sidebar = () => {
           })
         }
       } else {
-        // For regular items, apply the filter directly
         const filteredItem = filterNavItem(item)
         if (filteredItem !== undefined) {
           filtered.push(filteredItem)
@@ -107,57 +107,76 @@ export const Sidebar = () => {
 
   useEffect(() => {
     // Find and set active parent menu based on current path
-    const findActiveParent = () => {
-      filteredNavItems.forEach((group) => {
-        if (isNavItemGroup(group)) {
-          group.items.forEach((item) => {
-            if (item.children?.some((child) => child.url === pathname)) {
-              setCurrentMenu(item.title)
-            }
-          })
-        } else if (group.children?.some((child) => child.url === pathname)) {
-          setCurrentMenu(group.title)
+    const path = pathname.replace(/^\/[a-z]{2}(\/|$)/, '/')
+    filteredNavItems.forEach((group) => {
+      const items = isNavItemGroup(group) ? group.items : [group]
+      items.forEach((item) => {
+        if (item.children?.some((child) => child.show !== false && child.url === path)) {
+          setCurrentMenu(item.title)
         }
       })
-    }
-
-    findActiveParent()
-  }, [pathname, filteredNavItems, dispatch, themeConfig.sidebar])
+    })
+  }, [pathname, filteredNavItems])
 
   useEffect(() => {
-    if (window.innerWidth < 1024 && themeConfig.sidebar) {
-      dispatch(toggleSidebar())
+    // The drawer closes on every navigation below lg; the desktop rail keeps its state.
+    if (window.innerWidth < 1024) {
+      dispatch(setSidebar(false))
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname])
+  }, [pathname, dispatch])
 
   return (
-    <div className={semidark ? 'dark' : ''}>
-      <nav className={`fixed top-0 sidebar bottom-0 z-50 h-full min-h-screen w-65 shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] transition-all duration-300 ${semidark ? 'text-white-dark' : ''}`}>
-        <div className="flex h-full flex-col bg-white dark:bg-black">
-          <div className="flex items-center justify-between px-4 py-3">
-            <Link href="/admin" className="flex shrink-0 items-center main-logo">
-              <Image className="ms-1.25 h-8 w-8 flex-none" src="/assets/images/icon.png" alt="logo" width={32} height={32} unoptimized priority />
-              <span className="ms-1.5 align-middle text-[18px] font-semibold lg:inline dark:text-white-light">{t('brand.name')}</span>
-            </Link>
+    <>
+      {/* Drawer backdrop, below lg only */}
+      <div
+        className={cn('fixed inset-0 z-40 bg-overlay backdrop-blur-[2px] transition-opacity duration-200 lg:hidden', sidebarFlag ? 'opacity-100' : 'pointer-events-none opacity-0')}
+        onClick={() => dispatch(toggleSidebar())}
+        aria-hidden="true"
+      />
+      <nav
+        className={cn(
+          'fixed inset-y-0 inset-s-0 z-50 flex w-64 flex-col border-e border-border bg-surface transition-[width,transform,box-shadow] duration-200 ease-out',
+          // Below lg: an off-canvas drawer
+          sidebarFlag ? 'max-lg:translate-x-0 max-lg:shadow-lg' : 'max-lg:-translate-x-full max-lg:rtl:translate-x-full',
+          // lg and up: full column, or the icon rail
+          sidebarFlag && 'lg:w-18',
+        )}
+      >
+        <div className={cn('flex h-14 shrink-0 items-center justify-between gap-2 px-4', compact && 'lg:justify-center lg:px-0')}>
+          <Link href="/admin" className="flex min-w-0 items-center gap-2.5">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
+              <Image className="size-5" src="/assets/images/icon.png" alt="logo" width={20} height={20} unoptimized priority />
+            </span>
+            <span className={cn('truncate text-[15px] font-semibold tracking-tight text-foreground', compact && 'lg:hidden')}>{t('brand.name')}</span>
+          </Link>
 
+          <button
+            type="button"
+            className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground lg:hidden"
+            onClick={() => dispatch(toggleSidebar())}
+            aria-label={t('common.close')}
+          >
+            <X size={18} />
+          </button>
+          {!sidebarFlag && (
             <button
               type="button"
-              className="collapse-icon flex h-8 w-8 cursor-pointer items-center rounded-full transition duration-300 hover:bg-gray-500/10 rtl:rotate-180 dark:text-white-light dark:hover:bg-dark-light/10"
+              className="hidden size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground lg:flex rtl:rotate-180"
               onClick={() => dispatch(toggleSidebar())}
+              aria-label={t('common.collapseSidebar')}
+              title={t('common.collapseSidebar')}
             >
-              <ChevronsDown size={16} className="m-auto rotate-90" />
+              <PanelLeftClose size={18} />
             </button>
-          </div>
-          <PerfectScrollbar className="relative flex-1" options={{ suppressScrollX: true }}>
-            <div className="relative space-y-0.5 px-4 pt-0 pb-3 font-semibold">
-              {filteredNavItems.map((group, index) => (
-                <SidebarNavGroup key={`nav-group-${index}`} group={group} currentMenu={currentMenu} pathname={pathname} t={t} onToggleMenu={toggleMenu} />
-              ))}
-            </div>
-          </PerfectScrollbar>
+          )}
+        </div>
+
+        <div className="relative flex-1 overflow-x-hidden overflow-y-auto px-3 pb-4">
+          {filteredNavItems.map((group, index) => (
+            <SidebarNavGroup key={`nav-group-${index}`} group={group} currentMenu={currentMenu} pathname={pathname} t={t} onToggleMenu={toggleMenu} compact={compact} />
+          ))}
         </div>
       </nav>
-    </div>
+    </>
   )
 }

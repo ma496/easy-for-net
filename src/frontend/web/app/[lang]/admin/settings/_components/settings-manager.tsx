@@ -35,10 +35,12 @@ export const SettingsManager = () => {
   }
 
   const banner = (
-    <div className="flex items-start gap-2 rounded-md border border-info/30 bg-info/10 p-3 text-sm text-info">
-      <Settings2 className="mt-0.5 h-4 w-4 shrink-0" />
-      <div className="min-w-0 wrap-break-word">
-        <div>{activeTenant ? t('page.settings.scope.tenant', { tenant: activeTenant.name }) : t('page.settings.scope.platform')}</div>
+    <div className="flex items-start gap-3 rounded-xl border border-border bg-surface p-4 text-sm shadow-xs">
+      <span className="grid size-8 shrink-0 place-content-center rounded-lg bg-primary/10 text-primary">
+        <Settings2 className="h-4 w-4" />
+      </span>
+      <div className="min-w-0 self-center wrap-break-word text-muted-foreground">
+        <div className="text-foreground">{activeTenant ? t('page.settings.scope.tenant', { tenant: activeTenant.name }) : t('page.settings.scope.platform')}</div>
         {!canUpdate && <div>{t('page.settings.readOnly')}</div>}
       </div>
     </div>
@@ -47,7 +49,7 @@ export const SettingsManager = () => {
   const content = () => {
     if (isLoading) {
       return (
-        <div className="flex min-h-64 items-center justify-center">
+        <div className="flex min-h-64 items-center justify-center rounded-xl border border-border bg-surface shadow-xs">
           <Loader />
         </div>
       )
@@ -55,7 +57,7 @@ export const SettingsManager = () => {
 
     if (error || !data) {
       return (
-        <div className="rounded-md border border-white-light p-4 dark:border-[#1b2e4b]">
+        <div className="rounded-xl border border-border bg-surface p-5 shadow-xs">
           <ApiErrorMessages error={error} />
         </div>
       )
@@ -67,35 +69,30 @@ export const SettingsManager = () => {
     const email = emailDto ? toEmailSettings(emailDto) : null
 
     if (!signin && !email) {
-      return <div className="flex items-center justify-center py-10 text-center text-gray-500 dark:text-gray-400">{t('page.settings.empty')}</div>
+      return (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-border bg-surface px-6 py-14 text-center shadow-xs">
+          <span className="grid size-12 place-content-center rounded-xl bg-surface-2 text-muted-foreground">
+            <Settings2 className="h-5 w-5" />
+          </span>
+          <p className="text-sm font-medium text-foreground">{t('page.settings.empty')}</p>
+        </div>
+      )
     }
 
     return (
-      <>
+      <div className="flex flex-col gap-8 [&>*+*]:border-t [&>*+*]:border-border [&>*+*]:pt-8">
         {signin && (
-          <SigninSettingsCard
-            key={`${SettingName.Signin}:${resetKeys.Signin ?? 0}`}
-            settings={signin}
-            ownSource={ownSource}
-            canUpdate={canUpdate}
-            onReset={remountAfterReset(SettingName.Signin)}
-          />
+          <SigninSettingsCard key={`${SettingName.Signin}:${resetKeys.Signin ?? 0}`} settings={signin} ownSource={ownSource} canUpdate={canUpdate} onReset={remountAfterReset(SettingName.Signin)} />
         )}
         {email && (
-          <EmailSettingsCard
-            key={`${SettingName.Email}:${resetKeys.Email ?? 0}`}
-            settings={email}
-            ownSource={ownSource}
-            canUpdate={canUpdate}
-            onReset={remountAfterReset(SettingName.Email)}
-          />
+          <EmailSettingsCard key={`${SettingName.Email}:${resetKeys.Email ?? 0}`} settings={email} ownSource={ownSource} canUpdate={canUpdate} onReset={remountAfterReset(SettingName.Email)} />
         )}
-      </>
+      </div>
     )
   }
 
   return (
-    <div className="flex max-w-3xl flex-col gap-5">
+    <div className="flex max-w-6xl flex-col gap-8">
       {banner}
       {content()}
     </div>

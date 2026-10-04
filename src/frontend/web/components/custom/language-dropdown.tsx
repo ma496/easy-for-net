@@ -12,8 +12,8 @@ import Image from 'next/image'
 const languageDropdownVariants = cva('', {
   variants: {
     onlyFlag: {
-      true: 'block w-9 h-9 p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60',
-      false: 'flex items-center gap-2.5 rounded-lg border border-white-dark/30 bg-white px-2 py-1.5 text-white-dark hover:border-primary hover:text-primary dark:bg-black',
+      true: 'icon-btn',
+      false: 'chip-btn',
     },
   },
   defaultVariants: {
@@ -53,7 +53,7 @@ export const LanguageDropdown = ({ className = '', onlyFlag = false }: LanguageD
   }
 
   return (
-    <div className={cn(`dropdown ${onlyFlag ? 'h-9 w-9' : ''}`, className)}>
+    <div className={cn('dropdown', className)}>
       {i18n.language && (
         <Dropdown
           ref={dropdownRef}
@@ -64,32 +64,32 @@ export const LanguageDropdown = ({ className = '', onlyFlag = false }: LanguageD
               {!onlyFlag && (
                 <>
                   <div>
-                    <Image src={`/assets/images/flags/${i18n.language.toUpperCase()}.svg`} alt="language flag" width={20} height={20} className="h-5 w-5 rounded-full object-cover" />
+                    <Image src={`/assets/images/flags/${i18n.language.toUpperCase()}.svg`} alt="language flag" width={20} height={20} className="size-5 rounded-full object-cover ring-1 ring-border" />
                   </div>
-                  <div className="text-base font-bold uppercase">{i18n.language}</div>
+                  <div className="text-xs font-semibold uppercase">{i18n.language}</div>
                   <span className="shrink-0">
-                    <ChevronDown size={16} />
+                    <ChevronDown size={14} className="text-muted-foreground" />
                   </span>
                 </>
               )}
               {onlyFlag && (
                 <div>
-                  <Image className="h-5 w-5 rounded-full object-cover" src={`/assets/images/flags/${i18n.language.toUpperCase()}.svg`} alt="language flag" width={20} height={20} />
+                  <Image className="size-5 rounded-full object-cover ring-1 ring-border" src={`/assets/images/flags/${i18n.language.toUpperCase()}.svg`} alt="language flag" width={20} height={20} />
                 </div>
               )}
             </>
           }
         >
-          <ul className="grid w-70 grid-cols-2 gap-2 px-2! font-semibold text-dark dark:text-white-light/90">
+          <ul className="grid w-72 grid-cols-2 gap-0.5">
             {dictionary.languages.map((item) => (
               <li key={item.code}>
                 <button
                   type="button"
-                  className={cn('flex w-full cursor-pointer rounded-lg hover:text-primary', i18n.language === item.code && 'bg-primary/10 text-primary')}
+                  className={cn(i18n.language === item.code && 'bg-primary/10! font-medium text-primary!')}
                   onClick={() => setLocale(item.code)}
                 >
                   <Image src={`/assets/images/flags/${item.code.toUpperCase()}.svg`} alt={`${item.name} flag`} width={20} height={20} className="h-5 w-5 rounded-full object-cover" />
-                  <span className="ms-3">{item.name}</span>
+                  <span className="truncate">{item.name}</span>
                 </button>
               </li>
             ))}

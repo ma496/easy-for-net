@@ -1,202 +1,232 @@
 'use client'
 
-import { Tooltip, Truncated, Button, CodeShowcase } from '@/components/ui'
-import { InfoIcon, SettingsIcon, UserIcon, HeartIcon } from 'lucide-react'
+import { Tooltip, Truncated, Button, CodeShowcase, IconButton } from '@/components/ui'
+import { InfoIcon, SettingsIcon, UserIcon, HeartIcon, CopyIcon, PencilIcon, Trash2Icon } from 'lucide-react'
+import { ShowcasePreview, ShowcaseRow } from '../../_components/showcase-preview'
 
 /**
  * Interactive client-side showcase component that demonstrates the Tooltip component's basic usage, positioning directions, rich content, delays, animations, and integration with the Truncated text component.
  */
 export const TooltipExample = () => {
   return (
-    <div className="space-y-8 p-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold">Tooltips</h1>
-        <p className="text-white-dark">A premium, accessible tooltip component triggered by hover events.</p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+    <div className="space-y-6">
+      <div className="grid items-start gap-6 xl:grid-cols-2">
         <CodeShowcase
-          title="Basic Tooltip"
-          description="A standard tooltip shown on top of the trigger."
+          title="Basic tooltip"
+          description="Shown above the trigger on hover or focus."
           preview={
-            <div className="flex gap-4">
+            <ShowcasePreview>
               <Tooltip content="Tooltip message">
                 <Button variant="outline">Hover me</Button>
               </Tooltip>
               <Tooltip content="Save changes" delay={0}>
-                <Button icon={<HeartIcon size={16} />} variant="outline">Instant</Button>
+                <Button icon={<HeartIcon />} variant="outline">
+                  Instant
+                </Button>
               </Tooltip>
-            </div>
+            </ShowcasePreview>
           }
           code={`<Tooltip content="Tooltip message">
   <Button variant="outline">Hover me</Button>
 </Tooltip>
 
 <Tooltip content="Save changes" delay={0}>
-  <Button icon={<HeartIcon size={16} />} variant="outline">Instant</Button>
+  <Button icon={<HeartIcon />} variant="outline">Instant</Button>
 </Tooltip>`}
         />
 
         <CodeShowcase
           title="Directions"
-          description="Tooltips can be positioned in four main directions."
+          description="Top, bottom, left or right of the trigger."
           preview={
-            <div className="grid grid-cols-2 gap-4">
-              <Tooltip content="Tooltip on Top" position="top">
-                <Button variant="outline" className="w-full">Top</Button>
-              </Tooltip>
-              <Tooltip content="Tooltip on Bottom" position="bottom">
-                <Button variant="outline" className="w-full">Bottom</Button>
-              </Tooltip>
-              <Tooltip content="Tooltip on Left" position="left">
-                <Button variant="outline" className="w-full">Left</Button>
-              </Tooltip>
-              <Tooltip content="Tooltip on Right" position="right">
-                <Button variant="outline" className="w-full">Right</Button>
-              </Tooltip>
-            </div>
+            <ShowcasePreview>
+              <div className="grid w-full max-w-xs grid-cols-2 gap-3">
+                <Tooltip content="Tooltip on top" position="top">
+                  <Button variant="outline" className="w-full">
+                    Top
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Tooltip on bottom" position="bottom">
+                  <Button variant="outline" className="w-full">
+                    Bottom
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Tooltip on left" position="left">
+                  <Button variant="outline" className="w-full">
+                    Left
+                  </Button>
+                </Tooltip>
+                <Tooltip content="Tooltip on right" position="right">
+                  <Button variant="outline" className="w-full">
+                    Right
+                  </Button>
+                </Tooltip>
+              </div>
+            </ShowcasePreview>
           }
-          code={`<Tooltip content="Tooltip on Top" position="top">
+          code={`<Tooltip content="Tooltip on top" position="top">
   <Button variant="outline">Top</Button>
 </Tooltip>
 
-<Tooltip content="Tooltip on Bottom" position="bottom">
+<Tooltip content="Tooltip on bottom" position="bottom">
   <Button variant="outline">Bottom</Button>
 </Tooltip>
 
-<Tooltip content="Tooltip on Left" position="left">
+<Tooltip content="Tooltip on left" position="left">
   <Button variant="outline">Left</Button>
 </Tooltip>
 
-<Tooltip content="Tooltip on Right" position="right">
+<Tooltip content="Tooltip on right" position="right">
   <Button variant="outline">Right</Button>
 </Tooltip>`}
         />
 
         <CodeShowcase
-          title="Custom Rich Content"
-          description="Tooltips can render any JSX content, allowing for rich notifications."
+          title="Icon buttons"
+          description="The label an icon-only control needs, shown on hover."
           preview={
-            <Tooltip
-              content={
-                <div className="flex items-start gap-2 max-w-50">
-                  <div className="mt-0.5 rounded-full bg-blue-500/20 p-1 text-blue-500">
-                    <InfoIcon size={14} />
-                  </div>
-                  <div>
-                    <div className="font-bold">System Status</div>
-                    <div className="text-[10px] text-white/70">All systems are operational. Scheduled maintenance in 2 hours.</div>
-                  </div>
-                </div>
-              }
-            >
-              <div className="cursor-pointer rounded-full bg-gray-100 p-2 dark:bg-gray-800">
-                <SettingsIcon size={20} />
+            <ShowcasePreview>
+              <div className="flex items-center gap-1 rounded-lg border border-border bg-surface p-1">
+                <Tooltip content="Edit">
+                  <IconButton icon={<PencilIcon />} variant="ghost" size="sm" aria-label="Edit" />
+                </Tooltip>
+                <Tooltip content="Duplicate">
+                  <IconButton icon={<CopyIcon />} variant="ghost" size="sm" aria-label="Duplicate" />
+                </Tooltip>
+                <Tooltip content="Delete">
+                  <IconButton icon={<Trash2Icon />} variant="ghost" size="sm" className="text-danger" aria-label="Delete" />
+                </Tooltip>
               </div>
-            </Tooltip>
+            </ShowcasePreview>
+          }
+          code={`<Tooltip content="Edit">
+  <IconButton icon={<PencilIcon />} variant="ghost" size="sm" aria-label="Edit" />
+</Tooltip>
+
+<Tooltip content="Delete">
+  <IconButton icon={<Trash2Icon />} variant="ghost" size="sm" className="text-danger" aria-label="Delete" />
+</Tooltip>`}
+        />
+
+        <CodeShowcase
+          title="Rich content"
+          description="Any JSX can be the content, for short status notes."
+          preview={
+            <ShowcasePreview>
+              <Tooltip
+                content={
+                  <div className="flex max-w-56 items-start gap-2">
+                    <div className="mt-0.5 rounded-full bg-info/20 p-1 text-info">
+                      <InfoIcon size={14} />
+                    </div>
+                    <div>
+                      <div className="font-semibold">System status</div>
+                      <div className="text-[11px] font-normal text-background/70">All systems are operational. Scheduled maintenance in 2 hours.</div>
+                    </div>
+                  </div>
+                }
+              >
+                <IconButton icon={<SettingsIcon />} variant="outline" rounded="full" aria-label="System status" />
+              </Tooltip>
+            </ShowcasePreview>
           }
           code={`<Tooltip
   content={
-    <div className="flex items-start gap-2 max-w-50">
-      <div className="mt-0.5 rounded-full bg-blue-500/20 p-1 text-blue-500">
+    <div className="flex max-w-56 items-start gap-2">
+      <div className="mt-0.5 rounded-full bg-info/20 p-1 text-info">
         <InfoIcon size={14} />
       </div>
       <div>
-        <div className="font-bold">System Status</div>
-        <div className="text-[10px] text-white/70">
+        <div className="font-semibold">System status</div>
+        <div className="text-[11px] font-normal text-background/70">
           All systems are operational...
         </div>
       </div>
     </div>
   }
 >
-  <SettingsIcon />
+  <IconButton icon={<SettingsIcon />} variant="outline" rounded="full" aria-label="System status" />
 </Tooltip>`}
         />
 
         <CodeShowcase
-          title="Interaction Delays"
-          description="Control how quickly the tooltip appears or disappears."
+          title="Delays"
+          description="How long the pointer must rest before the tooltip appears."
           preview={
-            <div className="flex gap-4">
-              <Tooltip content="Delayed appearance" delay={1000}>
-                <Button variant="outline">Long Delay (1s)</Button>
-              </Tooltip>
+            <ShowcasePreview>
               <Tooltip content="Medium delay" delay={500}>
                 <Button variant="outline">Medium (0.5s)</Button>
               </Tooltip>
-            </div>
+              <Tooltip content="Delayed appearance" delay={1000}>
+                <Button variant="outline">Long (1s)</Button>
+              </Tooltip>
+            </ShowcasePreview>
           }
-          code={`<Tooltip content="Delayed appearance" delay={1000}>
-  <Button variant="outline">Long Delay (1s)</Button>
+          code={`<Tooltip content="Medium delay" delay={500}>
+  <Button variant="outline">Medium (0.5s)</Button>
 </Tooltip>
 
-<Tooltip content="Medium delay" delay={500}>
-  <Button variant="outline">Medium (0.5s)</Button>
+<Tooltip content="Delayed appearance" delay={1000}>
+  <Button variant="outline">Long (1s)</Button>
 </Tooltip>`}
         />
 
         <CodeShowcase
-          title="Animations"
-          description="Tooltips are instant by default, but can be animated using the 'animate' prop."
+          title="Animation"
+          description="Instant by default; the animate prop fades and scales it in."
           preview={
-            <div className="flex gap-4">
+            <ShowcasePreview>
               <Tooltip content="Instant tooltip (default)">
                 <Button variant="outline">Instant</Button>
               </Tooltip>
               <Tooltip content="Animated tooltip" animate>
-                <Button variant="default">Animated</Button>
+                <Button>Animated</Button>
               </Tooltip>
-            </div>
+            </ShowcasePreview>
           }
           code={`<Tooltip content="Instant tooltip (default)">
   <Button variant="outline">Instant</Button>
 </Tooltip>
 
 <Tooltip content="Animated tooltip" animate>
-  <Button variant="primary">Animated</Button>
+  <Button>Animated</Button>
 </Tooltip>`}
         />
+      </div>
 
-        <CodeShowcase
-          title="Truncated Text"
-          description="Automatically truncates text and shows a tooltip if it exceeds a limit."
-          preview={
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-xs min-w-32">Default (limit 40):</span>
+      <CodeShowcase
+        title="Truncated text"
+        description="Cuts text past a character limit and shows the whole of it in a tooltip."
+        preview={
+          <ShowcasePreview stack>
+            <ShowcaseRow label="Limit 40">
+              <span className="text-sm text-foreground">
                 <Truncated text="This is a very long text that will be truncated automatically because it exceeds the default limit of forty characters." />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-xs min-w-32">Within limit:</span>
+              </span>
+            </ShowcaseRow>
+            <ShowcaseRow label="Within limit">
+              <span className="text-sm text-foreground">
                 <Truncated text="This text is short." />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-xs min-w-32">Custom limit (20):</span>
-                <Truncated
-                  limit={20}
-                  text="This text exceeds a custom limit of twenty characters."
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-xs text-primary min-w-32">Animated:</span>
-                <Truncated
-                  animate
-                  text="This truncated text has the premium tooltip animation enabled via prop."
-                  className="font-medium text-primary"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-xs min-w-32">No underline:</span>
-                <Truncated
-                  limit={20}
-                  underline={false}
-                  text="Truncated without underline."
-                />
-              </div>
-            </div>
-          }
-          code={`<Truncated text="This is a very long text that will be truncated..." />
+              </span>
+            </ShowcaseRow>
+            <ShowcaseRow label="Limit 20">
+              <span className="text-sm text-foreground">
+                <Truncated limit={20} text="This text exceeds a custom limit of twenty characters." />
+              </span>
+            </ShowcaseRow>
+            <ShowcaseRow label="Animated">
+              <span className="text-sm">
+                <Truncated animate text="This truncated text has the tooltip animation enabled via prop." className="font-medium text-primary" />
+              </span>
+            </ShowcaseRow>
+            <ShowcaseRow label="No underline">
+              <span className="text-sm text-foreground">
+                <Truncated limit={20} underline={false} text="Truncated without underline." />
+              </span>
+            </ShowcaseRow>
+          </ShowcasePreview>
+        }
+        code={`<Truncated text="This is a very long text that will be truncated..." />
 
 <Truncated text="Short text within limit." />
 
@@ -205,40 +235,61 @@ export const TooltipExample = () => {
 <Truncated animate text="Truncated with animation." className="text-primary" />
 
 <Truncated underline={false} text="Truncated without underline." />`}
-        />
-      </div>
+      />
 
-      <div className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold">User Experience Showcase</h2>
-        <div className="panel flex flex-wrap items-center justify-center gap-8 py-10">
-          <Tooltip content="Mark as favorite" position="bottom" className="text-xs">
-            <HeartIcon className="h-6 w-6 text-danger cursor-pointer transition-transform hover:scale-110" />
-          </Tooltip>
+      <CodeShowcase
+        title="In context"
+        description="Tooltips on an icon, a user chip and a score tile."
+        preview={
+          <ShowcasePreview className="gap-8">
+            <Tooltip content="Mark as favorite" position="bottom" className="text-xs">
+              <HeartIcon className="size-6 cursor-pointer text-danger transition-transform hover:scale-110" />
+            </Tooltip>
 
-          <Tooltip content="View Profile" position="top">
-            <div className="flex items-center gap-3 cursor-pointer group">
-              <div className="h-10 w-10 overflow-hidden rounded-full border-2 border-primary/20 transition-all group-hover:border-primary">
-                <UserIcon className="h-full w-full p-2 text-gray-400 group-hover:text-primary" />
+            <Tooltip content="View profile" position="top">
+              <div className="group flex cursor-pointer items-center gap-3">
+                <div className="grid size-10 place-items-center rounded-full bg-primary/10 text-primary ring-2 ring-transparent transition-shadow group-hover:ring-primary/25">
+                  <UserIcon className="size-5" />
+                </div>
+                <span className="text-sm font-medium text-foreground transition-colors group-hover:text-primary">John Doe</span>
               </div>
-              <span className="font-medium group-hover:text-primary transition-colors">John Doe</span>
-            </div>
-          </Tooltip>
+            </Tooltip>
 
-          <Tooltip content={
-            <div className="flex flex-col items-center">
-              <div className="mb-1 text-center font-bold">Performance</div>
-              <div className="h-1 w-24 bg-white/20 rounded-full overflow-hidden">
-                <div className="h-full w-3/4 bg-success" />
+            <Tooltip
+              content={
+                <div className="flex flex-col items-center">
+                  <div className="mb-1 text-center font-semibold">Performance</div>
+                  <div className="h-1 w-24 overflow-hidden rounded-full bg-background/20">
+                    <div className="h-full w-3/4 bg-success" />
+                  </div>
+                  <div className="mt-1 text-[11px] font-normal">75% - Running optimally</div>
+                </div>
+              }
+            >
+              <div className="grid size-12 cursor-help place-items-center rounded-xl border border-border bg-surface-2">
+                <span className="text-lg font-semibold text-success">A+</span>
               </div>
-              <div className="mt-1 text-[10px]">75% - Running optimally</div>
-            </div>
-          }>
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 shadow-sm dark:bg-gray-800 cursor-help">
-              <span className="text-lg font-bold text-success">A+</span>
-            </div>
-          </Tooltip>
-        </div>
+            </Tooltip>
+          </ShowcasePreview>
+        }
+        code={`<Tooltip content="Mark as favorite" position="bottom">
+  <HeartIcon className="size-6 text-danger" />
+</Tooltip>
+
+<Tooltip
+  content={
+    <div className="flex flex-col items-center">
+      <div className="mb-1 font-semibold">Performance</div>
+      <div className="h-1 w-24 overflow-hidden rounded-full bg-background/20">
+        <div className="h-full w-3/4 bg-success" />
       </div>
+      <div className="mt-1 text-[11px]">75% - Running optimally</div>
+    </div>
+  }
+>
+  <div className="grid size-12 place-items-center rounded-xl border border-border bg-surface-2">A+</div>
+</Tooltip>`}
+      />
     </div>
   )
 }

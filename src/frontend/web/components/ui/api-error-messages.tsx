@@ -59,17 +59,17 @@ export const ApiErrorMessages = ({
     <div
       role="alert"
       className={cn(
-        'relative flex items-start gap-3 rounded-lg border border-danger/30 bg-danger-light p-4 text-sm dark:border-danger/40 dark:bg-danger/10',
+        'relative flex items-start gap-3 rounded-lg border border-danger/30 bg-danger/10 p-4 text-sm',
         className,
       )}
     >
       <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-danger" />
       <div className="flex-1 space-y-1">
-        <p className="font-semibold text-danger-dark dark:text-danger">
+        <p className="font-semibold text-danger">
           {title}
         </p>
         {messages.length > 0 && (
-          <ul className="list-inside list-disc space-y-0.5 text-danger-dark/80 dark:text-danger/80">
+          <ul className="list-inside list-disc space-y-0.5 text-danger/80">
             {messages.map((msg, i) => (
               <li key={i}>{msg}</li>
             ))}
@@ -80,7 +80,7 @@ export const ApiErrorMessages = ({
         <button
           type="button"
           onClick={() => setDismissedError(error)}
-          className="cursor-pointer text-danger-dark/60 hover:text-danger-dark dark:text-danger/60 dark:hover:text-danger"
+          className="cursor-pointer text-danger/60 hover:text-danger"
           aria-label={t('common.close') ?? 'Close'}
         >
           <X className="h-4 w-4" />

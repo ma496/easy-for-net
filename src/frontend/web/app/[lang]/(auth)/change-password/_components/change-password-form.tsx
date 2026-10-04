@@ -7,7 +7,7 @@ import { leaveSignedOut } from '@/store/tenant-cache'
 import { apiErrorAlert, successAlert } from '@/lib/utils'
 import { Form, Formik } from 'formik'
 import { FormPasswordInput } from '@/components/ui/form'
-import { Button } from '@/components/ui'
+import { Button, LocalizedLink } from '@/components/ui'
 import { Lock } from 'lucide-react'
 
 /**
@@ -72,11 +72,18 @@ export const ChangePasswordForm = () => {
       onSubmit={onSubmit}
     >
       {() => (
-        <Form noValidate className="flex flex-col gap-4">
-          <FormPasswordInput name="currentPassword" label={t('form.label.currentPassword')} placeholder={t('form.placeholder.currentPassword')} icon={<Lock size={18} />} autoFocus={true} required={true} />
-          <FormPasswordInput name="newPassword" label={t('form.label.newPassword')} placeholder={t('form.placeholder.newPassword')} icon={<Lock size={18} />} required={true} />
-          <FormPasswordInput name="confirmPassword" label={t('form.label.confirmPassword')} placeholder={t('form.placeholder.confirmPassword')} icon={<Lock size={18} />} required={true} />
-          <div className="flex justify-end">
+        <Form noValidate className="rounded-xl border border-border bg-surface shadow-xs">
+          <div className="space-y-5 p-5 sm:p-6">
+            <FormPasswordInput name="currentPassword" label={t('form.label.currentPassword')} placeholder={t('form.placeholder.currentPassword')} icon={<Lock size={16} />} autoFocus={true} required={true} />
+            <div className="grid gap-5 border-t border-border pt-5 sm:grid-cols-2">
+              <FormPasswordInput name="newPassword" label={t('form.label.newPassword')} placeholder={t('form.placeholder.newPassword')} icon={<Lock size={16} />} required={true} />
+              <FormPasswordInput name="confirmPassword" label={t('form.label.confirmPassword')} placeholder={t('form.placeholder.confirmPassword')} icon={<Lock size={16} />} required={true} />
+            </div>
+          </div>
+          <div className="flex flex-col-reverse gap-2 rounded-b-xl border-t border-border bg-surface-2/50 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+            <LocalizedLink href="/admin" className="btn btn-secondary">
+              {t('common.cancel')}
+            </LocalizedLink>
             <Button type="submit" isLoading={isChangingPassword}>
               {t('common.submit')}
             </Button>

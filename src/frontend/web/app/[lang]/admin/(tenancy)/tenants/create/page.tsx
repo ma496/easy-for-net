@@ -19,7 +19,7 @@ const TenantCreate = async ({ params }: TenantCreatePageProps) => {
   return (
     <AdminPageContent
       title={title}
-      innerClassName='max-w-155'
+      innerClassName='max-w-3xl'
     >
       <TenantCreateForm />
     </AdminPageContent>

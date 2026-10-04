@@ -36,7 +36,17 @@
     "deleteConfirm": "是的，删除它",
     "notifications": "通知",
     "viewAll": "查看全部",
-    "close": "关闭"
+    "close": "关闭",
+    "menu": "菜单",
+    "theme": "主题",
+    "themeLight": "浅色",
+    "themeDark": "深色",
+    "themeSystem": "跟随系统",
+    "noResults": "未找到结果",
+    "selectPlaceholder": "请选择…",
+    "noOptions": "无选项",
+    "scrollToTop": "回到顶部",
+    "collapseSidebar": "收起侧边栏"
   },
   "navigation": {
     "home": "首页",
@@ -324,7 +334,9 @@
       "tenantStatus": "租户状态",
       "allStatuses": "所有状态",
       "suspended": "已暂停"
-    }
+    },
+    "loadFailed": "无法加载记录",
+    "loadFailedHint": "请检查网络连接后重试。"
   },
   "file": {
     "upload": "文件上传",
@@ -401,7 +413,8 @@
       "viewReport": "查看报告",
       "editReport": "编辑报告",
       "markAsDone": "标记为完成",
-      "goToColumns": "前往列查看详细信息"
+      "goToColumns": "前往列查看详细信息",
+      "description": "收入、订单和销售概览。"
     },
     "users": {
       "title": "用户",
@@ -416,7 +429,10 @@
       },
       "update": {
         "title": "更新用户"
-      }
+      },
+      "accountDetails": "账户详情",
+      "passwordDescription": "该用户登录时使用的密码。",
+      "isActiveDescription": "未激活的用户无法登录。"
     },
     "roles": {
       "title": "角色",
@@ -589,7 +605,8 @@
       "detail": {
         "title": "租户详情",
         "information": "租户信息",
-        "membersTitle": "成员"
+        "membersTitle": "成员",
+        "seats": "席位"
       },
       "enterButton": "进入",
       "enterCurrent": "当前",

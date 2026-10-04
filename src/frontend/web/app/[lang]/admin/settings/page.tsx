@@ -18,7 +18,7 @@ const SettingsPage = async ({ params }: SettingsPageProps) => {
   const title = await getServerTranslation(lang, 'page.settings.title')
 
   return (
-    <AdminPageContent title={title}>
+    <AdminPageContent title={title} plain>
       <SettingsManager />
     </AdminPageContent>
   )

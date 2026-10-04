@@ -39,17 +39,17 @@ export const NotificationFilterPanel = ({ filters, onChange, onSearch, onClear }
 
   const groupOptions = [
     { label: t('notifications.all') || 'All', value: '' },
-    ...(groupsData?.groups ?? []).map(group => ({
+    ...(groupsData?.groups ?? []).map((group) => ({
       label: t(`notifications.groups.${group}`, { defaultValue: group }),
-      value: group
-    }))
+      value: group,
+    })),
   ]
 
   const activeFiltersCount = [filters.isRead, filters.group].filter(Boolean).length
 
   if (isGroupsLoading) {
     return (
-      <div className="flex justify-center items-center">
+      <div className="flex items-center justify-center">
         <Loader />
       </div>
     )
@@ -57,21 +57,19 @@ export const NotificationFilterPanel = ({ filters, onChange, onSearch, onClear }
 
   if (groupsError) {
     return (
-      <div className="flex justify-center items-center">
+      <div className="flex items-center justify-center">
         <ApiErrorMessages error={groupsError} />
       </div>
     )
   }
 
   return (
-    <div className="mb-4 panel-2">
+    <div className="panel-2 mb-4">
       {/* Filters Row */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {/* IsRead Status Filter */}
         <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="isRead"
-            className="text-xs font-medium text-gray-500 dark:text-gray-400">
+          <label htmlFor="isRead" className="text-xs font-medium text-muted-foreground">
             {t('table.columns.status')}
           </label>
           <Select
@@ -89,9 +87,7 @@ export const NotificationFilterPanel = ({ filters, onChange, onSearch, onClear }
 
         {/* Group Filter */}
         <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="group"
-            className="text-xs font-medium text-gray-500 dark:text-gray-400">
+          <label htmlFor="group" className="text-xs font-medium text-muted-foreground">
             {t('table.columns.group')}
           </label>
           <Select
@@ -110,20 +106,10 @@ export const NotificationFilterPanel = ({ filters, onChange, onSearch, onClear }
 
       {/* Action Buttons Row */}
       <div className="mt-4 flex justify-end gap-2">
-        <Button
-          onClick={onSearch}
-          icon={<Search className="h-4 w-4" />}
-          size="sm"
-        >
+        <Button onClick={onSearch} icon={<Search className="h-4 w-4" />} size="sm">
           {t('table.filter.search') || 'Search'}
         </Button>
-        <Button
-          variant="secondary"
-          onClick={onClear}
-          disabled={activeFiltersCount === 0}
-          icon={<X className="h-4 w-4" />}
-          size="sm"
-        >
+        <Button variant="secondary" onClick={onClear} disabled={activeFiltersCount === 0} icon={<X className="h-4 w-4" />} size="sm">
           {t('table.filter.clear') || 'Clear'}
         </Button>
       </div>

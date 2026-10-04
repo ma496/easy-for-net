@@ -52,22 +52,22 @@ export const Dropdown = forwardRef<DropdownRef, DropdownProps>((props, ref) => {
   const getDropdownPosition = () => {
     switch (props.placement) {
       case 'top-start':
-        return 'bottom-full left-0'
+        return 'bottom-full left-0 mb-1.5'
       case 'top-end':
-        return 'bottom-full right-0'
+        return 'bottom-full right-0 mb-1.5'
       case 'bottom-end':
-        return 'top-full right-0'
+        return 'top-full right-0 mt-1.5'
       case 'right-start':
-        return 'left-full top-0'
+        return 'left-full top-0 ms-1.5'
       case 'right-end':
-        return 'left-full bottom-0'
+        return 'left-full bottom-0 ms-1.5'
       case 'left-start':
-        return 'right-full top-0'
+        return 'right-full top-0 me-1.5'
       case 'left-end':
-        return 'right-full bottom-0'
+        return 'right-full bottom-0 me-1.5'
       case 'bottom-start':
       default:
-        return 'top-full left-0'
+        return 'top-full left-0 mt-1.5'
     }
   }
 
@@ -77,8 +77,8 @@ export const Dropdown = forwardRef<DropdownRef, DropdownProps>((props, ref) => {
         {props.button}
       </button>
       {visibility && (
-        <div className={cn('absolute z-10', getDropdownPosition(), props.menuClassName)}>
-          <div className="rounded-md bg-white dark:bg-gray-800 dark:text-white">{props.children}</div>
+        <div className={cn('absolute z-50', getDropdownPosition(), props.menuClassName)}>
+          <div className="menu-surface animate-scale-in">{props.children}</div>
         </div>
       )}
     </div>
