@@ -103,6 +103,7 @@ export const EditionTable = () => {
       cell: (info) => info.getValue(),
     }),
     columnHelper.accessor('description', {
+      meta: { card: 'subtitle' },
       header: t('table.columns.description'),
       cell: (info) => info.getValue() ?? '',
       enableSorting: false,
@@ -114,11 +115,7 @@ export const EditionTable = () => {
     // Counted per page off the tenant rows rather than held on the plan, so it cannot be sorted on.
     columnHelper.accessor('tenantCount', {
       header: t('table.columns.tenantCount'),
-      cell: (info) => (
-        <div className="w-10 flex items-center justify-center">
-          <Badge variant="primary">{info.getValue()}</Badge>
-        </div>
-      ),
+      cell: (info) => <Badge variant="primary">{info.getValue()}</Badge>,
       enableSorting: false,
     }),
     columnHelper.display({

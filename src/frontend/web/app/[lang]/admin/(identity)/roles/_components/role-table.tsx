@@ -108,15 +108,13 @@ export const RoleTable = () => {
       cell: (info) => info.getValue(),
     }),
     columnHelper.accessor('description', {
+      meta: { card: 'subtitle' },
       header: t('table.columns.description'),
       cell: (info) => info.getValue(),
     }),
     columnHelper.accessor('userCount', {
       header: t('table.columns.userCount'),
-      cell: (info) => (
-        <div className='w-10 flex items-center justify-center'>
-          <Badge variant='primary'>{info.getValue()}</Badge>
-        </div>),
+      cell: (info) => <Badge variant='primary'>{info.getValue()}</Badge>,
       enableSorting: false,
     }),
     columnHelper.display({

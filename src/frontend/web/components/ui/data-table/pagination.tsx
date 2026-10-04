@@ -189,7 +189,11 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
             &lt;
           </button>
 
-          {pageNumbers()}
+          {/* A phone has no room for the numbered pages, so it reads its position instead. */}
+          <span className="min-w-16 px-1 text-center text-sm font-semibold whitespace-nowrap sm:hidden" aria-live="polite">
+            {table.getState().pagination.pageIndex + 1} / {Math.max(table.getPageCount(), 1)}
+          </span>
+          <div className="hidden items-center gap-2 sm:flex">{pageNumbers()}</div>
 
           <button
             onClick={() => table.nextPage()}
