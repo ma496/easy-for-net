@@ -101,8 +101,9 @@ Components:
   `accountOwned`, `forceDelete` (default `true`: replacing/clearing deletes the old file on the
   server — pass `false` when the entity save decides that), and a render-prop `children` for custom
   UI. Failures go through `apiErrorAlert`.
-- `MultiFileUpload` (`@/components/ui/form`) — `fileNames`, `onFilesChanged(names)`, `maxSizeBytes`,
-  `accept`, `forceDelete`.
+- `MultiFileUpload` (`@/components/ui/form`) — `fileNames`, `onFilesChanged(names)`, `maxSizeBytes`
+  (default 10 MB), `accept` (default `image/*`), `forceDelete`. It has no `accountOwned`, so its uploads
+  are always tenant-scoped.
 - `ImagePreview` (`@/components/custom`) — `imageName`, `alt`, `fallback`, `objectFit`; fetches the
   blob through `useFileGetQuery` and renders an object URL.
 

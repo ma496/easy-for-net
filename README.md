@@ -5,8 +5,9 @@ A full-stack template built with ASP.NET 10 and Next.js 16. It’s well-structur
 ## Prerequisites
 
 - .NET 10.0
-- PostgreSQL
-- Node.js
+- Git (the tool clones the template)
+- PostgreSQL and Redis (`docker compose up -d` in a generated project starts both)
+- Node.js 24 or later
 
 ## Installation
 
@@ -44,7 +45,7 @@ dotnet efn cp -n {name} -o {path} -m {true|false}
 
 ## Build Backend
 
-To build the backend project, navigate to the `{name}/src/backend` directory and run the following command:
+To build the backend project, navigate to the `{name}` directory (it holds the project's `.slnx` solution) and run the following command:
 
 ```sh
 dotnet tool restore
@@ -54,7 +55,7 @@ dotnet build
 Production deployments should apply migrations explicitly before starting the API:
 
 ```bash
-dotnet ef database update --project src/backend/Source/Backend.csproj
+dotnet ef database update --project src/backend/Source
 ```
 
 Automatic migrations remain enabled for Development and Testing. Set
@@ -106,7 +107,7 @@ pointing at it.
 npm run deploy:vps -- --host 203.0.113.10 --domain app.example.com --email you@example.com
 npm run deploy:vps -- --domain app.example.com          # later deploys: the other answers are remembered
 npm run deploy:vps -- --host 203.0.113.10 --check       # only report the server's prerequisites
-npm run deploy:vps -- --help                            # every option (--user, --port, --identity, --repo, --branch, --name)
+npm run deploy:vps -- --help                            # every option (--user, --port, --identity, --repo, --branch, --name, --yes)
 ```
 
 Over SSH it checks the server first (distribution, CPU, memory, disk, ports 80/443/8000, an existing
@@ -143,12 +144,17 @@ Go to `{name}/src/backend/Source` directory. By default, the EasyForNet sets up 
     }
     ```
 
-2. Open the `appsettings.Testing.json` file. Update the `DefaultConnection` string with your PostgreSQL connection details:
+2. Open the `appsettings.Testing.json` file. Update the same two connection strings with your PostgreSQL connection details (the test run creates and deletes its own database):
 
     ```json
     {
       "ConnectionStrings": {
-        "DefaultConnection": "Host=your_host;Database=your_db;Username=your_user;Password=your_password"
+        "DefaultConnection": "Host=your_host;Database=your_test_db;Username=your_user;Password=your_password"
+      },
+      "Hangfire": {
+        "Storage": {
+          "ConnectionString": "Host=your_host;Database=your_test_db;Username=your_user;Password=your_password"
+        }
       }
     }
     ```
@@ -194,7 +200,8 @@ Seeded accounts:
 - Default tenant administrator: `tenantadmin`
 
 Their password is generated for each project and printed when it is created. It is in the `Seed`
-section of `src/backend/Source/appsettings.json` and applied only when an account is first created.
+section of `src/backend/Source/appsettings.json` (and of the Development and Testing files) and
+applied only when an account is first created.
 
 ## Run the Tests
 
@@ -215,6 +222,7 @@ dotnet test
 - **Automatic Token Cleanup Jobs**  
   - `delete-expired-auth-tokens` – A recurring job that runs once per day to remove expired authentication tokens. The schedule can be customized.  
   - `delete-expired-tokens` – A recurring job that runs once per day to remove expired tokens used for the "Forgot Password" functionality. The schedule can be customized.  
+  - `delete-expired-notifications` – A recurring job that runs once per day to remove notifications older than `Notifications:RetentionDays`.  
 
 ## Custom Development
 

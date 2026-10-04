@@ -10,9 +10,9 @@ shape); copy its structure:
 
 ```
 app/[lang]/admin/(<group>)/<entity>/
-  list/page.tsx
-  list/_components/<entity>-table.tsx
-  list/_components/<entity>-filter-panel.tsx
+  page.tsx                                  (the list, at /admin/<entity>)
+  _components/<entity>-table.tsx
+  _components/<entity>-filter-panel.tsx
   create/page.tsx
   create/_components/<entity>-create-form.tsx
   [id]/update/page.tsx
@@ -64,7 +64,7 @@ const { data, isFetching, error } = useUserListQuery({
   isActive: getIsActiveValue(appliedFilters.isActive),
 })
 
-if (error) return <div className="flex justify-center items-center"><ApiErrorMessages error={error} /></div>
+if (error) return <div className="py-6"><ApiErrorMessages error={error} /></div>
 
 return (
   <DataTableProvider
@@ -78,7 +78,7 @@ return (
     isFetching={isFetching}
   >
     <DataTableToolbar>{/* DataTableFilterButton, create link, export dropdown */}</DataTableToolbar>
-    {filtersOpen && <UserFilterPanel />}
+    {filtersOpen && <UserFilterPanel filters={pendingFilters} onChange={setPendingFilters} onSearch={handleSearch} onClear={handleClear} />}
     <DataTable />
     <DataTablePagination siblingCount={1} />
   </DataTableProvider>
@@ -115,7 +115,7 @@ identifier), `badge` for a status pill at the end of the heading, by the actions
 phone can do without, `title` when the heading is not the first column:
 
 ```tsx
-columnHelper.accessor('emailNormalized', { meta: { card: 'subtitle' }, header: t('table.columns.email'), cell: (info) => info.getValue() }),
+columnHelper.accessor('email', { meta: { card: 'subtitle' }, header: t('table.columns.email'), cell: (info) => info.getValue() }),
 columnHelper.accessor('isActive', { meta: { card: 'badge' }, header: t('table.columns.isActive'), cell: ... }),
 ```
 
@@ -135,11 +135,12 @@ A permission whose capability depends on the tenant's plan needs no extra check 
 the session when the plan withholds it (see `feature-management`).
 
 Toolbar actions are **icon-only** `DataTableToolbarButton`s — the `label` becomes the tooltip and
-the accessible name; pass `href` for navigation or `onClick` for an action. Export is
+the accessible name; pass `href` for navigation or `onClick` for an action, and `primary` on the
+screen's main action (create) to fill it with the accent colour. Export is
 `DataTableExportButton` (`onExport(format, all)`), filters `DataTableFilterButton`:
 
 ```tsx
-{canCreate && <DataTableToolbarButton label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/users/create" />}
+{canCreate && <DataTableToolbarButton primary label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/users/create" />}
 <DataTableExportButton onExport={handleExport} isExporting={isExporting} disabled={isFetching || !data?.total} />
 ```
 
@@ -152,9 +153,9 @@ const seatsExhausted = seats?.limit != null && seats.used >= seats.limit
 
 {canCreate &&
   (seatsExhausted ? (
-    <DataTableToolbarButton label={t('page.users.seatLimitReached')} icon={<Plus size={16} />} disabled />
+    <DataTableToolbarButton primary label={t('page.users.seatLimitReached')} icon={<Plus size={16} />} disabled />
   ) : (
-    <DataTableToolbarButton label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/users/create" />
+    <DataTableToolbarButton primary label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/users/create" />
   ))}
 ```
 
@@ -175,9 +176,10 @@ Export re-fetches with `all: true` through the lazy query, maps rows to a flat o
 ## Filter panel
 
 The shared `DataTableFilterButton` goes in the toolbar (icon-only, shows the active-filter count);
-the route supplies an `<Entity>FilterPanel` rendered between the toolbar and the table. The panel is **draft state** —
-keep `pendingFilters` in `useState`, sync it from the URL when the panel opens, and only write to
-the URL on *Search*:
+the route supplies an `<Entity>FilterPanel` rendered between the toolbar and the table. The panel is
+controlled (`filters`, `onChange`, `onSearch`, `onClear`) and edits **draft state** the table owns —
+keep `pendingFilters` in `useState`, sync it from the URL in an effect when the panel opens, and only
+write to the URL on *Search*:
 
 ```tsx
 const handleSearch = () => {
@@ -196,7 +198,8 @@ const handleClear = () => {
 ```
 
 `null` clears a filter from the URL. Export the panel's `<Entity>Filters` interface so the table can
-type its draft state. Options that come from the API (a role dropdown, for example) are loaded in
+type its draft state. Its fields are the bare `Select` from `@/components/ui/form` (`size="sm"`),
+not the Formik-bound ones. Options that come from the API (a role dropdown, for example) are loaded in
 the panel with `useRoleListQuery({ all: true })`, guarded by `<Loader />` and `<ApiErrorMessages />`.
 
 ## Create / update forms
@@ -246,6 +249,11 @@ before the round trip. Then:
 </Formik>
 ```
 
+A longer form may group its fields instead: the identity screens wrap them in `FormSection`
+(`title`, `description`, `columns={1 | 2}`) and the buttons in `FormActions`, both from the group's own
+`(identity)/_components/form-layout.tsx` — promote it to `components/` (see `ui-component`) once
+another group needs it, rather than importing across groups.
+
 Formik-bound fields come from `@/components/ui/form`: `FormInput`, `FormPasswordInput`,
 `FormTextarea`, `FormSelect`, `FormMultiSelect`, `FormLazySelect`, `FormLazyMultiSelect`,
 `FormCheckbox`, `FormRadio`, `FormDatePicker`. Use them inside Formik — the bare `Input`, `Select`,
@@ -264,7 +272,8 @@ router.push('/admin/users')          // useLocalizedRouter, unprefixed path
 
 The **update** form additionally loads the row and guards the render order:
 `isLoading` → `<Loader />`, `error` → `<ApiErrorMessages error={...} />`, no data →
-`t('error.server.userNotFound')`, and only then the form, with `initialValues` taken from the
+`t('error.server.userNotFound')` (each centred, in `FormState` where the form uses `form-layout`),
+and only then the form, with `initialValues` taken from the
 fetched row. A lazy select there takes `selectedItemIds={userData.roles}` so the already-chosen
 options are fetched and labelled. The id travels in the path, so the payload is
 `{ ...values, id: userId }` and read-only fields shown in the form are stripped before sending.

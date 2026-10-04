@@ -55,8 +55,8 @@ REVIEW: CHANGES NEEDED
 ```
 
 `PASS` means you would let this land as it stands. Say `CHANGES NEEDED` if you found
-anything in categories 1 or 2, or anything else you would not want committed; the runner
-feeds your report back to the implementing agent as the next attempt's brief, so be specific
+anything in categories 1 or 2, or anything else you would not want committed; the lead
+hands your findings to whoever fixes them and sends the fix back to you, so be specific
 about what to change and where. Vague findings produce vague fixes.
 
 If you genuinely found nothing, say so briefly and pass. A review that manufactures a

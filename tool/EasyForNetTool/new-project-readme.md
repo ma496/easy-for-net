@@ -82,7 +82,7 @@ pointing at it.
 npm run deploy:vps -- --host 203.0.113.10 --domain app.example.com --email you@example.com
 npm run deploy:vps -- --domain app.example.com          # later deploys: the other answers are remembered
 npm run deploy:vps -- --host 203.0.113.10 --check       # only report the server's prerequisites
-npm run deploy:vps -- --help                            # every option (--user, --port, --identity, --repo, --branch, --name)
+npm run deploy:vps -- --help                            # every option (--user, --port, --identity, --repo, --branch, --name, --yes)
 ```
 
 Over SSH it checks the server first (distribution, CPU, memory, disk, ports 80/443/8000, an existing

@@ -133,8 +133,11 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.ToTable("Notifications", "notifications");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Type).HasConversion<string>();
-        builder.HasIndex(x => x.CreatedAt);
         builder.HasIndex(x => new { x.TenantId, x.UserId });
+        builder.HasIndex(x => new { x.TenantId, x.UserId, x.IsRead, x.CreatedAt })
+               .IsDescending(false, false, false, true)
+               .HasFilter("\"UserId\" IS NOT NULL AND NOT \"IsDeleted\"")
+               .HasDatabaseName("IX_Notifications_Personal");
     }
 }
 ```
@@ -142,14 +145,20 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
 Rules the existing configurations follow:
 
 - **Always `ToTable("<PluralName>", "<feature-schema>")`** — each feature owns a PostgreSQL schema,
-  its lowercase name (`identity`, `notifications`, `tenancy`, `filemanagement`).
+  its lowercase name (`identity`, `notifications`, `tenancy`, `filemanagement`, `localization`,
+  `settings`).
 - Enums are stored as strings (`HasConversion<string>()`), unless a query must compare them
   numerically (`Permission.Scope` uses `HasConversion<int>()`).
 - Index every column you filter or sort on, `TenantId` included (leading a composite index when
   reads are "X of the active tenant").
-- **Uniqueness goes on the normalized column, scoped by tenant for tenant-owned kinds**:
+- **Uniqueness goes on the normalized column, scoped by tenant for tenant-owned kinds, and the raw
+  column behind it gets a twin unique index on the same terms**:
 
 ```csharp
+builder.HasIndex(r => new { r.TenantId, r.Name })
+    .IsUnique()
+    .AreNullsDistinct(false)
+    .HasDatabaseName("IX_Roles_TenantId_Name");
 builder.HasIndex(r => new { r.TenantId, r.NameNormalized })
     .IsUnique()
     .AreNullsDistinct(false)              // platform rows (null tenant) are unique among themselves too
@@ -172,6 +181,7 @@ Add to `src/backend/Source/ShareData/AppDbContext.cs` under the feature's commen
 // Notifications
 public DbSet<Notification> Notifications => Set<Notification>();
 public DbSet<NotificationVisit> NotificationVisits => Set<NotificationVisit>();
+public DbSet<NotificationReadCursor> NotificationReadCursors => Set<NotificationReadCursor>();
 ```
 
 ## Migration
@@ -195,7 +205,7 @@ without a `Migrations` folder; its first migration is `dotnet ef migrations add 
 ## Seeded data
 
 `ShareData/DataSeeder` runs on every startup and reconciles the permission catalogue, the bootstrap
-tenant, the platform administrator role and `admin` account, the bootstrap tenant's administrator
+tenant, the default edition, the platform administrator role and `admin` account, the bootstrap tenant's administrator
 role and `tenantadmin` account with its membership, sample notifications, and prunes stored feature
 values the code no longer declares. Put baseline rows a fresh database cannot work without there,
 inside the tenant or platform scope they belong to — not in a migration.

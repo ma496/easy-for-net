@@ -50,6 +50,8 @@ What you get:
   initialized for you to commit).
 - Root files `.editorconfig`, `.gitignore`, `.gitattributes`, `global.json`, `package.json` (the gate
   and task-loop scripts) and `agentic.config.json`, plus `.config` (pinned `dotnet-ef`) and `.vscode`.
+- The Docker files: `docker-compose.yml` (development PostgreSQL and Redis),
+  `docker-compose.prod.yml`, `docker-compose.coolify.yml`, `.env.docker.example` and `docker/`.
 - `CLAUDE.md` and the agentic layer: `.claude` (agents, commands, hooks, `settings.json`, status
   line, skills, `memory/README.md`), `scripts/` (the loop's engine), and an empty task-loop skeleton —
   `specs/{README,TEMPLATE}.md`, `docs/AGENTIC_WORKFLOW.md`, `docs/{builds,capabilities}/README.md`,

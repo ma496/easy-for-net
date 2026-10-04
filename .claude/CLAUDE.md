@@ -61,7 +61,7 @@ A green gate proves a change builds and its tests pass; it cannot see a missing 
 filter, a prompt that invites the model to invent, or an assertion deleted to make the gate
 go green — which is exactly what a task under retry pressure is tempted to do.
 
-The requirement is checked rather than trusted: `lib/stream-render.mjs` collects the `Task`
+The requirement is checked rather than trusted: `lib/stream-render.mjs` collects the `Agent`/`Task`
 tool calls actually observed in the run's stream, and an attempt missing any owed department
 is fed back naming each one and the paths that made it necessary.
 

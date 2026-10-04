@@ -44,7 +44,7 @@ const TenantDetail = async ({ params }: TenantDetailPageProps) => {
   const title = await getServerTranslation(lang, 'page.tenants.detail.title')
 
   return (
-    <AdminPageContent title={title}>
+    <AdminPageContent title={title} plain>
       <TenantDetailView tenantId={id} />
     </AdminPageContent>
   )
@@ -83,7 +83,8 @@ import { Allow } from '@/allow'
 
 Anything that loads data renders in this order: `isLoading` → `<Loader />`, `error` →
 `<ApiErrorMessages error={error} />`, no data → a translated "not found" line, then the content —
-each state wrapped in `<div className="flex justify-center items-center">`.
+each state centred in a `flex items-center justify-center` wrapper (on its own `panel` when the page
+is `plain`).
 
 **Navigation must stay locale-aware** — use `useLocalizedRouter()` instead of `next/navigation`'s
 router, and `<LocalizedLink href="/admin/users">` instead of `next/link`. Pass unprefixed

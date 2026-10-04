@@ -62,7 +62,7 @@ copy, and why a raw key showing in the UI means a missing entry rather than a cr
 Interpolation is `${name}` in the JSON value:
 
 ```json
-"validation": { "minLength": "Must be at least ${min} characters" }
+"validation": { "minLength": "Field must be at least ${min} characters" }
 ```
 
 ```tsx
@@ -153,10 +153,13 @@ only that subset.
 2. Add `{ name, isRtl }` for the code to `LanguageCatalog` (`Features/Localization/Core/LanguageCatalog.cs`).
 3. Add the code to `i18nConfig.locales` in `i18n/config.ts` — `i18n/locales.test.ts` fails when that
    list differs from the backend's resource files.
-4. Make sure `public/assets/images/flags/<CODE>.svg` exists — `LanguageDropdown` loads the flag by the
+4. Add the code to `i18n/offline-resources.json` with the same keys as `en`, each value copied from the
+   new resource file — `i18n/offline-resources.test.ts` fails unless that file covers exactly the
+   routable locales.
+5. Make sure `public/assets/images/flags/<CODE>.svg` exists — `LanguageDropdown` loads the flag by the
    upper-cased code.
 
-Removing a language is the same four places in reverse. Stored `LanguageSetting` rows that still
+Removing a language is the same five places in reverse. Stored `LanguageSetting` rows that still
 enable the removed code are not rewritten, so re-save the affected scopes' languages from the admin
 screen (the update endpoint accepts only shipped cultures).
 
@@ -170,16 +173,17 @@ use `ms-`/`me-`, `ps-`/`pe-`, `inset-s-`/`inset-e-`, `text-start`/`text-end`, `b
 where no logical utility exists. Components that must branch read
 `useAppSelector((state) => state.theme.rtlClass) === 'rtl'` — the anchor side of
 `DataTableExportButton` and `DataTableRowActions` is the existing example. `i18n/tenant-screens.test.ts`
-also scans the tenancy and localization screens for physical utilities; extend its directory list when
-you want a new feature's screens held to the same rule.
+also scans the tenancy, tenant-selection, localization and settings screens for physical utilities;
+extend its directory list when you want a new feature's screens held to the same rule.
 
 ## Single-language projects
 
-`dotnet efn cp` defaults to `-m false`, which deletes the non-English resource files and reduces
-`locales` in `i18n/config.ts` to `['en']`. In such a project there is exactly one resource file to
-update — but keep using `t()` and keys anyway, so adding a language later is only the four steps above.
-The generator rewrites `config.ts` with a regular expression, so keep `locales: ['en', …]` a
-single-line array.
+`dotnet efn cp` defaults to `-m false`, which deletes the non-English resource files, reduces
+`locales` in `i18n/config.ts` to `['en']` and keeps only `en` in `i18n/offline-resources.json`.
+In such a project there is exactly one resource file to update — but keep using `t()` and keys
+anyway, so adding a language later is only the five steps above.
+The generator rewrites `config.ts` with a regular expression matching `locales: [ … ]`, so keep that
+property spelled exactly so (one space after the colon) with no `]` inside the array.
 
 ## Checklist
 
@@ -188,5 +192,5 @@ single-line array.
 - [ ] Translators imported from `@/i18n`; server components use `getServerTranslation`, client
       components `useTranslation`
 - [ ] New markup uses logical (RTL-safe) utilities
-- [ ] A new language is registered in all four places, flag included
+- [ ] A new language is registered in all five places, offline strings and flag included
 - [ ] `dotnet test` (resource-file test) and `npm run test` (locale and tenant-screen tests) pass

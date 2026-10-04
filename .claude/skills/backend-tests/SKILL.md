@@ -81,10 +81,11 @@ public class UserCreateTests(App app) : AppTestsBase(app)
 | Base | Adds |
 | --- | --- |
 | `AppTestsBase` | client, scope, sign-in, `TenantContext` (table below) |
-| `TenancyTestsBase` (`Tests/Features/Tenancy`) | `CreateTenantAsync`, `CreateTenantRoleAsync(tenantId, params permissions)`, `CreateTenantUserAsync(tenantId, params roleIds)`, `CreateAccountWithoutMembershipAsync`, `SignInAsAsync(username, tenantId?)`, `ClientForAsync(username, tenantId?)`, `TenantScopedAsync`, `SessionForAsync` (a renewable session), `SignInAsPlatformAdministratorEnteringAsync`, `NewTenantIdentifier()` |
-| `FeatureTestsBase` (`Tests/FeatureManagement`) | editions and stored feature values: `CreateEditionAsync`, `PutOnEditionAsync`, `CreateTenantOnEditionAsync`, `SetForTenantAsync`, `SetForEditionAsync`, `ResolveForTenantAsync` |
+| `TenancyTestsBase` (`Tests/Features/Tenancy`) | `CreateTenantAsync`, `CreateTenantRoleAsync(tenantId, params permissions)`, `CreateTenantUserAsync(tenantId, params roleIds)`, `CreateAccountWithoutMembershipAsync`, `CreateDualTenantMemberAsync`, `CreateEditionAsync`, `PutOnEditionAsync`, `CreateTenantOnEditionAsync`, `SignInAsAsync(username, tenantId?)`, `ClientForAsync(username, tenantId?)`, `TenantScopedAsync`, `SessionForAsync` (a renewable session), `SignInAsPlatformAdministratorEnteringAsync`, `NewTenantIdentifier()` |
+| `FeatureTestsBase` (`Tests/FeatureManagement`) | stored feature values and their resolution: `SetForTenantAsync`, `SetForEditionAsync`, `ResolveForTenantAsync`, plus the feature services (`FeatureValueStore`, `FeatureValueResolver`, …) |
 | `SettingsTestsBase` (`Tests/Features/Settings`) | the `Settings` collection and its layers: `SetPlatformValuesAsync`, `SetTenantValuesAsync`, `TenantClientAsync`, `PlatformClientAsync`, `StoredValuesAsync`, and a teardown that removes every platform row (see the `settings` skill) |
-| `NotificationsTestsBase`, `FileTestsBase` | the arrangements those suites repeat, and their `[Collection]` |
+| `SessionRevocationTestsBase` (`Tests/Features/Identity`) | `AssertEndedAsync` / `AssertAliveAsync` over a `SessionForAsync` session, `RefreshStatusAsync`, `CreatePlatformRoleAsync` |
+| `NotificationsTestsBase`, `FileTestsBase`, `LocalizationTestsBase` | the arrangements those suites repeat, and their `[Collection]` |
 
 Anything that needs its own tenant, role or account should derive from `TenancyTestsBase` and create
 it rather than reuse a seeded one. If several tests in a new area need the same setup, add an
@@ -179,8 +180,9 @@ says otherwise. This is what keeps the suite fast, so it is worth writing for:
 - If a class genuinely shares a resource with another, give both the same `[Collection]` and say why
   in a comment. The ones that exist are `Notifications` (platform-wide notices reach every account),
   `FileManagement` (one uploads directory), `BootstrapTenant` (tests that modify the default tenant
-  row), `FeatureManagement` (feature-value pruning spans the whole table) and `Settings` (a platform
-  settings row changes what every tenant resolves to).
+  row), `FeatureManagement` (feature-value pruning spans the whole table), `Localization` (a platform
+  text or language row changes what every tenant resolves to) and `Settings` (a platform settings row
+  changes what every tenant resolves to).
 
 ## Why the suite is fast
 
@@ -188,8 +190,10 @@ Worth knowing before changing the fixtures, because each of these is load-bearin
 
 - `Tests/Fakes/TestDoubles.RegisterTestDoubles` substitutes `TestPasswordHasher` for the production
   hasher and `RecordingEmailTransport` for `IEmailTransport` — behind the real `IEmailService`, it
-  sends nothing but records each message with the settings it was sent with — and adds the test-only
-  probe setting and `PlatformSettingOverlays`. The real hasher is deliberately slow and the suite
+  sends nothing but records each message with the settings it was sent with — wraps the session
+  store in `FaultInjectingSessionStore` (a test can make the store unreachable for sessions or
+  accounts it created itself) beside a `FaultingSessionEndedHandler`, and adds the test-only probe
+  setting and `PlatformSettingOverlays`. The real hasher is deliberately slow and the suite
   signs in hundreds of times; `PasswordHasherTests` still pins the production parameters.
 - No Hangfire worker runs under `Testing`, so enqueued jobs are stored but never executed — assert
   on what the endpoint wrote, not on a job's effect.
