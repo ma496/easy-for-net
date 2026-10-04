@@ -5,7 +5,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import { useAppSelector } from '@/store/hooks'
 
-const tabVariants = cva('-mb-px inline-flex h-10 cursor-pointer items-center justify-center gap-2 border-b-2 px-3 text-sm font-medium whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50', {
+const tabVariants = cva('inline-flex h-10 cursor-pointer items-center justify-center gap-2 border-b-2 px-3 text-sm font-medium whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50', {
   variants: {
     active: {
       true: 'border-primary text-foreground',
@@ -98,7 +98,10 @@ export const Tabs = <T extends string = string>({
 
   return (
     <div className={cn('flex flex-col gap-4', className)} {...props}>
-      <div role="tablist" className={cn('flex gap-2 overflow-x-auto border-b border-border', listClassName)}>
+      {/* The baseline is an inset shadow, painted beneath the tabs, rather than a border the tabs
+          would have to overlap with a negative margin: that 1px spill gives the scrolling list
+          vertical overflow too, and with it a vertical scrollbar. */}
+      <div role="tablist" className={cn('flex gap-2 overflow-x-auto overflow-y-hidden shadow-[inset_0_-1px_0_var(--color-border)]', listClassName)}>
         {items.map((item, index) => {
           const active = item.value === value
           return (
