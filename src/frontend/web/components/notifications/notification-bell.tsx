@@ -39,12 +39,15 @@ export const NotificationBell = () => {
         onClick={() => setIsOpen(!isOpen)}
       >
         <span className="sr-only">{t('common.notifications')}</span>
-        <Bell size={18} aria-hidden="true" />
-        {badge !== null && (
-          <span className="absolute -top-0.5 -end-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] leading-none font-semibold tabular-nums text-danger-foreground ring-2 ring-background">
-            {badge}
-          </span>
-        )}
+        {/* The badge is anchored to the glyph, not the button, so it sits on the bell's shoulder */}
+        <span className="relative inline-flex">
+          <Bell size={18} aria-hidden="true" />
+          {badge !== null && (
+            <span className="absolute -top-2 inset-s-3 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] leading-none font-semibold tabular-nums text-danger-foreground ring-2 ring-background">
+              {badge}
+            </span>
+          )}
+        </span>
       </button>
       {isOpen && <NotificationPanel onClose={() => setIsOpen(false)} />}
     </div>
