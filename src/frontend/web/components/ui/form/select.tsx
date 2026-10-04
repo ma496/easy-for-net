@@ -170,10 +170,12 @@ export const Select = ({
               ref={dropdownRef}
               className={cn('fixed z-999 overflow-hidden rounded-lg border border-border bg-surface text-foreground shadow-lg', 'custom-select')}
               style={{
-                top: `${position?.top ?? 0}px`,
+                top: position?.bottom === undefined ? `${position?.top ?? 0}px` : undefined,
+                bottom: position?.bottom === undefined ? undefined : `${position.bottom}px`,
                 left: `${position?.left ?? 0}px`,
                 width: `${position?.width ?? 0}px`,
                 maxHeight: `${panelMaxHeight}px`,
+                zIndex: position?.zIndex,
               }}
             >
               {searchable && (
