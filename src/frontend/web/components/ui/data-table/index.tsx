@@ -1,4 +1,7 @@
-export { DataTable } from './data-table'
+export { DataTable, type DataTableCardsBelow } from './data-table'
+export { DataTableCardList } from './card-list'
+export { DataTableCardSort } from './card-sort'
+export type { DataTableCardPlacement } from './column-meta'
 export { DataTablePagination } from './pagination'
 export { DataTableToolbar } from './toolbar'
 export { DataTableFilterButton } from './filter-button'

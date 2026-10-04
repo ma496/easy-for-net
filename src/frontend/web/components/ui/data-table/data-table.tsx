@@ -4,6 +4,18 @@ import { DataTableSortIcon } from './sort-icon'
 import { Loader } from '..'
 import { useTranslation } from '@/i18n'
 import ScrollBar from 'react-perfect-scrollbar'
+import { DataTableCardList } from './card-list'
+import { DataTableCardSort } from './card-sort'
+
+/** Below which breakpoint rows render as cards rather than a table; `false` keeps the table at every width. */
+export type DataTableCardsBelow = 'sm' | 'md' | 'lg' | false
+
+// Spelled out in full so Tailwind sees every class it has to generate.
+const responsiveClasses: Record<'sm' | 'md' | 'lg', { table: string; cards: string }> = {
+  sm: { table: 'hidden sm:block', cards: 'sm:hidden' },
+  md: { table: 'hidden md:block', cards: 'md:hidden' },
+  lg: { table: 'hidden lg:block', cards: 'lg:hidden' },
+}
 
 /** Props for the DataTable, the body component that renders the table's header/rows from the shared DataTable context, with optional scrollbar suppression. */
 interface DataTableProps {
@@ -12,12 +24,35 @@ interface DataTableProps {
   suppressScrollY?: boolean
   /** Shown instead of the default "no records" message when there are no rows to render. */
   emptyMessage?: string
+  /** Below this breakpoint each row renders as a card (placed by `meta.card` on its columns). Defaults to `md`. */
+  cardsBelow?: DataTableCardsBelow
 }
 
 /**
  * DataTable is the body component of the data-table system that renders the table's headers (with click-to-sort affordance), rows, and either a loading indicator, a localized "no records" message (or a caller-supplied `emptyMessage`), or the data rows themselves from the shared DataTable context.
+ * Below `cardsBelow` it renders the same rows as a card list with a sort control instead, so a phone never scrolls a record sideways.
  */
-export function DataTable<TData>({ className = '', suppressScrollX = false, suppressScrollY = true, emptyMessage }: DataTableProps) {
+export function DataTable<TData>({ cardsBelow = 'md', emptyMessage, ...gridProps }: DataTableProps) {
+  if (!cardsBelow) {
+    return <DataTableGrid<TData> emptyMessage={emptyMessage} {...gridProps} />
+  }
+
+  const classes = responsiveClasses[cardsBelow]
+  return (
+    <>
+      <div className={classes.table}>
+        <DataTableGrid<TData> emptyMessage={emptyMessage} {...gridProps} />
+      </div>
+      <div className={classes.cards}>
+        <DataTableCardSort<TData> />
+        <DataTableCardList<TData> emptyMessage={emptyMessage} />
+      </div>
+    </>
+  )
+}
+
+/** The table rendering of DataTable: at every width when cards are off, above `cardsBelow` otherwise. */
+function DataTableGrid<TData>({ className = '', suppressScrollX = false, suppressScrollY = true, emptyMessage }: Omit<DataTableProps, 'cardsBelow'>) {
   const { columns, table, isFetching } = useDataTable<TData>()
   const { t } = useTranslation()
 

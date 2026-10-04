@@ -211,6 +211,7 @@ export const TenantTable = () => {
       cell: (info) => info.getValue(),
     }),
     columnHelper.accessor('identifier', {
+      meta: { card: 'subtitle' },
       header: t('table.columns.identifier'),
       cell: (info) => info.getValue(),
     }),
@@ -231,13 +232,11 @@ export const TenantTable = () => {
     // cannot be sorted on.
     columnHelper.accessor('userCount', {
       header: t('table.columns.userCount'),
-      cell: (info) => (
-        <div className="w-10 flex items-center justify-center">
-          <Badge variant="primary">{info.getValue()}</Badge>
-        </div>),
+      cell: (info) => <Badge variant="primary">{info.getValue()}</Badge>,
       enableSorting: false,
     }),
     columnHelper.accessor('status', {
+      meta: { card: 'badge' },
       header: t('table.columns.status'),
       cell: (info) =>
         info.getValue() === TenantStatus.Active ? (

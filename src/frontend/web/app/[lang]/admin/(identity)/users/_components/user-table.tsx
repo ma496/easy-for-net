@@ -175,10 +175,12 @@ export const UserTable = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const columns: ColumnDef<UserListDto, any>[] = [
     columnHelper.accessor('usernameNormalized', {
+      meta: { card: 'title' },
       header: t('table.columns.userName'),
       cell: (info) => info.getValue(),
     }),
     columnHelper.accessor('emailNormalized', {
+      meta: { card: 'subtitle' },
       header: t('table.columns.email'),
       cell: (info) => info.getValue(),
     }),
@@ -200,6 +202,7 @@ export const UserTable = () => {
       enableSorting: false,
     }),
     columnHelper.accessor('isActive', {
+      meta: { card: 'badge' },
       header: t('table.columns.isActive'),
       cell: (info) =>
         info.getValue() ? (

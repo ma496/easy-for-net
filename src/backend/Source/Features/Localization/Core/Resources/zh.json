@@ -295,6 +295,12 @@
     },
     "noRecords": "未找到记录",
     "searchPlaceholder": "搜索...",
+    "sort": {
+      "label": "排序方式",
+      "none": "默认顺序",
+      "ascending": "升序 — 点按改为降序",
+      "descending": "降序 — 点按改为升序"
+    },
     "export": {
       "button": "导出",
       "excel": "Excel",
