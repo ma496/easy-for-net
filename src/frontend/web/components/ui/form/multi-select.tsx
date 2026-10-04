@@ -4,9 +4,9 @@ import { useState, useMemo, useRef, useEffect, useId } from 'react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/i18n'
 import { ChevronDown, Search, X } from 'lucide-react'
-import ScrollBar from 'react-perfect-scrollbar'
 import { Portal } from '@headlessui/react'
 import { Input } from './input'
+import { OptionsScrollArea } from './options-scroll-area'
 import { useAppSelector } from '@/store/hooks'
 import { useDropdownPosition } from '@/hooks'
 
@@ -216,14 +216,7 @@ export const MultiSelect = ({
                   />
                 </div>
               )}
-              <ScrollBar
-                options={{ suppressScrollX: true }}
-                style={{
-                  maxHeight: `${listMaxHeight}px`,
-                  direction: isRTL ? 'rtl' : 'ltr',
-                }}
-                key={isRTL ? `${controlId}-rtl` : `${controlId}-ltr`}
-              >
+              <OptionsScrollArea maxHeight={listMaxHeight} isRTL={isRTL}>
                 <ul>
                   {filteredOptions.length === 0 && <li className="px-3 py-6 text-center text-sm text-subtle-foreground">{t('common.noOptions')}</li>}
                   {filteredOptions.map((opt) => (
@@ -241,7 +234,7 @@ export const MultiSelect = ({
                     </li>
                   ))}
                 </ul>
-              </ScrollBar>
+              </OptionsScrollArea>
             </div>
           </Portal>
         )}
