@@ -431,7 +431,8 @@
         "title": "Mettre à jour l'utilisateur"
       },
       "accountDetails": "Détails du compte",
-      "passwordDescription": "Le mot de passe avec lequel cet utilisateur se connecte."
+      "passwordDescription": "Le mot de passe avec lequel cet utilisateur se connecte.",
+      "isActiveDescription": "Un utilisateur inactif ne peut pas se connecter."
     },
     "roles": {
       "title": "Rôles",

@@ -431,7 +431,8 @@
         "title": "Update User"
       },
       "accountDetails": "Account details",
-      "passwordDescription": "The password this user signs in with."
+      "passwordDescription": "The password this user signs in with.",
+      "isActiveDescription": "An inactive user cannot sign in."
     },
     "roles": {
       "title": "Roles",

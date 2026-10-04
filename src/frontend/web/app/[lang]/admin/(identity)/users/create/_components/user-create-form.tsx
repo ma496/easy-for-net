@@ -138,11 +138,12 @@ export const UserCreateForm = () => {
               pageSize={20}
               required={true}
             />
-            <div className="panel-2 px-4 py-3">
+            <div className="rounded-lg border border-border px-4 py-3">
               <FormCheckbox
                 name="isActive"
                 label={t('form.label.isActive')}
               />
+              <p className="mt-1 ps-5 text-xs text-muted-foreground">{t('page.users.isActiveDescription')}</p>
             </div>
           </FormSection>
           <FormActions>

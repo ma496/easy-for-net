@@ -431,7 +431,8 @@
         "title": "Actualizar usuario"
       },
       "accountDetails": "Datos de la cuenta",
-      "passwordDescription": "La contraseña con la que este usuario inicia sesión."
+      "passwordDescription": "La contraseña con la que este usuario inicia sesión.",
+      "isActiveDescription": "Un usuario inactivo no puede iniciar sesión."
     },
     "roles": {
       "title": "Roles",
