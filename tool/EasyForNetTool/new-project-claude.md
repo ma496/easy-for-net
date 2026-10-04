@@ -255,4 +255,4 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
 - API: `backend-feature`, `backend-endpoint`, `backend-entity`, `backend-tests`, `multi-tenancy`, `permissions`, `feature-management`, `background-jobs`, `file-storage`, `notifications`
 - Web: `rtk-query-api`, `frontend-page`, `frontend-crud`, `ui-component`, `redux-state`, `localization`, `frontend-tests`
 - Spanning both: `api-error-handling`
-- Process: spec-driven development — `specs/README.md`, the `.claude/commands` (`/feature`, `/fix`, `/auto`, `/queue`, `/spec-split`, `/verify`, `/ship`, `/review-diff`, `/commit-msg`), and the agents in `.claude/agents`
+- Process: spec-driven development — `specs/README.md`, the `.claude/commands` (`/feature`, `/fix`, `/auto`, `/queue`, `/spec-split`, `/verify`, `/ship`, `/review-diff`, `/commit-msg`, `/pr-msg`), and the agents in `.claude/agents`
