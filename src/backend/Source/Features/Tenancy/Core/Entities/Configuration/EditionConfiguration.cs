@@ -29,12 +29,13 @@ public class EditionConfiguration : IEntityTypeConfiguration<Edition>
         builder.Property(x => x.Description)
             .HasMaxLength(512);
 
-        // Deliberately unfiltered, and deliberately named: the uniqueness comparison has to include
-        // soft-deleted editions, and ExceptionProcessor reports the offending field as the last
-        // underscore-separated segment of the constraint name, so "IX_Editions_Name" yields "name" -
-        // the request field name - where the EF default "IX_Editions_NameNormalized" would yield a
-        // name no form knows.
+        // Deliberately unfiltered: the uniqueness comparison has to include soft-deleted editions.
+        // ExceptionProcessor reports the offending field as the last underscore-separated segment of
+        // the constraint name with "Normalized" dropped, so both indexes yield the "name" request field.
         builder.HasIndex(x => x.NameNormalized)
+            .IsUnique()
+            .HasDatabaseName("IX_Editions_NameNormalized");
+        builder.HasIndex(x => x.Name)
             .IsUnique()
             .HasDatabaseName("IX_Editions_Name");
 

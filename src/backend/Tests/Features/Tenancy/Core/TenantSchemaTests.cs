@@ -18,10 +18,9 @@ using Backend.ShareData.Entities;
 /// <para>
 /// The identifier constraint is the one whose <em>name</em> is load-bearing rather than merely
 /// descriptive: the exception processor reports the offending field as the last underscore-separated
-/// segment of the violated constraint's name, so the create surfaces hand the caller a refusal
-/// attributed to <c>Identifier</c> only for as long as the index is called
-/// <c>IX_Tenants_Identifier</c>. That is why the name is asserted here rather than left to the default
-/// EF would derive.
+/// segment of the violated constraint's name with a <c>Normalized</c> suffix dropped, so the create
+/// surfaces hand the caller a refusal attributed to <c>Identifier</c> only for as long as the index is
+/// called <c>IX_Tenants_IdentifierNormalized</c>. That is why the name is asserted here.
 /// </para>
 /// </remarks>
 public class TenantSchemaTests(App app) : TenancyTestsBase(app)
@@ -30,12 +29,12 @@ public class TenantSchemaTests(App app) : TenancyTestsBase(app)
     /// The unique index behind the identifier comparison, named explicitly so the refusal a duplicate
     /// identifier earns can be attributed to the field the caller has to change.
     /// </summary>
-    private const string IdentifierIndexName = "IX_Tenants_Identifier";
+    private const string IdentifierIndexName = "IX_Tenants_IdentifierNormalized";
 
     /// <summary>
     /// The unique index behind a role name being unique within its tenant.
     /// </summary>
-    private const string RoleNameIndexName = "IX_Roles_TenantId_Name";
+    private const string RoleNameIndexName = "IX_Roles_TenantId_NameNormalized";
 
     /// <summary>
     /// Verifies that the model describes a tenant as the tenant lifecycle needs it - the identity it is

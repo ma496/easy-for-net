@@ -202,11 +202,15 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Name");
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Roles_TenantId_Name");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "Name"), false);
 
                     b.HasIndex("TenantId", "NameNormalized")
                         .IsUnique()
-                        .HasDatabaseName("IX_Roles_TenantId_Name");
+                        .HasDatabaseName("IX_Roles_TenantId_NameNormalized");
 
                     NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("TenantId", "NameNormalized"), false);
 
@@ -350,19 +354,25 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Email");
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Users_Email");
 
                     b.HasIndex("EmailNormalized")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("IX_Users_EmailNormalized");
 
                     b.HasIndex("FirstName");
 
                     b.HasIndex("LastName");
 
-                    b.HasIndex("Username");
+                    b.HasIndex("Username")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Users_Username");
 
                     b.HasIndex("UsernameNormalized")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("IX_Users_UsernameNormalized");
 
                     b.ToTable("Users", "identity");
                 });
@@ -688,9 +698,13 @@ namespace Backend.Migrations
 
                     b.HasIndex("DisplayOrder");
 
-                    b.HasIndex("NameNormalized")
+                    b.HasIndex("Name")
                         .IsUnique()
                         .HasDatabaseName("IX_Editions_Name");
+
+                    b.HasIndex("NameNormalized")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Editions_NameNormalized");
 
                     b.ToTable("Editions", "tenancy");
                 });
@@ -796,11 +810,12 @@ namespace Backend.Migrations
                     b.HasIndex("EditionId");
 
                     b.HasIndex("Identifier")
-                        .HasDatabaseName("IX_Tenants_IdentifierRaw");
+                        .IsUnique()
+                        .HasDatabaseName("IX_Tenants_Identifier");
 
                     b.HasIndex("IdentifierNormalized")
                         .IsUnique()
-                        .HasDatabaseName("IX_Tenants_Identifier");
+                        .HasDatabaseName("IX_Tenants_IdentifierNormalized");
 
                     b.HasIndex("Name");
 
