@@ -7,6 +7,7 @@ import { Form, Formik } from 'formik'
 import { Button, ApiErrorMessages, Loader } from '@/components/ui'
 import { FormInput, FormLazySelect } from '@/components/ui/form'
 import { apiErrorAlert, successToast } from '@/lib/utils'
+import { Building2, Lock } from 'lucide-react'
 
 /**
  * Builds a Yup validation schema for the tenant update form using the supplied translation function for error messages.
@@ -53,7 +54,7 @@ export const TenantUpdateForm = ({ tenantId }: TenantUpdateFormProps) => {
 
   if (isLoadingTenant) {
     return (
-      <div className="flex justify-center items-center">
+      <div className="flex items-center justify-center py-12">
         <Loader />
       </div>
     )
@@ -69,16 +70,22 @@ export const TenantUpdateForm = ({ tenantId }: TenantUpdateFormProps) => {
 
   if (!isLoadingTenant && !tenantGetError && !tenantData) {
     return (
-      <div className="flex justify-center items-center">
-        {t('page.tenants.notFound')}
+      <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+        <div className="flex size-12 items-center justify-center rounded-xl bg-surface-2 text-muted-foreground">
+          <Building2 className="size-5" />
+        </div>
+        <p className="max-w-sm text-sm text-muted-foreground">{t('page.tenants.notFound')}</p>
       </div>
     )
   }
 
   if (tenantData.systemCreated) {
     return (
-      <div className="flex justify-center items-center">
-        {t('error.server.systemCreatedTenantCannotBeModified')}
+      <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+        <div className="flex size-12 items-center justify-center rounded-xl bg-surface-2 text-muted-foreground">
+          <Lock className="size-5" />
+        </div>
+        <p className="max-w-sm text-sm text-muted-foreground">{t('error.server.systemCreatedTenantCannotBeModified')}</p>
       </div>
     )
   }
@@ -113,7 +120,7 @@ export const TenantUpdateForm = ({ tenantId }: TenantUpdateFormProps) => {
       onSubmit={onSubmit}
     >
       {() => (
-        <Form noValidate className="grid grid-cols-1 gap-4">
+        <Form noValidate className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <FormInput
             name="name"
             label={t('form.label.tenantName')}
@@ -129,6 +136,7 @@ export const TenantUpdateForm = ({ tenantId }: TenantUpdateFormProps) => {
           />
           <FormLazySelect<EditionListDto, EditionListRequest>
             name="editionId"
+            className="sm:col-span-2"
             label={t('navigation.editions')}
             placeholder={t('form.placeholder.edition')}
             useLazyQuery={useLazyEditionListQuery}
@@ -137,7 +145,7 @@ export const TenantUpdateForm = ({ tenantId }: TenantUpdateFormProps) => {
             selectedItemId={tenantData.editionId ?? undefined}
             pageSize={20}
           />
-          <div className="flex justify-end gap-4">
+          <div className="mt-1 flex justify-end gap-2 border-t border-border pt-5 sm:col-span-2">
             <Button
               type="button"
               variant="outline"

@@ -52,17 +52,24 @@ export const errorToast = Swal.mixin({
 
 /**
  * Wraps SweetAlert2.fire, applying localized default button labels
- * (common.ok, common.cancel) and theme colors when the caller does not
- * supply them. Returns the SweetAlert2 result promise.
+ * (common.ok, common.cancel) and the design system's button classes, so the
+ * dialog follows the light/dark theme. Returns the SweetAlert2 result promise.
  */
-export async function sweetAlert(params: SweetAlertOptions): Promise<SweetAlertResult<unknown>> {
+export async function sweetAlert(params: SweetAlertOptions, tone: 'primary' | 'danger' = 'primary'): Promise<SweetAlertResult<unknown>> {
   const { t } = getTranslation()
+  const customClass = typeof params.customClass === 'object' ? params.customClass : {}
   const result = await Swal.fire({
     ...params,
     confirmButtonText: params.confirmButtonText ? params.confirmButtonText : t('common.ok'),
     cancelButtonText: params.cancelButtonText ? params.cancelButtonText : t('common.cancel'),
-    confirmButtonColor: params.confirmButtonColor ? params.confirmButtonColor : '#4361ee',
-    cancelButtonColor: params.cancelButtonColor ? params.cancelButtonColor : '#805dca',
+    buttonsStyling: false,
+    reverseButtons: params.reverseButtons ?? true,
+    customClass: {
+      confirmButton: tone === 'danger' ? 'btn btn-danger' : 'btn btn-primary',
+      cancelButton: 'btn btn-secondary',
+      denyButton: 'btn btn-secondary',
+      ...customClass,
+    },
   })
   return result
 }
@@ -112,12 +119,10 @@ export async function confirmAlert(params: SweetAlertOptions): Promise<SweetAler
 /** Pre-configured sweetAlert call for destructive confirmations (warning icon, red confirm button, localized delete/cancel labels). */
 export async function confirmDeleteAlert(params: SweetAlertOptions): Promise<SweetAlertResult<unknown>> {
   const { t } = getTranslation()
-  if (!params.confirmButtonColor) params.confirmButtonColor = '#d33'
-  if (!params.cancelButtonColor) params.cancelButtonColor = '#4361ee'
   if (!params.icon) params.icon = 'warning'
   if (params.showCancelButton === undefined) params.showCancelButton = true
   if (!params.confirmButtonText) params.confirmButtonText = t('common.deleteConfirm')
   if (!params.cancelButtonText) params.cancelButtonText = t('common.cancel')
 
-  return sweetAlert(params)
+  return sweetAlert(params, 'danger')
 }

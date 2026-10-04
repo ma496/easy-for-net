@@ -1,6 +1,11 @@
+'use client'
+import { useRef } from 'react'
 import { useDispatch } from 'react-redux'
 import { toggleTheme } from '@/store/slices'
-import { Sun, Moon, Laptop } from 'lucide-react'
+import { Sun, Moon, Laptop, Check } from 'lucide-react'
+import { Dropdown, type DropdownRef } from '@/components/ui'
+import { useAppSelector } from '@/store/hooks'
+import { useTranslation } from '@/i18n'
 import { cn } from '@/lib/utils'
 
 /**
@@ -11,45 +16,51 @@ interface ThemeChangerProps {
   className?: string
 }
 
+const options = [
+  { value: 'light', icon: Sun, label: 'common.themeLight' },
+  { value: 'dark', icon: Moon, label: 'common.themeDark' },
+  { value: 'system', icon: Laptop, label: 'common.themeSystem' },
+] as const
+
 /**
- * Renders a round icon button that cycles through the available theme modes (light, dark, system) and dispatches the new theme to the Redux store.
+ * Icon button showing the active color scheme that opens a menu to pick light, dark, or the operating system's, dispatching the choice to the Redux store.
  */
 export const ThemeChanger = ({ theme, className }: ThemeChangerProps) => {
   const dispatch = useDispatch()
-
-  const getThemeIcon = () => {
-    switch (theme) {
-      case 'light':
-        return <Sun />
-      case 'dark':
-        return <Moon />
-      case 'system':
-        return <Laptop />
-      default:
-        return <Sun />
-    }
-  }
-
-  const getNextTheme = () => {
-    switch (theme) {
-      case 'light':
-        return 'dark'
-      case 'dark':
-        return 'system'
-      case 'system':
-        return 'light'
-      default:
-        return 'light'
-    }
-  }
+  const { t } = useTranslation()
+  const dropdownRef = useRef<DropdownRef>(null)
+  const isRtl = useAppSelector((state) => state.theme.rtlClass) === 'rtl'
+  const current = options.find((option) => option.value === theme) ?? options[2]
 
   return (
-    <button
-      className={cn('flex w-9 h-9 cursor-pointer items-center rounded-full bg-white-light/40 p-2 hover:bg-white-light/90 hover:text-primary dark:bg-dark/40 dark:hover:bg-dark/60', className)}
-      onClick={() => dispatch(toggleTheme(getNextTheme()))}
+    <Dropdown
+      ref={dropdownRef}
+      placement={isRtl ? 'bottom-start' : 'bottom-end'}
+      btnClassName={cn('icon-btn', className)}
+      button={
+        <span title={t('common.theme')} aria-label={t('common.theme')}>
+          <current.icon size={18} />
+        </span>
+      }
     >
-      {getThemeIcon()}
-    </button>
+      <ul className="w-40">
+        {options.map((option) => (
+          <li key={option.value}>
+            <button
+              type="button"
+              className={cn(theme === option.value && 'text-primary')}
+              onClick={() => {
+                dispatch(toggleTheme(option.value))
+                dropdownRef.current?.close()
+              }}
+            >
+              <option.icon size={16} className="shrink-0" />
+              <span className="flex-1">{t(option.label)}</span>
+              {theme === option.value && <Check size={14} className="shrink-0" />}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </Dropdown>
   )
 }
-

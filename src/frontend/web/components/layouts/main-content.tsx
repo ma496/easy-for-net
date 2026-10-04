@@ -1,35 +1,28 @@
 'use client'
 
-import { Breadcrumbs } from '@/components/ui'
 import { ContentAnimation } from './content-animation'
 import { Header } from './header'
 import { Portals } from '@/components'
 import { Footer } from './footer'
 import { TenantChangeNotice } from './tenant-change-notice'
+import { useAppSelector } from '@/store/hooks'
+import { cn } from '@/lib/utils'
 
 /**
- * Primary page shell that stacks the header, animated content area (with breadcrumbs), footer, and global portals around the routed children.
+ * Primary page shell beside the sidebar: the sticky header, the page content in a centred max-width column, the footer, and global portals. From lg up its start padding follows the sidebar's width.
  */
 export const MainContent = ({ children }: { children: React.ReactNode }) => {
+  const collapsed = useAppSelector((state) => state.theme.sidebar)
+
   return (
-    <div className="main-content flex min-h-[calc(100vh-20px)] flex-col">
-      {/* BEGIN TOP NAVBAR */}
+    <div className={cn('flex min-h-screen flex-col transition-[padding] duration-200 ease-out', collapsed ? 'lg:ps-[4.5rem]' : 'lg:ps-64')}>
       <Header />
-      {/* END TOP NAVBAR */}
-
-      {/* BEGIN CONTENT AREA */}
-      <ContentAnimation>
-        <Breadcrumbs className="mb-5" />
-        {children}
-      </ContentAnimation>
-      {/* END CONTENT AREA */}
-
-      {/* BEGIN FOOTER */}
+      <main className="flex-1">
+        <ContentAnimation>{children}</ContentAnimation>
+      </main>
       <Footer />
-      {/* END FOOTER */}
       <Portals />
       <TenantChangeNotice />
     </div>
   )
 }
-

@@ -1,7 +1,8 @@
 'use client'
 
 import { useQueryState, parseAsStringEnum } from 'nuqs'
-import { Globe } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { Globe, Languages, Type } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { useAppSelector } from '@/store/hooks'
 import { isAllowed } from '@/lib/utils'
@@ -13,6 +14,7 @@ import { LocalizationLanguageEditor } from './localization-language-editor'
 /** The two panels the localization screen offers, kept in the URL so a reload or a shared link lands on the same one. */
 const LOCALIZATION_TABS = ['texts', 'languages'] as const
 type LocalizationTab = (typeof LOCALIZATION_TABS)[number]
+const TAB_ICONS: Record<LocalizationTab, ReactNode> = { texts: <Type />, languages: <Languages /> }
 
 /**
  * Client-side shell for `/admin/localization`: the scope notice (which tenant, or the platform, is
@@ -27,22 +29,31 @@ export const LocalizationManager = () => {
 
   const [tab, setTab] = useQueryState(
     'tab',
-    parseAsStringEnum<LocalizationTab>([...LOCALIZATION_TABS]).withDefault('texts').withOptions({ history: 'replace', clearOnDefault: true }),
+    parseAsStringEnum<LocalizationTab>([...LOCALIZATION_TABS])
+      .withDefault('texts')
+      .withOptions({ history: 'replace', clearOnDefault: true }),
   )
 
   const activeTenant = authState.activeTenant
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-start gap-2 rounded-md border border-info/30 bg-info/10 p-3 text-sm text-info">
-        <Globe className="mt-0.5 h-4 w-4 shrink-0" />
-        <div className="min-w-0 wrap-break-word">
-          <div>{activeTenant ? t('page.localization.scope.tenant', { tenant: activeTenant.name }) : t('page.localization.scope.platform')}</div>
+    <div className="flex flex-col gap-6">
+      <div className="flex items-start gap-3 rounded-xl border border-border bg-surface p-4 text-sm shadow-xs">
+        <span className="grid size-8 shrink-0 place-content-center rounded-lg bg-primary/10 text-primary">
+          <Globe className="h-4 w-4" />
+        </span>
+        <div className="min-w-0 self-center wrap-break-word text-muted-foreground">
+          <div className="text-foreground">{activeTenant ? t('page.localization.scope.tenant', { tenant: activeTenant.name }) : t('page.localization.scope.platform')}</div>
           {!canUpdate && <div>{t('page.localization.readOnly')}</div>}
         </div>
       </div>
 
-      <Tabs items={LOCALIZATION_TABS.map((candidate) => ({ value: candidate, label: t(`page.localization.tabs.${candidate}`) }))} value={tab} onValueChange={setTab}>
+      <Tabs
+        items={LOCALIZATION_TABS.map((candidate) => ({ value: candidate, label: t(`page.localization.tabs.${candidate}`), icon: TAB_ICONS[candidate] }))}
+        value={tab}
+        onValueChange={setTab}
+        panelClassName="min-w-0 rounded-xl border border-border bg-surface p-4 shadow-xs sm:p-6"
+      >
         {tab === 'texts' ? <LocalizationTextTable canUpdate={canUpdate} /> : <LocalizationLanguageEditor canUpdate={canUpdate} />}
       </Tabs>
     </div>

@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 import { RotateCcw } from 'lucide-react'
 import { useTranslation } from '@/i18n'
-import { ApiErrorMessages, Badge, Button, Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui'
+import { ApiErrorMessages, Badge, Button, Card, CardContent, CardFooter } from '@/components/ui'
 import type { ApiError } from '@/lib/utils'
 import type { SourceMarker } from './settings-form'
 
@@ -51,7 +51,7 @@ export const SettingField = ({ id, label, marker, changed, extraBadges, children
   return (
     <div className="min-w-0">
       <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-        <label htmlFor={id} className="mb-0 text-sm font-semibold">
+        <label htmlFor={id} className="mb-0 text-sm font-medium text-foreground">
           {label}
         </label>
         <div className="flex flex-wrap items-center gap-1">
@@ -95,47 +95,50 @@ export const SettingsCard = ({ title, description, isCustomized, canUpdate, dirt
   const { t } = useTranslation()
   const isBusy = isSaving || isResetting
 
+  // At lg the setting's title, description and summary sit in a column beside the card holding its fields.
   return (
-    <Card className="w-full">
-      <CardHeader className="flex-row flex-wrap items-start justify-between gap-2 space-y-0">
-        <div className="min-w-0">
-          <CardTitle className="text-lg">{title}</CardTitle>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{description}</p>
+    <section className="grid gap-4 lg:grid-cols-[minmax(0,17rem)_minmax(0,1fr)] lg:gap-10">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-base font-semibold text-foreground">{title}</h2>
+          {isCustomized ? (
+            <Badge variant="primary" type="solid">
+              {t('page.settings.customized')}
+            </Badge>
+          ) : (
+            <Badge variant="secondary" type="outline">
+              {t('page.settings.inherited')}
+            </Badge>
+          )}
         </div>
-        {isCustomized ? (
-          <Badge variant="primary" type="solid">
-            {t('page.settings.customized')}
-          </Badge>
-        ) : (
-          <Badge variant="secondary" type="outline">
-            {t('page.settings.inherited')}
-          </Badge>
+        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+      </div>
+
+      <Card className="w-full min-w-0 overflow-hidden">
+        <CardContent className="flex flex-col gap-5 pt-5 sm:pt-6">
+          {saveError && <ApiErrorMessages error={saveError} />}
+          {children}
+        </CardContent>
+
+        {canUpdate && (
+          <CardFooter className="flex flex-wrap items-center justify-end gap-3 border-t border-border bg-surface-2/50 py-3 sm:py-3">
+            {dirty && <span className="me-auto text-sm text-muted-foreground">{t('page.settings.unsaved')}</span>}
+            {isCustomized && (
+              <Button type="button" variant="outline" onClick={onReset} disabled={isBusy} isLoading={isResetting} icon={<RotateCcw />}>
+                {t('page.settings.resetToInherited')}
+              </Button>
+            )}
+            {dirty && (
+              <Button type="button" variant="outline" onClick={onDiscard} disabled={isBusy}>
+                {t('page.settings.discard')}
+              </Button>
+            )}
+            <Button type="submit" isLoading={isSaving} disabled={!dirty || isBusy}>
+              {t('common.save')}
+            </Button>
+          </CardFooter>
         )}
-      </CardHeader>
-
-      <CardContent className="flex flex-col gap-4">
-        {saveError && <ApiErrorMessages error={saveError} />}
-        {children}
-      </CardContent>
-
-      {canUpdate && (
-        <CardFooter className="flex flex-wrap items-center justify-end gap-3">
-          {dirty && <span className="text-sm text-gray-500 dark:text-gray-400">{t('page.settings.unsaved')}</span>}
-          {isCustomized && (
-            <Button type="button" variant="outline" onClick={onReset} disabled={isBusy} isLoading={isResetting} icon={<RotateCcw />}>
-              {t('page.settings.resetToInherited')}
-            </Button>
-          )}
-          {dirty && (
-            <Button type="button" variant="outline" onClick={onDiscard} disabled={isBusy}>
-              {t('page.settings.discard')}
-            </Button>
-          )}
-          <Button type="submit" isLoading={isSaving} disabled={!dirty || isBusy}>
-            {t('common.save')}
-          </Button>
-        </CardFooter>
-      )}
-    </Card>
+      </Card>
+    </section>
   )
 }

@@ -19,13 +19,13 @@ export const DateView = ({
   placeholder = '-'
 }: DateViewProps) => {
   if (!date) {
-    return <span className={cn('text-gray-400', className)}>{placeholder}</span>
+    return <span className={cn('text-subtle-foreground', className)}>{placeholder}</span>
   }
 
   const dateObj = new Date(date)
 
   if (!isValid(dateObj)) {
-    return <span className={cn('text-red-400', className)}>Invalid Date</span>
+    return <span className={cn('text-danger', className)}>Invalid Date</span>
   }
 
   return (

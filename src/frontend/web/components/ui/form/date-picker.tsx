@@ -114,25 +114,25 @@ export const DatePicker = (props: DatePickerProps) => {
   }, [isOpen])
 
   const customClassNames = {
-    root: `${defaultClassNames.root} rdp-custom bg-white dark:bg-black border border-white-light dark:border-[#17263c] rounded-md p-4 shadow-lg`,
+    root: `${defaultClassNames.root} rdp-custom bg-surface border border-border rounded-xl p-3 shadow-lg`,
     months: `${defaultClassNames.months} flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0`,
     month: `${defaultClassNames.month} space-y-4`,
-    month_caption: `${defaultClassNames.month_caption} flex! justify-center! py-2! relative! items-center! px-14! min-h-10! border-b! border-white-light! dark:border-[#17263c]!`,
-    caption_label: `${defaultClassNames.caption_label} text-sm font-medium text-black dark:text-white-dark`,
+    month_caption: `${defaultClassNames.month_caption} flex! justify-center! py-2! relative! items-center! px-14! min-h-10! border-b! border-border!`,
+    caption_label: `${defaultClassNames.caption_label} text-sm font-medium text-foreground`,
     nav: `${defaultClassNames.nav} absolute! inset-0! flex! items-center! justify-between! pointer-events-none! z-15!`,
-    button_previous: `${defaultClassNames.button_previous} absolute! left-2! top-1/2! -translate-y-1/2! h-7! w-7! bg-transparent! p-0! opacity-70! hover:opacity-100! text-black! dark:text-white-dark! pointer-events-auto! rounded-sm! border-0! flex! items-center! justify-center! cursor-pointer! transition-all! z-25!`,
-    button_next: `${defaultClassNames.button_next} absolute! right-2! top-1/2! -translate-y-1/2! h-7! w-7! bg-transparent! p-0! opacity-70! hover:opacity-100! text-black! dark:text-white-dark! pointer-events-auto! rounded-sm! border-0! flex! items-center! justify-center! cursor-pointer! transition-all! z-25!`,
+    button_previous: `${defaultClassNames.button_previous} absolute! left-2! top-1/2! -translate-y-1/2! h-7! w-7! bg-transparent! p-0! opacity-70! hover:opacity-100! text-foreground! pointer-events-auto! rounded-sm! border-0! flex! items-center! justify-center! cursor-pointer! transition-all! z-25!`,
+    button_next: `${defaultClassNames.button_next} absolute! right-2! top-1/2! -translate-y-1/2! h-7! w-7! bg-transparent! p-0! opacity-70! hover:opacity-100! text-foreground! pointer-events-auto! rounded-sm! border-0! flex! items-center! justify-center! cursor-pointer! transition-all! z-25!`,
     month_grid: `${defaultClassNames.month_grid} w-full border-collapse space-y-1`,
     weekdays: `${defaultClassNames.weekdays} flex`,
-    weekday: `${defaultClassNames.weekday} text-black/50 dark:text-white/50 rounded-md w-9 font-normal text-[0.8rem]`,
+    weekday: `${defaultClassNames.weekday} text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]`,
     week: `${defaultClassNames.week} flex w-full mt-2`,
-    day: `${defaultClassNames.day} h-9 w-9 text-center text-sm p-0 relative text-black dark:text-white-dark hover:bg-primary/10 rounded-md`,
+    day: `${defaultClassNames.day} h-9 w-9 text-center text-sm p-0 relative text-foreground hover:bg-primary/10 rounded-md`,
     day_button: `${defaultClassNames.day_button} h-9 w-9 p-0 font-normal ${mode === 'multiple' ? 'hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary' : 'hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary'}`,
-    selected: mode === 'multiple' ? 'rdp-multiple-selected' : `bg-primary text-white hover:bg-primary hover:text-white focus:bg-primary focus:text-white`,
-    today: `bg-accent text-accent-foreground border border-primary/20`,
+    selected: mode === 'multiple' ? 'rdp-multiple-selected' : `bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground`,
+    today: `font-semibold text-primary`,
     outside: `text-muted-foreground opacity-50`,
     disabled: `text-muted-foreground opacity-50 cursor-not-allowed`,
-    range_middle: `aria-selected:bg-accent aria-selected:text-accent-foreground`,
+    range_middle: `aria-selected:bg-primary/10 aria-selected:text-primary`,
     multiple: `rdp-multiple`,
     hidden: `invisible`,
   }
@@ -152,7 +152,7 @@ export const DatePicker = (props: DatePickerProps) => {
         <Button
           type="button"
           variant="outline"
-          className={cn('form-input w-full justify-start border! p-2! text-left font-normal shadow-none!', !selected && 'text-muted-foreground')}
+          className={cn('form-input w-full justify-start border! p-2! text-start font-normal shadow-none!', !selected && 'text-muted-foreground')}
           id={controlId}
           name={name}
           onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -165,7 +165,7 @@ export const DatePicker = (props: DatePickerProps) => {
         </Button>
 
         {isOpen && (
-          <div className="absolute top-full left-0 z-50 mt-1 min-w-max">
+          <div className="absolute top-full start-0 z-50 mt-1 min-w-max">
             <DayPickerWrapper
               mode={mode}
               selected={selected}

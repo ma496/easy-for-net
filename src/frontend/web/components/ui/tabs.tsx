@@ -5,11 +5,11 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import { useAppSelector } from '@/store/hooks'
 
-const tabVariants = cva('-mb-px inline-flex cursor-pointer items-center justify-center gap-2 border-b-2 px-4 py-2 transition-colors disabled:cursor-not-allowed disabled:opacity-50', {
+const tabVariants = cva('-mb-px inline-flex h-10 cursor-pointer items-center justify-center gap-2 border-b-2 px-3 text-sm font-medium whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50', {
   variants: {
     active: {
-      true: 'border-primary font-semibold text-primary',
-      false: 'border-transparent text-gray-600 hover:text-primary dark:text-gray-400',
+      true: 'border-primary text-foreground',
+      false: 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
     },
     // `mobile` shares the row evenly on small screens and sizes each tab to its label from `sm` up.
     fullWidth: {
@@ -98,7 +98,7 @@ export const Tabs = <T extends string = string>({
 
   return (
     <div className={cn('flex flex-col gap-4', className)} {...props}>
-      <div role="tablist" className={cn('flex border-b border-white-light dark:border-[#191e3a]', listClassName)}>
+      <div role="tablist" className={cn('flex gap-2 overflow-x-auto border-b border-border', listClassName)}>
         {items.map((item, index) => {
           const active = item.value === value
           return (

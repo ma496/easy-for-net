@@ -74,7 +74,7 @@ export const SigninSettingsCard = ({ settings: initialSettings, ownSource, canUp
                   )}
                 </div>
               </div>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('page.settings.signin.isEmailVerificationRequiredHelp')}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t('page.settings.signin.isEmailVerificationRequiredHelp')}</p>
             </div>
           </SettingsCard>
         </Form>

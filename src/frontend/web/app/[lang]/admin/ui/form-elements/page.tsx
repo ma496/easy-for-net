@@ -1,5 +1,5 @@
 import { getServerTranslation } from '@/i18n'
-import { FormElementsExample } from "./_components/form-elements-example"
+import { FormElementsExample } from './_components/form-elements-example'
 import { AdminPageContent } from '@/components/layouts'
 
 /**
@@ -18,7 +18,7 @@ const FormElementsPage = async ({ params }: FormElementsPageProps) => {
   const title = await getServerTranslation(lang, 'page.ui.formElements.title')
 
   return (
-    <AdminPageContent title={title}>
+    <AdminPageContent title={title} description="Text, choice and date controls, standalone or bound to Formik, with validation and disabled states." plain>
       <FormElementsExample />
     </AdminPageContent>
   )

@@ -1,5 +1,5 @@
 import { ProviderComponent, TranslationProvider, LocaleGuard } from '@/components/layouts'
-import { Nunito } from 'next/font/google'
+import { Geist, Geist_Mono } from 'next/font/google'
 import { getDictionary, i18nConfig, type Locale, getServerTranslation } from '@/i18n'
 
 import 'react-perfect-scrollbar/dist/css/styles.css'
@@ -16,15 +16,17 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: Loc
     },
   }
 }
+
+/** The app's typefaces, exposed as the CSS variables the design tokens in styles/tailwind.css read. */
+const geistSans = Geist({ subsets: ['latin'], display: 'swap', variable: '--font-geist-sans' })
+const geistMono = Geist_Mono({ subsets: ['latin'], display: 'swap', variable: '--font-geist-mono' })
+
 /**
- * Configured Nunito Google font instance used as the project's primary typeface and exposed via a CSS variable.
+ * Runs before first paint so a dark-mode visitor never sees a light flash: reads the saved theme
+ * (light, dark or system) and sets the `dark` class on <html> that every color token keys off.
+ * App.tsx keeps the class in step afterwards.
  */
-const nunito = Nunito({
-  weight: ['400', '500', '600', '700', '800'],
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-nunito',
-})
+const themeScript = `(function(){try{var t=localStorage.getItem('theme')||'system';var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);}catch(e){}})()`
 
 export async function generateStaticParams() {
   return i18nConfig.locales.map((locale) => ({ lang: locale }))
@@ -32,7 +34,7 @@ export async function generateStaticParams() {
 
 /**
  * Server-rendered root layout for every locale-prefixed route.
- * Loads the locale dictionary, applies the Nunito font, and wraps the tree in the translation and Redux provider components.
+ * Loads the locale dictionary, applies the Geist fonts and the saved theme, and wraps the tree in the translation and Redux provider components.
  */
 export default async function RootLayout({
   children,
@@ -46,8 +48,10 @@ export default async function RootLayout({
 
   return (
     <html lang={lang} data-scroll-behavior="smooth" suppressHydrationWarning={true}>
-      <head></head>
-      <body className={nunito.variable} suppressHydrationWarning={true}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning={true}>
         <TranslationProvider dictionary={dictionary}>
           <LocaleGuard urlLocale={lang} servedCulture={dictionary.culture} defaultCulture={dictionary.defaultCulture} languages={dictionary.languages} />
           <ProviderComponent>{children}</ProviderComponent>

@@ -10,11 +10,11 @@ import { useAppSelector } from '@/store/hooks'
 import { LocalizedLink } from '../localized-link'
 
 const rowActionItemVariants = cva(
-  'flex w-full cursor-pointer items-center gap-2 px-4 py-2 text-sm whitespace-nowrap data-disabled:cursor-not-allowed data-disabled:opacity-50 ltr:text-left rtl:text-right',
+  'flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-sm whitespace-nowrap data-disabled:cursor-not-allowed data-disabled:opacity-50 ltr:text-left rtl:text-right [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
-        default: 'data-focus:bg-primary/10 data-focus:text-primary',
+        default: 'text-foreground data-focus:bg-surface-2',
         primary: 'text-primary data-focus:bg-primary/10',
         success: 'text-success data-focus:bg-success/10',
         warning: 'text-warning data-focus:bg-warning/10',
@@ -60,7 +60,7 @@ export function DataTableRowActions({ actions, className }: DataTableRowActionsP
   return (
     <Menu>
       <MenuButton
-        className={cn('btn btn-outline-secondary btn-sm cursor-pointer p-1.5! shadow-none', className)}
+        className={cn('icon-btn size-8 data-active:bg-surface-2 data-active:text-foreground', className)}
         aria-label={t('table.actions')}
         title={t('table.actions')}
       >
@@ -69,7 +69,7 @@ export function DataTableRowActions({ actions, className }: DataTableRowActionsP
       <MenuItems
         anchor={isRTL ? 'bottom start' : 'bottom end'}
         modal={false}
-        className="z-50 mt-1 min-w-40 rounded-md bg-white py-2 text-black shadow-lg ring-1 ring-black/5 focus:outline-none dark:bg-[#1b2e4b] dark:text-white-dark"
+        className="menu-surface z-50 mt-1 min-w-44 [--anchor-gap:4px] focus:outline-none"
       >
         {visible.map((action) => {
           const content = (

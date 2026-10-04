@@ -4,7 +4,7 @@ import { useTranslation } from '@/i18n'
 import { useLocalizedRouter } from '@/hooks'
 import { useForgetPasswordMutation } from '@/store/api/identity'
 import { Form, Formik } from 'formik'
-import { Button } from '@/components/ui'
+import { Button, LocalizedLink } from '@/components/ui'
 import { FormInput } from '@/components/ui/form'
 import { Mail } from 'lucide-react'
 import { successAlert, apiErrorAlert } from '@/lib/utils'
@@ -48,25 +48,26 @@ export const ForgetPasswordForm = () => {
   }
 
   return (
-    <div className="panel flex min-w-75 flex-col gap-4 sm:min-w-125">
-      <Formik
-        initialValues={{
-          email: '',
-        }}
-        validationSchema={validationSchema}
-        onSubmit={onSubmit}
-      >
-        {() => (
-          <Form noValidate className="flex flex-col gap-4">
-            <FormInput name="email" type="email" label={t('form.label.email')} placeholder={t('form.placeholder.email')} icon={<Mail size={16} />} autoFocus={true} required={true} />
-            <div className="flex justify-end">
-              <Button type="submit" isLoading={isForgettingPassword}>
-                {t('page.auth.forgotPassword.button')}
-              </Button>
-            </div>
-          </Form>
-        )}
-      </Formik>
-    </div>
+    <Formik
+      initialValues={{
+        email: '',
+      }}
+      validationSchema={validationSchema}
+      onSubmit={onSubmit}
+    >
+      {() => (
+        <Form noValidate className="space-y-5">
+          <FormInput name="email" type="email" label={t('form.label.email')} placeholder={t('form.placeholder.email')} icon={<Mail size={16} />} autoFocus={true} required={true} />
+          <Button type="submit" size="lg" className="w-full" isLoading={isForgettingPassword}>
+            {t('page.auth.forgotPassword.button')}
+          </Button>
+          <p className="text-center text-sm">
+            <LocalizedLink href="/signin" className="font-medium text-primary hover:underline">
+              {t('page.auth.signin.backToSignin')}
+            </LocalizedLink>
+          </p>
+        </Form>
+      )}
+    </Formik>
   )
 }

@@ -3,11 +3,15 @@ import { VariantProps, cva } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
 
-const iconButtonVariants = cva('btn cursor-pointer inline-flex items-center justify-center aspect-square p-0!', {
+const iconButtonVariants = cva("btn aspect-square p-0! [&_svg:not([class*='size-'])]:size-4", {
   variants: {
     variant: {
       default: 'btn-primary',
-      outline: 'btn-outline-primary',
+      primary: 'btn-primary',
+      outline: 'btn-secondary',
+      secondary: 'btn-secondary',
+      soft: 'btn-soft',
+      ghost: 'btn-ghost',
       info: 'btn-info',
       'outline-info': 'btn-outline-info',
       success: 'btn-success',
@@ -16,15 +20,15 @@ const iconButtonVariants = cva('btn cursor-pointer inline-flex items-center just
       'outline-warning': 'btn-outline-warning',
       danger: 'btn-danger',
       'outline-danger': 'btn-outline-danger',
-      secondary: 'btn-secondary',
-      'outline-secondary': 'btn-outline-secondary',
+      'outline-primary': 'btn-outline-primary',
+      'outline-secondary': 'btn-secondary',
       dark: 'btn-dark',
       'outline-dark': 'btn-outline-dark',
     },
     size: {
-      sm: 'p-1.5 w-8 h-8',
-      default: 'p-2 w-10 h-10',
-      lg: 'p-2.5 w-12 h-12',
+      sm: 'size-8',
+      default: 'size-9',
+      lg: "size-11 [&_svg:not([class*='size-'])]:size-5",
     },
     rounded: {
       default: '',
@@ -50,13 +54,8 @@ interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, Varia
  */
 const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(({ className, variant, size, rounded, icon, isLoading, disabled, ...props }, ref) => {
   return (
-    <button
-      type='button'
-      className={cn(iconButtonVariants({ variant, size, rounded }), className)}
-      ref={ref}
-      disabled={disabled || isLoading}
-      {...props}>
-      <div className="flex items-center justify-center">{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <span>{icon}</span>}</div>
+    <button type="button" className={cn(iconButtonVariants({ variant, size, rounded }), className)} ref={ref} disabled={disabled || isLoading} {...props}>
+      {isLoading ? <Loader2 className="animate-spin" /> : icon}
     </button>
   )
 })

@@ -3,60 +3,60 @@
 
 /* Custom DatePicker Theme Integration */
 .rdp-custom {
-  --rdp-accent-color: #4361ee;
+  --rdp-accent-color: var(--primary);
   /* Primary color */
-  --rdp-accent-background-color: #4361ee;
+  --rdp-accent-background-color: var(--primary);
   --rdp-day-height: 36px;
   --rdp-day-width: 36px;
   --rdp-day_button-height: 34px;
   --rdp-day_button-width: 34px;
   --rdp-day_button-border-radius: 6px;
-  --rdp-selected-border: 1px solid #4361ee;
-  --rdp-today-color: #4361ee;
+  --rdp-selected-border: 1px solid var(--primary);
+  --rdp-today-color: var(--primary);
   --rdp-disabled-opacity: 0.5;
   --rdp-outside-opacity: 0.5;
-  --rdp-range_middle-background-color: rgba(67, 97, 238, 0.1);
-  --rdp-range_middle-color: #4361ee;
-  --rdp-range_start-background: #4361ee;
-  --rdp-range_end-background: #4361ee;
+  --rdp-range_middle-background-color: color-mix(in oklab, var(--primary) 12%, transparent);
+  --rdp-range_middle-color: var(--primary);
+  --rdp-range_start-background: var(--primary);
+  --rdp-range_end-background: var(--primary);
   --rdp-nav_button-disabled-opacity: 0.3;
-  --rdp-multiple-selected-background: #4361ee;
-  --rdp-multiple-selected-color: white;
+  --rdp-multiple-selected-background: var(--primary);
+  --rdp-multiple-selected-color: var(--primary-foreground);
 }
 
 /* Dark mode overrides */
 .dark .rdp-custom {
-  --rdp-accent-color: #4361ee;
-  --rdp-accent-background-color: #4361ee;
-  --rdp-today-color: #4361ee;
-  --rdp-range_middle-background-color: rgba(67, 97, 238, 0.2);
-  --rdp-multiple-selected-background: #4361ee;
-  --rdp-multiple-selected-color: white;
+  --rdp-accent-color: var(--primary);
+  --rdp-accent-background-color: var(--primary);
+  --rdp-today-color: var(--primary);
+  --rdp-range_middle-background-color: color-mix(in oklab, var(--primary) 20%, transparent);
+  --rdp-multiple-selected-background: var(--primary);
+  --rdp-multiple-selected-color: var(--primary-foreground);
 }
 
 /* Core interaction styles */
 .rdp-custom .rdp-day_button:hover:not([disabled]):not(.rdp-selected) {
-  background-color: rgba(67, 97, 238, 0.1);
-  color: #4361ee;
+  background-color: color-mix(in oklab, var(--primary) 12%, transparent);
+  color: var(--primary);
 }
 
 .rdp-custom .rdp-selected {
-  background-color: #4361ee !important;
-  color: white !important;
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
 }
 
 .rdp-custom .rdp-today:not(.rdp-selected) {
   font-weight: 600;
-  color: #4361ee;
+  color: var(--primary);
 }
 
 .dark .rdp-custom .rdp-day_button:hover:not([disabled]):not(.rdp-selected) {
-  background-color: rgba(67, 97, 238, 0.2);
-  color: #4361ee;
+  background-color: color-mix(in oklab, var(--primary) 20%, transparent);
+  color: var(--primary);
 }
 
 .dark .rdp-custom .rdp-today:not(.rdp-selected) {
-  color: #4361ee;
+  color: var(--primary);
 }
 
 /* Navigation button styles */
@@ -74,7 +74,7 @@
 }
 
 .rdp-custom .rdp-nav_button:hover:not([disabled]) {
-  background-color: rgba(67, 97, 238, 0.1);
+  background-color: color-mix(in oklab, var(--primary) 12%, transparent);
 }
 
 .rdp-custom .rdp-nav_button[disabled] {
@@ -84,12 +84,12 @@
 
 /* Navigation button focus styles */
 .rdp-custom .rdp-nav_button:focus {
-  outline: 2px solid #4361ee;
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 
 .dark .rdp-custom .rdp-nav_button:focus {
-  outline: 2px solid #4361ee;
+  outline: 2px solid var(--primary);
 }
 
 /* Month caption styles */
@@ -101,11 +101,11 @@
   padding: 8px 50px;
   min-height: 40px;
   margin-bottom: 8px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid var(--border);
 }
 
 .dark .rdp-custom .rdp-month_caption {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border);
 }
 
 /* Month caption label */
@@ -155,78 +155,78 @@
 .rdp-custom .rdp-range_start {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
-  background-color: #4361ee;
-  color: white;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .rdp-custom .rdp-range_end {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
-  background-color: #4361ee;
-  color: white;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .rdp-custom .rdp-range_middle {
   border-radius: 0;
-  background-color: rgba(67, 97, 238, 0.1);
-  color: #4361ee;
+  background-color: color-mix(in oklab, var(--primary) 12%, transparent);
+  color: var(--primary);
 }
 
 .rdp-custom .rdp-range_start .rdp-day_button {
-  background-color: #4361ee;
-  color: white;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
 
 .rdp-custom .rdp-range_end .rdp-day_button {
-  background-color: #4361ee;
-  color: white;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
 
 .rdp-custom .rdp-range_middle .rdp-day_button {
-  background-color: rgba(67, 97, 238, 0.1);
-  color: #4361ee;
+  background-color: color-mix(in oklab, var(--primary) 12%, transparent);
+  color: var(--primary);
   border-radius: 0;
 }
 
 /* Multiple selection styles */
 .rdp-custom .rdp-multiple-selected {
-  background-color: #4361ee !important;
-  color: white !important;
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
   border-radius: 6px !important;
 }
 
 .rdp-custom .rdp-multiple-selected .rdp-day_button {
-  background-color: #4361ee !important;
-  color: white !important;
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
   border-radius: 6px !important;
 }
 
 /* Dark mode multiple selection */
 .dark .rdp-custom .rdp-multiple-selected {
-  background-color: #4361ee !important;
-  color: white !important;
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
 }
 
 .dark .rdp-custom .rdp-multiple-selected .rdp-day_button {
-  background-color: #4361ee !important;
-  color: white !important;
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
 }
 
 .dark .rdp-custom .rdp-day_button:hover:not([disabled]):not(.rdp-selected),
 .dark .rdp-custom .rdp-day:not(.rdp-selected) .rdp-day_button:hover:not([disabled]) {
-  background-color: rgba(67, 97, 238, 0.2) !important;
-  color: #4361ee !important;
+  background-color: color-mix(in oklab, var(--primary) 20%, transparent) !important;
+  color: var(--primary) !important;
 }
 
 /* Focus styles for accessibility - moved to global styles */
 
 /* Dark mode navigation buttons */
 .dark .rdp-custom .rdp-nav_button:hover:not([disabled]) {
-  background-color: rgba(67, 97, 238, 0.2);
+  background-color: color-mix(in oklab, var(--primary) 20%, transparent);
 }
 
 /* Icon styles handled by component */

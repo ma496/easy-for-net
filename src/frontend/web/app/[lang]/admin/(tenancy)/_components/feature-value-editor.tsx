@@ -28,7 +28,7 @@ interface FeatureValueEditorProps {
   returnUrl: string
 }
 
-/** A toggle rendered as a switch rather than a checkbox, so an on/off entitlement reads at a glance. */
+/** Props for {@link FeatureSwitch}: its state, whether it can be changed, the change callback and its accessible name. */
 interface FeatureSwitchProps {
   checked: boolean
   disabled?: boolean
@@ -36,6 +36,7 @@ interface FeatureSwitchProps {
   label: string
 }
 
+/** A toggle rendered as a switch rather than a checkbox, so an on/off entitlement reads at a glance. */
 const FeatureSwitch = ({ checked, disabled, onChange, label }: FeatureSwitchProps) => (
   <button
     type="button"
@@ -45,16 +46,16 @@ const FeatureSwitch = ({ checked, disabled, onChange, label }: FeatureSwitchProp
     disabled={disabled}
     onClick={() => onChange(!checked)}
     className={cn(
-      'relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200',
-      'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
-      checked ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600',
+      'relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-transparent transition-colors duration-200',
+      'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
+      checked ? 'bg-primary' : 'border-input bg-surface-3',
       disabled && 'cursor-not-allowed opacity-50',
     )}
   >
     <span
       className={cn(
-        'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow ring-0 transition-[margin] duration-200',
-        checked ? 'ms-5' : 'ms-0',
+        'pointer-events-none inline-block size-4 rounded-full bg-surface shadow-xs transition-[margin] duration-200',
+        checked ? 'ms-4.5' : 'ms-0.5',
       )}
     />
   </button>
@@ -145,7 +146,7 @@ export const FeatureValueEditor = ({ providerName, providerKey, returnUrl }: Fea
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center">
+      <div className="panel flex items-center justify-center py-16">
         <Loader />
       </div>
     )
@@ -153,14 +154,21 @@ export const FeatureValueEditor = ({ providerName, providerKey, returnUrl }: Fea
 
   if (error) {
     return (
-      <div className="flex justify-center items-center">
+      <div className="panel flex items-center justify-center">
         <ApiErrorMessages error={error} />
       </div>
     )
   }
 
   if (!currentGroup) {
-    return <div className="flex justify-center items-center py-10 text-gray-500">{t('page.features.none')}</div>
+    return (
+      <div className="panel flex flex-col items-center justify-center gap-3 py-16 text-center">
+        <div className="flex size-12 items-center justify-center rounded-xl bg-surface-2 text-muted-foreground">
+          <Layers className="size-5" />
+        </div>
+        <p className="text-sm text-muted-foreground">{t('page.features.none')}</p>
+      </div>
+    )
   }
 
   const visibleFeatures = currentGroup.features.filter((feature) => {
@@ -185,25 +193,28 @@ export const FeatureValueEditor = ({ providerName, providerKey, returnUrl }: Fea
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid min-h-100 grid-cols-1 gap-4 md:grid-cols-4">
-        <div className="flex flex-col border-gray-200 pt-2 border-e pe-4 dark:border-gray-700 md:col-span-1">
-          <div className="mb-3 flex items-center gap-2 text-xs font-semibold tracking-wider text-gray-800 uppercase dark:text-gray-100">
-            <Layers className="h-3.5 w-3.5" />
+    <div className="flex flex-col gap-6">
+      <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-[13rem_minmax(0,1fr)] lg:grid-cols-[15rem_minmax(0,1fr)]">
+        {/* The group list: a vertical rail from md up, a row of scrollable chips on a phone. */}
+        <nav className="min-w-0 md:sticky md:top-20">
+          <div className="mb-2 hidden items-center gap-2 px-1 text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase md:flex">
+            <Layers className="size-3.5" />
             {t('page.features.groups')}
           </div>
-          <div className="flex flex-col space-y-1">
+          <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 md:mx-0 md:flex-col md:overflow-visible md:px-0 md:pb-0">
             {groups.map((group) => {
               const isActive = group.groupName === currentGroup.groupName
               return (
                 <button
                   key={group.groupName}
                   type="button"
+                  aria-current={isActive ? 'true' : undefined}
                   className={cn(
-                    'flex cursor-pointer items-center justify-between gap-2 rounded-md px-3 py-2 transition-colors',
+                    'flex shrink-0 cursor-pointer items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm transition-colors md:w-full',
+                    'focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
                     isActive
-                      ? 'bg-primary text-white'
-                      : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800',
+                      ? 'border-primary/20 bg-primary/10 font-medium text-primary'
+                      : 'border-transparent text-muted-foreground hover:bg-surface-2 hover:text-foreground',
                   )}
                   onClick={() => {
                     setActiveGroup(group.groupName)
@@ -213,8 +224,8 @@ export const FeatureValueEditor = ({ providerName, providerKey, returnUrl }: Fea
                   <span className="truncate">{group.displayName}</span>
                   <span
                     className={cn(
-                      'shrink-0 rounded-full px-2 py-0.5 text-xs',
-                      isActive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+                      'shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-medium tabular-nums',
+                      isActive ? 'bg-primary/15 text-primary' : 'bg-surface-2 text-muted-foreground',
                     )}
                   >
                     {enabledCount(group)}/{group.features.length}
@@ -223,28 +234,35 @@ export const FeatureValueEditor = ({ providerName, providerKey, returnUrl }: Fea
               )
             })}
           </div>
-        </div>
+        </nav>
 
-        <div className="pt-2 md:col-span-3">
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-xs font-semibold tracking-wider text-gray-800 uppercase dark:text-gray-100">
-              <Settings2 className="h-3.5 w-3.5" />
-              {currentGroup.displayName}
+        <section className="min-w-0 rounded-xl border border-border bg-surface shadow-xs">
+          <header className="flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <Settings2 className="size-4" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="truncate text-base font-semibold text-foreground">{currentGroup.displayName}</h2>
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  {enabledCount(currentGroup)}/{currentGroup.features.length}
+                </p>
+              </div>
             </div>
-            <div className="relative w-full max-w-xs">
-              <input
+            <div className="w-full sm:max-w-64">
+              <Input
                 type="text"
                 name="searchFeatures"
-                className="form-input w-full py-1.5! text-sm ps-9"
+                className="[&_.form-input]:h-9 [&_.form-input]:text-sm"
                 placeholder={t('common.search')}
                 value={search}
+                icon={<Search className="size-4" />}
                 onChange={(event) => setSearch(event.target.value)}
               />
-              <Search className="absolute top-1/2 h-4 w-4 -translate-y-1/2 text-gray-300 start-2 dark:text-gray-600" />
             </div>
-          </div>
+          </header>
 
-          <div className="flex flex-col gap-2">
+          <ul className="divide-y divide-border">
             {visibleFeatures.map((feature) => {
               const value = valueOf(feature)
               const parentOff = !isParentInForce(feature, currentGroup)
@@ -252,109 +270,123 @@ export const FeatureValueEditor = ({ providerName, providerKey, returnUrl }: Fea
               const isDirty = feature.name in edited
 
               return (
-                <div
+                <li
                   key={feature.name}
-                  style={{ marginInlineStart: `${feature.depth * 1.25}rem` }}
-                  className={cn(
-                    'flex flex-wrap items-center justify-between gap-3 rounded-md border p-3 transition-colors',
-                    'border-white-light bg-white hover:border-primary/40 dark:border-[#1b2e4b] dark:bg-[#191e3a]',
-                    feature.depth > 0 && 'border-s-2 border-s-primary/30',
-                    parentOff && 'opacity-60',
-                  )}
+                  className={cn('px-4 py-4 transition-colors hover:bg-surface-2/50 sm:px-5', isDirty && 'bg-warning/5')}
                 >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-semibold text-gray-800 dark:text-gray-100">{feature.displayName}</span>
-                      {sourceBadge(feature)}
-                      {isDirty && <Badge variant="warning" type="outline">{t('page.features.unsaved')}</Badge>}
+                  {/* Children sit on an indented rail, one step per level of depth. */}
+                  <div
+                    style={{ marginInlineStart: `${feature.depth * 1.25}rem` }}
+                    className={cn(
+                      'flex flex-wrap items-center justify-between gap-x-6 gap-y-3',
+                      feature.depth > 0 && 'border-s-2 border-primary/25 ps-4',
+                      parentOff && 'opacity-60',
+                    )}
+                  >
+                    <div className="min-w-0 flex-1 basis-56">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-medium text-foreground">{feature.displayName}</span>
+                        {sourceBadge(feature)}
+                        {isDirty && <Badge variant="warning" type="outline">{t('page.features.unsaved')}</Badge>}
+                      </div>
+                      {feature.description && (
+                        <p className="mt-1 text-[13px] text-muted-foreground">{feature.description}</p>
+                      )}
+                      {parentOff && (
+                        <p className="mt-1 text-xs font-medium text-warning">{t('page.features.parentDisabled')}</p>
+                      )}
                     </div>
-                    {feature.description && (
-                      <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{feature.description}</p>
-                    )}
-                    {parentOff && (
-                      <p className="mt-0.5 text-xs text-warning">{t('page.features.parentDisabled')}</p>
-                    )}
-                  </div>
 
-                  <div className="flex shrink-0 items-center gap-2">
-                    {feature.valueType.name === FeatureValueTypeName.Toggle && (
-                      <FeatureSwitch
-                        checked={readsAsTrue(value)}
-                        disabled={disabled}
-                        label={feature.displayName}
-                        onChange={(checked) => setValue(feature.name, checked ? 'true' : 'false')}
-                      />
-                    )}
+                    <div className="ms-auto flex shrink-0 items-center gap-2">
+                      {canManage && (feature.isOverridden || isDirty) && (
+                        <button
+                          type="button"
+                          className="icon-btn size-8"
+                          title={t('page.features.resetToInherited')}
+                          aria-label={t('page.features.resetToInherited')}
+                          onClick={() => setValue(feature.name, null)}
+                        >
+                          <RotateCcw className="size-3.5" />
+                        </button>
+                      )}
 
-                    {feature.valueType.name === FeatureValueTypeName.FreeText && (
-                      <div className="w-40">
-                        <Input
-                          name={feature.name}
-                          type={feature.valueType.validatorName === 'Numeric' ? 'number' : 'text'}
-                          min={feature.valueType.validatorProperties.minimum}
-                          max={feature.valueType.validatorProperties.maximum}
-                          maxLength={
-                            feature.valueType.validatorProperties.maximumLength
-                              ? Number(feature.valueType.validatorProperties.maximumLength)
-                              : undefined
-                          }
-                          value={value ?? ''}
+                      {feature.valueType.name === FeatureValueTypeName.Toggle && (
+                        <FeatureSwitch
+                          checked={readsAsTrue(value)}
                           disabled={disabled}
-                          onChange={(event) => setValue(feature.name, event.target.value)}
+                          label={feature.displayName}
+                          onChange={(checked) => setValue(feature.name, checked ? 'true' : 'false')}
                         />
-                      </div>
-                    )}
+                      )}
 
-                    {feature.valueType.name === FeatureValueTypeName.Selection && (
-                      <div className="w-44">
-                        <Select
-                          name={feature.name}
-                          value={value ?? ''}
-                          disabled={disabled}
-                          onChange={(_, selected) => setValue(feature.name, selected)}
-                          options={feature.valueType.items.map((item) => ({ value: item.value, label: item.displayName }))}
-                        />
-                      </div>
-                    )}
+                      {feature.valueType.name === FeatureValueTypeName.FreeText && (
+                        <div className="w-36 sm:w-40">
+                          <Input
+                            name={feature.name}
+                            type={feature.valueType.validatorName === 'Numeric' ? 'number' : 'text'}
+                            className="[&_.form-input]:h-9 [&_.form-input]:text-sm [&_.form-input]:tabular-nums"
+                            min={feature.valueType.validatorProperties.minimum}
+                            max={feature.valueType.validatorProperties.maximum}
+                            maxLength={
+                              feature.valueType.validatorProperties.maximumLength
+                                ? Number(feature.valueType.validatorProperties.maximumLength)
+                                : undefined
+                            }
+                            value={value ?? ''}
+                            disabled={disabled}
+                            onChange={(event) => setValue(feature.name, event.target.value)}
+                          />
+                        </div>
+                      )}
 
-                    {canManage && (feature.isOverridden || isDirty) && (
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-sm cursor-pointer"
-                        title={t('page.features.resetToInherited')}
-                        onClick={() => setValue(feature.name, null)}
-                      >
-                        <RotateCcw className="h-3 w-3" />
-                      </button>
-                    )}
+                      {feature.valueType.name === FeatureValueTypeName.Selection && (
+                        <div className="w-40 sm:w-44">
+                          <Select
+                            name={feature.name}
+                            value={value ?? ''}
+                            disabled={disabled}
+                            size="sm"
+                            onChange={(_, selected) => setValue(feature.name, selected)}
+                            options={feature.valueType.items.map((item) => ({ value: item.value, label: item.displayName }))}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </li>
               )
             })}
 
             {visibleFeatures.length === 0 && (
-              <div className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                {t('page.features.noMatches')}
-              </div>
+              <li className="flex flex-col items-center gap-3 px-5 py-12 text-center">
+                <div className="flex size-12 items-center justify-center rounded-xl bg-surface-2 text-muted-foreground">
+                  <Search className="size-5" />
+                </div>
+                <p className="text-sm text-muted-foreground">{t('page.features.noMatches')}</p>
+              </li>
             )}
-          </div>
-        </div>
-      </div>
+          </ul>
 
-      <div className="flex items-center justify-end gap-4">
-        {changedCount > 0 && (
-          <span className="text-sm text-gray-500 dark:text-gray-400">
-            {t('page.features.unsavedCount', { count: changedCount })}
-          </span>
-        )}
-        <Button type="button" variant="outline" onClick={() => router.push(returnUrl)} disabled={isSaving}>
-          {t('common.cancel')}
-        </Button>
-        {canManage && (
-          <Button type="button" onClick={onSave} isLoading={isSaving} disabled={changedCount === 0}>
-            {t('common.save')}
-          </Button>
-        )}
+          {/* One save for every group, kept in reach at the bottom of the screen however long the list is. */}
+          <div className="sticky bottom-0 z-10 flex flex-wrap items-center justify-end gap-x-4 gap-y-2 rounded-b-xl border-t border-border bg-surface/95 px-4 py-3 backdrop-blur sm:px-5">
+            {changedCount > 0 && (
+              <span className="me-auto flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="size-2 rounded-full bg-warning" />
+                {t('page.features.unsavedCount', { count: changedCount })}
+              </span>
+            )}
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="outline" onClick={() => router.push(returnUrl)} disabled={isSaving}>
+                {t('common.cancel')}
+              </Button>
+              {canManage && (
+                <Button type="button" onClick={onSave} isLoading={isSaving} disabled={changedCount === 0}>
+                  {t('common.save')}
+                </Button>
+              )}
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   )

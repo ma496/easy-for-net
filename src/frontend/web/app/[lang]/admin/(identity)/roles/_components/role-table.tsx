@@ -105,12 +105,13 @@ export const RoleTable = () => {
   const columns: ColumnDef<RoleListDto, any>[] = [
     columnHelper.accessor('name', {
       header: t('table.columns.name'),
-      cell: (info) => info.getValue(),
+      cell: (info) => <span className="font-medium text-foreground">{info.getValue()}</span>,
     }),
     columnHelper.accessor('description', {
       meta: { card: 'subtitle' },
       header: t('table.columns.description'),
-      cell: (info) => info.getValue(),
+      // Long descriptions are clamped so one role cannot stretch its row; the card shows the subtitle in full.
+      cell: (info) => <span className="line-clamp-2 max-w-xl text-muted-foreground">{info.getValue()}</span>,
     }),
     columnHelper.accessor('userCount', {
       header: t('table.columns.userCount'),
@@ -151,7 +152,7 @@ export const RoleTable = () => {
 
   if (roleListError) {
     return (
-      <div className="flex justify-center items-center">
+      <div className="py-6">
         <ApiErrorMessages error={roleListError} />
       </div>
     )
@@ -173,7 +174,7 @@ export const RoleTable = () => {
     >
       <DataTableToolbar>
         {canCreate && (
-          <DataTableToolbarButton label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/roles/create" />
+          <DataTableToolbarButton primary label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/roles/create" />
         )}
         <DataTableExportButton onExport={handleExport} isExporting={isExporting} disabled={isGettingRoles || !roleListResponse?.total} />
       </DataTableToolbar>

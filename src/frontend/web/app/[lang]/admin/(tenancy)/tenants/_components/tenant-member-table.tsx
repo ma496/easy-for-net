@@ -87,12 +87,12 @@ export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
     columnHelper.accessor('username', {
       meta: { card: 'title' },
       header: t('table.columns.userName'),
-      cell: (info) => info.getValue(),
+      cell: (info) => <span className="font-medium text-foreground">{info.getValue()}</span>,
     }),
     columnHelper.accessor('email', {
       meta: { card: 'subtitle' },
       header: t('table.columns.email'),
-      cell: (info) => info.getValue(),
+      cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
     }),
     columnHelper.accessor('firstName', {
       header: t('table.columns.firstName'),
@@ -104,17 +104,19 @@ export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
     }),
     columnHelper.accessor('roles', {
       header: t('table.columns.roles'),
-      cell: (info) =>
-        info
-          .getValue()
-          .map((role: TenantMemberRoleDto) => role.name)
-          .join(', '),
+      cell: (info) => (
+        <div className="flex flex-wrap gap-1">
+          {info.getValue().map((role: TenantMemberRoleDto) => (
+            <Badge key={role.id} variant="secondary">{role.name}</Badge>
+          ))}
+        </div>
+      ),
       enableSorting: false,
     }),
     columnHelper.accessor('memberSince', {
       header: t('table.columns.date'),
       cell: (info) => (
-        <span className="text-gray-500 dark:text-gray-400">{format(new Date(info.getValue()), 'PP')}</span>
+        <span className="whitespace-nowrap text-muted-foreground tabular-nums">{format(new Date(info.getValue()), 'PP')}</span>
       ),
       enableSorting: false,
     }),
@@ -180,13 +182,13 @@ export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
         <DataTableToolbar>
           {canAdd &&
             (seatsExhausted ? (
-              <DataTableToolbarButton label={t('page.tenants.members.seatLimitReached')} icon={<Plus size={16} />} disabled />
+              <DataTableToolbarButton primary label={t('page.tenants.members.seatLimitReached')} icon={<Plus size={16} />} disabled />
             ) : (
-              <DataTableToolbarButton label={t('page.tenants.members.addButton')} icon={<Plus size={16} />} onClick={() => setIsAddOpen(true)} />
+              <DataTableToolbarButton primary label={t('page.tenants.members.addButton')} icon={<Plus size={16} />} onClick={() => setIsAddOpen(true)} />
             ))}
         </DataTableToolbar>
 
-        <DataTable />
+        <DataTable cardsBelow="lg" />
 
         <DataTablePagination siblingCount={1} />
       </DataTableProvider>

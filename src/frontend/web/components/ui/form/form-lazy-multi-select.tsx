@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback, useId } from 'react'
 import { useField, useFormikContext } from 'formik'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/i18n'
 import { ChevronDown, Search, X } from 'lucide-react'
 import { TypedUseLazyQuery } from '@reduxjs/toolkit/query/react'
 import { ListDto } from '@/store/api'
@@ -59,7 +60,7 @@ export const FormLazyMultiSelect = <TItem, TRequest>({
   showValidation = true,
   className,
   icon,
-  placeholder = 'Select...',
+  placeholder: placeholderProp,
   searchable = true,
   maxVisibleItems = 5,
   disabled = false,
@@ -68,6 +69,8 @@ export const FormLazyMultiSelect = <TItem, TRequest>({
   generateRequest,
   required = false,
 }: FormLazyMultiSelectProps<TItem, TRequest>) => {
+  const { t } = useTranslation()
+  const placeholder = placeholderProp ?? t('common.selectPlaceholder')
   const [field, meta, helpers] = useField(name)
   const { submitCount } = useFormikContext()
   const isDirty = (Array.isArray(meta.initialValue) && Array.isArray(meta.value))
@@ -282,11 +285,11 @@ export const FormLazyMultiSelect = <TItem, TRequest>({
             .map((val) => allOptions.find((opt) => opt.value === val))
             .filter((opt): opt is Option => !!opt)
             .map((opt) => (
-              <span key={opt.value} className="badge flex items-center gap-1 badge-outline-secondary pr-1">
+              <span key={opt.value} className="badge flex items-center gap-1 badge-outline-secondary pe-1">
                 {opt.label}
                 <div
                   role="button"
-                  className="ml-1 text-xs text-primary hover:text-danger focus:outline-hidden"
+                  className="ms-1 text-xs text-primary hover:text-danger focus:outline-hidden"
                   tabIndex={-1}
                   onClick={(e) => {
                     e.stopPropagation()
@@ -306,20 +309,20 @@ export const FormLazyMultiSelect = <TItem, TRequest>({
   return (
     <div className={cn(className, (isDirty || submitCount > 0) && hasError && 'has-error')} ref={containerRef}>
       {label && (
-        <label htmlFor={controlId}>
+        <label htmlFor={controlId} className="form-label">
           {label}
           {required && <span className="ms-1 text-danger">*</span>}
         </label>
       )}
-      <div className={cn('relative text-white-dark', 'custom-select')} ref={triggerRef}>
+      <div className={cn('relative text-muted-foreground', 'custom-select')} ref={triggerRef}>
         <button
           type="button"
           className={cn(
-            'form-input flex min-h-10 w-full cursor-pointer flex-wrap items-center gap-1 bg-transparent py-0.5 pr-10 text-left',
+            'form-input flex h-auto min-h-9 w-full cursor-pointer flex-wrap items-center gap-1 bg-transparent py-0.5 pe-10 text-start',
             icon && 'ps-10',
-            size === 'sm' && 'py-1 text-xs',
+            size === 'sm' && 'min-h-8 py-0.5 text-[13px]',
             size === 'lg' && 'py-1.75 text-base',
-            !field.value && 'text-gray-400'
+            !field.value?.length && 'text-subtle-foreground'
           )
           }
           id={controlId}
@@ -327,16 +330,16 @@ export const FormLazyMultiSelect = <TItem, TRequest>({
           style={{ backgroundImage: 'none' }}
           onClick={() => setOpen((v) => !v)}
         >
-          {icon && <span className="absolute inset-s-4 top-1/2 -translate-y-1/2">{icon}</span>}
+          {icon && <span className="pointer-events-none absolute inset-s-3 top-1/2 -translate-y-1/2">{icon}</span>}
           <span className="flex flex-1 items-center truncate">
             {renderValue()}
           </span>
-          {field.value && (
-            <div role="button" className="absolute inset-e-8 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-hidden" tabIndex={-1} onClick={handleClear}>
+          {(field.value?.length ?? 0) > 0 && (
+            <div role="button" className="absolute inset-e-8 top-1/2 -translate-y-1/2 text-subtle-foreground hover:text-muted-foreground focus:outline-hidden" tabIndex={-1} onClick={handleClear}>
               <X size={16} />
             </div>
           )}
-          <span className="pointer-events-none absolute inset-e-4 top-1/2 -translate-y-1/2">
+          <span className="pointer-events-none absolute inset-e-3 top-1/2 -translate-y-1/2">
             <ChevronDown className={cn('h-4 w-4 transition-transform', open && 'rotate-180')} />
           </span>
         </button>
@@ -347,7 +350,7 @@ export const FormLazyMultiSelect = <TItem, TRequest>({
           <div
             ref={dropdownRef}
             className={cn(
-              'fixed z-999 overflow-hidden rounded-sm border border-[rgb(224,230,237)] bg-white text-white-dark shadow-lg dark:border-[#253b5c] dark:bg-[#1b2e4b]',
+              'fixed z-999 overflow-hidden rounded-lg border border-border bg-surface text-foreground shadow-lg',
               'custom-select',
               !open && 'hidden',
             )}
@@ -359,13 +362,13 @@ export const FormLazyMultiSelect = <TItem, TRequest>({
             }}
           >
             {searchable && (
-              <div className="sticky top-0 z-10 flex items-center border-b border-gray-100 bg-white px-2 py-2 dark:border-[#253b5c] dark:bg-[#1b2e4b]" onClick={(e) => e.stopPropagation()}>
+              <div className="sticky top-0 z-10 flex items-center border-b border-border bg-surface p-1.5" onClick={(e) => e.stopPropagation()}>
                 <Input
                   name={name}
                   id={`${controlId}-search`}
                   type="text"
-                  icon={<Search className="pointer-events-none h-4 w-4 text-gray-400" />}
-                  placeholder="Search..."
+                  icon={<Search className="pointer-events-none h-4 w-4 text-subtle-foreground" />}
+                  placeholder={t('common.search')}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   autoFocus
@@ -386,16 +389,16 @@ export const FormLazyMultiSelect = <TItem, TRequest>({
             >
               <ul className="overflow-hidden">
                 {isFetching && page === 1 && (
-                  <li className="flex items-center justify-center px-4 py-2 text-gray-400">
+                  <li className="flex items-center justify-center px-3 py-3 text-subtle-foreground">
                     <Loader />
                   </li>
                 )}
-                {!isFetching && fetchedOptions.length === 0 && <li className="px-4 py-2 text-gray-400">No options</li>}
+                {!isFetching && fetchedOptions.length === 0 && <li className="px-3 py-6 text-center text-sm text-subtle-foreground">{t('common.noOptions')}</li>}
                 {fetchedOptions.map((opt) => (
                   <li
                     key={opt.value}
                     className={cn(
-                      'flex cursor-pointer items-center gap-2 px-4 py-2 hover:bg-[#f6f6f6] dark:hover:bg-[#132136]',
+                      'mx-1 my-0.5 flex cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 hover:bg-surface-2',
                       isSelected(opt.value) && 'bg-primary/10 text-primary',
                       opt.disabled && 'pointer-events-none opacity-50',
                     )}
@@ -406,7 +409,7 @@ export const FormLazyMultiSelect = <TItem, TRequest>({
                   </li>
                 ))}
                 {isFetching && page > 1 && (
-                  <li className="flex items-center justify-center px-4 py-2 text-gray-400">
+                  <li className="flex items-center justify-center px-3 py-3 text-subtle-foreground">
                     <Loader />
                   </li>
                 )}
@@ -415,7 +418,7 @@ export const FormLazyMultiSelect = <TItem, TRequest>({
           </div>
         </Portal>
       </div>
-      {showValidation && (isDirty || submitCount > 0) && hasError && <div className="mt-1 text-danger">{meta.error}</div>}
+      {showValidation && (isDirty || submitCount > 0) && hasError && <div className="mt-1.5 text-xs font-medium text-danger">{meta.error}</div>}
     </div>
   )
 }

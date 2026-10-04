@@ -208,12 +208,12 @@ export const TenantTable = () => {
   const columns: ColumnDef<TenantListDto, any>[] = [
     columnHelper.accessor('name', {
       header: t('table.columns.name'),
-      cell: (info) => info.getValue(),
+      cell: (info) => <span className="font-medium text-foreground">{info.getValue()}</span>,
     }),
     columnHelper.accessor('identifier', {
       meta: { card: 'subtitle' },
       header: t('table.columns.identifier'),
-      cell: (info) => info.getValue(),
+      cell: (info) => <span className="font-mono text-[13px] text-muted-foreground">{info.getValue()}</span>,
     }),
     // Filled per page by the API from the editions table rather than held on the tenant row, so like
     // the member count it cannot be sorted on. A tenant on no plan shows a dash rather than an empty
@@ -224,7 +224,7 @@ export const TenantTable = () => {
         info.getValue() ? (
           <Badge variant="info" type="outline">{info.getValue()}</Badge>
         ) : (
-          <span className="text-gray-400 dark:text-gray-600">&mdash;</span>
+          <span className="text-subtle-foreground">&mdash;</span>
         ),
       enableSorting: false,
     }),
@@ -358,7 +358,7 @@ export const TenantTable = () => {
         />
 
         {canCreate && (
-          <DataTableToolbarButton label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/tenants/create" />
+          <DataTableToolbarButton primary label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/tenants/create" />
         )}
         <DataTableExportButton onExport={handleExport} isExporting={isExporting} disabled={isGettingTenants || !tenantListResponse?.total} />
       </DataTableToolbar>
@@ -372,7 +372,7 @@ export const TenantTable = () => {
           onClear={handleClear}
         />
       )}
-      <DataTable />
+      <DataTable cardsBelow="lg" />
 
       <DataTablePagination siblingCount={1} />
     </DataTableProvider>

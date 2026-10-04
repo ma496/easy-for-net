@@ -105,7 +105,7 @@ const TreeViewItem = ({
 
   return (
     <div className="w-full">
-      <div className={cn('flex w-full items-center rounded-lg px-4 py-2 text-sm font-medium', 'hover:bg-accent hover:text-accent-foreground')} style={{ paddingInlineStart: `${level * 1}rem` }}>
+      <div className={cn('flex w-full items-center rounded-md px-3 py-1.5 text-sm font-medium text-foreground transition-colors', 'hover:bg-surface-2')} style={{ paddingInlineStart: `${level * 1}rem` }}>
         <div className="flex items-center gap-2">
           {enableSelection && (
             <input
@@ -117,11 +117,11 @@ const TreeViewItem = ({
                 }
               }}
               onChange={handleCheckboxChange}
-              className="cursor-pointer h-4 w-4 rounded-sm border-gray-300"
+              className="form-checkbox"
             />
           )}
           {hasChildren && (
-            <button onClick={toggleOpen} className="cursor-pointer flex w-4 items-center justify-center">
+            <button onClick={toggleOpen} className="flex w-4 cursor-pointer items-center justify-center text-muted-foreground hover:text-foreground">
               {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </button>
           )}

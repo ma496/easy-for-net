@@ -3,7 +3,7 @@ import * as Yup from 'yup'
 import { useTranslation } from '@/i18n'
 import { Formik, Form } from 'formik'
 import { FormInput, FormPasswordInput } from '@/components/ui/form'
-import { Mail, Lock, AlertCircle, Building2 } from 'lucide-react'
+import { User, Lock, AlertCircle, Building2 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useTokenMutation, useLazyGetUserInfoQuery, useResendVerifyEmailMutation } from '@/store/api/identity'
@@ -143,39 +143,40 @@ export const SigninForm = () => {
   return (
     <Formik initialValues={{ username: '', password: '', tenantIdentifier: '' }} validationSchema={validationSchema} onSubmit={submitForm}>
       {() => (
-        <Form className="space-y-5 dark:text-white">
-          <FormInput label={t('form.label.username')} name="username" placeholder={t('form.placeholder.username')} icon={<Mail size={16} />} autoFocus={true} required={true} />
+        <Form className="space-y-5">
+          <FormInput label={t('form.label.username')} name="username" placeholder={t('form.placeholder.username')} icon={<User size={16} />} autoFocus={true} required={true} />
           <FormPasswordInput label={t('form.label.password')} name="password" placeholder={t('form.placeholder.password')} icon={<Lock size={16} />} required={true} />
           <FormInput label={t('form.label.tenant')} name="tenantIdentifier" placeholder={t('form.placeholder.tenant')} icon={<Building2 size={16} />} />
 
           {showResendLink && (
-            <div role="alert" className="relative flex items-start gap-3 rounded-lg border border-danger/30 bg-danger-light p-4 text-sm dark:border-danger/40 dark:bg-danger/10">
-              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-danger" />
-              <div className="flex-1 space-y-2">
-                <p className="text-danger-dark font-semibold dark:text-danger">{t('page.verifyEmail.notVerifiedTitle')}</p>
-                <p className="text-danger-dark/80 dark:text-danger/80">{t('page.verifyEmail.notVerifiedMessage')}</p>
-                <Button type="button" variant="outline" onClick={handleResendEmail} disabled={countdown > 0 || isResending} isLoading={isResending}>
+            <div role="alert" className="flex items-start gap-3 rounded-lg border border-danger/30 bg-danger/10 p-4 text-sm">
+              <AlertCircle className="mt-0.5 size-4 shrink-0 text-danger" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <p className="font-semibold text-danger">{t('page.verifyEmail.notVerifiedTitle')}</p>
+                <p className="text-foreground/80">{t('page.verifyEmail.notVerifiedMessage')}</p>
+                <Button type="button" variant="outline" size="sm" onClick={handleResendEmail} disabled={countdown > 0 || isResending} isLoading={isResending}>
                   {countdown > 0 ? t('page.verifyEmail.resendWait', { seconds: countdown }) : t('page.verifyEmail.resendButton')}
                 </Button>
               </div>
             </div>
           )}
 
-          <div className="flex items-center justify-between">
-            <div className="flex gap-2">
-              <span className="text-sm dark:text-gray-400">{t('page.auth.signin.noAccount')}</span>
-              <LocalizedLink href="/signup" className="text-sm text-primary hover:underline dark:text-white">
-                {t('page.auth.signin.signupLink')}
-              </LocalizedLink>
-            </div>
-            <LocalizedLink href="/forget-password" className="text-sm text-primary hover:underline dark:text-white">
+          <div className="flex justify-end">
+            <LocalizedLink href="/forget-password" className="text-sm font-medium text-primary hover:underline">
               {t('page.auth.signin.forgotPassword')}
             </LocalizedLink>
           </div>
 
-          <Button type="submit" className="btn w-full border-0 btn-gradient uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]" isLoading={isTokenLoading || isLoadingUserInfo}>
+          <Button type="submit" size="lg" className="w-full" isLoading={isTokenLoading || isLoadingUserInfo}>
             {t('page.auth.signin.button')}
           </Button>
+
+          <p className="text-center text-sm text-muted-foreground">
+            {t('page.auth.signin.noAccount')}{' '}
+            <LocalizedLink href="/signup" className="font-medium text-primary hover:underline">
+              {t('page.auth.signin.signupLink')}
+            </LocalizedLink>
+          </p>
         </Form>
       )}
     </Formik>

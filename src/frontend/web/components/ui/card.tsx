@@ -17,7 +17,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(({ children, className,
   return (
     <div
       ref={ref}
-      className={cn('w-fit rounded-sm border border-white-light bg-white shadow-[4px_6px_10px_-3px_#bfc9d4] dark:border-[#1b2e4b] dark:bg-[#191e3a] dark:shadow-none', className)}
+      className={cn('w-fit rounded-xl border border-border bg-surface text-foreground shadow-xs', className)}
       {...props}
     >
       {children}
@@ -30,7 +30,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(({ children, className,
  * It forwards a ref to the underlying div element.
  */
 const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('flex w-full flex-col space-y-1.5 p-6', className)} {...props} />
+  <div ref={ref} className={cn('flex w-full flex-col gap-1 p-5 sm:p-6', className)} {...props} />
 ))
 
 /**
@@ -38,21 +38,21 @@ const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
  * It forwards a ref to the underlying heading element.
  */
 const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(({ className, ...props }, ref) => (
-  <h3 ref={ref} className={cn('text-xl font-semibold text-dark dark:text-white-light', className)} {...props} />
+  <h3 ref={ref} className={cn('text-base font-semibold tracking-tight text-foreground', className)} {...props} />
 ))
 
 /**
  * CardContent renders the main body area of a Card with horizontal padding and no top padding.
  * It forwards a ref to the underlying div element.
  */
-const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => <div ref={ref} className={cn('w-full p-6 pt-0', className)} {...props} />)
+const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => <div ref={ref} className={cn('w-full p-5 pt-0 sm:p-6 sm:pt-0', className)} {...props} />)
 
 /**
  * CardFooter renders a flex row area at the bottom of a Card, typically used for actions.
  * It forwards a ref to the underlying div element.
  */
 const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('flex w-full items-center p-6 pt-0', className)} {...props} />
+  <div ref={ref} className={cn('flex w-full items-center gap-2 p-5 pt-0 sm:p-6 sm:pt-0', className)} {...props} />
 ))
 
 Card.displayName = 'Card'

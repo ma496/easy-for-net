@@ -1,5 +1,5 @@
 import { getServerTranslation } from '@/i18n'
-import { DatePickerExample } from "./_components/date-picker-example"
+import { DatePickerExample } from './_components/date-picker-example'
 import { AdminPageContent } from '@/components/layouts'
 
 /**
@@ -18,7 +18,7 @@ const DatePickerPage = async ({ params }: DatePickerPageProps) => {
   const title = await getServerTranslation(lang, 'page.ui.datePicker.title')
 
   return (
-    <AdminPageContent title={title}>
+    <AdminPageContent title={title} description="Single, multiple and range date selection, standalone or bound to Formik." plain>
       <DatePickerExample />
     </AdminPageContent>
   )
