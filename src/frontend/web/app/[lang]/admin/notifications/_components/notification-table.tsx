@@ -202,7 +202,6 @@ export const NotificationTable = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const columns: ColumnDef<NotificationDto, any>[] = [
     columnHelper.accessor('type', {
-      meta: { card: 'badge' },
       header: t('table.columns.type'),
       cell: (info) => getTypeBadge(info.getValue()),
       enableSorting: false,
