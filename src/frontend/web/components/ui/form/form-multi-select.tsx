@@ -5,8 +5,8 @@ import { useField, useFormikContext } from 'formik'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/i18n'
 import { ChevronDown, Search, X } from 'lucide-react'
-import ScrollBar from 'react-perfect-scrollbar'
 import { Input } from './input'
+import { OptionsScrollArea } from './options-scroll-area'
 import { useAppSelector } from '@/store/hooks'
 
 /** Single label/value option used by the multi-select components. */
@@ -193,14 +193,7 @@ export const FormMultiSelect = ({
                 />
               </div>
             )}
-            <ScrollBar
-              options={{ suppressScrollX: true }}
-              style={{
-                maxHeight: `${maxVisibleItems * 40}px`,
-                direction: isRTL ? 'rtl' : 'ltr',
-              }}
-              key={isRTL ? `${controlId}-rtl` : `${controlId}-ltr`}
-            >
+            <OptionsScrollArea maxHeight={maxVisibleItems * 40} isRTL={isRTL}>
               <ul>
                 {filteredOptions.length === 0 && <li className="px-3 py-6 text-center text-sm text-subtle-foreground">{t('common.noOptions')}</li>}
                 {filteredOptions.map((opt) => (
@@ -218,7 +211,7 @@ export const FormMultiSelect = ({
                   </li>
                 ))}
               </ul>
-            </ScrollBar>
+            </OptionsScrollArea>
           </div>
         )}
       </div>

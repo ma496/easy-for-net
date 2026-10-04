@@ -10,7 +10,7 @@ import { ListDto } from '@/store/api'
 import { Loader } from '..'
 import { useDebounce, useDropdownPosition } from '@/hooks'
 import { Input } from './input'
-import ScrollBar from 'react-perfect-scrollbar'
+import { OptionsScrollArea } from './options-scroll-area'
 import { Portal } from '@headlessui/react'
 import { useAppSelector } from '@/store/hooks'
 
@@ -376,17 +376,7 @@ export const FormLazyMultiSelect = <TItem, TRequest>({
                 />
               </div>
             )}
-            <ScrollBar
-              options={{
-                suppressScrollX: true,
-              }}
-              style={{
-                maxHeight: `${listMaxHeight}px`,
-                direction: isRTL ? 'rtl' : 'ltr',
-              }}
-              onScrollY={handleScroll}
-              key={isRTL ? `${controlId}-rtl` : `${controlId}-ltr`}
-            >
+            <OptionsScrollArea maxHeight={listMaxHeight} isRTL={isRTL} onScrollY={handleScroll}>
               <ul className="overflow-hidden">
                 {isFetching && page === 1 && (
                   <li className="flex items-center justify-center px-3 py-3 text-subtle-foreground">
@@ -414,7 +404,7 @@ export const FormLazyMultiSelect = <TItem, TRequest>({
                   </li>
                 )}
               </ul>
-            </ScrollBar>
+            </OptionsScrollArea>
           </div>
         </Portal>
       </div>
