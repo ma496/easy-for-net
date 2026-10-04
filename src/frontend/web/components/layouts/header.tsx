@@ -1,106 +1,54 @@
 'use client'
-import { useEffect } from 'react'
-import { LocalizedLink } from '@/components/ui'
 import { toggleSidebar } from '@/store/slices'
-import { usePathname } from 'next/navigation'
 import { ThemeChanger, NavUser, LanguageDropdown, TenantSwitcher } from '@/components/custom'
+import { Breadcrumbs, LocalizedLink } from '@/components/ui'
+import Image from 'next/image'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { SearchComponent } from './search-component'
-import { Menu } from 'lucide-react'
+import { PanelLeft } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { NotificationBell } from '@/components/notifications'
 import { useNotificationHub } from '@/hooks'
 import { isPlatformWithoutTenant } from '@/lib/utils'
-import Image from 'next/image'
 
 /**
- * Header is the client-side application top bar that contains the brand logo, mobile sidebar toggle, search box, tenant switcher, notification bell, theme changer, language dropdown, and the user navigation menu; it also activates the current horizontal-menu link and subscribes to the notification hub.
+ * Header is the sticky, translucent top bar of the admin shell: the sidebar toggle (drawer below lg, rail from lg up) and the breadcrumb trail on the start side; search, tenant switcher, notifications, theme, language and the user menu on the end side. It also subscribes to the notification hub.
  */
 export const Header = () => {
-  const pathname = usePathname()
   const dispatch = useAppDispatch()
-  const themeConfig = useAppSelector((state) => state.theme)
+  const theme = useAppSelector((state) => state.theme.theme)
   // Notifications are read in the tenant being acted in, or in platform scope by a platform account acting in none. An ordinary account left with no tenant is sent to choose one, so the bell waits until it has.
   const canReadNotifications = useAppSelector((state) => state.auth.activeTenant != null || isPlatformWithoutTenant(state.auth.user))
   const { t } = useTranslation()
 
   useNotificationHub()
 
-  useEffect(() => {
-    const selector = document.querySelector('ul.horizontal-menu a[href="' + window.location.pathname + '"]')
-    if (selector) {
-      const all = document.querySelectorAll('ul.horizontal-menu .nav-link.active')
-      for (let i = 0; i < all.length; i++) {
-        all[0]?.classList.remove('active')
-      }
-
-      const allLinks = document.querySelectorAll('ul.horizontal-menu a.active')
-      for (let i = 0; i < allLinks.length; i++) {
-        const element = allLinks[i]
-        element?.classList.remove('active')
-      }
-      selector?.classList.add('active')
-
-      const ul = selector.closest('ul.sub-menu')
-      if (ul) {
-        const ele = ul.closest('li.menu')?.querySelectorAll('.nav-link')
-        if (ele && ele.length > 0) {
-          setTimeout(() => {
-            ele[0]?.classList.add('active')
-          })
-        }
-      }
-    }
-  }, [pathname])
-
   return (
-    <header className={`z-40 ${themeConfig.semidark && themeConfig.menu === 'horizontal' ? 'dark' : ''}`}>
-      <div className="shadow-xs">
-        <div className="relative flex w-full items-center bg-white px-3 py-2.5 sm:px-5 dark:bg-black">
-          <div className="ms-2 horizontal-logo flex items-center justify-between lg:hidden">
-            {/* Below sm the logo gives way to the controls; the menu toggle alone opens the sidebar that carries it. */}
-            <LocalizedLink href="/admin" className="hidden shrink-0 items-center main-logo sm:flex">
-              <Image className="-ms-1 inline h-8 w-8" src="/assets/images/icon.png" alt="logo" width={32} height={32} unoptimized priority />
-              <span className="ms-1.5 hidden align-middle text-sm font-semibold transition-all duration-300 md:inline dark:text-white-light">{t('brand.name')}</span>
-            </LocalizedLink>
-            <button
-              type="button"
-              className="collapse-icon flex flex-none cursor-pointer rounded-full bg-white-light/40 p-2 hover:bg-white-light/90 hover:text-primary sm:ms-2 lg:hidden dark:bg-dark/40 dark:text-[#d0d2d6] dark:hover:bg-dark/60 dark:hover:text-primary"
-              onClick={() => dispatch(toggleSidebar())}
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-          </div>
+    <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/70">
+      <div className="flex h-14 items-center gap-2 px-3 sm:px-5 lg:px-6">
+        <button
+          type="button"
+          className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground rtl:-scale-x-100"
+          onClick={() => dispatch(toggleSidebar())}
+          aria-label={t('common.menu')}
+        >
+          <PanelLeft size={18} />
+        </button>
+        <LocalizedLink href="/admin" className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20 lg:hidden" aria-label={t('brand.name')}>
+          <Image className="size-5" src="/assets/images/icon.png" alt="" width={20} height={20} unoptimized />
+        </LocalizedLink>
+        <div className="hidden h-5 w-px bg-border sm:block" />
+        <Breadcrumbs className="hidden min-w-0 flex-1 sm:flex" />
+        <div className="flex-1 sm:hidden" />
 
-          <div className="ms-auto flex items-center gap-1 sm:ms-0 sm:flex-1 sm:gap-1.5 lg:gap-2 dark:text-[#d0d2d6]">
-            <div className="sm:ms-2 sm:me-auto">
-              <SearchComponent />
-            </div>
-
-            <div className="flex items-center justify-center gap-1 sm:gap-2">
-              <div>
-                <TenantSwitcher />
-              </div>
-
-              {canReadNotifications && (
-                <div>
-                  <NotificationBell />
-                </div>
-              )}
-
-              {/* Below sm the theme stays reachable from the settings customizer. */}
-              <div className="hidden sm:block">
-                <ThemeChanger theme={themeConfig.theme} />
-              </div>
-
-              <div>
-                <LanguageDropdown onlyFlag={true} />
-              </div>
-
-              <div>
-                <NavUser />
-              </div>
-            </div>
+        <div className="flex items-center gap-1 sm:gap-1.5">
+          <SearchComponent />
+          <TenantSwitcher />
+          {canReadNotifications && <NotificationBell />}
+          <ThemeChanger theme={theme} />
+          <LanguageDropdown onlyFlag={true} />
+          <div className="ms-1">
+            <NavUser />
           </div>
         </div>
       </div>

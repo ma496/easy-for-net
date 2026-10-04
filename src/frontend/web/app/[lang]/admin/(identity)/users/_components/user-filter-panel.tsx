@@ -50,7 +50,7 @@ export const UserFilterPanel = ({ filters, onChange, onSearch, onClear }: UserFi
 
   if (isRolesLoading) {
     return (
-      <div className="flex justify-center items-center">
+      <div className="mb-4 panel-2 flex min-h-24 items-center justify-center">
         <Loader />
       </div>
     )
@@ -58,7 +58,7 @@ export const UserFilterPanel = ({ filters, onChange, onSearch, onClear }: UserFi
 
   if (rolesError) {
     return (
-      <div className="flex justify-center items-center">
+      <div className="mb-4">
         <ApiErrorMessages error={rolesError} />
       </div>
     )
@@ -66,13 +66,13 @@ export const UserFilterPanel = ({ filters, onChange, onSearch, onClear }: UserFi
 
   return (
     <div className="mb-4 panel-2">
-      {/* Filters Row */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {/* Filters and actions: stacked on a phone, two columns from sm, one row with the actions at the end from lg */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-end">
         {/* Active Status Filter */}
-        <div className="flex flex-col gap-1.5">
+        <div className="min-w-0">
           <label
             htmlFor="isActive"
-            className="text-xs font-medium text-gray-500 dark:text-gray-400">
+            className="mb-1.5 block text-xs font-medium text-muted-foreground">
             {t('table.filter.activeStatus') || 'Active Status'}
           </label>
           <Select
@@ -89,10 +89,10 @@ export const UserFilterPanel = ({ filters, onChange, onSearch, onClear }: UserFi
         </div>
 
         {/* Role Filter */}
-        <div className="flex flex-col gap-1.5">
+        <div className="min-w-0">
           <label
             htmlFor="roleId"
-            className="text-xs font-medium text-gray-500 dark:text-gray-400">
+            className="mb-1.5 block text-xs font-medium text-muted-foreground">
             {t('table.filter.role') || 'Role'}
           </label>
           <Select
@@ -107,26 +107,26 @@ export const UserFilterPanel = ({ filters, onChange, onSearch, onClear }: UserFi
             size="sm"
           />
         </div>
-      </div>
 
-      {/* Action Buttons Row */}
-      <div className="mt-4 flex justify-end gap-2">
-        <Button
-          onClick={onSearch}
-          icon={<Search className="h-4 w-4" />}
-          size="sm"
-        >
-          {t('table.filter.search') || 'Search'}
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={onClear}
-          disabled={activeFiltersCount === 0}
-          icon={<X className="h-4 w-4" />}
-          size="sm"
-        >
-          {t('table.filter.clear') || 'Clear'}
-        </Button>
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-2 sm:col-span-2 lg:col-span-1">
+          <Button
+            variant="ghost"
+            onClick={onClear}
+            disabled={activeFiltersCount === 0}
+            icon={<X className="h-4 w-4" />}
+            size="sm"
+          >
+            {t('table.filter.clear') || 'Clear'}
+          </Button>
+          <Button
+            onClick={onSearch}
+            icon={<Search className="h-4 w-4" />}
+            size="sm"
+          >
+            {t('table.filter.search') || 'Search'}
+          </Button>
+        </div>
       </div>
     </div>
   )

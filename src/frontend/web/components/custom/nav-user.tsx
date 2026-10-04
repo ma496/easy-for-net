@@ -9,7 +9,6 @@ import { useRef } from 'react'
 import { ImagePreview } from './image-preview'
 import { useSignoutMutation } from '@/store/api/identity'
 import { apiErrorAlert } from '@/lib/utils'
-import Image from 'next/image'
 
 /**
  * Header dropdown that shows the signed-in user avatar, profile/change-password links, and a
@@ -47,62 +46,60 @@ export const NavUser = () => {
   }
 
   return (
-    <div className="dropdown h-9 w-9">
+    <div className="dropdown">
       <Dropdown
         ref={dropdownRef}
         placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`}
-        btnClassName="block w-9 h-9 p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60"
+        btnClassName="flex size-9 items-center justify-center rounded-full ring-offset-2 ring-offset-background transition hover:ring-2 hover:ring-primary/40"
         button={
-          <div className="h-5 w-5 overflow-hidden rounded-full">
+          <div className="flex size-8 items-center justify-center overflow-hidden rounded-full bg-primary/12 text-[13px] font-semibold text-primary uppercase">
             {user?.image ? (
-              <ImagePreview imageName={user.image} alt="userProfile" className="object-cover saturate-50 group-hover:saturate-100" fallback={<User className="h-5 w-5" />} objectFit="cover" />
+              <ImagePreview imageName={user.image} alt="userProfile" className="object-cover" fallback={<span>{user?.username?.charAt(0)}</span>} objectFit="cover" />
             ) : (
-              <User className="h-5 w-5" />
+              <span>{user?.username?.charAt(0) || <User size={16} />}</span>
             )}
           </div>
         }
       >
-        <ul className="w-57.5 py-0! font-semibold text-dark dark:text-white-light/90">
+        <ul className="w-64">
           <li>
-            <div className="flex items-center px-4 py-4">
-              <div className="h-9 w-9 overflow-hidden rounded-full">
+            <div className="mb-1 flex items-center gap-3 border-b border-border px-2.5 pt-2 pb-3">
+              <div className="size-10 shrink-0 overflow-hidden rounded-full ring-1 ring-border">
                 {user?.image ? (
                   <ImagePreview
                     imageName={user.image}
                     alt="userProfile"
                     className="object-cover saturate-50 group-hover:saturate-100"
-                    fallback={<Image className="h-full w-full object-cover" src="/assets/images/default-avatar.svg" alt="user profile" width={40} height={40} />}
+                    fallback={<span className="flex size-full items-center justify-center bg-primary/12 text-sm font-semibold text-primary uppercase">{user?.username?.charAt(0)}</span>}
                     objectFit="cover"
                   />
                 ) : (
-                  <Image className="h-full w-full object-cover" src="/assets/images/default-avatar.svg" alt="user profile" width={40} height={40} />
+                  <span className="flex size-full items-center justify-center bg-primary/12 text-sm font-semibold text-primary uppercase">{user?.username?.charAt(0)}</span>
                 )}
               </div>
-              <div className="truncate ltr:pl-4 rtl:pr-4">
-                <h4 className="text-base">{user?.username ? `${user?.username}` : ''}</h4>
-                <button type="button" className="text-black/60 hover:text-primary dark:text-dark-light/60 dark:hover:text-white">
-                  {user?.email}
-                </button>
+              <div className="min-w-0">
+                <div className="truncate text-sm font-semibold text-foreground">{user?.username ?? ''}</div>
+                <div className="truncate text-xs text-muted-foreground">{user?.email}</div>
               </div>
             </div>
           </li>
           <li>
-            <LocalizedLink href="/profile" className="dark:hover:text-white" onClick={handleLinkClick}>
-              <User className="h-4.5 w-4.5 shrink-0 ltr:mr-2 rtl:ml-2" />
+            <LocalizedLink href="/profile" onClick={handleLinkClick}>
+              <User size={16} className="shrink-0 text-muted-foreground" />
               {t('navigation.profile')}
             </LocalizedLink>
           </li>
           <li>
-            <LocalizedLink href="/change-password" className="dark:hover:text-white" onClick={handleLinkClick}>
-              <Lock className="h-4.5 w-4.5 shrink-0 ltr:mr-2 rtl:ml-2" />
+            <LocalizedLink href="/change-password" onClick={handleLinkClick}>
+              <Lock size={16} className="shrink-0 text-muted-foreground" />
               {t('navigation.changePassword')}
             </LocalizedLink>
           </li>
-          <li className="cursor-pointer border-t border-white-light dark:border-white-light/10">
-            <a className="py-3! text-danger" onClick={signoutAction}>
-              {isSigningOut ? <Loader className="h-4.5 w-4.5 shrink-0 rotate-90 ltr:mr-2 rtl:ml-2" /> : <LogOut className="h-4.5 w-4.5 shrink-0 rotate-90 ltr:mr-2 rtl:ml-2" />}
+          <li className="mt-1 border-t border-border pt-1">
+            <button type="button" className="text-danger! hover:bg-danger/10!" onClick={signoutAction}>
+              {isSigningOut ? <Loader size="sm" className="shrink-0" variant="danger" /> : <LogOut size={16} className="shrink-0 rtl:-scale-x-100" />}
               {t('page.auth.signout')}
-            </a>
+            </button>
           </li>
         </ul>
       </Dropdown>

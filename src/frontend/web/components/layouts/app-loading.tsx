@@ -5,8 +5,8 @@ import { Loader } from '@/components/ui'
  */
 export const AppLoading = () => {
   return (
-    <div className="flex h-screen items-center justify-center bg-[#fafafa] dark:bg-[#060818]">
-      <Loader size="xl" />
+    <div className="flex h-screen items-center justify-center bg-background">
+      <Loader size="lg" />
     </div>
   )
 }

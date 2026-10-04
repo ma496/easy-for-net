@@ -34,12 +34,12 @@ export const CodeShowcase = ({ title, description, preview, code, className = ''
   return (
     <Card className={`w-full ${className}`}>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
             <CardTitle className="text-lg">{title}</CardTitle>
-            {description && <p className="mt-1 text-sm text-white-dark">{description}</p>}
+            {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
           </div>
-          <div className="flex gap-2">
+          <div className="flex shrink-0 gap-2">
             <Button variant="outline" size="sm" onClick={() => setShowCode(!showCode)} icon={showCode ? <EyeIcon size={16} /> : <CodeIcon size={16} />}>
               {showCode ? 'Preview' : 'Code'}
             </Button>
@@ -54,7 +54,7 @@ export const CodeShowcase = ({ title, description, preview, code, className = ''
       <CardContent>
         {showCode ? (
           <div className="relative">
-            <pre className="overflow-x-auto rounded-lg bg-gray-100 p-4 text-sm dark:bg-gray-800">
+            <pre className="overflow-x-auto rounded-lg bg-surface-2 p-4 text-sm">
               <code className="language-tsx">{code}</code>
             </pre>
           </div>

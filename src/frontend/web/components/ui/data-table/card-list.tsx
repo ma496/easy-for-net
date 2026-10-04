@@ -1,6 +1,7 @@
 import { Cell, flexRender, Header } from '@tanstack/react-table'
 import { useDataTable } from './context'
 import { resolveCardLayout } from './card-layout'
+import { DataTableEmpty } from './empty-state'
 import { Loader } from '..'
 import { useTranslation } from '@/i18n'
 import { cn } from '@/lib/utils'
@@ -31,21 +32,22 @@ export function DataTableCardList<TData>({ className = '', emptyMessage }: DataT
     return header && !header.isPlaceholder ? flexRender(header.column.columnDef.header, header.getContext()) : null
   }
 
-  if (isFetching) {
+  const rows = table.getRowModel().rows
+  // The spinner stands in only for a first load; a refetch keeps the current cards, dimmed, so the list does not jump.
+  if (isFetching && rows.length === 0) {
     return (
-      <div className="py-6 text-center">
+      <div className="py-12 text-center text-muted-foreground">
         <Loader size="lg" />
       </div>
     )
   }
 
-  const rows = table.getRowModel().rows
   if (rows.length === 0) {
-    return <div className="py-6 text-center">{emptyMessage ?? t('table.noRecords')}</div>
+    return <DataTableEmpty message={emptyMessage ?? t('table.noRecords')} />
   }
 
   return (
-    <ul className={cn('space-y-3', className)}>
+    <ul className={cn('space-y-3 transition-opacity duration-150', isFetching && 'pointer-events-none opacity-60', className)} aria-busy={isFetching}>
       {rows.map((row) => {
         const cells = new Map<string, Cell<TData, unknown>>(row.getVisibleCells().map((cell) => [cell.column.id, cell]))
         const render = (columnId?: string) => {
@@ -57,7 +59,7 @@ export function DataTableCardList<TData>({ className = '', emptyMessage }: DataT
           const cell = cells.get(columnId)
           const value = cell?.column.accessorFn ? cell.getValue() : undefined
           const empty = cell?.column.accessorFn !== undefined && (value == null || value === '' || (Array.isArray(value) && value.length === 0))
-          return empty ? <span className="text-gray-400 dark:text-gray-600">&mdash;</span> : render(columnId)
+          return empty ? <span className="text-subtle-foreground">&mdash;</span> : render(columnId)
         }
         const hasBody = layout.fields.length > 0 || layout.wide.length > 0
 
@@ -65,16 +67,16 @@ export function DataTableCardList<TData>({ className = '', emptyMessage }: DataT
           <li
             key={row.id}
             className={cn(
-              'rounded-md border border-white-light p-4 dark:border-[#191e3a]',
-              row.getIsSelected() ? 'border-primary/40 bg-primary/10 dark:bg-primary/20' : 'bg-white dark:bg-black',
+              'rounded-xl border border-border p-4 shadow-xs',
+              row.getIsSelected() ? 'border-primary/40 bg-primary/10' : 'bg-surface',
             )}
           >
             <div className="flex items-start gap-3">
               {layout.select && <div className="pt-0.5">{render(layout.select)}</div>}
               <div className="min-w-0 flex-1">
-                {layout.title && <div className="font-semibold wrap-break-word text-dark dark:text-white-light">{render(layout.title)}</div>}
+                {layout.title && <div className="font-semibold wrap-break-word text-foreground">{render(layout.title)}</div>}
                 {layout.subtitles.map((id) => (
-                  <div key={id} className="mt-0.5 text-xs wrap-break-word text-gray-500 dark:text-gray-400">
+                  <div key={id} className="mt-0.5 text-xs wrap-break-word text-muted-foreground">
                     {render(id)}
                   </div>
                 ))}
@@ -96,16 +98,16 @@ export function DataTableCardList<TData>({ className = '', emptyMessage }: DataT
             {hasBody && (
               // One row per field, label at the start and value at the end, so every value lines up
               // whatever the field count; a wide field puts its label above a full-width value.
-              <dl className="mt-3 divide-y divide-white-light border-t border-white-light text-sm dark:divide-[#191e3a] dark:border-[#191e3a]">
+              <dl className="mt-3 divide-y divide-border border-t border-border text-sm">
                 {layout.fields.map((id) => (
                   <div key={id} className="flex items-center justify-between gap-4 py-2.5 last:pb-0">
-                    <dt className="shrink-0 text-gray-500 dark:text-gray-400">{label(id)}</dt>
+                    <dt className="shrink-0 text-muted-foreground">{label(id)}</dt>
                     <dd className="flex min-w-0 justify-end text-end wrap-break-word">{field(id)}</dd>
                   </div>
                 ))}
                 {layout.wide.map((id) => (
                   <div key={id} className="py-2.5 last:pb-0">
-                    <dt className="text-gray-500 dark:text-gray-400">{label(id)}</dt>
+                    <dt className="text-muted-foreground">{label(id)}</dt>
                     <dd className="mt-1 wrap-break-word">{field(id)}</dd>
                   </div>
                 ))}

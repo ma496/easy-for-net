@@ -174,15 +174,24 @@ export const UserTable = () => {
   const columnHelper = createColumnHelper<UserListDto>()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const columns: ColumnDef<UserListDto, any>[] = [
-    columnHelper.accessor('usernameNormalized', {
+    columnHelper.accessor('username', {
       meta: { card: 'title' },
       header: t('table.columns.userName'),
-      cell: (info) => info.getValue(),
+      // The initial tile and the name, here and as the card's heading. The email keeps its own
+      // sortable column, so it is not repeated under the name.
+      cell: (info) => (
+        <div className="flex min-w-0 items-center gap-3">
+          <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary uppercase">
+            {info.getValue()?.charAt(0)}
+          </span>
+          <span className="truncate font-medium text-foreground">{info.getValue()}</span>
+        </div>
+      ),
     }),
-    columnHelper.accessor('emailNormalized', {
+    columnHelper.accessor('email', {
       meta: { card: 'subtitle' },
       header: t('table.columns.email'),
-      cell: (info) => info.getValue(),
+      cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
     }),
     columnHelper.accessor('firstName', {
       header: t('table.columns.firstName'),
@@ -194,11 +203,15 @@ export const UserTable = () => {
     }),
     columnHelper.accessor('roles', {
       header: t('table.columns.roles'),
-      cell: (info) =>
-        info
-          .getValue()
-          .map((role: UserRoleDto) => role.name)
-          .join(', '),
+      cell: (info) => (
+        <div className="flex flex-wrap gap-1">
+          {info.getValue().map((role: UserRoleDto) => (
+            <Badge key={role.id} variant="secondary">
+              {role.name}
+            </Badge>
+          ))}
+        </div>
+      ),
       enableSorting: false,
     }),
     columnHelper.accessor('isActive', {
@@ -243,7 +256,7 @@ export const UserTable = () => {
 
   if (getUsersApiError) {
     return (
-      <div className="flex justify-center items-center">
+      <div className="py-6">
         <ApiErrorMessages error={getUsersApiError} />
       </div>
     )
@@ -273,9 +286,9 @@ export const UserTable = () => {
 
         {canCreate &&
           (seatsExhausted ? (
-            <DataTableToolbarButton label={t('page.users.seatLimitReached')} icon={<Plus size={16} />} disabled />
+            <DataTableToolbarButton primary label={t('page.users.seatLimitReached')} icon={<Plus size={16} />} disabled />
           ) : (
-            <DataTableToolbarButton label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/users/create" />
+            <DataTableToolbarButton primary label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/users/create" />
           ))}
         <DataTableExportButton onExport={handleExport} isExporting={isExporting} disabled={isGettingUsers || !userListResponse?.total} />
       </DataTableToolbar>
@@ -289,7 +302,7 @@ export const UserTable = () => {
           onClear={handleClear}
         />
       )}
-      <DataTable />
+      <DataTable cardsBelow="lg" />
 
       <DataTablePagination siblingCount={1} />
     </DataTableProvider>

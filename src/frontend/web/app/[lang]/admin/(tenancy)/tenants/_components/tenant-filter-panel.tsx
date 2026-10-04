@@ -45,7 +45,7 @@ export const TenantFilterPanel = ({ filters, onChange, onSearch, onClear }: Tena
         <div className="flex flex-col gap-1.5">
           <label
             htmlFor="status"
-            className="text-xs font-medium text-gray-500 dark:text-gray-400"
+            className="text-xs font-medium text-muted-foreground"
           >
             {t('table.filter.tenantStatus')}
           </label>

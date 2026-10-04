@@ -29,11 +29,11 @@ export const Input = ({ label, name, id, className, icon, error, showError = tru
           {required && <span className="ms-1 text-danger">*</span>}
         </label>
       )}
-      <div className="relative text-white-dark">
+      <div className="relative text-muted-foreground">
         <input {...props} name={name} id={inputId} autoComplete={autoComplete} className={cn('form-input', icon && 'ps-10')} />
-        {icon && <span className="absolute inset-s-4 top-1/2 -translate-y-1/2">{icon}</span>}
+        {icon && <span className="pointer-events-none absolute inset-s-3 top-1/2 -translate-y-1/2">{icon}</span>}
       </div>
-      {showError && error && <div className="mt-1 text-danger">{error}</div>}
+      {showError && error && <div className="mt-1.5 text-xs font-medium text-danger">{error}</div>}
     </div>
   )
 }

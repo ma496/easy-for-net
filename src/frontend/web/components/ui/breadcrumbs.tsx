@@ -6,7 +6,8 @@ import { LocalizedLink as Link } from './localized-link'
 import { usePathname } from 'next/navigation'
 import { useTranslation } from '@/i18n'
 import { useAppSelector } from '@/store/hooks'
-import { AuthState, isAllowed, isPathAvailable } from '@/lib/utils'
+import { AuthState, cn, isAllowed, isPathAvailable } from '@/lib/utils'
+import { ChevronRight } from 'lucide-react'
 
 /**
  * Walks the nav-items tree and returns the chain of NavItems leading to (and including) the item matching the given pathname, supporting dynamic `{id}` segments.
@@ -74,24 +75,25 @@ export function Breadcrumbs({ className }: BreadcrumbsProps) {
   const authState = useAppSelector((state) => state.auth)
 
   return (
-    <ul className={`flex gap-2 ${className || ''}`}>
-      <li>
-        <Link href="/admin" className="text-primary hover:underline">
+    <ol className={cn('flex min-w-0 items-center gap-1.5 text-[13px] text-muted-foreground', className)}>
+      <li className="shrink-0">
+        <Link href="/admin" className="truncate transition-colors hover:text-foreground">
           {t('navigation.home')}
         </Link>
       </li>
       {activePathItems.map((item, index) => (
-        <li key={item.url} className="before:content-['/'] before:me-2">
+        <li key={item.url} className="flex min-w-0 items-center gap-1.5">
+          <ChevronRight size={14} className="shrink-0 text-subtle-foreground rtl:rotate-180" />
           {index === activePathItems.length - 1 || !canOpen(item, authState) ? (
-            <span>{t(item.title)}</span>
+            <span className={cn('truncate', index === activePathItems.length - 1 && 'font-medium text-foreground')}>{t(item.title)}</span>
           ) : (
             /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-            <Link href={item.url as any} className="text-primary hover:underline">
+            <Link href={item.url as any} className="truncate transition-colors hover:text-foreground">
               {t(item.title)}
             </Link>
           )}
         </li>
       ))}
-    </ul>
+    </ol>
   )
 }

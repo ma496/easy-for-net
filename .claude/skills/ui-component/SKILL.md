@@ -36,9 +36,9 @@ import { VariantProps, cva } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
 
-const buttonVariants = cva('btn cursor-pointer inline-flex items-center justify-center', {
+const buttonVariants = cva('btn', {
   variants: {
-    variant: { default: 'btn-primary', outline: 'btn-outline-primary', danger: 'btn-danger', secondary: 'btn-secondary' },
+    variant: { default: 'btn-primary', primary: 'btn-primary', outline: 'btn-secondary', secondary: 'btn-secondary', soft: 'btn-soft', ghost: 'btn-ghost', danger: 'btn-danger' },
     size: { default: "[&_svg:not([class*='size-'])]:size-4", sm: "btn-sm [&_svg:not([class*='size-'])]:size-3.5", lg: 'btn-lg' },
     rounded: { default: '', full: 'rounded-full' },
   },
@@ -54,11 +54,9 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, Va
 /** Button is a styled native button with variant/size/rounded options, a loading spinner and an optional leading icon. */
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ className, variant, size, rounded, isLoading, disabled, children, icon, ...props }, ref) => (
   <button className={cn(buttonVariants({ variant, size, rounded }), className)} ref={ref} disabled={disabled || isLoading} {...props}>
-    <div className="flex items-center justify-center gap-2">
-      {isLoading && <Loader2 className="animate-spin" />}
-      {icon && !isLoading && <span className="inline-flex shrink-0">{icon}</span>}
-      {children}
-    </div>
+    {isLoading && <Loader2 className="animate-spin" />}
+    {icon && !isLoading && <span className="inline-flex shrink-0">{icon}</span>}
+    {children}
   </button>
 ))
 Button.displayName = 'Button'
@@ -126,11 +124,11 @@ export const FormInput = ({ label, name, id, showValidation = true, className, i
           {required && <span className="ms-1 text-danger">*</span>}
         </label>
       )}
-      <div className="relative text-white-dark">
+      <div className="relative text-muted-foreground">
         <input {...field} {...props} id={inputId} name={name} autoComplete={autoComplete} className={cn('form-input', icon && 'ps-10')} />
-        {icon && <span className="absolute inset-s-4 top-1/2 -translate-y-1/2">{icon}</span>}
+        {icon && <span className="pointer-events-none absolute inset-s-3 top-1/2 -translate-y-1/2">{icon}</span>}
       </div>
-      {showValidation && hasError && <div className="mt-1 text-danger">{meta.error}</div>}
+      {showValidation && hasError && <div className="mt-1.5 text-xs font-medium text-danger">{meta.error}</div>}
     </div>
   )
 }
@@ -144,11 +142,24 @@ results"), never for caller-supplied text.
 
 ## Styling
 
-- The theme ships semantic CSS classes — `btn`, `btn-primary`, `form-input`, `form-label`, `panel`,
-  `panel-2`, `badge`, `has-error`, `text-danger`, `text-white-dark`, `white-light`. Prefer them over
+- **Colors are semantic tokens, never values.** `styles/tailwind.css` defines each color twice — on
+  `:root` for light and on `.dark` for dark — and exposes it to Tailwind through `@theme`:
+  `bg-background`, `bg-surface` / `bg-surface-2` / `bg-surface-3`, `text-foreground`,
+  `text-muted-foreground`, `text-subtle-foreground`, `border-border`, `border-input`, `ring-ring`,
+  `bg-overlay`, and the accents `primary`, `secondary`, `success`, `warning`, `danger`, `info` (soft
+  tints with opacity: `bg-primary/10 text-primary`). Because the tokens switch with the theme,
+  **dark mode needs no `dark:` color classes** — never pair a light color with a `dark:` override,
+  and never write a hex value or a stock palette class (`gray-*`, `slate-*`, `red-*`, `bg-white`,
+  `text-black`). A shade the tokens lack becomes a new token in `styles/tailwind.css`.
+  `styles/tokens.test.ts` fails on any of these in `app/` and `components/`.
+- The theme ships component classes built on the tokens — `panel`, `panel-2`, `btn` with
+  `btn-primary|secondary|soft|ghost|danger|…` and `btn-sm|lg`, `icon-btn`, `chip-btn`, `badge` with
+  `badge-<color>` (soft), `badge-solid-<color>`, `badge-outline-<color>`, `form-input|select|textarea|
+  checkbox|radio|label`, `has-error`, `menu-surface`, `table-base`, `kbd`. Prefer them over
   hand-rolled Tailwind (v4), and add utilities only for layout and spacing.
-- **Dark mode is mandatory**: every color decision needs its `dark:` counterpart
-  (`text-dark dark:text-white-light`, `bg-white dark:bg-[#1b2e4b]`).
+- Shape and type: controls `rounded-md` and 36px high, cards `rounded-xl` with a hairline border and
+  at most `shadow-xs` (shadows are for floating layers), page titles `text-2xl font-semibold
+  tracking-tight`, section titles `text-base font-semibold`, numbers `tabular-nums`.
 - **RTL is mandatory**: use logical utilities — `ms-`/`me-`, `ps-`/`pe-`, `inset-s-`/`inset-e-`,
   `text-start`/`text-end`, `border-s`/`border-e`, `rounded-s`/`rounded-e` — never `ml-`/`pl-`/`left-`/
   `text-left`. Where a logical utility does not exist, pair the `ltr:` and `rtl:` variants
@@ -169,7 +180,7 @@ event handlers — that covers most of `components/ui`. Pure wrappers such as `B
 - [ ] `cva` variants + `cn(...)` merge + native attributes spread
 - [ ] `forwardRef` and `displayName` when wrapping a DOM element
 - [ ] Icon-only control has a tooltip and an `aria-label`; menus are anchored/portaled
-- [ ] `dark:` classes and logical (RTL-safe) utilities
+- [ ] Semantic color tokens only (no hex, stock palette or `dark:` color classes) and logical (RTL-safe) utilities
 - [ ] Exported from the folder's barrel
 - [ ] For a form field: the bare and the `Form*` variant, wired to Formik the same way
 - [ ] `npm run lint` and `npx tsc --noEmit` pass

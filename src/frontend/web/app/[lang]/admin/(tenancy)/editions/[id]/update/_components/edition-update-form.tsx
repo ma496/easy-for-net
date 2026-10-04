@@ -7,6 +7,7 @@ import { Form, Formik } from 'formik'
 import { Button, ApiErrorMessages, Loader } from '@/components/ui'
 import { FormInput, FormTextarea } from '@/components/ui/form'
 import { apiErrorAlert, successToast } from '@/lib/utils'
+import { Layers } from 'lucide-react'
 
 /**
  * Builds a Yup validation schema for the edition update form. The bounds mirror
@@ -50,7 +51,7 @@ export const EditionUpdateForm = ({ editionId }: EditionUpdateFormProps) => {
 
   if (isLoadingEdition) {
     return (
-      <div className="flex justify-center items-center">
+      <div className="flex items-center justify-center py-12">
         <Loader />
       </div>
     )
@@ -66,8 +67,11 @@ export const EditionUpdateForm = ({ editionId }: EditionUpdateFormProps) => {
 
   if (!isLoadingEdition && !editionGetError && !editionData) {
     return (
-      <div className="flex justify-center items-center">
-        {t('page.editions.notFound')}
+      <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+        <div className="flex size-12 items-center justify-center rounded-xl bg-surface-2 text-muted-foreground">
+          <Layers className="size-5" />
+        </div>
+        <p className="max-w-sm text-sm text-muted-foreground">{t('page.editions.notFound')}</p>
       </div>
     )
   }
@@ -102,7 +106,7 @@ export const EditionUpdateForm = ({ editionId }: EditionUpdateFormProps) => {
       onSubmit={onSubmit}
     >
       {() => (
-        <Form noValidate className="grid grid-cols-1 gap-4">
+        <Form noValidate className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <FormInput
             name="name"
             label={t('form.label.editionName')}
@@ -110,18 +114,20 @@ export const EditionUpdateForm = ({ editionId }: EditionUpdateFormProps) => {
             autoFocus={true}
             required={true}
           />
-          <FormTextarea
-            name="description"
-            label={t('form.label.editionDescription')}
-            placeholder={t('form.placeholder.editionDescription')}
-          />
           <FormInput
             name="displayOrder"
             type="number"
             label={t('form.label.editionDisplayOrder')}
             required={true}
           />
-          <div className="flex justify-end gap-4">
+          <FormTextarea
+            className="sm:col-span-2 [&_textarea]:h-auto [&_textarea]:min-h-24 [&_textarea]:py-2"
+            rows={4}
+            name="description"
+            label={t('form.label.editionDescription')}
+            placeholder={t('form.placeholder.editionDescription')}
+          />
+          <div className="mt-1 flex justify-end gap-2 border-t border-border pt-5 sm:col-span-2">
             <Button
               type="button"
               variant="outline"

@@ -23,7 +23,7 @@ const EditionUpdate = async ({ params }: EditionUpdatePageProps) => {
   return (
     <AdminPageContent
       title={title}
-      innerClassName='max-w-155'
+      innerClassName='max-w-3xl'
     >
       <EditionUpdateForm editionId={id} />
     </AdminPageContent>

@@ -36,7 +36,17 @@
     "deleteConfirm": "Yes, delete it",
     "notifications": "Notifications",
     "viewAll": "View all",
-    "close": "Close"
+    "close": "Close",
+    "menu": "Menu",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "noResults": "No results found",
+    "selectPlaceholder": "Select…",
+    "noOptions": "No options",
+    "scrollToTop": "Scroll to top",
+    "collapseSidebar": "Collapse sidebar"
   },
   "navigation": {
     "home": "Home",
@@ -324,7 +334,9 @@
       "tenantStatus": "Tenant Status",
       "allStatuses": "All Statuses",
       "suspended": "Suspended"
-    }
+    },
+    "loadFailed": "Could not load the records",
+    "loadFailedHint": "Check your connection and try again."
   },
   "file": {
     "upload": "File Upload",
@@ -401,7 +413,8 @@
       "viewReport": "View Report",
       "editReport": "Edit Report",
       "markAsDone": "Mark as Done",
-      "goToColumns": "Go to columns for details"
+      "goToColumns": "Go to columns for details",
+      "description": "An overview of revenue, orders and sales."
     },
     "users": {
       "title": "Users",
@@ -416,7 +429,10 @@
       },
       "update": {
         "title": "Update User"
-      }
+      },
+      "accountDetails": "Account details",
+      "passwordDescription": "The password this user signs in with.",
+      "isActiveDescription": "An inactive user cannot sign in."
     },
     "roles": {
       "title": "Roles",
@@ -589,7 +605,8 @@
       "detail": {
         "title": "Tenant Detail",
         "information": "Tenant Information",
-        "membersTitle": "Members"
+        "membersTitle": "Members",
+        "seats": "Seats"
       },
       "enterButton": "Enter",
       "enterCurrent": "Current",

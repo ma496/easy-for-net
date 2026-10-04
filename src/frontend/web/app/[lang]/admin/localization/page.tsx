@@ -18,7 +18,7 @@ const LocalizationPage = async ({ params }: LocalizationPageProps) => {
   const title = await getServerTranslation(lang, 'page.localization.title')
 
   return (
-    <AdminPageContent title={title}>
+    <AdminPageContent title={title} plain>
       <LocalizationManager />
     </AdminPageContent>
   )

@@ -3,11 +3,17 @@ import { VariantProps, cva } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
 
-const buttonVariants = cva('btn cursor-pointer inline-flex items-center justify-center', {
+const buttonVariants = cva('btn', {
   variants: {
     variant: {
       default: 'btn-primary',
-      outline: 'btn-outline-primary',
+      primary: 'btn-primary',
+      // A neutral bordered button: the usual pairing beside a primary action (cancel, back, secondary actions).
+      outline: 'btn-secondary',
+      secondary: 'btn-secondary',
+      soft: 'btn-soft',
+      ghost: 'btn-ghost',
+      link: 'h-auto px-0 text-primary underline-offset-4 hover:underline',
       info: 'btn-info',
       'outline-info': 'btn-outline-info',
       success: 'btn-success',
@@ -16,8 +22,8 @@ const buttonVariants = cva('btn cursor-pointer inline-flex items-center justify-
       'outline-warning': 'btn-outline-warning',
       danger: 'btn-danger',
       'outline-danger': 'btn-outline-danger',
-      secondary: 'btn-secondary',
-      'outline-secondary': 'btn-outline-secondary',
+      'outline-primary': 'btn-outline-primary',
+      'outline-secondary': 'btn-secondary',
       dark: 'btn-dark',
       'outline-dark': 'btn-outline-dark',
     },
@@ -53,11 +59,9 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, Va
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ className, variant, size, rounded, isLoading, disabled, children, icon, ...props }, ref) => {
   return (
     <button className={cn(buttonVariants({ variant, size, rounded }), className)} ref={ref} disabled={disabled || isLoading} {...props}>
-      <div className="flex items-center justify-center gap-2">
-        {isLoading && <Loader2 className="animate-spin" />}
-        {icon && !isLoading && <span className="inline-flex shrink-0">{icon}</span>}
-        {children}
-      </div>
+      {isLoading && <Loader2 className="animate-spin" />}
+      {icon && !isLoading && <span className="inline-flex shrink-0">{icon}</span>}
+      {children}
     </button>
   )
 })

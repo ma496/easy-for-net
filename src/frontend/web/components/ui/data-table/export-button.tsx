@@ -39,11 +39,11 @@ export function DataTableExportButton({ onExport, isExporting = false, disabled 
       <MenuItems
         anchor={{ to: isRTL ? 'bottom start' : 'bottom end', gap: 6 }}
         modal={false}
-        className="z-50 min-w-48 rounded-md bg-white py-1.5 text-sm text-black shadow-lg ring-1 ring-black/5 focus:outline-none dark:bg-[#1b2e4b] dark:text-white-dark"
+        className="menu-surface z-50 min-w-52 [--anchor-gap:4px] focus:outline-none"
       >
         {formats.map(({ format, labelKey, icon: Icon }, index) => (
-          <MenuSection key={format} className={index > 0 ? 'mt-1 border-t border-white-light pt-1 dark:border-[#253b5c]' : undefined}>
-            <MenuHeading className="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+          <MenuSection key={format} className={index > 0 ? 'mt-1 border-t border-border pt-1' : undefined}>
+            <MenuHeading className="flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase">
               <Icon size={14} />
               {t(labelKey)}
             </MenuHeading>
@@ -51,7 +51,7 @@ export function DataTableExportButton({ onExport, isExporting = false, disabled 
               <MenuItem key={String(all)}>
                 <button
                   type="button"
-                  className="flex w-full cursor-pointer items-center py-2 ps-9 pe-4 whitespace-nowrap data-focus:bg-primary/10 data-focus:text-primary"
+                  className="flex w-full cursor-pointer items-center rounded-md py-1.5 ps-8 pe-3 text-sm whitespace-nowrap data-focus:bg-surface-2"
                   onClick={() => onExport(format, all)}
                 >
                   {t(all ? 'table.export.allRecords' : 'table.export.currentPage')}

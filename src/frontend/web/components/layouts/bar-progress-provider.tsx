@@ -7,7 +7,7 @@ import { ProgressProvider } from '@bprogress/next/app'
  */
 export const BarProgressProvider = ({ children }: { children: React.ReactNode }) => {
   return (
-    <ProgressProvider height="3px" color="#805CCA" options={{ showSpinner: false }} shallowRouting>
+    <ProgressProvider height="2px" color="var(--primary)" options={{ showSpinner: false }} shallowRouting>
       {children}
     </ProgressProvider>
   )

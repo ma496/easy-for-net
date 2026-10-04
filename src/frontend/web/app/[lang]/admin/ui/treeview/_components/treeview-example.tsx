@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import { TreeNode, TreeView, CodeShowcase } from '@/components/ui'
+import { ShowcasePreview } from '../../_components/showcase-preview'
 
 const basicTreeData: TreeNode[] = [
   {
@@ -156,23 +157,23 @@ export const TreeviewExample = () => {
 ]
 
 <TreeView
-  className="panel w-75"
+  className="panel w-full max-w-sm"
   data={treeData}
   onNodeClick={(node) => console.log("Clicked:", node)}
 />`
 
   const selectableTreeCode = `<TreeView
-  className="panel w-75"
+  className="panel w-full max-w-sm"
   data={treeData}
   enableSelection={true}
-  defaultSelectedIds={["1.1.1, 1.1.2"]}
+  defaultSelectedIds={["1.1.1", "1.1.2"]}
   onSelectionChange={(selectedIds) => {
     console.log("Selected IDs:", selectedIds)
   }}
 />`
 
   const expandedTreeCode = `<TreeView
-  className="panel w-75"
+  className="panel w-full max-w-sm"
   data={treeData}
   defaultExpandedIds={["1", "1.1"]}
   expandAll={false}
@@ -196,81 +197,77 @@ export const TreeviewExample = () => {
 ]
 
 <TreeView
-  className="panel w-87.5"
+  className="panel w-full max-w-sm"
   data={orgData}
   defaultExpandedIds={["ceo", "cto", "cfo"]}
   enableSelection={true}
 />`
 
   return (
-    <div className="container mx-auto space-y-8 p-6">
-      <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-bold">TreeView Component</h1>
-        <p className="text-white-dark">Hierarchical tree structure component with expand/collapse, selection, and custom data support.</p>
-      </div>
-
-      <div className="grid gap-8">
+    <div className="space-y-6">
+      <div className="grid items-start gap-6 xl:grid-cols-2">
         {/* Basic TreeView */}
         <CodeShowcase
-          title="Basic TreeView"
+          title="Basic tree"
           description="Simple tree structure with clickable nodes"
           code={basicTreeCode}
           preview={
-            <div className="flex justify-center">
-              <TreeView className="panel w-75" data={basicTreeData} onNodeClick={handleNodeClick} />
-            </div>
+            <ShowcasePreview>
+              <TreeView className="panel w-full max-w-sm" data={basicTreeData} onNodeClick={handleNodeClick} />
+            </ShowcasePreview>
           }
         />
 
         {/* Selectable TreeView */}
         <CodeShowcase
-          title="Selectable TreeView"
+          title="Selection"
           description="TreeView with selection support and default selected items"
           code={selectableTreeCode}
           preview={
-            <div className="flex justify-center">
-              <TreeView className="panel w-75" data={basicTreeData} enableSelection={true} defaultSelectedIds={selectableDefaultSelectedIds} onSelectionChange={handleSelectionChange} />
-            </div>
+            <ShowcasePreview>
+              <TreeView className="panel w-full max-w-sm" data={basicTreeData} enableSelection={true} defaultSelectedIds={selectableDefaultSelectedIds} onSelectionChange={handleSelectionChange} />
+            </ShowcasePreview>
           }
         />
 
         {/* Pre-expanded TreeView */}
         <CodeShowcase
-          title="Pre-expanded TreeView"
+          title="Pre-expanded"
           description="TreeView with specific nodes expanded by default"
           code={expandedTreeCode}
           preview={
-            <div className="flex justify-center">
-              <TreeView className="panel w-75" data={advancedTreeData} defaultExpandedIds={advancedDefaultExpandedIds} onNodeClick={handleNodeClick} />
-            </div>
+            <ShowcasePreview>
+              <TreeView className="panel w-full max-w-sm" data={advancedTreeData} defaultExpandedIds={advancedDefaultExpandedIds} onNodeClick={handleNodeClick} />
+            </ShowcasePreview>
           }
         />
 
         {/* Organization Chart TreeView */}
         <CodeShowcase
-          title="Organization Chart"
+          title="Organization chart"
           description="Real-world example showing organizational hierarchy"
           code={organizationTreeCode}
           preview={
-            <div className="flex justify-center">
+            <ShowcasePreview>
               <TreeView
-                className="panel w-87.5"
+                className="panel w-full max-w-sm"
                 data={organizationData}
                 defaultExpandedIds={organizationDefaultExpandedIds}
                 enableSelection={true}
                 onNodeClick={handleEmployeeNodeClick}
                 onSelectionChange={handleEmployeeSelectionChange}
               />
-            </div>
+            </ShowcasePreview>
           }
         />
 
         {/* Feature Showcase */}
         <CodeShowcase
-          title="All Features Combined"
+          className="xl:col-span-2"
+          title="All features combined"
           description="TreeView with all features enabled: selection, pre-expansion, click handlers"
           code={`<TreeView
-  className="panel w-100"
+  className="panel w-full max-w-sm"
   data={complexTreeData}
   enableSelection={true}
   defaultExpandedIds={["1", "1.1"]}
@@ -279,9 +276,9 @@ export const TreeviewExample = () => {
   onSelectionChange={(ids) => console.log("Selection:", ids)}
 />`}
           preview={
-            <div className="flex justify-center">
+            <ShowcasePreview>
               <TreeView
-                className="panel w-100"
+                className="panel w-full max-w-sm"
                 data={advancedTreeData}
                 enableSelection={true}
                 defaultExpandedIds={featuresDefaultExpandedIds}
@@ -289,7 +286,7 @@ export const TreeviewExample = () => {
                 onNodeClick={handleNodeClick}
                 onSelectionChange={handleSelectionChange}
               />
-            </div>
+            </ShowcasePreview>
           }
         />
       </div>

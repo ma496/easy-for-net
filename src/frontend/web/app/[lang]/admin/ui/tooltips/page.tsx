@@ -1,5 +1,5 @@
 import { getServerTranslation } from '@/i18n'
-import { TooltipExample } from "./_components/tooltip-example"
+import { TooltipExample } from './_components/tooltip-example'
 import { AdminPageContent } from '@/components/layouts'
 
 /**
@@ -18,7 +18,7 @@ const TooltipPage = async ({ params }: TooltipPageProps) => {
   const title = await getServerTranslation(lang, 'page.ui.tooltip.title')
 
   return (
-    <AdminPageContent title={title}>
+    <AdminPageContent title={title} description="Hover tooltips in every direction, and text that truncates with its full value in a tooltip." plain>
       <TooltipExample />
     </AdminPageContent>
   )

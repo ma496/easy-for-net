@@ -22,7 +22,7 @@ const ChangePermissions = async ({ params }: ChangePermissionsPageProps) => {
   return (
     <AdminPageContent
       title={title}
-      innerClassName='max-w-175'
+      innerClassName='max-w-5xl p-0 sm:p-0'
     >
       <ChangePermissionsForm roleId={id} />
     </AdminPageContent>

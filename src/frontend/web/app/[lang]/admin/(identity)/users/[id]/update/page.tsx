@@ -22,7 +22,7 @@ const UserUpdate = async ({ params }: UserUpdatePageProps) => {
   return (
     <AdminPageContent
       title={title}
-      innerClassName='max-w-155'
+      innerClassName='max-w-3xl'
     >
       <UserUpdateForm userId={id} />
     </AdminPageContent>

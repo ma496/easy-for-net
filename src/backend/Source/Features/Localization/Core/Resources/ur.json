@@ -36,7 +36,17 @@
     "deleteConfirm": "ہاں، اسے حذف کریں",
     "notifications": "اطلاعات",
     "viewAll": "سب دیکھیں",
-    "close": "بند کریں"
+    "close": "بند کریں",
+    "menu": "مینو",
+    "theme": "تھیم",
+    "themeLight": "روشن",
+    "themeDark": "تاریک",
+    "themeSystem": "سسٹم",
+    "noResults": "کوئی نتیجہ نہیں ملا",
+    "selectPlaceholder": "منتخب کریں…",
+    "noOptions": "کوئی اختیار نہیں",
+    "scrollToTop": "اوپر جائیں",
+    "collapseSidebar": "سائیڈبار سمیٹیں"
   },
   "navigation": {
     "home": "ہوم",
@@ -324,7 +334,9 @@
       "tenantStatus": "ٹیننٹ کی حیثیت",
       "allStatuses": "تمام حیثیتیں",
       "suspended": "معطل"
-    }
+    },
+    "loadFailed": "ریکارڈ لوڈ نہیں ہو سکے",
+    "loadFailedHint": "اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔"
   },
   "file": {
     "upload": "فائل اپ لوڈ",
@@ -401,7 +413,8 @@
       "viewReport": "رپورٹ دیکھیں",
       "editReport": "رپورٹ میں ترمیم کریں",
       "markAsDone": "ہو گیا کے طور پر نشان زد کریں",
-      "goToColumns": "تفصیلات کے لیے کالم پر جائیں"
+      "goToColumns": "تفصیلات کے لیے کالم پر جائیں",
+      "description": "آمدنی، آرڈرز اور فروخت کا جائزہ۔"
     },
     "users": {
       "title": "صارفین",
@@ -416,7 +429,10 @@
       },
       "update": {
         "title": "صارف اپ ڈیٹ کریں"
-      }
+      },
+      "accountDetails": "اکاؤنٹ کی تفصیلات",
+      "passwordDescription": "وہ پاس ورڈ جس سے یہ صارف سائن ان کرتا ہے۔",
+      "isActiveDescription": "غیر فعال صارف سائن ان نہیں کر سکتا۔"
     },
     "roles": {
       "title": "کردار",
@@ -589,7 +605,8 @@
       "detail": {
         "title": "ٹیننٹ کی تفصیل",
         "information": "ٹیننٹ کی معلومات",
-        "membersTitle": "اراکین"
+        "membersTitle": "اراکین",
+        "seats": "نشستیں"
       },
       "enterButton": "داخل ہوں",
       "enterCurrent": "موجودہ",

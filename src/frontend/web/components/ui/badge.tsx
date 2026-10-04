@@ -4,40 +4,23 @@ import React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
+const colors = ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'dark'] as const
+
 const badgeVariants = cva('badge', {
   variants: {
-    variant: {
-      primary: '',
-      secondary: '',
-      success: '',
-      danger: '',
-      warning: '',
-      info: '',
-      dark: '',
-    },
+    variant: Object.fromEntries(colors.map((color) => [color, ''])) as Record<(typeof colors)[number], string>,
+    // `solid` (the default) is a soft tint of the color; `strong` fills it; `outline` draws only the border.
     type: {
       solid: '',
+      strong: '',
       outline: '',
     },
   },
-  compoundVariants: [
-    // Solid variants
-    { variant: 'primary', type: 'solid', className: 'badge-primary' },
-    { variant: 'secondary', type: 'solid', className: 'badge-secondary' },
-    { variant: 'success', type: 'solid', className: 'badge-success' },
-    { variant: 'danger', type: 'solid', className: 'badge-danger' },
-    { variant: 'warning', type: 'solid', className: 'badge-warning' },
-    { variant: 'info', type: 'solid', className: 'badge-info' },
-    { variant: 'dark', type: 'solid', className: 'badge-dark' },
-    // Outline variants
-    { variant: 'primary', type: 'outline', className: 'badge-outline-primary' },
-    { variant: 'secondary', type: 'outline', className: 'badge-outline-secondary' },
-    { variant: 'success', type: 'outline', className: 'badge-outline-success' },
-    { variant: 'danger', type: 'outline', className: 'badge-outline-danger' },
-    { variant: 'warning', type: 'outline', className: 'badge-outline-warning' },
-    { variant: 'info', type: 'outline', className: 'badge-outline-info' },
-    { variant: 'dark', type: 'outline', className: 'badge-outline-dark' },
-  ],
+  compoundVariants: colors.flatMap((color) => [
+    { variant: color, type: 'solid' as const, className: `badge-${color}` },
+    { variant: color, type: 'strong' as const, className: `badge-solid-${color}` },
+    { variant: color, type: 'outline' as const, className: `badge-outline-${color}` },
+  ]),
   defaultVariants: {
     variant: 'primary',
     type: 'solid',
@@ -45,22 +28,16 @@ const badgeVariants = cva('badge', {
 })
 
 /**
- * Props for the Badge component, a small label-like element rendered as a span with variant and style (solid/outline) options.
+ * Props for the Badge component, a small label-like element rendered as a span with variant and style options.
  */
 export interface IBadgeProps extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof badgeVariants> {
   children: React.ReactNode
 }
 
 /**
- * Badge is a small label rendered as a span that supports color variants (primary, secondary, success, danger, warning, info, dark) and either solid or outline styles.
+ * Badge is a small pill label that supports color variants (primary, secondary, success, danger, warning, info, dark) and soft (`solid`), filled (`strong`) or outline styles.
  */
-export const Badge: React.FC<IBadgeProps> = ({
-  children,
-  variant,
-  type,
-  className,
-  ...props
-}) => {
+export const Badge: React.FC<IBadgeProps> = ({ children, variant, type, className, ...props }) => {
   return (
     <span className={cn(badgeVariants({ variant, type }), className)} {...props}>
       {children}

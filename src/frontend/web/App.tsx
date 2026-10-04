@@ -1,7 +1,7 @@
 'use client'
 import { PropsWithChildren, useContext, useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { toggleRTL, toggleTheme, setDarkMode, toggleMenu, toggleLayout, toggleAnimation, toggleNavbar, toggleSemidark, setUserInfo } from '@/store/slices'
+import { toggleRTL, toggleTheme, setDarkMode, setUserInfo } from '@/store/slices'
 import { AppLoading, ServiceUnavailableView, TranslationContext } from '@/components/layouts'
 import { i18nConfig, Locale } from '@/i18n'
 import { useLazyGetUserInfoQuery } from './store/api/identity'
@@ -13,7 +13,7 @@ import { useCookieConsent } from '@/hooks'
 import defaultThemeConfig from '@/theme.config'
 
 /**
- * Interactive client-side root component that loads the authenticated user, applies the persisted theme/menu/layout preferences, keeps the caller off screens they may not open - whether for want of a
+ * Interactive client-side root component that loads the authenticated user, applies the persisted theme and direction, keeps the caller off screens they may not open - whether for want of a
  * permission or of a usable tenant - and conditionally renders the cookie consent dialog.
  */
 function App({ children }: PropsWithChildren) {
@@ -90,11 +90,6 @@ function App({ children }: PropsWithChildren) {
 
   useEffect(() => {
     dispatch(toggleTheme(localStorage.getItem('theme') || defaultThemeConfig.theme))
-    dispatch(toggleMenu(localStorage.getItem('menu') || defaultThemeConfig.menu))
-    dispatch(toggleLayout(localStorage.getItem('layout') || defaultThemeConfig.layout))
-    dispatch(toggleAnimation(localStorage.getItem('animation') || defaultThemeConfig.animation))
-    dispatch(toggleNavbar(localStorage.getItem('navbar') || defaultThemeConfig.navbar))
-    dispatch(toggleSemidark(localStorage.getItem('semidark') || defaultThemeConfig.semidark))
 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(false)
@@ -106,23 +101,18 @@ function App({ children }: PropsWithChildren) {
     const applyTheme = () => {
       const isDark = themeConfig.theme === 'dark' || (themeConfig.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
       dispatch(setDarkMode(isDark))
-      document.body.classList.toggle('dark', isDark)
+      document.documentElement.classList.toggle('dark', isDark)
     }
 
     localStorage.setItem('theme', themeConfig.theme)
-    localStorage.setItem('menu', themeConfig.menu)
-    localStorage.setItem('layout', themeConfig.layout)
     localStorage.setItem('rtlClass', themeConfig.rtlClass)
-    localStorage.setItem('animation', themeConfig.animation)
-    localStorage.setItem('navbar', themeConfig.navbar)
-    localStorage.setItem('semidark', String(themeConfig.semidark))
     document.documentElement.setAttribute('dir', themeConfig.rtlClass || 'ltr')
     applyTheme()
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     if (themeConfig.theme === 'system') mediaQuery.addEventListener('change', applyTheme)
     return () => mediaQuery.removeEventListener('change', applyTheme)
-  }, [dispatch, isLoading, themeConfig.animation, themeConfig.layout, themeConfig.menu, themeConfig.navbar, themeConfig.rtlClass, themeConfig.semidark, themeConfig.theme])
+  }, [dispatch, isLoading, themeConfig.rtlClass, themeConfig.theme])
 
   useEffect(() => {
     // The served culture's own RTL flag decides direction, so a tenant or platform override of the
@@ -134,11 +124,7 @@ function App({ children }: PropsWithChildren) {
   }, [dispatch, dictionary.culture, dictionary.languages])
 
   return (
-    <div
-      className={`${(themeConfig.sidebar && 'toggle-sidebar') || ''} ${themeConfig.menu} ${themeConfig.layout} ${
-        themeConfig.rtlClass
-      } main-section relative font-nunito text-sm font-normal antialiased`}
-    >
+    <div className="relative min-h-screen bg-background font-sans text-sm text-foreground antialiased">
       {isServiceUnavailable ? <ServiceUnavailableView /> : isLoading || isLoadingUserInfo ? <AppLoading /> : children}
       {!isServiceUnavailable && showConsentDialog && !consentLoading && <CookieConsentDialog isOpen={true} onAccept={accept} onDecline={decline} />}
     </div>

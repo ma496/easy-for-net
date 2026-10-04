@@ -2,10 +2,11 @@ import { useId } from 'react'
 import { ArrowDownWideNarrow, ArrowUpNarrowWide } from 'lucide-react'
 import { useDataTable } from './context'
 import { useTranslation } from '@/i18n'
+import { Select } from '../form/select'
 
 /**
  * DataTableCardSort stands in for the clickable column headers the card list has no room for: a
- * select of the sortable columns and a button flipping the direction, both bound to the table's
+ * themed select of the sortable columns (a native one opens an OS-drawn list on phones) and a button flipping the direction, both bound to the table's
  * sorting state. It renders nothing when no column can be sorted.
  */
 export function DataTableCardSort<TData>() {
@@ -21,28 +22,30 @@ export function DataTableCardSort<TData>() {
 
   return (
     <div className="mb-3 flex items-center gap-2">
-      <label htmlFor={selectId} className="shrink-0 text-sm text-gray-500 dark:text-gray-400">
+      <label htmlFor={selectId} className="shrink-0 text-sm text-muted-foreground">
         {t('table.sort.label')}
       </label>
-      <select
+      <Select
+        name="sort"
         id={selectId}
-        className="form-select min-w-0 flex-1 rounded-md border-white-light py-2 text-sm font-semibold text-black focus:border-primary focus:ring-transparent dark:border-[#17263c] dark:bg-[#121e32] dark:text-white-dark dark:focus:border-primary"
+        className="min-w-0 flex-1"
+        options={[
+          { value: '', label: t('table.sort.none') },
+          ...sortable.map((column) => {
+            const header = column.columnDef.header
+            return { value: column.id, label: typeof header === 'string' ? header : column.id }
+          }),
+        ]}
         value={current?.id ?? ''}
-        onChange={(e) => table.setSorting(e.target.value ? [{ id: e.target.value, desc: descending }] : [])}
-      >
-        <option value="">{t('table.sort.none')}</option>
-        {sortable.map((column) => {
-          const header = column.columnDef.header
-          return (
-            <option key={column.id} value={column.id}>
-              {typeof header === 'string' ? header : column.id}
-            </option>
-          )
-        })}
-      </select>
+        onChange={(_, value) => table.setSorting(value ? [{ id: value, desc: descending }] : [])}
+        placeholder={t('table.sort.none')}
+        searchable={false}
+        clearable={false}
+        showValidation={false}
+      />
       <button
         type="button"
-        className="btn btn-outline-secondary btn-sm shrink-0 p-1.5! shadow-none disabled:cursor-not-allowed disabled:opacity-50"
+        className="btn btn-secondary size-9 shrink-0 p-0"
         disabled={!current}
         onClick={() => current && table.setSorting([{ id: current.id, desc: !descending }])}
         aria-label={descending ? t('table.sort.descending') : t('table.sort.ascending')}

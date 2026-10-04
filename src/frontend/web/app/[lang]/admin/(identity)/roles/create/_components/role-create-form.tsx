@@ -7,6 +7,7 @@ import { Form, Formik } from 'formik'
 import { Button } from '@/components/ui'
 import { FormInput, FormTextarea } from '@/components/ui/form'
 import { apiErrorAlert, successToast } from '@/lib/utils'
+import { FormSection, FormActions } from '../../../_components/form-layout'
 
 /**
  * Builds a Yup validation schema for the role create form using the supplied translation function for error messages.
@@ -60,21 +61,23 @@ export const RoleCreateForm = () => {
       onSubmit={onSubmit}
     >
       {() => (
-        <Form noValidate className="grid grid-cols-1 gap-4">
-          <FormInput
-            name="name"
-            label={t('form.label.roleName')}
-            placeholder={t('form.placeholder.roleName')}
-            autoFocus={true}
-            required={true}
-          />
-          <FormTextarea
-            name="description"
-            label={t('form.label.roleDescription')}
-            placeholder={t('form.placeholder.roleDescription')}
-            rows={4}
-          />
-          <div className="flex justify-end gap-4">
+        <Form noValidate>
+          <FormSection columns={1}>
+            <FormInput
+              name="name"
+              label={t('form.label.roleName')}
+              placeholder={t('form.placeholder.roleName')}
+              autoFocus={true}
+              required={true}
+            />
+            <FormTextarea
+              name="description"
+              label={t('form.label.roleDescription')}
+              placeholder={t('form.placeholder.roleDescription')}
+              rows={4}
+            />
+          </FormSection>
+          <FormActions>
             <Button
               type="button"
               variant="outline"
@@ -89,7 +92,7 @@ export const RoleCreateForm = () => {
             >
               {t('common.submit')}
             </Button>
-          </div>
+          </FormActions>
         </Form>
       )}
     </Formik>

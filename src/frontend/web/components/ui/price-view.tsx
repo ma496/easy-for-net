@@ -22,13 +22,13 @@ export const PriceView = ({
   decimals = 2,
 }: PriceViewProps) => {
   if (amount === undefined || amount === '') {
-    return <span className={cn('text-gray-400', className)}>{placeholder}</span>
+    return <span className={cn('text-subtle-foreground', className)}>{placeholder}</span>
   }
 
   const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount
 
   if (isNaN(numericAmount)) {
-    return <span className={cn('text-red-400', className)}>Invalid Price</span>
+    return <span className={cn('text-danger', className)}>Invalid Price</span>
   }
 
   const formattedPrice = new Intl.NumberFormat(locale, {

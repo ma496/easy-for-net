@@ -1,52 +1,33 @@
 'use client'
 import React, { useEffect, useState } from 'react'
+import { ArrowUp } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { useTranslation } from '@/i18n'
 
 /**
- * Floating "back to top" button that becomes visible once the page has scrolled past 50px and smoothly scrolls the document back to the top on click.
+ * Floating "back to top" button that fades in once the page has scrolled past 300px and smoothly scrolls the document back to the top on click.
  */
 export const ScrollToTop = () => {
-  const [showTopButton, setShowTopButton] = useState(false)
-
-  const goToTop = () => {
-    document.body.scrollTop = 0
-    document.documentElement.scrollTop = 0
-  }
-
-  const onScrollHandler = () => {
-    if (document.body.scrollTop > 50 || document.documentElement.scrollTop > 50) {
-      setShowTopButton(true)
-    } else {
-      setShowTopButton(false)
-    }
-  }
+  const [visible, setVisible] = useState(false)
+  const { t } = useTranslation()
 
   useEffect(() => {
-    window.addEventListener('scroll', onScrollHandler)
-    return () => {
-      window.removeEventListener('onscroll', onScrollHandler)
-    }
-  })
+    const onScroll = () => setVisible(window.scrollY > 300)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   return (
-    <div className="fixed bottom-6 z-50 ltr:right-6 rtl:left-6">
-      {showTopButton && (
-        <button type="button" className="btn animate-pulse rounded-full btn-outline-primary bg-[#fafafa] p-2 dark:bg-[#060818] dark:hover:bg-primary" onClick={goToTop}>
-          <svg width="24" height="24" className="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              opacity="0.5"
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M12 20.75C12.4142 20.75 12.75 20.4142 12.75 20L12.75 10.75L11.25 10.75L11.25 20C11.25 20.4142 11.5858 20.75 12 20.75Z"
-              fill="currentColor"
-            ></path>
-            <path
-              d="M6.00002 10.75C5.69667 10.75 5.4232 10.5673 5.30711 10.287C5.19103 10.0068 5.25519 9.68417 5.46969 9.46967L11.4697 3.46967C11.6103 3.32902 11.8011 3.25 12 3.25C12.1989 3.25 12.3897 3.32902 12.5304 3.46967L18.5304 9.46967C18.7449 9.68417 18.809 10.0068 18.6929 10.287C18.5768 10.5673 18.3034 10.75 18 10.75L6.00002 10.75Z"
-              fill="currentColor"
-            ></path>
-          </svg>
-        </button>
+    <button
+      type="button"
+      aria-label={t('common.scrollToTop')}
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      className={cn(
+        'fixed end-6 bottom-6 z-40 flex size-10 items-center justify-center rounded-full border border-border bg-surface text-muted-foreground shadow-md transition-all duration-200 hover:text-foreground',
+        visible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-2 opacity-0',
       )}
-    </div>
+    >
+      <ArrowUp size={18} />
+    </button>
   )
 }
-

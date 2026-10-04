@@ -7,6 +7,7 @@ import { Form, Formik } from 'formik'
 import { FormPasswordInput, FormInput, FormCheckbox, FormLazyMultiSelect } from '@/components/ui/form'
 import { Button } from '@/components/ui'
 import { apiErrorAlert, successToast } from '@/lib/utils'
+import { FormSection, FormActions } from '../../../_components/form-layout'
 
 /**
  * Builds a Yup validation schema for the user create form using the supplied translation function for error messages.
@@ -84,44 +85,48 @@ export const UserCreateForm = () => {
       onSubmit={onSubmit}
     >
       {() => (
-        <Form noValidate className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormInput
-            name="username"
-            label={t('form.label.username')}
-            placeholder={t('form.placeholder.username')}
-            autoFocus={true}
-            required={true}
-          />
-          <FormInput
-            name="email"
-            type="email"
-            label={t('form.label.email')}
-            placeholder={t('form.placeholder.email')}
-            required={true}
-          />
-          <FormInput
-            name="firstName"
-            label={t('form.label.firstName')}
-            placeholder={t('form.placeholder.firstName')}
-          />
-          <FormInput
-            name="lastName"
-            label={t('form.label.lastName')}
-            placeholder={t('form.placeholder.lastName')}
-          />
-          <FormPasswordInput
-            name="password"
-            label={t('form.label.password')}
-            placeholder={t('form.placeholder.password')}
-            required={true}
-          />
-          <FormPasswordInput
-            name="confirmPassword"
-            label={t('form.label.confirmPassword')}
-            placeholder={t('form.placeholder.confirmPassword')}
-            required={true}
-          />
-          <div className="sm:col-span-2">
+        <Form noValidate>
+          <FormSection title={t('page.users.accountDetails')}>
+            <FormInput
+              name="username"
+              label={t('form.label.username')}
+              placeholder={t('form.placeholder.username')}
+              autoFocus={true}
+              required={true}
+            />
+            <FormInput
+              name="email"
+              type="email"
+              label={t('form.label.email')}
+              placeholder={t('form.placeholder.email')}
+              required={true}
+            />
+            <FormInput
+              name="firstName"
+              label={t('form.label.firstName')}
+              placeholder={t('form.placeholder.firstName')}
+            />
+            <FormInput
+              name="lastName"
+              label={t('form.label.lastName')}
+              placeholder={t('form.placeholder.lastName')}
+            />
+          </FormSection>
+          <FormSection title={t('form.label.password')} description={t('page.users.passwordDescription')}>
+            <FormPasswordInput
+              name="password"
+              label={t('form.label.password')}
+              placeholder={t('form.placeholder.password')}
+              required={true}
+            />
+            <FormPasswordInput
+              name="confirmPassword"
+              label={t('form.label.confirmPassword')}
+              placeholder={t('form.placeholder.confirmPassword')}
+              required={true}
+            />
+          </FormSection>
+          <FormSection columns={1}>
             <FormLazyMultiSelect<RoleListDto, RoleListRequest>
               name="roles"
               label={t('form.label.roles')}
@@ -133,14 +138,15 @@ export const UserCreateForm = () => {
               pageSize={20}
               required={true}
             />
-          </div>
-          <div className="sm:col-span-2">
-            <FormCheckbox
-              name="isActive"
-              label={t('form.label.isActive')}
-            />
-          </div>
-          <div className="flex justify-end gap-4 sm:col-span-2">
+            <div className="rounded-lg border border-border px-4 py-3">
+              <FormCheckbox
+                name="isActive"
+                label={t('form.label.isActive')}
+              />
+              <p className="mt-1 ps-5 text-xs text-muted-foreground">{t('page.users.isActiveDescription')}</p>
+            </div>
+          </FormSection>
+          <FormActions>
             <Button
               type="button"
               variant="outline"
@@ -155,7 +161,7 @@ export const UserCreateForm = () => {
             >
               {t('common.submit')}
             </Button>
-          </div>
+          </FormActions>
         </Form>
       )}
     </Formik>

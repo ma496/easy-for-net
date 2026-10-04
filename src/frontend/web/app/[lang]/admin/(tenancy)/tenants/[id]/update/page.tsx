@@ -22,7 +22,7 @@ const TenantUpdate = async ({ params }: TenantUpdatePageProps) => {
   return (
     <AdminPageContent
       title={title}
-      innerClassName='max-w-155'
+      innerClassName='max-w-3xl'
     >
       <TenantUpdateForm tenantId={id} />
     </AdminPageContent>

@@ -1,84 +1,130 @@
 'use client'
-import { useId, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useLocalizedRouter } from '@/hooks'
 import { SearchableItem, searchableItems } from '@/searchable-items'
 import { authUrls } from '@/auth-urls'
-import { LocalizedLink } from '@/components/ui'
 import { useTranslation } from '@/i18n'
 import { useAppSelector } from '@/store/hooks'
-import { Search, X } from 'lucide-react'
+import { CornerDownLeft, FileText, Search } from 'lucide-react'
 import { cn, isAllowed, isPathAvailable } from '@/lib/utils'
+import { navItems, NavItem } from '@/nav-items'
+
+/** Each navigation url's icon - a child without one of its own takes its parent's - so a search result shows the icon its screen has in the sidebar. */
+const iconByUrl = (() => {
+  const icons = new Map<string, NavItem['icon']>()
+  const visit = (items: NavItem[], inherited?: NavItem['icon']) =>
+    items.forEach((item) => {
+      const icon = item.icon ?? inherited
+      if (icon && !icons.has(item.url)) icons.set(item.url, icon)
+      if (item.children) visit(item.children, icon)
+    })
+  visit(navItems.flatMap((entry) => ('items' in entry ? entry.items : [entry])))
+  return icons
+})()
 
 /**
- * Header search input that fuzzy-matches the list of searchable (and authorized) navigation items, exposes a keyboard-navigable result list, and routes to the selected item on Enter.
- * Below sm it collapses to an icon button that opens the input as an overlay across the header row.
+ * Header search: a trigger (a search field look-alike from md up, an icon below it) that opens a
+ * command palette over the page, also on Ctrl/⌘+K. The palette lists the searchable navigation
+ * items the caller may open - all of them while the query is empty, the matches once typed - is
+ * driven by the arrow keys, and routes to the chosen item on Enter or click.
  */
 export const SearchComponent = () => {
   const router = useLocalizedRouter()
   const { t } = useTranslation()
-  // Only meaningful below sm, where the input is an overlay opened from the toggle button.
-  const [search, setSearch] = useState(false)
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const [activeIndex, setActiveIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<SearchableItem[]>([])
-  const [activeIndex, setActiveIndex] = useState(-1)
+  const inputId = useId()
   const authState = useAppSelector((state) => state.auth)
 
-  const getSearchableItems = (query: string): SearchableItem[] => {
-    if (!query || query.trim() === '') {
-      return []
-    }
-
-    return searchableItems
-      .filter((item) => {
+  const available = useMemo(
+    () =>
+      searchableItems.filter((item) => {
         const authUrl = authUrls.find((a) => a.url === item.url)
         const isAuthorized = authUrl?.permissions ? isAllowed(authState, authUrl.permissions) : true
-        return t(item.title).toLowerCase().includes(query.trim().toLowerCase()) && isAuthorized && isPathAvailable(authState.user, item.url)
-      })
-      .slice(0, 5)
-  }
+        return isAuthorized && isPathAvailable(authState.user, item.url)
+      }),
+    [authState],
+  )
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const query = event.target.value
-    setSearchQuery(query)
-    setSearchResults(getSearchableItems(query))
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return (q ? available.filter((item) => t(item.title).toLowerCase().includes(q)) : available).slice(0, 8)
+  }, [available, query, t])
+
+  // The element focused before the palette opened, given focus back when it closes.
+  const returnFocusRef = useRef<HTMLElement | null>(null)
+
+  const openPalette = useCallback(() => {
+    returnFocusRef.current = document.activeElement as HTMLElement | null
+    setOpen(true)
+  }, [])
+
+  // Every way out (Esc, Ctrl/⌘+K, the backdrop, choosing a result) resets the query, so the next open starts clean.
+  const close = useCallback(() => {
+    setOpen(false)
+    setQuery('')
     setActiveIndex(0)
+    returnFocusRef.current?.focus()
+  }, [])
+
+  const go = (item: SearchableItem) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    router.push(item.url as any)
+    close()
   }
 
-  const closeSearch = () => {
-    setSearch(false)
-    setSearchQuery('')
-    setSearchResults([])
-    setActiveIndex(-1)
-  }
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        if (open) close()
+        else openPalette()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, close, openPalette])
 
-  const openSearch = () => {
-    setSearch(true)
-    // The input is display:none until the overlay renders, so focus it on the next frame.
-    requestAnimationFrame(() => inputRef.current?.focus())
-  }
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  // Esc closes from anywhere in the dialog, and Tab stays inside it: the input is the only stop, since the arrow keys move through the results.
+  const handleDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Escape') {
-      closeSearch()
-    } else if (event.key === 'ArrowDown') {
-      setActiveIndex((prevIndex) => (prevIndex + 1) % searchResults.length)
-    } else if (event.key === 'ArrowUp') {
-      setActiveIndex((prevIndex) => (prevIndex - 1 + searchResults.length) % searchResults.length)
-    } else if (event.key === 'Enter' && activeIndex >= 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      router.push(searchResults[activeIndex].url as any)
-      closeSearch()
+      event.preventDefault()
+      close()
+    } else if (event.key === 'Tab') {
+      event.preventDefault()
+      inputRef.current?.focus()
     }
   }
 
-  const highlightText = (text: string, query: string) => {
-    const parts = text.split(new RegExp(`(${query})`, 'gi'))
-    return parts.map((part, index) =>
-      part.toLowerCase() === query.toLowerCase() ? (
-        <span key={index} className="bg-yellow-200">
+  useEffect(() => {
+    if (open) requestAnimationFrame(() => inputRef.current?.focus())
+  }, [open])
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      setActiveIndex((index) => (results.length ? (index + 1) % results.length : 0))
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setActiveIndex((index) => (results.length ? (index - 1 + results.length) % results.length : 0))
+    } else if (event.key === 'Enter' && results[activeIndex]) {
+      event.preventDefault()
+      go(results[activeIndex])
+    }
+  }
+
+  const highlightText = (text: string) => {
+    const q = query.trim()
+    if (!q) return text
+    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    return text.split(new RegExp(`(${escaped})`, 'gi')).map((part, index) =>
+      part.toLowerCase() === q.toLowerCase() ? (
+        <mark key={index} className="bg-transparent font-semibold text-inherit">
           {part}
-        </span>
+        </mark>
       ) : (
         part
       ),
@@ -87,65 +133,75 @@ export const SearchComponent = () => {
 
   return (
     <>
-      <form
-        className={cn('absolute inset-x-0 top-1/2 z-10 mx-3 -translate-y-1/2 sm:relative sm:top-0 sm:mx-0 sm:block sm:translate-y-0', search ? 'block' : 'hidden')}
-        onSubmit={(e) => {
-          e.preventDefault()
-          if (searchResults.length > 0) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            router.push(searchResults[0].url as any)
-          }
-          closeSearch()
-        }}
-      >
-        <div className="relative w-full sm:w-auto">
-          <input
-            type="text"
-            ref={inputRef}
-            id={useId()}
-            className="peer form-input w-full bg-gray-100 pr-9 pl-9 placeholder:tracking-widest sm:bg-transparent sm:ltr:pr-4 sm:rtl:pl-4"
-            placeholder={t('common.search')}
-            value={searchQuery}
-            onChange={handleSearchChange}
-            onKeyDown={handleKeyDown}
-          />
-          {searchResults.length > 0 && (
-            <ul className="absolute w-full bg-white text-black shadow-sm dark:bg-[#1b2e4b] dark:text-white-dark">
-              {searchResults.map((item: SearchableItem, index) => (
-                <li key={item.url} className={index === activeIndex ? 'bg-primary/10 text-primary hover:bg-primary/5' : 'hover:bg-primary/5 hover:text-primary'}>
-                  <LocalizedLink
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    href={item.url as any}
-                    className="block px-4 py-2"
-                    onClick={closeSearch}
-                  >
-                    {highlightText(t(item.title), searchQuery)}
-                  </LocalizedLink>
-                </li>
-              ))}
-            </ul>
-          )}
-          <button type="button" className="absolute inset-0 right-auto h-9 w-9 appearance-none peer-focus:text-primary">
-            <Search className="mx-auto text-gray-300 dark:text-gray-400" size={20} />
-          </button>
-          <button
-            type="button"
-            className="absolute top-1/2 right-2 flex -translate-y-1/2 cursor-pointer text-gray-400 hover:text-primary sm:hidden"
-            aria-label={t('common.close')}
-            onClick={closeSearch}
-          >
-            <X size={18} />
-          </button>
-        </div>
-      </form>
       <button
         type="button"
-        className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white-light/40 p-2 hover:bg-white-light/90 hover:text-primary sm:hidden dark:bg-dark/40 dark:hover:bg-dark/60"
-        aria-label={t('common.search')}
-        onClick={openSearch}
+        onClick={openPalette}
+        className="hidden h-9 w-56 items-center gap-2 rounded-md border border-border bg-surface px-3 text-sm text-subtle-foreground shadow-xs transition-colors hover:bg-surface-2 hover:text-muted-foreground md:flex lg:w-64"
       >
-        <Search className="h-5 w-5" />
+        <Search size={15} className="shrink-0" />
+        <span className="flex-1 truncate text-start">{t('common.search')}</span>
+        <span className="kbd">Ctrl K</span>
       </button>
+      <button type="button" className="icon-btn md:hidden" aria-label={t('common.search')} onClick={openPalette}>
+        <Search size={18} />
+      </button>
+
+      {open &&
+        createPortal(
+          <div className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-[12vh]" role="dialog" aria-modal="true" aria-label={t('common.search')} onKeyDown={handleDialogKeyDown}>
+            <div className="absolute inset-0 animate-fade-in bg-overlay backdrop-blur-sm" onClick={close} />
+            <div className="relative w-full max-w-xl animate-scale-in overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
+              <div className="flex items-center gap-3 border-b border-border px-4">
+                <Search size={18} className="shrink-0 text-subtle-foreground" />
+                <input
+                  ref={inputRef}
+                  id={inputId}
+                  type="text"
+                  autoComplete="off"
+                  className="h-12 w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-subtle-foreground"
+                  placeholder={t('common.search')}
+                  value={query}
+                  onChange={(event) => {
+                    setQuery(event.target.value)
+                    setActiveIndex(0)
+                  }}
+                  onKeyDown={handleKeyDown}
+                />
+                <button type="button" className="kbd cursor-pointer" onClick={close}>
+                  Esc
+                </button>
+              </div>
+              <ul className="max-h-[50vh] overflow-y-auto p-1.5">
+                {results.length === 0 && <li className="px-3 py-8 text-center text-sm text-muted-foreground">{t('common.noResults')}</li>}
+                {results.map((item, index) => {
+                  const Icon = iconByUrl.get(item.url) ?? FileText
+                  return (
+                    <li key={item.url}>
+                      <button
+                        type="button"
+                        onMouseMove={() => setActiveIndex(index)}
+                        onClick={() => go(item)}
+                        className={cn(
+                          'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-start text-sm transition-colors',
+                          index === activeIndex ? 'bg-primary/10 text-primary' : 'text-foreground',
+                        )}
+                      >
+                        <span
+                          className={cn('flex size-7 shrink-0 items-center justify-center rounded-md border', index === activeIndex ? 'border-primary/30 bg-primary/10' : 'border-border bg-surface-2')}
+                        >
+                          <Icon size={14} />
+                        </span>
+                        <span className="flex-1 truncate">{highlightText(t(item.title))}</span>
+                        {index === activeIndex && <CornerDownLeft size={14} className="shrink-0 opacity-70 rtl:-scale-x-100" />}
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          </div>,
+          document.body,
+        )}
     </>
   )
 }

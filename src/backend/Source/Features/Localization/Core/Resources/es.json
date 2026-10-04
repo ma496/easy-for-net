@@ -36,7 +36,17 @@
     "deleteConfirm": "Sí, eliminarlo",
     "notifications": "Notificaciones",
     "viewAll": "Ver todo",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "menu": "Menú",
+    "theme": "Tema",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
+    "themeSystem": "Sistema",
+    "noResults": "No se encontraron resultados",
+    "selectPlaceholder": "Seleccionar…",
+    "noOptions": "Sin opciones",
+    "scrollToTop": "Volver arriba",
+    "collapseSidebar": "Contraer barra lateral"
   },
   "navigation": {
     "home": "Inicio",
@@ -324,7 +334,9 @@
       "tenantStatus": "Estado del Inquilino",
       "allStatuses": "Todos los Estados",
       "suspended": "Suspendido"
-    }
+    },
+    "loadFailed": "No se pudieron cargar los registros",
+    "loadFailedHint": "Comprueba tu conexión e inténtalo de nuevo."
   },
   "file": {
     "upload": "Subir Archivo",
@@ -401,7 +413,8 @@
       "viewReport": "Ver Informe",
       "editReport": "Editar Informe",
       "markAsDone": "Marcar como Hecho",
-      "goToColumns": "Ir a columnas para detalles"
+      "goToColumns": "Ir a columnas para detalles",
+      "description": "Un resumen de ingresos, pedidos y ventas."
     },
     "users": {
       "title": "Usuarios",
@@ -416,7 +429,10 @@
       },
       "update": {
         "title": "Actualizar usuario"
-      }
+      },
+      "accountDetails": "Datos de la cuenta",
+      "passwordDescription": "La contraseña con la que este usuario inicia sesión.",
+      "isActiveDescription": "Un usuario inactivo no puede iniciar sesión."
     },
     "roles": {
       "title": "Roles",
@@ -589,7 +605,8 @@
       "detail": {
         "title": "Detalle del inquilino",
         "information": "Información del inquilino",
-        "membersTitle": "Miembros"
+        "membersTitle": "Miembros",
+        "seats": "Plazas"
       },
       "enterButton": "Entrar",
       "enterCurrent": "Actual",

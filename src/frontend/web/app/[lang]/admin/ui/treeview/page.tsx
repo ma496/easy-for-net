@@ -1,5 +1,5 @@
 import { getServerTranslation } from '@/i18n'
-import { TreeviewExample } from "./_components/treeview-example"
+import { TreeviewExample } from './_components/treeview-example'
 import { AdminPageContent } from '@/components/layouts'
 
 /**
@@ -18,7 +18,7 @@ const TreeviewPage = async ({ params }: TreeviewPageProps) => {
   const title = await getServerTranslation(lang, 'page.ui.treeview.title')
 
   return (
-    <AdminPageContent title={title}>
+    <AdminPageContent title={title} description="Hierarchical data with expand, collapse and checkbox selection." plain>
       <TreeviewExample />
     </AdminPageContent>
   )

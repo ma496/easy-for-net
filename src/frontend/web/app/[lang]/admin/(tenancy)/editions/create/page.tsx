@@ -20,7 +20,7 @@ const EditionCreate = async ({ params }: EditionCreatePageProps) => {
   return (
     <AdminPageContent
       title={title}
-      innerClassName='max-w-155'
+      innerClassName='max-w-3xl'
     >
       <EditionCreateForm />
     </AdminPageContent>

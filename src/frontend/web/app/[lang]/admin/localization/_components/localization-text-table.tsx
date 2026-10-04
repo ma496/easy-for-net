@@ -132,7 +132,7 @@ export const LocalizationTextTable = ({ canUpdate }: LocalizationTextTableProps)
         const value = info.getValue()
         if (value == null) {
           return (
-            <span className="text-gray-400">
+            <span className="text-subtle-foreground">
               — <span className="sr-only">{t('page.localization.texts.notOverridden')}</span>
             </span>
           )
@@ -142,7 +142,7 @@ export const LocalizationTextTable = ({ canUpdate }: LocalizationTextTableProps)
             <Badge variant="primary" type="solid">
               {t('page.localization.texts.setHere')}
             </Badge>
-            <span className="line-clamp-3 font-medium whitespace-pre-wrap text-gray-800 dark:text-white-dark">{value}</span>
+            <span className="line-clamp-3 font-medium whitespace-pre-wrap text-foreground">{value}</span>
           </div>
         )
       },
@@ -225,7 +225,7 @@ export const LocalizationTextTable = ({ canUpdate }: LocalizationTextTableProps)
           />
         </DataTableToolbar>
 
-        <DataTable emptyMessage={emptyMessage} />
+        <DataTable cardsBelow="lg" emptyMessage={emptyMessage} />
 
         <DataTablePagination siblingCount={1} />
       </DataTableProvider>

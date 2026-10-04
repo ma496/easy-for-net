@@ -34,19 +34,19 @@ export const FormPasswordInput = ({ label, name, id, showValidation = true, clas
   return (
     <div className={cn(className, (isDirty || submitCount > 0) && (hasError ? 'has-error' : ''))}>
       {label && (
-        <label htmlFor={inputId}>
+        <label htmlFor={inputId} className="form-label">
           {label}
           {required && <span className="ms-1 text-danger">*</span>}
         </label>
       )}
-      <div className="relative text-white-dark">
+      <div className="relative text-muted-foreground">
         <input {...field} {...props} name={name} id={inputId} autoComplete={autoComplete} type={showPassword ? 'text' : 'password'} className={cn('form-input', icon && 'ps-10', 'pe-10')} />
-        {icon && <span className="absolute inset-s-4 top-1/2 -translate-y-1/2">{icon}</span>}
-        <button type="button" onClick={togglePasswordVisibility} tabIndex={-1} className="absolute inset-e-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-hidden">
+        {icon && <span className="pointer-events-none absolute inset-s-3 top-1/2 -translate-y-1/2">{icon}</span>}
+        <button type="button" onClick={togglePasswordVisibility} tabIndex={-1} className="absolute inset-e-3 top-1/2 -translate-y-1/2 text-subtle-foreground hover:text-muted-foreground focus:outline-hidden">
           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
       </div>
-      {showValidation && (isDirty || submitCount > 0) && hasError && <div className="mt-1 text-danger">{meta.error}</div>}
+      {showValidation && (isDirty || submitCount > 0) && hasError && <div className="mt-1.5 text-xs font-medium text-danger">{meta.error}</div>}
     </div>
   )
 }

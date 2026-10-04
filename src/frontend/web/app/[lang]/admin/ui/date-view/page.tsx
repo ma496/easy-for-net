@@ -18,7 +18,7 @@ const DateViewPage = async ({ params }: DateViewPageProps) => {
   const title = await getServerTranslation(lang, 'page.ui.dateView.title')
 
   return (
-    <AdminPageContent title={title}>
+    <AdminPageContent title={title} description="Dates displayed in one consistent, formatted way, including the empty and invalid cases." plain>
       <DateViewExample />
     </AdminPageContent>
   )

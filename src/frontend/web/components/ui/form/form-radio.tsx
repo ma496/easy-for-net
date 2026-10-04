@@ -8,13 +8,13 @@ import { useId } from 'react'
 const formRadioVariants = cva('form-radio cursor-pointer', {
   variants: {
     variant: {
-      default: 'text-primary border-gray-300 focus:ring-primary',
+      default: 'text-primary border-input focus:ring-primary',
       success: 'text-success border-success focus:ring-success',
       danger: 'text-danger border-danger focus:ring-danger',
       warning: 'text-warning border-warning focus:ring-warning',
       info: 'text-info border-info focus:ring-info',
       secondary: 'text-secondary border-secondary focus:ring-secondary',
-      dark: 'text-dark border-dark focus:ring-dark',
+      dark: 'text-foreground border-input focus:ring-ring',
     },
     size: {
       default: 'h-4 w-4',
@@ -49,7 +49,7 @@ export const FormRadio = ({ label, name, id, showValidation = true, className, v
   const inputId = id ?? generatedId
 
   return (
-    <div className={cn('inline-flex flex-wrap items-start gap-2', className, (isDirty || submitCount > 0) && (hasError ? 'has-error' : ''))}>
+    <div className={cn('inline-flex flex-col items-start', className, (isDirty || submitCount > 0) && (hasError ? 'has-error' : ''))}>
       <div className="flex min-h-5 items-center">
         <input {...field} {...props} type="radio" name={name} id={inputId} className={cn('mb-0', formRadioVariants({ variant, size }), hasError && 'border-danger focus:ring-danger')} />
         {label && (
@@ -62,7 +62,7 @@ export const FormRadio = ({ label, name, id, showValidation = true, className, v
           </label>
         )}
       </div>
-      {showValidation && (isDirty || submitCount > 0) && hasError && <div className="text-sm text-danger">{meta.error}</div>}
+      {showValidation && (isDirty || submitCount > 0) && hasError && <div className="mt-1.5 text-xs font-medium text-danger">{meta.error}</div>}
     </div>
   )
 }

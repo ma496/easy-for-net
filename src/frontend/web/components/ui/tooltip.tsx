@@ -142,11 +142,11 @@ export const Tooltip = ({ content, children, position = 'top', className, delay 
                 className
               )}
             >
-              <div className="relative rounded-lg bg-black/90 backdrop-blur-md px-3 py-1.5 text-xs font-medium text-white shadow-xl dark:bg-gray-800/95 dark:text-white-light">
+              <div className="relative rounded-md bg-foreground px-2.5 py-1.5 text-xs font-medium text-background shadow-md">
                 {content}
                 <div
                   className={cn(
-                    'absolute h-2 w-2 rotate-45 border-transparent bg-black/90 dark:bg-gray-800/95',
+                    'absolute h-2 w-2 rotate-45 border-transparent bg-foreground',
                     {
                       '-bottom-1 left-1/2 -ml-1': coords?.position === 'top',
                       '-top-1 left-1/2 -ml-1': coords?.position === 'bottom',

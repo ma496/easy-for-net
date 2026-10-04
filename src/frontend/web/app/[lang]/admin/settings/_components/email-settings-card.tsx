@@ -144,7 +144,7 @@ export const EmailSettingsCard = ({ settings: initialSettings, ownSource, canUpd
                       </Button>
                     )
                   )}
-                  {canUpdate && <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('page.settings.email.passwordInheritHint')}</p>}
+                  {canUpdate && <p className="mt-1 text-xs text-muted-foreground">{t('page.settings.email.passwordInheritHint')}</p>}
                 </SettingField>
 
                 {textField('senderEmail', t('page.settings.email.senderEmail'), { dir: 'ltr', type: 'email' })}
