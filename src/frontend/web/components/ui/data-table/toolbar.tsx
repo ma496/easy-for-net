@@ -24,16 +24,16 @@ export function DataTableToolbar<TData>({ title, children }: DataTableToolbarPro
       {title && <div className="text-xl font-semibold">{title}</div>}
 
       {/* Right side controls - stack on mobile, row on tablet+ */}
-      <div className={cn('flex w-full flex-wrap items-center justify-around gap-4 sm:justify-between', title ? 'sm:w-auto sm:justify-end' : 'sm:justify-between')}>
+      <div className={cn('flex w-full flex-wrap items-center justify-center gap-4 sm:justify-between', title ? 'sm:w-auto sm:justify-end' : 'sm:justify-between')}>
         {/* Search with icon */}
-        <div className="relative">
-          <span className="absolute top-1/2 start-3 -translate-y-1/2 text-gray-400">
+        <div className="relative w-full sm:w-auto">
+          <span className="absolute top-1/2 inset-s-3 -translate-y-1/2 text-gray-400">
             <Search size={16} className="text-gray-200 dark:text-gray-400" />
           </span>
           <input
             type="text"
             id={useId()}
-            className="form-input w-full max-w-xs rounded-md border-white-light py-2 pe-3 ps-9 text-sm font-semibold text-black placeholder:text-gray-400 focus:border-primary focus:ring-transparent sm:w-auto dark:border-[#17263c] dark:bg-[#121e32] dark:text-white-dark dark:placeholder:text-gray-500 dark:focus:border-primary"
+            className="form-input w-full rounded-md sm:max-w-xs border-white-light py-2 pe-3 ps-9 text-sm font-semibold text-black placeholder:text-gray-400 focus:border-primary focus:ring-transparent sm:w-auto dark:border-[#17263c] dark:bg-[#121e32] dark:text-white-dark dark:placeholder:text-gray-500 dark:focus:border-primary"
             placeholder={t('table.searchPlaceholder')}
             value={table.getState().globalFilter}
             onChange={(e) => table.setGlobalFilter(String(e.target.value))}
