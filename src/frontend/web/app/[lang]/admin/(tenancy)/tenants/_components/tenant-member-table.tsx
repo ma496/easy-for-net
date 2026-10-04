@@ -85,10 +85,12 @@ export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const columns: ColumnDef<TenantMemberListDto, any>[] = [
     columnHelper.accessor('username', {
+      meta: { card: 'title' },
       header: t('table.columns.userName'),
       cell: (info) => info.getValue(),
     }),
     columnHelper.accessor('email', {
+      meta: { card: 'subtitle' },
       header: t('table.columns.email'),
       cell: (info) => info.getValue(),
     }),
@@ -117,6 +119,7 @@ export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
       enableSorting: false,
     }),
     columnHelper.accessor('isActive', {
+      meta: { card: 'badge' },
       header: t('table.columns.isActive'),
       cell: (info) =>
         info.getValue() ? (

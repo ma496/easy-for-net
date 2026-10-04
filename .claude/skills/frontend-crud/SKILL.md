@@ -106,6 +106,19 @@ cell: (info) => (
 Headers are translated (`t('table.columns.email')`). Set `enableSorting: false` on computed columns —
 and remember any sortable column must also be whitelisted in the backend list validator.
 
+Below `md` the same `<DataTable />` renders each row as a card instead of a table row, with a sort
+select standing in for the clickable headers (`cardsBelow="sm" | "lg"` moves the breakpoint, `false`
+keeps the table everywhere). The cells keep their renderers and the headers become field labels; the
+`actions` column sits top-right and the first data column is the heading. Place the rest with
+`meta.card` so a card reads at a glance — `subtitle` for the identifying second line (email,
+identifier), `badge` for a status pill at the end of the heading, by the actions menu, `wide` for long text, `hidden` for what a
+phone can do without, `title` when the heading is not the first column:
+
+```tsx
+columnHelper.accessor('emailNormalized', { meta: { card: 'subtitle' }, header: t('table.columns.email'), cell: (info) => info.getValue() }),
+columnHelper.accessor('isActive', { meta: { card: 'badge' }, header: t('table.columns.isActive'), cell: ... }),
+```
+
 Gating combines the caller's permissions with facts about the row. A row whose DTO extends
 `SystemCreatedDto` will be refused on update/delete, so hide those actions up front
 (`hidden: !(canDelete && !row.systemCreated)`), and hide any action the row's state rules out (a

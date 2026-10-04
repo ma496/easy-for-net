@@ -295,6 +295,12 @@
     },
     "noRecords": "No records found",
     "searchPlaceholder": "Search...",
+    "sort": {
+      "label": "Sort by",
+      "none": "Default order",
+      "ascending": "Ascending — tap to sort descending",
+      "descending": "Descending — tap to sort ascending"
+    },
     "export": {
       "button": "Export",
       "excel": "Excel",

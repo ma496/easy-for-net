@@ -195,6 +195,7 @@ export const NotificationTable = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const columns: ColumnDef<NotificationDto, any>[] = [
     columnHelper.accessor('type', {
+      meta: { card: 'badge' },
       header: t('table.columns.type'),
       cell: (info) => (
         <div className="flex items-center gap-2">
@@ -205,6 +206,7 @@ export const NotificationTable = () => {
       enableSorting: false
     }),
     columnHelper.accessor('titleKey', {
+      meta: { card: 'title' },
       header: t('table.columns.title'),
       cell: (info) => (
         <LocalizedLink
@@ -216,6 +218,7 @@ export const NotificationTable = () => {
       )
     }),
     columnHelper.accessor('messageKey', {
+      meta: { card: 'subtitle' },
       header: t('table.columns.message'),
       cell: (info) => (
         <Truncated
@@ -239,6 +242,7 @@ export const NotificationTable = () => {
       enableSorting: false
     }),
     columnHelper.accessor('isRead', {
+      meta: { card: 'badge' },
       header: t('table.columns.status'),
       cell: (info) => (
         info.getValue() ? (

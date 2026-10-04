@@ -93,6 +93,7 @@ export const LocalizationTextTable = ({ canUpdate }: LocalizationTextTableProps)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const columns: ColumnDef<TextListItemDto, any>[] = [
     columnHelper.accessor('key', {
+      meta: { card: 'title' },
       header: t('table.columns.key'),
       enableSorting: false,
       minSize: 160,
@@ -104,6 +105,7 @@ export const LocalizationTextTable = ({ canUpdate }: LocalizationTextTableProps)
       ),
     }),
     columnHelper.accessor('inheritedValue', {
+      meta: { card: 'wide' },
       header: isPlatformScope ? t('table.columns.defaultValue') : t('table.columns.inheritedValue'),
       enableSorting: false,
       minSize: 200,
@@ -122,6 +124,7 @@ export const LocalizationTextTable = ({ canUpdate }: LocalizationTextTableProps)
       },
     }),
     columnHelper.accessor('value', {
+      meta: { card: 'wide' },
       header: t('table.columns.override'),
       enableSorting: false,
       minSize: 200,
