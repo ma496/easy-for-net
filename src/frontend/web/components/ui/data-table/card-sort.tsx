@@ -2,10 +2,11 @@ import { useId } from 'react'
 import { ArrowDownWideNarrow, ArrowUpNarrowWide } from 'lucide-react'
 import { useDataTable } from './context'
 import { useTranslation } from '@/i18n'
+import { Select } from '../form/select'
 
 /**
  * DataTableCardSort stands in for the clickable column headers the card list has no room for: a
- * select of the sortable columns and a button flipping the direction, both bound to the table's
+ * themed select of the sortable columns (a native one opens an OS-drawn list on phones) and a button flipping the direction, both bound to the table's
  * sorting state. It renders nothing when no column can be sorted.
  */
 export function DataTableCardSort<TData>() {
@@ -24,22 +25,24 @@ export function DataTableCardSort<TData>() {
       <label htmlFor={selectId} className="shrink-0 text-sm text-muted-foreground">
         {t('table.sort.label')}
       </label>
-      <select
+      <Select
+        name="sort"
         id={selectId}
-        className="form-select min-w-0 flex-1"
+        className="min-w-0 flex-1"
+        options={[
+          { value: '', label: t('table.sort.none') },
+          ...sortable.map((column) => {
+            const header = column.columnDef.header
+            return { value: column.id, label: typeof header === 'string' ? header : column.id }
+          }),
+        ]}
         value={current?.id ?? ''}
-        onChange={(e) => table.setSorting(e.target.value ? [{ id: e.target.value, desc: descending }] : [])}
-      >
-        <option value="">{t('table.sort.none')}</option>
-        {sortable.map((column) => {
-          const header = column.columnDef.header
-          return (
-            <option key={column.id} value={column.id}>
-              {typeof header === 'string' ? header : column.id}
-            </option>
-          )
-        })}
-      </select>
+        onChange={(_, value) => table.setSorting(value ? [{ id: value, desc: descending }] : [])}
+        placeholder={t('table.sort.none')}
+        searchable={false}
+        clearable={false}
+        showValidation={false}
+      />
       <button
         type="button"
         className="btn btn-secondary size-9 shrink-0 p-0"
