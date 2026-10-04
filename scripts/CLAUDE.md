@@ -30,14 +30,15 @@ loop.mjs            the whole cycle: look → observe → plan → drain → rep
 | `dev.mjs` | `npm run dev`: the whole app for a developer — PostgreSQL and Redis through `docker compose` when the probes say they are down, then the API (via `serve-api.mjs`) and `next dev` side by side, each line prefixed. Not part of the loop or the gate. |
 | `stop-api.mjs` | Stops this checkout's running API (anything running from `src/backend/Source/bin/`), which on Windows locks the build output. The gate runs it before `dotnet build`; `npm run stop:api`. |
 | `pg-ready.mjs` | Whether PostgreSQL accepts connections — the dependency probe for verify and the loop. |
+| `redis-ready.mjs` | Whether the Redis in `ConnectionStrings:Redis` accepts a TCP connection — the same probe, for the session store. |
 | `smoke.mjs` | The live check: health, the OpenAPI document, and an anonymous caller refused. |
 | `deploy-vps.mjs` | `npm run deploy:vps`: puts the app on a Linux server behind Coolify over SSH, from any OS. Uploads `deploy/vps/remote.sh` (POSIX sh, run as root) and runs its `check`/`prepare`/`deploy` phases; the pure parts are `lib/deploy-vps.mjs`. Not part of the loop or the gate. |
 | `lib/` | The pure parts: the department map, spend and budget arithmetic, salvage, memory selection, cross-platform process helpers (`proc.mjs`), the timer's files (`schedule.mjs`), remote and PR URLs (`remote.mjs`), the config and its validation (`project-config.mjs`), the queue lock (`queue-lock.mjs`), `Depends-on:` resolution (`task-deps.mjs`), changed-path listing and the tree fingerprint a passing verify is reused on (`changed-paths.mjs`), the services a task needs before it may start (`dependencies.mjs`), which gate steps a diff reaches (`gate-scope.mjs`), journal outcomes (`outcomes.mjs`), how an attempt ended (`attempt-outcome.mjs`). |
 | `lib/claude-events.mjs` | **The only reader of the Claude CLI's stream-json.** `stream-render.mjs` renders and adds up what it normalises. A CLI release that moves a field is fixed here, and `tests/claude-stream-contract.test.mjs` holds it against captured streams. |
 
 **Two kinds of file live here.** The engine — everything above except `gate`, `serve-api`, `dev`, `deploy`,
-`stop-api`, `pg-ready` and `smoke` — knows nothing about the stack; it asks `lib/project-config.mjs`,
-which reads `agentic.config.json`. Those seven are the stack-specific half: they are what the
+`stop-api`, `pg-ready`, `redis-ready` and `smoke` — knows nothing about the stack; it asks `lib/project-config.mjs`,
+which reads `agentic.config.json`. Those eight are the stack-specific half: they are what the
 config's commands name, and they are where a change to how this repository builds or runs
 belongs.
 
@@ -56,7 +57,8 @@ works on one machine and silently fails on the next.
   prompt as an argument, is the one that runs on an unchosen default or fails on Windows'
   command-line limit.
 - **Exit codes are the interface.** `0` worked, `1` failed, `3` a spend ceiling stopped it,
-  `4` the account cannot run. A caller that cannot tell "out of money" from "never verified"
+  `4` the run never happened (the account cannot run, or a service verification
+  needs is down and cannot be started). A caller that cannot tell "out of money" from "never verified"
   will report the wrong thing to a person who is not watching.
 - **A required check that could not run is a failure.** Never a pass with a footnote.
 - **The scripts never read `.env`.** Ceilings and flags come from the environment the caller

@@ -1,18 +1,19 @@
 ---
 description: Verify the current change — the static gate plus whatever live checks the diff demands
-argument-hint: "[--scope working] [--autostart]"
+argument-hint: "[--scope working] [--autostart] [--full]"
 allowed-tools: Bash, Read, Grep, Glob
 ---
 
 Run `npm run verify -- $ARGUMENTS` from the repo root (the `--` hands the flags to the
 script rather than to npm).
 
-It reads the diff and decides what this change actually needs: the static gate always, plus
-every check in `verify.checks` whose watched paths the diff touched. `agentic.config.json`
+It reads the diff and decides what this change actually needs: the gate steps the diff's
+paths can break (all of them when a path is watched by none, none for a documentation-only
+diff), plus every check in `verify.checks` whose watched paths the diff touched. `agentic.config.json`
 is where that mapping lives — read it if you want to know why a check did or did not run.
 
 Useful flags: `--autostart` starts the app if a live check needs it, `--scope working`
-judges only uncommitted changes instead of the whole branch.
+judges only uncommitted changes instead of the whole branch, `--full` runs every gate step.
 
 ## Reading the result
 

@@ -18,11 +18,12 @@ store/api/
     <area>/
       <area>-api.ts
       <area>-dtos.ts
+      <area>-mappers.ts             # optional: pure DTO <-> form conversions, with a colocated test
 ```
 
 `<feature>` and `<area>` mirror the backend: `identity/users`, `identity/roles`, `identity/account`,
 `identity/permissions`, `notifications/notifications`, `file-management/files`, `tenancy/tenants`,
-`tenancy/editions`, `tenancy/features`.
+`tenancy/editions`, `tenancy/features`, `localization/localization`, `settings/settings`.
 
 ## DTOs first
 
@@ -108,7 +109,8 @@ file path (`@/store/api/identity/account/account-api`) to avoid barrel cycles.
 
 Use a tag type when the data is a **server-owned collection that this app also mutates**, so a
 mutation must refresh lists and details: `Users`, `Roles`, `Notifications`, `Tenants`,
-`TenantMembers`, `Editions`, `FeatureValues`. Name it after the area in PascalCase and declare it with
+`TenantMembers`, `Editions`, `FeatureValues`, `MyFeatures`, `Settings`, `LocalizationText`,
+`LocalizationLanguage`. Name it after the area in PascalCase and declare it with
 `enhanceEndpoints({ addTagTypes: [...] })` on every slice that provides **or invalidates** it — a slice
 may re-declare another area's tag (`tenantsApi` declares `Users` so a member change refreshes the user
 list and the seat count; `editionsApi` declares `Tenants` because deleting a plan changes the tenants
@@ -120,7 +122,6 @@ Do **not** add tags when there is nothing to invalidate:
   and the reauth flow, not in the cache.
 - `permissions-api.ts` — the permission catalogue is static for the life of a deployment.
 - `files-api.ts` — uploads/downloads/deletes are addressed by file name, and nothing lists them.
-- Polled endpoints such as `notificationGetUnreadCount`, which refetch on their own interval.
 - `tenantSwitch` / `tenantExit` — changing the acting tenant changes what **every** cached query would
   answer, so the caller discards the whole store with a full page load instead (`useTenantSwitch` /
   `leaveForTenantChange` in `store/tenant-cache.ts`). Invalidating or resetting in place would refetch
@@ -148,7 +149,15 @@ providesTags: ['Users'],
 
 // a row keyed by more than one field
 providesTags: (result, error, arg) => [{ type: 'FeatureValues', id: `${arg.providerName}:${arg.providerKey}` }],
+
+// a named sub-tag, so one invalidation can skip a query the bare type would refetch
+export const NOTIFICATIONS_LIST_TAG = { type: 'Notifications' as const, id: 'LIST' }
+providesTags: [{ type: 'Notifications', id: 'UNREAD_COUNT' }],
 ```
+
+The notification lists provide `NOTIFICATIONS_LIST_TAG`, which the hub's push invalidates
+(`use-notification-hub.ts`) without refetching the unread count it has already counted; the
+mutations invalidate the bare `Notifications` type and so refresh the badge too.
 
 A mutation that changes what the **signed-in account** is (its tenants, its roles) also has to refresh
 `authSlice`, which is not in the cache: `onQueryStarted` awaits `queryFulfilled`, re-reads

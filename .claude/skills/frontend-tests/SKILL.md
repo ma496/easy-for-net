@@ -1,6 +1,6 @@
 ---
 name: frontend-tests
-description: Write and run Vitest tests for the web app in src/frontend/web — colocated *.test.ts files, what is worth testing (pure helpers, route and tenant-scope rules, reducers, middleware, the store's tenant-change reset, client/API mirrors, locale files) and how to structure cases. Use when changing frontend logic that has rules worth pinning down.
+description: Write and run Vitest tests for the web app in src/frontend/web — colocated *.test.ts files, what is worth testing (pure helpers, route and tenant-scope rules, reducers, middleware, the tenant-change page load, client/API mirrors, locale files) and how to structure cases. Use when changing frontend logic that has rules worth pinning down.
 ---
 
 # Frontend tests
@@ -29,8 +29,10 @@ Tests are **colocated** with the code they cover and named `<file>.test.ts`:
 ```
 lib/utils/redirect.test.ts                 lib/utils/tenant-routing.test.ts
 lib/utils/upload-limit.test.ts             lib/utils/api-error-helpers.test.ts
+lib/notifications/hub-reconnect.test.ts    components/ui/data-table/card-layout.test.ts
 store/slices/authSlice.test.ts             store/middlewares/rtk-error-middleware.test.ts
-store/tenant-cache.test.ts                 i18n/locales.test.ts
+store/tenant-cache.test.ts                 store/api/settings/settings/settings-mappers.test.ts
+styles/tokens.test.ts                      i18n/locales.test.ts
 i18n/tenant-screens.test.ts                i18n/resolve-locale.test.ts
 i18n/locale-guard.test.ts                  i18n/translate.test.ts
 i18n/locale-routing-loop.test.ts
@@ -93,10 +95,9 @@ browser:
 - **Reducers** — call `slice.reducer(state, action)` and assert on the state it returns.
 - **Middleware** — run an action through `middleware(api)(next)(action)` with a recording `dispatch`
   and assert on what it dispatched, and on what it left alone.
-- **The store** where the behaviour *is* the cache: `tenant-cache.test.ts` seeds a record with
-  `accountApi.util.upsertQueryData`, dispatches the tenant-change sequence through the real `store`,
-  and reads `store.getState().appApi.queries` back. Reset with `appApi.util.resetApiState()` in
-  `beforeEach`.
+- **Browser globals** a helper touches: `tenant-cache.test.ts` stubs `window` with `vi.stubGlobal`
+  (a recording `location.replace`, an in-memory `sessionStorage`), asserts the full page load and the
+  notice it hands to the next document, and `vi.unstubAllGlobals()` in `afterEach`.
 - **Client/API mirrors**: `allow.test.ts` and `feature-names.test.ts` restate the backend constants and
   fail when `allow.ts` / `feature-names.ts` drift — add the new constant there when you add a
   permission or a feature.

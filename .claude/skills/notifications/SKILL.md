@@ -44,8 +44,8 @@ await notificationService.NewUserNotificationsAsync(
     group: "approvals", cancellationToken: cancellationToken);
 ```
 
-**Scope.** Attribution comes from `ITenantContext`, never from an argument, and every method throws
-`TenantScopeNotEstablishedException` with no scope at all. `NewUser…` stamps the active scope: inside
+**Scope.** Attribution comes from `ITenantContext`, never from an argument, and every method but
+`NewGlobal…` throws `TenantScopeNotEstablishedException` with no scope at all. `NewUser…` stamps the active scope: inside
 a tenant the recipient sees the row only while acting in that tenant, and in platform scope the row
 names no tenant and the recipient sees it only while acting in platform scope - this is how a platform
 account is told something personally. `NewTenant…` needs an actual tenant and throws
@@ -243,7 +243,8 @@ with the platform-wide broadcasts alone; that is harmless, and the web app sends
   and `baseQueryWithReauth` then refreshes the session under its mutex - or signs out, which stops the
   connection. A connection merely being lost is not probed, only a failed attempt. Sign-out closes the
   connection server-side at once, so a probe then would find no session to refresh: `leaveSignedOut`
-  marks the navigation to sign-in first (`store/signed-out-navigation.ts`), after which the hook probes
+  (`store/tenant-cache.ts`) marks the navigation to sign-in first (`markLeavingSignedOut` in
+  `store/signed-out-navigation.ts`), after which the hook probes
   nothing and a failed refresh redirects nowhere. Never refresh from the hook by any other route.
 - Fallback polling: none while connected; while disconnected, the unread count every
   `fallbackPollDelayMs` (60 s, give or take 10%), paused while the tab is hidden, with one fetch when it
@@ -251,7 +252,8 @@ with the platform-wide broadcasts alone; that is harmless, and the web app sends
 - `components/notifications/` holds `NotificationBell` (the badge, whose text is
   `formatUnreadBadge(count)`: no badge at zero or below, `99+` above 99), `NotificationPanel` (dropdown
   list) and `NotificationItem` (single row, renders `t(titleKey, notificationVariables(metadata))` and the
-  same for `messageKey`), with full pages under `app/[lang]/admin/notifications/` (`list`, `[id]`).
+  same for `messageKey`), with full pages under `app/[lang]/admin/notifications/` (the list at its
+  root, one notification under `[id]`).
 
 ## Testing
 

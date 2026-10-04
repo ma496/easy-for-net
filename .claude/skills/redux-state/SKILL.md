@@ -14,12 +14,13 @@ can read it". Use a slice only for state the client owns:
 | --- | --- |
 | `authSlice` (`auth`) | the session: `user` (`GetUserInfoResponse`), `isAuthenticated`, `activeTenant`, `tenants` — typed as `AuthState` from `@/lib/utils` |
 | `themeConfigSlice` (`theme`) | the color scheme (`theme`: light, dark or system, and `isDarkMode`, what it resolves to), `rtlClass`, and `sidebar` (collapsed to the icon rail from lg up, the drawer open below it). Enabled languages come from the translation dictionary, not a slice |
-| `notificationsSlice` (`notifications`) | the unread badge count |
+| `notificationsSlice` (`notifications`) | `unreadCount`, the badge (`setUnreadCount`, and `notificationReceived` counting one push) |
 | `serviceAvailabilitySlice` (`serviceAvailability`) | `isUnavailable` — whether the API is unreachable |
 
-`notificationsSlice` is the sanctioned exception to the rule above: `useNotificationHub` polls the
-unread-count query and mirrors the number into the slice so the badge can be read from anywhere
-without every consumer subscribing to the query. `authSlice` is the other: the account info is
+`notificationsSlice` is the sanctioned exception to the rule above: `useNotificationHub` subscribes
+to the unread-count query (polling it only while the hub is down), mirrors the number into the slice
+and counts each pushed notification on top, so the badge can be read from anywhere without every
+consumer subscribing to the query. `authSlice` is the other: the account info is
 server data, but it *is* the session every guard reads, so it is held in a slice and replaced
 wholesale by `setUserInfo`.
 

@@ -159,7 +159,7 @@ DI registration, or a tenant scope that was never established.
 
 Configure SMTP before expecting mail to arrive — as the `EmailSettings` section in
 `appsettings.Development.json` (the default every scope inherits), or as the platform's override on
-`/admin/settings`. The template ships placeholder credentials.
+`/admin/settings`. The `EmailSettings` section in `appsettings.json` holds only placeholder credentials.
 
 ## Checklist
 

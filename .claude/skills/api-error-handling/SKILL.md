@@ -20,7 +20,7 @@ if (usernameExists)
 
 A call site names only the code — never an English message. The code is the resource key
 (`error.server.<code>`); the message the caller would otherwise have typed would drift from what
-that key ships and would have to be kept in step across all eight resource files by hand.
+that key ships and would have to be kept in step across every shipped resource file by hand.
 
 Overloads on `EndpointExtension` (`Backend.Extensions`), each taking an `ErrorCode` from
 `ErrorHandling/ErrorCodes.cs` and no message:
@@ -28,16 +28,17 @@ Overloads on `EndpointExtension` (`Backend.Extensions`), each taking an `ErrorCo
 | Call | Produces |
 | --- | --- |
 | `ThrowError(code)` | request-level error (filed under `generalErrors`) |
+| `ThrowError(code, statusCode)` | request-level error answered with that status instead of 400 (`settingNotFound` → 404) |
 | `ThrowError(x => x.Email, code)` | error attached to that request property |
 | `ThrowError("PropertyName", code)` | same, with the name spelled out |
 
 Called with the `this.` receiver: FastEndpoints' own `Endpoint<TRequest,TResponse>` declares
 instance overloads named `ThrowError`, none of which accepts an `ErrorCode`, so through `this.` the
 compiler binds these extensions. A bare `ThrowError(ErrorCodes.X)` never considers extension methods
-and fails to compile, so a missing receiver is a build error, not a silent misbind. All three add a `ValidationFailure`
+and fails to compile, so a missing receiver is a build error, not a silent misbind. Each adds a `ValidationFailure`
 — its message set from `ErrorLocalization.ResolveEnglishFallback`, the shipped English text for the
-code with no database involved — and throw `ValidationFailureException`, so the response is a 400
-ProblemDetails with the code included (`IndicateErrorCode = true` in `Program.cs`).
+code with no database involved — and throws, so the response is a ProblemDetails (400 unless a status
+is given) with the code included (`IndicateErrorCode = true` in `Program.cs`).
 
 `ErrorCode` (`ErrorHandling/ErrorCode.cs`) is a `readonly record struct` wrapping the code string,
 deliberately with no implicit conversion to `string`: an applicable instance method always wins over
@@ -83,8 +84,8 @@ across features.
 }
 ```
 
-`name` is the camelCased request property (empty for request-level errors; the feature name for plan
-refusals), `code` is the `ErrorCodes` constant's `.Value` or a FluentValidation code, `reason` is the
+`name` is the camelCased request property (`generalErrors` for request-level errors; the feature name
+for plan refusals), `code` is the `ErrorCodes` constant's `.Value` or a FluentValidation code, `reason` is the
 localized message. Titles are transformed by status: 400 → "Validation Error", 404 → "Not Found"; the
 hand-shaped responses above carry their own ("Feature Disabled", "Db Update Failed", …).
 
@@ -172,7 +173,8 @@ that handling per screen.
 
 A 401 (and a 404 from `/account/get-info`) is intercepted earlier by `baseQueryWithReauth`, which
 serializes a refresh attempt through an `async-mutex`, retries the original request and re-reads the
-account info; if the refresh fails it signs the user out and redirects to `/signin?redirect=…`. Other
+account info; if the refresh fails it signs the user out and, when the page requires a session,
+redirects to `/signin?redirect=…`. Other
 404s reach the screen.
 
 ## Checklist

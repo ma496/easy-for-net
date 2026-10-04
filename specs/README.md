@@ -43,7 +43,7 @@ Build the reporting dashboard
 Depends-on: 01-reporting-data-contract
 ```
 
-A task with unmet dependencies stays in `todo/`, is shown as `[blocked: waiting on …]`, and
+A task with unmet dependencies stays in `todo/`, is shown as `[blocked: <task> (pending)]`, and
 is skipped by the drain. When the task it names lands in `done/` — which means its code is
 committed — the next drain picks it up on its own. Nothing needs re-queueing by hand.
 

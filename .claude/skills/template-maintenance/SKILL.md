@@ -28,7 +28,7 @@ only reaches users after the next tagged release** — and the tool never reads 
 
 Everything copied lands in every scaffolded project. No project-specific names, no hardcoded
 domains, no sample business entities. `Identity`, `Tenancy` (with feature management),
-`FileManagement` and `Notifications` are the baseline; add to them only what every new project
+`Settings`, `Localization`, `FileManagement` and `Notifications` are the baseline; add to them only what every new project
 would want.
 
 ## What gets copied — and what does not
@@ -41,8 +41,8 @@ would want.
 - `appsettings.json` duplicated into `appsettings.Development.json` / `appsettings.Testing.json`
 - `src/frontend/web/.env.example` copied to `.env.development`
 - the root `.env` written from `.env.docker.example` by `WriteDockerEnvAsync`: the project's Compose
-  project, database and Redis key prefix, `DOMAIN=localhost`, and fresh random database, Redis and
-  administrator passwords and JWT key (a key added to the example ships as it is unless it is named
+  project, database and Redis key prefix, `DOMAIN=localhost` / `PUBLIC_URL=https://localhost`, and
+  fresh random database, Redis and administrator passwords and JWT key (a key added to the example ships as it is unless it is named
   there)
 - root files `.editorconfig`, `.gitignore`, `.gitattributes`, `global.json`, `package.json`,
   `agentic.config.json`, `docker-compose.yml`, `docker-compose.prod.yml`, `docker-compose.coolify.yml`
@@ -84,10 +84,13 @@ name no shipped directory uses) or put it outside `.claude`.
   project's reference to it; `Meta.cs`'s `InternalsVisibleTo`; `Program.cs`'s
   `c.Binding.ReflectionCache.AddFrom<ProjectName>` call; the namespace strings in
   `Tests/Architect/FeatureDependencyTests.cs`.
-- Connection strings (`ConnectionStrings.DefaultConnection`, `Hangfire.Storage.ConnectionString`)
-  are rewritten to `Database=<Name>` (`<Name>Test` for Testing) with a literal `{password}`, and
-  Development/Testing get a GUID `Auth.Jwt.Key`. These are JSON-path updates, so renaming or moving
-  those keys in `appsettings.json` must be mirrored in the generator.
+- `CustomizeAppSettingsAsync` rewrites the connection strings (`ConnectionStrings.DefaultConnection`,
+  `Hangfire.Storage.ConnectionString`) to `Database=<Name>` (`<Name>Test` for Testing) — with a
+  literal `{password}` in `appsettings.json` and `postgres` (the `docker-compose.yml` default) in
+  Development/Testing — sets `Redis.InstanceName` to `<Name>:` (`<Name>Test:` for Testing), gives
+  Development/Testing a GUID `Auth.Jwt.Key`, and writes one random password into
+  `Seed.PlatformAdminPassword` / `Seed.TenantAdminPassword` of all three files. These are JSON-path
+  updates, so renaming or moving those keys in `appsettings.json` must be mirrored in the generator.
 - `name` in the web `package.json` / `package-lock.json`, the root `package.json`, and
   `project.name` in `agentic.config.json` become the kebab-case name.
 - The display name: `Easy\s+For\s+Net` in every `.json` under the web app and in the API's shipped
@@ -109,14 +112,16 @@ names out of them — they address the solution by globbing the root `*.slnx` an
 
 Translations ship as the API's resource files, so without multi-language the generator deletes
 `{ur,zh,ar,hi,es,fr,ru}.json` from `src/backend/Source/Features/Localization/Core/Resources` and
-regex-rewrites one literal to English only: `locales: [...]` in `i18n/config.ts`. Changing the shape
+regex-rewrites one literal to English only: `locales: [...]` in `i18n/config.ts`; it also drops every
+culture but `en` from the web app's `i18n/offline-resources.json` (`KeepOfflineResourceLocalesAsync`).
+Changing the shape
 of that literal makes the regex miss silently (and `i18n/locales.test.ts` then fails in the generated
 project); adding or removing a shipped language means updating the generator's list too.
 `LanguageCatalog` is left whole — an entry with no resource file is harmless.
 
-`-m`/`--multilanguage` is currently broken: `SetProperty` derives the property name `Multilanguage`
-from the option name, which does not match `CreateProjectArgument.MultiLanguage`, and it would also
-assign a string to a `bool`. Any use of `-m` throws, so every generated project is English-only.
+`-m`/`--multilanguage` takes a value: `-m true` keeps every language, `-m false` (the default) is
+English-only, and anything else is refused. The option names `CreateProjectArgument.MultiLanguage`
+through its `PropertyName`, since the PascalCase of the option name would not match.
 
 ## Migrations
 
@@ -156,8 +161,10 @@ npm run gate                         # also runs every tool/*.Tests project it f
 ./publish-package.sh                 # interactive: version prompt + NuGet publish confirmation
 ```
 
-The tool tests cover argument parsing, string helpers, `Helpers` and `NamespaceRewriter`; the
-generator itself has no automated test (it shells out to `git` and `dotnet`).
+The tool tests cover argument parsing, string helpers, `Helpers`, `NamespaceRewriter`, and the
+generator's file rewrites (`CustomizeAppSettingsAsync`, `WriteDockerEnvAsync`,
+`KeepOfflineResourceLocalesAsync`); `Generate` itself has no automated test (it shells out to `git`
+and `dotnet`).
 
 ### Testing the generator locally
 

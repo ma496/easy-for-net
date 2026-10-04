@@ -54,7 +54,8 @@ entities, services and their interfaces, feature classes, Mapperly mappers). Tes
 `InternalsVisibleTo("Backend.Tests")`.
 
 **Types are `sealed` by default.** Endpoints, requests, validators, responses, groups. Mapperly
-mappers are `public partial class` (the generator needs `partial`). Entities, configurations and
+mappers are `public partial class` (the generator needs `partial`; a mapper of static methods is a
+`static partial class`). Entities, configurations and
 service implementations are plain `public class`.
 
 **Primary constructors for dependencies.** `sealed class UserGetEndpoint(IUserService userService)`,
@@ -91,7 +92,7 @@ interfaces, and non-obvious public methods. Add it; do not leave new types undoc
 | Entitlement provider | `<Feature>FeaturesProvider` | `FileManagementFeaturesProvider` |
 | Permission constant | `Entity_Action` (`"Entity.Action"` value) | `User_Create = "User.Create"` |
 | Feature (entitlement) constant | `Feature_Name` (`"Feature.Name"` value) | `Identity_MaxUserCount` |
-| Error code | `camelCase` string constant | `usernameAlreadyExists` |
+| Error code | `ErrorCodes` member (`public static readonly ErrorCode`), `camelCase` value | `UsernameAlreadyExists = new("usernameAlreadyExists")` |
 
 Private static readonly fields are `_camelCase`, private constants `PascalCase`, parameters
 `camelCase` (enforced as warnings by `.editorconfig`).

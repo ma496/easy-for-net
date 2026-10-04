@@ -1,6 +1,6 @@
 ---
 description: Verify, review, and commit the working tree — then stop for approval to push
-allowed-tools: Bash, Read, Grep, Glob
+allowed-tools: Bash, Read, Edit, Write, Grep, Glob, Agent
 ---
 
 Ship the work in the current working tree.

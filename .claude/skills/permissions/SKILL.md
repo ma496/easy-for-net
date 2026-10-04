@@ -91,7 +91,7 @@ you add one of those.
 ## 5. Gate the UI
 
 - Route guard: add an entry to `src/frontend/web/auth-urls.ts`
-  (`{ url: '/admin/invoices/list', permissions: [Allow.Invoice_View] }`; `{id}` matches one segment).
+  (`{ url: '/admin/invoices', permissions: [Allow.Invoice_View] }`; `{id}` matches one segment).
   `App.tsx` sends a signed-in caller lacking the permissions to `/unauthorized`; `proxy.ts` only uses
   `isAuthRequired` from the same file to force sign-in. The sidebar, global search and breadcrumbs also
   hide entries whose `authUrls` permissions the caller lacks.
@@ -148,8 +148,8 @@ Consequences worth knowing before you choose:
 
 `User.IsPlatform` names the tier an account belongs to, never what it may do; authorize on
 permissions. Where the tier is read, and why, is listed in the `multi-tenancy` skill. On the client,
-`isPlatform` from `/account/get-info` gates UX only — the "enter tenant" action in the tenants table
-and the "exit tenant" control in the header switcher.
+`isPlatform` from `/account/get-info` gates UX only — the "enter tenant" action in the tenants table,
+the "exit tenant" control in the header switcher, and which scope's screens `tenant-routing.ts` offers.
 
 ## Gating a permission on the tenant's plan
 

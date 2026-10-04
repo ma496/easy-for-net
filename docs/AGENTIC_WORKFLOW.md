@@ -146,8 +146,8 @@ answerable rather than arguable.
   integration tests, which migrate and seed their own database; with the server down every
   task fails its gate, and `npm run loop` says so in its preflight.
 - **Redis running** where `ConnectionStrings:Redis` points, for the live check's API.
-- The runner probes both before an attempt starts and, when one is down and has no `start`
-  command, exits 4 having spent nothing; the drain puts the task back in `todo/` and stops.
+- The runner probes both before an attempt starts and, when one is down and cannot be
+  started, exits 4 having spent nothing; the drain puts the task back in `todo/` and stops.
 - `src/frontend/web/node_modules` — the gate runs `npm ci` there on a fresh checkout.
 
 ## The queue repairs its own bookkeeping

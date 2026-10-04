@@ -82,11 +82,9 @@ One file per service, interface first, implementation below, both documented:
 
 ```csharp
 /// <summary>Defines lookup and lifecycle operations for <see cref="Edition"/>…</summary>
+[AllowOutside]                                             // only when another feature consumes it
 public interface IEditionService
 {
-    /// <summary>The refusal reported when a plan name is already taken.</summary>
-    const string DuplicateNameMessage = "An edition with this name already exists";
-
     IQueryable<Edition> Editions();                        // composable; the slice's endpoints narrow it
     Task<bool> NameExistsAsync(string name, Guid? excludingId = null, CancellationToken cancellationToken = default);
 }
@@ -99,8 +97,10 @@ public class EditionService(AppDbContext dbContext, IFeatureValueStore featureVa
 - `[NoDirectUse]` makes `Tests/Architect/NoDirectUseTests` fail if any other type depends on the
   concrete class instead of the interface. `[BypassNoDirectUse]` is for the rare type that
   legitimately needs the concrete type (feature modules, composition roots).
-- Refusal messages that several endpoints report live as constants on the interface
-  (`IEditionService.DuplicateNameMessage`), so every caller says the same thing.
+- Services answer facts (`NameExistsAsync`); the endpoint turns a refusal into an
+  `ErrorCodes` constant (`this.ThrowError(x => x.Name, ErrorCodes.EditionNameAlreadyExists)`), so
+  every caller reports the same code and the message comes from the localized resources — never an
+  English message constant.
 - Async members take `CancellationToken cancellationToken = default` as the last parameter.
 - A tenant-aware service injects `ITenantContext` (published by `Tenancy`); it never takes a tenant
   id from a caller's payload. See the `multi-tenancy` skill.

@@ -8,7 +8,8 @@ description: Work with tenant isolation — tenant-owned entities (IHaveTenant/I
 One database, rows tagged with a `TenantId`. Isolation is automatic *if* an entity carries a tenant
 marker and code never widens a query without saying so. Everything tenancy-shaped lives in the
 `Tenancy` slice (`Features/Tenancy/Core`); `ITenantContext`, `TenantContextExtensions`,
-`ITenantMembershipService` and `TenantSeats` are `[AllowOutside]`, so any slice may use them.
+`ITenantMembershipService`, `ITenantMembershipQuery` (membership reads as composable id queries) and
+`TenantSeats` are `[AllowOutside]`, so any slice may use them.
 
 ## 1. Scopes: tenant, platform, unresolved
 
@@ -78,8 +79,8 @@ tenant's). See the `permissions` skill.
 
 Implement one marker from `Backend.ShareData.Entities.Base`:
 
-- `IHaveTenant` — `Guid TenantId`; every row belongs to exactly one tenant. Writing one in platform or
-  unresolved scope throws.
+- `IHaveTenant` — `Guid TenantId`; every row belongs to exactly one tenant. Writing one with no
+  `TenantId` set in platform or unresolved scope throws.
 - `IMayHaveTenant` — `Guid? TenantId`; `null` is a platform-owned row (platform roles, global
   notifications, account-owned files). Use it only when such rows genuinely exist.
 
@@ -113,13 +114,14 @@ migration — is the `backend-entity` skill.
 
 **Unique indexes must lead with `TenantId`**, or one tenant's value blocks another's. For an
 `IMayHaveTenant` kind add `.AreNullsDistinct(false)` so platform rows are unique among themselves too
-(`RoleConfiguration`):
+(`RoleConfiguration`, which gives the raw column behind a normalized one its own unique index on the
+same terms). Name each index after its columns (`backend-entity`):
 
 ```csharp
 builder.HasIndex(x => new { x.TenantId, x.NumberNormalized })
     .IsUnique()
     .AreNullsDistinct(false)
-    .HasDatabaseName("IX_Invoices_TenantId_Number");
+    .HasDatabaseName("IX_Invoices_TenantId_NumberNormalized");
 ```
 
 ## 3. Reading across tenants — explicitly

@@ -39,7 +39,7 @@ import { Loader2 } from 'lucide-react'
 const buttonVariants = cva('btn', {
   variants: {
     variant: { default: 'btn-primary', primary: 'btn-primary', outline: 'btn-secondary', secondary: 'btn-secondary', soft: 'btn-soft', ghost: 'btn-ghost', danger: 'btn-danger' },
-    size: { default: "[&_svg:not([class*='size-'])]:size-4", sm: "btn-sm [&_svg:not([class*='size-'])]:size-3.5", lg: 'btn-lg' },
+    size: { default: "[&_svg:not([class*='size-'])]:size-4", sm: "btn-sm [&_svg:not([class*='size-'])]:size-3.5", lg: "btn-lg [&_svg:not([class*='size-'])]:size-5" },
     rounded: { default: '', full: 'rounded-full' },
   },
   defaultVariants: { variant: 'default', size: 'default', rounded: 'default' },
@@ -165,7 +165,8 @@ results"), never for caller-supplied text.
   `text-left`. Where a logical utility does not exist, pair the `ltr:` and `rtl:` variants
   (`ltr:text-left rtl:text-right`). Components that must branch in JS read
   `useAppSelector((state) => state.theme.rtlClass) === 'rtl'`. `i18n/tenant-screens.test.ts` fails on
-  physical utilities in the tenancy and localization screens and `TenantSwitcher`.
+  physical utilities (and `translate-x-`) in the tenancy, select-tenant, localization and settings
+  screens and `TenantSwitcher`.
 - Icons come from `lucide-react`, sized with classes (`h-4 w-4`) or the `size` prop.
 
 ## Client vs server
