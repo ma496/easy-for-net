@@ -23,20 +23,19 @@ const isNavItemGroup = (item: NavItem | NavItemGroup): item is NavItemGroup => {
 /**
  * Client-side sidebar navigation: filters nav items by the current user's permissions, manages which group is open, and auto-expands the active parent on route change.
  *
- * From lg up it is a fixed column that the theme's `sidebar` flag collapses to an icon rail, which
- * widens again while hovered. Below lg the same flag opens it as an off-canvas drawer, and every
- * navigation closes it.
+ * From lg up it is a fixed column that the theme's `sidebar` flag collapses to an icon rail. The rail
+ * stays narrow: hovering an entry opens a flyout beside it with the entry's name, or its submenu.
+ * Below lg the same flag opens it as an off-canvas drawer, and every navigation closes it.
  */
 export const Sidebar = () => {
   const dispatch = useAppDispatch()
   const { t } = useTranslation()
   const pathname = usePathname()
   const [currentMenu, setCurrentMenu] = useState<string>('')
-  const [hovered, setHovered] = useState(false)
   const sidebarFlag = useAppSelector((state) => state.theme.sidebar)
   const authState = useAppSelector((state) => state.auth)
-  // On a desktop the flag means "collapsed to the rail"; the rail shows labels again while hovered.
-  const compact = sidebarFlag && !hovered
+  // On a desktop the flag means "collapsed to the rail".
+  const compact = sidebarFlag
 
   const toggleMenu = (value: string) => {
     setCurrentMenu((oldValue) => {
@@ -134,15 +133,12 @@ export const Sidebar = () => {
       />
       <nav
         className={cn(
-          'fixed inset-y-0 start-0 z-50 flex w-64 flex-col border-e border-border bg-surface transition-[width,transform,box-shadow] duration-200 ease-out',
+          'fixed inset-y-0 inset-s-0 z-50 flex w-64 flex-col border-e border-border bg-surface transition-[width,transform,box-shadow] duration-200 ease-out',
           // Below lg: an off-canvas drawer
           sidebarFlag ? 'max-lg:translate-x-0 max-lg:shadow-lg' : 'max-lg:-translate-x-full max-lg:rtl:translate-x-full',
-          // lg and up: full column, or the icon rail that widens while hovered
-          sidebarFlag && 'lg:w-[4.5rem]',
-          sidebarFlag && hovered && 'lg:w-64 lg:shadow-lg',
+          // lg and up: full column, or the icon rail
+          sidebarFlag && 'lg:w-18',
         )}
-        onMouseEnter={() => sidebarFlag && setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
       >
         <div className={cn('flex h-14 shrink-0 items-center justify-between gap-2 px-4', compact && 'lg:justify-center lg:px-0')}>
           <Link href="/admin" className="flex min-w-0 items-center gap-2.5">
