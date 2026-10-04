@@ -431,7 +431,8 @@
         "title": "更新用户"
       },
       "accountDetails": "账户详情",
-      "passwordDescription": "该用户登录时使用的密码。"
+      "passwordDescription": "该用户登录时使用的密码。",
+      "isActiveDescription": "未激活的用户无法登录。"
     },
     "roles": {
       "title": "角色",

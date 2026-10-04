@@ -431,7 +431,8 @@
         "title": "صارف اپ ڈیٹ کریں"
       },
       "accountDetails": "اکاؤنٹ کی تفصیلات",
-      "passwordDescription": "وہ پاس ورڈ جس سے یہ صارف سائن ان کرتا ہے۔"
+      "passwordDescription": "وہ پاس ورڈ جس سے یہ صارف سائن ان کرتا ہے۔",
+      "isActiveDescription": "غیر فعال صارف سائن ان نہیں کر سکتا۔"
     },
     "roles": {
       "title": "کردار",
