@@ -12,6 +12,7 @@ import { authUrls } from '@/auth-urls'
 import { SidebarNavGroup } from './nav-group'
 import { cn, isAllowed, isPathAvailable } from '@/lib/utils'
 import Image from 'next/image'
+import { useMediaQuery } from '@/hooks'
 
 /**
  * Type guard that narrows a {@link NavItem} | {@link NavItemGroup} union to {@link NavItemGroup} by checking for the `items` property.
@@ -34,8 +35,9 @@ export const Sidebar = () => {
   const [currentMenu, setCurrentMenu] = useState<string>('')
   const sidebarFlag = useAppSelector((state) => state.theme.sidebar)
   const authState = useAppSelector((state) => state.auth)
-  // On a desktop the flag means "collapsed to the rail".
-  const compact = sidebarFlag
+  const isDesktop = useMediaQuery('(min-width: 1024px)')
+  // On a desktop the flag means "collapsed to the rail"; below lg it means "drawer open", where submenus expand inline.
+  const compact = sidebarFlag && isDesktop
 
   const toggleMenu = (value: string) => {
     setCurrentMenu((oldValue) => {
