@@ -96,6 +96,16 @@ bld.Services.AddDbContext<AppDbContext>((provider, options) =>
            .AddInterceptors(provider.GetServices<IInterceptor>())
            .ConfigureWarnings(warnings =>
            {
+               // UserRole and RolePermission require a Role, NotificationVisit a Notification, and both
+               // principals are filtered (soft delete, tenant) while the junctions are not. Reaching the
+               // principal through the required navigation is an inner join against the filtered set, so
+               // a row whose role or notification is deleted or another tenant's drops out rather than
+               // arriving with that principal - fewer rows, never extra ones, which is the intended
+               // reading: a deleted role grants nothing. EF's remedies are worse here: an optional
+               // navigation needs nullable keys and returns rows with a null principal, and a matching
+               // filter on the junctions drags the principal's tenant filter into every junction query.
+               warnings.Ignore(CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning);
+
                if (throwOnUnorderedPaging)
                {
                    warnings.Throw(CoreEventId.RowLimitingOperationWithoutOrderByWarning);
