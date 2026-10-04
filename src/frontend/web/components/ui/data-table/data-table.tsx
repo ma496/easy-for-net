@@ -4,6 +4,7 @@ import { DataTableSortIcon } from './sort-icon'
 import { Loader } from '..'
 import { useTranslation } from '@/i18n'
 import ScrollBar from 'react-perfect-scrollbar'
+import { useEffect, useRef } from 'react'
 import { DataTableCardList } from './card-list'
 import { DataTableCardSort } from './card-sort'
 import { DataTableEmpty } from './empty-state'
@@ -56,12 +57,33 @@ export function DataTable<TData>({ cardsBelow = 'md', emptyMessage, ...gridProps
 function DataTableGrid<TData>({ className = '', suppressScrollX = false, suppressScrollY = true, emptyMessage }: Omit<DataTableProps, 'cardsBelow'>) {
   const { columns, table, isFetching } = useDataTable<TData>()
   const { t } = useTranslation()
+  const scrollBarRef = useRef<ScrollBar>(null)
+  const containerRef = useRef<HTMLElement | null>(null)
+
+  // perfect-scrollbar measures only when it mounts or re-renders, so a window resize, a sidebar toggle or a table
+  // shown from display:none would leave its rails sized for the old width. Re-measure whenever the container or the
+  // table changes size, so the horizontal rail appears on hover exactly when the table is wider than its space.
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(() => scrollBarRef.current?.updateScroll())
+    observer.observe(container)
+    if (container.firstElementChild) observer.observe(container.firstElementChild)
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <ScrollBar
+      ref={scrollBarRef}
+      containerRef={(element) => {
+        containerRef.current = element
+      }}
       options={{
         suppressScrollX,
         suppressScrollY,
+        // A full-width table can measure a fraction of a pixel wider than its container; that is not overflow.
+        scrollXMarginOffset: 1,
+        scrollYMarginOffset: 1,
       }}
     >
       <div className="relative">
