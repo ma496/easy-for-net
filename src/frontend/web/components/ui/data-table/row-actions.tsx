@@ -69,7 +69,7 @@ export function DataTableRowActions({ actions, className }: DataTableRowActionsP
       <MenuItems
         anchor={isRTL ? 'bottom start' : 'bottom end'}
         modal={false}
-        className="menu-surface z-50 mt-1 min-w-44 [--anchor-gap:4px] focus:outline-none"
+        className="menu-surface z-50 min-w-44 [--anchor-gap:2px] focus:outline-none"
       >
         {visible.map((action) => {
           const content = (
