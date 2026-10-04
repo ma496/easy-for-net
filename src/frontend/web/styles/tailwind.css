@@ -451,8 +451,8 @@
   }
 }
 
-/* SweetAlert2: dialogs and toasts follow the theme. */
-.swal2-container.swal2-backdrop-show {
+/* SweetAlert2: dialogs and toasts follow the theme. Toast containers carry swal2-backdrop-show too, so only a modal gets the overlay. */
+body:not(.swal2-toast-shown) .swal2-container.swal2-backdrop-show {
   background: var(--overlay) !important;
   backdrop-filter: blur(2px);
 }
