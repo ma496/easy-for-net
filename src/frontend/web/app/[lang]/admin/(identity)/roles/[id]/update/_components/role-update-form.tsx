@@ -7,6 +7,7 @@ import { Form, Formik } from 'formik'
 import { Button, ApiErrorMessages, Loader } from '@/components/ui'
 import { FormInput, FormTextarea } from '@/components/ui/form'
 import { apiErrorAlert, successToast } from '@/lib/utils'
+import { FormSection, FormActions, FormState } from '../../../../_components/form-layout'
 
 /**
  * Builds a Yup validation schema for the role update form using the supplied translation function for error messages.
@@ -44,25 +45,25 @@ export const RoleUpdateForm = ({ roleId }: RoleUpdateFormProps) => {
 
   if (isLoadingRole) {
     return (
-      <div className="flex justify-center items-center">
-        <Loader />
-      </div>
+      <FormState>
+        <Loader size="lg" />
+      </FormState>
     )
   }
 
   if (roleGetError) {
     return (
-      <div className="flex justify-center items-center">
-        <ApiErrorMessages error={roleGetError} />
-      </div>
+      <FormState>
+        <ApiErrorMessages error={roleGetError} className="w-full" dismissible={false} />
+      </FormState>
     )
   }
 
   if (!isLoadingRole && !roleGetError && !roleData) {
     return (
-      <div className="flex justify-center items-center">
+      <FormState>
         {t('page.roles.notFound')}
-      </div>
+      </FormState>
     )
   }
 
@@ -93,21 +94,23 @@ export const RoleUpdateForm = ({ roleId }: RoleUpdateFormProps) => {
       onSubmit={onSubmit}
     >
       {() => (
-        <Form noValidate className="grid grid-cols-1 gap-4">
-          <FormInput
-            name="name"
-            label={t('form.label.roleName')}
-            placeholder={t('form.placeholder.roleName')}
-            autoFocus={true}
-            required={true}
-          />
-          <FormTextarea
-            name="description"
-            label={t('form.label.roleDescription')}
-            placeholder={t('form.placeholder.roleDescription')}
-            rows={4}
-          />
-          <div className="flex justify-end gap-4">
+        <Form noValidate>
+          <FormSection columns={1}>
+            <FormInput
+              name="name"
+              label={t('form.label.roleName')}
+              placeholder={t('form.placeholder.roleName')}
+              autoFocus={true}
+              required={true}
+            />
+            <FormTextarea
+              name="description"
+              label={t('form.label.roleDescription')}
+              placeholder={t('form.placeholder.roleDescription')}
+              rows={4}
+            />
+          </FormSection>
+          <FormActions>
             <Button
               type="button"
               variant="outline"
@@ -122,7 +125,7 @@ export const RoleUpdateForm = ({ roleId }: RoleUpdateFormProps) => {
             >
               {t('common.submit')}
             </Button>
-          </div>
+          </FormActions>
         </Form>
       )}
     </Formik>

@@ -13,7 +13,7 @@ export function DataTableCheckboxCell<TData>({ row }: DataTableCheckboxCellProps
     <div className="flex items-center">
       <input
         type="checkbox"
-        className="form-checkbox h-5 w-5 cursor-pointer rounded-sm border-2 border-white-light bg-transparent text-primary shadow-none! ring-0! ring-offset-0! outline-hidden! checked:bg-size-[90%_90%] disabled:cursor-not-allowed dark:border-[#253b5c]"
+        className="form-checkbox"
         checked={row.getIsSelected()}
         onChange={row.getToggleSelectedHandler()}
       />
@@ -36,7 +36,7 @@ export function DataTableCheckboxHeader({ checked, indeterminate, onChange }: Da
     <div className="flex items-center">
       <input
         type="checkbox"
-        className="form-checkbox h-5 w-5 cursor-pointer rounded-sm border-2 border-white-light bg-transparent text-primary shadow-none! ring-0! ring-offset-0! outline-hidden! checked:bg-size-[90%_90%] disabled:cursor-not-allowed dark:border-[#253b5c]"
+        className="form-checkbox"
         checked={checked}
         ref={(el) => {
           if (el) {

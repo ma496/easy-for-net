@@ -6,9 +6,10 @@ import { useTranslation } from '@/i18n'
 export const Footer = () => {
   const { t } = useTranslation()
   return (
-    <div className="mt-auto px-6 pt-0 text-center sm:ltr:text-left sm:rtl:text-right dark:text-white-dark">
-      © {new Date().getFullYear()}. {t('brand.name')}. {t('common.allRightsReserved')}
-    </div>
+    <footer className="mx-auto w-full max-w-[1400px] px-4 pb-6 text-xs text-subtle-foreground sm:px-6 lg:px-8">
+      <div className="border-t border-border pt-5">
+        © {new Date().getFullYear()} {t('brand.name')}. {t('common.allRightsReserved')}
+      </div>
+    </footer>
   )
 }
-

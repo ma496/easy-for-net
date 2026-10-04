@@ -55,9 +55,12 @@ export default TenantDetail
 
 A route without a dynamic segment types `params: Promise<{ lang: string }>` and passes nothing down.
 
-`AdminPageContent` takes `title`, an optional `className`, and an optional `innerClassName` to
-constrain form width (`max-w-155` for most create/update forms, `max-w-175` / `max-w-187.5` for
-wider ones). List and detail screens leave it full width.
+`AdminPageContent` is the page frame: a header with `title`, an optional `description` line and
+`actions` (end-aligned controls such as a primary "create" button), then the body on one card.
+`innerClassName` styles that card — constrain form width with it (`max-w-3xl` for most
+create/update forms); list and detail screens leave it full width. `plain` drops the card, for a
+page that lays out several cards of its own (a detail or settings screen). Colors follow the
+token rules in the `ui-component` skill.
 
 ## The client component
 

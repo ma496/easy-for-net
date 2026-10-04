@@ -26,7 +26,7 @@ const Loader = ({ variant = 'primary', size = 'md', className }: LoaderProps) =>
     danger: 'text-danger',
     warning: 'text-warning',
     info: 'text-info',
-    dark: 'text-dark',
+    dark: 'text-foreground',
   }
 
   return (

@@ -28,10 +28,10 @@ export const Textarea = ({ label, name, id, className, error, showError = true, 
           {required && <span className="ms-1 text-danger">*</span>}
         </label>
       )}
-      <div className="relative text-white-dark">
-        <textarea {...props} name={name} id={textareaId} autoComplete={autoComplete} className="form-input" />
+      <div className="relative text-muted-foreground">
+        <textarea {...props} name={name} id={textareaId} autoComplete={autoComplete} className="form-textarea" />
       </div>
-      {showError && error && <div className="mt-1 text-danger">{error}</div>}
+      {showError && error && <div className="mt-1.5 text-xs font-medium text-danger">{error}</div>}
     </div>
   )
 }

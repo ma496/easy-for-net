@@ -36,7 +36,17 @@
     "deleteConfirm": "हाँ, इसे हटा दें",
     "notifications": "सूचनाएं",
     "viewAll": "सभी देखें",
-    "close": "बंद करें"
+    "close": "बंद करें",
+    "menu": "मेनू",
+    "theme": "थीम",
+    "themeLight": "लाइट",
+    "themeDark": "डार्क",
+    "themeSystem": "सिस्टम",
+    "noResults": "कोई परिणाम नहीं मिला",
+    "selectPlaceholder": "चुनें…",
+    "noOptions": "कोई विकल्प नहीं",
+    "scrollToTop": "ऊपर जाएँ",
+    "collapseSidebar": "साइडबार छोटा करें"
   },
   "navigation": {
     "home": "होम",
@@ -324,7 +334,9 @@
       "tenantStatus": "टेनेंट स्थिति",
       "allStatuses": "सभी स्थितियां",
       "suspended": "निलंबित"
-    }
+    },
+    "loadFailed": "रिकॉर्ड लोड नहीं हो सके",
+    "loadFailedHint": "अपना कनेक्शन जाँचें और फिर से प्रयास करें।"
   },
   "file": {
     "upload": "फ़ाइल अपलोड",
@@ -401,7 +413,8 @@
       "viewReport": "रिपोर्ट देखें",
       "editReport": "रिपोर्ट संपादित करें",
       "markAsDone": "पूर्ण के रूप में चिह्नित करें",
-      "goToColumns": "विवरण के लिए कॉलम पर जाएं"
+      "goToColumns": "विवरण के लिए कॉलम पर जाएं",
+      "description": "राजस्व, ऑर्डर और बिक्री का अवलोकन।"
     },
     "users": {
       "title": "उपयोगकर्ता",
@@ -416,7 +429,9 @@
       },
       "update": {
         "title": "उपयोगकर्ता अपडेट करें"
-      }
+      },
+      "accountDetails": "खाते का विवरण",
+      "passwordDescription": "वह पासवर्ड जिससे यह उपयोगकर्ता साइन इन करता है।"
     },
     "roles": {
       "title": "भूमिकाएं",
@@ -589,7 +604,8 @@
       "detail": {
         "title": "टेनेंट विवरण",
         "information": "टेनेंट जानकारी",
-        "membersTitle": "सदस्य"
+        "membersTitle": "सदस्य",
+        "seats": "सीटें"
       },
       "enterButton": "प्रवेश करें",
       "enterCurrent": "वर्तमान",

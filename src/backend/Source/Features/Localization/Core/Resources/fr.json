@@ -36,7 +36,17 @@
     "deleteConfirm": "Oui, supprimer",
     "notifications": "Notifications",
     "viewAll": "Voir tout",
-    "close": "Fermer"
+    "close": "Fermer",
+    "menu": "Menu",
+    "theme": "Thème",
+    "themeLight": "Clair",
+    "themeDark": "Sombre",
+    "themeSystem": "Système",
+    "noResults": "Aucun résultat",
+    "selectPlaceholder": "Sélectionner…",
+    "noOptions": "Aucune option",
+    "scrollToTop": "Revenir en haut",
+    "collapseSidebar": "Réduire la barre latérale"
   },
   "navigation": {
     "home": "Accueil",
@@ -324,7 +334,9 @@
       "tenantStatus": "Statut du locataire",
       "allStatuses": "Tous les statuts",
       "suspended": "Suspendu"
-    }
+    },
+    "loadFailed": "Impossible de charger les enregistrements",
+    "loadFailedHint": "Vérifiez votre connexion et réessayez."
   },
   "file": {
     "upload": "Téléchargement de fichier",
@@ -401,7 +413,8 @@
       "viewReport": "Voir le rapport",
       "editReport": "Modifier le rapport",
       "markAsDone": "Marquer comme fait",
-      "goToColumns": "Aller aux colonnes pour les détails"
+      "goToColumns": "Aller aux colonnes pour les détails",
+      "description": "Un aperçu des revenus, des commandes et des ventes."
     },
     "users": {
       "title": "Utilisateurs",
@@ -416,7 +429,9 @@
       },
       "update": {
         "title": "Mettre à jour l'utilisateur"
-      }
+      },
+      "accountDetails": "Détails du compte",
+      "passwordDescription": "Le mot de passe avec lequel cet utilisateur se connecte."
     },
     "roles": {
       "title": "Rôles",
@@ -589,7 +604,8 @@
       "detail": {
         "title": "Détail du locataire",
         "information": "Informations du locataire",
-        "membersTitle": "Membres"
+        "membersTitle": "Membres",
+        "seats": "Places"
       },
       "enterButton": "Entrer",
       "enterCurrent": "Actuel",

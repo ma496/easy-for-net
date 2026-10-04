@@ -1,5 +1,5 @@
 import { getServerTranslation } from '@/i18n'
-import { ButtonsExample } from "./_components/buttons-example"
+import { ButtonsExample } from './_components/buttons-example'
 import { AdminPageContent } from '@/components/layouts'
 
 /**
@@ -18,7 +18,7 @@ const ButtonsPage = async ({ params }: ButtonsPageProps) => {
   const title = await getServerTranslation(lang, 'page.ui.buttons.title')
 
   return (
-    <AdminPageContent title={title}>
+    <AdminPageContent title={title} description="Buttons, icon buttons and badges in every variant, size and state." plain>
       <ButtonsExample />
     </AdminPageContent>
   )

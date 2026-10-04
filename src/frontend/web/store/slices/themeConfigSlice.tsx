@@ -3,35 +3,23 @@ import themeConfig from '@/theme.config'
 
 interface ThemeConfigState {
   isDarkMode: boolean
+  /** Desktop: the sidebar is collapsed to its icon rail. Below lg: the sidebar drawer is open. */
   sidebar: boolean
   theme: string
-  menu: string
-  layout: string
   rtlClass: string
-  animation: string
-  navbar: string
-  locale: string
-  semidark: boolean
 }
 
 const initialState: ThemeConfigState = {
   isDarkMode: false,
   sidebar: false,
   theme: themeConfig.theme,
-  menu: themeConfig.menu,
-  layout: themeConfig.layout,
   rtlClass: themeConfig.rtlClass,
-  animation: themeConfig.animation,
-  navbar: themeConfig.navbar,
-  locale: themeConfig.locale,
-  semidark: themeConfig.semidark,
 }
 
 /**
- * Theme/layout configuration slice managing dark mode, menu style, layout,
- * RTL direction, page animations, navbar style, sidebar visibility, and
- * the supported language list. Browser persistence and DOM updates are
- * handled by the app component so reducers remain deterministic.
+ * Theme slice: the chosen color scheme (light, dark or system) and whether it currently resolves to
+ * dark, the text direction, and the sidebar's collapsed/open state. Browser persistence and DOM
+ * updates are handled by the app component so reducers remain deterministic.
  */
 export const themeConfigSlice = createSlice({
   name: 'theme',
@@ -49,38 +37,17 @@ export const themeConfigSlice = createSlice({
     setDarkMode(state, { payload }) {
       state.isDarkMode = Boolean(payload)
     },
-    toggleMenu(state, { payload }) {
-      payload = payload || state.menu // vertical, collapsible-vertical, horizontal
-      state.menu = payload
-    },
-    toggleLayout(state, { payload }) {
-      payload = payload || state.layout // full, boxed-layout
-      state.layout = payload
-    },
     toggleRTL(state, { payload }) {
       payload = payload || state.rtlClass // rtl, ltr
       state.rtlClass = payload
     },
-    toggleAnimation(state, { payload }) {
-      payload = payload || state.animation // animate__fadeIn, animate__fadeInDown, animate__fadeInUp, animate__fadeInLeft, animate__fadeInRight, animate__slideInDown, animate__slideInLeft, animate__slideInRight, animate__zoomIn
-      payload = payload?.trim()
-      state.animation = payload
-    },
-    toggleNavbar(state, { payload }) {
-      payload = payload || state.navbar // navbar-sticky, navbar-floating, navbar-static
-      state.navbar = payload
-    },
-    toggleSemidark(state, { payload }) {
-      payload = payload === true || payload === 'true' ? true : false
-      state.semidark = payload
-    },
     toggleSidebar(state) {
       state.sidebar = !state.sidebar
     },
-    resetToggleSidebar(state) {
-      state.sidebar = false
+    setSidebar(state, { payload }) {
+      state.sidebar = Boolean(payload)
     },
   },
 })
 
-export const { toggleTheme, setDarkMode, toggleMenu, toggleLayout, toggleRTL, toggleAnimation, toggleNavbar, toggleSemidark, toggleSidebar, resetToggleSidebar } = themeConfigSlice.actions
+export const { toggleTheme, setDarkMode, toggleRTL, toggleSidebar, setSidebar } = themeConfigSlice.actions

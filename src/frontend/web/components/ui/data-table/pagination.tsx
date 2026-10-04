@@ -3,6 +3,7 @@ import { useTranslation } from '@/i18n'
 import ScrollBar from 'react-perfect-scrollbar'
 import { cn } from '@/lib/utils'
 import { useId } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 /** Props for the DataTablePagination, the data-table footer that shows a "showing N-M of T" summary, a page-size selector, and a numbered pagination control. */
 interface DataTablePaginationProps {
@@ -31,9 +32,9 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
           <button
             key={i}
             onClick={() => table.setPageIndex(i)}
-            className={cn('flex h-9 w-9 items-center justify-center rounded-md p-0 font-semibold transition duration-300', {
-              'cursor-default bg-primary text-white dark:bg-primary dark:text-white-light': currentPage === i,
-              'cursor-pointer border border-white-light bg-white text-dark hover:bg-primary hover:text-white dark:border-[#191e3a] dark:bg-black dark:text-white-light dark:hover:bg-primary':
+            className={cn('flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-[13px] font-medium tabular-nums transition-colors duration-150', {
+              'cursor-default bg-primary/10 text-primary ring-1 ring-primary/25 ring-inset': currentPage === i,
+              'cursor-pointer text-muted-foreground hover:bg-surface-2 hover:text-foreground':
                 currentPage !== i,
             })}
           >
@@ -49,9 +50,9 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
       <button
         key="first"
         onClick={() => table.firstPage()}
-        className={cn('flex h-9 w-9 items-center justify-center rounded-md p-0 font-semibold transition duration-300', {
-          'cursor-default bg-primary text-white dark:bg-primary dark:text-white-light': currentPage === 0,
-          'cursor-pointer border border-white-light bg-white text-dark hover:bg-primary hover:text-white dark:border-[#191e3a] dark:bg-black dark:text-white-light dark:hover:bg-primary':
+        className={cn('flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-[13px] font-medium tabular-nums transition-colors duration-150', {
+          'cursor-default bg-primary/10 text-primary ring-1 ring-primary/25 ring-inset': currentPage === 0,
+          'cursor-pointer text-muted-foreground hover:bg-surface-2 hover:text-foreground':
             currentPage !== 0,
         })}
       >
@@ -76,7 +77,7 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
     // Show left ellipsis if needed
     if (startPage > 1) {
       items.push(
-        <button key="ellipsis-1" className="flex h-9 w-9 items-center justify-center rounded-md p-0" disabled>
+        <button key="ellipsis-1" className="flex h-8 w-6 items-center justify-center text-subtle-foreground" disabled>
           ...
         </button>,
       )
@@ -88,9 +89,9 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
         <button
           key={i}
           onClick={() => table.setPageIndex(i)}
-          className={cn('flex h-9 w-9 items-center justify-center rounded-md p-0 font-semibold transition duration-300', {
-            'cursor-default bg-primary text-white dark:bg-primary dark:text-white-light': currentPage === i,
-            'cursor-pointer border border-white-light bg-white text-dark hover:bg-primary hover:text-white dark:border-[#191e3a] dark:bg-black dark:text-white-light dark:hover:bg-primary':
+          className={cn('flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-[13px] font-medium tabular-nums transition-colors duration-150', {
+            'cursor-default bg-primary/10 text-primary ring-1 ring-primary/25 ring-inset': currentPage === i,
+            'cursor-pointer text-muted-foreground hover:bg-surface-2 hover:text-foreground':
               currentPage !== i,
           })}
         >
@@ -102,7 +103,7 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
     // Show right ellipsis if needed
     if (endPage < table.getPageCount() - 2) {
       items.push(
-        <button key="ellipsis-2" className="flex h-9 w-9 items-center justify-center rounded-md p-0" disabled>
+        <button key="ellipsis-2" className="flex h-8 w-6 items-center justify-center text-subtle-foreground" disabled>
           ...
         </button>,
       )
@@ -114,9 +115,9 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
         <button
           key="last"
           onClick={() => table.lastPage()}
-          className={cn('flex h-9 w-9 items-center justify-center rounded-md p-0 font-semibold transition duration-300', {
-            'cursor-default bg-primary text-white dark:bg-primary dark:text-white-light': currentPage === table.getPageCount() - 1,
-            'cursor-pointer border border-white-light bg-white text-dark hover:bg-primary hover:text-white dark:border-[#191e3a] dark:bg-black dark:text-white-light dark:hover:bg-primary':
+          className={cn('flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-[13px] font-medium tabular-nums transition-colors duration-150', {
+            'cursor-default bg-primary/10 text-primary ring-1 ring-primary/25 ring-inset': currentPage === table.getPageCount() - 1,
+            'cursor-pointer text-muted-foreground hover:bg-surface-2 hover:text-foreground':
               currentPage !== table.getPageCount() - 1,
           })}
         >
@@ -133,15 +134,15 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
   const to = rowCount === 0 ? 0 : Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, rowCount || 0)
 
   return (
-    <div className={cn('mt-5 flex flex-col items-center justify-center gap-4 md:flex-row md:justify-between', className)}>
+    <div className={cn('mt-4 flex flex-col items-center justify-center gap-3 border-t border-border pt-4 md:flex-row md:justify-between', className)}>
       <div className="flex items-center justify-center sm:ms-0">
         <div className="flex items-center">
-          <span className="whitespace-nowrap">{t('table.pagination.showingEntries', { from, to, totalRecords: rowCount || 0 })}</span>
+          <span className="text-[13px] whitespace-nowrap text-muted-foreground">{t('table.pagination.showingEntries', { from, to, totalRecords: rowCount || 0 })}</span>
         </div>
         <div className="flex items-center ms-3">
           <select
             id={useId()}
-            className="w-auto min-w-14 appearance-none rounded-md border border-white-light bg-white bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-size-[1.25rem_1.25rem] bg-no-repeat py-1 text-sm font-semibold text-black cursor-pointer bg-inline-end-[0.2rem] ps-2 pe-7 dark:border-[#17263c] dark:bg-[#121e32] dark:text-white-dark"
+            className="form-select h-8 w-auto min-w-16 py-0 ps-2.5 text-[13px]"
             value={table.getState().pagination.pageSize}
             onChange={(e) => table.setPageSize(Number(e.target.value))}
           >
@@ -155,15 +156,15 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
       </div>
 
       <ScrollBar className="w-full sm:w-auto" options={{ suppressScrollX: true }}>
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-1">
           <button
             onClick={() => table.firstPage()}
             disabled={!table.getCanPreviousPage()}
             className={cn(
-              'flex h-9 w-9 cursor-pointer items-center justify-center rounded-md border border-white-light bg-white p-0 font-semibold text-dark transition duration-300 dark:border-[#191e3a] dark:bg-black dark:text-white-light',
+              'flex size-8 cursor-pointer items-center justify-center rounded-md border border-border bg-surface text-muted-foreground shadow-xs transition-colors duration-150',
               {
                 'cursor-not-allowed opacity-50': table.getState().pagination.pageIndex === 0,
-                'hover:bg-primary hover:text-white dark:hover:bg-primary': table.getState().pagination.pageIndex !== 0,
+                'hover:bg-surface-2 hover:text-foreground': table.getState().pagination.pageIndex !== 0,
               },
             )}
             title="First Page"
@@ -178,46 +179,46 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
             className={cn(
-              'flex h-9 w-9 cursor-pointer items-center justify-center rounded-md border border-white-light bg-white p-0 font-semibold text-dark transition duration-300 dark:border-[#191e3a] dark:bg-black dark:text-white-light',
+              'flex size-8 cursor-pointer items-center justify-center rounded-md border border-border bg-surface text-muted-foreground shadow-xs transition-colors duration-150',
               {
                 'cursor-not-allowed opacity-50': table.getState().pagination.pageIndex === 0,
-                'hover:bg-primary hover:text-white dark:hover:bg-primary': table.getState().pagination.pageIndex !== 0,
+                'hover:bg-surface-2 hover:text-foreground': table.getState().pagination.pageIndex !== 0,
               },
             )}
             title="Previous Page"
           >
-            &lt;
+            <ChevronLeft size={16} className="rtl:scale-x-[-1]" />
           </button>
 
           {/* A phone has no room for the numbered pages, so it reads its position instead. */}
-          <span className="min-w-16 px-1 text-center text-sm font-semibold whitespace-nowrap sm:hidden" aria-live="polite">
+          <span className="min-w-16 px-1 text-center text-[13px] font-medium tabular-nums whitespace-nowrap text-muted-foreground sm:hidden" aria-live="polite">
             {table.getState().pagination.pageIndex + 1} / {Math.max(table.getPageCount(), 1)}
           </span>
-          <div className="hidden items-center gap-2 sm:flex">{pageNumbers()}</div>
+          <div className="hidden items-center gap-1 sm:flex">{pageNumbers()}</div>
 
           <button
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
             className={cn(
-              'flex h-9 w-9 cursor-pointer items-center justify-center rounded-md border border-white-light bg-white p-0 font-semibold text-dark transition duration-300 dark:border-[#191e3a] dark:bg-black dark:text-white-light',
+              'flex size-8 cursor-pointer items-center justify-center rounded-md border border-border bg-surface text-muted-foreground shadow-xs transition-colors duration-150',
               {
                 'cursor-not-allowed opacity-50': table.getState().pagination.pageIndex >= table.getPageCount() - 1,
-                'hover:bg-primary hover:text-white dark:hover:bg-primary': table.getState().pagination.pageIndex < table.getPageCount() - 1,
+                'hover:bg-surface-2 hover:text-foreground': table.getState().pagination.pageIndex < table.getPageCount() - 1,
               },
             )}
             title="Next Page"
           >
-            &gt;
+            <ChevronRight size={16} className="rtl:scale-x-[-1]" />
           </button>
 
           <button
             onClick={() => table.lastPage()}
             disabled={!table.getCanNextPage()}
             className={cn(
-              'flex h-9 w-9 cursor-pointer items-center justify-center rounded-md border border-white-light bg-white p-0 font-semibold text-dark transition duration-300 dark:border-[#191e3a] dark:bg-black dark:text-white-light',
+              'flex size-8 cursor-pointer items-center justify-center rounded-md border border-border bg-surface text-muted-foreground shadow-xs transition-colors duration-150',
               {
                 'cursor-not-allowed opacity-50': table.getState().pagination.pageIndex >= table.getPageCount() - 1,
-                'hover:bg-primary hover:text-white dark:hover:bg-primary': table.getState().pagination.pageIndex < table.getPageCount() - 1,
+                'hover:bg-surface-2 hover:text-foreground': table.getState().pagination.pageIndex < table.getPageCount() - 1,
               },
             )}
             title="Last Page"

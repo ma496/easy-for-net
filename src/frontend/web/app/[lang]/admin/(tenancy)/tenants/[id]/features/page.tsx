@@ -23,7 +23,7 @@ const TenantFeatures = async ({ params }: TenantFeaturesPageProps) => {
   const title = await getServerTranslation(lang, 'page.features.tenantTitle')
 
   return (
-    <AdminPageContent title={title}>
+    <AdminPageContent title={title} plain>
       <FeatureValueEditor
         providerName={FeatureValueProvider.Tenant}
         providerKey={id}

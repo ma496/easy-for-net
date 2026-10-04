@@ -7,13 +7,13 @@ import { useId } from 'react'
 const radioVariants = cva('form-radio cursor-pointer', {
   variants: {
     variant: {
-      default: 'text-primary border-gray-300 focus:ring-primary',
+      default: 'text-primary border-input focus:ring-primary',
       success: 'text-success border-success focus:ring-success',
       danger: 'text-danger border-danger focus:ring-danger',
       warning: 'text-warning border-warning focus:ring-warning',
       info: 'text-info border-info focus:ring-info',
       secondary: 'text-secondary border-secondary focus:ring-secondary',
-      dark: 'text-dark border-dark focus:ring-dark',
+      dark: 'text-foreground border-input focus:ring-ring',
     },
     size: {
       default: 'h-4 w-4',
@@ -45,7 +45,7 @@ export const Radio = ({ label, name, id, className, variant, size, error, showEr
   const radioId = id ?? generatedId
 
   return (
-    <div className={cn('inline-flex flex-wrap items-start gap-2', className, error && showError && 'has-error')}>
+    <div className={cn('inline-flex flex-col items-start', className, error && showError && 'has-error')}>
       <div className="flex min-h-5 items-center">
         <input {...props} type="radio" name={name} id={radioId} className={cn('mb-0', radioVariants({ variant, size }), error && 'border-danger focus:ring-danger')} />
         {label && (
@@ -58,7 +58,7 @@ export const Radio = ({ label, name, id, className, variant, size, error, showEr
           </label>
         )}
       </div>
-      {showError && error && <div className="text-sm text-danger">{error}</div>}
+      {showError && error && <div className="mt-1.5 text-xs font-medium text-danger">{error}</div>}
     </div>
   )
 }

@@ -10,11 +10,11 @@ import { cva } from 'class-variance-authority'
 import { ArrowUpRight, Building2, Check, ChevronDown, LogOut } from 'lucide-react'
 import { useRef } from 'react'
 
-const tenantSwitcherVariants = cva('flex items-center gap-2 rounded-lg border px-2 py-1.5 text-sm', {
+const tenantSwitcherVariants = cva('inline-flex h-9 items-center gap-2 rounded-md border px-2.5 text-sm font-medium transition-colors', {
   variants: {
     interactive: {
-      true: 'border-white-dark/30 bg-white text-white-dark hover:border-primary hover:text-primary dark:bg-black',
-      false: 'cursor-default border-transparent bg-white-light/40 text-dark dark:bg-dark/40 dark:text-white-light',
+      true: 'border-border bg-surface text-foreground shadow-xs hover:bg-surface-2',
+      false: 'cursor-default border-transparent bg-surface-2 text-muted-foreground',
     },
   },
   defaultVariants: {
@@ -85,9 +85,9 @@ export const TenantSwitcher = ({ className = '' }: TenantSwitcherProps) => {
 
   const name = (
     <>
-      <Building2 className="h-4 w-4 shrink-0" />
+      <Building2 className="h-4 w-4 shrink-0 text-muted-foreground" />
       {/* Below sm only the icon is shown; the name stays available as the control's title. */}
-      <span className="hidden max-w-40 truncate font-semibold sm:inline">{activeTenantName}</span>
+      <span className="hidden max-w-40 truncate sm:inline">{activeTenantName}</span>
     </>
   )
 
@@ -115,14 +115,14 @@ export const TenantSwitcher = ({ className = '' }: TenantSwitcherProps) => {
             menuClassName="max-sm:fixed max-sm:inset-x-2 max-sm:top-14"
             button={isBusy ? <Loader size="sm" className="shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
           >
-            <ul className="w-full py-0! sm:w-64 font-semibold text-dark dark:text-white-light/90">
-              <li className="border-b border-white-light px-4 py-2 text-xs font-semibold text-white-dark uppercase dark:border-white-light/10">{t('page.tenants.switcher.switchTo')}</li>
+            <ul className="w-full sm:w-64">
+              <li className="px-2.5 pt-1.5 pb-1 text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase">{t('page.tenants.switcher.switchTo')}</li>
               {tenants.map((tenant) => (
                 <li key={tenant.id} className="flex items-center">
                   <button
                     type="button"
                     disabled={isBusy}
-                    className={cn('flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-start hover:text-primary', tenant.id === activeTenant?.id && 'bg-primary/10 text-primary')}
+                    className={cn('min-w-0 flex-1', tenant.id === activeTenant?.id && 'font-medium text-primary!')}
                     onClick={() => switchTenant(tenant)}
                   >
                     <Check className={cn('h-4 w-4 shrink-0', tenant.id !== activeTenant?.id && 'invisible')} />
@@ -133,7 +133,7 @@ export const TenantSwitcher = ({ className = '' }: TenantSwitcherProps) => {
                       type="button"
                       disabled={isBusy}
                       // The dropdown's list styles stretch every row button to full width; this one only holds an icon.
-                      className="w-auto! shrink-0 cursor-pointer px-3! text-white-dark hover:text-primary"
+                      className="w-auto! shrink-0 px-2! text-muted-foreground! hover:text-foreground!"
                       title={t('page.tenants.switcher.viewDetail')}
                       aria-label={t('page.tenants.switcher.viewDetail')}
                       onClick={() => openDetail(tenant.id)}
@@ -152,7 +152,7 @@ export const TenantSwitcher = ({ className = '' }: TenantSwitcherProps) => {
         <button
           type="button"
           disabled={isBusy}
-          className={cn(tenantSwitcherVariants({ interactive: true }), 'cursor-pointer disabled:cursor-not-allowed disabled:opacity-60')}
+          className="icon-btn"
           title={t('page.tenants.switcher.exitTenant')}
           aria-label={t('page.tenants.switcher.exitTenant')}
           onClick={() => exitTenant()}

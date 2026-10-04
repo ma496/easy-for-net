@@ -83,7 +83,7 @@ export const LocalizationTextEditModal = ({ isOpen, onClose, culture, cultureNam
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded bg-gray-100 px-2 py-1 font-mono text-xs dark:bg-gray-800" dir="ltr">
+          <span className="rounded-md bg-surface-2 px-2 py-1 font-mono text-xs break-all text-foreground" dir="ltr">
             {row.key}
           </span>
           <Badge variant="secondary" type="outline">
@@ -93,28 +93,20 @@ export const LocalizationTextEditModal = ({ isOpen, onClose, culture, cultureNam
 
         <div>
           <div className="label form-label">{isPlatformScope ? t('page.localization.texts.defaultLabel') : t('page.localization.texts.inheritedLabel')}</div>
-          <div className="max-h-40 overflow-y-auto rounded-md border border-white-light p-3 text-sm whitespace-pre-wrap dark:border-[#1b2e4b]" dir={dir}>
+          <div className="max-h-40 overflow-y-auto rounded-md border border-border bg-surface-2 p-3 text-sm wrap-break-word whitespace-pre-wrap text-muted-foreground" dir={dir}>
             {row.inheritedValue}
           </div>
         </div>
 
         <div>
-          <Textarea
-            name="overrideValue"
-            label={t('page.localization.texts.overrideLabel')}
-            rows={6}
-            maxLength={4000}
-            dir={dir}
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
-          />
-          <div className="text-end text-xs text-gray-500">{value.length}/4000</div>
+          <Textarea name="overrideValue" label={t('page.localization.texts.overrideLabel')} rows={6} maxLength={4000} dir={dir} value={value} onChange={(event) => setValue(event.target.value)} />
+          <div className="text-end text-xs text-muted-foreground">{value.length}/4000</div>
           {trimmed.length === 0 && <div className="mt-1 text-sm text-danger">{t('validation.required')}</div>}
         </div>
 
         {placeholders.length > 0 && (
           <div className="flex flex-col gap-2">
-            <span className="text-sm text-gray-600 dark:text-gray-400">{t('page.localization.texts.placeholders')}</span>
+            <span className="text-sm text-muted-foreground">{t('page.localization.texts.placeholders')}</span>
             <div className="flex flex-wrap gap-2">
               {placeholders.map((name) =>
                 missingPlaceholders.includes(name) ? (
@@ -122,7 +114,7 @@ export const LocalizationTextEditModal = ({ isOpen, onClose, culture, cultureNam
                     {`\${${name}}`}
                   </Badge>
                 ) : (
-                  <Badge key={name} variant="dark" type="outline" className="font-mono dark:border-white-dark dark:text-white-dark">
+                  <Badge key={name} variant="dark" type="outline" className="font-mono">
                     {`\${${name}}`}
                   </Badge>
                 ),
@@ -132,7 +124,7 @@ export const LocalizationTextEditModal = ({ isOpen, onClose, culture, cultureNam
           </div>
         )}
 
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-white-light pt-4 dark:border-[#1b2e4b]">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4">
           <div>
             {row.value != null && (
               <Button type="button" variant="outline-warning" onClick={handleReset} disabled={isBusy}>
@@ -140,7 +132,7 @@ export const LocalizationTextEditModal = ({ isOpen, onClose, culture, cultureNam
               </Button>
             )}
           </div>
-          <div className="flex justify-end gap-4">
+          <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose} disabled={isBusy}>
               {t('common.cancel')}
             </Button>

@@ -13,7 +13,7 @@ can read it". Use a slice only for state the client owns:
 | Slice (store key) | Holds |
 | --- | --- |
 | `authSlice` (`auth`) | the session: `user` (`GetUserInfoResponse`), `isAuthenticated`, `activeTenant`, `tenants` — typed as `AuthState` from `@/lib/utils` |
-| `themeConfigSlice` (`theme`) | theme/dark mode, layout, menu, `rtlClass`, animation, navbar, semidark, sidebar, locale (enabled languages come from the translation dictionary, not a slice) |
+| `themeConfigSlice` (`theme`) | the color scheme (`theme`: light, dark or system, and `isDarkMode`, what it resolves to), `rtlClass`, and `sidebar` (collapsed to the icon rail from lg up, the drawer open below it). Enabled languages come from the translation dictionary, not a slice |
 | `notificationsSlice` (`notifications`) | the unread badge count |
 | `serviceAvailabilitySlice` (`serviceAvailability`) | `isUnavailable` — whether the API is unreachable |
 

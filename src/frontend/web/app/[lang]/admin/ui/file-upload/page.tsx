@@ -1,5 +1,5 @@
 import { getServerTranslation } from '@/i18n'
-import { FileUploadExample } from "./_components/file-upload-example"
+import { FileUploadExample } from './_components/file-upload-example'
 import { AdminPageContent } from '@/components/layouts'
 
 /**
@@ -18,11 +18,10 @@ const FileUploadPage = async ({ params }: FileUploadPageProps) => {
   const title = await getServerTranslation(lang, 'page.ui.fileUpload.title')
 
   return (
-    <AdminPageContent title={title}>
+    <AdminPageContent title={title} description="Single, fully custom and multi-file uploads with size limits and validation." plain>
       <FileUploadExample />
     </AdminPageContent>
   )
 }
 
 export default FileUploadPage
-

@@ -4,7 +4,7 @@ import { useTranslation } from '@/i18n'
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
 import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableFilterButton, DataTableToolbarButton } from '@/components/ui/data-table'
 import { ApiErrorMessages, Badge, LocalizedLink, Truncated } from '@/components/ui'
-import { apiErrorAlert, confirmAlert, confirmDeleteAlert, notificationVariables, successToast } from '@/lib/utils'
+import { apiErrorAlert, cn, confirmAlert, confirmDeleteAlert, notificationVariables, successToast, formatRelativeTime } from '@/lib/utils'
 import {
   NotificationDto,
   NotificationType,
@@ -12,9 +12,8 @@ import {
   useNotificationMarkAsReadMutation,
   useNotificationMarkAsUnreadMutation,
   useNotificationMarkAllAsReadMutation,
-  useNotificationDeleteMutation
+  useNotificationDeleteMutation,
 } from '@/store/api/notifications'
-import { formatDistanceToNow } from 'date-fns'
 import { Check, Trash2, Mail, CheckCheck, AlertCircle, AlertTriangle, CheckCircle, Info } from 'lucide-react'
 import { NotificationFilterPanel, NotificationFilters } from './notification-filter-panel'
 import { useTableUrlState } from '@/hooks'
@@ -42,7 +41,7 @@ export const NotificationTable = () => {
     isRead: url.filters.isRead ?? '',
     group: url.filters.group ?? '',
   })
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   const getIsReadValue = (value: string): boolean | null => {
     if (value === 'true') return true
@@ -70,13 +69,13 @@ export const NotificationTable = () => {
   const {
     data: notificationResponse,
     isFetching: isGettingNotifications,
-    error: getNotificationsError
+    error: getNotificationsError,
   } = useNotificationListQuery({
     page: url.page,
     pageSize: url.pageSize,
     search: url.search || undefined,
     isRead: getIsReadValue(appliedFilters.isRead),
-    group: appliedFilters.group || undefined
+    group: appliedFilters.group || undefined,
   })
 
   const [markAsRead, { isLoading: isMarkingAsRead }] = useNotificationMarkAsReadMutation()
@@ -110,7 +109,7 @@ export const NotificationTable = () => {
       return
     } else {
       successToast.fire({
-        text: t('notifications.markedAsRead')
+        text: t('notifications.markedAsRead'),
       })
     }
   }
@@ -122,7 +121,7 @@ export const NotificationTable = () => {
       return
     } else {
       successToast.fire({
-        text: t('notifications.markedAsUnread')
+        text: t('notifications.markedAsUnread'),
       })
     }
   }
@@ -130,7 +129,7 @@ export const NotificationTable = () => {
   const handleMarkAllAsRead = async () => {
     const result = await confirmAlert({
       title: t('notifications.markAllReadConfirmTitle'),
-      text: t('notifications.markAllReadConfirmText')
+      text: t('notifications.markAllReadConfirmText'),
     })
     if (result.isConfirmed) {
       const { error } = await markAllAsRead({})
@@ -139,7 +138,7 @@ export const NotificationTable = () => {
         return
       } else {
         successToast.fire({
-          text: t('notifications.markedAllAsRead')
+          text: t('notifications.markedAllAsRead'),
         })
       }
     }
@@ -148,7 +147,7 @@ export const NotificationTable = () => {
   const handleDelete = async (id: string) => {
     const result = await confirmDeleteAlert({
       title: t('notifications.deleteTitle'),
-      text: t('notifications.deleteConfirm')
+      text: t('notifications.deleteConfirm'),
     })
     if (result.isConfirmed) {
       const { error } = await deleteNotification({ id })
@@ -157,35 +156,43 @@ export const NotificationTable = () => {
         return
       } else {
         successToast.fire({
-          text: t('notifications.deleted')
+          text: t('notifications.deleted'),
         })
       }
     }
   }
 
-  const getTypeIcon = (type: NotificationType) => {
-    switch (type) {
-      case NotificationType.Warning:
-        return <AlertTriangle className="h-4 w-4 text-warning" />
-      case NotificationType.Error:
-        return <AlertCircle className="h-4 w-4 text-danger" />
-      case NotificationType.Success:
-        return <CheckCircle className="h-4 w-4 text-success" />
-      default:
-        return <Info className="h-4 w-4 text-primary" />
-    }
-  }
-
+  /** The type's badge, carrying its icon so the column reads at a glance. */
   const getTypeBadge = (type: NotificationType) => {
     switch (type) {
       case NotificationType.Warning:
-        return <Badge variant="warning">{t('notifications.types.warning')}</Badge>
+        return (
+          <Badge variant="warning">
+            <AlertTriangle className="h-3 w-3" />
+            {t('notifications.types.warning')}
+          </Badge>
+        )
       case NotificationType.Error:
-        return <Badge variant="danger">{t('notifications.types.error')}</Badge>
+        return (
+          <Badge variant="danger">
+            <AlertCircle className="h-3 w-3" />
+            {t('notifications.types.error')}
+          </Badge>
+        )
       case NotificationType.Success:
-        return <Badge variant="success">{t('notifications.types.success')}</Badge>
+        return (
+          <Badge variant="success">
+            <CheckCircle className="h-3 w-3" />
+            {t('notifications.types.success')}
+          </Badge>
+        )
       default:
-        return <Badge variant="primary">{t('notifications.types.info')}</Badge>
+        return (
+          <Badge variant="primary">
+            <Info className="h-3 w-3" />
+            {t('notifications.types.info')}
+          </Badge>
+        )
     }
   }
 
@@ -197,68 +204,54 @@ export const NotificationTable = () => {
     columnHelper.accessor('type', {
       meta: { card: 'badge' },
       header: t('table.columns.type'),
-      cell: (info) => (
-        <div className="flex items-center gap-2">
-          {getTypeIcon(info.getValue())}
-          {getTypeBadge(info.getValue())}
-        </div>
-      ),
-      enableSorting: false
+      cell: (info) => getTypeBadge(info.getValue()),
+      enableSorting: false,
     }),
     columnHelper.accessor('titleKey', {
       meta: { card: 'title' },
       header: t('table.columns.title'),
       cell: (info) => (
-        <LocalizedLink
-          href={`/admin/notifications/${info.row.original.id}`}
-          className="font-medium text-primary hover:underline"
-        >
-          {t(info.getValue(), notificationVariables(info.row.original.metadata))}
-        </LocalizedLink>
-      )
+        <span className="inline-flex min-w-0 items-center gap-2">
+          {/* An unread notification is marked with a dot and a heavier title. */}
+          {!info.row.original.isRead && <span className="size-2 shrink-0 rounded-full bg-primary" aria-hidden="true" />}
+          <LocalizedLink
+            href={`/admin/notifications/${info.row.original.id}`}
+            className={cn('text-foreground hover:text-primary hover:underline', info.row.original.isRead ? 'font-normal' : 'font-semibold')}
+          >
+            {t(info.getValue(), notificationVariables(info.row.original.metadata))}
+          </LocalizedLink>
+        </span>
+      ),
     }),
     columnHelper.accessor('messageKey', {
       meta: { card: 'subtitle' },
       header: t('table.columns.message'),
-      cell: (info) => (
-        <Truncated
-          text={t(info.getValue(), notificationVariables(info.row.original.metadata))}
-          className="text-gray-500 dark:text-gray-400"
-          underline={false}
-        />
-      ),
-      enableSorting: false
+      cell: (info) => <Truncated text={t(info.getValue(), notificationVariables(info.row.original.metadata))} className="text-muted-foreground" underline={false} />,
+      enableSorting: false,
     }),
     columnHelper.accessor('group', {
       header: t('table.columns.group'),
       cell: (info) => {
         const group = info.getValue()
-        return (
-          <span className="text-gray-500 dark:text-gray-400">
-            {group ? t(`notifications.groups.${group}`, { defaultValue: group }) : '-'}
-          </span>
-        )
+        return <span className="text-muted-foreground">{group ? t(`notifications.groups.${group}`, { defaultValue: group }) : <span className="text-subtle-foreground">&mdash;</span>}</span>
       },
-      enableSorting: false
+      enableSorting: false,
     }),
     columnHelper.accessor('isRead', {
       meta: { card: 'badge' },
       header: t('table.columns.status'),
-      cell: (info) => (
+      cell: (info) =>
         info.getValue() ? (
           <Badge variant="secondary">{t('notifications.read')}</Badge>
         ) : (
-          <Badge variant="primary">{t('notifications.unread')}</Badge>
-        )
-      )
+          <Badge variant="primary" type="outline">
+            {t('notifications.unread')}
+          </Badge>
+        ),
     }),
     columnHelper.accessor('createdAt', {
       header: t('table.columns.date'),
-      cell: (info) => (
-        <span className="text-gray-500 dark:text-gray-400">
-          {formatDistanceToNow(new Date(info.getValue()), { addSuffix: true })}
-        </span>
-      )
+      cell: (info) => <span className="whitespace-nowrap text-muted-foreground">{formatRelativeTime(info.getValue(), i18n.language)}</span>,
     }),
     columnHelper.display({
       id: 'actions',
@@ -290,12 +283,12 @@ export const NotificationTable = () => {
           ]}
         />
       ),
-    })
+    }),
   ]
 
   if (getNotificationsError) {
     return (
-      <div className="flex justify-center items-center">
+      <div className="flex items-center justify-center">
         <ApiErrorMessages error={getNotificationsError} />
       </div>
     )
@@ -316,29 +309,13 @@ export const NotificationTable = () => {
       isFetching={isGettingNotifications}
     >
       <DataTableToolbar>
-        <DataTableFilterButton
-          isOpen={filtersOpen}
-          onToggle={() => setFiltersOpen(!filtersOpen)}
-          activeFiltersCount={activeFiltersCount}
-        />
+        <DataTableFilterButton isOpen={filtersOpen} onToggle={() => setFiltersOpen(!filtersOpen)} activeFiltersCount={activeFiltersCount} />
 
-        <DataTableToolbarButton
-          label={t('notifications.markAllRead')}
-          icon={<CheckCheck size={16} />}
-          onClick={handleMarkAllAsRead}
-          disabled={!notificationResponse?.items?.some(n => !n.isRead)}
-        />
+        <DataTableToolbarButton label={t('notifications.markAllRead')} icon={<CheckCheck size={16} />} onClick={handleMarkAllAsRead} disabled={!notificationResponse?.items?.some((n) => !n.isRead)} />
       </DataTableToolbar>
 
-      {filtersOpen && (
-        <NotificationFilterPanel
-          filters={pendingFilters}
-          onChange={handleFilterChange}
-          onSearch={handleSearch}
-          onClear={handleClear}
-        />
-      )}
-      <DataTable />
+      {filtersOpen && <NotificationFilterPanel filters={pendingFilters} onChange={handleFilterChange} onSearch={handleSearch} onClear={handleClear} />}
+      <DataTable cardsBelow="lg" />
       <DataTablePagination siblingCount={1} />
     </DataTableProvider>
   )

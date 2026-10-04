@@ -4,8 +4,9 @@ import { useState } from 'react'
 import { Formik, Form } from 'formik'
 import * as Yup from 'yup'
 import { DatePicker, FormDatePicker } from '@/components/ui/form'
-import { Button, Card, CodeShowcase } from '@/components/ui'
-import { Calendar } from 'lucide-react'
+import { Button, Card, CardHeader, CardTitle, CodeShowcase } from '@/components/ui'
+import { ShowcasePreview } from '../../_components/showcase-preview'
+import { PropsTable } from '../../_components/props-table'
 import { DateRange } from 'react-day-picker'
 
 const validationSchema = Yup.object({
@@ -108,7 +109,9 @@ const [dates, setDates] = useState<Date[]>([])
 
     range: `import { DatePicker } from '@/components/ui/form'
 
-const [range, setRange] = useState<{ from?: Date; to?: Date }>()
+import { DateRange } from 'react-day-picker'
+
+const [range, setRange] = useState<DateRange>()
 
 <DatePicker
   mode="range"
@@ -119,89 +122,79 @@ const [range, setRange] = useState<{ from?: Date; to?: Date }>()
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="mb-4 flex items-center gap-3">
-          <Calendar className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold text-black dark:text-white">Date Picker Components</h1>
-        </div>
-        <p className="text-gray-600 dark:text-gray-300">
-          Comprehensive date picker components built with react-day-picker, featuring light/dark mode support, Formik integration, and multiple selection modes.
-        </p>
-      </div>
-
+    <div className="space-y-6">
       {/* Basic Date Picker */}
       <CodeShowcase
-        title="Basic Date Picker"
-        description="Single date selection with and without icons"
+        title="Basic date picker"
+        description="Single date selection, with and without the calendar icon."
         code={codeExamples.basic}
         preview={
-          <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="space-y-4">
-              <h3 className="font-medium">Single Date Selection</h3>
-              <DatePicker name="basicDate" selected={basicDate} onSelect={(date) => setBasicDate(date)} placeholder="Select a date" label="Event Date" />
-              {basicDate && <p className="text-sm text-gray-600 dark:text-gray-300">Selected: {basicDate.toDateString()}</p>}
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="font-medium">With Icon Disabled</h3>
-              <DatePicker name="basicDateNoIcon" selected={basicDate} onSelect={(date) => setBasicDate(date)} placeholder="Select without icon" showIcon={false} label="Simple Date Picker" />
-            </div>
-          </div>
-        }
-      />
-
-      {/* Multiple Date Selection */}
-      <CodeShowcase
-        title="Multiple Date Selection"
-        description="Select multiple dates from the calendar"
-        code={codeExamples.multiple}
-        preview={
-          <div className="w-full space-y-4">
-            <DatePicker name="multipleDates" mode="multiple" selected={multipleDate} onSelect={(dates) => setMultipleDate(dates || [])} placeholder="Select multiple dates" label="Event Dates" />
-            {multipleDate.length > 0 && (
-              <div className="text-sm text-gray-600 dark:text-gray-300">
-                <p className="font-medium">Selected dates:</p>
-                <ul className="mt-2 space-y-1">
-                  {multipleDate.map((date, index) => (
-                    <li key={index}>• {date.toDateString()}</li>
-                  ))}
-                </ul>
+          <ShowcasePreview stack>
+            <div className="grid w-full gap-5 md:grid-cols-2">
+              <div className="space-y-2">
+                <DatePicker name="basicDate" selected={basicDate} onSelect={(date) => setBasicDate(date)} placeholder="Select a date" label="Event date" />
+                {basicDate && <p className="text-xs text-muted-foreground">Selected: {basicDate.toDateString()}</p>}
               </div>
-            )}
-          </div>
+              <DatePicker name="basicDateNoIcon" selected={basicDate} onSelect={(date) => setBasicDate(date)} placeholder="Select without icon" showIcon={false} label="Without icon" />
+            </div>
+          </ShowcasePreview>
         }
       />
 
-      {/* Range Date Selection */}
-      <CodeShowcase
-        title="Date Range Selection"
-        description="Select a date range with start and end dates"
-        code={codeExamples.range}
-        preview={
-          <div className="w-full space-y-4">
-            <DatePicker name="rangeDate" mode="range" selected={rangeDate} onSelect={(range) => setRangeDate(range)} placeholder="Select date range" label="Event Duration" />
-            {rangeDate?.from && (
-              <div className="text-sm text-gray-600 dark:text-gray-300">
-                <p className="font-medium">Selected range:</p>
-                <p className="mt-1">
-                  From: {rangeDate.from.toDateString()}
-                  {rangeDate.to && ` → To: ${rangeDate.to.toDateString()}`}
-                </p>
-              </div>
-            )}
-          </div>
-        }
-      />
+      <div className="grid items-start gap-6 xl:grid-cols-2">
+        {/* Multiple Date Selection */}
+        <CodeShowcase
+          title="Multiple dates"
+          description="Pick any number of separate dates."
+          code={codeExamples.multiple}
+          preview={
+            <ShowcasePreview stack>
+              <DatePicker name="multipleDates" mode="multiple" selected={multipleDate} onSelect={(dates) => setMultipleDate(dates || [])} placeholder="Select multiple dates" label="Event dates" />
+              {multipleDate.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase">Selected dates</p>
+                  <ul className="flex flex-wrap gap-1.5">
+                    {multipleDate.map((date, index) => (
+                      <li key={index} className="badge badge-primary">
+                        {date.toDateString()}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </ShowcasePreview>
+          }
+        />
+
+        {/* Range Date Selection */}
+        <CodeShowcase
+          title="Date range"
+          description="A start and an end date in one control."
+          code={codeExamples.range}
+          preview={
+            <ShowcasePreview stack>
+              <DatePicker name="rangeDate" mode="range" selected={rangeDate} onSelect={(range) => setRangeDate(range)} placeholder="Select date range" label="Event duration" />
+              {rangeDate?.from && (
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase">Selected range</p>
+                  <p className="text-sm text-foreground tabular-nums">
+                    {rangeDate.from.toDateString()}
+                    {rangeDate.to && ` → ${rangeDate.to.toDateString()}`}
+                  </p>
+                </div>
+              )}
+            </ShowcasePreview>
+          }
+        />
+      </div>
 
       {/* Formik Integration */}
       <CodeShowcase
-        title="Formik Integration"
-        description="Date pickers with form validation and state management"
+        title="Formik integration and validation"
+        description="Bound to Formik with Yup rules. Submit the empty form to see the error state."
         code={codeExamples.formik}
         preview={
-          <div className="w-full">
+          <ShowcasePreview stack>
             <Formik
               initialValues={{
                 birthDate: undefined,
@@ -218,166 +211,77 @@ const [range, setRange] = useState<{ from?: Date; to?: Date }>()
               }}
             >
               {({ isSubmitting, values }) => (
-                <Form className="space-y-6">
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <FormDatePicker name="birthDate" label="Birth Date" placeholder="Select your birth date" required={true} />
-
-                    <FormDatePicker name="appointmentDate" label="Appointment Date" placeholder="Select appointment date" required={true} />
+                <Form className="space-y-5">
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    <FormDatePicker name="birthDate" label="Birth date" placeholder="Select your birth date" required={true} />
+                    <FormDatePicker name="appointmentDate" label="Appointment date" placeholder="Select appointment date" required={true} />
+                    <FormDatePicker name="multipleEvents" mode="multiple" label="Event dates (multiple)" placeholder="Select multiple event dates" />
+                    <FormDatePicker name="projectDuration" mode="range" label="Project duration (range)" placeholder="Select project date range" />
                   </div>
 
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <FormDatePicker name="multipleEvents" mode="multiple" label="Event Dates (Multiple)" placeholder="Select multiple event dates" />
-
-                    <FormDatePicker name="projectDuration" mode="range" label="Project Duration (Range)" placeholder="Select project date range" />
-                  </div>
-
-                  <div className="flex gap-4">
-                    <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? 'Submitting...' : 'Submit Form'}
-                    </Button>
+                  <div className="flex flex-wrap justify-end gap-2 border-t border-border pt-5">
                     <Button type="button" variant="outline" onClick={() => console.log('Current values:', values)}>
-                      Log Values
+                      Log values
+                    </Button>
+                    <Button type="submit" isLoading={isSubmitting}>
+                      Submit form
                     </Button>
                   </div>
                 </Form>
               )}
             </Formik>
-          </div>
+          </ShowcasePreview>
         }
       />
 
       {/* Props Documentation */}
-      <Card className="p-6">
-        <h2 className="mb-6 text-xl font-semibold">Component Props</h2>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>DatePicker props</CardTitle>
+          <p className="text-sm text-muted-foreground">The standalone, controlled picker.</p>
+        </CardHeader>
+        <div className="px-5 pb-5 sm:px-6 sm:pb-6">
+          <PropsTable
+            rows={[
+              { name: 'selected', type: 'Date | Date[] | DateRange', defaultValue: 'undefined', description: 'Currently selected date(s), by mode' },
+              { name: 'onSelect', type: 'Function', defaultValue: 'undefined', description: 'Callback when a date is selected' },
+              { name: 'placeholder', type: 'string', defaultValue: '"Select date..."', description: 'Placeholder text' },
+              { name: 'disabled', type: 'boolean', defaultValue: 'false', description: 'Disable the date picker' },
+              { name: 'showIcon', type: 'boolean', defaultValue: 'true', description: 'Show the calendar icon' },
+              { name: 'mode', type: "'single' | 'multiple' | 'range'", defaultValue: "'single'", description: 'Selection mode' },
+              { name: 'label', type: 'string', defaultValue: 'undefined', description: 'Optional label text' },
+              { name: 'required', type: 'boolean', defaultValue: 'false', description: 'Display the required asterisk' },
+            ]}
+          />
+        </div>
+      </Card>
 
-        <div className="space-y-8">
-          <div>
-            <h3 className="mb-4 text-lg font-medium">DatePicker Props</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="p-2 text-left">Prop</th>
-                    <th className="p-2 text-left">Type</th>
-                    <th className="p-2 text-left">Default</th>
-                    <th className="p-2 text-left">Description</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  <tr>
-                    <td className="p-2 font-mono">selected</td>
-                    <td className="p-2">Date | undefined</td>
-                    <td className="p-2">undefined</td>
-                    <td className="p-2">Currently selected date(s)</td>
-                  </tr>
-                  <tr>
-                    <td className="p-2 font-mono">onSelect</td>
-                    <td className="p-2">Function</td>
-                    <td className="p-2">undefined</td>
-                    <td className="p-2">Callback when date is selected</td>
-                  </tr>
-                  <tr>
-                    <td className="p-2 font-mono">placeholder</td>
-                    <td className="p-2">string</td>
-                    <td className="p-2">&quot;Select date...&quot;</td>
-                    <td className="p-2">Placeholder text</td>
-                  </tr>
-                  <tr>
-                    <td className="p-2 font-mono">disabled</td>
-                    <td className="p-2">boolean</td>
-                    <td className="p-2">false</td>
-                    <td className="p-2">Disable the date picker</td>
-                  </tr>
-                  <tr>
-                    <td className="p-2 font-mono">showIcon</td>
-                    <td className="p-2">boolean</td>
-                    <td className="p-2">true</td>
-                    <td className="p-2">Show calendar icon</td>
-                  </tr>
-                  <tr>
-                    <td className="p-2 font-mono">mode</td>
-                    <td className="p-2">&#39;single&#39; | &#39;multiple&#39; | &#39;range&#39;</td>
-                    <td className="p-2">&#39;single&#39;</td>
-                    <td className="p-2">Selection mode</td>
-                  </tr>
-                  <tr>
-                    <td className="p-2 font-mono">label</td>
-                    <td className="p-2">string</td>
-                    <td className="p-2">undefined</td>
-                    <td className="p-2">Optional label text</td>
-                  </tr>
-                  <tr>
-                    <td className="p-2 font-mono">required</td>
-                    <td className="p-2">boolean</td>
-                    <td className="p-2">false</td>
-                    <td className="p-2">Display required asterisk</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>FormDatePicker props</CardTitle>
+          <p className="text-sm text-muted-foreground">The Formik-bound picker; it reads and writes the field its name points at.</p>
+        </CardHeader>
+        <div className="space-y-5 px-5 pb-5 sm:px-6 sm:pb-6">
+          <PropsTable
+            rows={[
+              { name: 'name', type: 'string', defaultValue: 'required', description: 'Field name for Formik' },
+              { name: 'mode', type: "'single' | 'multiple' | 'range'", defaultValue: "'single'", description: 'Selection mode' },
+              { name: 'showValidation', type: 'boolean', defaultValue: 'true', description: 'Show validation errors' },
+              { name: 'required', type: 'boolean', defaultValue: 'false', description: 'Display the required asterisk' },
+              { name: '...DatePickerProps', type: '-', defaultValue: '-', description: 'All DatePicker props except selected/onSelect' },
+            ]}
+          />
 
-          <div>
-            <h3 className="mb-4 text-lg font-medium">FormDatePicker Props</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="p-2 text-left">Prop</th>
-                    <th className="p-2 text-left">Type</th>
-                    <th className="p-2 text-left">Default</th>
-                    <th className="p-2 text-left">Description</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  <tr>
-                    <td className="p-2 font-mono">name</td>
-                    <td className="p-2">string</td>
-                    <td className="p-2">required</td>
-                    <td className="p-2">Field name for Formik</td>
-                  </tr>
-                  <tr>
-                    <td className="p-2 font-mono">mode</td>
-                    <td className="p-2">&#39;single&#39; | &#39;multiple&#39; | &#39;range&#39;</td>
-                    <td className="p-2">&#39;single&#39;</td>
-                    <td className="p-2">Selection mode</td>
-                  </tr>
-                  <tr>
-                    <td className="p-2 font-mono">showValidation</td>
-                    <td className="p-2">boolean</td>
-                    <td className="p-2">true</td>
-                    <td className="p-2">Show validation errors</td>
-                  </tr>
-                  <tr>
-                    <td className="p-2 font-mono">required</td>
-                    <td className="p-2">boolean</td>
-                    <td className="p-2">false</td>
-                    <td className="p-2">Display required asterisk</td>
-                  </tr>
-                  <tr>
-                    <td className="p-2 font-mono">...DatePickerProps</td>
-                    <td className="p-2">-</td>
-                    <td className="p-2">-</td>
-                    <td className="p-2">All DatePicker props except selected/onSelect</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div className="mt-6">
-              <h4 className="mb-3 font-medium">Expected Field Value Types</h4>
-              <div className="space-y-2 text-sm">
-                <div>
-                  <span className="font-mono">mode=&quot;single&quot;</span>: <code>Date | undefined</code>
-                </div>
-                <div>
-                  <span className="font-mono">mode=&quot;multiple&quot;</span>: <code>Date[] | undefined</code>
-                </div>
-                <div>
-                  <span className="font-mono">mode=&quot;range&quot;</span>: <code>{'{ from?: Date; to?: Date } | undefined'}</code>
-                </div>
-              </div>
-            </div>
+          <div className="space-y-2">
+            <h4 className="text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase">Expected field value types</h4>
+            <dl className="grid gap-x-4 gap-y-1 sm:grid-cols-[10rem_1fr] sm:gap-y-2">
+              <dt className="font-mono text-[13px] text-foreground">mode=&quot;single&quot;</dt>
+              <dd className="mb-2 font-mono text-[13px] text-muted-foreground sm:mb-0">Date | undefined</dd>
+              <dt className="font-mono text-[13px] text-foreground">mode=&quot;multiple&quot;</dt>
+              <dd className="mb-2 font-mono text-[13px] text-muted-foreground sm:mb-0">Date[] | undefined</dd>
+              <dt className="font-mono text-[13px] text-foreground">mode=&quot;range&quot;</dt>
+              <dd className="font-mono text-[13px] text-muted-foreground">{'{ from?: Date; to?: Date } | undefined'}</dd>
+            </dl>
           </div>
         </div>
       </Card>

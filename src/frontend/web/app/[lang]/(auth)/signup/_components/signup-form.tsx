@@ -107,27 +107,30 @@ export const SignupForm = () => {
     const isVerificationRequired = successMessage === t('page.auth.signup.successVerifyEmail')
 
     return (
-      <div className="flex flex-col items-center justify-center space-y-4 text-center dark:text-white">
-        <CheckCircle size={48} className="text-green-500" />
-        <h2 className="text-2xl font-bold">{t('page.auth.signup.successTitle')}</h2>
-        <p>{successMessage}</p>
+      <div className="flex flex-col items-center text-center">
+        <div className="mb-5 flex size-12 items-center justify-center rounded-xl bg-success/10 text-success">
+          <CheckCircle className="size-6" />
+        </div>
+        <h2 className="text-xl font-semibold tracking-tight">{t('page.auth.signup.successTitle')}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{successMessage}</p>
+        <div className="mt-6 flex w-full flex-col gap-2">
+          {isVerificationRequired && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleResendEmail}
+              disabled={countdown > 0 || isResendingVerifyEmail}
+              isLoading={isResendingVerifyEmail}
+            >
+              {countdown > 0 ? t('page.verifyEmail.resendWait', { seconds: countdown }) : t('page.verifyEmail.resendButton')}
+            </Button>
+          )}
 
-        {isVerificationRequired && (
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full mt-2"
-            onClick={handleResendEmail}
-            disabled={countdown > 0 || isResendingVerifyEmail}
-            isLoading={isResendingVerifyEmail}
-          >
-            {countdown > 0 ? t('page.verifyEmail.resendWait', { seconds: countdown }) : t('page.verifyEmail.resendButton')}
-          </Button>
-        )}
-
-        <LocalizedLink href="/signin" className="btn btn-primary w-full mt-2">
-          {t('page.auth.signin.backToSignin')}
-        </LocalizedLink>
+          <LocalizedLink href="/signin" className="btn btn-primary w-full">
+            {t('page.auth.signin.backToSignin')}
+          </LocalizedLink>
+        </div>
       </div>
     )
   }
@@ -139,30 +142,30 @@ export const SignupForm = () => {
       onSubmit={submitForm}
     >
       {() => (
-        <Form className="space-y-5 dark:text-white">
+        <Form className="space-y-5">
           <FormInput label={t('form.label.username')} name="username" placeholder={t('form.placeholder.username')} icon={<Mail size={16} />} autoFocus={true} required={true} />
           <FormInput label={t('form.label.email')} name="email" placeholder={t('form.placeholder.email')} icon={<Mail size={16} />} required={true} />
           <FormPasswordInput label={t('form.label.password')} name="password" placeholder={t('form.placeholder.password')} icon={<Lock size={16} />} required={true} />
           <FormPasswordInput label={t('form.label.confirmPassword')} name="confirmPassword" placeholder={t('form.placeholder.confirmPassword')} icon={<Lock size={16} />} required={true} />
 
-          <div className="border-t border-white-light pt-5 dark:border-[#1b2e4b]">
-            <p className="mb-4 text-sm font-semibold">{t('page.auth.signup.tenantSectionTitle')}</p>
+          <div className="border-t border-border pt-5">
+            <p className="mb-4 text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase">{t('page.auth.signup.tenantSectionTitle')}</p>
             <div className="space-y-5">
               <FormInput label={t('form.label.tenantName')} name="tenantName" placeholder={t('form.placeholder.tenantName')} icon={<Building2 size={16} />} required={true} />
               <FormInput label={t('form.label.tenantIdentifier')} name="tenantIdentifier" placeholder={t('form.placeholder.tenantIdentifier')} icon={<Building2 size={16} />} required={true} />
             </div>
           </div>
 
-          <div className="flex justify-end gap-2">
-            <span className="text-sm">{t('page.auth.signup.alreadyHaveAccount')}</span>
-            <LocalizedLink href="/signin" className="text-sm text-primary hover:underline dark:text-white">
-              {t('page.auth.signup.signinLink')}
-            </LocalizedLink>
-          </div>
-
-          <Button type="submit" className="btn w-full border-0 btn-gradient uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]" isLoading={isSubmittingSignup}>
+          <Button type="submit" size="lg" className="w-full" isLoading={isSubmittingSignup}>
             {t('page.auth.signup.button')}
           </Button>
+
+          <p className="text-center text-sm text-muted-foreground">
+            {t('page.auth.signup.alreadyHaveAccount')}{' '}
+            <LocalizedLink href="/signin" className="font-medium text-primary hover:underline">
+              {t('page.auth.signup.signinLink')}
+            </LocalizedLink>
+          </p>
         </Form>
       )}
     </Formik>

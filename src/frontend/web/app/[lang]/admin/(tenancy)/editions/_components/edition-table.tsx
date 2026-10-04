@@ -100,17 +100,17 @@ export const EditionTable = () => {
   const columns: ColumnDef<EditionListDto, any>[] = [
     columnHelper.accessor('name', {
       header: t('table.columns.name'),
-      cell: (info) => info.getValue(),
+      cell: (info) => <span className="font-medium text-foreground">{info.getValue()}</span>,
     }),
     columnHelper.accessor('description', {
       meta: { card: 'subtitle' },
       header: t('table.columns.description'),
-      cell: (info) => info.getValue() ?? '',
+      cell: (info) => <span className="line-clamp-2 max-w-md text-muted-foreground">{info.getValue() ?? ''}</span>,
       enableSorting: false,
     }),
     columnHelper.accessor('displayOrder', {
       header: t('table.columns.displayOrder'),
-      cell: (info) => info.getValue(),
+      cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
     }),
     // Counted per page off the tenant rows rather than held on the plan, so it cannot be sorted on.
     columnHelper.accessor('tenantCount', {
@@ -181,7 +181,7 @@ export const EditionTable = () => {
     >
       <DataTableToolbar>
         {canCreate && (
-          <DataTableToolbarButton label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/editions/create" />
+          <DataTableToolbarButton primary label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/editions/create" />
         )}
         <DataTableExportButton onExport={handleExport} isExporting={isExporting} disabled={isGettingEditions || !editionListResponse?.total} />
       </DataTableToolbar>

@@ -34,14 +34,14 @@ export const NotificationBell = () => {
     <div className="relative" ref={panelRef}>
       <button
         type="button"
-        className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white-light/40 p-2 hover:bg-white-light/90 hover:text-primary dark:bg-dark/40 dark:hover:bg-dark/60 dark:hover:text-primary"
+        className="icon-btn"
         aria-expanded={isOpen}
         onClick={() => setIsOpen(!isOpen)}
       >
         <span className="sr-only">{t('common.notifications')}</span>
-        <Bell className="h-5 w-5" aria-hidden="true" />
+        <Bell size={18} aria-hidden="true" />
         {badge !== null && (
-          <span className="absolute -top-1 -end-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 text-xs leading-none font-semibold tabular-nums text-white">
+          <span className="absolute -top-0.5 -end-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] leading-none font-semibold tabular-nums text-danger-foreground ring-2 ring-background">
             {badge}
           </span>
         )}

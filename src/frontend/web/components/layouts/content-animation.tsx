@@ -1,34 +1,27 @@
 'use client'
-import { useAppSelector } from '@/store/hooks'
 import { usePathname } from 'next/navigation'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 
 /**
- * ContentAnimation is a client component that wraps the main content area and applies the user's chosen entry animation from the theme config, replaying it on every route change.
+ * ContentAnimation wraps the page content in the shell's centred column and replays a short fade-up on every route change.
+ * The animation is restarted on the element rather than by remounting it, so the page's state survives a navigation.
  */
 export const ContentAnimation = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname()
-  const themeConfig = useAppSelector((state) => state.theme)
-  const [animation, setAnimation] = useState(themeConfig.animation)
+  const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setAnimation(themeConfig.animation)
-  }, [themeConfig.animation])
+    const element = ref.current
+    if (!element) return
+    element.classList.remove('animate-fade-up')
+    // Reading layout flushes the removal, so re-adding the class starts the animation again.
+    void element.offsetWidth
+    element.classList.add('animate-fade-up')
+  }, [pathname])
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setAnimation(themeConfig.animation)
-    setTimeout(() => {
-      setAnimation('')
-    }, 1100)
-  }, [pathname, themeConfig.animation])
   return (
-    <>
-      {/* BEGIN CONTENT AREA */}
-      <div className={`${animation} animate__animated p-6`}>{children}</div>
-      {/* END CONTENT AREA */}
-    </>
+    <div ref={ref} className="mx-auto w-full max-w-[1400px] animate-fade-up px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      {children}
+    </div>
   )
 }
-

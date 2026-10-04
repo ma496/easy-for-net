@@ -6,6 +6,7 @@ import { useTranslation } from '@/i18n'
 import ScrollBar from 'react-perfect-scrollbar'
 import { DataTableCardList } from './card-list'
 import { DataTableCardSort } from './card-sort'
+import { DataTableEmpty } from './empty-state'
 
 /** Below which breakpoint rows render as cards rather than a table; `false` keeps the table at every width. */
 export type DataTableCardsBelow = 'sm' | 'md' | 'lg' | false
@@ -71,11 +72,11 @@ function DataTableGrid<TData>({ className = '', suppressScrollX = false, suppres
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="p-4 text-start font-semibold first:rounded-ss-md last:rounded-se-md"
+                    className="h-10 bg-surface-2 px-4 text-start text-xs font-medium tracking-wide whitespace-nowrap text-muted-foreground uppercase first:rounded-s-lg last:rounded-e-lg"
                     style={{ width: header.getSize(), minWidth: header.column.columnDef.minSize, maxWidth: header.column.columnDef.maxSize }}
                   >
                     {header.isPlaceholder ? null : (
-                      <div className={`group flex items-center ${header.column.getCanSort() ? 'cursor-pointer select-none' : ''}`} onClick={header.column.getToggleSortingHandler()}>
+                      <div className={`group flex items-center gap-1 ${header.column.getCanSort() ? 'cursor-pointer select-none hover:text-foreground' : ''}`} onClick={header.column.getToggleSortingHandler()}>
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {header.column.getCanSort() && <DataTableSortIcon isSorted={header.column.getIsSorted()} />}
                       </div>
@@ -85,10 +86,11 @@ function DataTableGrid<TData>({ className = '', suppressScrollX = false, suppres
               </tr>
             ))}
           </thead>
-          <tbody>
-            {isFetching ? (
+          <tbody className={isFetching ? 'pointer-events-none opacity-60 transition-opacity duration-150' : 'transition-opacity duration-150'} aria-busy={isFetching}>
+            {/* The spinner stands in only for a first load; a refetch keeps the current rows, dimmed, so the table does not jump. */}
+            {isFetching && table.getRowModel().rows.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="py-6 text-center">
+                <td colSpan={columns.length} className="py-14 text-center">
                   <Loader size="lg" />
                 </td>
               </tr>
@@ -96,12 +98,12 @@ function DataTableGrid<TData>({ className = '', suppressScrollX = false, suppres
               table.getRowModel().rows.map((row) => (
                 <tr
                   key={row.id}
-                  className={`border-b border-white-light/40 hover:bg-white-light/20 dark:border-[#191e3a] dark:hover:bg-[#1a2941]/40 ${row.getIsSelected() ? 'bg-primary/10 dark:bg-primary/20' : ''}`}
+                  className={`border-b border-border transition-colors last:border-b-0 hover:bg-surface-2/60 ${row.getIsSelected() ? 'bg-primary/5' : ''}`}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className="px-4 py-3"
+                      className="px-4 py-3 text-foreground"
                       style={{ width: cell.column.getSize(), minWidth: cell.column.columnDef.minSize, maxWidth: cell.column.columnDef.maxSize }}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -111,8 +113,8 @@ function DataTableGrid<TData>({ className = '', suppressScrollX = false, suppres
               ))
             ) : (
               <tr>
-                <td colSpan={columns.length} className="py-6 text-center">
-                  {emptyMessage ?? t('table.noRecords')}
+                <td colSpan={columns.length}>
+                  <DataTableEmpty message={emptyMessage ?? t('table.noRecords')} />
                 </td>
               </tr>
             )}

@@ -69,7 +69,7 @@ export const EditionCreateForm = () => {
       onSubmit={onSubmit}
     >
       {() => (
-        <Form noValidate className="grid grid-cols-1 gap-4">
+        <Form noValidate className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <FormInput
             name="name"
             label={t('form.label.editionName')}
@@ -77,18 +77,20 @@ export const EditionCreateForm = () => {
             autoFocus={true}
             required={true}
           />
-          <FormTextarea
-            name="description"
-            label={t('form.label.editionDescription')}
-            placeholder={t('form.placeholder.editionDescription')}
-          />
           <FormInput
             name="displayOrder"
             type="number"
             label={t('form.label.editionDisplayOrder')}
             required={true}
           />
-          <div className="flex justify-end gap-4">
+          <FormTextarea
+            className="sm:col-span-2 [&_textarea]:h-auto [&_textarea]:min-h-24 [&_textarea]:py-2"
+            rows={4}
+            name="description"
+            label={t('form.label.editionDescription')}
+            placeholder={t('form.placeholder.editionDescription')}
+          />
+          <div className="mt-1 flex justify-end gap-2 border-t border-border pt-5 sm:col-span-2">
             <Button
               type="button"
               variant="outline"

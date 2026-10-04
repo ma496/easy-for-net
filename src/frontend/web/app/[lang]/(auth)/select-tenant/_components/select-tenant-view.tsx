@@ -7,6 +7,7 @@ import { useAppSelector } from '@/store/hooks'
 import { GetUserInfoTenant } from '@/store/api/identity'
 import { cn } from '@/lib/utils'
 import { LocalizedLink } from '@/components/ui'
+import { AccountShell } from '../../_components/account-shell'
 
 /**
  * Interactive client-side chooser that lists the tenants the signed-in user holds an active membership in and
@@ -30,54 +31,55 @@ export const SelectTenantView = () => {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-white px-6 py-16 dark:bg-[#060818]">
-      <div className="relative z-10 w-full max-w-2xl">
-        <div className="mb-8 text-center">
-          <h1 className="mb-2 text-3xl font-extrabold text-primary uppercase md:text-4xl">
-            {t('page.selectTenant.title')}
-          </h1>
-          <p className="text-base font-bold text-white-dark">{t('page.selectTenant.description')}</p>
-        </div>
-
-        {tenants.length === 0 ? (
-          // Nothing left to choose from: every tenant this account belonged to is gone, suspended, or has
-          // removed it. Signing up creates a tenant, so the way back is a new account rather than a screen
-          // here - what this offers is the account's own profile and the door out.
-          <div className="rounded-md bg-white p-6 text-center shadow-sm dark:bg-black/20">
-            <p className="mb-4 font-medium text-gray-500 dark:text-gray-400">{t('page.selectTenant.emptyDescription')}</p>
-            <LocalizedLink href="/profile" className="btn btn-primary">
-              {t('page.selectTenant.emptyAction')}
-            </LocalizedLink>
+    <AccountShell title={t('page.selectTenant.title')} description={t('page.selectTenant.description')}>
+      {tenants.length === 0 ? (
+        // Nothing left to choose from: every tenant this account belonged to is gone, suspended, or has
+        // removed it. Signing up creates a tenant, so the way back is a new account rather than a screen
+        // here - what this offers is the account's own profile and the door out.
+        <div className="flex flex-col items-center rounded-xl border border-border bg-surface px-6 py-12 text-center shadow-xs">
+          <div className="mb-4 flex size-12 items-center justify-center rounded-xl bg-surface-2 text-muted-foreground">
+            <Building2 className="size-6" />
           </div>
-        ) : (
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {tenants.map((tenant) => (
+          <p className="max-w-sm text-sm text-muted-foreground">{t('page.selectTenant.emptyDescription')}</p>
+          <LocalizedLink href="/profile" className="btn btn-primary mt-6">
+            {t('page.selectTenant.emptyAction')}
+          </LocalizedLink>
+        </div>
+      ) : (
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {tenants.map((tenant) => {
+            const isActive = tenant.id === activeTenant?.id
+
+            return (
               <li key={tenant.id}>
                 <button
                   type="button"
                   disabled={isBusy}
+                  aria-current={isActive ? 'true' : undefined}
                   className={cn(
-                    'flex w-full cursor-pointer items-center gap-3 rounded-md border border-gray-200 bg-white px-4 py-3 text-start transition-colors hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-600 dark:bg-[#1b2e4b] dark:text-gray-200',
-                    tenant.id === activeTenant?.id && 'border-primary bg-primary/10 text-primary'
+                    'group flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border bg-surface p-4 text-start shadow-xs transition-colors hover:border-primary/50 hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60',
+                    isActive && 'border-primary bg-primary/5 ring-1 ring-primary/25 hover:bg-primary/5'
                   )}
                   onClick={() => switchTenant(tenant)}
                 >
-                  <Building2 className="h-5 w-5 shrink-0" />
-                  <span className="flex flex-1 flex-col truncate">
-                    <span className="font-semibold">{tenant.name}</span>
-                    <span className="text-xs text-white-dark">{tenant.identifier}</span>
+                  <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-muted-foreground transition-colors group-hover:text-primary', isActive && 'bg-primary/10 text-primary')}>
+                    <Building2 className="size-5" />
+                  </span>
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate text-sm font-semibold text-foreground">{tenant.name}</span>
+                    <span className="truncate text-xs text-muted-foreground">{tenant.identifier}</span>
                   </span>
                   {isBusy ? (
-                    <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                    <Loader2 className="size-4 shrink-0 animate-spin text-muted-foreground" />
                   ) : (
-                    <Check className={cn('h-4 w-4 shrink-0', tenant.id !== activeTenant?.id && 'invisible')} />
+                    <Check className={cn('size-4 shrink-0 text-primary', !isActive && 'invisible')} />
                   )}
                 </button>
               </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </div>
+            )
+          })}
+        </ul>
+      )}
+    </AccountShell>
   )
 }

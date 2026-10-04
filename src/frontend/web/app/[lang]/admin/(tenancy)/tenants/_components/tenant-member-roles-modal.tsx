@@ -105,7 +105,7 @@ export const TenantMemberRolesModal = ({ tenantId, member, isOpen, onClose }: Te
                 tenantId,
               })}
             />
-            <div className="flex justify-end gap-4">
+            <div className="-mx-5 -mb-5 mt-2 flex justify-end gap-2 border-t border-border bg-surface-2/50 px-5 py-3.5">
               <Button
                 type="button"
                 variant="outline"

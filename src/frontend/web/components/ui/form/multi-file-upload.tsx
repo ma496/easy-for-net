@@ -196,7 +196,7 @@ export const MultiFileUpload = ({
           ghostClass="opacity-50"
         >
           {fileNames.map((fileName, index) => (
-            <div key={fileName} className="group relative aspect-square cursor-move overflow-hidden rounded-lg border border-white-light bg-gray-100 dark:border-[#17263c] dark:bg-gray-800">
+            <div key={fileName} className="group relative aspect-square cursor-move overflow-hidden rounded-lg border border-border bg-surface-2">
               {fileUrls[fileName] ? (
                 <Image src={fileUrls[fileName]} alt="" width={1} height={1} unoptimized className="h-full w-full object-contain" />
               ) : (
@@ -235,7 +235,7 @@ export const MultiFileUpload = ({
         <label
           htmlFor={inputId}
           className={cn(
-            'flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-white-light transition-colors hover:border-primary hover:bg-primary/5 dark:border-[#17263c] dark:hover:border-primary',
+            'flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border transition-colors hover:border-primary hover:bg-primary/5',
             isUploading && 'pointer-events-none opacity-50',
           )}
         >
@@ -243,8 +243,8 @@ export const MultiFileUpload = ({
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           ) : (
             <>
-              <Plus className="mb-2 h-8 w-8 text-gray-400" />
-              <span className="text-xs text-gray-400">{t('file.upload')}</span>
+              <Plus className="mb-2 h-8 w-8 text-subtle-foreground" />
+              <span className="text-xs text-subtle-foreground">{t('file.upload')}</span>
             </>
           )}
           <input id={inputId} type="file" multiple accept={accept} className="hidden" onChange={handleFileChange} disabled={isUploading} />

@@ -23,7 +23,7 @@ const EditionFeatures = async ({ params }: EditionFeaturesPageProps) => {
   const title = await getServerTranslation(lang, 'page.features.editionTitle')
 
   return (
-    <AdminPageContent title={title}>
+    <AdminPageContent title={title} plain>
       <FeatureValueEditor
         providerName={FeatureValueProvider.Edition}
         providerKey={id}

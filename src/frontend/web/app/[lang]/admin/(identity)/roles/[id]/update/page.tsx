@@ -22,7 +22,7 @@ const RoleUpdate = async ({ params }: RoleUpdatePageProps) => {
   return (
     <AdminPageContent
       title={title}
-      innerClassName='max-w-155'
+      innerClassName='max-w-3xl'
     >
       <RoleUpdateForm roleId={id} />
     </AdminPageContent>

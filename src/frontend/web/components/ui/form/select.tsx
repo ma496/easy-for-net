@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect, useId } from 'react'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/i18n'
 import { ChevronDown, Search, X } from 'lucide-react'
 import ScrollBar from 'react-perfect-scrollbar'
 import { Portal } from '@headlessui/react'
@@ -55,7 +56,7 @@ export const Select = ({
   showValidation = true,
   className,
   icon,
-  placeholder = 'Select...',
+  placeholder: placeholderProp,
   searchable = true,
   maxVisibleItems = 5,
   disabled = false,
@@ -63,6 +64,8 @@ export const Select = ({
   clearable = true,
   required = false,
 }: SelectProps) => {
+  const { t } = useTranslation()
+  const placeholder = placeholderProp ?? t('common.selectPlaceholder')
   const hasError = touched && error
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
@@ -127,18 +130,18 @@ export const Select = ({
   return (
     <div className={cn(className, hasError && 'has-error')} ref={containerRef}>
       {label && (
-        <label htmlFor={controlId}>
+        <label htmlFor={controlId} className="form-label">
           {label}
           {required && <span className="ms-1 text-danger">*</span>}
         </label>
       )}
-      <div className={cn('relative text-white-dark', 'custom-select')} ref={triggerRef}>
+      <div className={cn('relative text-muted-foreground', 'custom-select')} ref={triggerRef}>
         <button
           type="button"
           className={cn(
-            'form-input flex min-h-10 w-full cursor-pointer items-center gap-1 bg-transparent pe-10 ltr:text-left rtl:text-right',
+            'form-input flex h-auto min-h-9 w-full cursor-pointer items-center gap-1 bg-transparent pe-10 text-start',
             icon && 'ps-10',
-            size === 'sm' && 'py-1.5 text-xs',
+            size === 'sm' && 'min-h-8 py-1 text-[13px]',
             size === 'lg' && 'py-2.5 text-base',
           )
           }
@@ -147,14 +150,14 @@ export const Select = ({
           style={{ backgroundImage: 'none' }}
           onClick={() => setOpen((v) => !v)}
         >
-          {icon && <span className="absolute inset-s-4 top-1/2 -translate-y-1/2">{icon}</span>}
-          <span className={cn('flex-1 truncate ltr:text-left rtl:text-right', !value && 'text-gray-400')}>{value ? getSelectedLabel() : placeholder}</span>
+          {icon && <span className="pointer-events-none absolute inset-s-3 top-1/2 -translate-y-1/2">{icon}</span>}
+          <span className={cn('flex-1 truncate ltr:text-left rtl:text-right', !value && 'text-subtle-foreground')}>{value ? getSelectedLabel() : placeholder}</span>
           {clearable && value && (
-            <div role="button" className="absolute inset-e-8 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-hidden" tabIndex={-1} onClick={handleClear}>
+            <div role="button" className="absolute inset-e-8 top-1/2 -translate-y-1/2 text-subtle-foreground hover:text-muted-foreground focus:outline-hidden" tabIndex={-1} onClick={handleClear}>
               <X size={16} />
             </div>
           )}
-          <span className="pointer-events-none absolute inset-e-4 top-1/2 -translate-y-1/2">
+          <span className="pointer-events-none absolute inset-e-3 top-1/2 -translate-y-1/2">
             <ChevronDown className={cn('h-4 w-4 transition-transform', open && 'rotate-180')} />
           </span>
         </button>
@@ -165,7 +168,7 @@ export const Select = ({
           <Portal>
             <div
               ref={dropdownRef}
-              className={cn('fixed z-999 overflow-hidden rounded-sm border border-[rgb(224,230,237)] bg-white text-white-dark shadow-lg dark:border-[#253b5c] dark:bg-[#1b2e4b]', 'custom-select')}
+              className={cn('fixed z-999 overflow-hidden rounded-lg border border-border bg-surface text-foreground shadow-lg', 'custom-select')}
               style={{
                 top: `${position?.top ?? 0}px`,
                 left: `${position?.left ?? 0}px`,
@@ -174,13 +177,13 @@ export const Select = ({
               }}
             >
               {searchable && (
-                <div className="sticky top-0 z-10 flex h-12.5 items-center border-b border-gray-100 bg-white px-2 py-2 dark:border-[#253b5c] dark:bg-[#1b2e4b]" onClick={(e) => e.stopPropagation()}>
+                <div className="sticky top-0 z-10 flex items-center border-b border-border bg-surface p-1.5" onClick={(e) => e.stopPropagation()}>
                   <Input
                     name={name}
                     id={`${controlId}-search`}
                     type="text"
-                    icon={<Search className="pointer-events-none h-4 w-4 text-gray-400" />}
-                    placeholder="Search..."
+                    icon={<Search className="pointer-events-none h-4 w-4 text-subtle-foreground" />}
+                    placeholder={t('common.search')}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     autoFocus
@@ -197,12 +200,12 @@ export const Select = ({
                 key={isRTL ? `${controlId}-rtl` : `${controlId}-ltr`}
               >
                 <ul>
-                  {filteredOptions.length === 0 && <li className="px-4 py-2 text-gray-400">No options</li>}
+                  {filteredOptions.length === 0 && <li className="px-3 py-6 text-center text-sm text-subtle-foreground">{t('common.noOptions')}</li>}
                   {filteredOptions.map((opt) => (
                     <li
                       key={opt.value}
                       className={cn(
-                        'cursor-pointer px-4 py-2 hover:bg-[#f6f6f6] dark:hover:bg-[#132136]',
+                        'mx-1 my-0.5 cursor-pointer rounded-md px-3 py-1.5 hover:bg-surface-2',
                         isSelected(opt.value) && 'bg-primary/10 text-primary',
                         opt.disabled && 'pointer-events-none opacity-50',
                       )}
@@ -217,7 +220,7 @@ export const Select = ({
           </Portal>
         )}
       </div>
-      {showValidation && hasError && <div className="mt-1 text-danger">{error}</div>}
+      {showValidation && hasError && <div className="mt-1.5 text-xs font-medium text-danger">{error}</div>}
     </div>
   )
 }
