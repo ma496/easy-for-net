@@ -1,6 +1,5 @@
 import { useDataTable } from './context'
 import { useTranslation } from '@/i18n'
-import ScrollBar from 'react-perfect-scrollbar'
 import { cn } from '@/lib/utils'
 import { useId } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -155,7 +154,7 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
         </div>
       </div>
 
-      <ScrollBar className="w-full sm:w-auto" options={{ suppressScrollX: true }}>
+      <div className="w-full sm:w-auto">
         <div className="flex items-center justify-center gap-1">
           <button
             onClick={() => table.firstPage()}
@@ -229,7 +228,7 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
             </svg>
           </button>
         </div>
-      </ScrollBar>
+      </div>
     </div>
   )
 }
