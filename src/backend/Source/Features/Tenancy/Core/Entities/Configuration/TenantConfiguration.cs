@@ -22,21 +22,16 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
         builder.Property(x => x.Status)
             .HasConversion<string>();
 
-        // Deliberately unfiltered: the uniqueness comparison has to include soft-deleted tenants,
-        // and the explicit database name is load-bearing - ExceptionProcessor reports the offending
-        // field as the last underscore-separated segment of the constraint name, so
-        // "IX_Tenants_Identifier" yields "identifier", the request field name, where the EF default
-        // "IX_Tenants_IdentifierNormalized" would yield a name no form knows.
+        // Deliberately unfiltered: the uniqueness comparison has to include soft-deleted tenants.
+        // ExceptionProcessor reports the offending field as the last underscore-separated segment of
+        // the constraint name with "Normalized" dropped, so both indexes yield the "identifier"
+        // request field.
         builder.HasIndex(x => x.IdentifierNormalized)
             .IsUnique()
-            .HasDatabaseName("IX_Tenants_Identifier");
-
-        // EF would name this index IX_Tenants_Identifier as well - the name it derives from the
-        // column - and two indexes on one table cannot share a name, so the raw-column index is named
-        // explicitly and the unique index above keeps the name ExceptionProcessor depends on.
+            .HasDatabaseName("IX_Tenants_IdentifierNormalized");
         builder.HasIndex(x => x.Identifier)
-            .IsUnique(false)
-            .HasDatabaseName("IX_Tenants_IdentifierRaw");
+            .IsUnique()
+            .HasDatabaseName("IX_Tenants_Identifier");
         builder.HasIndex(x => x.Name)
             .IsUnique(false);
         builder.HasIndex(x => x.Status);

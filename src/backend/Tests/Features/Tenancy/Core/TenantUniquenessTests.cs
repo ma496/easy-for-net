@@ -41,12 +41,12 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
     /// own message rather than through its exception type, so the test project keeps no direct
     /// dependency on the PostgreSQL driver.
     /// </summary>
-    private const string IdentifierConstraint = "IX_Tenants_Identifier";
+    private const string IdentifierConstraint = "IX_Tenants_IdentifierNormalized";
 
     /// <summary>
     /// The descriptor behind a role name being unique within its tenant.
     /// </summary>
-    private const string RoleNameConstraint = "IX_Roles_TenantId_Name";
+    private const string RoleNameConstraint = "IX_Roles_TenantId_NameNormalized";
 
     /// <summary>
     /// Verifies that deleting a tenant does not free its identifier: a tenant removed through the

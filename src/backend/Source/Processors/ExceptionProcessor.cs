@@ -211,8 +211,12 @@ public class ExceptionProcessor(IWebHostEnvironment env, ILogger<ExceptionProces
                 if (string.IsNullOrEmpty(constraintName))
                     return (null, ErrorCodes.DuplicateValue);
 
-                // Extract property name from constraint name (e.g. "IX_Users_Username" -> "username")
-                var property = constraintName.Split('_').Last().ToLowerInvariant();
+                // Extract property name from constraint name, the normalized copy reported as the field
+                // it normalizes (e.g. "IX_Users_Username" and "IX_Users_UsernameNormalized" -> "username")
+                var column = constraintName.Split('_').Last();
+                if (column.EndsWith("Normalized", StringComparison.Ordinal))
+                    column = column[..^"Normalized".Length];
+                var property = column.ToLowerInvariant();
                 return (property, ErrorCodes.DuplicatePropertyValue);
 
             // Not null violation

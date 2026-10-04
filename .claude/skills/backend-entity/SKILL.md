@@ -153,13 +153,13 @@ Rules the existing configurations follow:
 builder.HasIndex(r => new { r.TenantId, r.NameNormalized })
     .IsUnique()
     .AreNullsDistinct(false)              // platform rows (null tenant) are unique among themselves too
-    .HasDatabaseName("IX_Roles_TenantId_Name");
+    .HasDatabaseName("IX_Roles_TenantId_NameNormalized");
 ```
 
-- **Name unique indexes so the last `_` segment is the request field.** `ExceptionProcessor`
-  turns a unique violation into `duplicatePropertyValue` against that segment lower-cased, so
-  `IX_Editions_Name` reports `name` where the EF default `IX_Editions_NameNormalized` would report a
-  field no form has. The raw column gets a separate non-unique index.
+- **Name unique indexes after their columns, so the last `_` segment is the request field.**
+  `ExceptionProcessor` turns a unique violation into `duplicatePropertyValue` against that segment
+  with a `Normalized` suffix dropped, lower-cased, so `IX_Editions_NameNormalized` and
+  `IX_Editions_Name` both report `name`.
 - Relationships inside a feature get explicit `HasOne(...).WithMany(...).HasForeignKey(...)`;
   `OnDelete(DeleteBehavior.Cascade)` where a child cannot outlive its parent,
   `DeleteBehavior.Restrict` where the endpoint refuses the delete first.

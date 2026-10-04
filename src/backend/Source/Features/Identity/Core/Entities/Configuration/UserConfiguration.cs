@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 /// <summary>
 /// EF Core entity configuration for <see cref="User"/>, mapping it to the <c>identity.Users</c> table
-/// and defining indexes on the username, email, and name fields (with uniqueness only on the normalized variants).
+/// and defining indexes on the username, email, and name fields (unique on the username and email, raw and normalized alike).
 /// </summary>
 public class UserConfiguration : IEntityTypeConfiguration<User>
 {
@@ -16,14 +16,21 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     {
         builder.ToTable("Users", "identity");
 
-        builder.HasIndex(u => u.Username)
-            .IsUnique(false);
+        // Each index is named after its column: ExceptionProcessor reports a unique violation against
+        // the last underscore-separated segment with a "Normalized" suffix dropped, so either index of
+        // a pair names the same request field.
         builder.HasIndex(u => u.UsernameNormalized)
-            .IsUnique();
-        builder.HasIndex(u => u.Email)
-            .IsUnique(false);
+            .IsUnique()
+            .HasDatabaseName("IX_Users_UsernameNormalized");
+        builder.HasIndex(u => u.Username)
+            .IsUnique()
+            .HasDatabaseName("IX_Users_Username");
         builder.HasIndex(u => u.EmailNormalized)
-            .IsUnique();
+            .IsUnique()
+            .HasDatabaseName("IX_Users_EmailNormalized");
+        builder.HasIndex(u => u.Email)
+            .IsUnique()
+            .HasDatabaseName("IX_Users_Email");
         builder.HasIndex(u => u.FirstName)
             .IsUnique(false);
         builder.HasIndex(u => u.LastName)
