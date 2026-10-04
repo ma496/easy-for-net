@@ -174,7 +174,7 @@ export const UserTable = () => {
   const columnHelper = createColumnHelper<UserListDto>()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const columns: ColumnDef<UserListDto, any>[] = [
-    columnHelper.accessor('usernameNormalized', {
+    columnHelper.accessor('username', {
       meta: { card: 'title' },
       header: t('table.columns.userName'),
       // The initial tile and the name, here and as the card's heading. The email keeps its own
@@ -188,7 +188,7 @@ export const UserTable = () => {
         </div>
       ),
     }),
-    columnHelper.accessor('emailNormalized', {
+    columnHelper.accessor('email', {
       meta: { card: 'subtitle' },
       header: t('table.columns.email'),
       cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
