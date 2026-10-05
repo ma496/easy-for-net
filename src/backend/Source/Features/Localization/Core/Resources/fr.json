@@ -347,48 +347,60 @@
   "page": {
     "home": {
       "hero": {
-        "badge": "Modèle Open Source .NET & Next.js",
+        "badge": "Modèle multi-locataire open source .NET et Next.js",
         "titleFocus": "Concentrez-vous sur",
         "titleHighlight": "la Logique Métier",
-        "description": "Arrêtez de perdre du temps sur le code passe-partout. Une fondation prête pour la production avec authentification, permissions et tâches en arrière-plan préconfigurées.",
+        "description": "Oubliez la plomberie. Une base prête pour la production avec locataires, rôles et permissions, fonctionnalités par offre, localisation et notifications en temps réel, déjà construits et testés.",
         "dashboardDetail": "Tableau de bord",
         "signin": "Se connecter",
         "viewSource": "Voir la source"
       },
       "features": {
         "titleBadge": "Fonctionnalités",
-        "title": "Tout ce dont vous avez besoin pour construire plus vite",
-        "description": "Un kit de démarrage complet avec toutes les fonctionnalités essentielles pré-construites, pour que vous puissiez vous concentrer sur vos besoins métier uniques.",
+        "title": "Tout ce dont un produit multi-locataire a besoin",
+        "description": "Multi-location, contrôle d'accès, offres, paramètres et le reste de la plomberie sont construits, testés et reliés, pour que votre premier commit soit une fonctionnalité.",
         "items": {
-          "permissions": {
-            "title": "Permissions Granulaires",
-            "description": "Contrôle d'accès basé sur les rôles (RBAC) intégré avec des permissions granulaires. Gérez facilement ce que les utilisateurs peuvent voir et faire."
+          "tenancy": {
+            "title": "Multi-location",
+            "description": "Locataires isolés avec adhésions, limites de sièges et inscription en libre-service. Les administrateurs de la plateforme gèrent tous les locataires ; les membres passent de l'un à l'autre."
           },
-          "email": {
-            "title": "Service Email",
-            "description": "Service email intégré pour les notifications, réinitialisations de mot de passe et plus. Prêt à connecter avec votre fournisseur SMTP."
+          "permissions": {
+            "title": "Rôles et permissions",
+            "description": "Permissions hiérarchiques à l'échelle de la plateforme ou d'un locataire, accordées par des rôles et appliquées à chaque endpoint et écran."
+          },
+          "plans": {
+            "title": "Offres et feature flags",
+            "description": "Les éditions décident des fonctionnalités de chaque locataire et de ses limites, comme les sièges et la taille des fichiers, avec des surcharges par locataire."
+          },
+          "sessions": {
+            "title": "Sessions sécurisées",
+            "description": "Sessions côté serveur dans Redis derrière une connexion JWT ou cookie. Modifier les accès d'un utilisateur met fin à ses sessions immédiatement."
+          },
+          "settings": {
+            "title": "Paramètres à l'exécution",
+            "description": "Paramètres typés que la plateforme et chaque locataire peuvent surcharger sans redéploiement, avec des secrets stockés chiffrés."
+          },
+          "localization": {
+            "title": "Localisation et RTL",
+            "description": "Huit langues incluses, mises en page de droite à gauche et traductions modifiables par chaque locataire depuis l'administration."
+          },
+          "notifications": {
+            "title": "Notifications en temps réel",
+            "description": "Notifications dans l'application envoyées via SignalR à un utilisateur, un locataire ou toute la plateforme, avec mise à l'échelle par Redis."
+          },
+          "files": {
+            "title": "Gestion des fichiers",
+            "description": "Envois, aperçus et stockage, avec des limites de taille fixées par l'offre de chaque locataire."
           },
           "jobs": {
-            "title": "Tâches en Arrière-plan",
-            "description": "Propulsé par Hangfire. Inclut des tâches préconfigurées pour le nettoyage des jetons et la maintenance des fichiers."
-          },
-          "cleanup": {
-            "title": "Nettoyage des Jetons et Fichiers",
-            "description": "Services automatisés pour garder votre base de données et stockage propres. Supprime les jetons expirés et fichiers temporaires."
-          },
-          "users": {
-            "title": "Gestion des Utilisateurs",
-            "description": "Gestion complète du cycle de vie des utilisateurs. Créez, mettez à jour et gérez les profils et rôles utilisateurs dès le début."
-          },
-          "ui": {
-            "title": "Composants UI Modernes",
-            "description": "Une riche bibliothèque de composants accessibles, prêts pour le mode sombre, construits avec Tailwind CSS et Headless UI."
+            "title": "Tâches de fond et e-mail",
+            "description": "Hangfire pour les tâches en file et récurrentes, et l'e-mail SMTP pour la vérification, la réinitialisation du mot de passe et plus."
           }
         }
       },
       "cta": {
         "title": "Open Source & Dirigé par la Communauté",
-        "description": "Rejoignez la communauté, contribuez au projet ou forkez-le pour démarrer votre prochaine grande idée.",
+        "description": "Forkez-le, ou générez un nouveau projet avec la CLI dotnet efn. Docker, un déploiement VPS en une commande et un workflow IA piloté par les spécifications sont inclus.",
         "button": "Étoile sur GitHub",
         "opensource": "Open Source",
         "license": "Licence MIT. Gratuit pour les projets personnels et commerciaux."

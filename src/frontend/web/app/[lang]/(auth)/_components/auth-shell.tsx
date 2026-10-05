@@ -27,9 +27,10 @@ export const AuthShell = ({ title, description, showBack = false, children }: Au
   const { t } = useTranslation()
 
   const highlights = [
+    t('page.home.features.items.tenancy.title'),
     t('page.home.features.items.permissions.title'),
-    t('page.home.features.items.users.title'),
-    t('page.home.features.items.jobs.title'),
+    t('page.home.features.items.plans.title'),
+    t('page.home.features.items.notifications.title'),
   ]
 
   return (

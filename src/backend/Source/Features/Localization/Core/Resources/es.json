@@ -347,48 +347,60 @@
   "page": {
     "home": {
       "hero": {
-        "badge": "Plantilla de código abierto .NET y Next.js",
+        "badge": "Plantilla multiinquilino de código abierto .NET y Next.js",
         "titleFocus": "Enfócate en",
         "titleHighlight": "Lógica de Negocio",
-        "description": "Deja de perder tiempo en código repetitivo. Una base lista para producción con autenticación, permisos y trabajos en segundo plano preconfigurados.",
+        "description": "Olvídate de la infraestructura repetitiva. Una base lista para producción con inquilinos, roles y permisos, funciones según el plan, localización y notificaciones en tiempo real ya construidos y probados.",
         "dashboardDetail": "Tablero",
         "signin": "Iniciar Sesión",
         "viewSource": "Ver Código"
       },
       "features": {
         "titleBadge": "Características",
-        "title": "Todo lo que necesitas para construir más rápido",
-        "description": "Un kit de inicio completo con todas las características esenciales preconstruidas, para que puedas concentrarte en tus requisitos comerciales únicos.",
+        "title": "Todo lo que necesita un producto multiinquilino",
+        "description": "Multiinquilino, control de acceso, planes, configuración y el resto de la infraestructura están construidos, probados y conectados, para que tu primer commit sea una funcionalidad.",
         "items": {
-          "permissions": {
-            "title": "Permisos Granulares",
-            "description": "Control de acceso basado en roles (RBAC) incorporado con permisos granulares. Administra fácilmente lo que los usuarios pueden ver y hacer."
+          "tenancy": {
+            "title": "Multiinquilino",
+            "description": "Inquilinos aislados con membresías, límites de puestos y registro autoservicio. Los administradores de la plataforma gestionan todos los inquilinos; los miembros cambian entre los suyos."
           },
-          "email": {
-            "title": "Servicio de Correo Electrónico",
-            "description": "Servicio de correo electrónico integrado para notificaciones, restablecimiento de contraseñas y más. Listo para conectar con tu proveedor SMTP."
+          "permissions": {
+            "title": "Roles y permisos",
+            "description": "Permisos jerárquicos con alcance de plataforma o de inquilino, otorgados mediante roles y aplicados en cada endpoint y pantalla."
+          },
+          "plans": {
+            "title": "Planes y flags de funciones",
+            "description": "Las ediciones deciden qué funciones obtiene cada inquilino y sus límites, como puestos y tamaño de subida, con ajustes por inquilino."
+          },
+          "sessions": {
+            "title": "Sesiones seguras",
+            "description": "Sesiones en el servidor con Redis tras el inicio de sesión por JWT o cookie. Cambiar el acceso de un usuario cierra sus sesiones al instante."
+          },
+          "settings": {
+            "title": "Configuración en tiempo de ejecución",
+            "description": "Configuración tipada que la plataforma y cada inquilino pueden sobrescribir sin volver a desplegar, con los secretos cifrados."
+          },
+          "localization": {
+            "title": "Localización y RTL",
+            "description": "Ocho idiomas incluidos, diseños de derecha a izquierda y traducciones que cada inquilino puede editar desde la administración."
+          },
+          "notifications": {
+            "title": "Notificaciones en tiempo real",
+            "description": "Notificaciones en la aplicación enviadas por SignalR a un usuario, un inquilino o toda la plataforma, escalando con Redis."
+          },
+          "files": {
+            "title": "Gestión de archivos",
+            "description": "Subidas, vistas previas y almacenamiento, con límites de tamaño definidos por el plan de cada inquilino."
           },
           "jobs": {
-            "title": "Trabajos en Segundo Plano",
-            "description": "Impulsado por Hangfire. Incluye trabajos preconfigurados para limpieza de tokens y mantenimiento de archivos."
-          },
-          "cleanup": {
-            "title": "Limpieza de Tokens y Archivos",
-            "description": "Servicios automatizados para mantener limpia tu base de datos y almacenamiento. Elimina tokens caducados y archivos temporales."
-          },
-          "users": {
-            "title": "Gestión de Usuarios",
-            "description": "Gestión completa del ciclo de vida del usuario. Crea, actualiza y administra perfiles de usuario y roles desde el primer momento."
-          },
-          "ui": {
-            "title": "Componentes de UI Modernos",
-            "description": "Una rica biblioteca de componentes accesibles y listos para modo oscuro construidos con Tailwind CSS y Headless UI."
+            "title": "Tareas en segundo plano y correo",
+            "description": "Hangfire para trabajos en cola y recurrentes, y correo SMTP para verificación, restablecimiento de contraseña y más."
           }
         }
       },
       "cta": {
         "title": "Código Abierto e Impulsado por la Comunidad",
-        "description": "Únete a la comunidad, contribuye al proyecto o haz un fork para comenzar tu próxima gran idea.",
+        "description": "Haz un fork o genera un proyecto nuevo con la CLI dotnet efn. Incluye Docker, despliegue en VPS con un solo comando y un flujo de trabajo de IA basado en especificaciones.",
         "button": "Estrella en GitHub",
         "opensource": "Código Abierto",
         "license": "Licencia MIT. Gratis para uso en proyectos personales y comerciales."

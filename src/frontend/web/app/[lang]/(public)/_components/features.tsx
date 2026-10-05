@@ -1,77 +1,40 @@
-import { Users, Palette, Mail, Trash2, Lock, Layers } from 'lucide-react'
+import { Bell, Building2, CalendarClock, FolderOpen, KeyRound, Languages, Layers, Lock, SlidersHorizontal } from 'lucide-react'
 import { getServerTranslation } from '@/i18n'
 
 /**
+ * The capabilities the landing page advertises, in display order, each with the key under
+ * `page.home.features.items` that holds its title and description.
+ */
+const featureItems = [
+  { key: 'tenancy', icon: Building2 },
+  { key: 'permissions', icon: Lock },
+  { key: 'plans', icon: Layers },
+  { key: 'sessions', icon: KeyRound },
+  { key: 'settings', icon: SlidersHorizontal },
+  { key: 'localization', icon: Languages },
+  { key: 'notifications', icon: Bell },
+  { key: 'files', icon: FolderOpen },
+  { key: 'jobs', icon: CalendarClock },
+] as const
+
+/**
  * Server-rendered features section of the public landing page.
- * Loads the localized strings for the badge, heading, and six feature cards, then renders them in a responsive grid with icons.
+ * Loads the localized strings for the badge, heading, and feature cards, then renders them in a responsive grid with icons.
  */
 export const Features = async ({ lang }: { lang: string }) => {
-  const [
-    titleBadge,
-    title,
-    description,
-    permissionsTitle,
-    permissionsDesc,
-    emailTitle,
-    emailDesc,
-    jobsTitle,
-    jobsDesc,
-    cleanupTitle,
-    cleanupDesc,
-    usersTitle,
-    usersDesc,
-    uiTitle,
-    uiDesc,
-  ] = await Promise.all([
+  const [titleBadge, title, description, features] = await Promise.all([
     getServerTranslation(lang, 'page.home.features.titleBadge'),
     getServerTranslation(lang, 'page.home.features.title'),
     getServerTranslation(lang, 'page.home.features.description'),
-    getServerTranslation(lang, 'page.home.features.items.permissions.title'),
-    getServerTranslation(lang, 'page.home.features.items.permissions.description'),
-    getServerTranslation(lang, 'page.home.features.items.email.title'),
-    getServerTranslation(lang, 'page.home.features.items.email.description'),
-    getServerTranslation(lang, 'page.home.features.items.jobs.title'),
-    getServerTranslation(lang, 'page.home.features.items.jobs.description'),
-    getServerTranslation(lang, 'page.home.features.items.cleanup.title'),
-    getServerTranslation(lang, 'page.home.features.items.cleanup.description'),
-    getServerTranslation(lang, 'page.home.features.items.users.title'),
-    getServerTranslation(lang, 'page.home.features.items.users.description'),
-    getServerTranslation(lang, 'page.home.features.items.ui.title'),
-    getServerTranslation(lang, 'page.home.features.items.ui.description'),
+    Promise.all(
+      featureItems.map(async ({ key, icon }) => ({
+        key,
+        icon,
+        name: await getServerTranslation(lang, `page.home.features.items.${key}.title`),
+        description: await getServerTranslation(lang, `page.home.features.items.${key}.description`),
+      })),
+    ),
   ])
-
-  const features = [
-    {
-      name: permissionsTitle,
-      description: permissionsDesc,
-      icon: Lock,
-    },
-    {
-      name: emailTitle,
-      description: emailDesc,
-      icon: Mail,
-    },
-    {
-      name: jobsTitle,
-      description: jobsDesc,
-      icon: Layers,
-    },
-    {
-      name: cleanupTitle,
-      description: cleanupDesc,
-      icon: Trash2,
-    },
-    {
-      name: usersTitle,
-      description: usersDesc,
-      icon: Users,
-    },
-    {
-      name: uiTitle,
-      description: uiDesc,
-      icon: Palette,
-    },
-  ]
 
   return (
     <section id="features" className="scroll-mt-16 border-y border-border bg-surface-2/40 py-20 sm:py-28">
@@ -84,7 +47,7 @@ export const Features = async ({ lang }: { lang: string }) => {
 
         <dl className="mt-14 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature) => (
-            <div key={feature.name} className="rounded-xl border border-border bg-surface p-6 shadow-xs transition-colors hover:border-primary/40">
+            <div key={feature.key} className="rounded-xl border border-border bg-surface p-6 shadow-xs transition-colors hover:border-primary/40">
               <dt>
                 <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
                   <feature.icon className="size-5" aria-hidden="true" />
@@ -99,4 +62,3 @@ export const Features = async ({ lang }: { lang: string }) => {
     </section>
   )
 }
-
