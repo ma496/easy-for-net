@@ -34,14 +34,14 @@ public class CustomizeAppSettingsTests
                 await File.WriteAllTextAsync(Path.Combine(dir, name), Template);
 
             // Act
-            await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "Demo", DevPorts.Default);
+            await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "demo", DevPorts.Default);
 
             // Assert
-            Assert.Equal("Demo:", await ReadAsync(dir, "appsettings.json", "Redis", "InstanceName"));
-            Assert.Equal("Demo:", await ReadAsync(dir, "appsettings.Development.json", "Redis", "InstanceName"));
-            Assert.Equal("DemoTest:", await ReadAsync(dir, "appsettings.Testing.json", "Redis", "InstanceName"));
-            Assert.Contains("Database=DemoTest;", await ReadAsync(dir, "appsettings.Testing.json", "ConnectionStrings", "DefaultConnection"));
-            Assert.Contains("Database=Demo;", await ReadAsync(dir, "appsettings.json", "ConnectionStrings", "DefaultConnection"));
+            Assert.Equal("demo:", await ReadAsync(dir, "appsettings.json", "Redis", "InstanceName"));
+            Assert.Equal("demo:", await ReadAsync(dir, "appsettings.Development.json", "Redis", "InstanceName"));
+            Assert.Equal("demo_test:", await ReadAsync(dir, "appsettings.Testing.json", "Redis", "InstanceName"));
+            Assert.Contains("Database=demo_test;", await ReadAsync(dir, "appsettings.Testing.json", "ConnectionStrings", "DefaultConnection"));
+            Assert.Contains("Database=demo;", await ReadAsync(dir, "appsettings.json", "ConnectionStrings", "DefaultConnection"));
             Assert.NotEqual("placeholder", await ReadAsync(dir, "appsettings.Development.json", "Auth", "Jwt", "Key"));
             Assert.NotEqual("placeholder", await ReadAsync(dir, "appsettings.Testing.json", "Auth", "Jwt", "Key"));
         }
@@ -68,12 +68,12 @@ public class CustomizeAppSettingsTests
                 File.Copy(templateSettings, Path.Combine(dir, name));
 
             // Act
-            await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "Demo", DevPorts.Default);
+            await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "demo", DevPorts.Default);
 
             // Assert
-            Assert.Equal("Demo:", await ReadAsync(dir, "appsettings.json", "Redis", "InstanceName"));
-            Assert.Equal("Demo:", await ReadAsync(dir, "appsettings.Development.json", "Redis", "InstanceName"));
-            Assert.Equal("DemoTest:", await ReadAsync(dir, "appsettings.Testing.json", "Redis", "InstanceName"));
+            Assert.Equal("demo:", await ReadAsync(dir, "appsettings.json", "Redis", "InstanceName"));
+            Assert.Equal("demo:", await ReadAsync(dir, "appsettings.Development.json", "Redis", "InstanceName"));
+            Assert.Equal("demo_test:", await ReadAsync(dir, "appsettings.Testing.json", "Redis", "InstanceName"));
         }
         finally
         {
@@ -99,7 +99,7 @@ public class CustomizeAppSettingsTests
                 File.Copy(templateSettings, Path.Combine(dir, name));
 
             // Act
-            var password = await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "Demo", DevPorts.Default);
+            var password = await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "demo", DevPorts.Default);
 
             // Assert
             Assert.NotEqual("Admin#123", password);
@@ -115,7 +115,7 @@ public class CustomizeAppSettingsTests
                 Assert.EndsWith($"Password={CreateProjectGenerator.DevelopmentDatabasePassword}", await ReadAsync(dir, name, "ConnectionStrings", "DefaultConnection"));
                 Assert.EndsWith($"Password={CreateProjectGenerator.DevelopmentDatabasePassword}", await ReadAsync(dir, name, "Hangfire", "Storage", "ConnectionString"));
             }
-            Assert.NotEqual(password, await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "Demo", DevPorts.Default));
+            Assert.NotEqual(password, await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "demo", DevPorts.Default));
         }
         finally
         {
@@ -140,7 +140,7 @@ public class CustomizeAppSettingsTests
                 File.Copy(templateSettings, Path.Combine(dir, name));
 
             // Act
-            await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "Demo", new DevPorts(5433, 6380));
+            await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "demo", new DevPorts(5433, 6380));
 
             // Assert
             foreach (var name in new[] { "appsettings.json", "appsettings.Development.json", "appsettings.Testing.json" })

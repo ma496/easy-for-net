@@ -21,7 +21,7 @@ public class WriteDockerEnvTests
         try
         {
             // Act
-            await CreateProjectGenerator.WriteDockerEnvAsync(example, envPath, "demo-shop", "DemoShop", DevPorts.Default);
+            await CreateProjectGenerator.WriteDockerEnvAsync(example, envPath, "demo-shop", DevPorts.Default);
 
             // Assert
             var lines = await File.ReadAllLinesAsync(envPath);
@@ -31,7 +31,7 @@ public class WriteDockerEnvTests
             Assert.Equal("https://localhost", values["PUBLIC_URL"]);
             Assert.Equal("demo_shop", values["POSTGRES_DB"]);
             Assert.Equal("demo_shop", values["POSTGRES_USER"]);
-            Assert.Equal("DemoShop:", values["REDIS_INSTANCE_NAME"]);
+            Assert.Equal("demo_shop:", values["REDIS_INSTANCE_NAME"]);
             Assert.Equal(32, values["POSTGRES_PASSWORD"].Length);
             Assert.Equal(32, values["REDIS_PASSWORD"].Length);
             Assert.True(values["JWT_KEY"].Length >= 32);
@@ -57,7 +57,7 @@ public class WriteDockerEnvTests
         try
         {
             // Act
-            await CreateProjectGenerator.WriteDockerEnvAsync(example, envPath, "demo", "Demo", new DevPorts(5433, 6380));
+            await CreateProjectGenerator.WriteDockerEnvAsync(example, envPath, "demo", new DevPorts(5433, 6380));
 
             // Assert
             var values = Parse(await File.ReadAllLinesAsync(envPath));
@@ -83,8 +83,8 @@ public class WriteDockerEnvTests
         try
         {
             // Act
-            await CreateProjectGenerator.WriteDockerEnvAsync(example, first, "demo", "Demo", DevPorts.Default);
-            await CreateProjectGenerator.WriteDockerEnvAsync(example, second, "demo", "Demo", DevPorts.Default);
+            await CreateProjectGenerator.WriteDockerEnvAsync(example, first, "demo", DevPorts.Default);
+            await CreateProjectGenerator.WriteDockerEnvAsync(example, second, "demo", DevPorts.Default);
 
             // Assert
             var a = Parse(await File.ReadAllLinesAsync(first));

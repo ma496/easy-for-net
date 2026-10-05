@@ -68,7 +68,7 @@ or `dotnet ef`. It prints the seeded administrators' generated password and the 
 Run these from the new project's root.
 
 1. **Database password.** Development and Testing connect as `postgres` / `postgres` — the
-   `docker-compose.yml` default — to the databases `<Name>` and `<Name>Test`; the tracked
+   `docker-compose.yml` default — to the databases `<name>` and `<name>_test` (the snake_case project name: `my_app` for `MyApp`); the tracked
    `appsettings.json` keeps a literal `{password}` placeholder. If the developer uses their own
    PostgreSQL, ask them to change the per-environment files themselves: the hooks refuse Claude
    reading or editing `appsettings.*.json` and `.env*`. Development and Testing already have a
@@ -94,7 +94,7 @@ Run these from the new project's root.
    src/backend/Source` is optional there. Commit the migration.
 4. **Redis.** Outside the Testing environment the API needs Redis (`ConnectionStrings:Redis`,
    default `localhost:6379`) and prefixes every key with `Redis:InstanceName`, which the generator set
-   to `<Name>:` (`<Name>Test:` in Testing) so several apps can share one Redis server. The project's
+   to `<name>:` (`<name>_test:` in Testing) so several apps can share one Redis server. The project's
    `docker-compose.yml` runs PostgreSQL (user and password `postgres`, unless `DEV_POSTGRES_PASSWORD`
    says otherwise — match it in the connection strings) and Redis with the password `redis` (or
    `DEV_REDIS_PASSWORD`, matched in `ConnectionStrings:Redis` as `localhost:6379,password=<password>`) for development:
@@ -138,7 +138,7 @@ Run these from the new project's root.
    with no tenant.
 7. **Tests and the gate.** `dotnet test src/backend/Tests` needs PostgreSQL reachable with the
    `appsettings.Testing.json` connection string and the `Initial` migration in place; the run
-   migrates and seeds `<Name>Test` and deletes it at the end; it needs no Redis. From the root, `npm run gate`
+   migrates and seeds `<name>_test` and deletes it at the end; it needs no Redis. From the root, `npm run gate`
    (`-- --fast` skips the production web build) runs the build, backend tests, web
    lint/typecheck/vitest, the engine and hook tests and `next build`; it runs `npm ci` in the web app
    when `node_modules` is missing.

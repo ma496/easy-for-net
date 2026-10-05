@@ -34,7 +34,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
     /// <c>appsettings.Testing.json</c> for a new project: its databases and the PostgreSQL and Redis
     /// ports its development containers are published on, fresh JWT keys for
     /// Development and Testing, its own Redis key prefix so several applications can share one
-    /// Redis server (<c>&lt;Name&gt;:</c>, and <c>&lt;Name&gt;Test:</c> for Testing), and a random
+    /// Redis server (<c>&lt;name&gt;:</c>, and <c>&lt;name&gt;_test:</c> for Testing), and a random
     /// password for the seeded administrators in all three files.
     /// </summary>
     /// <remarks>
@@ -43,33 +43,33 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
     /// <c>appsettings.json</c> keeps its <c>{password}</c> placeholder.
     /// </remarks>
     /// <param name="backendProjectTargetPath">The generated backend project directory holding the appsettings files.</param>
-    /// <param name="pascalCaseProjectName">The PascalCase project name.</param>
+    /// <param name="snakeCaseProjectName">The snake_case project name - lowercase, so the database never needs quoting in SQL.</param>
     /// <param name="ports">The host ports the root <c>.env</c> publishes the development containers on.</param>
     /// <returns>The seeded administrators' password.</returns>
-    internal static async Task<string> CustomizeAppSettingsAsync(string backendProjectTargetPath, string pascalCaseProjectName, DevPorts ports)
+    internal static async Task<string> CustomizeAppSettingsAsync(string backendProjectTargetPath, string snakeCaseProjectName, DevPorts ports)
     {
         var appSettings = Path.Combine(backendProjectTargetPath, "appsettings.json");
         var developmentSettings = Path.Combine(backendProjectTargetPath, "appsettings.Development.json");
         var testingSettings = Path.Combine(backendProjectTargetPath, "appsettings.Testing.json");
-        var connectionString = $"Host=localhost;Port={ports.Postgres};Database={pascalCaseProjectName};Username=postgres;Password={{password}}";
-        var developmentConnectionString = $"Host=localhost;Port={ports.Postgres};Database={pascalCaseProjectName};Username=postgres;Password={DevelopmentDatabasePassword}";
-        var testConnectionString = $"Host=localhost;Port={ports.Postgres};Database={pascalCaseProjectName}Test;Username=postgres;Password={DevelopmentDatabasePassword}";
+        var connectionString = $"Host=localhost;Port={ports.Postgres};Database={snakeCaseProjectName};Username=postgres;Password={{password}}";
+        var developmentConnectionString = $"Host=localhost;Port={ports.Postgres};Database={snakeCaseProjectName};Username=postgres;Password={DevelopmentDatabasePassword}";
+        var testConnectionString = $"Host=localhost;Port={ports.Postgres};Database={snakeCaseProjectName}_test;Username=postgres;Password={DevelopmentDatabasePassword}";
         var redisConnectionString = $"localhost:{ports.Redis},password={DevelopmentRedisPassword}";
         var adminPassword = Secrets.Password(16);
 
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(appSettings, "ConnectionStrings.DefaultConnection", connectionString);
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(appSettings, "Hangfire.Storage.ConnectionString", connectionString);
-        await JsonPropertyUpdater.UpdateJsonPropertyAsync(appSettings, "Redis.InstanceName", $"{pascalCaseProjectName}:");
+        await JsonPropertyUpdater.UpdateJsonPropertyAsync(appSettings, "Redis.InstanceName", $"{snakeCaseProjectName}:");
 
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(developmentSettings, "Auth.Jwt.Key", Guid.NewGuid().ToString());
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(developmentSettings, "ConnectionStrings.DefaultConnection", developmentConnectionString);
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(developmentSettings, "Hangfire.Storage.ConnectionString", developmentConnectionString);
-        await JsonPropertyUpdater.UpdateJsonPropertyAsync(developmentSettings, "Redis.InstanceName", $"{pascalCaseProjectName}:");
+        await JsonPropertyUpdater.UpdateJsonPropertyAsync(developmentSettings, "Redis.InstanceName", $"{snakeCaseProjectName}:");
 
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(testingSettings, "Auth.Jwt.Key", Guid.NewGuid().ToString());
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(testingSettings, "ConnectionStrings.DefaultConnection", testConnectionString);
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(testingSettings, "Hangfire.Storage.ConnectionString", testConnectionString);
-        await JsonPropertyUpdater.UpdateJsonPropertyAsync(testingSettings, "Redis.InstanceName", $"{pascalCaseProjectName}Test:");
+        await JsonPropertyUpdater.UpdateJsonPropertyAsync(testingSettings, "Redis.InstanceName", $"{snakeCaseProjectName}_test:");
 
         foreach (var settings in new[] { appSettings, developmentSettings, testingSettings })
         {
@@ -92,9 +92,8 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
     /// <param name="examplePath">The template's <c>.env.docker.example</c>.</param>
     /// <param name="envPath">The <c>.env</c> file to create.</param>
     /// <param name="kebabCaseProjectName">The kebab-case project name.</param>
-    /// <param name="pascalCaseProjectName">The PascalCase project name.</param>
     /// <param name="ports">The host ports for the development containers, the same the appsettings files connect to.</param>
-    internal static async Task WriteDockerEnvAsync(string examplePath, string envPath, string kebabCaseProjectName, string pascalCaseProjectName, DevPorts ports)
+    internal static async Task WriteDockerEnvAsync(string examplePath, string envPath, string kebabCaseProjectName, DevPorts ports)
     {
         var snakeCaseProjectName = kebabCaseProjectName.Replace('-', '_');
         var values = new Dictionary<string, string>
@@ -106,7 +105,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             ["POSTGRES_USER"] = snakeCaseProjectName,
             ["POSTGRES_PASSWORD"] = Secrets.Alphanumeric(32),
             ["REDIS_PASSWORD"] = Secrets.Alphanumeric(32),
-            ["REDIS_INSTANCE_NAME"] = $"{pascalCaseProjectName}:",
+            ["REDIS_INSTANCE_NAME"] = $"{snakeCaseProjectName}:",
             ["JWT_KEY"] = Secrets.Base64(48),
             // letters and digits only: a "#" could be read as the start of a comment by an env-file parser
             ["SEED_ADMIN_PASSWORD"] = Secrets.Alphanumeric(20),
@@ -221,7 +220,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             // a PostgreSQL or Redis already running on this machine keeps its port; the project's containers take the next free one
             var devPorts = DevPorts.Find(DevPorts.IsFree);
             // .env is git-ignored in the template, so it is written from the tracked example with this project's values
-            await WriteDockerEnvAsync(Path.Combine(versionedTemplateDir, ".env.docker.example"), Path.Combine(targetPath, ".env"), kebabCaseProjectName, pascalCaseProjectName, devPorts);
+            await WriteDockerEnvAsync(Path.Combine(versionedTemplateDir, ".env.docker.example"), Path.Combine(targetPath, ".env"), kebabCaseProjectName, devPorts);
             CopyDirectory($"{versionedTemplateDir}/docker", $"{targetPath}/docker", true);
             CopyDirectory($"{versionedTemplateDir}/.config", $"{targetPath}/.config", true);
             CopyDirectory($"{versionedTemplateDir}/.vscode", $"{targetPath}/.vscode", true);
@@ -248,7 +247,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
                 throw new UserFriendlyException($"Failed to get root namespace from project '{backendTestProjectTargetPath}'. csproj file is not found.");
             }
             // update connection strings, the JWT keys, the Redis key prefixes and the seeded administrators' password
-            var adminPassword = await CustomizeAppSettingsAsync(backendProjectTargetPath, pascalCaseProjectName, devPorts);
+            var adminPassword = await CustomizeAppSettingsAsync(backendProjectTargetPath, kebabCaseProjectName.Replace('-', '_'), devPorts);
             // update Meta.cs
             await ReplaceInFile(Path.Combine(backendProjectTargetPath, "Meta.cs"), $@"InternalsVisibleTo\s*\(\s*""{Regex.Escape(backendTestProjectName)}""\s*\)", $@"InternalsVisibleTo(""{pascalCaseProjectName}.Tests"")");
             // update Program.cs
