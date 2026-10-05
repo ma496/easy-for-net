@@ -347,48 +347,60 @@
   "page": {
     "home": {
       "hero": {
-        "badge": "Open Source .NET & Next.js Template",
+        "badge": "Open Source Multi-Tenant .NET & Next.js Template",
         "titleFocus": "Focus on",
         "titleHighlight": "Business Logic",
-        "description": "Stop wasting time on boilerplate. A production-ready foundation with Authentication, Permissions, and Background Jobs pre-configured.",
+        "description": "Skip the plumbing. A production-ready foundation with tenants, roles and permissions, plan-based features, localization and real-time notifications already built and tested.",
         "dashboardDetail": "Dashboard",
         "signin": "Signin",
         "viewSource": "View Source"
       },
       "features": {
         "titleBadge": "Features",
-        "title": "Everything you need to build faster",
-        "description": "A complete starter kit with all the essential features pre-built, so you can focus on your unique business requirements.",
+        "title": "Everything a multi-tenant product needs",
+        "description": "Tenancy, access control, plans, settings and the rest of the plumbing are built, tested and wired together, so your first commit can be a feature.",
         "items": {
-          "permissions": {
-            "title": "Granular Permissions",
-            "description": "Built-in role-based access control (RBAC) with granular permissions. Easily manage what users can see and do."
+          "tenancy": {
+            "title": "Multi-Tenancy",
+            "description": "Isolated tenants with memberships, seat limits and self-service sign-up. Platform administrators manage every tenant; members switch between theirs."
           },
-          "email": {
-            "title": "Email Service",
-            "description": "Integrated email service for notifications, password resets, and more. Ready to connect with your SMTP provider."
+          "permissions": {
+            "title": "Roles & Permissions",
+            "description": "Hierarchical permissions scoped to the platform or a tenant, granted through roles and enforced on every endpoint and screen."
+          },
+          "plans": {
+            "title": "Plans & Feature Flags",
+            "description": "Editions decide which features each tenant gets and the limits it works within, such as seats and upload size, with per-tenant overrides."
+          },
+          "sessions": {
+            "title": "Secure Sessions",
+            "description": "Server-side sessions in Redis behind JWT or cookie sign-in. Changing a user's access ends their sessions at once."
+          },
+          "settings": {
+            "title": "Runtime Settings",
+            "description": "Typed settings the platform and each tenant can override without a redeploy, with secrets stored encrypted."
+          },
+          "localization": {
+            "title": "Localization & RTL",
+            "description": "Eight languages out of the box, right-to-left layouts, and translations each tenant can edit from the admin screens."
+          },
+          "notifications": {
+            "title": "Real-Time Notifications",
+            "description": "In-app notifications pushed over SignalR to a user, a tenant or the whole platform, scaling out through Redis."
+          },
+          "files": {
+            "title": "File Management",
+            "description": "Uploads, previews and storage, with file size limits set by each tenant's plan."
           },
           "jobs": {
-            "title": "Background Jobs",
-            "description": "Powered by Hangfire. Includes pre-configured jobs for token cleanup and file maintenance."
-          },
-          "cleanup": {
-            "title": "Token & File Cleanup",
-            "description": "Automated services to keep your database and storage clean. Removes expired tokens and temporary files."
-          },
-          "users": {
-            "title": "User Management",
-            "description": "Complete user lifecycle management. Create, update, and manage user profiles and roles out of the box."
-          },
-          "ui": {
-            "title": "Modern UI Components",
-            "description": "A rich library of accessible, dark-mode ready components built with Tailwind CSS and Headless UI."
+            "title": "Background Jobs & Email",
+            "description": "Hangfire for queued and recurring work, and SMTP email for verification, password resets and more."
           }
         }
       },
       "cta": {
         "title": "Open Source & Community Driven",
-        "description": "Join the community, contribute to the project, or fork it to start your next big idea.",
+        "description": "Fork it, or scaffold a fresh project with the dotnet efn CLI. Docker, a one-command VPS deploy and a spec-driven AI workflow come included.",
         "button": "Star on GitHub",
         "opensource": "Open Source",
         "license": "MIT Licensed. Free to use for personal and commercial projects."

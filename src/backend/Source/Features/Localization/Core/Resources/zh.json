@@ -347,48 +347,60 @@
   "page": {
     "home": {
       "hero": {
-        "badge": "开源 .NET & Next.js 模板",
+        "badge": "开源多租户 .NET 与 Next.js 模板",
         "titleFocus": "专注于",
         "titleHighlight": "业务逻辑",
-        "description": "停止在样板代码上浪费时间。一个预配置了身份验证、权限和后台任务的生产就绪基础。",
+        "description": "跳过重复的基础设施工作。一个可用于生产的基础框架，租户、角色与权限、按套餐启用的功能、本地化和实时通知均已构建并经过测试。",
         "dashboardDetail": "仪表板",
         "signin": "登录",
         "viewSource": "查看源码"
       },
       "features": {
         "titleBadge": "特性",
-        "title": "构建更快所需的一切",
-        "description": "包含了所有基本功能的完整入门套件，因此您可以专注于您独特的业务需求。",
+        "title": "多租户产品所需的一切",
+        "description": "多租户、访问控制、套餐、设置以及其余基础设施均已构建、测试并相互连接，让你的第一次提交就是一个功能。",
         "items": {
-          "permissions": {
-            "title": "精细权限",
-            "description": "内置基于角色的访问控制 (RBAC) 和精细权限。轻松管理用户可以看到和做什么。"
+          "tenancy": {
+            "title": "多租户",
+            "description": "相互隔离的租户，支持成员、席位限制和自助注册。平台管理员管理所有租户；成员可在自己的租户之间切换。"
           },
-          "email": {
-            "title": "邮件服务",
-            "description": "用于通知、密码重置等的集成邮件服务。准备好连接您的 SMTP 提供商。"
+          "permissions": {
+            "title": "角色与权限",
+            "description": "平台级或租户级的分层权限，通过角色授予，并在每个接口和页面上强制执行。"
+          },
+          "plans": {
+            "title": "套餐与功能开关",
+            "description": "版本决定每个租户可用的功能及其限制（如席位和上传大小），并支持按租户覆盖。"
+          },
+          "sessions": {
+            "title": "安全会话",
+            "description": "基于 JWT 或 Cookie 登录、存储在 Redis 中的服务端会话。更改用户的访问权限会立即结束其会话。"
+          },
+          "settings": {
+            "title": "运行时设置",
+            "description": "强类型设置，平台和每个租户无需重新部署即可覆盖，密钥加密存储。"
+          },
+          "localization": {
+            "title": "本地化与 RTL",
+            "description": "开箱即用的八种语言、从右到左布局，以及每个租户可在管理界面中编辑的翻译。"
+          },
+          "notifications": {
+            "title": "实时通知",
+            "description": "通过 SignalR 推送给用户、租户或整个平台的应用内通知，借助 Redis 横向扩展。"
+          },
+          "files": {
+            "title": "文件管理",
+            "description": "上传、预览和存储，文件大小限制由每个租户的套餐决定。"
           },
           "jobs": {
-            "title": "后台任务",
-            "description": "由 Hangfire 提供支持。包括用于令牌清理和文件维护的预配置作业。"
-          },
-          "cleanup": {
-            "title": "令牌和文件清理",
-            "description": "保持数据库和存储清洁的自动化服务。删除过期的令牌和临时文件。"
-          },
-          "users": {
-            "title": "用户管理",
-            "description": "完整的用户生命周期管理。开箱即用地创建、更新和管理用户配置文件和角色。"
-          },
-          "ui": {
-            "title": "现代 UI 组件",
-            "description": "使用 Tailwind CSS 和 Headless UI 构建的丰富、可访问且支持深色模式的组件库。"
+            "title": "后台任务与邮件",
+            "description": "使用 Hangfire 处理队列和定时任务，使用 SMTP 邮件进行验证、重置密码等。"
           }
         }
       },
       "cta": {
         "title": "开源 & 社区驱动",
-        "description": "加入社区，为项目做出贡献，或分叉它以开始您的下一个大创意。",
+        "description": "Fork 它，或使用 dotnet efn CLI 生成全新项目。内置 Docker、一条命令部署到 VPS，以及基于规格说明的 AI 工作流。",
         "button": "在 GitHub 上加星",
         "opensource": "开源",
         "license": "MIT 许可。免费用于个人和商业项目。"
