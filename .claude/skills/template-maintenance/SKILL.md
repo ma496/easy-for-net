@@ -89,9 +89,9 @@ name no shipped directory uses) or put it outside `.claude`.
   `c.Binding.ReflectionCache.AddFrom<ProjectName>` call; the namespace strings in
   `Tests/Architect/FeatureDependencyTests.cs`.
 - `CustomizeAppSettingsAsync` rewrites the connection strings (`ConnectionStrings.DefaultConnection`,
-  `Hangfire.Storage.ConnectionString`) to `Database=<Name>` (`<Name>Test` for Testing) — with a
+  `Hangfire.Storage.ConnectionString`) to `Database=<name>` (`<name>_test` for Testing, `<name>` being the snake_case project name) — with a
   literal `{password}` in `appsettings.json` and `postgres` (the `docker-compose.yml` default) in
-  Development/Testing — sets `Redis.InstanceName` to `<Name>:` (`<Name>Test:` for Testing), gives
+  Development/Testing — sets `Redis.InstanceName` to `<name>:` (`<name>_test:` for Testing), gives
   Development/Testing a GUID `Auth.Jwt.Key`, and writes one random password into
   `Seed.PlatformAdminPassword` / `Seed.TenantAdminPassword` of all three files. These are JSON-path
   updates, so renaming or moving those keys in `appsettings.json` must be mirrored in the generator.
