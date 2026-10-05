@@ -127,7 +127,8 @@ export const DatePicker = (props: DatePickerProps) => {
     weekday: `${defaultClassNames.weekday} text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]`,
     week: `${defaultClassNames.week} flex w-full mt-2`,
     day: `${defaultClassNames.day} h-9 w-9 text-center text-sm p-0 relative text-foreground hover:bg-primary/10 rounded-md`,
-    day_button: `${defaultClassNames.day_button} h-9 w-9 p-0 font-normal ${mode === 'multiple' ? 'hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary' : 'hover:bg-primary/10 hover:text-primary focus:bg-primary/10 focus:text-primary'}`,
+    // No text color here: the button inherits its cell's, so a selected day keeps its contrasting text on hover.
+    day_button: `${defaultClassNames.day_button} h-9 w-9 p-0 font-normal hover:bg-primary/10 focus:bg-primary/10`,
     selected: mode === 'multiple' ? 'rdp-multiple-selected' : `bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground`,
     today: `font-semibold text-primary`,
     outside: `text-muted-foreground opacity-50`,
