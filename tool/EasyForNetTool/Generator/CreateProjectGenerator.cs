@@ -24,8 +24,15 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
     internal const string DevelopmentDatabasePassword = "postgres";
 
     /// <summary>
+    /// The Redis password the connection strings are written with - the default the project's own
+    /// <c>docker-compose.yml</c> starts Redis with.
+    /// </summary>
+    internal const string DevelopmentRedisPassword = "redis";
+
+    /// <summary>
     /// Rewrites the copied <c>appsettings.json</c>, <c>appsettings.Development.json</c> and
-    /// <c>appsettings.Testing.json</c> for a new project: its databases, fresh JWT keys for
+    /// <c>appsettings.Testing.json</c> for a new project: its databases and the PostgreSQL and Redis
+    /// ports its development containers are published on, fresh JWT keys for
     /// Development and Testing, its own Redis key prefix so several applications can share one
     /// Redis server (<c>&lt;Name&gt;:</c>, and <c>&lt;Name&gt;Test:</c> for Testing), and a random
     /// password for the seeded administrators in all three files.
@@ -37,15 +44,17 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
     /// </remarks>
     /// <param name="backendProjectTargetPath">The generated backend project directory holding the appsettings files.</param>
     /// <param name="pascalCaseProjectName">The PascalCase project name.</param>
+    /// <param name="ports">The host ports the root <c>.env</c> publishes the development containers on.</param>
     /// <returns>The seeded administrators' password.</returns>
-    internal static async Task<string> CustomizeAppSettingsAsync(string backendProjectTargetPath, string pascalCaseProjectName)
+    internal static async Task<string> CustomizeAppSettingsAsync(string backendProjectTargetPath, string pascalCaseProjectName, DevPorts ports)
     {
         var appSettings = Path.Combine(backendProjectTargetPath, "appsettings.json");
         var developmentSettings = Path.Combine(backendProjectTargetPath, "appsettings.Development.json");
         var testingSettings = Path.Combine(backendProjectTargetPath, "appsettings.Testing.json");
-        var connectionString = $"Host=localhost;Port=5432;Database={pascalCaseProjectName};Username=postgres;Password={{password}}";
-        var developmentConnectionString = $"Host=localhost;Port=5432;Database={pascalCaseProjectName};Username=postgres;Password={DevelopmentDatabasePassword}";
-        var testConnectionString = $"Host=localhost;Port=5432;Database={pascalCaseProjectName}Test;Username=postgres;Password={DevelopmentDatabasePassword}";
+        var connectionString = $"Host=localhost;Port={ports.Postgres};Database={pascalCaseProjectName};Username=postgres;Password={{password}}";
+        var developmentConnectionString = $"Host=localhost;Port={ports.Postgres};Database={pascalCaseProjectName};Username=postgres;Password={DevelopmentDatabasePassword}";
+        var testConnectionString = $"Host=localhost;Port={ports.Postgres};Database={pascalCaseProjectName}Test;Username=postgres;Password={DevelopmentDatabasePassword}";
+        var redisConnectionString = $"localhost:{ports.Redis},password={DevelopmentRedisPassword}";
         var adminPassword = Secrets.Password(16);
 
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(appSettings, "ConnectionStrings.DefaultConnection", connectionString);
@@ -64,6 +73,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
 
         foreach (var settings in new[] { appSettings, developmentSettings, testingSettings })
         {
+            await JsonPropertyUpdater.UpdateJsonPropertyAsync(settings, "ConnectionStrings.Redis", redisConnectionString);
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(settings, "Seed.PlatformAdminPassword", adminPassword);
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(settings, "Seed.TenantAdminPassword", adminPassword);
         }
@@ -76,13 +86,15 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
     /// the template's <c>.env.docker.example</c>, keeping its comments: the project's own Compose
     /// project, database and Redis key prefix, fresh random database, Redis and administrator
     /// passwords and JWT signing key, and <c>localhost</c> as the domain so the stack starts as
-    /// generated. Values the example leaves for the developer (SMTP) are copied as they are.
+    /// generated, and the host ports the development <c>docker-compose.yml</c> publishes PostgreSQL
+    /// and Redis on. Values the example leaves for the developer (SMTP) are copied as they are.
     /// </summary>
     /// <param name="examplePath">The template's <c>.env.docker.example</c>.</param>
     /// <param name="envPath">The <c>.env</c> file to create.</param>
     /// <param name="kebabCaseProjectName">The kebab-case project name.</param>
     /// <param name="pascalCaseProjectName">The PascalCase project name.</param>
-    internal static async Task WriteDockerEnvAsync(string examplePath, string envPath, string kebabCaseProjectName, string pascalCaseProjectName)
+    /// <param name="ports">The host ports for the development containers, the same the appsettings files connect to.</param>
+    internal static async Task WriteDockerEnvAsync(string examplePath, string envPath, string kebabCaseProjectName, string pascalCaseProjectName, DevPorts ports)
     {
         var snakeCaseProjectName = kebabCaseProjectName.Replace('-', '_');
         var values = new Dictionary<string, string>
@@ -98,6 +110,8 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             ["JWT_KEY"] = Secrets.Base64(48),
             // letters and digits only: a "#" could be read as the start of a comment by an env-file parser
             ["SEED_ADMIN_PASSWORD"] = Secrets.Alphanumeric(20),
+            ["DEV_POSTGRES_PORT"] = ports.Postgres.ToString(),
+            ["DEV_REDIS_PORT"] = ports.Redis.ToString(),
         };
 
         var content = await File.ReadAllTextAsync(examplePath);
@@ -204,8 +218,10 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             CopyFrom(webProjectPath, webTargetPath, ".env.example", ".env.development");
             CopyFiles(versionedTemplateDir, targetPath, ".editorconfig", ".gitignore", ".gitattributes", "global.json", "package.json", "agentic.config.json",
                 "docker-compose.yml", "docker-compose.prod.yml", "docker-compose.coolify.yml", ".env.docker.example");
+            // a PostgreSQL or Redis already running on this machine keeps its port; the project's containers take the next free one
+            var devPorts = DevPorts.Find(DevPorts.IsFree);
             // .env is git-ignored in the template, so it is written from the tracked example with this project's values
-            await WriteDockerEnvAsync(Path.Combine(versionedTemplateDir, ".env.docker.example"), Path.Combine(targetPath, ".env"), kebabCaseProjectName, pascalCaseProjectName);
+            await WriteDockerEnvAsync(Path.Combine(versionedTemplateDir, ".env.docker.example"), Path.Combine(targetPath, ".env"), kebabCaseProjectName, pascalCaseProjectName, devPorts);
             CopyDirectory($"{versionedTemplateDir}/docker", $"{targetPath}/docker", true);
             CopyDirectory($"{versionedTemplateDir}/.config", $"{targetPath}/.config", true);
             CopyDirectory($"{versionedTemplateDir}/.vscode", $"{targetPath}/.vscode", true);
@@ -232,7 +248,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
                 throw new UserFriendlyException($"Failed to get root namespace from project '{backendTestProjectTargetPath}'. csproj file is not found.");
             }
             // update connection strings, the JWT keys, the Redis key prefixes and the seeded administrators' password
-            var adminPassword = await CustomizeAppSettingsAsync(backendProjectTargetPath, pascalCaseProjectName);
+            var adminPassword = await CustomizeAppSettingsAsync(backendProjectTargetPath, pascalCaseProjectName, devPorts);
             // update Meta.cs
             await ReplaceInFile(Path.Combine(backendProjectTargetPath, "Meta.cs"), $@"InternalsVisibleTo\s*\(\s*""{Regex.Escape(backendTestProjectName)}""\s*\)", $@"InternalsVisibleTo(""{pascalCaseProjectName}.Tests"")");
             // update Program.cs
@@ -318,6 +334,9 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             Console.WriteLine();
             Console.WriteLine($"  Seeded accounts: admin and tenantadmin, password {adminPassword}");
             Console.WriteLine("  (the Seed section of the appsettings files; .env holds the production stack's own secrets)");
+            Console.WriteLine($"  Development PostgreSQL on localhost:{devPorts.Postgres}, Redis on localhost:{devPorts.Redis}");
+            if (devPorts != DevPorts.Default)
+                Console.WriteLine("  (a default port was already in use; DEV_POSTGRES_PORT / DEV_REDIS_PORT in .env match the connection strings)");
             Console.WriteLine();
             Console.WriteLine("  Next steps:");
             Console.WriteLine($"    cd {kebabCaseProjectName}");

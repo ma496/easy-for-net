@@ -42,8 +42,12 @@ would want.
 - `src/frontend/web/.env.example` copied to `.env.development`
 - the root `.env` written from `.env.docker.example` by `WriteDockerEnvAsync`: the project's Compose
   project, database and Redis key prefix, `DOMAIN=localhost` / `PUBLIC_URL=https://localhost`, and
-  fresh random database, Redis and administrator passwords and JWT key (a key added to the example ships as it is unless it is named
-  there)
+  fresh random database, Redis and administrator passwords and JWT key, and `DEV_POSTGRES_PORT` /
+  `DEV_REDIS_PORT` (a key added to the example ships as it is unless it is named there)
+- the development ports: `DevPorts.Find(DevPorts.IsFree)` keeps 5432 and 6379 when nothing on the
+  machine holds them and otherwise takes the next free port above each, and the same pair goes to
+  `WriteDockerEnvAsync` and `CustomizeAppSettingsAsync` so `.env` and every connection string
+  (PostgreSQL, Hangfire, Redis) agree
 - root files `.editorconfig`, `.gitignore`, `.gitattributes`, `global.json`, `package.json`,
   `agentic.config.json`, `docker-compose.yml`, `docker-compose.prod.yml`, `docker-compose.coolify.yml`
   (what `npm run deploy:vps` points Coolify at), `.env.docker.example`

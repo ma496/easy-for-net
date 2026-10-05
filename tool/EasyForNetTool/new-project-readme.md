@@ -10,6 +10,12 @@ with `dotnet efn`. `CLAUDE.md` describes the architecture; `.claude/skills` hold
 - Docker (for PostgreSQL and Redis in development), or your own PostgreSQL on `localhost:5432` and
   Redis on `localhost:6379`
 
+The development containers are published on the ports `DEV_POSTGRES_PORT` and `DEV_REDIS_PORT` in
+the root `.env`. When the project was created, 5432 and 6379 were used unless something on the
+machine already held them, in which case the next free ports were picked and written into the
+connection strings in `src/backend/Source/appsettings.Development.json` and `appsettings.Testing.json`
+as well. To change a port later, change it in both places.
+
 ## Development
 
 Once, from the root — `dotnet ef` needs the packages restored, and the API needs a migration to create
