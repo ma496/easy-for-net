@@ -59,6 +59,8 @@
       "Bash(head .env)",
       "Bash(tail .env)",
       "Bash(cp .env *)",
+      "Bash(npm run deploy:vps*)",
+      "Bash(node scripts/deploy-vps.mjs*)",
       "Bash(rm -rf /*)"
     ]
   },

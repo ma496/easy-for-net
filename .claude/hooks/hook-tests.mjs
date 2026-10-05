@@ -215,6 +215,17 @@ const cases = [
     expect: "block",
   },
 
+  // --- deploying is the owner's (hooks.deniedCommands in agentic.config.json) -----------
+  { label: "npm run deploy:vps", command: "npm run deploy:vps -- --host 203.0.113.10 --domain a.example.com", expect: "block" },
+  { label: "deploy:vps --check still deploys tooling", command: "npm run deploy:vps -- --check", expect: "block" },
+  { label: "deploy:vps via npm run-script", command: "npm run-script deploy:vps", expect: "block" },
+  { label: "deploy:vps after another command", command: "npm run gate && npm run deploy:vps", expect: "block" },
+  { label: "the deploy script run by node", command: "node scripts/deploy-vps.mjs --yes", expect: "block" },
+  { label: "the deploy script by a Windows path", command: `node .${BS}scripts${BS}deploy-vps.mjs`, expect: "block" },
+  { label: "reading the deploy script", command: "cat scripts/deploy-vps.mjs", expect: "allow" },
+  { label: "the deploy helpers' unit tests", command: "node --test scripts/tests/deploy-vps.test.mjs", expect: "allow" },
+  { label: "grep for the deploy script name", command: "grep -rn 'deploy:vps' package.json", expect: "allow" },
+
   // --- ordinary work must stay unblocked -----------------------------------------------
   { label: "npm run gate", command: "npm run gate", expect: "allow" },
   { label: "npm run verify", command: "npm run verify", expect: "allow" },
