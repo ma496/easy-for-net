@@ -321,12 +321,10 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             Console.WriteLine();
             Console.WriteLine("  Next steps:");
             Console.WriteLine($"    cd {kebabCaseProjectName}");
-            Console.WriteLine("    docker compose up -d");
             Console.WriteLine("    dotnet tool restore");
             Console.WriteLine($"    dotnet build {pascalCaseProjectName}.slnx");
             Console.WriteLine("    dotnet ef migrations add Initial --project src/backend/Source");
-            Console.WriteLine("    dotnet run --project src/backend/Source");
-            Console.WriteLine("    cd src/frontend/web && npm install && npm run dev");
+            Console.WriteLine("    npm run dev        # PostgreSQL + Redis (Docker), the API on :5000 and the web app on :3000; Ctrl+C stops both");
             Console.WriteLine();
             Console.WriteLine("  README.md has the rest.");
         }
