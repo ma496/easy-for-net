@@ -132,8 +132,8 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
   new version's fixtures.
 - **Guards run in every permission mode.** `.claude/hooks/` refuses reading or writing `.env*` and the
   per-environment `appsettings.*.json`, edits to build output, `dotnet ef database drop`, destructive
-  SQL, `git reset --hard`, `git add -A`, force-pushes, pushes to a protected branch and every merge
-  route — for the Bash and PowerShell tools alike, with git's global options (`git -C …`) seen
+  SQL, `git reset --hard`, `git add -A`, force-pushes, pushes to a protected branch, every merge
+  route and the VPS deploy (`npm run deploy:vps`, through `hooks.deniedCommands`) — for the Bash and PowerShell tools alike, with git's global options (`git -C …`) seen
   through — and reading the secret files through the Read and Grep tools. `npm run test:hooks`
   holds a block case and a neighbouring allow case for each rule; add both when you add a rule.
 - **Records.** `.agent-runs/` (git-ignored) is every attempt, with its raw stream beside its log
