@@ -56,4 +56,48 @@ public class MyClass
         // Old variable name SHOULD NOT change
         Assert.Contains("var Old = \"Old\";", resultCode);
     }
+
+    /// <summary>
+    /// Tests that namespaces named in comments are rewritten: <c>cref</c> attributes in XML
+    /// documentation (which otherwise fail to resolve and raise CS1574), XML doc prose and
+    /// ordinary comments, while words that merely start with the old root are left alone.
+    /// </summary>
+    [Fact]
+    public void Should_Rewrite_Namespaces_In_Comments()
+    {
+        // Arrange
+        var sourceCode = @"
+namespace Backend.Features.Users;
+
+/// <summary>
+/// Seeded by <see cref=""Backend.ShareData.DataSeeder""/> and <see cref=""Backend.Permissions""/>;
+/// see <c>Backend.Features.Identity</c>. Not BackendTools.
+/// </summary>
+/// <param name=""x"">From <see cref=""Backend.Permissions.Allow.Tenant_Detail""/>.</param>
+public class MyClass
+{
+    // Mirrors Backend.Features.Tenancy, not MyBackend.Thing.
+    /* Also Backend.ShareData. */
+    public void Method(int x) { }
+}
+";
+
+        var rewriter = new NamespaceRewriter("Backend", "Acme");
+        var root = CSharpSyntaxTree.ParseText(sourceCode).GetRoot();
+
+        // Act
+        var resultCode = rewriter.Visit(root).ToFullString();
+
+        // Assert
+        Assert.Contains("namespace Acme.Features.Users;", resultCode);
+        Assert.Contains(@"<see cref=""Acme.ShareData.DataSeeder""/>", resultCode);
+        Assert.Contains(@"<see cref=""Acme.Permissions""/>", resultCode);
+        Assert.Contains(@"<see cref=""Acme.Permissions.Allow.Tenant_Detail""/>", resultCode);
+        Assert.Contains("<c>Acme.Features.Identity</c>. Not BackendTools.", resultCode);
+        Assert.Contains("// Mirrors Acme.Features.Tenancy, not MyBackend.Thing.", resultCode);
+        Assert.Contains("/* Also Acme.ShareData. */", resultCode);
+        Assert.DoesNotContain(" Backend.", resultCode);
+        Assert.DoesNotContain("\"Backend.", resultCode);
+        Assert.DoesNotContain(">Backend.", resultCode);
+    }
 }
