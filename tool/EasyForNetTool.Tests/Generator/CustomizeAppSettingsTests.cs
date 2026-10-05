@@ -34,7 +34,7 @@ public class CustomizeAppSettingsTests
                 await File.WriteAllTextAsync(Path.Combine(dir, name), Template);
 
             // Act
-            await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "Demo");
+            await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "Demo", DevPorts.Default);
 
             // Assert
             Assert.Equal("Demo:", await ReadAsync(dir, "appsettings.json", "Redis", "InstanceName"));
@@ -68,7 +68,7 @@ public class CustomizeAppSettingsTests
                 File.Copy(templateSettings, Path.Combine(dir, name));
 
             // Act
-            await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "Demo");
+            await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "Demo", DevPorts.Default);
 
             // Assert
             Assert.Equal("Demo:", await ReadAsync(dir, "appsettings.json", "Redis", "InstanceName"));
@@ -99,7 +99,7 @@ public class CustomizeAppSettingsTests
                 File.Copy(templateSettings, Path.Combine(dir, name));
 
             // Act
-            var password = await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "Demo");
+            var password = await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "Demo", DevPorts.Default);
 
             // Assert
             Assert.NotEqual("Admin#123", password);
@@ -115,7 +115,40 @@ public class CustomizeAppSettingsTests
                 Assert.EndsWith($"Password={CreateProjectGenerator.DevelopmentDatabasePassword}", await ReadAsync(dir, name, "ConnectionStrings", "DefaultConnection"));
                 Assert.EndsWith($"Password={CreateProjectGenerator.DevelopmentDatabasePassword}", await ReadAsync(dir, name, "Hangfire", "Storage", "ConnectionString"));
             }
-            Assert.NotEqual(password, await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "Demo"));
+            Assert.NotEqual(password, await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "Demo", DevPorts.Default));
+        }
+        finally
+        {
+            Directory.Delete(dir, true);
+        }
+    }
+
+    /// <summary>
+    /// Tests that the ports picked for the development containers reach every connection string, so the
+    /// API connects where the root .env publishes PostgreSQL and Redis.
+    /// </summary>
+    [Fact]
+    public async Task Should_Write_Dev_Ports_Into_Every_Connection_String()
+    {
+        // Arrange
+        var templateSettings = FindTemplateAppSettings();
+        var dir = Path.Combine(Path.GetTempPath(), "efn-appsettings-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            foreach (var name in new[] { "appsettings.json", "appsettings.Development.json", "appsettings.Testing.json" })
+                File.Copy(templateSettings, Path.Combine(dir, name));
+
+            // Act
+            await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "Demo", new DevPorts(5433, 6380));
+
+            // Assert
+            foreach (var name in new[] { "appsettings.json", "appsettings.Development.json", "appsettings.Testing.json" })
+            {
+                Assert.Contains("Port=5433;", await ReadAsync(dir, name, "ConnectionStrings", "DefaultConnection"));
+                Assert.Contains("Port=5433;", await ReadAsync(dir, name, "Hangfire", "Storage", "ConnectionString"));
+                Assert.Equal($"localhost:6380,password={CreateProjectGenerator.DevelopmentRedisPassword}", await ReadAsync(dir, name, "ConnectionStrings", "Redis"));
+            }
         }
         finally
         {

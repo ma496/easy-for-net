@@ -8,7 +8,10 @@
  *   npm run dev -- --web-only        # the web app alone, against an API started elsewhere
  *
  * 1. Probes PostgreSQL and Redis (pg-ready.mjs, redis-ready.mjs). When either is down it runs
- *    `docker compose up -d --wait` on docker-compose.yml and waits for both to answer.
+ *    `docker compose up -d --wait` on docker-compose.yml and waits for both to answer. A port
+ *    another server already holds is named, with how to move off it (DEV_POSTGRES_PORT /
+ *    DEV_REDIS_PORT in .env and the connection strings); a service that answers but is not this
+ *    project's container (a PostgreSQL installed on the machine) is warned about, not used silently.
  * 2. Stops an API already running from this checkout, which would hold the port and lock bin/.
  * 3. Installs the web app's packages when node_modules is missing.
  * 4. Starts the API (serve-api.mjs, Development) and `next dev`, with each line prefixed by
@@ -26,6 +29,17 @@ const API_ONLY = args.includes("--api-only");
 const WEB_ONLY = args.includes("--web-only");
 const WEB = join(REPO_ROOT, "src", "frontend", "web");
 const API_PORT = process.env.PORT || "5000";
+/**
+ * The two services, each with the probe that reads its address from the connection string, the
+ * Compose service and container port that serve it, and the .env variable that moves its host port.
+ */
+const SERVICES = [
+  { name: "PostgreSQL", probe: "pg-ready.mjs", service: "postgres", containerPort: 5432, portVariable: "DEV_POSTGRES_PORT" },
+  { name: "Redis", probe: "redis-ready.mjs", service: "redis", containerPort: 6379, portVariable: "DEV_REDIS_PORT" },
+];
+const PORT_ADVICE =
+  "set {variable} in the root .env to a free port and the same port in the connection strings of " +
+  "src/backend/Source/appsettings.Development.json and appsettings.Testing.json";
 
 if (args.includes("--help")) {
   console.log("usage: npm run dev [-- --no-docker] [-- --api-only | --web-only]");
@@ -108,27 +122,96 @@ function prefixLines(stream, label) {
 
 /** PostgreSQL and Redis answering, starting them with Docker Compose when they are not. */
 function ensureServices() {
-  if (probe("pg-ready.mjs") && probe("redis-ready.mjs")) return;
+  if (SERVICES.every((s) => probe(s.probe))) {
+    if (!NO_DOCKER) warnForeignServers();
+    return;
+  }
   if (NO_DOCKER) fail("PostgreSQL or Redis is not answering, and --no-docker was given. Start them and run again.");
   if (!hasExecutable("docker")) {
     fail("PostgreSQL or Redis is not answering, and docker is not on PATH. Install Docker or start them yourself.");
   }
+  // A port that already answers while its container is not running belongs to some other server, and the
+  // container will fail to publish on it. With Docker itself down (ps fails) that cannot be told, so nothing is held.
+  const running = compose(["ps", "--status", "running", "--services"]);
+  const held = running === null ? [] : SERVICES.filter((s) => probe(s.probe) && !running.split(/\r?\n/).includes(s.service));
   console.log("dev: starting PostgreSQL and Redis (docker compose up -d)…");
   const up = runSync("docker", ["compose", "-f", join(REPO_ROOT, "docker-compose.yml"), "up", "-d", "--wait"], {
     cwd: REPO_ROOT,
     stdio: "inherit",
   });
-  if (up.status !== 0) fail("docker compose up failed. Is Docker running?");
+  if (up.status !== 0) {
+    if (held.length === 0) fail("docker compose up failed. Is Docker running?");
+    fail(
+      "docker compose up failed. " +
+        held
+          .map((s) => `${s.name}'s port is already taken by another server (${probeOutput(s.probe)}): ${portAdvice(s)}.`)
+          .join(" "),
+    );
+  }
   // --wait follows the containers' healthchecks; the probes confirm the ports the API uses.
   for (let i = 0; i < 30; i++) {
-    if (probe("pg-ready.mjs") && probe("redis-ready.mjs")) return;
+    if (SERVICES.every((s) => probe(s.probe))) return;
     sleepSync(1000);
   }
-  fail("PostgreSQL or Redis did not start answering within 30 seconds.");
+  fail(
+    "PostgreSQL or Redis did not start answering within 30 seconds. If .env publishes them on other ports than the " +
+      "connection strings name, make the two agree.",
+  );
+}
+
+/**
+ * When a service answers but not from this project's container — a PostgreSQL installed on the
+ * machine, another project's container — the API will connect to it, with credentials that were
+ * written for the container. Say so rather than leave a login failure to explain it. A Docker that
+ * is not running proves nothing either way, so it says nothing.
+ */
+function warnForeignServers() {
+  if (!hasExecutable("docker") || compose(["ps"]) === null) return;
+  for (const s of SERVICES) {
+    const target = probeOutput(s.probe);
+    const configuredPort = target.split(":").pop();
+    const published = (compose(["port", s.service, String(s.containerPort)]) ?? "").trim().split(":").pop();
+    if (!published) {
+      console.log(
+        `dev: warning: ${s.name} answers on ${target}, but this project's container is not running — the API will use ` +
+          `that other server. If that is intended, run with --no-docker; otherwise ${portAdvice(s)}, then run again.`,
+      );
+    } else if (published !== configuredPort) {
+      console.log(
+        `dev: warning: this project's ${s.name} container is published on port ${published}, but the connection string ` +
+          `names ${target} — the API will use whatever answers there. Make ${s.portVariable} in .env and the ` +
+          "connection strings agree.",
+      );
+    }
+  }
+}
+
+function portAdvice(s) {
+  return PORT_ADVICE.replace("{variable}", s.portVariable);
+}
+
+/** stdout of `docker compose …` on this project's file, or null when it fails (Docker not running, say). */
+function compose(composeArgs) {
+  const result = runSync("docker", ["compose", "-f", join(REPO_ROOT, "docker-compose.yml"), ...composeArgs], {
+    cwd: REPO_ROOT,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "ignore"],
+  });
+  return result.status === 0 ? String(result.stdout ?? "") : null;
 }
 
 function probe(script) {
   return runSync("node", [join(REPO_ROOT, "scripts", script)], { cwd: REPO_ROOT, stdio: "ignore" }).status === 0;
+}
+
+/** The `host:port` a probe names when its service answers ("ready host:port"), or "" when it does not. */
+function probeOutput(script) {
+  const result = runSync("node", [join(REPO_ROOT, "scripts", script)], {
+    cwd: REPO_ROOT,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "ignore"],
+  });
+  return String(result.stdout ?? "").trim().replace(/^ready\s+/, "");
 }
 
 function fail(message) {

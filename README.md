@@ -82,7 +82,7 @@ npm run stop:api                # stop an API left running from this project (it
 To run the pieces separately instead:
 
 ```sh
-docker compose up -d                          # PostgreSQL (postgres/postgres) on :5432, Redis (password "redis") on :6379
+docker compose up -d                          # PostgreSQL (postgres/postgres) and Redis (password "redis"), on the ports DEV_POSTGRES_PORT / DEV_REDIS_PORT name (default 5432 / 6379)
 dotnet run --project src/backend/Source       # the API
 cd src/frontend/web && npm install && npm run dev
 ```
@@ -142,7 +142,9 @@ Go to `{name}/src/backend/Source` directory. By default, the EasyForNet sets up 
 
 To keep using the Docker containers with other passwords, set `DEV_POSTGRES_PASSWORD` / `DEV_REDIS_PASSWORD`
 (in the shell or the root `.env`) to the same values. A PostgreSQL password takes effect only when its
-volume is first created.
+volume is first created. Likewise `DEV_POSTGRES_PORT` / `DEV_REDIS_PORT` move the containers off a
+PostgreSQL or Redis already installed on the machine; the connection strings must name the same ports.
+`dotnet efn cp` does this itself when it finds 5432 or 6379 taken.
 
 ## Run the Tests
 

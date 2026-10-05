@@ -21,7 +21,7 @@ public class WriteDockerEnvTests
         try
         {
             // Act
-            await CreateProjectGenerator.WriteDockerEnvAsync(example, envPath, "demo-shop", "DemoShop");
+            await CreateProjectGenerator.WriteDockerEnvAsync(example, envPath, "demo-shop", "DemoShop", DevPorts.Default);
 
             // Assert
             var lines = await File.ReadAllLinesAsync(envPath);
@@ -46,6 +46,31 @@ public class WriteDockerEnvTests
     }
 
     /// <summary>
+    /// Tests that the ports picked for the development containers are the ones docker-compose.yml reads.
+    /// </summary>
+    [Fact]
+    public async Task Should_Write_Dev_Ports()
+    {
+        // Arrange
+        var example = CustomizeAppSettingsTests.FindTemplateFile(".env.docker.example");
+        var envPath = Path.Combine(Path.GetTempPath(), "efn-env-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            // Act
+            await CreateProjectGenerator.WriteDockerEnvAsync(example, envPath, "demo", "Demo", new DevPorts(5433, 6380));
+
+            // Assert
+            var values = Parse(await File.ReadAllLinesAsync(envPath));
+            Assert.Equal("5433", values["DEV_POSTGRES_PORT"]);
+            Assert.Equal("6380", values["DEV_REDIS_PORT"]);
+        }
+        finally
+        {
+            File.Delete(envPath);
+        }
+    }
+
+    /// <summary>
     /// Tests that two projects never share a secret.
     /// </summary>
     [Fact]
@@ -58,8 +83,8 @@ public class WriteDockerEnvTests
         try
         {
             // Act
-            await CreateProjectGenerator.WriteDockerEnvAsync(example, first, "demo", "Demo");
-            await CreateProjectGenerator.WriteDockerEnvAsync(example, second, "demo", "Demo");
+            await CreateProjectGenerator.WriteDockerEnvAsync(example, first, "demo", "Demo", DevPorts.Default);
+            await CreateProjectGenerator.WriteDockerEnvAsync(example, second, "demo", "Demo", DevPorts.Default);
 
             // Assert
             var a = Parse(await File.ReadAllLinesAsync(first));
