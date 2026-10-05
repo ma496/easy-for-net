@@ -12,27 +12,45 @@ with `dotnet efn`. `CLAUDE.md` describes the architecture; `.claude/skills` hold
 
 ## Development
 
+Once, from the root — `dotnet ef` needs the packages restored, and the API needs a migration to create
+its database:
+
+```sh
+dotnet tool restore                                       # dotnet-ef
+dotnet build {{Name}}.slnx
+dotnet ef migrations add Initial --project src/backend/Source
+```
+
+Then, from the root, run the whole application:
+
+```sh
+npm run dev
+```
+
+It starts PostgreSQL and Redis with Docker (`docker-compose.yml`) when they are not already answering,
+installs the web app's packages when they are missing, and runs the API (http://localhost:5000, Swagger
+at `/swagger`) and the web app (http://localhost:3000) together in one terminal. **Ctrl+C stops both**; the
+containers keep running until `docker compose down` (which keeps the data).
+
+```sh
+npm run dev -- --no-docker      # use the PostgreSQL and Redis you already run
+npm run dev -- --api-only       # services + API, no web app
+npm run dev -- --web-only       # the web app alone, against an API started elsewhere
+npm run stop:api                # stop an API left running from this checkout (it locks bin/ on Windows)
+```
+
+To run the pieces separately instead:
+
 ```sh
 docker compose up -d                                      # PostgreSQL (postgres/postgres) and Redis (password "redis")
-dotnet tool restore                                       # dotnet-ef
-dotnet build {{Name}}.slnx                                # restores packages, which dotnet ef needs first
-dotnet ef migrations add Initial --project src/backend/Source
-dotnet run --project src/backend/Source                   # http://localhost:5000, Swagger at /swagger
+dotnet run --project src/backend/Source                   # the API
+cd src/frontend/web && npm install && npm run dev         # the web app
 ```
-
-```sh
-cd src/frontend/web
-npm install
-npm run dev                                               # http://localhost:3000
-```
-
-After the first migration, `npm run dev` from the root does all of this in one terminal: it starts PostgreSQL and
-Redis with Docker when they are not already answering, then runs the API and the web app together (Ctrl+C stops
-both; `-- --no-docker`, `-- --api-only` and `-- --web-only` narrow it).
 
 Development and Testing apply migrations on startup. If you use your own PostgreSQL or Redis instead
 of `docker compose`, update the connection strings in `src/backend/Source/appsettings.Development.json`
-and `appsettings.Testing.json` (both git-ignored).
+and `appsettings.Testing.json` (both git-ignored); to keep the containers with other passwords, set
+`DEV_POSTGRES_PASSWORD` / `DEV_REDIS_PASSWORD` in the shell or the root `.env` to match.
 
 ### Seeded accounts
 
@@ -69,7 +87,8 @@ Before deploying for real:
 - fill in the SMTP values;
 - keep `.env` out of version control and back it up.
 
-`SEED_ADMIN_PASSWORD` is the administrators' password in that stack.
+`SEED_ADMIN_PASSWORD` is the administrators' password in that stack. The API applies migrations on
+startup there too, so add the initial migration first (see **Development**).
 
 ## Deploy to a VPS (Coolify)
 
