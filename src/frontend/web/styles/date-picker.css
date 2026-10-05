@@ -34,8 +34,8 @@
   --rdp-multiple-selected-color: var(--primary-foreground);
 }
 
-/* Core interaction styles */
-.rdp-custom .rdp-day_button:hover:not([disabled]):not(.rdp-selected) {
+/* Core interaction styles — a selected day is marked by aria-selected on its cell (the custom classNames replace rdp-selected) */
+.rdp-custom .rdp-day:not([aria-selected='true']) .rdp-day_button:hover:not([disabled]) {
   background-color: color-mix(in oklab, var(--primary) 12%, transparent);
   color: var(--primary);
 }
@@ -50,7 +50,7 @@
   color: var(--primary);
 }
 
-.dark .rdp-custom .rdp-day_button:hover:not([disabled]):not(.rdp-selected) {
+.dark .rdp-custom .rdp-day:not([aria-selected='true']) .rdp-day_button:hover:not([disabled]) {
   background-color: color-mix(in oklab, var(--primary) 20%, transparent);
   color: var(--primary);
 }
@@ -216,8 +216,7 @@
   color: var(--primary-foreground) !important;
 }
 
-.dark .rdp-custom .rdp-day_button:hover:not([disabled]):not(.rdp-selected),
-.dark .rdp-custom .rdp-day:not(.rdp-selected) .rdp-day_button:hover:not([disabled]) {
+.dark .rdp-custom .rdp-day:not([aria-selected='true']) .rdp-day_button:hover:not([disabled]) {
   background-color: color-mix(in oklab, var(--primary) 20%, transparent) !important;
   color: var(--primary) !important;
 }
