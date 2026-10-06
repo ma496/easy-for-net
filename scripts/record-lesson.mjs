@@ -18,7 +18,8 @@
  * Writing is idempotent by title: recording the same lesson again refines it rather than
  * accumulating near-duplicates that would each consume the budget.
  */
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
+import { listTasks } from "./lib/task-names.mjs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readLessons, writeLesson, scopeReach } from "./lib/memory.mjs";
@@ -79,10 +80,9 @@ function reportReach(scope) {
   try {
     const texts = [];
     for (const dir of [join(ROOT, ".agent-queue", "todo"), join(ROOT, ".agent-queue", "done"), join(ROOT, "specs")]) {
-      if (!existsSync(dir)) continue;
-      for (const f of readdirSync(dir)) {
-        if (f.endsWith(".md")) texts.push(readFileSync(join(dir, f), "utf8"));
-      }
+      // Lanes hold briefs in scope folders (lib/task-names.mjs); specs/ is flat, which
+      // listTasks reads as well.
+      for (const f of listTasks(dir)) texts.push(readFileSync(join(dir, f), "utf8"));
     }
     if (texts.length === 0) return;
     const reach = scopeReach(scope, texts);

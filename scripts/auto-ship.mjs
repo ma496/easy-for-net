@@ -15,6 +15,7 @@
  *   - on the work branch, commits in place and stops: work accumulates locally
  *   - never pushes the base branch; merging is the owner's alone
  *   - never stages .env or appsettings secrets, and never uses `git add -A`
+ *   - stages nothing under .agent-queue/ but the task's own brief leaving todo/
  *   - never force-pushes
  */
 import { spawnSync } from "node:child_process";
@@ -22,6 +23,7 @@ import { fileURLToPath } from "node:url";
 import { hasExecutable } from "./lib/proc.mjs";
 import { BASE_BRANCH, config, WORK_BRANCH } from "./lib/project-config.mjs";
 import { describeRemote } from "./lib/remote.mjs";
+import { stageable } from "./lib/stage-paths.mjs";
 
 const argv = process.argv.slice(2);
 // `--task <stem>` takes a value; without skipping it the stem would be read as the
@@ -117,10 +119,17 @@ if (forbidden.length > 0) {
   process.exit(1);
 }
 
-// The trailing slash matters: in a task worktree `node_modules` is a *symlink*, so it
-// appears as a bare entry with no slash and would otherwise be staged.
-const IGNORED = /(^|\/)(dist|\.output|\.next|node_modules|bin|obj|coverage)(\/|$)/;
-const toStage = entries.filter((e) => !IGNORED.test(e.path));
+// Build output never; queue bookkeeping only as this task's own brief leaving todo/
+// (lib/stage-paths.mjs says why). The stem is read here rather than at the commit, because
+// it decides what is staged as well as what the trailer says.
+const taskStem = (argOf("task", "") || "").replace(/\.md$/, "");
+const toStage = stageable(entries, taskStem);
+// Leaving a path out of `git add` does not keep it out of the commit when it is already in
+// the index, so queue bookkeeping someone staged by hand is unstaged — not reverted — here.
+const heldBack = entries
+  .filter((e) => e.path.startsWith(".agent-queue/") && !toStage.includes(e) && e.index !== " " && e.index !== "?")
+  .map((e) => e.path);
+if (heldBack.length > 0) git("reset", "-q", "--", ...heldBack);
 if (toStage.length === 0) {
   console.log("Nothing to commit. Working tree is clean.");
   process.exit(0);
@@ -156,7 +165,6 @@ if (staged.length > 0) {
 // `Task: <brief-stem>` is how the queue's audit ties this commit back to the brief it came
 // from. Pairing on subject text alone breaks the moment anyone commits under a different
 // message, which left a finished task sitting in todo/ blocking eight dependents.
-const taskStem = (argOf("task", "") || "").replace(/\.md$/, "");
 const bodyLines = [
   "",
   `Verified with \`${config.commands.verify}\` (build, backend and web tests, lint, typecheck).`,

@@ -71,7 +71,10 @@ import {
   salvageBrief,
 } from "./lib/salvage.mjs";
 import { IS_WINDOWS, hasExecutable, killTree, spawnPortable } from "./lib/proc.mjs";
-import { assertValidConfig, config, modelArgs, positiveInt, resolveModel, WORK_BRANCH } from "./lib/project-config.mjs";
+import {
+  assertValidConfig, config, modelArgs, positiveInt, resolveModel, WORK_BRANCH, workflowRefusal,
+} from "./lib/project-config.mjs";
+import { fsKey, stemOf } from "./lib/task-names.mjs";
 import { treeFingerprint, workingTreePaths } from "./lib/changed-paths.mjs";
 import { attemptOutcome } from "./lib/attempt-outcome.mjs";
 import { buildBrief } from "./lib/brief.mjs";
@@ -111,7 +114,9 @@ const task = (taskFile ? readFileSync(taskFile, "utf8") : argv.find((a) => !a.st
 // journalled so a later run can find this one's cost even after the brief's body is edited
 // — matching on the body meant a brief that gained a `Depends-on:` line lost its own
 // history, and with it the ceiling that history was holding up.
-const taskSlug = taskFile ? basename(taskFile).replace(/\.md$/i, "") : null;
+// The task's identity is its stem, `scope/name` (lib/task-names.mjs): what the commit's `Task:`
+// line carries, what the journal keys its history on, and what AGENT_TASK names.
+const taskSlug = taskFile ? stemOf(taskFile) : null;
 
 if (!task || !task.trim()) {
   console.error('Usage: npm run auto -- "<task>"  [--attempts N] [--safe] [--no-commit] [--no-autostart]');
@@ -434,6 +439,11 @@ const runVerifyCapture = () => verifyTree();
 // Work happens on the work branch, in place — no task branch, no worktree.
 {
   const current = branchName();
+  const refusal = workflowRefusal({ branch: current });
+  if (refusal) {
+    console.error(refusal);
+    process.exit(1);
+  }
   if (current !== WORK_BRANCH) {
     console.error(
       `This runner builds on ${WORK_BRANCH}, and the checkout is on "${current}".\n` +
@@ -444,7 +454,8 @@ const runVerifyCapture = () => verifyTree();
 
   // Drain restores interrupted/<slug>/ before spawning us; if it did not (manual auto),
   // restore here from the task-file stem so salvage still works.
-  const taskStem = taskFile ? basename(taskFile, ".md") : null;
+  // Parked leftovers are filed under the stem as one path segment, as the drain parks them.
+  const taskStem = taskFile ? fsKey(stemOf(taskFile)) : null;
   const repoRoot = join(SCRIPTS, "..");
   if (taskStem) {
     const restored = restoreSalvage(repoRoot, taskStem);
@@ -780,10 +791,10 @@ ${carried.slice(-6000)}`;
       console.log(`\nAttempt ${attempt} verified, but the working tree holds no change to accept.`);
       feedback =
         `\`${config.commands.verify}\` passed, but nothing was written: \`git status\` shows no changed ` +
-        `file outside \`.agent-queue/\` and \`${config.docs.builds}/\`. The gate is green because \`${WORK_BRANCH}\` ` +
+        `file outside \`.agent-queue/\`. The gate is green because \`${WORK_BRANCH}\` ` +
         "is green, not because this task was done.\n\n" +
-        "Read the brief again and implement it. Edit the actual source files — a build " +
-        "record, a plan, or a description of what you would do is not the change. If you " +
+        "Read the brief again and implement it. Edit the actual source files — a " +
+        "plan, a queue file, or a description of what you would do is not the change. If you " +
         `believe the work already exists on \`${WORK_BRANCH}\`, name the commit and the lines that ` +
         "satisfy each **Done when** bullet instead of finishing silently.";
       continue;
@@ -967,10 +978,15 @@ Verified and left uncommitted on ${WORK_BRANCH} (--no-commit).
   process.exit(0);
 }
 
+// The build record is written now, before the commit, so it lands in the task's own commit
+// rather than being left in the tree for the next one to sweep up. record-build.mjs never
+// fails the run; a task with no brief file (`npm run auto -- "<task>"`) has nothing to record.
+if (taskFile) runLive("node", [join(SCRIPTS, "record-build.mjs"), "--task", taskFile]);
+
 const shipArgs = [join(SCRIPTS, "auto-ship.mjs"), subject, "--commit-only"];
 // The brief this run came from, so `queue -- audit` can pair the commit to it by trailer
 // rather than by matching subject text.
-if (taskFile) shipArgs.push("--task", basename(taskFile, ".md"));
+if (taskFile) shipArgs.push("--task", stemOf(taskFile));
 const ship = runLive("node", shipArgs);
 if (ship.status !== 0) {
   // Verified but uncommitted is a failure for this runner: the queue's next task would

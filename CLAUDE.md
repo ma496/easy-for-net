@@ -112,6 +112,16 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
   every service `cycle.preflight` and `verify.service.dependsOn` name and exits 4 without
   spending anything (the drain puts the task back in `todo/`) when one is down and cannot be
   started; `--no-preflight` skips that.
+- **Solo or team** is `project.workflow`. `solo` (the default) builds on whatever branch is checked
+  out, the base branch included. `team` never plans or builds on the base branch — `queue plan`/`drain`,
+  `loop`, `auto` and `schedule install` refuse there — so each spec is written, planned and built on a
+  branch of its own and reaches the base through a pull request. `specs/`, `.agent-queue/todo/` and
+  `planned.json` are tracked (planning commits them as `Plan <spec>`); `doing/`, `done/` and `failed/`
+  are per machine and gitignored. A task has landed when a commit reachable from HEAD names it on a
+  `Task:` line, which survives a rebase or squash merge. Each spec's tasks live in a folder named for
+  the spec (`adhoc` for hand-queued tasks) and a task's identity is `<spec>/<name>`, so every spec
+  numbers from `01-`; planning an edited spec again numbers on past the names it already used, and a
+  planning call that writes outside its folder or reuses a name queues nothing.
 - **The work branch** is `project.branch`, or whichever branch is checked out when that is `null`.
   The runner refuses a dirty tree, commits each task with a `Task: <brief>` trailer, and **never
   pushes unless `AGENT_AUTO_PUSH=1`** — and nothing here merges. Pull requests go to
@@ -137,7 +147,9 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
   through — and reading the secret files through the Read and Grep tools. `npm run test:hooks`
   holds a block case and a neighbouring allow case for each rule; add both when you add a rule.
 - **Records.** `.agent-runs/` (git-ignored) is every attempt, with its raw stream beside its log
-  (`<run>-attempt-N.stream.jsonl`); `docs/builds/` is one committed record per landed task;
+  (`<run>-attempt-N.stream.jsonl`); each task's commit is its code, its brief leaving `todo/` and its
+  build record — `docs/builds/<date-time>-<spec>/<task>.md`, one directory per planning of a spec, stamped with when
+  planning started (`docs/builds/adhoc/` for a task queued by hand), written just before the commit;
   `.claude/memory/lessons/` is what runs learned, injected into later briefs, each naming the task
   that taught it (the runner exports `AGENT_TASK` to the session).
 

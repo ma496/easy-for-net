@@ -608,27 +608,20 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
 
     /// <summary>
     /// Lays out the places the spec-driven task loop records its work - <c>specs/</c>, <c>docs/</c>,
-    /// the <c>.agent-queue/</c> lanes and the lessons directory - with their guides but none of the
-    /// template repository's own specs, build records, queued tasks or lessons.
+    /// an empty <c>.agent-queue/planned.json</c> and the lessons directory - with their guides but none
+    /// of the template repository's own specs, build records, queued tasks or lessons. The queue creates
+    /// its lanes itself, and <c>docs/builds/</c> appears with the first task that lands.
     /// </summary>
-    private static void CopyTaskLoopSkeleton(string templateDir, string targetPath)
+    internal static void CopyTaskLoopSkeleton(string templateDir, string targetPath)
     {
         Directory.CreateDirectory(Path.Combine(targetPath, "specs"));
         CopyFiles(Path.Combine(templateDir, "specs"), Path.Combine(targetPath, "specs"), "README.md", "TEMPLATE.md");
 
-        Directory.CreateDirectory(Path.Combine(targetPath, "docs"));
+        Directory.CreateDirectory(Path.Combine(targetPath, "docs", "capabilities"));
         CopyFiles(Path.Combine(templateDir, "docs"), Path.Combine(targetPath, "docs"), "AGENTIC_WORKFLOW.md");
-        foreach (var ledger in new[] { "builds", "capabilities" })
-        {
-            Directory.CreateDirectory(Path.Combine(targetPath, "docs", ledger));
-            CopyFiles(Path.Combine(templateDir, "docs", ledger), Path.Combine(targetPath, "docs", ledger), "README.md");
-        }
+        CopyFiles(Path.Combine(templateDir, "docs", "capabilities"), Path.Combine(targetPath, "docs", "capabilities"), "README.md");
 
-        foreach (var lane in new[] { "todo", "doing", "done", "failed" })
-        {
-            var laneDir = Directory.CreateDirectory(Path.Combine(targetPath, ".agent-queue", lane)).FullName;
-            File.WriteAllText(Path.Combine(laneDir, ".gitkeep"), string.Empty);
-        }
+        Directory.CreateDirectory(Path.Combine(targetPath, ".agent-queue"));
         File.WriteAllText(Path.Combine(targetPath, ".agent-queue", "planned.json"), "{}\n");
 
         var lessonsDir = Directory.CreateDirectory(Path.Combine(targetPath, ".claude", "memory", "lessons")).FullName;

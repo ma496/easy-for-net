@@ -58,9 +58,11 @@ would want.
   `tool/EasyForNetTool/new-project-claude.md` and `new-project-readme.md` (`{{Name}}` / `{{name}}`
   replaced with the project name)
 - **the task loop's records as an empty skeleton** (`CopyTaskLoopSkeleton`): `specs/README.md`,
-  `specs/TEMPLATE.md`, `docs/AGENTIC_WORKFLOW.md`, `docs/builds/README.md`,
-  `docs/capabilities/README.md`, the `.agent-queue/{todo,doing,done,failed}` lanes with only a
-  `.gitkeep`, `planned.json` as `{}`, and `.claude/memory/lessons/.gitkeep`.
+  `specs/TEMPLATE.md`, `docs/AGENTIC_WORKFLOW.md`, `docs/capabilities/README.md`,
+  `.agent-queue/planned.json` as `{}`, and `.claude/memory/lessons/.gitkeep`. The queue creates its
+  lanes itself (`doing/`, `done/` and `failed/` are per machine, gitignored by the copied
+  `.gitignore`), and `docs/builds/` appears with the first landed task;
+  `CopyTaskLoopSkeletonTests` pins the exact file list.
 
 Not copied: this repository's `README.md`, `LICENSE`, `EasyForNet.slnx` (a new `<Name>.slnx` is created with
 `dotnet new sln -f slnx` and both `.csproj` files added), `publish-package.sh`, `tool/`, and this

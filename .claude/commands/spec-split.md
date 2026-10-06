@@ -27,7 +27,12 @@ dependency on a `Depends-on:` line. Two tasks that need each other both ways are
 
 ## The shape of each file
 
-Name each file `.agent-queue/todo/NN-short-slug.md`, numbered in dependency order:
+Write each file as `.agent-queue/todo/<spec>/NN-short-slug.md`, numbered in dependency order.
+`<spec>` is the spec's file name lowercased without `.md`, anything but letters and digits
+turned into `-`: `billing-export` for `Billing Export.md`. If that folder, `done/<spec>/` or
+the history (`git log --grep "Task: <spec>/"`) already uses a name, do not reuse it — number on
+from the highest. A bare `Depends-on:` name means a task in the same folder; `<spec>/<name>`
+reaches one from another spec.
 
 ```markdown
 <one line: what this does — it becomes the commit subject>
@@ -50,4 +55,5 @@ Depends-on: 01-earlier-task          (omit the line entirely if nothing blocks i
 ## Report
 
 List the files you wrote, the dependency order, and anything in the spec you deliberately
-left unqueued and why.
+left unqueued and why. Do not commit them: say they are uncommitted, and that committing the
+spec and its briefs together (`Plan <spec>`) is what lets other checkouts see them.
