@@ -22,6 +22,7 @@ import { BUDGET_EXIT_CODE } from "./lib/budget.mjs";
 import { runCommandSync, sleepSync } from "./lib/proc.mjs";
 import { config, WORK_BRANCH, workflowRefusal } from "./lib/project-config.mjs";
 import { listTasks } from "./lib/task-names.mjs";
+import { isPlannableSpecPath } from "./lib/planning.mjs";
 
 const ROOT = resolve(join(dirname(fileURLToPath(import.meta.url)), ".."));
 const argv = process.argv.slice(2);
@@ -57,7 +58,8 @@ const branch = capture("git", ["rev-parse", "--abbrev-ref", "HEAD"]).trim();
 // it is stated here at the top and again at the bottom rather than left to be discovered.
 const dirtyPaths = capture("git", ["status", "--porcelain"])
   .split("\n")
-  .filter((l) => l.trim() && !l.slice(3).startsWith(".agent-queue/"));
+  .filter((l) => l.trim() && !l.slice(3).startsWith(".agent-queue/") && !isPlannableSpecPath(l));
+// A spec saved and not yet planned is not in the way — planning it is what this cycle is for.
 console.log(`Branch: ${branch}   ·   uncommitted files: ${dirtyPaths.length}`);
 // Before anything is started or spent: in a team the base branch is where no cycle runs,
 // and saying so here beats letting the drain refuse after the services came up.

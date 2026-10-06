@@ -92,7 +92,10 @@ export function isRefusal(text) {
   const t = String(text ?? "").trim();
   if (t.length > 300) return false;
   if (/^#{1,6}\s|\n#{1,6}\s|^[-*]\s|\n\n/.test(t)) return false;
-  return NETWORK_REFUSAL.test(t) || ENTITLEMENT_REFUSAL.test(withoutCode(t));
+  // A refused connection to this machine is the app under test being down, which is the
+  // task's problem to fix — not the API being out of reach.
+  const local = /\blocalhost\b|\b127\.0\.0\.1\b|\[::1\]|\b0\.0\.0\.0\b/i.test(t);
+  return (NETWORK_REFUSAL.test(t) && !local) || ENTITLEMENT_REFUSAL.test(withoutCode(t));
 }
 
 /** Re-exported so callers that only render do not need to know the adapter exists. */
@@ -237,11 +240,14 @@ export function renderStream(readable, write = (s) => console.log(s), limits = {
           }
         }
         if (event.kind === "assistant") {
-          if (!blocked) {
+          const sub = isSubagentEvent(event, state.rootSession);
+          // The parent's own messages only. A subagent reports what it saw — "the smoke check
+          // failed: ECONNREFUSED" is a finding about the app, not the account refusing — and
+          // a refusal that really stops a subagent reaches the parent's stream as well.
+          if (!blocked && !sub) {
             const refusal = event.texts.find((t) => isRefusal(t));
             if (refusal) blocked = truncate(refusal, 160);
           }
-          const sub = isSubagentEvent(event, state.rootSession);
           if (sub) {
             if (event.messageId) subagentMessages.add(event.messageId);
             else anonymousSubagentTurns += 1;

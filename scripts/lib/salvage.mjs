@@ -22,6 +22,20 @@ import {
 import { dirname, join } from "node:path";
 import { config } from "./project-config.mjs";
 
+/** The folder inside a park that holds untracked files at their own relative paths. */
+export const UNTRACKED_DIR = "untracked";
+
+/** Every file below `dir`, as forward-slash paths relative to it. */
+function filesUnder(dir, prefix = "") {
+  const out = [];
+  for (const name of readdirSync(dir)) {
+    const rel = prefix ? `${prefix}/${name}` : name;
+    if (statSync(join(dir, name)).isDirectory()) out.push(...filesUnder(join(dir, name), rel));
+    else out.push(rel);
+  }
+  return out;
+}
+
 export function interruptedRoot(repoRoot) {
   return join(repoRoot, ".agent-runs", "interrupted");
 }
@@ -80,24 +94,36 @@ export function restoreSalvage(repoRoot, slug) {
   }
 
   let untracked = 0;
-  for (const name of readdirSync(parkDir)) {
-    if (name === "tracked.patch" || name === ".restored" || name === "README.txt") continue;
-    const src = join(parkDir, name);
-    if (!statSync(src).isFile() && !statSync(src).isDirectory()) continue;
-    const destRel = name.replace(/__/g, "/");
+  const putBack = (src, destRel) => {
     const dest = join(repoRoot, destRel);
     try {
       mkdirSync(dirname(dest), { recursive: true });
       if (existsSync(dest)) {
         // Keep the parked copy; do not clobber something already in the tree.
-        continue;
+        return;
       }
       renameSync(src, dest);
       untracked += 1;
     } catch {
       // Leave it in the park dir for a human; continue restoring the rest.
     }
+  };
+  for (const name of readdirSync(parkDir)) {
+    if (name === "tracked.patch" || name === ".restored" || name === "README.txt") continue;
+    const src = join(parkDir, name);
+    if (name === UNTRACKED_DIR && statSync(src).isDirectory()) {
+      // Parked with its directories kept: each file goes back to the same relative path.
+      for (const rel of filesUnder(src)) putBack(join(src, rel), rel);
+      continue;
+    }
+    if (!statSync(src).isFile() && !statSync(src).isDirectory()) continue;
+    // Older parks flattened `a/b.ts` to `a__b.ts`, which `__tests__/x.ts` could not survive.
+    putBack(src, name.replace(/__/g, "/"));
   }
+
+  // A patch that did not apply is still the only copy of that work, so the park keeps its
+  // name and is found again — marking it applied is what made a failed restore vanish.
+  if (error) return { dir: parkDir, applied: null, patched, untracked, error };
 
   const applied = `${parkDir}-applied-${new Date().toISOString().replace(/[:.]/g, "-")}`;
   try {

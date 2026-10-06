@@ -9,6 +9,7 @@
  *   npm run auto -- "..." --no-autostart     # never start the stack for a live check
  *   npm run auto -- "..." --verify-port 5100 # live checks against a dedicated API port
  *   npm run auto -- "..." --no-preflight     # start even when a service verify needs is down
+ *   npm run auto -- "..." --salvage          # take over the uncommitted work already in the tree
  *
  * Work happens on the work branch (`project.branch`, or whichever is checked out), in this
  * checkout. There is no task branch: the run starts from a clean tree, builds, verifies,
@@ -70,7 +71,8 @@ import {
   restoreSalvage,
   salvageBrief,
 } from "./lib/salvage.mjs";
-import { IS_WINDOWS, hasExecutable, killTree, spawnPortable } from "./lib/proc.mjs";
+import { IS_WINDOWS, hasExecutable, isAlive, killTree, spawnPortable } from "./lib/proc.mjs";
+import { liveHolder } from "./lib/queue-lock.mjs";
 import {
   assertValidConfig, config, modelArgs, positiveInt, resolveModel, WORK_BRANCH, workflowRefusal,
 } from "./lib/project-config.mjs";
@@ -80,6 +82,7 @@ import { attemptOutcome } from "./lib/attempt-outcome.mjs";
 import { buildBrief } from "./lib/brief.mjs";
 import { ensureDependencies, taskDependencies } from "./lib/dependencies.mjs";
 import {
+  acceptanceProblems,
   carriedDelegations,
   expectedSequence,
   explainMissing,
@@ -119,7 +122,7 @@ const task = (taskFile ? readFileSync(taskFile, "utf8") : argv.find((a) => !a.st
 const taskSlug = taskFile ? stemOf(taskFile) : null;
 
 if (!task || !task.trim()) {
-  console.error('Usage: npm run auto -- "<task>"  [--attempts N] [--safe] [--no-commit] [--no-autostart]');
+  console.error('Usage: npm run auto -- "<task>"  [--attempts N] [--safe] [--salvage] [--no-commit] [--no-autostart]');
   process.exit(1);
 }
 
@@ -451,13 +454,37 @@ const runVerifyCapture = () => verifyTree();
     process.exit(1);
   }
 
+  // Two writers in one checkout corrupt each other's commits, and a half-finished git
+  // operation turns its conflicts into "salvage". Neither is the task's to resolve.
+  const gitDir = (run("git", ["rev-parse", "--absolute-git-dir"]).stdout ?? "").trim();
+  const inProgress = gitDir
+    ? ["MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD", "rebase-merge", "rebase-apply"].filter((f) => existsSync(join(gitDir, f)))
+    : [];
+  if (current === "HEAD" || inProgress.length > 0) {
+    console.error(
+      current === "HEAD"
+        ? "The checkout is on a detached HEAD, so there is no branch to commit the task to."
+        : `A git operation is in progress (${inProgress.join(", ")}). Finish or abort it first.`,
+    );
+    process.exit(1);
+  }
+  const drain = process.env.AGENT_FROM_DRAIN === "1" ? null : liveHolder(join(SCRIPTS, "..", ".agent-queue", "drain.lock"), { isAlive });
+  if (drain) {
+    console.error(
+      `A drain is running in this checkout (pid ${drain.pid}). Two runs at once edit the same tree,\n` +
+        "so this one is not starting. Queue the task instead: npm run queue -- add \"<task>\"",
+    );
+    process.exit(1);
+  }
+
   // Drain restores interrupted/<slug>/ before spawning us; if it did not (manual auto),
   // restore here from the task-file stem so salvage still works.
   // Parked leftovers are filed under the stem as one path segment, as the drain parks them.
   const taskStem = taskFile ? fsKey(stemOf(taskFile)) : null;
   const repoRoot = join(SCRIPTS, "..");
+  let restored = null;
   if (taskStem) {
-    const restored = restoreSalvage(repoRoot, taskStem);
+    restored = restoreSalvage(repoRoot, taskStem);
     if (restored) {
       log(
         `Restored salvage for ${taskStem}` +
@@ -469,6 +496,21 @@ const runVerifyCapture = () => verifyTree();
   }
 
   const dirty = dirtyOutsideQueue(run("git", ["status", "--porcelain"]).stdout);
+  // Uncommitted work is this task's salvage only when it can be: the drain restored this
+  // task's park before starting us, or this run just restored it. Run by hand on someone's
+  // half-finished edits, the runner used to verify them, call them salvage, and commit them
+  // under the new task's subject. `--salvage` says that is what you mean.
+  const fromDrain = process.env.AGENT_FROM_DRAIN === "1";
+  if (dirty.length > 0 && !fromDrain && !restored && !flag("salvage")) {
+    console.error(
+      `${dirty.length} uncommitted file(s) are in the tree, and nothing says they belong to this task:\n\n` +
+        dirty.slice(0, 10).join("\n") +
+        (dirty.length > 10 ? `\n  …and ${dirty.length - 10} more` : "") +
+        "\n\nCommit or stash them first, or pass --salvage to have this task take them over " +
+        "(they are then verified, reviewed and committed as this task's work).",
+    );
+    process.exit(1);
+  }
   if (dirty.length > 0) {
     // Salvage path: prior attempt (or restored park) left WIP. Do not refuse — verify first
     // inside the attempt loop and tell Claude to review/fix rather than rebuild.
@@ -528,6 +570,9 @@ let passed = false;
 let attempt = 0;
 /** Every delegation observed in this run's earlier attempts, in order. */
 const earlierDelegations = [];
+// The delegations the last attempt was judged on. The give-up path accepts a tree only on
+// the same terms an attempt would have, so it needs them after the loop has ended.
+let lastDelegations = { delegated: [], current: [] };
 
 console.log(`Model: ${MODEL === "inherit" ? "the CLI default (AGENT_MODEL=inherit)" : MODEL} (AGENT_MODEL)`);
 if (Number.isFinite(MAX_USD_PER_TASK)) {
@@ -652,6 +697,7 @@ ${carried.slice(-6000)}`;
   // still count for this one (lib/departments.mjs, carriedDelegations); reviews do not carry.
   const delegated = [...carriedDelegations(earlierDelegations), ...(claudeRes.subagents ?? [])];
   earlierDelegations.push(...(claudeRes.subagents ?? []));
+  lastDelegations = { delegated, current: claudeRes.subagents ?? [] };
 
   attemptCosts.push(typeof claudeRes.costUsd === "number" ? claudeRes.costUsd : null);
   attemptTurns.push(typeof claudeRes.turns === "number" ? claudeRes.turns : 0);
@@ -933,7 +979,18 @@ if (!passed) {
     const salvage = verifyTree();
     process.stdout.write(salvage.output);
 
-    if (salvage.status === 0) {
+    // A green gate is not the whole bar. An attempt refused for a missing or out-of-order
+    // review verified too, and accepting it here on the gate alone committed exactly the
+    // change that refusal was there to stop.
+    const unreviewed =
+      salvage.status === 0
+        ? acceptanceProblems(workingTreePaths(), lastDelegations.delegated, lastDelegations.current)
+        : [];
+    if (salvage.status === 0 && unreviewed.length > 0) {
+      console.error("\nIt verifies, but the reviews it owes did not all happen, so it is not accepted:");
+      for (const p of unreviewed) console.error(`   ${p}`);
+      console.error("The tree is left as it is; a later run restores it and asks for the reviews.");
+    } else if (salvage.status === 0) {
       console.log("\nIt verifies. Accepting the work rather than discarding it.");
       passed = true;
     } else {

@@ -2,6 +2,7 @@
  * The rules intake applies around the planner: which specs it may plan, and whether the
  * task files it wrote are acceptable. Pure, so they are testable without a model or a repo.
  */
+import { createHash } from "node:crypto";
 import { ADHOC } from "./task-names.mjs";
 
 /**
@@ -72,4 +73,58 @@ export function specsChangedOn(changedPaths) {
     if (m) out.add(m[1]);
   }
   return out;
+}
+
+/** Files in `specs/` that describe the folder rather than work, and are never planned. */
+export const SKIPPED_SPECS = new Set(["README.md", "TEMPLATE.md"]);
+
+/**
+ * Whether a path (or a `git status --porcelain` line) is a spec intake would plan — a
+ * top-level `specs/*.md` other than the README and the template.
+ *
+ * Such a file being uncommitted is the normal way work starts: saving it is the request.
+ * The clean-tree checks used to count it like any other edit, so a freshly saved spec
+ * refused the very drain that would have planned and committed it.
+ */
+export function isPlannableSpecPath(pathOrLine) {
+  let p = String(pathOrLine ?? "");
+  if (/^[ MADRCU?!]{2} /.test(p)) p = p.slice(3);
+  p = p.trim().replace(/^.* -> /, "").replace(/^"|"$/g, "").replace(/\\/g, "/");
+  const m = /^specs\/([^/]+\.md)$/i.exec(p);
+  return Boolean(m) && !SKIPPED_SPECS.has(m[1]);
+}
+
+/**
+ * The content hash a spec is planned at. Line endings are normalised first: a spec saved
+ * with CRLF on Windows is committed as LF (`.gitattributes`), and hashing the raw bytes
+ * made the next checkout look like an edit, which planned it a second time.
+ */
+export function specDigest(text) {
+  return createHash("sha1").update(String(text).replace(/\r\n/g, "\n")).digest("hex").slice(0, 12);
+}
+
+/**
+ * How many times this version of a spec has already failed to plan, from the journal.
+ *
+ * A plan that fails or is refused leaves the spec unplanned so the next run tries again —
+ * which on a one-minute timer meant paying for the same failing call every minute. Counted
+ * per content hash, so editing the spec is what earns it a fresh set of attempts.
+ */
+export function failedPlanAttempts(runs, specFile, hash) {
+  return (runs ?? []).filter(
+    (r) => r?.kind === "plan" && r.task === `plan spec: ${specFile}` && r.specHash === hash && r.outcome !== "planned",
+  ).length;
+}
+
+/**
+ * The paths a planning call changed that it had no business changing: everything dirty
+ * after it that was not dirty before, outside the queue and the spec folder. The planner
+ * writes task files only, and anything else it leaves would be swept into the first task's
+ * commit as if that task had written it.
+ */
+export function strayPlanPaths(before, after) {
+  const was = new Set(before ?? []);
+  return [...new Set(after ?? [])].filter(
+    (p) => !was.has(p) && !p.startsWith(".agent-queue/") && !p.startsWith("specs/"),
+  );
 }

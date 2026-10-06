@@ -207,3 +207,51 @@ test("the record carries the subject, the task, the files and the brief verbatim
   assert.match(text, /\| `src\/a\.ts` \| 3 \| 1 \|/);
   assert.match(text, /## The brief this was built from\n\nDepends-on: none\n\n## Scope\n- one\n$/);
 });
+
+test("a saved spec is not in the way of the drain that plans it", async () => {
+  const { isPlannableSpecPath } = await import("../lib/planning.mjs");
+  assert.equal(isPlannableSpecPath("?? specs/billing.md"), true);
+  assert.equal(isPlannableSpecPath(" M specs/billing.md"), true);
+  assert.equal(isPlannableSpecPath("specs\\billing.md"), true);
+  assert.equal(isPlannableSpecPath('?? "specs/two words.md"'), true);
+  // Its neighbours still count: the folder's own docs, nested files, anything else.
+  assert.equal(isPlannableSpecPath(" M specs/README.md"), false);
+  assert.equal(isPlannableSpecPath("?? specs/TEMPLATE.md"), false);
+  assert.equal(isPlannableSpecPath("?? specs/drafts/x.md"), false);
+  assert.equal(isPlannableSpecPath(" M src/specs/x.md"), false);
+  assert.equal(isPlannableSpecPath("?? specs/notes.txt"), false);
+});
+
+test("a spec hashes the same whatever its line endings", async () => {
+  const { specDigest } = await import("../lib/planning.mjs");
+  assert.equal(specDigest("# A\r\n\r\nbody\r\n"), specDigest("# A\n\nbody\n"));
+  assert.notEqual(specDigest("# A\n"), specDigest("# B\n"));
+});
+
+test("a spec's failed plans are counted per version, and a success is not a failure", async () => {
+  const { failedPlanAttempts } = await import("../lib/planning.mjs");
+  const run = (outcome, specHash, file = "billing.md") => ({ kind: "plan", task: `plan spec: ${file}`, specHash, outcome });
+  const runs = [run("failed", "aaa"), run("rejected", "aaa"), run("planned", "aaa"), run("failed", "bbb"), run("failed", "aaa", "other.md")];
+  assert.equal(failedPlanAttempts(runs, "billing.md", "aaa"), 2);
+  assert.equal(failedPlanAttempts(runs, "billing.md", "bbb"), 1);
+  assert.equal(failedPlanAttempts(runs, "billing.md", "ccc"), 0);
+});
+
+test("what a planner may leave behind is the queue and the specs, and nothing else", async () => {
+  const { strayPlanPaths } = await import("../lib/planning.mjs");
+  assert.deepEqual(
+    strayPlanPaths(["src/wip.ts"], ["src/wip.ts", ".agent-queue/todo/x/01-a.md", "specs/x.md", "src/api.ts"]),
+    ["src/api.ts"],
+  );
+  assert.deepEqual(strayPlanPaths([], []), []);
+});
+
+test("a re-plan is told which old tasks it replaces and which stay", async () => {
+  const { buildPlanBrief } = await import("../lib/brief-plan.mjs");
+  const brief = buildPlanBrief({ scope: SCOPE, taken: ["01-api", "02-page", "03-docs"], replaced: ["02-page", "03-docs"] });
+  assert.match(brief, /02-page, 03-docs were planned from the old version/);
+  assert.match(brief, /01-api already exist and stay/);
+  assert.match(brief, /number the new tasks from 04/);
+  // A first plan says nothing about earlier ones.
+  assert.doesNotMatch(buildPlanBrief({ scope: SCOPE }), /planned before/);
+});
