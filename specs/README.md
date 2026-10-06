@@ -11,11 +11,16 @@ npm run queue -- drain
 With the scheduler installed (`npm run schedule -- install`), even that disappears — the
 timer picks the spec up on its own.
 
-Intake is tracked by file contents in `.agent-queue/planned.json`: a spec is never planned
-twice, and editing one re-plans it. Planning commits the spec, its tasks and that line
-together (`Plan <spec>`), so a teammate who pulls sees it as planned too.
-`npm run queue -- plan` does the intake without draining, if you want to see the tasks
+Intake is tracked by file contents, one record per spec in `.agent-queue/planned/`: a spec is
+never planned twice, and editing one re-plans it — replacing its tasks that have not run yet
+rather than queueing a second set. Planning commits the spec, its tasks and its record
+together (`Plan <spec>`), so a teammate who pulls sees it as planned too. A saved spec needs
+no commit of its own first; the planning commit takes it.
+`npm run queue -- plan` does the intake without draining, if you want to read the tasks
 before anything runs.
+
+Only top-level `specs/*.md` are planned: this README, `TEMPLATE.md` and anything in a
+subfolder (a place for drafts) never are.
 
 Working in a team (`project.workflow: "team"` in `agentic.config.json`)? Write the spec on a
 branch of your own — the queue refuses to plan or build on the shared base branch — and let

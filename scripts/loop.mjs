@@ -20,7 +20,8 @@ import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BUDGET_EXIT_CODE } from "./lib/budget.mjs";
 import { runCommandSync, sleepSync } from "./lib/proc.mjs";
-import { config, WORK_BRANCH, workflowRefusal } from "./lib/project-config.mjs";
+import { BASE_BRANCH, config, WORK_BRANCH, WORKFLOW, workflowRefusal } from "./lib/project-config.mjs";
+import { unpushedHere } from "./lib/remote.mjs";
 import { listTasks } from "./lib/task-names.mjs";
 import { isPlannableSpecPath } from "./lib/planning.mjs";
 
@@ -130,13 +131,16 @@ run("node", [join(ROOT, "scripts", "agent-queue.mjs"), "list"]);
 
 // Unpushed commits on the work branch are the state that matters now: that is where finished work
 // lives until the owner pushes it.
-const aheadOf = (ref) => (capture("git", ["rev-list", "--count", `${ref}..HEAD`]) ?? "").trim();
-const ahead = branch === WORK_BRANCH ? aheadOf(`origin/${WORK_BRANCH}`) : "";
-if (ahead && ahead !== "0") {
-  console.log(
-    `\n${ahead} commit(s) on ${WORK_BRANCH} not yet pushed — review with ` +
-      `\`git log --oneline origin/${WORK_BRANCH}..HEAD\`.`,
-  );
+// Measured from the branch's remote copy, else the base (lib/remote.mjs) — a branch never
+// pushed, or a project with no remote yet, used to report nothing waiting at all.
+const unpushed = () => (branch === WORK_BRANCH ? unpushedHere(WORK_BRANCH, BASE_BRANCH, ROOT) : { count: 0 });
+const waiting = (u) =>
+  u.localOnly
+    ? `${u.count} commit(s) on ${WORK_BRANCH}, none pushed yet — they exist only on this machine`
+    : `${u.count} commit(s) on ${WORK_BRANCH} not yet pushed`;
+const before = unpushed();
+if (before.count > 0) {
+  console.log(`\n${waiting(before)}${before.since ? ` — review with \`git log --oneline ${before.since}..HEAD\`` : ""}.`);
 }
 
 // --- 2. ask the product what is broken --------------------------------------------------
@@ -246,17 +250,20 @@ if (audit.status !== 0) {
   console.log("");
 }
 
-const finalAhead = branch === WORK_BRANCH ? aheadOf(`origin/${WORK_BRANCH}`) : "";
+const after = unpushed();
 
-if (!finalAhead || finalAhead === "0") {
+if (after.count === 0) {
   console.log(`Nothing is waiting for you — ${WORK_BRANCH} has no unpushed commits.`);
+} else if (!after.since) {
+  console.log(`${waiting(after)}.`);
+  console.log("To keep a copy elsewhere:  git push -u origin HEAD   (git remote add origin <url> first, if there is no remote)");
 } else {
-  console.log(`${finalAhead} commit(s) are built, verified, and committed on ${WORK_BRANCH}.`);
+  console.log(`${waiting(after)}: built, verified and committed.`);
   console.log("Nothing has been pushed; that is the only step left, and it is yours.\n");
-  run("git", ["log", "--oneline", `origin/${WORK_BRANCH}..HEAD`]);
+  run("git", ["log", "--oneline", `${after.since}..HEAD`]);
   console.log(`
-  Review:  git diff origin/${WORK_BRANCH}..HEAD
-  Push:    git push`);
+  Review:  git diff ${after.since}..HEAD
+  Push:    ${WORKFLOW === "team" ? "git push -u origin HEAD, then npm run pr" : "git push"}`);
 }
 
 console.log(`\nHistory: npm run auto:status`);

@@ -128,3 +128,17 @@ export function strayPlanPaths(before, after) {
     (p) => !was.has(p) && !p.startsWith(".agent-queue/") && !p.startsWith("specs/"),
   );
 }
+
+/**
+ * The todo/ briefs among `changedPaths`, as lane-relative files (`billing/01-api.md`).
+ * In a team, these are the tasks this branch may build — see `briefsOfThisBranch`.
+ */
+export function briefsChangedOn(changedPaths) {
+  const out = new Set();
+  for (const raw of changedPaths ?? []) {
+    const p = String(raw).trim().replace(/\\/g, "/").replace(/^"|"$/g, "");
+    const m = /^\.agent-queue\/todo\/(.+\.md)$/i.exec(p);
+    if (m) out.add(m[1]);
+  }
+  return out;
+}

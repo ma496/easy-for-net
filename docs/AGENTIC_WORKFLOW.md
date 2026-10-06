@@ -28,10 +28,23 @@ timer.
 ## Work reaches the loop two ways
 
 **You write a spec.** Save a markdown file into `specs/`. The next drain splits it into tasks
-and queues them — so saving the file *is* starting development. Intake is keyed on content
-hash in `.agent-queue/planned.json`: a spec is planned once, re-planned if edited. The
-planner's briefs, the spec and its line in `planned.json` are committed together as
-`Plan <spec>`, so every other checkout of the branch sees the spec as planned.
+and queues them — so saving the file *is* starting development; an uncommitted spec does not
+count as a dirty tree. Intake is keyed on the spec's content hash (line endings ignored), kept
+in one record per spec, `.agent-queue/planned/<spec>.md.json` (a legacy shared
+`planned.json` is still read): a spec is planned once, re-planned if edited. The planner's
+briefs, the spec and its record are committed together as `Plan <spec>`, so every other
+checkout of the branch sees the spec as planned — and two branches planning different specs
+never touch the same file. To read the split before anything is built, run
+`npm run queue -- plan` first; the next drain builds what it queued.
+
+Re-planning an edited spec withdraws that spec's tasks still waiting in `todo/` to
+`.agent-runs/superseded/` and asks the planner to replace them (they come back if planning
+fails); tasks that already landed stay. A spec still uncommitted after intake — its planning
+failed, or ran out of budget — stops the drain rather than riding into a task's commit. The
+planner runs bounded (`budget.planMaxTurns`, `planMaxUsd`, `planMaxMinutes`), with no shell;
+a plan that edits anything outside the queue is refused and its edits moved to
+`.agent-runs/rejected-plans/`, and one version of a spec that fails `budget.planAttempts`
+times is not planned again until it is edited.
 
 Each spec's tasks live in a folder named for the spec, in every lane:
 `.agent-queue/todo/billing-export/01-endpoint.md`. A task's identity is `<spec>/<name>` —
@@ -42,7 +55,7 @@ anywhere but its own folder, names a file other than `NN-short-slug.md`, or reus
 queues nothing. A task queued by hand lives in `adhoc/`.
 
 Each planning also names a build-record directory, `docs/builds/<date-time>-<spec>/`, stamped
-when it started and kept in `planned.json`; that spec's tasks record into it.
+when it started and kept in the spec's plan record; that spec's tasks record into it.
 
 **The product files one.** Configure `cycle.observe` with a command that reads the running
 product — logs, error rates, complaints — and writes a task brief into `specs/` when a
@@ -112,7 +125,39 @@ is accepted if it verifies, and the run exits 3 with nothing committed, so "ran 
 never reads as "never verified".
 
 `npm run queue -- retry` puts a failed task back, and clears its spend history in the same
-gesture, because requeueing by hand is the one signal that somebody looked.
+gesture, because requeueing by hand is the one signal that somebody looked. It does so at
+most twice per brief (counted in the gitignored `.agent-queue/retries.json`); past that, the
+brief needs changing, not another run — edit it, or delete its line from that file to allow
+another retry.
+
+### Every setting read from the environment
+
+The scripts never read `.env`; these come from the shell that starts them, and the timer
+gets them from the command `npm run schedule -- install` wrote.
+
+| Variable | Default | What it does |
+|---|---|---|
+| `AGENT_MAX_USD_PER_TASK` / `_PER_DRAIN` | 50 / 200 | The spend ceilings above; `off`, `none`, `unlimited` or `infinity` removes one. |
+| `AGENT_MAX_RUNS_PER_TASK` | 3 | Starts of one brief before it goes to `failed/`. |
+| `AGENT_MAX_TURNS_PER_ATTEMPT` | `budget.maxTurns` | Parent turns per attempt (`--max-turns`). |
+| `AGENT_MAX_MINUTES_PER_ATTEMPT` | `budget.maxMinutesPerAttempt` | Wall clock per attempt. |
+| `AGENT_VERIFY_TIMEOUT_MINUTES` | 60 | How long one verify may run before it is stopped and counted as failed. |
+| `AGENT_ASSUMED_USD_PER_CALL` | learned from history, else 1 | What a call whose stream carried no cost is charged at. |
+| `AGENT_MODEL` | `budget.model` | The model every session and the planner run on; `inherit` passes none. |
+| `AGENT_AUTO_PUSH` | 0 | `1` pushes the work branch after each landed task. |
+| `AGENT_REFUSE_DIRTY_START` | 1 | `0` lets a drain park a dirty tree under `.agent-runs/interrupted/` instead of refusing. |
+| `AGENT_WORK_BRANCH` | — | Set by the timer: the branch it was installed on. |
+| `AGENT_SKIP_CLI_CONTRACT` | 0 | `1` skips the loop's once-per-CLI-version contract check. |
+
+The runner itself sets `AGENT_RUN_ID` (the session's run; inside one, `verify` starts the API
+when a live check needs it), `AGENT_NO_AUTOSTART` (from `--no-autostart`) and
+`AGENT_FROM_DRAIN` (a drain started this run, so anything in the tree is its salvage).
+
+The flags worth knowing: `queue -- drain --max N` (stop after N tasks), `--no-plan` (build
+without intake); `loop --dry-run`; `auto --salvage` (take over uncommitted work already in the
+tree — otherwise a manual run refuses it), `--no-preflight`, `--no-autostart`, `--safe`;
+`schedule -- install --interval <seconds>`, `--auto-push`; `queue -- resume` (requeue what a
+dead run left in `doing/`, its leftovers parked for its next run), `retry`, `audit [--fix]`.
 
 ## The model the session runs on is the largest single cost
 
@@ -181,6 +226,12 @@ either way.
 
 **`solo`** (the default). One developer. The queue plans and builds on whatever branch is
 checked out — the base branch included — and the commits stay local until you push them.
+The guard refuses an agent's push to a protected branch (`main`, `master`, `develop`, the base,
+`project.branch`) whatever is said in the turn: you push it yourself, `! git push` in the
+prompt. Interactively, `/ship` verifies, asks `npm run owes` which reviewers the diff owes,
+reviews and commits — the same bar the queue holds a task to. A timer is pinned to the branch it
+was installed on in `solo` too (see below), so checking out another branch pauses it rather
+than moving the queue there.
 
 **`team`**. Several developers share the base branch, so nothing plans or builds on it:
 `queue plan`, `queue drain`, `loop`, `auto` and `schedule install` all refuse there. The rule is
@@ -190,18 +241,26 @@ checked out — the base branch included — and the commits stay local until yo
 git switch -c feat/billing-export
 # write specs/billing-export.md
 npm run loop                         # plans it (one "Plan" commit), builds each task (one commit each)
-npm run pr                           # the pull request carries the spec, its briefs and every task
+git push -u origin HEAD              # yours to run; the loop never pushes unless AGENT_AUTO_PUSH=1
+npm run pr                           # prints the pull-request URL for the pushed branch
 ```
 
 Intake on a branch plans only the specs that branch added or changed since it left the base
 branch, so a spec that arrived from someone else's merged work is never planned a second
-time. Run one timer per branch, never two on the same one.
+time — and a drain builds only the briefs this branch added or changed, so a teammate's task
+that was still queued when their pull request merged is left for them, and listed. The guard
+also refuses a commit on the base branch itself, and the interactive commands (`/feature`,
+`/auto`, `/ship`) branch off it first.
+
+A timer belongs to a checkout, and is pinned to the branch it was installed on
+(`AGENT_WORK_BRANCH`): a cycle that fires while another branch is checked out refuses rather
+than building there. One timer per checkout; switching branches means reinstalling it.
 
 **What git shares and what stays on one machine:**
 
 | Path | |
 |---|---|
-| `specs/`, `.agent-queue/todo/`, `.agent-queue/planned.json` | Tracked — the queue's inputs |
+| `specs/`, `.agent-queue/todo/`, `.agent-queue/planned/` | Tracked — the queue's inputs |
 | `docs/builds/` | Tracked — one record per landed task, in that task's commit |
 | `.agent-queue/doing/`, `done/`, `failed/` | Local — this machine's progress, gitignored |
 | `.agent-runs/` | Local — journals, streams, parked work |
@@ -211,9 +270,13 @@ nothing more. A
 task that fails leaves its brief's removal unstaged, so it never rides along in another
 task's commit; `queue retry` puts it back.
 
-**Any merge style works.** "Landed" is read from the `Task:` lines in history, never from a
-recorded commit hash, so a branch merged with a merge commit, rebased, or squashed (GitHub's
-squash message keeps each commit's body) still reads as landed on the base branch.
+**Any merge style works, if the commit bodies survive it.** "Landed" is read from the
+`Task:` lines in history, never from a recorded commit hash, so a branch merged with a merge
+commit, rebased, or squashed still reads as landed on the base branch — provided the squash
+message keeps each commit's body. GitHub's default squash message ("Default message" /
+"commit details") does; the "Pull request title and description" setting drops the `Task:`
+lines, and the tasks then read as never landed. Keep the default, or paste the `Task:` lines
+into the pull-request description.
 Each task's build record is written just before its commit and lands in it:
 `docs/builds/<date-time>-<spec>/<task>.md`, one directory per planned spec, named for when planning started
 (`docs/builds/adhoc/<date-time>-<task>.md` for a task queued by hand). A record cannot name

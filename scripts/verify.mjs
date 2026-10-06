@@ -30,7 +30,7 @@ import { fileURLToPath } from "node:url";
 import { apiAdoptionVerdict } from "./lib/api-identity.mjs";
 import { workingTreePaths } from "./lib/changed-paths.mjs";
 import { IS_WINDOWS, killTree, runCommandSync, sleepSync, spawnCommand } from "./lib/proc.mjs";
-import { compileRules, config, fill, WORK_BRANCH } from "./lib/project-config.mjs";
+import { BASE_BRANCH, compileRules, config, fill } from "./lib/project-config.mjs";
 
 // Same reason as agent-run.mjs: cwd may hold only committed code, so the checks are driven
 // from this file's own directory and run against cwd.
@@ -69,7 +69,11 @@ try {
 } catch {
   /* keep the unresolved path; the adoption check reports the mismatch either way */
 }
-const BASE = argOf("base", WORK_BRANCH);
+// The branch a pull request would target. It defaulted to the work branch, which with
+// `project.branch` unset is the branch checked out — so on a feature branch the merge base
+// was HEAD itself, "branch" scope judged only the uncommitted tree, and committed work
+// reached its pull request unverified. The runner passes --base explicitly.
+const BASE = argOf("base", BASE_BRANCH);
 // "branch" asks what a pull request would contain — every commit on this branch plus the
 // working tree. That is the blast radius the owner actually reviews, so it is the default.
 // "working" narrows to uncommitted changes, for quick iteration on a long-lived branch.

@@ -10,7 +10,7 @@
  * one queue change: the removal of its own brief from `todo/`, which is how the shared,
  * tracked queue learns the task is no longer waiting. Everything else there is either local
  * to this machine (`doing/`, `done/`, `failed/`, gitignored) or committed by the step that
- * made it (`queue plan` commits the briefs and `planned.json` it writes). A brief another
+ * made it (`queue plan` commits the briefs and the plan record it writes). A brief another
  * task left removed — one that failed and went to `failed/` — stays out of this commit.
  *
  * Pure over porcelain entries (`{ index, worktree, path }`), so the rule is testable.

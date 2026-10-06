@@ -22,7 +22,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { recordPathFor, renderRecord } from "./lib/build-record.mjs";
+import { readPlanned, recordPathFor, renderRecord } from "./lib/build-record.mjs";
 import { stemOf } from "./lib/task-names.mjs";
 import { config } from "./lib/project-config.mjs";
 import { stageable } from "./lib/stage-paths.mjs";
@@ -76,12 +76,7 @@ try {
   const stem = stemOf(taskFile);
   const brief = readFileSync(taskFile, "utf8");
   const now = new Date();
-  let planned = {};
-  try {
-    planned = JSON.parse(readFileSync(join(ROOT, ".agent-queue", "planned.json"), "utf8"));
-  } catch {
-    /* nothing planned yet */
-  }
+  const planned = readPlanned(join(ROOT, ".agent-queue"));
   const existing = existsSync(join(ROOT, BUILDS)) ? readdirSync(join(ROOT, BUILDS)) : [];
   const rel = recordPathFor(stem, { planned, existing, date: now });
   const target = join(ROOT, BUILDS, rel);

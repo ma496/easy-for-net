@@ -131,6 +131,8 @@ const cases = [
   { label: "normal feature-branch push", command: "git push -u origin feat/x", expect: "allow" },
   { label: "PowerShell refspec push to master", command: "git push origin HEAD:master; Write-Host done", expect: "block" },
   { label: "branch merely named like main", command: "git push -u origin feat/main-nav", expect: "allow" },
+  { label: "pushing the shared develop branch", command: "git push origin HEAD:develop", expect: "block" },
+  { label: "branch merely named like develop", command: "git push -u origin feat/develop-docs", expect: "allow" },
   { label: "git -C . push to main by refspec", command: "git -C . push origin HEAD:main", expect: "block" },
   { label: "a push option's value is not a refspec", command: "git push -o main origin feat/x", expect: "allow" },
 
@@ -365,14 +367,25 @@ const branchCases = [
   { label: "commit on a feature branch", branch: "feat/x", expect: "allow" },
   { label: "bare git push from a feature branch", branch: "feat/x", command: "git push", expect: "allow" },
   { label: "git push origin HEAD from a feature branch", branch: "feat/x", command: "git push -u origin HEAD", expect: "allow" },
+  // Under `project.workflow: "team"` the base branch moves only through a pull request, so
+  // even the commit is refused there; a branch of one's own commits as before.
+  { label: "team: commit on the base branch", branch: "main", team: true, expect: "block" },
+  { label: "team: commit on a feature branch", branch: "feat/x", team: true, expect: "allow" },
+  { label: "team: commit-tree on the base only writes an object", branch: "main", team: true, command: "git commit-tree $TREE", expect: "allow" },
 ];
 
+// The same repo under a team config, for the cases marked `team`.
+const teamConfig = join(mkdtempSync(join(tmpdir(), "hooktest-team-")), "agentic.config.json");
+writeFileSync(teamConfig, JSON.stringify({ project: { workflow: "team", baseBranch: "main" } }));
+
 for (const c of branchCases) {
-  if (c.branch !== "main") git("checkout", "-B", c.branch);
+  // Every case checks out its own branch, so their order does not matter.
+  git("checkout", "-q", "-B", c.branch);
   const res = spawnSync("node", [HOOK], {
     input: JSON.stringify({ tool_input: { command: c.command ?? 'git commit -m "x"' } }),
     encoding: "utf8",
     cwd: repo,
+    ...(c.team ? { env: { ...process.env, AGENTIC_CONFIG: teamConfig } } : {}),
   });
   const actual = verdict(res);
   report(actual === c.expect, c.label, c.expect, actual);
@@ -517,6 +530,15 @@ for (const c of readCases) {
   report(actual === c.expect, c.label, c.expect, actual);
 }
 extraCases += readCases.length;
+
+// --- the status line ---------------------------------------------------------------
+// It runs on every prompt and imports the engine's config, so a break in either shows as a
+// blank or broken prompt line with nothing else noticing.
+{
+  const res = spawnSync("node", [join(HOOKS_DIR, "..", "statusline.mjs")], { input: "{}", encoding: "utf8" });
+  report(res.status === 0 && res.stdout.trim() !== "", "the status line renders", "output", res.status === 0 ? "output" : `exit ${res.status}`);
+  extraCases += 1;
+}
 
 // --- a config that does not parse ----------------------------------------------
 // Every guard but the secret-reads one imports the config. If parsing it failing ended the

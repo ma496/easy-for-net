@@ -18,7 +18,7 @@
  * a test is a rule that will be silently broken by the next edit.
  */
 import { execSync } from "node:child_process";
-import { BASE_BRANCH, config } from "../../scripts/lib/project-config.mjs";
+import { BASE_BRANCH, config, PROTECTED_BRANCHES as SHARED_PROTECTED } from "../../scripts/lib/project-config.mjs";
 
 const raw = await new Promise((resolve) => {
   let buf = "";
@@ -530,7 +530,7 @@ if (/\bgit\s+add\b(?:\s+-[\w-]+)*(?:\s+--)?\s+(-[a-zA-Z]*A[a-zA-Z]*\b|--all\b|\.
 // A push that names no refspec — `git push`, `git push origin` — sends the current branch,
 // and so does a refspec of `HEAD`. Checking only named refspecs let a bare `git push` from a
 // checkout of main through, and main is the work branch whenever `project.branch` is unset.
-const PROTECTED_BRANCHES = new Set([BASE_BRANCH, config.project.branch, "main", "master"].filter(Boolean));
+const PROTECTED_BRANCHES = new Set(SHARED_PROTECTED);
 for (const args of pushSegments) {
   // Quotes are the shell's, not the ref's: `'main'`, `HEAD:"main"` and the `main"` left by
   // `bash -c "git push origin main"` all push to main, and each slipped past unstripped.
@@ -604,6 +604,22 @@ if (/\bgit\s+merge(?![-\w])/.test(gitScanned) && !MERGE_RECOVERY.test(gitScanned
 
 if (/\bgh\s+pr\s+merge\b/.test(scanned)) {
   block("merging a pull request is the repo owner's call. Hand them the PR URL instead.");
+}
+
+// --- in a team, not even a commit lands on the base branch ----------------------------
+// Solo builds on whatever is checked out, base included. A team's base moves only through
+// pull requests, so a commit made on it can be neither pushed (the rule above) nor undone
+// without `reset --hard` (refused too) — refusing it here is cheaper than that dead end.
+// `commit-tree` only writes an object and stays allowed.
+if (
+  config.project.workflow === "team" &&
+  /\bgit\s+commit(?![-\w])/.test(gitScanned) &&
+  currentBranch() === BASE_BRANCH
+) {
+  block(
+    `this commits on \`${BASE_BRANCH}\`, the base branch a team shares (\`project.workflow: "team"\`). ` +
+      "Create a branch of your own first (`git switch -c <type>/<slug>`) and commit there.",
+  );
 }
 
 // --- committing on the work branch is allowed, deliberately ----------------------

@@ -19,8 +19,11 @@ export const windowsTaskName = (projectName) => `${slugOf(projectName)}-queue-dr
  * shell of yours and the scripts never read `.env`, so a setting not written into the
  * scheduled command is a setting the unattended runs do not have.
  */
-export function scheduleEnv({ model, maxUsdPerTask, maxUsdPerDrain, maxRunsPerTask, autoPush, refuseDirty }) {
+export function scheduleEnv({ model, maxUsdPerTask, maxUsdPerDrain, maxRunsPerTask, autoPush, refuseDirty, workBranch }) {
   return {
+    // The branch the timer was installed on. Without it the timer built on whatever was
+    // checked out when it fired, so a switch to a hotfix branch took the queue with it.
+    ...(workBranch ? { AGENT_WORK_BRANCH: workBranch } : {}),
     AGENT_MODEL: model,
     AGENT_MAX_USD_PER_TASK: maxUsdPerTask,
     AGENT_MAX_USD_PER_DRAIN: maxUsdPerDrain,

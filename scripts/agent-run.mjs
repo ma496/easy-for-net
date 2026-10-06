@@ -211,7 +211,7 @@ const startedAt = new Date().toISOString();
 const childEnv = { AGENT_RUN_ID: RUN_ID, ...(flag("no-autostart") ? { AGENT_NO_AUTOSTART: "1" } : {}) };
 
 // What one `claude` call is charged at when its stream carried no readable cost. Scripts
-// read the environment directly; the setting is documented in .env.example.
+// read the environment directly; every AGENT_* setting is listed in docs/AGENTIC_WORKFLOW.md.
 // Unset, it is learned from the journal: the median measured attempt, since the attempts
 // that go unmeasured are the killed ones and those are the long ones.
 const ASSUMED_USD = assumedRateFromHistory(
@@ -240,7 +240,7 @@ const attemptPhases = [];
 const attemptEndings = [];
 
 // What this task may spend in total, across every attempt. Read from the environment like
-// the assumed figure above and documented in .env.example; `off` means no ceiling.
+// the assumed figure above and listed in docs/AGENTIC_WORKFLOW.md; `off` means no ceiling.
 //
 // It bounds the attempt in flight too, but without killing it: the CLI is handed what is
 // left as `--max-budget-usd` and stops the session itself, reporting what it spent, with its
@@ -1050,7 +1050,7 @@ Verified and left uncommitted on ${WORK_BRANCH} (--no-commit).
 // fails the run; a task with no brief file (`npm run auto -- "<task>"`) has nothing to record.
 if (taskFile) runLive("node", [join(SCRIPTS, "record-build.mjs"), "--task", taskFile]);
 
-const shipArgs = [join(SCRIPTS, "auto-ship.mjs"), subject, "--commit-only"];
+const shipArgs = [join(SCRIPTS, "auto-ship.mjs"), subject, "--commit-only", "--verified"];
 // The brief this run came from, so `queue -- audit` can pair the commit to it by trailer
 // rather than by matching subject text.
 if (taskFile) shipArgs.push("--task", stemOf(taskFile));

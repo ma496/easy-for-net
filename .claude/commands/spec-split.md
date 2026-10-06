@@ -13,7 +13,7 @@ Write **no implementation code**. Your entire output is task files under
 
 If the file is a top-level `specs/*.md`, run `npm run queue -- plan` and stop there: it splits
 the spec with the same rules as below, records the version it planned in
-`.agent-queue/planned.json`, and commits the plan. Briefs written by hand for such a spec are
+`.agent-queue/planned/`, and commits the plan. Briefs written by hand for such a spec are
 not recorded there, so the next drain plans it again and queues every task twice. Then read
 the briefs it wrote and report them as below; if one needs changing, edit that brief — not the
 spec, since an edited spec is planned again.
