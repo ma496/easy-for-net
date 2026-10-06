@@ -1,7 +1,6 @@
 ---
 scope: token
 learned: 2026-09-29
-task: 01-redis-session-store-and-per-request-validation
 ---
 
 # FastEndpoints JWTs carry NameIdentifier as the full claim URI

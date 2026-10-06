@@ -83,13 +83,12 @@ function conventionsBlock() {
 }
 
 /**
- * @param {{ memory?: string, history?: string, taskSlug?: string }} parts
+ * @param {{ memory?: string, history?: string }} parts
  *   `memory` is what *other* tasks learned; `history` is this task's own failed attempts.
- *   Both are already formatted by their own modules and are pasted in as-is. `taskSlug`
- *   names the queued task, so a lesson it records says where it came from.
+ *   Both are already formatted by their own modules and are pasted in as-is.
  * @returns {string} the brief, ending with `TASK:` — the caller appends the task itself.
  */
-export function buildBrief({ memory = "", history = "", taskSlug = "" } = {}) {
+export function buildBrief({ memory = "", history = "" } = {}) {
   const routing = routingTable();
   const design = designAgents();
   const guide = config.docs.guide ?? "CLAUDE.md";
@@ -151,9 +150,10 @@ If this task teaches you something durable about THIS repository that a future u
 task would trip on too — a trap in the tooling, a convention no guide states, an assumption
 that turned out false — record it before you finish:
 
-  node scripts/record-lesson.mjs --title "<short imperative title>" --scope <a keyword a future task's brief would contain, or "always"> --body "<what to do instead, and why. two or three sentences.>"${taskSlug ? ` --task ${taskSlug}` : ""}
+  node scripts/record-lesson.mjs --title "<short imperative title>" --scope <a keyword a future task's brief would contain, or "always"> --body "<what to do instead, and why. two or three sentences.>"
 
-(One line on purpose: it has to run the same in bash and in PowerShell.)
+(One line on purpose: it has to run the same in bash and in PowerShell.) Write it for a
+reader who has never heard of this task: name no task, spec or brief in the title or body.
 
 Record nothing if nothing surprised you. A memory full of the obvious is worse than an
 empty one, because it crowds real lessons out of every future brief.

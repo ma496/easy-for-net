@@ -1,5 +1,5 @@
 import { strict as assert } from "node:assert";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,7 +21,6 @@ const lesson = (over = {}) => ({
   file: "x.md",
   scope: "always",
   learned: "2026-01-01",
-  task: "",
   title: "T",
   body: "# T\nbody",
   ...over,
@@ -167,42 +166,57 @@ test("scopeReach counts the briefs a scope would actually reach", () => {
   assert.equal(scopeReach("always", briefs), 3);
 });
 
-// --- provenance ---------------------------------------------------------------------------
+// --- no task reference ------------------------------------------------------------------
 //
-// Every lesson on record once had an empty `task:` — the session was never told which task
-// it was building, and the brief's command left the flag out. These hold the three ways it
-// is now filled, and the one way an empty value is written.
+// A lesson is read by future unrelated tasks, where the name of the task that taught it means
+// nothing and only spends the injection budget. None of these paths may write one.
 
-test("a lesson written with a task records it, and one without leaves the field out", () => {
+test("a lesson is written with no task field, even when one is passed", () => {
   const dir = mkdtempSync(join(tmpdir(), "memory-task-"));
-  const withTask = writeLesson(dir, { title: "With task", body: "b", learned: "2026-09-30", task: "07-x" });
-  assert.match(readFileSync(withTask, "utf8"), /^task: 07-x$/m);
-  const without = writeLesson(dir, { title: "Without task", body: "b", learned: "2026-09-30" });
-  assert.doesNotMatch(readFileSync(without, "utf8"), /^task:/m);
-  assert.equal(readLessons(dir).find((l) => l.title === "With task").task, "07-x");
-});
-
-test("record-lesson takes the task from AGENT_TASK when --task is not given, and --task wins", () => {
-  const dir = mkdtempSync(join(tmpdir(), "memory-env-"));
-  const script = join(dirname(fileURLToPath(import.meta.url)), "..", "record-lesson.mjs");
-  const record = (title, extra, env) =>
-    spawnSync(process.execPath, [script, "--title", title, "--scope", "always", "--body", "b", ...extra], {
-      encoding: "utf8",
-      env: { ...process.env, AGENT_MEMORY_DIR: dir, AGENT_TASK: env },
-    });
   try {
-    assert.equal(record("From env", [], "08-from-env").status, 0);
-    assert.equal(record("From flag", ["--task", "09-from-flag"], "08-from-env").status, 0);
-    const byTitle = Object.fromEntries(readLessons(dir).map((l) => [l.title, l.task]));
-    assert.equal(byTitle["From env"], "08-from-env");
-    assert.equal(byTitle["From flag"], "09-from-flag");
+    const path = writeLesson(dir, { title: "No task", body: "b", learned: "2026-09-30", task: "07-x" });
+    assert.doesNotMatch(readFileSync(path, "utf8"), /^task:/m);
+    assert.equal("task" in readLessons(dir)[0], false);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test("the brief's record-lesson command carries the task slug", async () => {
+test("a task line in an older lesson is ignored on read", () => {
+  const parsed = parseLesson("---\nscope: always\nlearned: 2026-01-01\ntask: 03-old\n---\n# Old\nbody", "old.md");
+  assert.equal(parsed.title, "Old");
+  assert.equal("task" in parsed, false);
+});
+
+test("record-lesson ignores --task and AGENT_TASK", () => {
+  const dir = mkdtempSync(join(tmpdir(), "memory-env-"));
+  const script = join(dirname(fileURLToPath(import.meta.url)), "..", "record-lesson.mjs");
+  try {
+    const run = spawnSync(
+      process.execPath,
+      [script, "--title", "From flag", "--scope", "always", "--body", "b", "--task", "09-from-flag"],
+      { encoding: "utf8", env: { ...process.env, AGENT_MEMORY_DIR: dir, AGENT_TASK: "08-from-env" } },
+    );
+    assert.equal(run.status, 0);
+    const text = readFileSync(join(dir, "lessons", "from-flag.md"), "utf8");
+    assert.doesNotMatch(text, /09-from-flag|08-from-env|^task:/m);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("the brief's record-lesson command names no task", async () => {
   const { buildBrief } = await import("../lib/brief.mjs");
-  assert.match(buildBrief({ taskSlug: "10-some-task" }), /record-lesson\.mjs [^\n]*--task 10-some-task/);
   assert.doesNotMatch(buildBrief({}), /--task/);
+});
+
+test("no lesson on record names a task", () => {
+  const dir = join(dirname(fileURLToPath(import.meta.url)), "..", "..", ".claude", "memory", "lessons");
+  let files = [];
+  try {
+    files = readdirSync(dir).filter((f) => f.endsWith(".md"));
+  } catch {
+    return;
+  }
+  for (const f of files) assert.doesNotMatch(readFileSync(join(dir, f), "utf8"), /^task:/m, f);
 });

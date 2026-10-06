@@ -1,7 +1,6 @@
 ---
 scope: next build
 learned: 2026-09-29
-task: 01-settings-slice-and-signin-setting
 ---
 
 # Clear .next/cache when next build fails on next/font/google

@@ -1,7 +1,6 @@
 ---
 scope: sign-out
 learned: 2026-09-30
-task: 05-web-realtime-notifications
 ---
 
 # Never navigate to sign-in over leaveSignedOut

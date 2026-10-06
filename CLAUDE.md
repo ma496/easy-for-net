@@ -150,8 +150,8 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
   (`<run>-attempt-N.stream.jsonl`); each task's commit is its code, its brief leaving `todo/` and its
   build record — `docs/builds/<date-time>-<spec>/<task>.md`, one directory per planning of a spec, stamped with when
   planning started (`docs/builds/adhoc/` for a task queued by hand), written just before the commit;
-  `.claude/memory/lessons/` is what runs learned, injected into later briefs, each naming the task
-  that taught it (the runner exports `AGENT_TASK` to the session).
+  `.claude/memory/lessons/` is what runs learned, injected into later briefs; a lesson names
+  no task, since the task that taught it means nothing to the unrelated ones that read it.
 
 ## Backend architecture
 

@@ -38,13 +38,16 @@ export const MAX_CHARS = 6000;
  *   ---
  *   scope: queue
  *   learned: 2026-08-27
- *   task: 15-lead-module-config-tables
  *   ---
  *   # Title
  *   body…
  *
  * `scope` is a single keyword matched against the task, or `always` for lessons that apply
  * to every run. Everything else is descriptive and never affects matching.
+ *
+ * A lesson names no task. It is advice for a future unrelated task, where the name of the
+ * task that taught it means nothing and only spends the brief's budget. A `task:` line in an
+ * older file is ignored on read and never written.
  */
 export function parseLesson(text, file) {
   // A lesson checked out with CRLF line endings is still a lesson.
@@ -67,7 +70,6 @@ export function parseLesson(text, file) {
     file,
     scope: (meta.scope || "always").toLowerCase(),
     learned: meta.learned || "",
-    task: meta.task || "",
     title,
     body,
   };
@@ -199,14 +201,14 @@ export function lessonSlug(title) {
 }
 
 /** Write one lesson. Overwrites an existing file of the same slug — a refined lesson replaces its earlier form. */
-export function writeLesson(memoryDir, { title, body, scope = "always", learned = "", task = "" }) {
+export function writeLesson(memoryDir, { title, body, scope = "always", learned = "" }) {
   const dir = join(memoryDir, "lessons");
   mkdirSync(dir, { recursive: true });
   const slug = lessonSlug(title);
   const path = join(dir, `${slug}.md`);
   writeFileSync(
     path,
-    `---\nscope: ${scope}\nlearned: ${learned}\n${task ? `task: ${task}\n` : ""}---\n\n# ${title}\n\n${body.trim()}\n`,
+    `---\nscope: ${scope}\nlearned: ${learned}\n---\n\n# ${title}\n\n${body.trim()}\n`,
   );
   return path;
 }
