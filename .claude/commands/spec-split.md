@@ -9,6 +9,17 @@ Split this spec into queued tasks: **$ARGUMENTS**
 Write **no implementation code**. Your entire output is task files under
 `.agent-queue/todo/`, plus a short report.
 
+## A spec in `specs/` is planned by the queue, not by hand
+
+If the file is a top-level `specs/*.md`, run `npm run queue -- plan` and stop there: it splits
+the spec with the same rules as below, records the version it planned in
+`.agent-queue/planned.json`, and commits the plan. Briefs written by hand for such a spec are
+not recorded there, so the next drain plans it again and queues every task twice. Then read
+the briefs it wrote and report them as below; if one needs changing, edit that brief — not the
+spec, since an edited spec is planned again.
+
+Split by hand only a spec kept outside `specs/` — the rest of this command is for that case.
+
 ## Find the seams
 
 The unit is the smallest thing worth reviewing and shipping on its own — not the smallest

@@ -119,6 +119,16 @@ const DEFAULTS = {
     maxTurns: 350,
     /** Wall-clock minutes per attempt, for a session that hangs and so reports neither turns nor cost. */
     maxMinutesPerAttempt: 120,
+    /**
+     * The planner's own limits. It writes task files and nothing else, so a planning call
+     * that runs long is lost, not working — and on a timer an unbounded one is the one
+     * session that could spend without a ceiling. `planAttempts` is how many times one
+     * version of a spec may fail to plan before intake stops paying for it.
+     */
+    planMaxTurns: 60,
+    planMaxUsd: 15,
+    planMaxMinutes: 30,
+    planAttempts: 2,
     /** `opus` is the alias for the newest Opus. `inherit` passes no `--model` at all. */
     model: "opus",
   },
@@ -164,8 +174,16 @@ function readConfigFile() {
     // change owes, what verification it needs — would otherwise silently fall back to the
     // defaults, and a run that verified less than it should have is the failure mode this
     // whole package exists to prevent.
-    console.error(`agentic.config.json could not be parsed: ${err.message}`);
-    process.exit(1);
+    //
+    // Exit 2, not 1. The guards in .claude/hooks import this module, and Claude Code reads a
+    // hook's exit 1 as "the hook broke, carry on" but exit 2 as a refusal — so with 1, one
+    // stray comma here switched every guard off. With 2 they fail closed until it is fixed.
+    // To every script caller, 2 is simply a failure.
+    console.error(
+      `agentic.config.json could not be parsed: ${err.message}\n` +
+        "Every guard refuses until it parses again — fix the file by hand.",
+    );
+    process.exit(2);
   }
 }
 
@@ -206,10 +224,13 @@ export function validateConfig(cfg) {
     problems.push(`project.workflow must be ${WORKFLOWS.join(" or ")} (got ${JSON.stringify(cfg.project?.workflow)})`);
   }
   const budget = cfg.budget ?? {};
-  for (const key of ["attempts", "maxTurns", "maxMinutesPerAttempt"]) {
+  for (const key of ["attempts", "maxTurns", "maxMinutesPerAttempt", "planMaxTurns", "planMaxMinutes", "planAttempts"]) {
     if (!isPositiveInt(budget[key])) {
       problems.push(`budget.${key} must be a positive integer (got ${JSON.stringify(budget[key])})`);
     }
+  }
+  if (!(typeof budget.planMaxUsd === "number" && budget.planMaxUsd > 0)) {
+    problems.push(`budget.planMaxUsd must be a positive number (got ${JSON.stringify(budget.planMaxUsd)})`);
   }
   if (typeof budget.model !== "string" || !budget.model.trim()) {
     problems.push("budget.model must be a model name or alias");

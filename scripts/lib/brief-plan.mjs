@@ -17,11 +17,20 @@ import { nextNumber } from "./planning.mjs";
  * `taken` the names an earlier plan of the same spec already used there, which must not be
  * reused — numbering carries on after the highest.
  */
-export function buildPlanBrief({ scope = "plan", taken = [] } = {}) {
+export function buildPlanBrief({ scope = "plan", taken = [], replaced = [] } = {}) {
+  const withdrawn = new Set(replaced);
+  const kept = taken.filter((n) => !withdrawn.has(n));
   const earlier = taken.length
     ? `\n\nThis spec was planned before, and its folder already uses these names: ${taken.join(", ")}.\n` +
-      `Do not reuse any of them; number the new tasks from ${nextNumber(taken)}. A new task may depend\n` +
-      "on one of those by name."
+      `Do not reuse any of them; number the new tasks from ${nextNumber(taken)}.` +
+      (replaced.length
+        ? `\nThe spec has changed since. ${replaced.join(", ")} were planned from the old version and never\n` +
+          "built; they have been withdrawn, and your plan replaces them — cover whatever of the spec\n" +
+          "they would have covered, as it now reads." +
+          (kept.length
+            ? ` ${kept.join(", ")} already exist and stay; plan only what the\nspec asks for beyond them, and a new task may depend on one of them by name.`
+            : "")
+        : " A new task may depend\non one of those by name.")
     : "";
   const guide = config.docs.guide ?? "CLAUDE.md";
   const capabilities = config.docs.capabilities;

@@ -15,6 +15,13 @@ import { dirname, join } from "node:path";
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 
+/**
+ * What Claude Code makes of a hook's exit: 0 lets the call through, 2 refuses it, and any
+ * other status is a broken hook that Claude Code reports and then *ignores*. Counting that
+ * third case as a block is how a guard that had stopped guarding passed here.
+ */
+const verdict = (res) => (res.status === 0 ? "allow" : res.status === 2 ? "block" : `crash (exit ${res.status})`);
+
 const HOOKS_DIR = dirname(fileURLToPath(import.meta.url));
 const HOOK = join(HOOKS_DIR, "guard-bash.mjs");
 const CONVENTIONS = join(HOOKS_DIR, "project-conventions.mjs");
@@ -250,7 +257,7 @@ for (const c of cases) {
     input: JSON.stringify({ tool_input: { command: c.command } }),
     encoding: "utf8",
   });
-  const actual = res.status === 0 ? "allow" : "block";
+  const actual = verdict(res);
   report(actual === c.expect, c.label, c.expect, actual);
 }
 
@@ -314,7 +321,7 @@ for (const c of branchCases) {
     encoding: "utf8",
     cwd: repo,
   });
-  const actual = res.status === 0 ? "allow" : "block";
+  const actual = verdict(res);
   report(actual === c.expect, c.label, c.expect, actual);
 }
 
@@ -324,7 +331,7 @@ for (const c of branchCases) {
     input: JSON.stringify({ tool_input: { notebook_path: `/repo/${DOTENV}` } }),
     encoding: "utf8",
   });
-  report(res.status !== 0, "notebook edit of the env file", "block", res.status === 0 ? "allow" : "block");
+  report(verdict(res) === "block", "notebook edit of the env file", "block", verdict(res));
   extraCases += 1;
 }
 
@@ -404,7 +411,7 @@ for (const c of conventionCases) {
     encoding: "utf8",
     env: { ...process.env, AGENTIC_CONFIG: fixtureConfig },
   });
-  const actual = res.status === 0 ? "allow" : "block";
+  const actual = verdict(res);
   report(actual === c.expect, c.label, c.expect, actual);
 }
 
@@ -431,7 +438,7 @@ for (const c of pathCases) {
     input: JSON.stringify({ tool_input: { file_path: c.file } }),
     encoding: "utf8",
   });
-  const actual = res.status === 0 ? "allow" : "block";
+  const actual = verdict(res);
   report(actual === c.expect, c.label, c.expect, actual);
 }
 
@@ -453,10 +460,29 @@ for (const c of readCases) {
     input: JSON.stringify({ tool_name: c.tool, tool_input: c.input }),
     encoding: "utf8",
   });
-  const actual = res.status === 0 ? "allow" : "block";
+  const actual = verdict(res);
   report(actual === c.expect, c.label, c.expect, actual);
 }
 extraCases += readCases.length;
+
+// --- a config that does not parse ----------------------------------------------
+// Every guard but the secret-reads one imports the config. If parsing it failing ended the
+// hook with any status but 2, one stray comma in agentic.config.json would switch them off.
+const brokenConfig = join(mkdtempSync(join(tmpdir(), "hook-broken-config-")), "agentic.config.json");
+writeFileSync(brokenConfig, '{ "project": { "name": "x", }');
+const brokenCases = [
+  { label: "broken config: the shell guard still refuses", hook: HOOK, input: { tool_input: { command: `cat ${DOTENV}` } } },
+  { label: "broken config: the path guard still refuses", hook: PATHS_GUARD, input: { tool_input: { file_path: `/repo/${DOTENV}` } } },
+];
+for (const c of brokenCases) {
+  const res = spawnSync("node", [c.hook], {
+    input: JSON.stringify(c.input),
+    encoding: "utf8",
+    env: { ...process.env, AGENTIC_CONFIG: brokenConfig },
+  });
+  report(verdict(res) === "block", c.label, "block", verdict(res));
+}
+extraCases += brokenCases.length;
 
 console.log("");
 if (failures > 0) {

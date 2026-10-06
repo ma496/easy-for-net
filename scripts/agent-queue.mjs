@@ -44,11 +44,21 @@
 import { spawn, spawnSync } from "node:child_process";
 import { findCommitFor, isDefinite } from "./lib/commit-pairing.mjs";
 import { landedTaskStems } from "./lib/landed-tasks.mjs";
-import { planNameProblems, specSlug, specsChangedOn } from "./lib/planning.mjs";
+import {
+  SKIPPED_SPECS,
+  failedPlanAttempts,
+  isPlannableSpecPath,
+  planNameProblems,
+  specDigest,
+  specSlug,
+  specsChangedOn,
+  strayPlanPaths,
+} from "./lib/planning.mjs";
+import { workingTreePaths } from "./lib/changed-paths.mjs";
 import { planDirName, plannedEntry } from "./lib/build-record.mjs";
 import { ADHOC, fsKey, listTasks, nameOf, qualify, scopeOf, stemOf } from "./lib/task-names.mjs";
 import { wantsRefuseDirtyStart } from "./lib/agent-flags.mjs";
-import { hasSalvage, restoreSalvage } from "./lib/salvage.mjs";
+import { UNTRACKED_DIR, hasSalvage, restoreSalvage } from "./lib/salvage.mjs";
 import { carriesProductCodeFromShow } from "./lib/landed.mjs";
 import {
   existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, renameSync, rmSync,
@@ -56,7 +66,6 @@ import {
 } from "node:fs";
 import { join, dirname, resolve, basename, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createHash } from "node:crypto";
 import { IS_WINDOWS, hasExecutable, isAlive, killTree, sleepSync, spawnPortable } from "./lib/proc.mjs";
 import { HEARTBEAT_MS, heartbeat, release, tryAcquire } from "./lib/queue-lock.mjs";
 import { dependencyState as depState } from "./lib/task-deps.mjs";
@@ -285,9 +294,7 @@ const git = (args, opts = {}) => spawnSync("git", args, { cwd: ROOT, encoding: "
 // --- intake: specs/ → queued tasks -------------------------------------------------
 const SPECS = join(ROOT, "specs");
 const PLANNED = join(QUEUE, "planned.json");
-const SKIP_SPECS = new Set(["README.md", "TEMPLATE.md"]);
-
-const digest = (text) => createHash("sha1").update(text).digest("hex").slice(0, 12);
+const digest = specDigest;
 const loadPlanned = () => {
   try {
     return JSON.parse(readFileSync(PLANNED, "utf8"));
@@ -297,6 +304,31 @@ const loadPlanned = () => {
 };
 
 const currentBranch = () => (git(["rev-parse", "--abbrev-ref", "HEAD"]).stdout ?? "").trim();
+
+/**
+ * Move what a planning call wrote outside its folder into `dir`, losslessly, and put those
+ * paths back as HEAD has them. Tracked edits become one patch; untracked files are moved
+ * with their directories kept, so nothing has to be guessed back into place.
+ */
+function parkStrayPaths(paths, dir) {
+  mkdirSync(dir, { recursive: true });
+  const tracked = paths.filter((p) => git(["ls-files", "--error-unmatch", "--", p]).status === 0);
+  const untracked = paths.filter((p) => !tracked.includes(p));
+  if (tracked.length) {
+    const patch = git(["diff", "--binary", "HEAD", "--", ...tracked], { maxBuffer: 64 * 1024 * 1024 }).stdout ?? "";
+    if (patch.trim()) writeFileSync(join(dir, "tracked.patch"), patch);
+    git(["restore", "--source=HEAD", "--staged", "--worktree", "--", ...tracked]);
+  }
+  for (const p of untracked) {
+    const target = join(dir, "untracked", p);
+    mkdirSync(dirname(target), { recursive: true });
+    try {
+      renameSync(join(ROOT, p), target);
+    } catch {
+      // Already gone; the clean-tree check after intake reports anything that remains.
+    }
+  }
+}
 
 /** Every task name already used in `scope` — queued in any lane, or landed in history. */
 function takenNames(scope) {
@@ -360,15 +392,22 @@ function specsOfThisBranch() {
  * commit — a hook, no git identity — is reported, never fatal: the briefs are queued
  * locally either way, and only sharing them waits.
  */
-function commitPlan(specFile, added) {
+function commitPlan(specFile, added, replaced = []) {
+  // A withdrawn brief that was ever committed leaves a deletion to commit with the plan
+  // that replaced it; one that never was has nothing to record.
+  const withdrawn = replaced
+    .map((f) => `.agent-queue/todo/${f}`)
+    .filter((p) => git(["ls-files", "--error-unmatch", "--", p]).status === 0);
   const paths = [
     `specs/${specFile}`,
     ...added.map((f) => `.agent-queue/todo/${f}`),
+    ...withdrawn,
     ".agent-queue/planned.json",
   ];
   const body = [
     `Spec: specs/${specFile}`,
     ...(added.length ? ["", ...added.map((f) => `- ${f.replace(/\.md$/, "")}`)] : []),
+    ...(replaced.length ? ["", "Replaces, unbuilt:", ...replaced.map((f) => `- ${f.replace(/\.md$/, "")}`)] : []),
     ...(config.project.coAuthor ? ["", config.project.coAuthor] : []),
   ].join("\n");
   const add = git(["add", "--", ...paths]);
@@ -397,7 +436,7 @@ async function planSpecs() {
   const ours = WORKFLOW === "team" ? specsOfThisBranch() : null;
   if (ours === undefined) return emptySpend();
   const pending = readdirSync(SPECS)
-    .filter((f) => f.endsWith(".md") && !SKIP_SPECS.has(f))
+    .filter((f) => f.endsWith(".md") && !SKIPPED_SPECS.has(f))
     .filter((f) => !ours || ours.has(f))
     .filter((f) => plannedEntry(planned[f]).hash !== digest(readFileSync(join(SPECS, f), "utf8")));
 
@@ -426,7 +465,18 @@ async function planSpecs() {
     }
 
     const body = readFileSync(join(SPECS, file), "utf8");
+    const specHash = digest(body);
+    const failedBefore = failedPlanAttempts(readRuns(), file, specHash);
+    if (failedBefore >= config.budget.planAttempts) {
+      console.error(
+        `  ${file}: this version already failed to plan ${failedBefore} time(s) ` +
+          `(budget.planAttempts = ${config.budget.planAttempts}), so it is not planned again. ` +
+          "Edit the spec — any change earns it fresh attempts — or read why in `npm run auto:status`.",
+      );
+      continue;
+    }
     const before = new Set(listLane("todo"));
+    const dirtyBefore = workingTreePaths(ROOT);
     // The spec's scope: its task folder in every lane and the prefix of every `Task:` line
     // its commits carry. Planning the same spec again (after an edit) reuses it, so the
     // names it already used — queued in any lane, or landed in history — are handed to the
@@ -437,6 +487,30 @@ async function planSpecs() {
     const scope = specSlug(file);
     const taken = takenNames(scope);
     const builds = planDirName(scope, new Date(startedAt));
+    // Planning an edited spec again: whatever of its old plan is still waiting in todo/ was
+    // split from the version that no longer exists. Left queued, both plans were built —
+    // the old tasks and the new ones covering the same ground. They are withdrawn to
+    // .agent-runs/superseded/ for the new plan to replace, and put back if it fails, so a
+    // failed re-plan loses nothing. Their names stay taken.
+    const supersededDir = join(ROOT, ".agent-runs", "superseded", builds);
+    const replaced = planned[file]
+      ? [...before].filter((f) => scopeOf(stemOf(f)) === scope)
+      : [];
+    for (const f of replaced) {
+      mkdirSync(dirname(join(supersededDir, f)), { recursive: true });
+      renameSync(join(laneDir("todo"), f), join(supersededDir, f));
+      before.delete(f);
+    }
+    const restoreReplaced = () => {
+      for (const f of replaced) {
+        mkdirSync(dirname(join(laneDir("todo"), f)), { recursive: true });
+        renameSync(join(supersededDir, f), join(laneDir("todo"), f));
+      }
+      if (replaced.length) console.error(`  ${file}: the ${replaced.length} task(s) it would have replaced are back in todo/.`);
+    };
+    if (replaced.length) {
+      console.log(`  ${file}: changed since it was planned; withdrawing ${replaced.length} unbuilt task(s) from its old plan.`);
+    }
     // What this spec's folder already holds, so a planner that writes over a queued brief —
     // a name it was told not to reuse — is caught and the brief put back, not lost.
     const queued = new Map(
@@ -451,23 +525,41 @@ async function planSpecs() {
     // The spec goes in on stdin, like the runner's brief, so its length never meets
     // Windows' command-line limit; the CLI is started through proc.mjs so a `claude.cmd`
     // shim resolves too.
+    //
+    // Bounded like a task attempt: turns and dollars by the CLI itself, wall clock by the
+    // timer below. The dollar cap is the smaller of the planner's own and what the drain
+    // has left. No Bash: the planner reads and writes task files, and has nothing to run.
+    const drainLeft = Number.isFinite(MAX_USD_PER_DRAIN)
+      ? MAX_USD_PER_DRAIN - (sumSpend(costs, ASSUMED_USD).usd ?? 0)
+      : Infinity;
+    const planUsd = Math.max(0.01, Math.min(config.budget.planMaxUsd, drainLeft));
     const child = spawnPortable(
       "claude",
       [
         "-p",
         ...modelArgs(PLAN_MODEL),
         "--permission-mode", "bypassPermissions",
+        "--disallowedTools", "Bash,PowerShell",
+        "--max-turns", String(config.budget.planMaxTurns),
+        "--max-budget-usd", planUsd.toFixed(2),
         "--output-format", "stream-json", "--verbose",
       ],
       { cwd: ROOT, stdio: ["pipe", "pipe", "inherit"] },
     );
     child.stdin.on("error", () => {});
-    child.stdin.end(`${buildPlanBrief({ scope, taken })}${body}`);
+    child.stdin.end(`${buildPlanBrief({ scope, taken, replaced: replaced.map((f) => nameOf(stemOf(f))) })}${body}`);
     const rendered = renderStream(child.stdout);
+    let timedOut = false;
+    const timer = setTimeout(() => {
+      timedOut = true;
+      console.error(`  ${file}: planning passed ${config.budget.planMaxMinutes} min (budget.planMaxMinutes); stopping it.`);
+      killTree(child.pid);
+    }, config.budget.planMaxMinutes * 60_000);
     const status = await new Promise((r) => {
       child.on("error", () => r(1));
-      child.on("close", (code) => r(code ?? 1));
+      child.on("close", (code) => r(timedOut ? 1 : (code ?? 1)));
     });
+    clearTimeout(timer);
     // Spread rather than cherry-pick — the same mistake that once left `subagents`
     // undefined at a call site would leave the planner's cost on the floor here.
     const res = { status, ...(await rendered) };
@@ -487,17 +579,49 @@ async function planSpecs() {
       startedAt,
       finishedAt: new Date().toISOString(),
       attempts: 1,
+      specHash,
       outcome: res.status === 0 ? "planned" : "failed",
       ...journalCostFields([cost], ASSUMED_USD),
     });
+    // A refusal after the call is journalled as one more entry rather than by rewriting the
+    // first: the journal is append-only, and failedPlanAttempts counts either.
+    const journalRejected = (why) =>
+      appendRun({
+        id: `plan-${startedAt.replace(/[:.]/g, "-")}-${file}-rejected`,
+        kind: "plan",
+        task: `plan spec: ${file}`,
+        branch: (git(["rev-parse", "--abbrev-ref", "HEAD"]).stdout ?? "").trim(),
+        startedAt,
+        finishedAt: new Date().toISOString(),
+        attempts: 0,
+        specHash,
+        outcome: "rejected",
+        failure: why,
+      });
+
+    // Whatever the call wrote outside the queue and specs/ is not a plan. Left in the tree
+    // it would ride into the first task's commit, so it is moved aside — even from a call
+    // that failed — and the plan is refused.
+    const stray = strayPlanPaths(dirtyBefore, workingTreePaths(ROOT));
+    if (stray.length > 0) {
+      const aside = join(ROOT, ".agent-runs", "rejected-plans", builds, "stray");
+      parkStrayPaths(stray, aside);
+      console.error(
+        `  ${file}: the planner changed ${stray.length} file(s) outside the queue, which it may not:\n` +
+          stray.slice(0, 10).map((p) => `    ${p}`).join("\n") +
+          `\n  Moved to ${relative(ROOT, aside).replace(/\\/g, "/")}/.`,
+      );
+    }
 
     if (res.status !== 0) {
       console.error(`  ${file}: planning failed; leaving it unplanned so the next run retries.`);
+      restoreReplaced();
       continue;
     }
 
     const added = listLane("todo").filter((f) => !before.has(f));
     const problems = planNameProblems({ added, scope, taken });
+    if (stray.length > 0) problems.push(`changed ${stray.length} file(s) outside the queue`);
     for (const [f, text] of queued) {
       const path = join(laneDir("todo"), f);
       const now = existsSync(path) ? readFileSync(path, "utf8") : null;
@@ -520,6 +644,8 @@ async function planSpecs() {
           problems.map((p) => `    ${p}`).join("\n") +
           `\n  Its files are in ${relative(ROOT, aside).replace(/\\/g, "/")}/; the next run plans the spec again.`,
       );
+      journalRejected(problems.join("; "));
+      restoreReplaced();
       continue;
     }
 
@@ -527,9 +653,9 @@ async function planSpecs() {
     // Recorded against the contents, so editing a spec re-plans it and an untouched one
     // is never planned twice. `builds` is where this plan's tasks record (record-build.mjs):
     // a new directory per planning, so the records of each plan stay together.
-    planned[file] = { hash: digest(body), builds };
+    planned[file] = { hash: specHash, builds };
     writeFileSync(PLANNED, `${JSON.stringify(planned, null, 2)}\n`);
-    commitPlan(file, added);
+    commitPlan(file, added, replaced);
   }
 
   const total = sumSpend(costs, ASSUMED_USD);
@@ -836,13 +962,15 @@ if (action === "resume") {
   if (stranded.length === 0) {
     console.log("Nothing was interrupted — doing/ is empty.");
   } else {
+    parkStranded(stranded);
     for (const file of stranded) {
       moveTask(file, "doing", "todo");
       console.log(`requeued  ${file}`);
     }
     console.log(
-      `\n${stranded.length} task(s) back in the queue. An interrupted task starts over, and ` +
-        `any uncommitted work it left on the work branch is reverted when it runs again.`,
+      `\n${stranded.length} task(s) back in the queue. What an interrupted task left in the tree ` +
+        "is parked under .agent-runs/interrupted/ and restored when it runs again, so its next " +
+        "run verifies that work before rebuilding any of it.",
     );
   }
   spawnSync("node", [join(ROOT, "scripts", "agent-queue.mjs"), "list"], { stdio: "inherit" });
@@ -912,15 +1040,22 @@ function parkWorkingTree(slug) {
     cwd: ROOT, encoding: "utf8",
   }).stdout ?? "")
     .split("\n")
-    .filter((l) => l.trim() && !l.slice(3).trim().startsWith(".agent-queue/")));
+    .filter((l) => l.trim() && !l.slice(3).trim().startsWith(".agent-queue/") && !isPlannableSpecPath(l)));
   if (dirty.length === 0) return null;
 
   const parked = join(ROOT, ".agent-runs", "interrupted", slug);
+  // A park still holding work — one whose restore failed — is moved aside rather than
+  // written over: its patch may be the only copy of that work.
+  if (hasSalvage(parked)) renameSync(parked, `${parked}-older-${new Date().toISOString().replace(/[:.]/g, "-")}`);
   mkdirSync(parked, { recursive: true });
+
+  // A spec is the person's request, not a run's leftovers, so it stays where they saved it.
+  const keep = [":(exclude).agent-queue", ":(exclude,glob)specs/*.md"];
 
   // HEAD-relative and including staged changes, so one patch restores the whole tracked
   // state with `git apply`. Written first: everything after this line destroys it.
-  const patch = spawnSync("git", ["diff", "HEAD", "--", ".", ":(exclude).agent-queue"], {
+  // --binary, or a changed image or font is written as "Binary files differ" and lost.
+  const patch = spawnSync("git", ["diff", "--binary", "HEAD", "--", ".", ...keep], {
     cwd: ROOT, encoding: "utf8", maxBuffer: 64 * 1024 * 1024,
   }).stdout ?? "";
   if (patch.trim()) writeFileSync(join(parked, "tracked.patch"), patch);
@@ -930,12 +1065,14 @@ function parkWorkingTree(slug) {
     .map((l) => l.slice(3).trim())
     .filter(Boolean);
 
-  git(["reset", "--", ".", ":(exclude).agent-queue"]);
-  git(["checkout", "--", ".", ":(exclude).agent-queue"]);
+  git(["reset", "--", ".", ...keep]);
+  git(["checkout", "--", ".", ...keep]);
 
   for (const pathname of untracked) {
-    const target = join(parked, pathname.replace(/[/\\]/g, "__"));
+    // Directories kept (lib/salvage.mjs UNTRACKED_DIR), so restoring needs no guessing.
+    const target = join(parked, UNTRACKED_DIR, pathname);
     try {
+      mkdirSync(dirname(target), { recursive: true });
       renameSync(join(ROOT, pathname), target);
     } catch {
       // A directory, or already gone. The clean-tree check below reports what remains
@@ -944,6 +1081,21 @@ function parkWorkingTree(slug) {
   }
 
   return { dir: parked, patched: Boolean(patch.trim()), untracked: untracked.length };
+}
+
+/**
+ * Park the tree a dead run left behind under that task's own key, so its next run restores
+ * it as salvage. Only the dead run can have written it — the drain lock was held — but the
+ * clean-tree check that follows refused it, so a crash or a reboot froze the queue until a
+ * person cleared the tree by hand. With more than one task stranded the tree cannot be
+ * attributed, and the clean-tree check decides as before.
+ */
+function parkStranded(stranded) {
+  if (stranded.length !== 1) return;
+  const parked = parkWorkingTree(fsKey(stemOf(stranded[0])));
+  if (parked) {
+    console.log(`  its leftovers are parked in ${relative(ROOT, parked.dir).replace(/\\/g, "/")}/ for its next run`);
+  }
 }
 
 function assertCleanMain() {
@@ -959,11 +1111,13 @@ function assertCleanMain() {
 
   // Queue bookkeeping under .agent-queue/ does not count: this runs after the drain lock
   // is taken, and a task claimed by an interrupted earlier run may already have moved.
+  // Nor does a spec waiting to be planned: saving one is how work starts, and intake
+  // commits it with its plan. assertNoUnplannedSpecs() checks again once intake has run.
   const dirty = ((spawnSync("git", ["status", "--porcelain"], {
     cwd: ROOT, encoding: "utf8",
   }).stdout ?? "")
     .split("\n")
-    .filter((l) => l.trim() && !l.slice(3).startsWith(".agent-queue/")));
+    .filter((l) => l.trim() && !l.slice(3).startsWith(".agent-queue/") && !isPlannableSpecPath(l)));
   if (dirty.length > 0) {
     // When a human (or Cursor) shares this checkout, parking silently feels like data loss.
     // Default (fully agentic): refuse. Set AGENT_REFUSE_DIRTY_START=0 to park under interrupted/.
@@ -990,7 +1144,7 @@ function assertCleanMain() {
       cwd: ROOT, encoding: "utf8",
     }).stdout ?? "")
       .split("\n")
-      .filter((l) => l.trim() && !l.slice(3).trim().startsWith(".agent-queue/")));
+      .filter((l) => l.trim() && !l.slice(3).trim().startsWith(".agent-queue/") && !isPlannableSpecPath(l)));
 
     if (still.length > 0) {
       console.error(
@@ -1051,12 +1205,14 @@ if (!hasExecutable("claude")) {
  * timer that recovers from a reboot on its own and one that quietly stops making progress
  * until somebody notices a file sitting in a lane and knows the command.
  *
- * The task is requeued, never resumed mid-flight: a dead run's partial edits are not
- * trustworthy, and assertCleanMain() below refuses to start while any of them remain.
+ * The task is requeued, never resumed mid-flight. A dead run's partial edits are not
+ * trusted as they stand, but they are not thrown away either: parkStranded() moves them
+ * under the task's key, and its next run restores them and verifies before rebuilding.
  */
 const stranded = listLane("doing");
 if (stranded.length > 0) {
   console.log(`Requeuing ${stranded.length} task(s) left behind by a run that did not finish:`);
+  parkStranded(stranded);
   for (const file of stranded) {
     moveTask(file, "doing", "todo");
     console.log(`  ${file}`);
@@ -1083,6 +1239,26 @@ if (drainCeilingSpent) {
 }
 const planSpend =
   flag("no-plan") || drainCeilingSpent ? emptySpend() : await planSpecs();
+
+// Intake commits every spec it plans, so a spec still uncommitted here was not planned —
+// it failed, it was over the ceiling, or (in a team) it is not this branch's. Building now
+// would sweep it into the first task's commit as if that task had written it, so the drain
+// stops and names it instead.
+const unplannedSpecs = ((spawnSync("git", ["status", "--porcelain", "--untracked-files=all"], {
+  cwd: ROOT, encoding: "utf8",
+}).stdout ?? "")
+  .split("\n")
+  .filter((l) => l.trim() && isPlannableSpecPath(l)));
+if (unplannedSpecs.length > 0) {
+  console.error(
+    `\n${unplannedSpecs.length} spec(s) are uncommitted and were not planned this run:\n\n` +
+      unplannedSpecs.join("\n") +
+      "\n\nNothing is built while they are, so no task's commit carries them. Read the planning " +
+      "output above, then fix the spec and run again, or move it out of specs/ until it is " +
+      "ready (`npm run queue -- plan` plans specs without building).",
+  );
+  process.exit(1);
+}
 
 /**
  * Split todo/ into what can run now and what is still waiting on a dependency.
@@ -1208,7 +1384,14 @@ function runTask(file, index) {
     // Detached on POSIX so the runner leads its own process group and a signal to the drain
     // can end the whole tree (proc.mjs's killTree sends to the group); Windows reaches the
     // tree with taskkill /T either way.
-    const child = spawn("node", args, { cwd: ROOT, stdio: "inherit", detached: !IS_WINDOWS });
+    // AGENT_FROM_DRAIN tells the runner the tree was clean when this drain started, so
+    // anything in it now is this task's restored salvage, not someone's own edits.
+    const child = spawn("node", args, {
+      cwd: ROOT,
+      stdio: "inherit",
+      detached: !IS_WINDOWS,
+      env: { ...process.env, AGENT_FROM_DRAIN: "1" },
+    });
     activeChild = child;
 
     child.on("close", (code) => {
@@ -1252,7 +1435,11 @@ function runTask(file, index) {
           );
         }
         moveTask(file, "doing", lane);
-        resolvePromise({ file, slug, ok: false, blocked: true, committed: false, commit: null });
+        // A run refused before its first call journals nothing and spent nothing; only one
+        // that reached the model (a limit hit mid-work) has a spend to report.
+        const entries = readRuns().slice(journalMark);
+        const spend = entries.length ? spendOfEntries(entries, ASSUMED_USD) : null;
+        resolvePromise({ file, slug, ok: false, blocked: true, committed: false, commit: null, spend });
         return;
       }
       const ok = code === 0;
@@ -1382,6 +1569,9 @@ let drainSpentUsd = planSpend.usd ?? 0;
 // Set when the ceiling stopped the drain, which is a different ending from an empty queue
 // and must not be reported as one.
 let budgetStop = null;
+// Set when a run could not happen at all (exit 4). That stops the drain too, and is a
+// third ending: neither an empty queue nor a spent budget.
+let blockedStop = null;
 
 if (Number.isFinite(MAX_USD_PER_DRAIN)) {
   console.log(`Spend ceiling for this drain: ${formatCeiling(MAX_USD_PER_DRAIN)} (AGENT_MAX_USD_PER_DRAIN)\n`);
@@ -1409,6 +1599,15 @@ while (results.length < max) {
 
   const result = await runTask(ready[0].file, results.length);
   results.push(result);
+  // A blocked run (exit 4) put its task back at the head of todo/, so carrying on would
+  // claim the same task again at once — and every service or account refusal behind it
+  // would meet the same wall. The loop used to do exactly that, spinning on one brief
+  // until the drain ceiling's assumed per-run charge ran out. Nothing is charged: a run
+  // that never happened spent nothing a ceiling should count.
+  if (result.blocked) {
+    blockedStop = result;
+    break;
+  }
   // The task's own total is already charged — spendOfEntries has replaced any unreadable
   // per-call figure with the assumed one — so it goes in as a measured number here. What
   // this call adds is the ceiling test, on the same helper the runner uses per attempt.
@@ -1437,13 +1636,14 @@ if (held.length) {
 
 // --- report ---------------------------------------------------------------------------------
 const ok = results.filter((r) => r.ok);
-const failed = results.filter((r) => !r.ok);
+const failed = results.filter((r) => !r.ok && !r.blocked);
 const budgeted = failed.filter((r) => r.stoppedOnBudget);
 
 console.log(`\n${"=".repeat(70)}`);
 console.log(
   `${ok.length} built and committed, ${failed.length - budgeted.length} failed` +
-    `${budgeted.length ? `, ${budgeted.length} stopped on the per-task spend ceiling` : ""}.`,
+    `${budgeted.length ? `, ${budgeted.length} stopped on the per-task spend ceiling` : ""}` +
+    `${blockedStop ? ", 1 could not run" : ""}.`,
 );
 console.log("=".repeat(70));
 
@@ -1460,7 +1660,7 @@ for (const r of failed) {
 // real to be set from.
 console.log("");
 for (const line of spendSummaryLines(
-  results.map((r) => ({ label: r.slug, ok: r.ok, spend: r.spend })),
+  results.filter((r) => r.spend).map((r) => ({ label: r.slug, ok: r.ok, spend: r.spend })),
   planSpend,
 )) {
   console.log(line);
@@ -1492,7 +1692,17 @@ Everything is committed on ${WORK_BRANCH}.${ahead && ahead !== "0" ? ` It is ${a
 }
 
 console.log(`\nHistory: npm run auto:status`);
+if (blockedStop) {
+  console.log(
+    `\nStopped: ${blockedStop.slug} could not run (a service or the account refused before any ` +
+      "work).\nIt is back in todo/; the next drain picks it up once the cause above is cleared.",
+  );
+}
+
 // The exit status is the channel `loop.mjs` and the timer read: 3 means the ceiling stopped
-// this drain, 1 means work failed, 0 means the queue was worked down. A budget stop takes
-// precedence — it is the reason there is more to do, and the failures are listed above.
-process.exit(budgetStop ? BUDGET_EXIT_CODE : failed.length > 0 ? 1 : 0);
+// this drain, 4 means a run could not happen, 1 means work failed, 0 means the queue was
+// worked down. A budget stop takes precedence — it is the reason there is more to do, and
+// the failures are listed above.
+process.exit(
+  budgetStop ? BUDGET_EXIT_CODE : failed.length > 0 ? 1 : blockedStop ? EXIT_BLOCKED : 0,
+);

@@ -292,3 +292,26 @@ test("a real account refusal is still caught", () => {
     assert.equal(isRefusal(text), true, `missed a real refusal: ${text}`);
   }
 });
+
+test("a subagent reporting a refused connection is not the account refusing", async () => {
+  const ev = (sid, text) => JSON.stringify({
+    type: "assistant", session_id: sid, message: { content: [{ type: "text", text }] },
+  });
+  const feed = [
+    ev("parent", "Delegating the review."),
+    ev("sub", "connect ECONNREFUSED 160.79.104.10:443"),
+    ev("parent", "Review done."),
+  ].join("\n");
+  const res = await renderStream(Readable.from([feed]), () => {});
+  assert.equal(res.blocked, null);
+});
+
+test("the app under test being down is the task's problem, not a refusal", async () => {
+  for (const text of [
+    "Smoke check failed: ECONNREFUSED on localhost:5000.",
+    "connect ECONNREFUSED 127.0.0.1:5432",
+  ]) {
+    const res = await renderStream(Readable.from([assistant([{ type: "text", text }])]), () => {});
+    assert.equal(res.blocked, null, `should not block: ${text}`);
+  }
+});
