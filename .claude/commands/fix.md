@@ -1,7 +1,7 @@
 ---
 description: Fix a bug end to end — reproduce, locate, fix, prove the repro now passes
 argument-hint: "<what is broken>"
-allowed-tools: Bash, Read, Edit, Write, Grep, Glob, Agent
+allowed-tools: Bash, PowerShell, Read, Edit, Write, Grep, Glob, Agent, Skill
 ---
 
 Fix this: **$ARGUMENTS**
@@ -28,10 +28,20 @@ a fix; it is a second bug that makes the first one harder to find.
 
 ## 4. Prove it
 
-Run the reproduction from step 1 again and quote the new output. Then run `npm run verify`.
-Add a unit test that fails on the old behaviour if the logic is testable without I/O.
+Run the reproduction from step 1 again and quote the new output, and run the narrow test for
+what you changed. Add a unit test that fails on the old behaviour if the logic is testable
+without I/O.
 
-## 5. Report
+## 5. Ship it
+
+Run `/ship`: it runs the full verify once, reviews the diff with every reviewer
+`npm run owes` names, then commits.
+
+If the cause was a trap an unrelated future task would fall into too — not this bug's
+details, the general shape — record it for the task loop:
+`node scripts/record-lesson.mjs --title "…" --scope <area> --body "…"`.
+
+## 6. Report
 
 State: the reproduction, the cause in one sentence, the fix, the proof it now passes, and
 anything nearby that is probably wrong for the same reason but was out of scope.

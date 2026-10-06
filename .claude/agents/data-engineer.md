@@ -1,7 +1,7 @@
 ---
 name: data-engineer
 description: Owns what is stored and how it is indexed — EF Core entities, their configurations, migrations, seeding, and the queries a shape change invalidates. Use for any change to the data model.
-tools: Read, Edit, Write, Bash, Grep, Glob
+tools: Read, Edit, Write, Bash, Grep, Glob, Skill
 model: opus
 ---
 

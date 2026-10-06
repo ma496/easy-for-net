@@ -1,13 +1,17 @@
 ---
 description: Build a new feature end to end — plan, implement, verify, review, commit, then stop for approval
 argument-hint: "<what you want built>"
-allowed-tools: Bash, Read, Edit, Write, Grep, Glob, Agent
+allowed-tools: Bash, PowerShell, Read, Edit, Write, Grep, Glob, Agent, Skill
 ---
 
 Build this feature: **$ARGUMENTS**
 
 Work through the stages below in order. Do not skip a stage silently — if you skip one, say
 why in your final report.
+
+Under `project.workflow: "team"` (agentic.config.json) nothing commits on the base branch: if
+it is checked out, `git switch -c feat/<slug>` before writing anything. Under `"solo"` build
+on the branch that is checked out.
 
 ## 1. Scope
 
@@ -45,8 +49,9 @@ actual output. A passing typecheck alone does not prove behaviour.
 
 ## 6. Review
 
-Dispatch each review tier the diff owes in a single message. Fix CHANGES NEEDED, and send
-the fix back to the reviewer that asked for it, before committing.
+`npm run owes` lists the reviewers the diff owes, by the rule the task runner enforces.
+Dispatch each tier it names in a single message. Fix CHANGES NEEDED, and send the fix back to
+the reviewer that asked for it, before committing.
 
 ## 7. Commit, then stop
 
@@ -57,7 +62,8 @@ git add <the specific files>        # never `git add -A`
 git commit
 ```
 
-Then **stop**. Pushing needs the owner's approval. Never merge a pull request.
+Then **stop**. Pushing is the owner's: the guard refuses an agent's push to a protected
+branch, so give them the command (`! git push`). Never merge a pull request.
 
 ## Final report
 

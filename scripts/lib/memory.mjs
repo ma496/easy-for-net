@@ -113,12 +113,13 @@ export function scopesOf(lesson) {
 /**
  * Which lessons apply to this task.
  *
- * `always` matches everything. Any other scope matches when its keyword appears in the
- * task's text — the brief names the files and areas it touches, so this is a good enough
- * signal without maintaining a second mapping that would drift from reality.
+ * `always` matches everything. Any other scope matches when the task's text names it as a
+ * word or path segment, plural included (`mentions`) — the brief names the files and areas
+ * it touches, so this is a good enough signal without a second mapping that would drift.
  *
- * Matching is deliberately generous: a lesson wrongly included costs a few hundred
- * characters, a lesson wrongly excluded costs the mistake being repeated.
+ * Matching is generous about form (case, plurals, a scope anywhere in the text) but not
+ * about words: `build` no longer matches "rebuild", which made nearly every lesson reach
+ * nearly every brief.
  *
  * The generosity has one sharp edge, which is why `scopeReach` exists below: a scope that
  * reads like a sensible area name but appears in no brief matches nothing, silently, for
@@ -128,8 +129,19 @@ export function scopesOf(lesson) {
 export function selectLessons(lessons, taskText) {
   const haystack = (taskText || "").toLowerCase();
   return lessons.filter((l) =>
-    scopesOf(l).some((scope) => scope === "always" || haystack.includes(scope)),
+    scopesOf(l).some((scope) => scope === "always" || mentions(haystack, scope)),
   );
+}
+
+/**
+ * Whether `text` names `scope` as a word, plural included. A bare substring test made
+ * `build` match "rebuild" and `tenant` match "multitenant", so nearly every lesson reached
+ * nearly every brief — and with the cap nearly full, the next one recorded would have pushed
+ * a relevant one out.
+ */
+export function mentions(text, scope) {
+  const escaped = scope.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|[^a-z0-9])${escaped}(e?s)?($|[^a-z0-9])`).test(text);
 }
 
 /**
@@ -144,7 +156,7 @@ export function scopeReach(scope, texts) {
   if (keys.includes("always")) return (texts || []).length;
   return (texts || []).filter((t) => {
     const haystack = String(t || "").toLowerCase();
-    return keys.some((k) => haystack.includes(k));
+    return keys.some((k) => mentions(haystack, k));
   }).length;
 }
 
@@ -164,7 +176,8 @@ export function formatForBrief(selected, { maxLessons = MAX_LESSONS, maxChars = 
 
   for (const lesson of ordered.slice(0, maxLessons)) {
     const block = `### ${lesson.title}\n${stripHeading(lesson.body)}`;
-    if (chars + block.length > maxChars) break;
+    // `continue`, not `break`: one long lesson used to hide every shorter one after it.
+    if (chars + block.length > maxChars) continue;
     kept.push(block);
     chars += block.length;
   }
@@ -180,7 +193,7 @@ export function formatForBrief(selected, { maxLessons = MAX_LESSONS, maxChars = 
     "",
     kept.join("\n\n"),
     dropped > 0
-      ? `\n_(${dropped} older lesson(s) not shown — the brief's memory budget was reached.)_`
+      ? `\n_(${dropped} lesson(s) not shown — the brief's memory budget was reached; \`npm run lessons\` lists every one.)_`
       : "",
   ]
     .filter(Boolean)

@@ -1,5 +1,5 @@
 ---
-scope: always
+scope: src/backend
 learned: 2026-09-29
 ---
 

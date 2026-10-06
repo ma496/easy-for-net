@@ -206,7 +206,9 @@ const PERMISSION_MODE = flag("safe") ? "acceptEdits" : "bypassPermissions";
 const RUN_ID = `run-${new Date().toISOString().replace(/[:.]/g, "-")}`;
 const startedAt = new Date().toISOString();
 // Handed to the session's environment.
-const childEnv = { AGENT_RUN_ID: RUN_ID };
+// AGENT_NO_AUTOSTART carries --no-autostart to the session's own verify, which otherwise
+// autostarts inside a run (verify.mjs).
+const childEnv = { AGENT_RUN_ID: RUN_ID, ...(flag("no-autostart") ? { AGENT_NO_AUTOSTART: "1" } : {}) };
 
 // What one `claude` call is charged at when its stream carried no readable cost. Scripts
 // read the environment directly; the setting is documented in .env.example.
@@ -298,7 +300,12 @@ function runVerify(extraArgs = []) {
  * environment — a service that was down — and deserves a fresh look once it is back.
  */
 let lastPass = null;
-function verifyTree() {
+// The last result on this tree whatever it was. A failure is reused only where asking again
+// cannot change the answer: the check that opens the next attempt and the give-up check run
+// seconds after it failed, on the same bytes. The verify after a session never reuses one,
+// since that session may have fixed the environment rather than the code.
+let lastResult = null;
+function verifyTree({ reuseFailure = false } = {}) {
   const fingerprint = treeFingerprint();
   if (lastPass?.fingerprint === fingerprint) {
     return {
@@ -307,8 +314,14 @@ function verifyTree() {
       reused: true,
     };
   }
+  if (reuseFailure && lastResult?.fingerprint === fingerprint && lastResult.result.status !== 0) {
+    return { ...lastResult.result, reused: true };
+  }
+  // Never reused: a pass the session reports or records. Anything the session can write it
+  // can forge, and this verify is the one check it cannot touch.
   const result = runVerify();
   if (result.status === 0) lastPass = { fingerprint, result };
+  lastResult = { fingerprint, result };
   return result;
 }
 const runLive = (cmd, args) => spawnSync(cmd, args, { stdio: "inherit", encoding: "utf8" });
@@ -435,8 +448,6 @@ if (!existsSync(LOG_DIR)) mkdirSync(LOG_DIR, { recursive: true });
 function dirtyOutsideQueue(porcelain) {
   return dirtyOutsideQueueLines(porcelain);
 }
-
-const runVerifyCapture = () => verifyTree();
 
 // Work happens on the work branch, in place — no task branch, no worktree.
 {
@@ -622,7 +633,7 @@ while (attempt < MAX_ATTEMPTS && !passed && !budgetExhausted) {
     log(
       `Attempt ${attempt} of ${MAX_ATTEMPTS} — salvaging ${dirtyNow.length} existing file(s) (verify first)`,
     );
-    const pre = runVerifyCapture();
+    const pre = verifyTree({ reuseFailure: true });
     salvageVerifyOutput = pre.output;
     process.stdout.write(pre.output);
     if (pre.status === 0) {
@@ -976,7 +987,7 @@ if (!passed) {
 
     // The same port and base as every other verify in this run; this one used to drop both
     // and judge the work against a different branch on the default port.
-    const salvage = verifyTree();
+    const salvage = verifyTree({ reuseFailure: true });
     process.stdout.write(salvage.output);
 
     // A green gate is not the whole bar. An attempt refused for a missing or out-of-order

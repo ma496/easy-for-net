@@ -29,8 +29,10 @@ ignored), and one left in an older file is ignored on read.
 
 **Read** by `agent-run.mjs`, which prepends every matching lesson to the next task's brief.
 A lesson scoped `always` reaches every task; any other scope reaches a task whose brief
-mentions that keyword. Matching is deliberately generous — a lesson wrongly included costs
-a few hundred characters, a lesson wrongly excluded costs the mistake being repeated.
+names that keyword as a whole word or path segment, plurals included — `build` matches
+"builds" but not "rebuild", and `src/backend` matches `src/backend/Source/…`. Write a path
+scope without a trailing slash. Several keywords, separated by spaces or commas, reach a
+brief that names any one of them.
 
 `npm run lessons` shows what the loop currently remembers.
 

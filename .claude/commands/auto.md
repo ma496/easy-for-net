@@ -1,7 +1,7 @@
 ---
 description: Run a task to completion with no human in the loop — implement, verify, review, commit, then stop
 argument-hint: "<what you want done>"
-allowed-tools: Bash, Read, Edit, Write, Grep, Glob, Agent
+allowed-tools: Bash, PowerShell, Read, Edit, Write, Grep, Glob, Agent, Skill
 ---
 
 Run this task unattended: **$ARGUMENTS**
@@ -14,9 +14,10 @@ when you want it fully detached; use this when you are already in a session.
 
 ## 1. Work in place
 
-Build here, in this checkout, on the project's working branch. Do not create a branch and do
-not use a worktree — a task that puts its work anywhere else puts it where the next task
-cannot see it.
+Build here, in this checkout. Under `project.workflow: "solo"` (agentic.config.json) that is
+the branch that is checked out — do not create a branch or a worktree, since a task that puts
+its work anywhere else puts it where the next task cannot see it. Under `"team"` nothing is
+built on the base branch: if it is checked out, `git switch -c <type>/<slug>` first.
 
 Start from a clean tree. If there are uncommitted changes that are not yours, stop and say
 so rather than folding somebody else's work into this task's commit. If a drain is running
@@ -47,8 +48,8 @@ Add unit tests for any pure helper you add or change.
 
 ## 4. Review — also not optional
 
-After the writers finish, dispatch each review tier the diff owes in a single message, a later
-tier (where one is declared) once the earlier has reported.
+After the writers finish, run `npm run owes` and dispatch each review tier it names in a
+single message, a later tier (where one is declared) once the earlier has reported.
 
 `npm run auto` refuses an attempt that skipped a department owed by the finished diff. Hold
 yourself to the same bar here.
@@ -56,7 +57,9 @@ yourself to the same bar here.
 ## 5. Commit, then stop
 
 Commit — deliberately, staging only the paths this task touched, never `git add -A`.
-Committing is routine here: it is what lets the next task build on this one.
+Committing is routine here: it is what lets the next task build on this one. `git commit` is
+in the `ask` list of settings.json, so in the default permission mode this one step still
+waits for a click; run the session in acceptEdits or bypass mode to finish unattended.
 
 Then **stop**. Do not push unless the owner has set `AGENT_AUTO_PUSH=1` for the runner. Do
 not merge a pull request — hooks block every merge route.

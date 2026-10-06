@@ -76,7 +76,13 @@ const BASE = argOf("base", WORK_BRANCH);
 const SCOPE = argOf("scope", "branch");
 const JSON_OUT = flag("json");
 const RUNS_DIR = join(CWD, ".agent-runs");
-const AUTOSTART = flag("autostart");
+// Inside an unattended run (AGENT_RUN_ID) there is nobody to start the app, and the lead's
+// verify of a backend change otherwise always failed on "nothing is serving" — a wasted
+// gate, then a second one from the runner. So a run autostarts unless told not to — by the
+// flag, or by the runner's own --no-autostart passed down as AGENT_NO_AUTOSTART.
+const AUTOSTART =
+  flag("autostart") ||
+  (Boolean(process.env.AGENT_RUN_ID) && !flag("no-autostart") && process.env.AGENT_NO_AUTOSTART !== "1");
 const KEEP_STACK = flag("keep-stack");
 const FULL = flag("full");
 
