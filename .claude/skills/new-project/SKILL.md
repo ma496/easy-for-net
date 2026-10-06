@@ -54,8 +54,8 @@ What you get:
   `docker-compose.prod.yml`, `docker-compose.coolify.yml`, `.env.docker.example` and `docker/`.
 - `CLAUDE.md` and the agentic layer: `.claude` (agents, commands, hooks, `settings.json`, status
   line, skills, `memory/README.md`), `scripts/` (the loop's engine), and an empty task-loop skeleton —
-  `specs/{README,TEMPLATE}.md`, `docs/AGENTIC_WORKFLOW.md`, `docs/{builds,capabilities}/README.md`,
-  the `.agent-queue/{todo,doing,done,failed}` lanes, `.agent-queue/planned.json` (`{}`) and an empty
+  `specs/{README,TEMPLATE}.md`, `docs/AGENTIC_WORKFLOW.md`, `docs/capabilities/README.md`,
+  `.agent-queue/planned.json` (`{}`) and an empty
   `.claude/memory/lessons`.
 
 Namespaces, project file names, `InternalsVisibleTo`, the `ReflectionCache.AddFrom…` call, the npm
@@ -158,6 +158,7 @@ Run these from the new project's root.
 
 The generated project's `CLAUDE.md`, `.claude/skills` and `specs/README.md` carry the code guides and
 the spec-driven workflow: save a spec under `specs/` and run `npm run loop`, or `npm run queue` /
-`npm run auto -- "<task>"`. Review `agentic.config.json` — `project.branch` / `project.baseBranch`,
+`npm run auto -- "<task>"`. Review `agentic.config.json` — `project.workflow` (`solo`, or `team`
+when several developers share the repository), `project.branch` / `project.baseBranch`,
 conventions, departments — since it is the one project-specific file of the loop. This scaffolding
 guide and `template-maintenance` are not in the generated project.

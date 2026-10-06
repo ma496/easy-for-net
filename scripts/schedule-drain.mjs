@@ -40,7 +40,7 @@ import {
   parseCeiling,
 } from "./lib/budget.mjs";
 import { isAlive, killTree } from "./lib/proc.mjs";
-import { config, resolveModel, WORK_BRANCH } from "./lib/project-config.mjs";
+import { config, resolveModel, WORK_BRANCH, workflowRefusal } from "./lib/project-config.mjs";
 import {
   launchdLabel,
   posixCommand,
@@ -242,6 +242,15 @@ if (action === "uninstall") {
 
   console.log(`Removed ${name}. Nothing is scheduled any more.`);
   process.exit(0);
+}
+
+// A timer on the shared base branch of a team would plan and build there every minute —
+// the one place team mode never builds. Refused at install, not just at each firing, so
+// the mistake is seen once by the person making it rather than logged every minute.
+const refusal = workflowRefusal({ branch: WORK_BRANCH });
+if (refusal) {
+  console.error(`${refusal}\n\nThen install the timer from that branch.`);
+  process.exit(1);
 }
 
 mkdirSync(LOG_DIR, { recursive: true });

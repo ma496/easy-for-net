@@ -287,3 +287,8 @@ uploads/
 .agent-worktrees/
 .agent-queue/drain.lock
 .agent-queue/retries.json
+# Which tasks this machine is building, has landed or has failed. What is shared is todo/
+# and planned.json; that a task landed is read from its commit's `Task:` line.
+.agent-queue/doing/
+.agent-queue/done/
+.agent-queue/failed/

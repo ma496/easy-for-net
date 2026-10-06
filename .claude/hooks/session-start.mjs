@@ -7,21 +7,19 @@
  * stdout is added to the session context. Keep it fast (~1s) and never fail the session.
  */
 import { spawnSync } from "node:child_process";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 try {
-  const { PROJECT_NAME, REPO_ROOT, WORK_BRANCH } = await import("../../scripts/lib/project-config.mjs");
+  const { PROJECT_NAME, REPO_ROOT, WORK_BRANCH, workflowRefusal } = await import("../../scripts/lib/project-config.mjs");
   const git = (...args) =>
     (spawnSync("git", args, { cwd: REPO_ROOT, encoding: "utf8", windowsHide: true }).stdout ?? "").trim();
 
   const branch = git("rev-parse", "--abbrev-ref", "HEAD") || "unknown";
   const changed = git("status", "--porcelain").split("\n").filter(Boolean);
   const ahead = Number(git("rev-list", "--count", `origin/${branch}..${branch}`) || 0);
-  const lane = (name) => {
-    const dir = join(REPO_ROOT, ".agent-queue", name);
-    return existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith(".md")).length : 0;
-  };
+  const { listTasks } = await import("../../scripts/lib/task-names.mjs");
+  const lane = (name) => listTasks(join(REPO_ROOT, ".agent-queue", name)).length;
 
   const out = [`## ${PROJECT_NAME} — session state`, ""];
   out.push(`- Branch: \`${branch}\`${ahead ? ` (${ahead} commit(s) ahead of origin)` : ""}`);
@@ -32,7 +30,14 @@ try {
   if (changed.length > 0) {
     out.push("", "Changed files:", ...changed.slice(0, 12).map((l) => `  ${l}`));
   }
-  if (branch === WORK_BRANCH) {
+  const refusal = workflowRefusal({ branch });
+  if (refusal) {
+    out.push(
+      "",
+      `**On \`${branch}\`, the base branch a team shares (\`project.workflow: "team"\`).** ` +
+        "The task queue neither plans nor builds here: work on a branch of your own and open a pull request.",
+    );
+  } else if (branch === WORK_BRANCH) {
     out.push("", `**On \`${branch}\`, where the task queue commits.** Build and commit here — no task branch, no worktree.`);
     if (ahead) out.push(`${ahead} commit(s) are waiting to be pushed. Pushing needs the owner's say-so in that turn.`);
   }

@@ -4,10 +4,10 @@ import { test } from "node:test";
 import {
   findCommitFor,
   isDefinite,
-  recordedShaIn,
   stemOf,
   subjectOf,
   taskTrailerOf,
+  taskTrailersIn,
 } from "../lib/commit-pairing.mjs";
 
 const commit = (sha, subject, extra = "") => ({
@@ -91,13 +91,26 @@ test("an empty brief pairs with nothing rather than everything", () => {
   assert.equal(findCommitFor({ taskFile: "empty.md", brief: "   \n\n", commits }), null);
 });
 
-test("a recorded sha is read back, and 'none' reads as absent", () => {
-  assert.equal(recordedShaIn("| **Commit** | `67e149b` |"), "67e149b");
-  assert.equal(recordedShaIn("| **Commit** | **none** — no commit carries the work |"), "");
-  assert.equal(recordedShaIn(""), "");
+test("every Task: line of a squashed message is read, in order", () => {
+  const squash =
+    "Add billing export (#42)\n\n* Add the export endpoint\n\nVerified with `npm run verify`.\n\nTask: billing-01-endpoint\n\n" +
+    "* Add the export screen\n\nTask: billing-02-screen.md\n";
+  assert.deepEqual(taskTrailersIn(squash), ["billing-01-endpoint", "billing-02-screen"]);
+});
+
+test("Task: only counts at the start of a line, not mid-sentence", () => {
+  assert.deepEqual(taskTrailersIn("Fixes the Task: thing\nsee Task: x in the brief"), []);
+  assert.deepEqual(taskTrailersIn(""), []);
 });
 
 test("stem and subject are derived the way the runner derives them", () => {
   assert.equal(stemOf("16-tenant-scoped-lead-routes.md"), "16-tenant-scoped-lead-routes");
   assert.equal(subjectOf("\n\nFirst real line.\nsecond\n"), "First real line");
+});
+
+test("a commit that names another task is never paired by its subject", () => {
+  // Two plans' briefs open with the same line; only the plan whose task the commit names owns it.
+  const commits = [{ sha: "aaa0000", subject: "Add alpha", message: "Add alpha\n\nTask: plan-a/01-alpha\n" }];
+  assert.equal(findCommitFor({ taskFile: "plan-b/01-alpha.md", brief: "Add alpha\n", commits }), null);
+  assert.equal(findCommitFor({ taskFile: "plan-a/01-alpha.md", brief: "Add alpha\n", commits })?.matchedBy, "trailer");
 });

@@ -12,8 +12,15 @@ With the scheduler installed (`npm run schedule -- install`), even that disappea
 timer picks the spec up on its own.
 
 Intake is tracked by file contents in `.agent-queue/planned.json`: a spec is never planned
-twice, and editing one re-plans it. `npm run queue -- plan` does the intake without
-draining, if you want to see the tasks before anything runs.
+twice, and editing one re-plans it. Planning commits the spec, its tasks and that line
+together (`Plan <spec>`), so a teammate who pulls sees it as planned too.
+`npm run queue -- plan` does the intake without draining, if you want to see the tasks
+before anything runs.
+
+Working in a team (`project.workflow: "team"` in `agentic.config.json`)? Write the spec on a
+branch of your own — the queue refuses to plan or build on the shared base branch — and let
+its pull request carry the spec and everything built from it. `docs/AGENTIC_WORKFLOW.md` has
+the whole arrangement.
 
 `TEMPLATE.md` is a worked example. Copy it and edit.
 
@@ -43,9 +50,12 @@ Build the reporting dashboard
 Depends-on: 01-reporting-data-contract
 ```
 
-A task with unmet dependencies stays in `todo/`, is shown as `[blocked: <task> (pending)]`, and
-is skipped by the drain. When the task it names lands in `done/` — which means its code is
-committed — the next drain picks it up on its own. Nothing needs re-queueing by hand.
+Each spec's tasks live in their own folder, `.agent-queue/todo/<spec>/`, so every spec numbers
+from `01-` without clashing: a bare `Depends-on:` name means a task of the same spec, and
+`<spec>/<name>` one from another spec. A task with unmet dependencies stays in `todo/`, is shown as
+`[blocked: <task> (pending)]`, and is skipped by the drain. When the task it names lands —
+its commit, naming it on a `Task:` line, is on the branch — the next drain picks it up on
+its own. Nothing needs re-queueing by hand.
 
 Two tasks that edit the same file are not independent even when their features are — give
 one a `Depends-on:` on the other, so the later one builds on the earlier one's committed
@@ -78,6 +88,7 @@ git show <sha>                         # review one change
 npm run auto:status                    # every run, and why any failed
 ```
 
-Each task that lands also writes its brief into `docs/builds/`, which is committed. That
-directory is the durable answer to "why does this exist?" long after the queue lane has been
-cleared.
+Each task that lands writes its brief, with the files it changed, into its spec's directory
+under `docs/builds/` (`<date-time>-<spec>/`, stamped when the spec was planned), in the task's
+own commit. That directory is the durable answer to "why does this exist?" long after the
+queue lane has been cleared.

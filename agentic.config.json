@@ -3,6 +3,7 @@
     "name": "easy-for-net",
     "branch": null,
     "baseBranch": null,
+    "workflow": "solo",
     "coAuthor": null,
     "conventions": [
       "Features are isolated vertical slices: a type under Features/X never references a type under Features/Y unless that type is marked [AllowOutside]. Cross-feature access goes through a service interface, never through another feature's entities — the architecture tests fail the gate otherwise.",

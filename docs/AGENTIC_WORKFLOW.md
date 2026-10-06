@@ -8,16 +8,16 @@ How work gets done here without a person driving each step, and what each part r
 
 ```
 specs/*.md            somebody describes what they want
-   │  npm run queue -- plan        (a model splits it into tasks)
+   │  npm run queue -- plan        (a model splits it into tasks; committed as "Plan <spec>")
    ▼
-.agent-queue/todo/    one task per file, in dependency order
+.agent-queue/todo/    one task per file, in dependency order — shared through git
    │  npm run queue -- drain       (serial, one at a time)
    ▼
 agent-run.mjs         brief → claude -p → verify → review check → commit
    │
    ▼
-.agent-queue/done/    the brief, filed, with a build record naming its commit
-docs/builds/          the durable record of what shipped and why
+docs/builds/          the durable record of what shipped and why, in the task's own commit
+.agent-queue/done/    the brief, filed on this machine (local, gitignored)
 .agent-runs/          every attempt, its cost, its turns, why it failed
 .claude/memory/       what a run learned, injected into later unrelated tasks
 ```
@@ -29,7 +29,20 @@ timer.
 
 **You write a spec.** Save a markdown file into `specs/`. The next drain splits it into tasks
 and queues them — so saving the file *is* starting development. Intake is keyed on content
-hash in `.agent-queue/planned.json`: a spec is planned once, re-planned if edited.
+hash in `.agent-queue/planned.json`: a spec is planned once, re-planned if edited. The
+planner's briefs, the spec and its line in `planned.json` are committed together as
+`Plan <spec>`, so every other checkout of the branch sees the spec as planned.
+
+Each spec's tasks live in a folder named for the spec, in every lane:
+`.agent-queue/todo/billing-export/01-endpoint.md`. A task's identity is `<spec>/<name>` —
+what its commit's `Task:` line carries — so every spec numbers from `01-` without two tasks
+ever sharing a name. Planning an edited spec again writes into the same folder and numbers on
+from the highest name it already used there, queued or landed. A planning call that writes
+anywhere but its own folder, names a file other than `NN-short-slug.md`, or reuses a name
+queues nothing. A task queued by hand lives in `adhoc/`.
+
+Each planning also names a build-record directory, `docs/builds/<date-time>-<spec>/`, stamped
+when it started and kept in `planned.json`; that spec's tasks record into it.
 
 **The product files one.** Configure `cycle.observe` with a command that reads the running
 product — logs, error rates, complaints — and writes a task brief into `specs/` when a
@@ -47,8 +60,10 @@ Build the reporting dashboard
 Depends-on: 01-reporting-data-contract
 ```
 
-A dependency is satisfied once that task is in `done/`, which means its code is committed —
-so the chain advances on its own. Two tasks editing the same file are still not independent:
+A bare name is the sibling in the same plan; `<scope>/<name>` reaches a task of another plan.
+A dependency is satisfied once a commit reachable from HEAD names that task on its `Task:`
+line (or it is in this machine's `done/`), which means its code is committed — so the chain
+advances on its own, and a teammate's checkout or a fresh clone agrees about it. Two tasks editing the same file are still not independent:
 give one a `Depends-on:` on the other, or the later one will be working from the earlier
 one's committed result without knowing it.
 
@@ -154,7 +169,54 @@ answerable rather than arguable.
 
 A run's commit carries a `Task: <brief-stem>` trailer, so `npm run queue -- audit` can tie a
 brief to its commit even when someone committed the work by hand under a different message.
-`audit --fix` then files it: the brief moves to `done/` with its build record, and the tasks
-waiting on it are released. It acts only on a definite match, and it deliberately never
-touches a `done/` task with no commit behind it — choosing between requeueing and deleting
-that brief is a judgement, not bookkeeping.
+`audit --fix` then files it: the brief moves to `done/`, its removal from `todo/` is committed
+(except on a team's base branch), and the tasks waiting on it are released. It acts only on a
+definite match, and it deliberately never touches a `done/` task with no commit behind it —
+choosing between requeueing and deleting that brief is a judgement, not bookkeeping.
+
+## Working alone or in a team
+
+`project.workflow` in `agentic.config.json` says which, and the rest of the loop is the same
+either way.
+
+**`solo`** (the default). One developer. The queue plans and builds on whatever branch is
+checked out — the base branch included — and the commits stay local until you push them.
+
+**`team`**. Several developers share the base branch, so nothing plans or builds on it:
+`queue plan`, `queue drain`, `loop`, `auto` and `schedule install` all refuse there. The rule is
+**one spec, one owner, one branch, one pull request**:
+
+```sh
+git switch -c feat/billing-export
+# write specs/billing-export.md
+npm run loop                         # plans it (one "Plan" commit), builds each task (one commit each)
+npm run pr                           # the pull request carries the spec, its briefs and every task
+```
+
+Intake on a branch plans only the specs that branch added or changed since it left the base
+branch, so a spec that arrived from someone else's merged work is never planned a second
+time. Run one timer per branch, never two on the same one.
+
+**What git shares and what stays on one machine:**
+
+| Path | |
+|---|---|
+| `specs/`, `.agent-queue/todo/`, `.agent-queue/planned.json` | Tracked — the queue's inputs |
+| `docs/builds/` | Tracked — one record per landed task, in that task's commit |
+| `.agent-queue/doing/`, `done/`, `failed/` | Local — this machine's progress, gitignored |
+| `.agent-runs/` | Local — journals, streams, parked work |
+
+A task's commit is its code, the removal of its own brief from `todo/` and its build record,
+nothing more. A
+task that fails leaves its brief's removal unstaged, so it never rides along in another
+task's commit; `queue retry` puts it back.
+
+**Any merge style works.** "Landed" is read from the `Task:` lines in history, never from a
+recorded commit hash, so a branch merged with a merge commit, rebased, or squashed (GitHub's
+squash message keeps each commit's body) still reads as landed on the base branch.
+Each task's build record is written just before its commit and lands in it:
+`docs/builds/<date-time>-<spec>/<task>.md`, one directory per planned spec, named for when planning started
+(`docs/builds/adhoc/<date-time>-<task>.md` for a task queued by hand). A record cannot name
+its own commit's hash, so it names the task, and `git log --grep "Task: <stem>"` finds the
+commit. Records of different specs live in different directories, so two pull requests never
+conflict over them.

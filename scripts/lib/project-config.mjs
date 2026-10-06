@@ -47,6 +47,13 @@ const DEFAULTS = {
     branch: null,
     /** Where pull requests go. `null` means `origin/HEAD`, else `main` or `master`. */
     baseBranch: null,
+    /**
+     * `solo`: one developer, and the queue builds on whatever branch is checked out — the
+     * base branch included. `team`: several developers share the base branch, so nothing
+     * plans or builds on it; each spec is planned and built on a branch of its own and
+     * reaches the base branch through a pull request.
+     */
+    workflow: "solo",
     /** A trailer the runner's commits end with. `null` adds none, leaving the author line — each developer's own git user.name/user.email — as the only identity. */
     coAuthor: null,
     /** Lines every unattended run is told before it starts — the traps a typecheck misses. */
@@ -61,6 +68,7 @@ const DEFAULTS = {
     pattern: "\\.test\\.(m?js|ts)$",
   },
   docs: {
+    /** Where each landed task's build record is written, one directory per planned spec. */
     builds: "docs/builds",
     capabilities: "docs/capabilities",
     guide: "CLAUDE.md",
@@ -163,6 +171,9 @@ function readConfigFile() {
 
 export const config = merge(DEFAULTS, readConfigFile());
 
+/** The ways a project may share its queue — see `project.workflow` in DEFAULTS. */
+export const WORKFLOWS = ["solo", "team"];
+
 const isPositiveInt = (n) => Number.isInteger(n) && n > 0;
 
 /** Every entry of `list` that is not a usable regular expression, as a problem message. */
@@ -191,6 +202,9 @@ function regexProblems(list, where, flags = "") {
  */
 export function validateConfig(cfg) {
   const problems = [];
+  if (!WORKFLOWS.includes(cfg.project?.workflow)) {
+    problems.push(`project.workflow must be ${WORKFLOWS.join(" or ")} (got ${JSON.stringify(cfg.project?.workflow)})`);
+  }
   const budget = cfg.budget ?? {};
   for (const key of ["attempts", "maxTurns", "maxMinutesPerAttempt"]) {
     if (!isPositiveInt(budget[key])) {
@@ -359,3 +373,23 @@ export const BASE_BRANCH = resolveBaseBranch(config.project.baseBranch, {
 
 /** The project's own name, for briefs and launchd labels. */
 export const PROJECT_NAME = config.project.name || "this repository";
+
+/** `solo` or `team` — how this project shares its queue (`project.workflow`). */
+export const WORKFLOW = config.project.workflow;
+
+/**
+ * Why the queue may not plan or build on `branch`, or null when it may.
+ *
+ * In a team the base branch is shared: a spec planned there by one developer's loop is
+ * planned again by the next one's, and a task committed there reaches everyone unreviewed.
+ * So team mode refuses it outright and the developer works on a branch of their own. Solo
+ * mode builds wherever it is, the base branch included. Pure, so the rule is testable.
+ */
+export function workflowRefusal({ workflow = WORKFLOW, branch, base = BASE_BRANCH } = {}) {
+  if (workflow !== "team" || !branch || branch !== base) return null;
+  return (
+    `project.workflow is "team", and this checkout is on ${base}, the branch everyone shares.\n` +
+    "Plan and build on a branch of your own, then open a pull request:\n\n" +
+    "  git switch -c feat/<name>"
+  );
+}

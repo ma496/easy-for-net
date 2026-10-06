@@ -16,12 +16,12 @@
  * merges. Nothing here pushes or merges — those stay yours.
  */
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BUDGET_EXIT_CODE } from "./lib/budget.mjs";
 import { runCommandSync, sleepSync } from "./lib/proc.mjs";
-import { config, WORK_BRANCH } from "./lib/project-config.mjs";
+import { config, WORK_BRANCH, workflowRefusal } from "./lib/project-config.mjs";
+import { listTasks } from "./lib/task-names.mjs";
 
 const ROOT = resolve(join(dirname(fileURLToPath(import.meta.url)), ".."));
 const argv = process.argv.slice(2);
@@ -59,6 +59,13 @@ const dirtyPaths = capture("git", ["status", "--porcelain"])
   .split("\n")
   .filter((l) => l.trim() && !l.slice(3).startsWith(".agent-queue/"));
 console.log(`Branch: ${branch}   ·   uncommitted files: ${dirtyPaths.length}`);
+// Before anything is started or spent: in a team the base branch is where no cycle runs,
+// and saying so here beats letting the drain refuse after the services came up.
+const refusal = workflowRefusal({ branch });
+if (refusal) {
+  console.error(`\n${refusal}`);
+  process.exit(1);
+}
 if (dirtyPaths.length > 0) {
   console.log("\n  ⚠  The working tree is dirty, so NO TASK CAN BUILD this cycle.");
   console.log("     Each task starts from a clean tree so its commit holds only its own work.");
@@ -205,9 +212,7 @@ if (dirtyPaths.length > 0) {
 // to do on its own schedule any faster — the next fire starts a fresh budget, but if the
 // queue is bigger than one cycle's worth of money, that is a decision for a person.
 if (drainStatus === BUDGET_EXIT_CODE) {
-  const waiting = existsSync(join(ROOT, ".agent-queue", "todo"))
-    ? readdirSync(join(ROOT, ".agent-queue", "todo")).filter((f) => f.endsWith(".md")).length
-    : 0;
+  const waiting = listTasks(join(ROOT, ".agent-queue", "todo")).length;
   console.log("This cycle stopped on its spend ceiling, not because the queue was empty.");
   console.log(
     `${waiting} task(s) are still in todo/, untouched. The next scheduled run starts a fresh\n` +
@@ -218,9 +223,7 @@ if (drainStatus === BUDGET_EXIT_CODE) {
   console.log("  What each run cost:  npm run auto:status\n");
 }
 
-const failedTasks = existsSync(join(ROOT, ".agent-queue", "failed"))
-  ? readdirSync(join(ROOT, ".agent-queue", "failed")).filter((f) => f.endsWith(".md"))
-  : [];
+const failedTasks = listTasks(join(ROOT, ".agent-queue", "failed"));
 if (failedTasks.length > 0) {
   console.log(`${failedTasks.length} task(s) failed and are waiting in .agent-queue/failed/:`);
   for (const f of failedTasks) console.log(`  ${f}`);

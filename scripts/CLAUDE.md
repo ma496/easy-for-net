@@ -14,12 +14,12 @@ loop.mjs            the whole cycle: look → observe → plan → drain → rep
 | File | Does |
 |------|------|
 | `loop.mjs` | One cycle. Brings up what the cycle needs, observes, plans, drains, then says what needs a human. |
-| `agent-queue.mjs` | `todo/ → doing/ → done/`. Plans specs into tasks, enforces `Depends-on:`, drains serially, audits its own bookkeeping. |
+| `agent-queue.mjs` | `todo/ → doing/ → done/`. Plans specs into tasks (committed as `Plan <spec>`), enforces `Depends-on:` against the local lanes and the `Task:` lines in history, drains serially, audits its own bookkeeping, and refuses the base branch under `project.workflow: "team"`. |
 | `agent-run.mjs` | One task, up to N attempts. The only file that spawns a model. |
 | `verify.mjs` | Decides from the diff what must be checked, and fails when a required check could not run. |
 | `test.mjs` | The unit suite, over the roots named in the config. |
 | `run-journal.mjs` | Every attempt, its cost, its turns, and why it failed. `npm run auto:status`. |
-| `record-build.mjs` | Writes a build record per landed task, and rebuilds the index. |
+| `record-build.mjs` | Writes a task's build record into its spec's `docs/builds/<date-time>-<spec>/` (or `adhoc/`). The runner calls it just before committing, so the record is in the task's own commit. |
 | `record-lesson.mjs` | Writes a lesson into `.claude/memory/lessons/`, naming the task from `--task` or `AGENT_TASK`. `npm run lessons` lists them. |
 | `claude-contract.mjs` | Probes the installed Claude CLI and checks its stream still carries what the runner reads. `--record` saves fixtures; `--if-changed` is what `loop.mjs` runs. |
 | `schedule-drain.mjs` | Installs (or removes) the timer that runs the cycle hands-off. |
@@ -33,7 +33,7 @@ loop.mjs            the whole cycle: look → observe → plan → drain → rep
 | `redis-ready.mjs` | Whether the Redis in `ConnectionStrings:Redis` accepts a TCP connection — the same probe, for the session store. |
 | `smoke.mjs` | The live check: health, the OpenAPI document, and an anonymous caller refused. |
 | `deploy-vps.mjs` | `npm run deploy:vps`: puts the app on a Linux server behind Coolify over SSH, from any OS. Uploads `deploy/vps/remote.sh` (POSIX sh, run as root) and runs its `check`/`prepare`/`deploy` phases; the pure parts are `lib/deploy-vps.mjs`. Not part of the loop or the gate, and never run by an agent: `hooks.deniedCommands` refuses it, so only the owner deploys. |
-| `lib/` | The pure parts: the department map, spend and budget arithmetic, salvage, memory selection, cross-platform process helpers (`proc.mjs`), the timer's files (`schedule.mjs`), remote and PR URLs (`remote.mjs`), the config and its validation (`project-config.mjs`), the queue lock (`queue-lock.mjs`), `Depends-on:` resolution (`task-deps.mjs`), changed-path listing and the tree fingerprint a passing verify is reused on (`changed-paths.mjs`), the services a task needs before it may start (`dependencies.mjs`), which gate steps a diff reaches (`gate-scope.mjs`), journal outcomes (`outcomes.mjs`), how an attempt ended (`attempt-outcome.mjs`). |
+| `lib/` | The pure parts: the department map, spend and budget arithmetic, salvage, memory selection, cross-platform process helpers (`proc.mjs`), the timer's files (`schedule.mjs`), remote and PR URLs (`remote.mjs`), the config and its validation (`project-config.mjs`), the queue lock (`queue-lock.mjs`), `Depends-on:` resolution (`task-deps.mjs`), which tasks history says landed (`landed-tasks.mjs`), the planner's folder and team-intake rules (`planning.mjs`), task scopes, stems and lane listing (`task-names.mjs`), what a runner commit may stage (`stage-paths.mjs`), where a build record goes and what it says (`build-record.mjs`), changed-path listing and the tree fingerprint a passing verify is reused on (`changed-paths.mjs`), the services a task needs before it may start (`dependencies.mjs`), which gate steps a diff reaches (`gate-scope.mjs`), journal outcomes (`outcomes.mjs`), how an attempt ended (`attempt-outcome.mjs`). |
 | `lib/claude-events.mjs` | **The only reader of the Claude CLI's stream-json.** `stream-render.mjs` renders and adds up what it normalises. A CLI release that moves a field is fixed here, and `tests/claude-stream-contract.test.mjs` holds it against captured streams. |
 
 **Two kinds of file live here.** The engine — everything above except `gate`, `serve-api`, `dev`, `deploy`,
