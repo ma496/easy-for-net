@@ -115,7 +115,7 @@ const task = (taskFile ? readFileSync(taskFile, "utf8") : argv.find((a) => !a.st
 // — matching on the body meant a brief that gained a `Depends-on:` line lost its own
 // history, and with it the ceiling that history was holding up.
 // The task's identity is its stem, `scope/name` (lib/task-names.mjs): what the commit's `Task:`
-// line carries, what the journal keys its history on, and what AGENT_TASK names.
+// line carries and what the journal keys its history on.
 const taskSlug = taskFile ? stemOf(taskFile) : null;
 
 if (!task || !task.trim()) {
@@ -202,9 +202,8 @@ const DEFAULT_VERIFY_PORT = String(config.verify.service?.port ?? 3000);
 const PERMISSION_MODE = flag("safe") ? "acceptEdits" : "bypassPermissions";
 const RUN_ID = `run-${new Date().toISOString().replace(/[:.]/g, "-")}`;
 const startedAt = new Date().toISOString();
-// Handed to the session's environment. `record-lesson.mjs` reads AGENT_TASK, so a lesson
-// says which task taught it whether or not the session remembered to pass `--task`.
-const childEnv = { AGENT_TASK: taskSlug ?? "", AGENT_RUN_ID: RUN_ID };
+// Handed to the session's environment.
+const childEnv = { AGENT_RUN_ID: RUN_ID };
 
 // What one `claude` call is charged at when its stream carried no readable cost. Scripts
 // read the environment directly; the setting is documented in .env.example.
@@ -519,7 +518,7 @@ const memory = (() => {
   }
 })();
 
-const BRIEF = buildBrief({ memory, history, taskSlug: taskSlug ?? "" });
+const BRIEF = buildBrief({ memory, history });
 
 let feedback = "";
 // Guidance that belongs to *how* the last attempt ended rather than to what verification

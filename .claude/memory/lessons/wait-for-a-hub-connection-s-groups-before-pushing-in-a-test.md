@@ -1,7 +1,6 @@
 ---
 scope: signalr hub
 learned: 2026-09-30
-task: 03-notification-hub-and-publishing
 ---
 
 # Wait for a hub connection's groups before pushing in a test

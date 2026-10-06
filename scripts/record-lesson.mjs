@@ -45,7 +45,7 @@ if (flag("list") || argv.length === 0) {
   }
   console.log(`${lessons.length} lesson(s) in .claude/memory/lessons/\n`);
   for (const l of lessons) {
-    console.log(`  [${l.scope}]${l.learned ? ` ${l.learned}` : ""}${l.task ? ` (${l.task})` : ""}  ${l.title}`);
+    console.log(`  [${l.scope}]${l.learned ? ` ${l.learned}` : ""}  ${l.title}`);
   }
   console.log("\nA lesson is injected into any task whose brief mentions its scope keyword.");
   console.log('Lessons scoped "always" are injected into every task.');
@@ -108,11 +108,9 @@ try {
     title,
     body,
     scope: (argOf("scope", "always") || "always").toLowerCase(),
+    // No task is recorded, and a `--task` flag is ignored: a lesson is read by future
+    // unrelated tasks, where the name of the one that taught it means nothing.
     learned,
-    // The runner exports the task it is building as AGENT_TASK, so a lesson says which task
-    // taught it even when the session leaves out --task — which every session did, and left
-    // every lesson on record with no provenance at all.
-    task: argOf("task") || process.env.AGENT_TASK || "",
   });
   console.log(`Recorded ${path.replace(ROOT, ".")}`);
   reportReach(argOf("scope", "always") || "always");

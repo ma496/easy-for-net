@@ -1,7 +1,6 @@
 ---
 scope: localization
 learned: 2026-09-29
-task: 06-document-session-validation-and-revocation
 ---
 
 # Put tests that read the default tenant's languages in the Localization collection
