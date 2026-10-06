@@ -28,8 +28,11 @@ const raw = await new Promise((resolve) => {
 });
 
 let command = "";
+let tool = "";
 try {
-  command = JSON.parse(raw)?.tool_input?.command ?? "";
+  const input = JSON.parse(raw);
+  command = input?.tool_input?.command ?? "";
+  tool = String(input?.tool_name ?? "");
 } catch {
   process.exit(0);
 }
@@ -185,11 +188,41 @@ function blankSearchPatterns(input) {
     });
 
     stages.forEach((stage, index) => {
-      if (!SEARCH_TOOLS.has(commandHead(stage.tokens))) return;
+      // Text a later stage could run is never blanked: `git commit -m "…" | sh` prints the
+      // message on its summary line, and `grep 'DROP …' f | psql` hands the pattern on.
       const downstreamExecutes = stages
         .slice(index + 1)
         .some((later) => !TEXT_FILTERS.has(commandHead(later.tokens)));
       if (downstreamExecutes) return;
+
+      // A commit or tag message is prose about the change, and prose names commands:
+      // "never git merge here" was refused as a merge. Its quoted value is blanked like a
+      // search pattern — the rest of the command, every flag and path, is still scanned.
+      // Not under PowerShell, whose strings do not end where this tokeniser's do: `\"` is
+      // an escaped quote to bash and a backslash then a closing quote to PowerShell, so a
+      // message could hide a command PowerShell then runs.
+      if (commandHead(stage.tokens) === "git") {
+        if (/powershell/i.test(tool)) return;
+        const args = stage.tokens.slice(1);
+        // Past git's global options, the same ones stripGitGlobals sees through.
+        let at = 0;
+        while (at < args.length && args[at].value.startsWith("-")) {
+          at += /^(-C|-c|--git-dir|--work-tree|--namespace|--exec-path|--config-env)$/.test(args[at].value) ? 2 : 1;
+        }
+        const verb = args[at];
+        if (verb && /^(commit|tag)$/.test(verb.value)) {
+          stage.tokens.forEach((t, i) => {
+            const next = stage.tokens[i + 1];
+            const takesMessage = /^-[a-zA-Z]*m$/.test(t.value) || t.value === "--message";
+            const candidate = takesMessage ? next : /^(-m|--message=)./.test(t.value) && t.quoted ? t : null;
+            if (!candidate?.quoted) return;
+            if (/\$\(|`|\\"/.test(input.slice(candidate.start, candidate.end))) return;
+            blanks.push(candidate);
+          });
+        }
+        return;
+      }
+      if (!SEARCH_TOOLS.has(commandHead(stage.tokens))) return;
 
       // The pattern is the first argument that is not an option. `-e PATTERN` lands here
       // too, since the flag itself is skipped and its value is not.
@@ -345,11 +378,23 @@ if (/\bdotnet[\s-]+ef\s+database\s+drop\b/i.test(scanned)) {
   );
 }
 
-if (/\bdocker\s+compose\s+down\b[^\n]*(-v\b|--volumes\b)/.test(scanned)) {
+// `docker-compose` (the v1 binary) as well as `docker compose`, and options such as
+// `-f docker-compose.prod.yml` between it and `down`.
+if (/\bdocker[\s-]+compose\b[^\n;&|]*\sdown\b[^\n;&|]*(\s-v\b|--volumes\b)/.test(scanned)) {
   block(
     "this drops the database volume — every row in it, with no undo. Only the user can ask " +
       "for it, in the turn it happens. Stop the stack without the volume flag to keep the " +
       "data.",
+  );
+}
+
+// Reverting to migration 0 runs every Down() — each table dropped in turn. The same loss
+// as `database drop`, spelled as an update.
+// The target is the first positional argument wherever it sits among the options.
+if (/\bdotnet[\s-]+ef\s+database\s+update\b[^\n;&|]*?\s0(?=\s|$|[;&|])/i.test(scanned)) {
+  block(
+    "`dotnet ef database update 0` reverts every migration, dropping every table and its rows. " +
+      "Only the user can ask for it, in the turn it happens. To undo one migration, name the one before it.",
   );
 }
 
@@ -402,6 +447,53 @@ if (/\bgit\s+clean\b[^\n]*-[a-z]*[fx]/.test(gitScanned)) {
   );
 }
 
+// `git checkout -- .` and `git restore .` are `reset --hard` for the working tree, by
+// another name. Naming files is fine; a whole-tree pathspec is not. `restore --staged`
+// alone only unstages, and stays allowed.
+for (const s of segments.map(stripGitGlobals)) {
+  const m = /\bgit\s+(checkout|restore)\b(.*)$/.exec(s);
+  if (!m) continue;
+  const args = m[2].trim().split(/\s+/).filter(Boolean).map((t) => t.replace(/^['"]|['"]$/g, ""));
+  const wholeTree = args.some((t) => t === "." || t === "./" || t === "*" || t === ":/");
+  const unstageOnly = m[1] === "restore" && args.some((t) => /^(--staged|-S)$/.test(t)) && !args.some((t) => /^(--worktree|-W)$/.test(t));
+  if (wholeTree && !unstageOnly) {
+    block(
+      `\`git ${m[1]} .\` throws away every uncommitted change in the tree, the same loss as ` +
+        "`git reset --hard`. Name the files you mean, or `git stash` to set work aside.",
+    );
+  }
+}
+
+if (/\bgit\s+stash\s+clear\b/.test(gitScanned)) {
+  block("`git stash clear` deletes every stash at once, with no undo. Drop the one you mean by name.");
+}
+
+// `find` and `sed -n` are pre-approved in settings.json as reads. `find` writes through
+// -delete and its -fprint family, and runs anything through -exec; only the read-only
+// commands below may follow -exec unprompted. For `sed -n`, the common write (-i) is refused
+// here; its script-level `w`/`e` commands are not parsed, which is why the allow-list stays
+// narrow to the `-n` form.
+const FIND_READ_ONLY_EXEC = /^(grep|egrep|fgrep|rg|cat|head|tail|wc|ls|stat|file|echo|printf|basename|dirname|realpath|sha1sum|sha256sum|md5sum)$/;
+for (const s of segments) {
+  if (!/^\s*find\b/.test(s)) continue;
+  const runs = [...s.matchAll(/\s-(?:exec|execdir|ok|okdir)\s+(\S+)/g)].map((m) => m[1].replace(/^.*[\\/]/, ""));
+  if (/\s-(delete|fprint0?|fprintf|fls)\b/.test(s) || runs.some((cmd) => !FIND_READ_ONLY_EXEC.test(cmd))) {
+    block(
+      "`find` is approved as a read, and this makes it write or run something — `-delete`, `-fprint`, or " +
+        "`-exec` with a command that is not a read. List the paths, then act on them by name.",
+    );
+  }
+}
+if (segments.some((s) => /^\s*sed\s+-n\b/.test(s) && /\s(-[a-zA-Z]*i\b|--in-place\b)/.test(s))) {
+  block("`sed -n` is approved as a read; with `-i` it edits files in place without the prompt. Use the Edit tool.");
+}
+
+// `git branch -D` deletes a branch whether or not it was merged — the only copy of its
+// commits, if it was never pushed. `-d` refuses an unmerged branch and stays allowed.
+if (/\bgit\s+branch\b[^\n;&|]*\s(-[a-zA-Z]*D[a-zA-Z]*\b|--delete\s+--force\b|--force\s+--delete\b)/.test(gitScanned)) {
+  block("`git branch -D` deletes a branch even when its commits are merged nowhere. Use `git branch -d`, which refuses an unmerged branch.");
+}
+
 // --- history rewrites and blind staging --------------------------------------
 // `-f` bundled with other short flags (`-uf`) and a `+` on a refspec force just the same.
 const pushSegments = [...gitScanned.matchAll(/\bgit\s+push\b([^\n;&|]*)/g)].map((m) => m[1]);
@@ -440,7 +532,13 @@ if (/\bgit\s+add\b(?:\s+-[\w-]+)*(?:\s+--)?\s+(-[a-zA-Z]*A[a-zA-Z]*\b|--all\b|\.
 // checkout of main through, and main is the work branch whenever `project.branch` is unset.
 const PROTECTED_BRANCHES = new Set([BASE_BRANCH, config.project.branch, "main", "master"].filter(Boolean));
 for (const args of pushSegments) {
-  const tokens = args.trim().split(/\s+/).filter(Boolean);
+  // Quotes are the shell's, not the ref's: `'main'`, `HEAD:"main"` and the `main"` left by
+  // `bash -c "git push origin main"` all push to main, and each slipped past unstripped.
+  const tokens = args
+    .trim()
+    .split(/\s+/)
+    .map((t) => t.replace(/["']/g, ""))
+    .filter(Boolean);
   // Options that take a value, so the value is not read as a remote or refspec.
   const positional = [];
   for (let i = 0; i < tokens.length; i++) {
@@ -460,8 +558,11 @@ for (const args of pushSegments) {
     if (PROTECTED_BRANCHES.has(destination)) {
       block(
         `this pushes straight to \`${destination}\`. That branch only ever moves when the ` +
-          "repo owner says so, in the turn it happens. Leave the commits local and tell " +
-          "them what is waiting to be pushed.",
+          "repo owner moves it. " +
+          (config.project.workflow === "team"
+            ? "In a team it moves through a pull request: push a branch of your own and give them the PR URL (`npm run pr`)."
+            : "Leave the commits local, tell them what is waiting, and give them the command to run " +
+              "themselves (`! git push` in this prompt)."),
       );
     }
   }
@@ -476,7 +577,12 @@ const MERGE_RECOVERY = /\bgit\s+merge\s+--(?:abort|continue)\b/;
 // --- merging a pull request is the repo owner's, always -----------------------
 // They said it plainly: they merge their own PRs. No script, agent, or API call here
 // may do it for them. This holds even under --permission-mode bypassPermissions.
-if (/(?:api\.bitbucket\.org|api\.github\.com)[^\n]*\/(?:pullrequests|pulls)\/[^\n]*\/merge/.test(scanned)) {
+// `gh api` reaches the same endpoint with no host in the command, and GraphQL by mutation name.
+if (
+  /(?:api\.bitbucket\.org|api\.github\.com)[^\n]*\/(?:pullrequests|pulls)\/[^\n]*\/merge/.test(scanned) ||
+  /\bgh\s+api\b[^\n]*\/pulls\/[^\s/]+\/merge\b/.test(scanned) ||
+  /\bgh\s+api\b[^\n]*\bmergePullRequest\b/.test(scanned)
+) {
   block(
     "this merges a pull request through a hosting API. Merging is the repo owner's " +
       "call — they merge their own PRs. Open the PR and hand them the URL instead.",
@@ -488,8 +594,11 @@ if (/(?:api\.bitbucket\.org|api\.github\.com)[^\n]*\/(?:pullrequests|pulls)\/[^\
 // word character nor a hyphen, so only the real merge is caught.
 if (/\bgit\s+merge(?![-\w])/.test(gitScanned) && !MERGE_RECOVERY.test(gitScanned)) {
   block(
-    "merging branches is the repo owner's call. Leave the branch as it is and give them " +
-      "the PR URL (`npm run pr`) so they can review and merge it themselves.",
+    config.project.workflow === "team"
+      ? "merging branches is the repo owner's call. Leave the branch as it is and give them " +
+          "the PR URL (`npm run pr`) so they can review and merge it themselves."
+      : "merging branches is the repo owner's call. Leave the branch as it is and give them " +
+          "the exact command to run themselves (`! git merge --ff-only <branch>` in this prompt).",
   );
 }
 

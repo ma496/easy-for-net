@@ -233,6 +233,59 @@ const cases = [
   { label: "the deploy helpers' unit tests", command: "node --test scripts/tests/deploy-vps.test.mjs", expect: "allow" },
   { label: "grep for the deploy script name", command: "grep -rn 'deploy:vps' package.json", expect: "allow" },
 
+  // --- quoting and wrapping do not change where a push goes ------------------------------
+  { label: "push to a quoted main", command: "git push origin 'main'", expect: "block" },
+  { label: "push to a double-quoted refspec destination", command: 'git push origin HEAD:"main"', expect: "block" },
+  { label: "push wrapped in bash -c", command: 'bash -c "git push origin main"', expect: "block" },
+  { label: "a quoted feature branch is still a feature branch", command: "git push -u origin 'feat/x'", expect: "allow" },
+  { label: `${MERGE} through gh api`, command: `gh api -X PUT repos/o/r/pulls/1/${MERGE}`, expect: "block" },
+  { label: `${MERGE} through gh api graphql`, command: `gh api graphql -f query='mutation { ${MERGE}PullRequest(input: {}) { clientMutationId } }'`, expect: "block" },
+  { label: "reading a PR through gh api", command: "gh api repos/o/r/pulls/1", expect: "allow" },
+
+  // --- a commit message is prose, not a command -----------------------------------------
+  { label: "commit message naming the merge verb", command: `git commit -m "docs: never run git ${MERGE} here"`, expect: "allow" },
+  { label: "commit message naming the compose command", command: `git commit -am '${DESTRUCTIVE} is refused'`, expect: "allow" },
+  { label: "a real command after the commit still counts", command: `git commit -m "wip" && git ${MERGE} feat/x`, expect: "block" },
+  { label: "substitution in a commit message still runs", command: `git commit -m "$(git ${MERGE} feat/x)"`, expect: "block" },
+  { label: "echo naming the merge verb is still scanned", command: `echo "git ${MERGE} later" | sh`, expect: "block" },
+  { label: "a commit message piped into a shell is kept", command: 'git commit -m "x; git push origin main" | sh', expect: "block" },
+  { label: "a commit message piped into a text filter is prose", command: `git commit -m "never git ${MERGE}" | tail -1`, expect: "allow" },
+  { label: "git -C . commit message naming the merge verb", command: `git -C . commit -m "never git ${MERGE} here"`, expect: "allow" },
+  {
+    label: "PowerShell: a message escaping its quote hides nothing",
+    tool: "PowerShell",
+    command: `git commit -m "a${BS}" ; git ${MERGE} feat ; echo ${BS}""`,
+    expect: "block",
+  },
+  { label: "Bash: an escaped quote inside a message is not blanked", command: `git commit -m "a${BS}" ; git ${MERGE} feat"`, expect: "block" },
+
+  // --- other ways to lose uncommitted work or data ---------------------------------------
+  { label: "git checkout -- .", command: "git checkout -- .", expect: "block" },
+  { label: "git restore .", command: "git restore .", expect: "block" },
+  { label: "git checkout one file", command: "git checkout -- src/app.ts", expect: "allow" },
+  { label: "git checkout a branch", command: "git checkout -b feat/x", expect: "allow" },
+  { label: "git restore --staged . only unstages", command: "git restore --staged .", expect: "allow" },
+  { label: "git stash clear", command: "git stash clear", expect: "block" },
+  { label: "git stash list", command: "git stash list", expect: "allow" },
+  { label: "the v1 compose binary dropping volumes", command: "docker-compose down -v", expect: "block" },
+  { label: "the v1 compose binary keeping volumes", command: "docker-compose down", expect: "allow" },
+  { label: "compose -f file, then down -v", command: "docker-compose -f docker-compose.prod.yml down --volumes", expect: "block" },
+  { label: "compose -f file, then down", command: "docker compose -f docker-compose.prod.yml down", expect: "allow" },
+  { label: "reverting every EF migration", command: "dotnet ef database update 0 --project src/backend/Source/Backend.csproj", expect: "block" },
+  { label: "reverting every EF migration, options first", command: "dotnet ef database update --project src/backend/Source/Backend.csproj 0", expect: "block" },
+  { label: "updating to a named EF migration", command: "dotnet ef database update AddOrders", expect: "allow" },
+  { label: "find -delete", command: 'find . -name "*.cs" -delete', expect: "block" },
+  { label: "find -exec rm", command: "find . -name '*.tmp' -exec rm {} ;", expect: "block" },
+  { label: "find -exec rm by its path", command: "find . -name '*.tmp' -exec /bin/rm {} +", expect: "block" },
+  { label: "find -exec sed -i", command: "find . -name '*.ts' -exec sed -i s/a/b/ {} +", expect: "block" },
+  { label: "find -exec grep only reads", command: "find . -name '*.ts' -exec grep -l TODO {} +", expect: "allow" },
+  { label: "find that only lists", command: 'find . -name "*.cs" -newer x', expect: "allow" },
+  { label: "git branch -D", command: "git branch -D feat/x", expect: "block" },
+  { label: "git branch -Dq, a bundled -D", command: "git branch -Dq feat/x", expect: "block" },
+  { label: "git branch -d refuses unmerged work", command: "git branch -d feat/x", expect: "allow" },
+  { label: "sed -n with -i edits in place", command: "sed -n -i 's/a/b/' src/x.ts", expect: "block" },
+  { label: "sed -n that only prints", command: "sed -n '1,20p' src/x.ts", expect: "allow" },
+
   // --- ordinary work must stay unblocked -----------------------------------------------
   { label: "npm run gate", command: "npm run gate", expect: "allow" },
   { label: "npm run verify", command: "npm run verify", expect: "allow" },
@@ -254,7 +307,7 @@ const report = (ok, label, expect, actual) => {
 
 for (const c of cases) {
   const res = spawnSync("node", [HOOK], {
-    input: JSON.stringify({ tool_input: { command: c.command } }),
+    input: JSON.stringify({ ...(c.tool ? { tool_name: c.tool } : {}), tool_input: { command: c.command } }),
     encoding: "utf8",
   });
   const actual = verdict(res);

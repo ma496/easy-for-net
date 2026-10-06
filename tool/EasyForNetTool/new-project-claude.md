@@ -238,6 +238,7 @@ npm run loop                        # preflight → observe → plan → drain �
 npm run schedule -- install         # run the loop on a timer (Task Scheduler / launchd)
 npm run auto:status                 # every attempt, its turns, cost and why it failed
 npm run lessons                     # what past runs recorded for future ones
+npm run owes                        # which reviews and skills the working tree's change owes (the runner's rule)
 npm run pr                          # the pull-request URL for the current branch
 npm run test:claude-contract        # check the installed Claude CLI still emits what the runner reads
 ```
@@ -251,7 +252,7 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
   diff and compared with the subagents actually seen in the run's stream: `ui-ux-reviewer` designs a
   screen first; `data-engineer`, `backend-engineer`, `frontend-engineer` build; `qa-engineer`,
   `security-reviewer` (when owned paths changed) and `code-reviewer` (unless the diff is markdown
-  alone, `exceptWhenOnly`) review together, in one tier. A retry keeps the design and build
+  outside `.claude/` alone, `exceptWhenOnly`) review together, in one tier. A retry keeps the design and build
   delegations of the run's earlier attempts, since their work is still in the tree; a review counts
   only in the attempt it judged. The agents are in `.claude/agents/`.
 - **Solo or team** is `project.workflow`. `solo` (the default) builds on whatever branch is checked

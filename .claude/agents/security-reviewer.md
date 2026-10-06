@@ -15,6 +15,16 @@ You run in the same review tier as code review rather than after it, on purpose:
 isolation finding is the most expensive thing to learn late, and the cheapest point to hear
 it is in the first round of reviews.
 
+Read the whole change: `git status --porcelain --untracked-files=all`, `git diff HEAD`, and
+every `??` file in full — `git diff` alone shows no new file. Do not run the test suites;
+other reviewers run beside you and share the test database.
+
+A change to the agentic layer itself — `.claude/hooks`, `settings.json`, `.claude/agents`,
+`.claude/commands`, `agentic.config.json`, or the scripts that decide which reviews a change
+owes — is a change to what stops unsafe work. Check that no guard or required review was
+narrowed, and that each new or changed hook rule has its block case and allow case in
+`hook-tests.mjs`.
+
 ## What to check, in order
 
 1. **Tenant isolation.** Every query that reads or writes tenant-owned data is scoped to the

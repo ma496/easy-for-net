@@ -95,14 +95,14 @@ test("the character cap truncates and says how many were dropped", () => {
     lesson({ title: `L${i}`, learned: `2026-0${i + 1}-01`, body: `# L${i}\n${"x".repeat(400)}` }),
   );
   const out = formatForBrief(many, { maxChars: 900 });
-  assert.ok(out.includes("older lesson(s) not shown"), "truncation must be disclosed");
+  assert.ok(out.includes("lesson(s) not shown"), "truncation must be disclosed");
   assert.ok(out.length < 2000);
 });
 
 test("the count cap also discloses what it dropped", () => {
   const many = Array.from({ length: 5 }, (_, i) => lesson({ title: `L${i}`, learned: "2026-01-01" }));
   const out = formatForBrief(many, { maxLessons: 2 });
-  assert.ok(out.includes("3 older lesson(s) not shown"));
+  assert.ok(out.includes("3 lesson(s) not shown"));
 });
 
 test("a cap that fits everything discloses nothing", () => {
@@ -219,4 +219,31 @@ test("no lesson on record names a task", () => {
     return;
   }
   for (const f of files) assert.doesNotMatch(readFileSync(join(dir, f), "utf8"), /^task:/m, f);
+});
+
+test("a scope matches as a word, plural included, never inside another word", async () => {
+  const { mentions } = await import("../lib/memory.mjs");
+  assert.equal(mentions("rebuild the page", "build"), false);
+  assert.equal(mentions("the next build fails", "build"), true);
+  assert.equal(mentions("two builds", "build"), true);
+  assert.equal(mentions("a multitenant table", "tenant"), false);
+  assert.equal(mentions("other tenants", "tenant"), true);
+  assert.equal(mentions("background processes", "process"), true);
+  // Regex-special and path-shaped scopes are matched literally, on segment boundaries.
+  assert.equal(mentions("written in c++ here", "c++"), true);
+  assert.equal(mentions("uses next/font/google", "next/font"), true);
+  assert.equal(mentions("edit src/backend/source/x.cs", "src/backend"), true);
+  assert.equal(mentions("edit src/backends/x.cs", "src/backend/"), false);
+});
+
+test("one lesson too long for the cap does not hide the shorter ones after it", () => {
+  const out = formatForBrief(
+    [
+      lesson({ title: "Huge", body: `# Huge\n${"x".repeat(2000)}`, learned: "2026-03-01" }),
+      lesson({ title: "Small", body: "# Small\nshort", learned: "2026-02-01" }),
+    ],
+    { maxChars: 500 },
+  );
+  assert.match(out, /### Small/);
+  assert.doesNotMatch(out, /### Huge/);
 });

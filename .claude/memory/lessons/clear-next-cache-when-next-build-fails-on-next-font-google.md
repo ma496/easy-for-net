@@ -1,5 +1,5 @@
 ---
-scope: next build
+scope: frontend/web next/font
 learned: 2026-09-29
 ---
 

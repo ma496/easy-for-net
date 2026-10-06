@@ -30,6 +30,9 @@ decision can be made.
 
 ## Pass two — review the built page
 
+Find what was built with `git status --porcelain --untracked-files=all` and `git diff HEAD`;
+a new page or component is a `??` file that `git diff` alone never shows, so read each in full.
+
 If you can render it — a running dev server and a browser tool — open it and **look at it**.
 If you cannot, review the JSX and the Tailwind classes against the brief, and say plainly in
 your verdict that the page was reviewed from code rather than rendered. Reading classes is not

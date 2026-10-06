@@ -7,13 +7,14 @@
  * stdout is added to the session context. Keep it fast (~1s) and never fail the session.
  */
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 try {
-  const { PROJECT_NAME, REPO_ROOT, WORK_BRANCH, workflowRefusal } = await import("../../scripts/lib/project-config.mjs");
+  const { BASE_BRANCH, PROJECT_NAME, REPO_ROOT, WORK_BRANCH, WORKFLOW, config, workflowRefusal } = await import("../../scripts/lib/project-config.mjs");
   const git = (...args) =>
-    (spawnSync("git", args, { cwd: REPO_ROOT, encoding: "utf8", windowsHide: true }).stdout ?? "").trim();
+    // trimEnd, not trim: a porcelain line's leading space is its status column.
+    (spawnSync("git", args, { cwd: REPO_ROOT, encoding: "utf8", windowsHide: true }).stdout ?? "").trimEnd();
 
   const branch = git("rev-parse", "--abbrev-ref", "HEAD") || "unknown";
   const changed = git("status", "--porcelain").split("\n").filter(Boolean);
@@ -22,11 +23,17 @@ try {
   const lane = (name) => listTasks(join(REPO_ROOT, ".agent-queue", name)).length;
 
   const out = [`## ${PROJECT_NAME} — session state`, ""];
+  out.push(`- Workflow: ${WORKFLOW} (\`project.workflow\`)`);
   out.push(`- Branch: \`${branch}\`${ahead ? ` (${ahead} commit(s) ahead of origin)` : ""}`);
   out.push(`- Uncommitted files: ${changed.length}`);
   if (existsSync(join(REPO_ROOT, ".agent-queue"))) {
     out.push(`- Queue: ${lane("todo")} waiting · ${lane("doing")} in flight · ${lane("failed")} failed`);
   }
+  // What past runs learned reaches unattended briefs on its own; an interactive session only
+  // sees it if it is pointed at it.
+  const lessons = join(REPO_ROOT, ".claude", "memory", "lessons");
+  const lessonCount = existsSync(lessons) ? readdirSync(lessons).filter((f) => f.endsWith(".md")).length : 0;
+  if (lessonCount) out.push(`- Lessons recorded by past runs: ${lessonCount} — \`npm run lessons\` before a change in an unfamiliar area`);
   if (changed.length > 0) {
     out.push("", "Changed files:", ...changed.slice(0, 12).map((l) => `  ${l}`));
   }
@@ -39,7 +46,14 @@ try {
     );
   } else if (branch === WORK_BRANCH) {
     out.push("", `**On \`${branch}\`, where the task queue commits.** Build and commit here — no task branch, no worktree.`);
-    if (ahead) out.push(`${ahead} commit(s) are waiting to be pushed. Pushing needs the owner's say-so in that turn.`);
+    // Only where the guard would refuse the push; a feature branch is the owner's to approve in the turn.
+    const PROTECTED = new Set([BASE_BRANCH, config.project.branch, "main", "master"].filter(Boolean));
+    if (ahead && PROTECTED.has(branch)) {
+      out.push(
+        `${ahead} commit(s) are waiting to be pushed. The guard refuses an agent's push to a protected branch — ` +
+          "the owner pushes it themselves (`! git push`).",
+      );
+    }
   }
   console.log(out.join("\n"));
 } catch {

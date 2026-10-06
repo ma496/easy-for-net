@@ -20,6 +20,7 @@ loop.mjs            the whole cycle: look → observe → plan → drain → rep
 | `test.mjs` | The unit suite, over the roots named in the config. |
 | `run-journal.mjs` | Every attempt, its cost, its turns, and why it failed. `npm run auto:status`. |
 | `record-build.mjs` | Writes a task's build record into its spec's `docs/builds/<date-time>-<spec>/` (or `adhoc/`). The runner calls it just before committing, so the record is in the task's own commit. |
+| `owes.mjs` | What the working tree's change owes — departments in order, and skills — by the same rule the runner enforces. `npm run owes`; spends nothing. |
 | `record-lesson.mjs` | Writes a lesson into `.claude/memory/lessons/`; a lesson names no task. `npm run lessons` lists them. |
 | `claude-contract.mjs` | Probes the installed Claude CLI and checks its stream still carries what the runner reads. `--record` saves fixtures; `--if-changed` is what `loop.mjs` runs. |
 | `schedule-drain.mjs` | Installs (or removes) the timer that runs the cycle hands-off. |

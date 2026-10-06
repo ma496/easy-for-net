@@ -28,7 +28,7 @@ makes an unattended run safe to leave alone.
 |------|--------|
 | `guard-protected-paths.mjs` | Writes to any `.env*` but a template, to the per-environment `appsettings.*.json`, to build output (`bin/`, `obj/`, `.next/`, `node_modules/`, …), and to anything in `hooks.protectedPaths` |
 | `guard-secret-reads.mjs` | The Read and Grep tools opening those same secret files — `secret-paths.mjs` is the one list both guards read |
-| `guard-bash.mjs` | For **both** the Bash and PowerShell tools: reading `.env` or the per-environment appsettings through the shell, `dotnet ef database drop`, dropping a Docker volume, `DROP`/`TRUNCATE`/`DELETE`, `git reset --hard`, `git clean -f`, force-push (`-f` bundled or a `+` refspec included), blind `git add -A`, **pushing to the protected branch by any refspec — or by none, from a checkout of it**, **merging any pull request**, plus every pattern in `hooks.deniedCommands`. git's global options (`-C`, `-c`, `--no-pager`, …) are stripped before the git rules look, and an existence check (`ls`, `test`) excuses only its own segment of a compound command |
+| `guard-bash.mjs` | For **both** the Bash and PowerShell tools: reading `.env` or the per-environment appsettings through the shell, `dotnet ef database drop`, dropping a Docker volume, `DROP`/`TRUNCATE`/`DELETE`, `git reset --hard`, `git clean -f`, `git checkout -- .` / `git restore .`, `git stash clear`, `git branch -D`, `dotnet ef database update 0`, `find` that deletes or runs a non-read command, `sed -n -i`, force-push (`-f` bundled or a `+` refspec included), blind `git add -A`, **pushing to the protected branch by any refspec — quoted, wrapped in `sh -c`, or by none, from a checkout of it**, **merging any pull request** (`git merge`, `gh pr merge`, the hosting APIs, `gh api`), plus every pattern in `hooks.deniedCommands`. git's global options (`-C`, `-c`, `--no-pager`, …) are stripped before the git rules look, and an existence check (`ls`, `test`) excuses only its own segment of a compound command |
 | `project-conventions.mjs` | Nothing — reports the conventions in `hooks.conventions` back to the model after every edit |
 | `session-start.mjs` | Nothing — orients a fresh session |
 
@@ -45,11 +45,14 @@ a hook that throws or has been quietly broadened fails the gate instead of faili
 one that blocks nothing, and over-broad regular expressions are how these rules actually
 rot. Add both cases when you add a rule.
 
-**Naming a command is not running it.** `guard-bash.mjs` matches the command as text, so two
-kinds of text are removed before the rules see it: heredoc bodies, and the search pattern
-given to `grep`, `rg`, and friends. Writing a document about `docker compose down -v` and
-grepping for `git merge` are both ordinary work. Only the pattern is dropped — the paths
-beside it stay — and only when nothing downstream could run what the search prints.
+**Naming a command is not running it.** `guard-bash.mjs` matches the command as text, so three
+kinds of text are removed before the rules see it: heredoc bodies, the search pattern given
+to `grep`, `rg`, and friends, and the quoted `-m` message of `git commit` or `git tag`.
+Writing a document about `docker compose down -v`, grepping for `git merge` and a commit
+message that mentions it are all ordinary work. Only that value is dropped — the paths and
+flags beside it stay — and only when nothing downstream could run what it prints. A message
+holding `$(…)`, a backtick or an escaped quote is kept, and under PowerShell, whose quoting
+differs, no message is dropped at all.
 
 ## Delegation is enforced, not suggested
 
