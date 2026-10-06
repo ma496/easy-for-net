@@ -342,6 +342,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             Console.WriteLine("    dotnet tool restore");
             Console.WriteLine($"    dotnet build {pascalCaseProjectName}.slnx");
             Console.WriteLine("    dotnet ef migrations add Initial --project src/backend/Source");
+            Console.WriteLine("    git add src/backend/Source/Migrations && git commit -m \"Add the initial migration\"");
             Console.WriteLine("    npm run dev        # PostgreSQL + Redis (Docker), the API on :5000 and the web app on :3000; Ctrl+C stops both");
             Console.WriteLine();
             Console.WriteLine("  README.md has the rest.");
@@ -442,6 +443,18 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
         {
             Console.WriteLine($"Warning: could not create a git repository: {ex.Message}");
             return;
+        }
+
+        try
+        {
+            // The first branch is main whatever init.defaultBranch says: the task loop finds the
+            // base branch by name until a remote exists, and a team workflow refuses to build on it.
+            // symbolic-ref rather than `init -b`, which git before 2.28 does not know.
+            await ExecuteCommand("git", $"-C \"{targetPath}\" symbolic-ref HEAD refs/heads/main");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: the first branch could not be named main, so it keeps git's default name: {ex.Message}");
         }
 
         try
@@ -608,7 +621,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
 
     /// <summary>
     /// Lays out the places the spec-driven task loop records its work - <c>specs/</c>, <c>docs/</c>,
-    /// an empty <c>.agent-queue/planned.json</c> and the lessons directory - with their guides but none
+    /// an empty <c>.agent-queue/planned/</c> (one plan record per spec) and the lessons directory - with their guides but none
     /// of the template repository's own specs, build records, queued tasks or lessons. The queue creates
     /// its lanes itself, and <c>docs/builds/</c> appears with the first task that lands.
     /// </summary>
@@ -621,8 +634,8 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
         CopyFiles(Path.Combine(templateDir, "docs"), Path.Combine(targetPath, "docs"), "AGENTIC_WORKFLOW.md");
         CopyFiles(Path.Combine(templateDir, "docs", "capabilities"), Path.Combine(targetPath, "docs", "capabilities"), "README.md");
 
-        Directory.CreateDirectory(Path.Combine(targetPath, ".agent-queue"));
-        File.WriteAllText(Path.Combine(targetPath, ".agent-queue", "planned.json"), "{}\n");
+        var plannedDir = Directory.CreateDirectory(Path.Combine(targetPath, ".agent-queue", "planned")).FullName;
+        File.WriteAllText(Path.Combine(plannedDir, ".gitkeep"), string.Empty);
 
         var lessonsDir = Directory.CreateDirectory(Path.Combine(targetPath, ".claude", "memory", "lessons")).FullName;
         File.WriteAllText(Path.Combine(lessonsDir, ".gitkeep"), string.Empty);

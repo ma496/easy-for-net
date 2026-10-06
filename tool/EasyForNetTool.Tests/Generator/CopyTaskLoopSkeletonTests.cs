@@ -10,7 +10,7 @@ using EasyForNetTool.Generator;
 public class CopyTaskLoopSkeletonTests
 {
     /// <summary>
-    /// Tests that the skeleton holds exactly the guides and an empty planned.json - no lane, and no build record.
+    /// Tests that the skeleton holds exactly the guides and an empty planned/ - no lane, no plan record, and no build record.
     /// </summary>
     [Fact]
     public void Should_Lay_Out_Only_The_Shared_Skeleton()
@@ -30,7 +30,7 @@ public class CopyTaskLoopSkeletonTests
                 .ToArray();
             Assert.Equal(
                 [
-                    ".agent-queue/planned.json",
+                    ".agent-queue/planned/.gitkeep",
                     ".claude/memory/lessons/.gitkeep",
                     "docs/AGENTIC_WORKFLOW.md",
                     "docs/capabilities/README.md",
@@ -38,7 +38,6 @@ public class CopyTaskLoopSkeletonTests
                     "specs/TEMPLATE.md",
                 ],
                 files);
-            Assert.Equal("{}\n", File.ReadAllText(Path.Combine(target, ".agent-queue", "planned.json")));
             Assert.False(Directory.Exists(Path.Combine(target, "docs", "builds")));
         }
         finally

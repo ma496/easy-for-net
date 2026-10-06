@@ -205,6 +205,7 @@ const env = scheduleEnv({
   maxRunsPerTask: argOf("max-runs-per-task", process.env.AGENT_MAX_RUNS_PER_TASK ?? "3"),
   autoPush,
   refuseDirty,
+  workBranch: WORK_BRANCH,
 });
 
 // --- actions --------------------------------------------------------------------------------
@@ -262,7 +263,7 @@ mkdirSync(LOG_DIR, { recursive: true });
 const name = scheduler.install(env, interval);
 
 console.log(`Scheduled: ${name}`);
-console.log(`  every ${Math.max(60, interval)}s, building on ${config.project.branch || `the checked-out branch (now ${WORK_BRANCH})`}`);
+console.log(`  every ${Math.max(60, interval)}s, building on ${WORK_BRANCH}${config.project.branch ? "" : " (the branch checked out now; a cycle that fires on another one refuses)"}`);
 console.log(`  spend ceilings: ${formatCeiling(maxUsdPerTask)} per task, ${formatCeiling(maxUsdPerDrain)} per drain`);
 console.log(`  model: ${env.AGENT_MODEL}`);
 console.log(autoPush ? "  AGENT_AUTO_PUSH=1 — each verified commit is pushed" : "  AGENT_AUTO_PUSH=0 — commits stay local");

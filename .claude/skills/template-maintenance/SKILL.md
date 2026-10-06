@@ -59,7 +59,7 @@ would want.
   replaced with the project name)
 - **the task loop's records as an empty skeleton** (`CopyTaskLoopSkeleton`): `specs/README.md`,
   `specs/TEMPLATE.md`, `docs/AGENTIC_WORKFLOW.md`, `docs/capabilities/README.md`,
-  `.agent-queue/planned.json` as `{}`, and `.claude/memory/lessons/.gitkeep`. The queue creates its
+  `.agent-queue/planned/.gitkeep`, and `.claude/memory/lessons/.gitkeep`. The queue creates its
   lanes itself (`doing/`, `done/` and `failed/` are per machine, gitignored by the copied
   `.gitignore`), and `docs/builds/` appears with the first landed task;
   `CopyTaskLoopSkeletonTests` pins the exact file list.

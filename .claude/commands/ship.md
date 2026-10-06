@@ -22,7 +22,7 @@ merge a pull request.
    verified.
 5. **Stop.** Report the commit, the gates that ran and the ones that were skipped, and how
    many commits are now unpushed. Wait.
-6. **Push.** The guard refuses an agent's push to `main`, `master`, the base branch or
+6. **Push.** The guard refuses an agent's push to `main`, `master`, `develop`, the base branch or
    `project.branch`, whatever is said in the turn — so for those, give the owner the command
    to run themselves (`! git push` in this prompt). A feature branch may be pushed once they
    say so in this turn; then hand them the pull request URL (`npm run pr`). Merging is theirs

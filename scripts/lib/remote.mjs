@@ -60,3 +60,37 @@ export function describeRemote(url, resolveAlias = sshHostName) {
   }
   return { host, slug: parsed.slug, forge };
 }
+
+/**
+ * The ref "not pushed yet" is measured from: the branch's own remote copy, else the base
+ * branch's (remote, then local) — what a pull request would be cut against. Null when none
+ * exists, as in a project with no remote yet. Pure: `refExists` is supplied.
+ *
+ * Every report used `origin/<branch>..HEAD` alone, which fails on a branch never pushed and
+ * in a repository with no remote, and the failure read as "nothing is waiting for you".
+ */
+export function unpushedBase(branch, base, refExists) {
+  const candidates = [`origin/${branch}`, ...(base && base !== branch ? [`origin/${base}`, base] : [])];
+  return candidates.find((ref) => refExists(ref)) ?? null;
+}
+
+/** `unpushedBase` against this repository's refs. */
+export function unpushedBaseHere(branch, base, cwd = process.cwd()) {
+  return unpushedBase(branch, base, (ref) =>
+    spawnSync("git", ["rev-parse", "--verify", "--quiet", `${ref}^{commit}`], { cwd, stdio: "ignore" }).status === 0,
+  );
+}
+
+/**
+ * What is waiting to be pushed: `{ since, count, localOnly }`. `since` is the ref counted
+ * from, or null. With nothing to count from — no remote yet, as in every freshly generated
+ * project, or a remote nothing has been pushed to — none of the history is known to exist
+ * anywhere else, so the count is all of it and `localOnly` says so. Reporting "nothing is
+ * waiting" there was the one answer that was certainly wrong.
+ */
+export function unpushedHere(branch, base, cwd = process.cwd()) {
+  const since = unpushedBaseHere(branch, base, cwd);
+  const range = since ? `${since}..HEAD` : "HEAD";
+  const count = Number((spawnSync("git", ["rev-list", "--count", range], { cwd, encoding: "utf8" }).stdout ?? "").trim() || 0);
+  return { since, count, localOnly: !since };
+}

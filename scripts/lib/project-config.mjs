@@ -381,7 +381,12 @@ export function resolveBaseBranch(configured, { originHead = "", existing = [] }
 }
 
 /** The branch work happens on. Everything refuses to build anywhere else. */
-export const WORK_BRANCH = resolveWorkBranch(config.project.branch, git("rev-parse", "--abbrev-ref", "HEAD"));
+// AGENT_WORK_BRANCH is what the timer is installed with (lib/schedule.mjs): a cycle it fires
+// on another branch then refuses rather than building there.
+export const WORK_BRANCH = resolveWorkBranch(
+  config.project.branch || process.env.AGENT_WORK_BRANCH,
+  git("rev-parse", "--abbrev-ref", "HEAD"),
+);
 
 /** The branch pull requests target and "shipped" is measured against. */
 export const BASE_BRANCH = resolveBaseBranch(config.project.baseBranch, {
@@ -391,6 +396,15 @@ export const BASE_BRANCH = resolveBaseBranch(config.project.baseBranch, {
     .map((b) => b.trim())
     .filter(Boolean),
 });
+
+/**
+ * The branches nothing here pushes to: the base branch, `project.branch` when one is named,
+ * and the usual shared names (`main`, `master`, `develop`). One list, so the shell guard, auto-ship and the session
+ * banner cannot disagree about which branch is safe — they did, over `develop`.
+ */
+export const PROTECTED_BRANCHES = Object.freeze(
+  [...new Set([BASE_BRANCH, config.project.branch, "main", "master", "develop"].filter(Boolean))],
+);
 
 /** The project's own name, for briefs and launchd labels. */
 export const PROJECT_NAME = config.project.name || "this repository";

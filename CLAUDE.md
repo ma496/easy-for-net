@@ -118,16 +118,20 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
   out, the base branch included. `team` never plans or builds on the base branch — `queue plan`/`drain`,
   `loop`, `auto` and `schedule install` refuse there — so each spec is written, planned and built on a
   branch of its own and reaches the base through a pull request. `specs/`, `.agent-queue/todo/` and
-  `planned.json` are tracked (planning commits them as `Plan <spec>`); `doing/`, `done/` and `failed/`
+  `.agent-queue/planned/` are tracked (planning commits them as `Plan <spec>`); `doing/`, `done/` and `failed/`
   are per machine and gitignored. A task has landed when a commit reachable from HEAD names it on a
   `Task:` line, which survives a rebase or squash merge. Each spec's tasks live in a folder named for
   the spec (`adhoc` for hand-queued tasks) and a task's identity is `<spec>/<name>`, so every spec
   numbers from `01-`; planning an edited spec again numbers on past the names it already used, and a
   planning call that writes outside its folder or reuses a name queues nothing.
 - **The work branch** is `project.branch`, or whichever branch is checked out when that is `null`.
-  The runner refuses a dirty tree, commits each task with a `Task: <brief>` trailer, and **never
-  pushes unless `AGENT_AUTO_PUSH=1`** — and nothing here merges. Pull requests go to
-  `project.baseBranch` (else `origin/HEAD`); `auto-ship` opens one with `gh` when it is installed.
+  The runner refuses a dirty tree that is not its own salvage (`--salvage` takes it over), a live
+  drain and a half-finished git operation, commits each task with a `Task: <brief>` trailer, and
+  **never pushes unless `AGENT_AUTO_PUSH=1`** — and nothing here merges. Pull requests go to
+  `project.baseBranch` (else `origin/HEAD`); `npm run pr` prints the URL, and
+  `npm run auto:ship -- "<subject>" --push` pushes a non-protected branch and opens one with `gh`.
+  In `team`, a drain builds only the briefs its own branch added, and the guard refuses a commit
+  on the base branch.
 - **Spend is bounded** by `AGENT_MAX_USD_PER_TASK` (default 50), `AGENT_MAX_USD_PER_DRAIN` (200) and
   `AGENT_MAX_RUNS_PER_TASK` (3). Each attempt is also stopped by the CLI itself at `budget.maxTurns`
   parent turns (`--max-turns`) and at what is left of the task's ceiling (`--max-budget-usd`), and
@@ -144,8 +148,9 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
   new version's fixtures.
 - **Guards run in every permission mode.** `.claude/hooks/` refuses reading or writing `.env*` and the
   per-environment `appsettings.*.json`, edits to build output, `dotnet ef database drop`, destructive
-  SQL, `git reset --hard`, `git add -A`, force-pushes, pushes to a protected branch, every merge
-  route and the VPS deploy (`npm run deploy:vps`, through `hooks.deniedCommands`) — for the Bash and PowerShell tools alike, with git's global options (`git -C …`) seen
+  SQL, `git reset --hard` and its equivalents (`checkout -- .`, `restore .`, `stash clear`,
+  `branch -D`), `git add -A`, force-pushes, pushes to a protected branch (and, in `team`, a commit
+  on the base branch), every merge route and the VPS deploy (`npm run deploy:vps`, through `hooks.deniedCommands`) — for the Bash and PowerShell tools alike, with git's global options (`git -C …`) seen
   through — and reading the secret files through the Read and Grep tools. `npm run test:hooks`
   holds a block case and a neighbouring allow case for each rule; add both when you add a rule.
 - **Records.** `.agent-runs/` (git-ignored) is every attempt, with its raw stream beside its log

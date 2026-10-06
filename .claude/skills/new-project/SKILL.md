@@ -55,7 +55,7 @@ What you get:
 - `CLAUDE.md` and the agentic layer: `.claude` (agents, commands, hooks, `settings.json`, status
   line, skills, `memory/README.md`), `scripts/` (the loop's engine), and an empty task-loop skeleton —
   `specs/{README,TEMPLATE}.md`, `docs/AGENTIC_WORKFLOW.md`, `docs/capabilities/README.md`,
-  `.agent-queue/planned.json` (`{}`) and an empty
+  an empty `.agent-queue/planned/` (one plan record per spec, kept by `.gitkeep`) and an empty
   `.claude/memory/lessons`.
 
 Namespaces, project file names, `InternalsVisibleTo`, the `ReflectionCache.AddFrom…` call, the npm

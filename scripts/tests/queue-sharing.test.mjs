@@ -255,3 +255,50 @@ test("a re-plan is told which old tasks it replaces and which stay", async () =>
   // A first plan says nothing about earlier ones.
   assert.doesNotMatch(buildPlanBrief({ scope: SCOPE }), /planned before/);
 });
+
+test("in a team, a branch builds only the briefs it added or changed", async () => {
+  const { briefsChangedOn } = await import("../lib/planning.mjs");
+  assert.deepEqual(
+    [...briefsChangedOn([".agent-queue/todo/billing/01-api.md", "specs/billing.md", ".agent-queue/planned.json", ".agent-queue/todo/adhoc/02-fix.md"])].sort(),
+    ["adhoc/02-fix.md", "billing/01-api.md"],
+  );
+  assert.equal(briefsChangedOn([".agent-queue/done/billing/01-api.md"]).size, 0);
+});
+
+test("each spec's plan is its own file, laid over the legacy shared one", async () => {
+  const { readPlanned, writePlanned, plannedRecordPath } = await import("../lib/build-record.mjs");
+  const queue = mkdtempSync(join(tmpdir(), "planned-"));
+  writeFileSync(join(queue, "planned.json"), JSON.stringify({ "old.md": "abc", "billing.md": { hash: "stale", builds: null } }));
+  writePlanned(queue, "billing.md", { hash: "new", builds: "2026-10-07T10-00-00-billing" });
+  const planned = readPlanned(queue);
+  assert.equal(planned["old.md"], "abc", "a legacy record still reads");
+  assert.equal(planned["billing.md"].hash, "new", "the per-spec file wins over the legacy entry");
+  assert.equal(plannedRecordPath("billing.md"), ".agent-queue/planned/billing.md.json");
+  rmSync(queue, { recursive: true, force: true });
+  assert.deepEqual(readPlanned(join(queue, "missing")), {});
+});
+
+test("unpushed work is measured from the branch's remote, else the base, else nothing", async () => {
+  const { unpushedBase } = await import("../lib/remote.mjs");
+  const has = (...refs) => (ref) => refs.includes(ref);
+  assert.equal(unpushedBase("feat/x", "main", has("origin/feat/x", "origin/main")), "origin/feat/x");
+  assert.equal(unpushedBase("feat/x", "main", has("origin/main", "main")), "origin/main", "never pushed");
+  assert.equal(unpushedBase("feat/x", "main", has("main")), "main", "no remote yet");
+  assert.equal(unpushedBase("main", "main", has("main")), null, "the base itself, with no remote");
+});
+
+test("with nothing pushed anywhere, every commit is reported as local only", async () => {
+  const { unpushedHere } = await import("../lib/remote.mjs");
+  const { spawnSync } = await import("node:child_process");
+  const dir = mkdtempSync(join(tmpdir(), "unpushed-"));
+  const git = (...args) => spawnSync("git", args, { cwd: dir, encoding: "utf8" });
+  git("init", "-q");
+  git("symbolic-ref", "HEAD", "refs/heads/main");
+  git("-c", "user.email=t@example.com", "-c", "user.name=T", "commit", "-q", "--allow-empty", "-m", "one");
+  git("-c", "user.email=t@example.com", "-c", "user.name=T", "commit", "-q", "--allow-empty", "-m", "two");
+  assert.deepEqual(unpushedHere("main", "main", dir), { since: null, count: 2, localOnly: true });
+  // A remote added but never pushed to holds none of it either.
+  git("remote", "add", "origin", "https://example.com/x.git");
+  assert.deepEqual(unpushedHere("main", "main", dir), { since: null, count: 2, localOnly: true });
+  rmSync(dir, { recursive: true, force: true });
+});

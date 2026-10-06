@@ -26,7 +26,7 @@
  *   .agent-queue/failed/   attempted, never verified — local; the failure is in the journal
  *
  * What another checkout knows comes from git, never from these local lanes: a planned spec is
- * a `Plan <spec>` commit adding its briefs to todo/ and its hash to planned.json, and a landed
+ * a `Plan <spec>` commit adding its briefs to todo/ and its hash to planned/<spec>.json, and a landed
  * task is a commit that removes its brief from todo/ and names it on a `Task:` line.
  *
  * Everything is built on the work branch, in this checkout. Tasks run strictly one at a time and
@@ -51,11 +51,13 @@ import {
   planNameProblems,
   specDigest,
   specSlug,
+  briefsChangedOn,
   specsChangedOn,
   strayPlanPaths,
 } from "./lib/planning.mjs";
 import { workingTreePaths } from "./lib/changed-paths.mjs";
-import { planDirName, plannedEntry } from "./lib/build-record.mjs";
+import { unpushedHere } from "./lib/remote.mjs";
+import { planDirName, plannedEntry, plannedRecordPath, readPlanned, writePlanned } from "./lib/build-record.mjs";
 import { ADHOC, fsKey, listTasks, nameOf, qualify, scopeOf, stemOf } from "./lib/task-names.mjs";
 import { wantsRefuseDirtyStart } from "./lib/agent-flags.mjs";
 import { UNTRACKED_DIR, hasSalvage, restoreSalvage } from "./lib/salvage.mjs";
@@ -112,7 +114,7 @@ const EXIT_BLOCKED = 4;
 /** The planner's model — the same rule as the runner's, so no session runs on an unchosen default. */
 const PLAN_MODEL = resolveModel({ env: process.env.AGENT_MODEL });
 // What one `claude` call is charged at when its stream carried no readable cost. Scripts
-// read the environment directly; the setting is documented in .env.example.
+// read the environment directly; every AGENT_* setting is listed in docs/AGENTIC_WORKFLOW.md.
 const ASSUMED_USD = parseAssumedUsd(process.env.AGENT_ASSUMED_USD_PER_CALL);
 // What one drain may spend in total, planning included. Checked before each task begins and
 // never mid-task: killing a task halfway leaves a dirty tree and a half-finished change,
@@ -293,15 +295,8 @@ const git = (args, opts = {}) => spawnSync("git", args, { cwd: ROOT, encoding: "
 
 // --- intake: specs/ → queued tasks -------------------------------------------------
 const SPECS = join(ROOT, "specs");
-const PLANNED = join(QUEUE, "planned.json");
 const digest = specDigest;
-const loadPlanned = () => {
-  try {
-    return JSON.parse(readFileSync(PLANNED, "utf8"));
-  } catch {
-    return {};
-  }
-};
+const loadPlanned = () => readPlanned(QUEUE);
 
 const currentBranch = () => (git(["rev-parse", "--abbrev-ref", "HEAD"]).stdout ?? "").trim();
 
@@ -358,6 +353,28 @@ function refuseByWorkflow() {
  * else's spec is the mistake this exists to prevent, so the answer is then "none".
  */
 function specsOfThisBranch() {
+  const changed = changedOnThisBranch("specs", "no spec is planned");
+  return changed && specsChangedOn(changed);
+}
+
+/**
+ * Team workflow only: the briefs in todo/ that this branch added or changed. A brief that
+ * reached the branch from the base — a teammate's task that failed or was still blocked
+ * when their pull request merged — is theirs to build, not this branch's: building it here
+ * put their work into this branch's pull request.
+ */
+function briefsOfThisBranch() {
+  const changed = changedOnThisBranch(".agent-queue/todo", "no queued task is built");
+  return changed && briefsChangedOn(changed);
+}
+
+/**
+ * Paths under `pathspec` this branch changed since it left the base branch, committed or
+ * not. The base is whichever of the local and the remote-tracking base branch is further
+ * along, so a stale local copy does not make work merged since look like this branch's own.
+ * Undefined, after saying `consequence`, when no merge base can be found.
+ */
+function changedOnThisBranch(pathspec, consequence) {
   const bases = [BASE_BRANCH, `origin/${BASE_BRANCH}`]
     .map((ref) => (git(["merge-base", ref, "HEAD"]).stdout ?? "").trim())
     .filter(Boolean);
@@ -367,22 +384,22 @@ function specsOfThisBranch() {
   );
   if (!mergeBase) {
     console.log(
-      `team workflow: no common history with ${BASE_BRANCH} was found, so no spec is planned.\n` +
+      `team workflow: no common history with ${BASE_BRANCH} was found, so ${consequence}.\n` +
         "Fetch the base branch, or set project.baseBranch in agentic.config.json.",
     );
     return undefined;
   }
-  const committed = (git(["diff", "--name-only", mergeBase, "HEAD", "--", "specs"]).stdout ?? "").split("\n");
-  const uncommitted = (git(["status", "--porcelain", "--untracked-files=all", "--", "specs"]).stdout ?? "")
+  const committed = (git(["diff", "--name-only", mergeBase, "HEAD", "--", pathspec]).stdout ?? "").split("\n");
+  const uncommitted = (git(["status", "--porcelain", "--untracked-files=all", "--", pathspec]).stdout ?? "")
     .split("\n")
     .filter(Boolean)
     .map((l) => l.slice(3).replace(/^.* -> /, ""));
-  return specsChangedOn([...committed, ...uncommitted]);
+  return [...committed, ...uncommitted].filter(Boolean);
 }
 
 /**
  * Commit what planning one spec produced — the spec itself, its briefs, and its line in
- * planned.json — and nothing else.
+ * plan record (planned/<spec>.json) — and nothing else.
  *
  * Left uncommitted, all of it rode along in the first task's commit, and in a team it never
  * reached anyone until that task landed: a teammate's loop saw the spec as unplanned and
@@ -402,7 +419,7 @@ function commitPlan(specFile, added, replaced = []) {
     `specs/${specFile}`,
     ...added.map((f) => `.agent-queue/todo/${f}`),
     ...withdrawn,
-    ".agent-queue/planned.json",
+    plannedRecordPath(specFile),
   ];
   const body = [
     `Spec: specs/${specFile}`,
@@ -454,7 +471,7 @@ async function planSpecs() {
     // Intake is the one phase that can make an unbounded number of calls: twenty specs
     // arriving at once is twenty `claude` calls, and nothing between them would otherwise
     // notice the drain's ceiling. Checked per spec for that reason. A spec left unplanned
-    // is not lost — planned.json is keyed on contents, so the next run picks it up.
+    // is not lost — the plan record is keyed on contents, so the next run picks it up.
     if (ceilingReached(sumSpend(costs, ASSUMED_USD).usd, MAX_USD_PER_DRAIN)) {
       console.log(
         `  stopping intake: ` +
@@ -632,7 +649,7 @@ async function planSpecs() {
     if (problems.length > 0) {
       // Nothing the call wrote is queued: one misnamed brief can release a dependent early,
       // and a half-accepted batch is a split nobody planned. Moved aside, never deleted, and
-      // planned.json is left alone so the next run plans the spec again.
+      // the plan record is left alone so the next run plans the spec again.
       const aside = join(ROOT, ".agent-runs", "rejected-plans", builds);
       for (const f of added) {
         mkdirSync(dirname(join(aside, f)), { recursive: true });
@@ -654,7 +671,7 @@ async function planSpecs() {
     // is never planned twice. `builds` is where this plan's tasks record (record-build.mjs):
     // a new directory per planning, so the records of each plan stay together.
     planned[file] = { hash: specHash, builds };
-    writeFileSync(PLANNED, `${JSON.stringify(planned, null, 2)}\n`);
+    writePlanned(QUEUE, file, planned[file]);
     commitPlan(file, added, replaced);
   }
 
@@ -1269,10 +1286,24 @@ if (unplannedSpecs.length > 0) {
  * scheduled run. An eight-task chain would take eight hours of wall clock to do what one
  * pass can do continuously.
  */
+// Team only: the briefs this branch may build, computed once — the set is about where each
+// brief came from, which building one task does not change. Null means every brief.
+const ownBriefs = WORKFLOW === "team" ? (briefsOfThisBranch() ?? new Set()) : null;
+if (ownBriefs) {
+  const others = listLane("todo").filter((f) => !ownBriefs.has(f));
+  if (others.length) {
+    console.log(
+      `team workflow: ${others.length} queued task(s) came from the base branch, not this one, and are left ` +
+        `for whoever planned them:\n${others.map((f) => `  ${f}`).join("\n")}\n`,
+    );
+  }
+}
+
 function partitionTodo() {
   const ready = [];
   const blocked = [];
   for (const file of listLane("todo")) {
+    if (ownBriefs && !ownBriefs.has(file)) continue;
     const waitingOn = blockedBy(file);
     (waitingOn.length ? blocked : ready).push({ file, waitingOn });
   }
@@ -1593,7 +1624,7 @@ while (results.length < max) {
     // Everything in todo/, not only what was runnable: a held task is still waiting there
     // and still untouched, and saying "2 remain" when 5 files sit in the lane would read as
     // if the ceiling had somehow consumed the rest.
-    budgetStop = { spentUsd: drainSpentUsd, waiting: listLane("todo").length };
+    budgetStop = { spentUsd: drainSpentUsd, waiting: listLane("todo").filter((f) => !ownBriefs || ownBriefs.has(f)).length };
     break;
   }
 
@@ -1683,12 +1714,19 @@ if (budgetStop) {
 }
 
 if (ok.length > 0) {
-  const ahead = (git(["rev-list", "--count", `origin/${WORK_BRANCH}..HEAD`]).stdout ?? "").trim();
+  // From the branch's remote copy, else the base: a branch never pushed has no origin/<branch>.
+  const { since, count, localOnly } = unpushedHere(WORK_BRANCH, BASE_BRANCH, ROOT);
+  const ahead = !count
+    ? ""
+    : since
+      ? ` It is ${count} commit(s) ahead of ${since}.`
+      : localOnly
+        ? ` Nothing has been pushed yet, so its ${count} commit(s) exist only on this machine.`
+        : "";
   console.log(`
-Everything is committed on ${WORK_BRANCH}.${ahead && ahead !== "0" ? ` It is ${ahead} commit(s) ahead of origin.` : ""}
-
-  Review:  git log --oneline origin/${WORK_BRANCH}..HEAD
-  Push:    git push          (yours alone — the guard refuses it from in here)`);
+Everything is committed on ${WORK_BRANCH}.${ahead}
+${since ? `\n  Review:  git log --oneline ${since}..HEAD` : ""}
+  Push:    ${WORKFLOW === "team" ? "git push -u origin HEAD, then npm run pr" : "git push"}          (yours alone — the guard refuses a protected branch from in here)`);
 }
 
 console.log(`\nHistory: npm run auto:status`);
