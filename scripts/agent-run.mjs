@@ -9,6 +9,7 @@
  *   npm run auto -- "..." --no-autostart     # never start the stack for a live check
  *   npm run auto -- "..." --verify-port 5100 # live checks against a dedicated API port
  *   npm run auto -- "..." --no-preflight     # start even when a service verify needs is down
+ *   npm run auto -- "..." --salvage          # take over the uncommitted work already in the tree
  *
  * Work happens on the work branch (`project.branch`, or whichever is checked out), in this
  * checkout. There is no task branch: the run starts from a clean tree, builds, verifies,
@@ -70,13 +71,18 @@ import {
   restoreSalvage,
   salvageBrief,
 } from "./lib/salvage.mjs";
-import { IS_WINDOWS, hasExecutable, killTree, spawnPortable } from "./lib/proc.mjs";
-import { assertValidConfig, config, modelArgs, positiveInt, resolveModel, WORK_BRANCH } from "./lib/project-config.mjs";
+import { IS_WINDOWS, hasExecutable, isAlive, killTree, spawnPortable } from "./lib/proc.mjs";
+import { liveHolder } from "./lib/queue-lock.mjs";
+import {
+  assertValidConfig, config, modelArgs, positiveInt, resolveModel, WORK_BRANCH, workflowRefusal,
+} from "./lib/project-config.mjs";
+import { fsKey, stemOf } from "./lib/task-names.mjs";
 import { treeFingerprint, workingTreePaths } from "./lib/changed-paths.mjs";
 import { attemptOutcome } from "./lib/attempt-outcome.mjs";
 import { buildBrief } from "./lib/brief.mjs";
 import { ensureDependencies, taskDependencies } from "./lib/dependencies.mjs";
 import {
+  acceptanceProblems,
   carriedDelegations,
   expectedSequence,
   explainMissing,
@@ -111,10 +117,12 @@ const task = (taskFile ? readFileSync(taskFile, "utf8") : argv.find((a) => !a.st
 // journalled so a later run can find this one's cost even after the brief's body is edited
 // — matching on the body meant a brief that gained a `Depends-on:` line lost its own
 // history, and with it the ceiling that history was holding up.
-const taskSlug = taskFile ? basename(taskFile).replace(/\.md$/i, "") : null;
+// The task's identity is its stem, `scope/name` (lib/task-names.mjs): what the commit's `Task:`
+// line carries and what the journal keys its history on.
+const taskSlug = taskFile ? stemOf(taskFile) : null;
 
 if (!task || !task.trim()) {
-  console.error('Usage: npm run auto -- "<task>"  [--attempts N] [--safe] [--no-commit] [--no-autostart]');
+  console.error('Usage: npm run auto -- "<task>"  [--attempts N] [--safe] [--salvage] [--no-commit] [--no-autostart]');
   process.exit(1);
 }
 
@@ -197,12 +205,13 @@ const DEFAULT_VERIFY_PORT = String(config.verify.service?.port ?? 3000);
 const PERMISSION_MODE = flag("safe") ? "acceptEdits" : "bypassPermissions";
 const RUN_ID = `run-${new Date().toISOString().replace(/[:.]/g, "-")}`;
 const startedAt = new Date().toISOString();
-// Handed to the session's environment. `record-lesson.mjs` reads AGENT_TASK, so a lesson
-// says which task taught it whether or not the session remembered to pass `--task`.
-const childEnv = { AGENT_TASK: taskSlug ?? "", AGENT_RUN_ID: RUN_ID };
+// Handed to the session's environment.
+// AGENT_NO_AUTOSTART carries --no-autostart to the session's own verify, which otherwise
+// autostarts inside a run (verify.mjs).
+const childEnv = { AGENT_RUN_ID: RUN_ID, ...(flag("no-autostart") ? { AGENT_NO_AUTOSTART: "1" } : {}) };
 
 // What one `claude` call is charged at when its stream carried no readable cost. Scripts
-// read the environment directly; the setting is documented in .env.example.
+// read the environment directly; every AGENT_* setting is listed in docs/AGENTIC_WORKFLOW.md.
 // Unset, it is learned from the journal: the median measured attempt, since the attempts
 // that go unmeasured are the killed ones and those are the long ones.
 const ASSUMED_USD = assumedRateFromHistory(
@@ -231,7 +240,7 @@ const attemptPhases = [];
 const attemptEndings = [];
 
 // What this task may spend in total, across every attempt. Read from the environment like
-// the assumed figure above and documented in .env.example; `off` means no ceiling.
+// the assumed figure above and listed in docs/AGENTIC_WORKFLOW.md; `off` means no ceiling.
 //
 // It bounds the attempt in flight too, but without killing it: the CLI is handed what is
 // left as `--max-budget-usd` and stops the session itself, reporting what it spent, with its
@@ -291,7 +300,12 @@ function runVerify(extraArgs = []) {
  * environment — a service that was down — and deserves a fresh look once it is back.
  */
 let lastPass = null;
-function verifyTree() {
+// The last result on this tree whatever it was. A failure is reused only where asking again
+// cannot change the answer: the check that opens the next attempt and the give-up check run
+// seconds after it failed, on the same bytes. The verify after a session never reuses one,
+// since that session may have fixed the environment rather than the code.
+let lastResult = null;
+function verifyTree({ reuseFailure = false } = {}) {
   const fingerprint = treeFingerprint();
   if (lastPass?.fingerprint === fingerprint) {
     return {
@@ -300,8 +314,14 @@ function verifyTree() {
       reused: true,
     };
   }
+  if (reuseFailure && lastResult?.fingerprint === fingerprint && lastResult.result.status !== 0) {
+    return { ...lastResult.result, reused: true };
+  }
+  // Never reused: a pass the session reports or records. Anything the session can write it
+  // can forge, and this verify is the one check it cannot touch.
   const result = runVerify();
   if (result.status === 0) lastPass = { fingerprint, result };
+  lastResult = { fingerprint, result };
   return result;
 }
 const runLive = (cmd, args) => spawnSync(cmd, args, { stdio: "inherit", encoding: "utf8" });
@@ -429,11 +449,14 @@ function dirtyOutsideQueue(porcelain) {
   return dirtyOutsideQueueLines(porcelain);
 }
 
-const runVerifyCapture = () => verifyTree();
-
 // Work happens on the work branch, in place — no task branch, no worktree.
 {
   const current = branchName();
+  const refusal = workflowRefusal({ branch: current });
+  if (refusal) {
+    console.error(refusal);
+    process.exit(1);
+  }
   if (current !== WORK_BRANCH) {
     console.error(
       `This runner builds on ${WORK_BRANCH}, and the checkout is on "${current}".\n` +
@@ -442,12 +465,37 @@ const runVerifyCapture = () => verifyTree();
     process.exit(1);
   }
 
+  // Two writers in one checkout corrupt each other's commits, and a half-finished git
+  // operation turns its conflicts into "salvage". Neither is the task's to resolve.
+  const gitDir = (run("git", ["rev-parse", "--absolute-git-dir"]).stdout ?? "").trim();
+  const inProgress = gitDir
+    ? ["MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD", "rebase-merge", "rebase-apply"].filter((f) => existsSync(join(gitDir, f)))
+    : [];
+  if (current === "HEAD" || inProgress.length > 0) {
+    console.error(
+      current === "HEAD"
+        ? "The checkout is on a detached HEAD, so there is no branch to commit the task to."
+        : `A git operation is in progress (${inProgress.join(", ")}). Finish or abort it first.`,
+    );
+    process.exit(1);
+  }
+  const drain = process.env.AGENT_FROM_DRAIN === "1" ? null : liveHolder(join(SCRIPTS, "..", ".agent-queue", "drain.lock"), { isAlive });
+  if (drain) {
+    console.error(
+      `A drain is running in this checkout (pid ${drain.pid}). Two runs at once edit the same tree,\n` +
+        "so this one is not starting. Queue the task instead: npm run queue -- add \"<task>\"",
+    );
+    process.exit(1);
+  }
+
   // Drain restores interrupted/<slug>/ before spawning us; if it did not (manual auto),
   // restore here from the task-file stem so salvage still works.
-  const taskStem = taskFile ? basename(taskFile, ".md") : null;
+  // Parked leftovers are filed under the stem as one path segment, as the drain parks them.
+  const taskStem = taskFile ? fsKey(stemOf(taskFile)) : null;
   const repoRoot = join(SCRIPTS, "..");
+  let restored = null;
   if (taskStem) {
-    const restored = restoreSalvage(repoRoot, taskStem);
+    restored = restoreSalvage(repoRoot, taskStem);
     if (restored) {
       log(
         `Restored salvage for ${taskStem}` +
@@ -459,6 +507,21 @@ const runVerifyCapture = () => verifyTree();
   }
 
   const dirty = dirtyOutsideQueue(run("git", ["status", "--porcelain"]).stdout);
+  // Uncommitted work is this task's salvage only when it can be: the drain restored this
+  // task's park before starting us, or this run just restored it. Run by hand on someone's
+  // half-finished edits, the runner used to verify them, call them salvage, and commit them
+  // under the new task's subject. `--salvage` says that is what you mean.
+  const fromDrain = process.env.AGENT_FROM_DRAIN === "1";
+  if (dirty.length > 0 && !fromDrain && !restored && !flag("salvage")) {
+    console.error(
+      `${dirty.length} uncommitted file(s) are in the tree, and nothing says they belong to this task:\n\n` +
+        dirty.slice(0, 10).join("\n") +
+        (dirty.length > 10 ? `\n  …and ${dirty.length - 10} more` : "") +
+        "\n\nCommit or stash them first, or pass --salvage to have this task take them over " +
+        "(they are then verified, reviewed and committed as this task's work).",
+    );
+    process.exit(1);
+  }
   if (dirty.length > 0) {
     // Salvage path: prior attempt (or restored park) left WIP. Do not refuse — verify first
     // inside the attempt loop and tell Claude to review/fix rather than rebuild.
@@ -508,7 +571,7 @@ const memory = (() => {
   }
 })();
 
-const BRIEF = buildBrief({ memory, history, taskSlug: taskSlug ?? "" });
+const BRIEF = buildBrief({ memory, history });
 
 let feedback = "";
 // Guidance that belongs to *how* the last attempt ended rather than to what verification
@@ -518,6 +581,9 @@ let passed = false;
 let attempt = 0;
 /** Every delegation observed in this run's earlier attempts, in order. */
 const earlierDelegations = [];
+// The delegations the last attempt was judged on. The give-up path accepts a tree only on
+// the same terms an attempt would have, so it needs them after the loop has ended.
+let lastDelegations = { delegated: [], current: [] };
 
 console.log(`Model: ${MODEL === "inherit" ? "the CLI default (AGENT_MODEL=inherit)" : MODEL} (AGENT_MODEL)`);
 if (Number.isFinite(MAX_USD_PER_TASK)) {
@@ -567,7 +633,7 @@ while (attempt < MAX_ATTEMPTS && !passed && !budgetExhausted) {
     log(
       `Attempt ${attempt} of ${MAX_ATTEMPTS} — salvaging ${dirtyNow.length} existing file(s) (verify first)`,
     );
-    const pre = runVerifyCapture();
+    const pre = verifyTree({ reuseFailure: true });
     salvageVerifyOutput = pre.output;
     process.stdout.write(pre.output);
     if (pre.status === 0) {
@@ -642,6 +708,7 @@ ${carried.slice(-6000)}`;
   // still count for this one (lib/departments.mjs, carriedDelegations); reviews do not carry.
   const delegated = [...carriedDelegations(earlierDelegations), ...(claudeRes.subagents ?? [])];
   earlierDelegations.push(...(claudeRes.subagents ?? []));
+  lastDelegations = { delegated, current: claudeRes.subagents ?? [] };
 
   attemptCosts.push(typeof claudeRes.costUsd === "number" ? claudeRes.costUsd : null);
   attemptTurns.push(typeof claudeRes.turns === "number" ? claudeRes.turns : 0);
@@ -780,10 +847,10 @@ ${carried.slice(-6000)}`;
       console.log(`\nAttempt ${attempt} verified, but the working tree holds no change to accept.`);
       feedback =
         `\`${config.commands.verify}\` passed, but nothing was written: \`git status\` shows no changed ` +
-        `file outside \`.agent-queue/\` and \`${config.docs.builds}/\`. The gate is green because \`${WORK_BRANCH}\` ` +
+        `file outside \`.agent-queue/\`. The gate is green because \`${WORK_BRANCH}\` ` +
         "is green, not because this task was done.\n\n" +
-        "Read the brief again and implement it. Edit the actual source files — a build " +
-        "record, a plan, or a description of what you would do is not the change. If you " +
+        "Read the brief again and implement it. Edit the actual source files — a " +
+        "plan, a queue file, or a description of what you would do is not the change. If you " +
         `believe the work already exists on \`${WORK_BRANCH}\`, name the commit and the lines that ` +
         "satisfy each **Done when** bullet instead of finishing silently.";
       continue;
@@ -920,10 +987,21 @@ if (!passed) {
 
     // The same port and base as every other verify in this run; this one used to drop both
     // and judge the work against a different branch on the default port.
-    const salvage = verifyTree();
+    const salvage = verifyTree({ reuseFailure: true });
     process.stdout.write(salvage.output);
 
-    if (salvage.status === 0) {
+    // A green gate is not the whole bar. An attempt refused for a missing or out-of-order
+    // review verified too, and accepting it here on the gate alone committed exactly the
+    // change that refusal was there to stop.
+    const unreviewed =
+      salvage.status === 0
+        ? acceptanceProblems(workingTreePaths(), lastDelegations.delegated, lastDelegations.current)
+        : [];
+    if (salvage.status === 0 && unreviewed.length > 0) {
+      console.error("\nIt verifies, but the reviews it owes did not all happen, so it is not accepted:");
+      for (const p of unreviewed) console.error(`   ${p}`);
+      console.error("The tree is left as it is; a later run restores it and asks for the reviews.");
+    } else if (salvage.status === 0) {
       console.log("\nIt verifies. Accepting the work rather than discarding it.");
       passed = true;
     } else {
@@ -967,10 +1045,15 @@ Verified and left uncommitted on ${WORK_BRANCH} (--no-commit).
   process.exit(0);
 }
 
-const shipArgs = [join(SCRIPTS, "auto-ship.mjs"), subject, "--commit-only"];
+// The build record is written now, before the commit, so it lands in the task's own commit
+// rather than being left in the tree for the next one to sweep up. record-build.mjs never
+// fails the run; a task with no brief file (`npm run auto -- "<task>"`) has nothing to record.
+if (taskFile) runLive("node", [join(SCRIPTS, "record-build.mjs"), "--task", taskFile]);
+
+const shipArgs = [join(SCRIPTS, "auto-ship.mjs"), subject, "--commit-only", "--verified"];
 // The brief this run came from, so `queue -- audit` can pair the commit to it by trailer
 // rather than by matching subject text.
-if (taskFile) shipArgs.push("--task", basename(taskFile, ".md"));
+if (taskFile) shipArgs.push("--task", stemOf(taskFile));
 const ship = runLive("node", shipArgs);
 if (ship.status !== 0) {
   // Verified but uncommitted is a failure for this runner: the queue's next task would

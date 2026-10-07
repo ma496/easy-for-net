@@ -61,7 +61,7 @@ const round = (n) => Math.round(n * 1e6) / 1e6;
 /**
  * Spellings that mean "no ceiling at all", for someone who deliberately wants none.
  *
- * Deliberately the exact set `.env.example` documents, and no wider. Every other
+ * Deliberately the exact set docs/AGENTIC_WORKFLOW.md documents, and no wider. Every other
  * unrecognised value falls back to the default ceiling, so an accepted-but-undocumented
  * spelling would be the one input class that silently removes a ceiling — which is the
  * failure this module exists to prevent.

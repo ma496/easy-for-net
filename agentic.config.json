@@ -3,6 +3,7 @@
     "name": "easy-for-net",
     "branch": null,
     "baseBranch": null,
+    "workflow": "solo",
     "coAuthor": null,
     "conventions": [
       "Features are isolated vertical slices: a type under Features/X never references a type under Features/Y unless that type is marked [AllowOutside]. Cross-feature access goes through a service interface, never through another feature's entities — the architecture tests fail the gate otherwise.",
@@ -29,7 +30,7 @@
       "agent": "ui-ux-reviewer",
       "label": "Design",
       "phase": "design",
-      "match": ["^src/frontend/web/(app|components)/.*\\.tsx$"],
+      "match": ["^src/frontend/web/(app|components)/(?!.*\\.test\\.tsx$).*\\.tsx$"],
       "why": "Decides what the screen should be — layout, states, narrow widths, dark mode and RTL — before code makes that decision by accident."
     },
     {
@@ -47,14 +48,14 @@
       "agent": "backend-engineer",
       "label": "Backend",
       "phase": "build",
-      "match": ["^src/backend/", "^tool/"],
+      "match": ["^src/backend/(?!Source/Features/Localization/Core/Resources/)", "^tool/"],
       "why": "Endpoints, services, permissions, feature management and their tests — everything behind the HTTP surface."
     },
     {
       "agent": "frontend-engineer",
       "label": "Front end",
       "phase": "build",
-      "match": ["^src/frontend/web/"],
+      "match": ["^src/frontend/web/", "^src/backend/Source/Features/Localization/Core/Resources/"],
       "why": "The Next.js app: locale-prefixed routes, RTK Query slices, forms, translations and the shared components."
     },
     {
@@ -71,7 +72,10 @@
       "phase": "review",
       "order": 1,
       "match": [
-        "^\\.claude/(hooks|settings)",
+        "^\\.claude/(hooks|settings|agents|commands)",
+        "^agentic\\.config\\.json$",
+        "^scripts/(agent-run|agent-queue|auto-ship|verify|gate)\\.mjs$",
+        "^scripts/lib/(departments|project-config|stage-paths|changed-paths|gate-scope|stream-render|claude-events|attempt-outcome)\\.mjs$",
         "^src/backend/Source/Permissions/",
         "^src/backend/Source/Features/(Identity|Tenancy)/",
         "^src/backend/Source/Program\\.cs$",
@@ -90,7 +94,7 @@
       "label": "UI / UX",
       "phase": "review",
       "order": 1,
-      "match": ["^src/frontend/web/(app|components)/.*\\.tsx$"],
+      "match": ["^src/frontend/web/(app|components)/(?!.*\\.test\\.tsx$).*\\.tsx$"],
       "why": "Layout, hierarchy and states are judged by eye, and nothing else in the loop looks."
     },
     {
@@ -99,7 +103,7 @@
       "phase": "review",
       "order": 1,
       "always": true,
-      "exceptWhenOnly": ["\\.md$"],
+      "exceptWhenOnly": ["^(?!\\.claude/).*\\.md$"],
       "why": "Sees what a green gate cannot: a tenant filter missing, a permission unchecked, a test weakened to pass."
     }
   ],

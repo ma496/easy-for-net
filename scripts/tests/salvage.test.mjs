@@ -45,3 +45,29 @@ test("salvageBrief includes verify output when fix mode", () => {
   assert.match(text, /Do not delete it and start over/i);
   assert.match(text, /FAIL: quota\.test\.ts/);
 });
+
+test("an untracked file parked with its directories comes back to the same path", async () => {
+  const { restoreSalvage, UNTRACKED_DIR } = await import("../lib/salvage.mjs");
+  const root = mkdtempSync(join(tmpdir(), "salvage-"));
+  const dir = parkDirForSlug(root, "billing__01-api");
+  mkdirSync(join(dir, UNTRACKED_DIR, "src", "__tests__"), { recursive: true });
+  writeFileSync(join(dir, UNTRACKED_DIR, "src", "__tests__", "a.test.ts"), "x");
+  const res = restoreSalvage(root, "billing__01-api");
+  assert.equal(res.untracked, 1);
+  assert.equal(readFileSync(join(root, "src", "__tests__", "a.test.ts"), "utf8"), "x");
+  assert.equal(existsSync(dir), false, "a clean restore marks the park applied");
+});
+
+test("a patch that does not apply leaves the park where the next run finds it", async () => {
+  const { restoreSalvage } = await import("../lib/salvage.mjs");
+  const root = mkdtempSync(join(tmpdir(), "salvage-"));
+  const { spawnSync } = await import("node:child_process");
+  spawnSync("git", ["init", "-q"], { cwd: root });
+  const dir = parkDirForSlug(root, "x");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, "tracked.patch"), "diff --git a/missing.txt b/missing.txt\n--- a/missing.txt\n+++ b/missing.txt\n@@ -1 +1 @@\n-old\n+new\n");
+  const res = restoreSalvage(root, "x");
+  assert.ok(res.error);
+  assert.equal(res.applied, null);
+  assert.equal(hasSalvage(dir), true);
+});

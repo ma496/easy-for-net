@@ -1,7 +1,7 @@
 ---
 name: backend-engineer
 description: Builds and changes everything server-side — FastEndpoints endpoints, feature services, permissions, feature (entitlement) checks, background jobs and their tests. Use for any behaviour change behind the HTTP surface.
-tools: Read, Edit, Write, Bash, Grep, Glob
+tools: Read, Edit, Write, Bash, Grep, Glob, Skill
 model: opus
 ---
 

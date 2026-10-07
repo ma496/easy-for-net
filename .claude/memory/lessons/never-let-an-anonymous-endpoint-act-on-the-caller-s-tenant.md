@@ -1,7 +1,6 @@
 ---
 scope: tenant
 learned: 2026-09-30
-task: 02-email-setting-with-configuration-default-and-secrets
 ---
 
 # Never let an anonymous endpoint act on the caller's tenant

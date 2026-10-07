@@ -16,10 +16,13 @@ build are settled facts. Your job is everything a green gate cannot see.
 ## Read the change first
 
 ```bash
-git status --porcelain
-git diff
-git diff --stat
+git status --porcelain --untracked-files=all
+git diff HEAD
+git diff HEAD --stat
 ```
+
+`git diff` shows neither new files nor staged ones, and most changes add files. Read every
+`??` path in full — an unreviewed new endpoint is an unreviewed change.
 
 Read the task brief you were given alongside the diff, and the repository's own guide
 (`CLAUDE.md` and the nested one nearest the files that changed). A change that is correct

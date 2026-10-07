@@ -16,12 +16,14 @@
  * merges. Nothing here pushes or merges — those stay yours.
  */
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BUDGET_EXIT_CODE } from "./lib/budget.mjs";
 import { runCommandSync, sleepSync } from "./lib/proc.mjs";
-import { config, WORK_BRANCH } from "./lib/project-config.mjs";
+import { BASE_BRANCH, config, WORK_BRANCH, WORKFLOW, workflowRefusal } from "./lib/project-config.mjs";
+import { unpushedHere } from "./lib/remote.mjs";
+import { listTasks } from "./lib/task-names.mjs";
+import { isPlannableSpecPath } from "./lib/planning.mjs";
 
 const ROOT = resolve(join(dirname(fileURLToPath(import.meta.url)), ".."));
 const argv = process.argv.slice(2);
@@ -57,8 +59,16 @@ const branch = capture("git", ["rev-parse", "--abbrev-ref", "HEAD"]).trim();
 // it is stated here at the top and again at the bottom rather than left to be discovered.
 const dirtyPaths = capture("git", ["status", "--porcelain"])
   .split("\n")
-  .filter((l) => l.trim() && !l.slice(3).startsWith(".agent-queue/"));
+  .filter((l) => l.trim() && !l.slice(3).startsWith(".agent-queue/") && !isPlannableSpecPath(l));
+// A spec saved and not yet planned is not in the way — planning it is what this cycle is for.
 console.log(`Branch: ${branch}   ·   uncommitted files: ${dirtyPaths.length}`);
+// Before anything is started or spent: in a team the base branch is where no cycle runs,
+// and saying so here beats letting the drain refuse after the services came up.
+const refusal = workflowRefusal({ branch });
+if (refusal) {
+  console.error(`\n${refusal}`);
+  process.exit(1);
+}
 if (dirtyPaths.length > 0) {
   console.log("\n  ⚠  The working tree is dirty, so NO TASK CAN BUILD this cycle.");
   console.log("     Each task starts from a clean tree so its commit holds only its own work.");
@@ -121,13 +131,16 @@ run("node", [join(ROOT, "scripts", "agent-queue.mjs"), "list"]);
 
 // Unpushed commits on the work branch are the state that matters now: that is where finished work
 // lives until the owner pushes it.
-const aheadOf = (ref) => (capture("git", ["rev-list", "--count", `${ref}..HEAD`]) ?? "").trim();
-const ahead = branch === WORK_BRANCH ? aheadOf(`origin/${WORK_BRANCH}`) : "";
-if (ahead && ahead !== "0") {
-  console.log(
-    `\n${ahead} commit(s) on ${WORK_BRANCH} not yet pushed — review with ` +
-      `\`git log --oneline origin/${WORK_BRANCH}..HEAD\`.`,
-  );
+// Measured from the branch's remote copy, else the base (lib/remote.mjs) — a branch never
+// pushed, or a project with no remote yet, used to report nothing waiting at all.
+const unpushed = () => (branch === WORK_BRANCH ? unpushedHere(WORK_BRANCH, BASE_BRANCH, ROOT) : { count: 0 });
+const waiting = (u) =>
+  u.localOnly
+    ? `${u.count} commit(s) on ${WORK_BRANCH}, none pushed yet — they exist only on this machine`
+    : `${u.count} commit(s) on ${WORK_BRANCH} not yet pushed`;
+const before = unpushed();
+if (before.count > 0) {
+  console.log(`\n${waiting(before)}${before.since ? ` — review with \`git log --oneline ${before.since}..HEAD\`` : ""}.`);
 }
 
 // --- 2. ask the product what is broken --------------------------------------------------
@@ -205,9 +218,7 @@ if (dirtyPaths.length > 0) {
 // to do on its own schedule any faster — the next fire starts a fresh budget, but if the
 // queue is bigger than one cycle's worth of money, that is a decision for a person.
 if (drainStatus === BUDGET_EXIT_CODE) {
-  const waiting = existsSync(join(ROOT, ".agent-queue", "todo"))
-    ? readdirSync(join(ROOT, ".agent-queue", "todo")).filter((f) => f.endsWith(".md")).length
-    : 0;
+  const waiting = listTasks(join(ROOT, ".agent-queue", "todo")).length;
   console.log("This cycle stopped on its spend ceiling, not because the queue was empty.");
   console.log(
     `${waiting} task(s) are still in todo/, untouched. The next scheduled run starts a fresh\n` +
@@ -218,9 +229,7 @@ if (drainStatus === BUDGET_EXIT_CODE) {
   console.log("  What each run cost:  npm run auto:status\n");
 }
 
-const failedTasks = existsSync(join(ROOT, ".agent-queue", "failed"))
-  ? readdirSync(join(ROOT, ".agent-queue", "failed")).filter((f) => f.endsWith(".md"))
-  : [];
+const failedTasks = listTasks(join(ROOT, ".agent-queue", "failed"));
 if (failedTasks.length > 0) {
   console.log(`${failedTasks.length} task(s) failed and are waiting in .agent-queue/failed/:`);
   for (const f of failedTasks) console.log(`  ${f}`);
@@ -241,17 +250,20 @@ if (audit.status !== 0) {
   console.log("");
 }
 
-const finalAhead = branch === WORK_BRANCH ? aheadOf(`origin/${WORK_BRANCH}`) : "";
+const after = unpushed();
 
-if (!finalAhead || finalAhead === "0") {
+if (after.count === 0) {
   console.log(`Nothing is waiting for you — ${WORK_BRANCH} has no unpushed commits.`);
+} else if (!after.since) {
+  console.log(`${waiting(after)}.`);
+  console.log("To keep a copy elsewhere:  git push -u origin HEAD   (git remote add origin <url> first, if there is no remote)");
 } else {
-  console.log(`${finalAhead} commit(s) are built, verified, and committed on ${WORK_BRANCH}.`);
+  console.log(`${waiting(after)}: built, verified and committed.`);
   console.log("Nothing has been pushed; that is the only step left, and it is yours.\n");
-  run("git", ["log", "--oneline", `origin/${WORK_BRANCH}..HEAD`]);
+  run("git", ["log", "--oneline", `${after.since}..HEAD`]);
   console.log(`
-  Review:  git diff origin/${WORK_BRANCH}..HEAD
-  Push:    git push`);
+  Review:  git diff ${after.since}..HEAD
+  Push:    ${WORKFLOW === "team" ? "git push -u origin HEAD, then npm run pr" : "git push"}`);
 }
 
 console.log(`\nHistory: npm run auto:status`);

@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /**
- * Unattended shipping: stage deliberately, commit, and — off the work branch only — push
- * and open a pull request.
+ * Unattended shipping: stage deliberately, commit, and — only when asked with `--push`, and
+ * never to a protected branch — push and open a pull request.
  *
- *   npm run auto:ship -- "commit subject"
- *   npm run auto:ship -- "commit subject" --commit-only   # stop after the commit
- *   npm run auto:ship -- "commit subject" --branch feat/my-thing
+ *   npm run auto:ship -- "commit subject"                         # commit and stop
+ *   npm run auto:ship -- "commit subject" --push                  # then push and open a PR
+ *   npm run auto:ship -- "commit subject" --push --branch feat/x  # on a branch of its own
+ *   npm run auto:ship -- "commit subject" --verified              # say verify passed (the runner does)
  *
  * The pull request is created with the GitHub CLI (`gh`) when it is installed and signed
  * in and origin is on GitHub. Otherwise everything up to the PR still runs, and the
@@ -15,13 +16,15 @@
  *   - on the work branch, commits in place and stops: work accumulates locally
  *   - never pushes the base branch; merging is the owner's alone
  *   - never stages .env or appsettings secrets, and never uses `git add -A`
+ *   - stages nothing under .agent-queue/ but the task's own brief leaving todo/
  *   - never force-pushes
  */
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { hasExecutable } from "./lib/proc.mjs";
-import { BASE_BRANCH, config, WORK_BRANCH } from "./lib/project-config.mjs";
-import { describeRemote } from "./lib/remote.mjs";
+import { BASE_BRANCH, config, PROTECTED_BRANCHES, workflowRefusal } from "./lib/project-config.mjs";
+import { describeRemote, unpushedBaseHere } from "./lib/remote.mjs";
+import { stageable } from "./lib/stage-paths.mjs";
 
 const argv = process.argv.slice(2);
 // `--task <stem>` takes a value; without skipping it the stem would be read as the
@@ -38,7 +41,7 @@ const argOf = (name, fallback) => {
 };
 
 if (!subject) {
-  console.error('Usage: npm run auto:ship -- "commit subject" [--branch <name>] [--task <brief-stem>]');
+  console.error('Usage: npm run auto:ship -- "commit subject" [--push [--branch <name>]] [--verified] [--task <brief-stem>]');
   process.exit(1);
 }
 
@@ -69,20 +72,48 @@ function slugify(text) {
 // --- 1. branch ----------------------------------------------------------------
 let branch = gitQuiet("rev-parse", "--abbrev-ref", "HEAD");
 
-// The work branch is where work is built, so being on it is the normal case, not a mistake
-// to branch away from. What does not change is that nothing leaves the machine: the commit
-// lands and the run stops. Any other protected branch keeps the branch-first rule.
-const commitOnly = flag("commit-only") || branch === WORK_BRANCH;
-const PROTECTED = [...new Set([BASE_BRANCH, "main", "master", "develop"])];
+// Committing is the default and the whole contract: nothing leaves the machine unless
+// `--push` asks for it. It used to be keyed on `branch === WORK_BRANCH`, and with
+// `project.branch` unset the work branch is whatever is checked out — so that was always
+// true and the push and pull-request steps below could never run. A protected branch is
+// never pushed; with `--push` on one, the work moves to a branch of its own first.
+const commitOnly = flag("commit-only") || !flag("push");
+const PROTECTED = PROTECTED_BRANCHES;
+// `--branch` names a branch to create, so a protected name is refused outright: the push
+// below runs inside this process, where the shell guard never sees it, and
+// `--push --branch main` was a working route to the branch the guard protects.
+// It must also be a plain branch name: `refs/heads/main` is not in the list as a string, yet
+// `git push origin refs/heads/main` pushes the real main.
+const requested = argOf("branch", null);
+if (requested) {
+  const plain =
+    !/^refs\//.test(requested) &&
+    !/[:+~^@]/.test(requested) &&
+    spawnSync("git", ["check-ref-format", "--branch", requested], { encoding: "utf8" }).status === 0;
+  if (!plain) {
+    console.error(`--branch ${requested} is not a plain branch name; name a branch like feat/<slug>.`);
+    process.exit(1);
+  }
+  if (PROTECTED.includes(requested)) {
+    console.error(`--branch ${requested} is a protected branch; name a branch of your own.`);
+    process.exit(1);
+  }
+}
 if (!commitOnly && PROTECTED.includes(branch)) {
-  const target = argOf("branch", `feat/auto-${slugify(subject)}`);
+  const target = requested ?? `feat/auto-${slugify(subject)}`;
   console.log(`On ${branch}; moving the working tree to ${target}.`);
   git("checkout", "-b", target);
   branch = target;
-} else if (argOf("branch", null) && argOf("branch", null) !== branch) {
-  const target = argOf("branch", branch);
-  git("checkout", "-b", target);
-  branch = target;
+} else if (requested && requested !== branch) {
+  git("checkout", "-b", requested);
+  branch = requested;
+}
+// Committing is git's own, not the guard's, so the team rule the guard holds for an agent's
+// `git commit` is held here too: nothing commits on the base a team shares.
+const refusal = workflowRefusal({ branch });
+if (refusal) {
+  console.error(refusal);
+  process.exit(1);
 }
 
 // --- 2. stage deliberately ------------------------------------------------------
@@ -117,10 +148,17 @@ if (forbidden.length > 0) {
   process.exit(1);
 }
 
-// The trailing slash matters: in a task worktree `node_modules` is a *symlink*, so it
-// appears as a bare entry with no slash and would otherwise be staged.
-const IGNORED = /(^|\/)(dist|\.output|\.next|node_modules|bin|obj|coverage)(\/|$)/;
-const toStage = entries.filter((e) => !IGNORED.test(e.path));
+// Build output never; queue bookkeeping only as this task's own brief leaving todo/
+// (lib/stage-paths.mjs says why). The stem is read here rather than at the commit, because
+// it decides what is staged as well as what the trailer says.
+const taskStem = (argOf("task", "") || "").replace(/\.md$/, "");
+const toStage = stageable(entries, taskStem);
+// Leaving a path out of `git add` does not keep it out of the commit when it is already in
+// the index, so queue bookkeeping someone staged by hand is unstaged — not reverted — here.
+const heldBack = entries
+  .filter((e) => e.path.startsWith(".agent-queue/") && !toStage.includes(e) && e.index !== " " && e.index !== "?")
+  .map((e) => e.path);
+if (heldBack.length > 0) git("reset", "-q", "--", ...heldBack);
 if (toStage.length === 0) {
   console.log("Nothing to commit. Working tree is clean.");
   process.exit(0);
@@ -156,11 +194,11 @@ if (staged.length > 0) {
 // `Task: <brief-stem>` is how the queue's audit ties this commit back to the brief it came
 // from. Pairing on subject text alone breaks the moment anyone commits under a different
 // message, which left a finished task sitting in todo/ blocking eight dependents.
-const taskStem = (argOf("task", "") || "").replace(/\.md$/, "");
+// Verification is claimed only when the caller ran it: the runner passes --verified after
+// its own verify passed. A hand-run auto:ship verified nothing, and the line said otherwise.
 const bodyLines = [
   "",
-  `Verified with \`${config.commands.verify}\` (build, backend and web tests, lint, typecheck).`,
-  "",
+  ...(flag("verified") ? [`Verified with \`${config.commands.verify}\`.`, ""] : []),
   ...(taskStem ? [`Task: ${taskStem}`] : []),
   ...(config.project.coAuthor ? [config.project.coAuthor] : []),
 ];
@@ -173,15 +211,22 @@ console.log(`\nCommitted ${sha} on ${branch}: ${subject}`);
 // accumulated commits and pushes them when they are ready, and no script here does it for
 // them. Reporting a push that never happened is the one thing worse than not pushing.
 if (commitOnly) {
+  const since = unpushedBaseHere(branch, BASE_BRANCH);
   console.log(`
 Committed on ${branch}. Nothing was pushed — that stays yours.
-
-  Review:  git log --oneline origin/${branch}..${branch}
+${since ? `\n  Review:  git log --oneline ${since}..${branch}` : ""}
   Push:    git push`);
   process.exit(0);
 }
 
-git("push", "-u", "origin", branch);
+// The last word before anything leaves the machine, whatever the branch logic above did.
+if (PROTECTED.includes(branch)) {
+  console.error(`Refusing to push ${branch}: it is a protected branch. The commit stays local.`);
+  process.exit(1);
+}
+// An explicit refspec, so the destination is exactly the branch just checked above and the
+// source the branch just committed on — never something git resolves a name to.
+git("push", "-u", "origin", `refs/heads/${branch}:refs/heads/${branch}`);
 console.log(`Pushed ${branch} to origin.`);
 
 // --- 5. pull request ---------------------------------------------------------------
