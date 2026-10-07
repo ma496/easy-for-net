@@ -69,7 +69,7 @@ const TOOL_PATHS = [/^tool\//, /^global\.json$/, /^[^/]+\.slnx?$/, /^src\/backen
 const WEB_PATHS = [/^src\/frontend\/web\//];
 const WEB_TESTS = [...WEB_PATHS, /^src\/backend\/Source\/Features\/Localization\/Core\/Resources\//];
 const ENGINE = [/^scripts\//, /^agentic\.config\.json$/, /^package(-lock)?\.json$/];
-const HOOKS = [/^\.claude\/hooks\//, /^\.claude\/settings\.json$/, /^scripts\/lib\//, /^agentic\.config\.json$/];
+const HOOKS = [/^\.claude\/hooks\//, /^\.claude\/settings\.json$/, /^\.claude\/statusline\.mjs$/, /^scripts\/lib\//, /^agentic\.config\.json$/];
 
 /** Paths no step needs to see: prose, queue bookkeeping, run records, editor settings. */
 const INERT = [

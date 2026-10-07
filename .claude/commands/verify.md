@@ -4,15 +4,15 @@ argument-hint: "[--scope working] [--autostart] [--full]"
 allowed-tools: Bash, Read, Grep, Glob
 ---
 
-Run `npm run verify -- $ARGUMENTS` from the repo root (the `--` hands the flags to the
-script rather than to npm).
+Run `npm run verify -- --autostart $ARGUMENTS` from the repo root (the `--` hands the flags
+to the script rather than to npm; `--autostart` brings the app up when a live check needs it).
 
 It reads the diff and decides what this change actually needs: the gate steps the diff's
 paths can break (all of them when a path is watched by none, none for a documentation-only
 diff), plus every check in `verify.checks` whose watched paths the diff touched. `agentic.config.json`
 is where that mapping lives — read it if you want to know why a check did or did not run.
 
-Useful flags: `--autostart` starts the app if a live check needs it, `--scope working`
+Useful flags: `--scope working`
 judges only uncommitted changes instead of the whole branch, `--full` runs every gate step.
 
 ## Reading the result
@@ -21,5 +21,6 @@ judges only uncommitted changes instead of the whole branch, `--full` runs every
 nothing was serving, the change is *unverified* — do not describe it as passing. Either
 start the app and re-run, or say plainly which check did not happen.
 
-Report which checks ran and which were skipped; the script prints both. Then stop —
-committing and pushing are the owner's to approve, and merging is theirs alone.
+Report which checks ran and which were skipped; the script prints both. Then stop — this
+command only verifies. Commit only when the command that called it (`/ship`, `/feature`,
+`/auto`) says to; pushing to a protected branch and merging are the owner's alone.

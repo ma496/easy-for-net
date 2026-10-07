@@ -30,7 +30,7 @@ import { fileURLToPath } from "node:url";
 import { apiAdoptionVerdict } from "./lib/api-identity.mjs";
 import { workingTreePaths } from "./lib/changed-paths.mjs";
 import { IS_WINDOWS, killTree, runCommandSync, sleepSync, spawnCommand } from "./lib/proc.mjs";
-import { compileRules, config, fill, WORK_BRANCH } from "./lib/project-config.mjs";
+import { BASE_BRANCH, compileRules, config, fill } from "./lib/project-config.mjs";
 
 // Same reason as agent-run.mjs: cwd may hold only committed code, so the checks are driven
 // from this file's own directory and run against cwd.
@@ -69,14 +69,24 @@ try {
 } catch {
   /* keep the unresolved path; the adoption check reports the mismatch either way */
 }
-const BASE = argOf("base", WORK_BRANCH);
+// The branch a pull request would target. It defaulted to the work branch, which with
+// `project.branch` unset is the branch checked out — so on a feature branch the merge base
+// was HEAD itself, "branch" scope judged only the uncommitted tree, and committed work
+// reached its pull request unverified. The runner passes --base explicitly.
+const BASE = argOf("base", BASE_BRANCH);
 // "branch" asks what a pull request would contain — every commit on this branch plus the
 // working tree. That is the blast radius the owner actually reviews, so it is the default.
 // "working" narrows to uncommitted changes, for quick iteration on a long-lived branch.
 const SCOPE = argOf("scope", "branch");
 const JSON_OUT = flag("json");
 const RUNS_DIR = join(CWD, ".agent-runs");
-const AUTOSTART = flag("autostart");
+// Inside an unattended run (AGENT_RUN_ID) there is nobody to start the app, and the lead's
+// verify of a backend change otherwise always failed on "nothing is serving" — a wasted
+// gate, then a second one from the runner. So a run autostarts unless told not to — by the
+// flag, or by the runner's own --no-autostart passed down as AGENT_NO_AUTOSTART.
+const AUTOSTART =
+  flag("autostart") ||
+  (Boolean(process.env.AGENT_RUN_ID) && !flag("no-autostart") && process.env.AGENT_NO_AUTOSTART !== "1");
 const KEEP_STACK = flag("keep-stack");
 const FULL = flag("full");
 

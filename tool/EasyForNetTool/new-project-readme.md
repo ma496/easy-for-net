@@ -25,7 +25,11 @@ its database:
 dotnet tool restore                                       # dotnet-ef
 dotnet build {{Name}}.slnx
 dotnet ef migrations add Initial --project src/backend/Source
+git add src/backend/Source/Migrations && git commit -m "Add the initial migration"
 ```
+
+The commit matters: the task loop builds only from a clean tree, so an uncommitted migration
+stops the first `npm run loop`.
 
 Then, from the root, run the whole application:
 
@@ -72,7 +76,7 @@ account is first created, so change it in the app after that.
 ## Tests
 
 ```sh
-dotnet test src/backend/Tests          # needs PostgreSQL (not Redis); creates and deletes {{Name}}Test
+dotnet test src/backend/Tests          # needs PostgreSQL (not Redis); creates and deletes the `<database>_test` database
 npm run gate                           # everything: build, backend tests, web lint/typecheck/tests, next build
 npm run gate -- --fast                 # the same without the production web build
 ```

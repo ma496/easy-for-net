@@ -173,3 +173,28 @@ test("departmentsFor returns the entries themselves, for explaining a refusal", 
   assert.ok(labels.includes("Data"));
   assert.ok(labels.includes("Code review"));
 });
+
+test("one design call before the build does not also count as the review of the built page", () => {
+  const problems = sequenceProblems(
+    ["public/index.html"],
+    ["ui-ux-reviewer", "frontend-engineer", "qa-engineer", "code-reviewer"],
+  );
+  assert.ok(problems.some((p) => p.includes("never reviewed what was built")));
+});
+
+test("a designer called again after the writers closes its own loop", () => {
+  const problems = sequenceProblems(
+    ["public/index.html"],
+    ["ui-ux-reviewer", "frontend-engineer", "qa-engineer", "ui-ux-reviewer", "code-reviewer"],
+  );
+  assert.deepEqual(problems, []);
+});
+
+test("acceptanceProblems reports a missing review and accepts a complete one", async () => {
+  const { acceptanceProblems } = await import("../lib/departments.mjs");
+  const paths = ["src/routes/thing.ts"];
+  assert.ok(
+    acceptanceProblems(paths, ["backend-engineer", "qa-engineer"]).some((p) => p.startsWith("code-reviewer")),
+  );
+  assert.deepEqual(acceptanceProblems(paths, ["backend-engineer", "qa-engineer", "code-reviewer"]), []);
+});

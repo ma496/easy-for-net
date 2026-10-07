@@ -134,6 +134,15 @@ export function tryAcquire(path, { pid = process.pid, now = Date.now(), host = h
   }
 }
 
+/**
+ * Who holds the lock at `path` right now, or null when nobody does (no file, or a stale
+ * one). For a process that must not run beside a drain but does not take the lock itself.
+ */
+export function liveHolder(path, { now = Date.now(), host = hostname(), isAlive, staleMs = DEFAULT_STALE_MS } = {}) {
+  const holder = parseLock(readRaw(path));
+  return holder && isHeld(holder, { now, host, isAlive, staleMs, mtimeMs: mtimeOf(path) }) ? holder : null;
+}
+
 /** Refresh the heartbeat — only while the file is still ours. */
 export function heartbeat(path, lock, now = Date.now()) {
   const current = parseLock(readRaw(path));

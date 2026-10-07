@@ -1,7 +1,6 @@
 ---
 scope: tests
 learned: 2026-09-29
-task: 04-revoke-sessions-on-plan-changes
 ---
 
 # Never change a seeded tenant's plan, members or lifecycle in a test

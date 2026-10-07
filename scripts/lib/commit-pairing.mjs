@@ -18,8 +18,24 @@
 
 /** The brief stem a commit message names in its `Task:` trailer, or null for none. */
 export function taskTrailerOf(message) {
-  const m = /^[ \t]*Task:[ \t]*([A-Za-z0-9._-]+?)[ \t]*$/m.exec(message ?? "");
+  const m = /^[ \t]*Task:[ \t]*([A-Za-z0-9._/-]+?)[ \t]*$/m.exec(message ?? "");
   return m ? m[1].replace(/\.md$/, "") : null;
+}
+
+/**
+ * Every brief stem a message names on a `Task:` line, in order.
+ *
+ * One commit names one task, but a squash merge folds a branch's commits into a single
+ * message whose body repeats each of their `Task:` lines — no longer as a trailer block git
+ * would recognise, but still one per line. Reading every line is what lets a task built on a
+ * branch still count as landed after the branch is squashed into the base.
+ */
+export function taskTrailersIn(message) {
+  const out = [];
+  for (const m of String(message ?? "").matchAll(/^[ \t]*Task:[ \t]*([A-Za-z0-9._/-]+?)[ \t]*$/gm)) {
+    out.push(m[1].replace(/\.md$/, ""));
+  }
+  return out;
 }
 
 /** A brief's file name reduced to the stem the trailer carries. */
@@ -53,14 +69,18 @@ export function findCommitFor({ taskFile, brief, commits }) {
   const subject = subjectOf(brief);
   if (!subject) return null;
 
-  const exact = list.find((c) => c.subject === subject);
+  // Only a commit that names no task can be paired by its subject. One that names a task
+  // belongs to that task — two plans' briefs often open with the same line, and pairing on
+  // it would file one plan's unbuilt task as landed on the other's commit.
+  const untagged = list.filter((c) => taskTrailersIn(c.message ?? "").length === 0);
+  const exact = untagged.find((c) => c.subject === subject);
   if (exact) return { ...exact, matchedBy: "subject-exact" };
 
   // A prefix match is a reasonable guess for a report and not good enough to move a lane
   // file on, so it is labelled rather than hidden. `--fix` only acts on the exact kinds.
   const key = subject.slice(0, 48);
   if (key.length < 24) return null;
-  const prefix = list.find((c) => String(c.subject ?? "").startsWith(key));
+  const prefix = untagged.find((c) => String(c.subject ?? "").startsWith(key));
   return prefix ? { ...prefix, matchedBy: "subject-prefix" } : null;
 }
 
@@ -71,10 +91,4 @@ export function findCommitFor({ taskFile, brief, commits }) {
  */
 export function isDefinite(match) {
   return match?.matchedBy === "trailer" || match?.matchedBy === "subject-exact";
-}
-
-/** The sha a build record already names, from its text, or "" when it names none. */
-export function recordedShaIn(recordText) {
-  const m = /\*\*Commit\*\*\s*\|\s*`([0-9a-f]{7,40})`/.exec(String(recordText ?? ""));
-  return m ? m[1] : "";
 }

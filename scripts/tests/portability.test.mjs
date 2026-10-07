@@ -149,3 +149,10 @@ test("schtasks runs every N minutes and replaces an earlier install", () => {
 test("the POSIX command sets the environment inline", () => {
   assert.match(posixCommand("/repo", env), /^cd "\/repo" && AGENT_MODEL=opus .* npm run loop$/);
 });
+
+test("the timer carries the branch it was installed on", () => {
+  const pinned = scheduleEnv({ model: "opus", maxUsdPerTask: "50", maxUsdPerDrain: "off", maxRunsPerTask: "3", autoPush: false, refuseDirty: true, workBranch: "main" });
+  assert.equal(pinned.AGENT_WORK_BRANCH, "main");
+  const unpinned = scheduleEnv({ model: "opus", maxUsdPerTask: "50", maxUsdPerDrain: "off", maxRunsPerTask: "3", autoPush: false, refuseDirty: true });
+  assert.equal("AGENT_WORK_BRANCH" in unpinned, false);
+});

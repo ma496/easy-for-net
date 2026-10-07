@@ -15,6 +15,13 @@ import { dirname, join } from "node:path";
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 
+/**
+ * What Claude Code makes of a hook's exit: 0 lets the call through, 2 refuses it, and any
+ * other status is a broken hook that Claude Code reports and then *ignores*. Counting that
+ * third case as a block is how a guard that had stopped guarding passed here.
+ */
+const verdict = (res) => (res.status === 0 ? "allow" : res.status === 2 ? "block" : `crash (exit ${res.status})`);
+
 const HOOKS_DIR = dirname(fileURLToPath(import.meta.url));
 const HOOK = join(HOOKS_DIR, "guard-bash.mjs");
 const CONVENTIONS = join(HOOKS_DIR, "project-conventions.mjs");
@@ -124,6 +131,8 @@ const cases = [
   { label: "normal feature-branch push", command: "git push -u origin feat/x", expect: "allow" },
   { label: "PowerShell refspec push to master", command: "git push origin HEAD:master; Write-Host done", expect: "block" },
   { label: "branch merely named like main", command: "git push -u origin feat/main-nav", expect: "allow" },
+  { label: "pushing the shared develop branch", command: "git push origin HEAD:develop", expect: "block" },
+  { label: "branch merely named like develop", command: "git push -u origin feat/develop-docs", expect: "allow" },
   { label: "git -C . push to main by refspec", command: "git -C . push origin HEAD:main", expect: "block" },
   { label: "a push option's value is not a refspec", command: "git push -o main origin feat/x", expect: "allow" },
 
@@ -226,6 +235,59 @@ const cases = [
   { label: "the deploy helpers' unit tests", command: "node --test scripts/tests/deploy-vps.test.mjs", expect: "allow" },
   { label: "grep for the deploy script name", command: "grep -rn 'deploy:vps' package.json", expect: "allow" },
 
+  // --- quoting and wrapping do not change where a push goes ------------------------------
+  { label: "push to a quoted main", command: "git push origin 'main'", expect: "block" },
+  { label: "push to a double-quoted refspec destination", command: 'git push origin HEAD:"main"', expect: "block" },
+  { label: "push wrapped in bash -c", command: 'bash -c "git push origin main"', expect: "block" },
+  { label: "a quoted feature branch is still a feature branch", command: "git push -u origin 'feat/x'", expect: "allow" },
+  { label: `${MERGE} through gh api`, command: `gh api -X PUT repos/o/r/pulls/1/${MERGE}`, expect: "block" },
+  { label: `${MERGE} through gh api graphql`, command: `gh api graphql -f query='mutation { ${MERGE}PullRequest(input: {}) { clientMutationId } }'`, expect: "block" },
+  { label: "reading a PR through gh api", command: "gh api repos/o/r/pulls/1", expect: "allow" },
+
+  // --- a commit message is prose, not a command -----------------------------------------
+  { label: "commit message naming the merge verb", command: `git commit -m "docs: never run git ${MERGE} here"`, expect: "allow" },
+  { label: "commit message naming the compose command", command: `git commit -am '${DESTRUCTIVE} is refused'`, expect: "allow" },
+  { label: "a real command after the commit still counts", command: `git commit -m "wip" && git ${MERGE} feat/x`, expect: "block" },
+  { label: "substitution in a commit message still runs", command: `git commit -m "$(git ${MERGE} feat/x)"`, expect: "block" },
+  { label: "echo naming the merge verb is still scanned", command: `echo "git ${MERGE} later" | sh`, expect: "block" },
+  { label: "a commit message piped into a shell is kept", command: 'git commit -m "x; git push origin main" | sh', expect: "block" },
+  { label: "a commit message piped into a text filter is prose", command: `git commit -m "never git ${MERGE}" | tail -1`, expect: "allow" },
+  { label: "git -C . commit message naming the merge verb", command: `git -C . commit -m "never git ${MERGE} here"`, expect: "allow" },
+  {
+    label: "PowerShell: a message escaping its quote hides nothing",
+    tool: "PowerShell",
+    command: `git commit -m "a${BS}" ; git ${MERGE} feat ; echo ${BS}""`,
+    expect: "block",
+  },
+  { label: "Bash: an escaped quote inside a message is not blanked", command: `git commit -m "a${BS}" ; git ${MERGE} feat"`, expect: "block" },
+
+  // --- other ways to lose uncommitted work or data ---------------------------------------
+  { label: "git checkout -- .", command: "git checkout -- .", expect: "block" },
+  { label: "git restore .", command: "git restore .", expect: "block" },
+  { label: "git checkout one file", command: "git checkout -- src/app.ts", expect: "allow" },
+  { label: "git checkout a branch", command: "git checkout -b feat/x", expect: "allow" },
+  { label: "git restore --staged . only unstages", command: "git restore --staged .", expect: "allow" },
+  { label: "git stash clear", command: "git stash clear", expect: "block" },
+  { label: "git stash list", command: "git stash list", expect: "allow" },
+  { label: "the v1 compose binary dropping volumes", command: "docker-compose down -v", expect: "block" },
+  { label: "the v1 compose binary keeping volumes", command: "docker-compose down", expect: "allow" },
+  { label: "compose -f file, then down -v", command: "docker-compose -f docker-compose.prod.yml down --volumes", expect: "block" },
+  { label: "compose -f file, then down", command: "docker compose -f docker-compose.prod.yml down", expect: "allow" },
+  { label: "reverting every EF migration", command: "dotnet ef database update 0 --project src/backend/Source/Backend.csproj", expect: "block" },
+  { label: "reverting every EF migration, options first", command: "dotnet ef database update --project src/backend/Source/Backend.csproj 0", expect: "block" },
+  { label: "updating to a named EF migration", command: "dotnet ef database update AddOrders", expect: "allow" },
+  { label: "find -delete", command: 'find . -name "*.cs" -delete', expect: "block" },
+  { label: "find -exec rm", command: "find . -name '*.tmp' -exec rm {} ;", expect: "block" },
+  { label: "find -exec rm by its path", command: "find . -name '*.tmp' -exec /bin/rm {} +", expect: "block" },
+  { label: "find -exec sed -i", command: "find . -name '*.ts' -exec sed -i s/a/b/ {} +", expect: "block" },
+  { label: "find -exec grep only reads", command: "find . -name '*.ts' -exec grep -l TODO {} +", expect: "allow" },
+  { label: "find that only lists", command: 'find . -name "*.cs" -newer x', expect: "allow" },
+  { label: "git branch -D", command: "git branch -D feat/x", expect: "block" },
+  { label: "git branch -Dq, a bundled -D", command: "git branch -Dq feat/x", expect: "block" },
+  { label: "git branch -d refuses unmerged work", command: "git branch -d feat/x", expect: "allow" },
+  { label: "sed -n with -i edits in place", command: "sed -n -i 's/a/b/' src/x.ts", expect: "block" },
+  { label: "sed -n that only prints", command: "sed -n '1,20p' src/x.ts", expect: "allow" },
+
   // --- ordinary work must stay unblocked -----------------------------------------------
   { label: "npm run gate", command: "npm run gate", expect: "allow" },
   { label: "npm run verify", command: "npm run verify", expect: "allow" },
@@ -247,10 +309,10 @@ const report = (ok, label, expect, actual) => {
 
 for (const c of cases) {
   const res = spawnSync("node", [HOOK], {
-    input: JSON.stringify({ tool_input: { command: c.command } }),
+    input: JSON.stringify({ ...(c.tool ? { tool_name: c.tool } : {}), tool_input: { command: c.command } }),
     encoding: "utf8",
   });
-  const actual = res.status === 0 ? "allow" : "block";
+  const actual = verdict(res);
   report(actual === c.expect, c.label, c.expect, actual);
 }
 
@@ -305,16 +367,27 @@ const branchCases = [
   { label: "commit on a feature branch", branch: "feat/x", expect: "allow" },
   { label: "bare git push from a feature branch", branch: "feat/x", command: "git push", expect: "allow" },
   { label: "git push origin HEAD from a feature branch", branch: "feat/x", command: "git push -u origin HEAD", expect: "allow" },
+  // Under `project.workflow: "team"` the base branch moves only through a pull request, so
+  // even the commit is refused there; a branch of one's own commits as before.
+  { label: "team: commit on the base branch", branch: "main", team: true, expect: "block" },
+  { label: "team: commit on a feature branch", branch: "feat/x", team: true, expect: "allow" },
+  { label: "team: commit-tree on the base only writes an object", branch: "main", team: true, command: "git commit-tree $TREE", expect: "allow" },
 ];
 
+// The same repo under a team config, for the cases marked `team`.
+const teamConfig = join(mkdtempSync(join(tmpdir(), "hooktest-team-")), "agentic.config.json");
+writeFileSync(teamConfig, JSON.stringify({ project: { workflow: "team", baseBranch: "main" } }));
+
 for (const c of branchCases) {
-  if (c.branch !== "main") git("checkout", "-B", c.branch);
+  // Every case checks out its own branch, so their order does not matter.
+  git("checkout", "-q", "-B", c.branch);
   const res = spawnSync("node", [HOOK], {
     input: JSON.stringify({ tool_input: { command: c.command ?? 'git commit -m "x"' } }),
     encoding: "utf8",
     cwd: repo,
+    ...(c.team ? { env: { ...process.env, AGENTIC_CONFIG: teamConfig } } : {}),
   });
-  const actual = res.status === 0 ? "allow" : "block";
+  const actual = verdict(res);
   report(actual === c.expect, c.label, c.expect, actual);
 }
 
@@ -324,7 +397,7 @@ for (const c of branchCases) {
     input: JSON.stringify({ tool_input: { notebook_path: `/repo/${DOTENV}` } }),
     encoding: "utf8",
   });
-  report(res.status !== 0, "notebook edit of the env file", "block", res.status === 0 ? "allow" : "block");
+  report(verdict(res) === "block", "notebook edit of the env file", "block", verdict(res));
   extraCases += 1;
 }
 
@@ -404,7 +477,7 @@ for (const c of conventionCases) {
     encoding: "utf8",
     env: { ...process.env, AGENTIC_CONFIG: fixtureConfig },
   });
-  const actual = res.status === 0 ? "allow" : "block";
+  const actual = verdict(res);
   report(actual === c.expect, c.label, c.expect, actual);
 }
 
@@ -431,7 +504,7 @@ for (const c of pathCases) {
     input: JSON.stringify({ tool_input: { file_path: c.file } }),
     encoding: "utf8",
   });
-  const actual = res.status === 0 ? "allow" : "block";
+  const actual = verdict(res);
   report(actual === c.expect, c.label, c.expect, actual);
 }
 
@@ -453,10 +526,38 @@ for (const c of readCases) {
     input: JSON.stringify({ tool_name: c.tool, tool_input: c.input }),
     encoding: "utf8",
   });
-  const actual = res.status === 0 ? "allow" : "block";
+  const actual = verdict(res);
   report(actual === c.expect, c.label, c.expect, actual);
 }
 extraCases += readCases.length;
+
+// --- the status line ---------------------------------------------------------------
+// It runs on every prompt and imports the engine's config, so a break in either shows as a
+// blank or broken prompt line with nothing else noticing.
+{
+  const res = spawnSync("node", [join(HOOKS_DIR, "..", "statusline.mjs")], { input: "{}", encoding: "utf8" });
+  report(res.status === 0 && res.stdout.trim() !== "", "the status line renders", "output", res.status === 0 ? "output" : `exit ${res.status}`);
+  extraCases += 1;
+}
+
+// --- a config that does not parse ----------------------------------------------
+// Every guard but the secret-reads one imports the config. If parsing it failing ended the
+// hook with any status but 2, one stray comma in agentic.config.json would switch them off.
+const brokenConfig = join(mkdtempSync(join(tmpdir(), "hook-broken-config-")), "agentic.config.json");
+writeFileSync(brokenConfig, '{ "project": { "name": "x", }');
+const brokenCases = [
+  { label: "broken config: the shell guard still refuses", hook: HOOK, input: { tool_input: { command: `cat ${DOTENV}` } } },
+  { label: "broken config: the path guard still refuses", hook: PATHS_GUARD, input: { tool_input: { file_path: `/repo/${DOTENV}` } } },
+];
+for (const c of brokenCases) {
+  const res = spawnSync("node", [c.hook], {
+    input: JSON.stringify(c.input),
+    encoding: "utf8",
+    env: { ...process.env, AGENTIC_CONFIG: brokenConfig },
+  });
+  report(verdict(res) === "block", c.label, "block", verdict(res));
+}
+extraCases += brokenCases.length;
 
 console.log("");
 if (failures > 0) {

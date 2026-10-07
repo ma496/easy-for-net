@@ -14,10 +14,14 @@ const git = (...args) => (spawnSync("git", args, { cwd: root, encoding: "utf8", 
 
 let name = "";
 let configured = "";
+let base = "";
+let team = false;
 try {
   const cfg = JSON.parse(readFileSync(join(root, "agentic.config.json"), "utf8"));
   name = cfg.project?.name ?? "";
   configured = cfg.project?.branch ?? "";
+  team = cfg.project?.workflow === "team";
+  base = cfg.project?.baseBranch ?? "";
 } catch {
   /* no config — the line still shows the branch */
 }
@@ -25,8 +29,15 @@ try {
 let branch = git("rev-parse", "--abbrev-ref", "HEAD") || "-";
 const dirty = git("status", "--porcelain").split("\n").filter(Boolean).length;
 // A branch the config names as protected is marked, because a commit there is normal and a
-// push there is not.
-if (configured && branch === configured) branch = `⚠ ${branch}`;
+// push there is not. In a team the shared base branch is marked too: the queue refuses to
+// build there, and the mark says why before the refusal does. Kept to what is cheap to read
+// — origin/HEAD, else main or master — since this runs on every prompt.
+if (team && !base) {
+  base = git("symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD").replace(/^origin\//, "");
+  if (!base) base = ["main", "master"].includes(branch) ? branch : "";
+}
+if (team && branch === base) branch = `⛔ ${branch} (team: use a branch)`;
+else if (configured && branch === configured) branch = `⚠ ${branch}`;
 
 let drain = "drain○";
 const lock = join(root, ".agent-queue", "drain.lock");

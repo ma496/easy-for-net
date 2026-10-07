@@ -47,6 +47,13 @@ const DEFAULTS = {
     branch: null,
     /** Where pull requests go. `null` means `origin/HEAD`, else `main` or `master`. */
     baseBranch: null,
+    /**
+     * `solo`: one developer, and the queue builds on whatever branch is checked out — the
+     * base branch included. `team`: several developers share the base branch, so nothing
+     * plans or builds on it; each spec is planned and built on a branch of its own and
+     * reaches the base branch through a pull request.
+     */
+    workflow: "solo",
     /** A trailer the runner's commits end with. `null` adds none, leaving the author line — each developer's own git user.name/user.email — as the only identity. */
     coAuthor: null,
     /** Lines every unattended run is told before it starts — the traps a typecheck misses. */
@@ -61,6 +68,7 @@ const DEFAULTS = {
     pattern: "\\.test\\.(m?js|ts)$",
   },
   docs: {
+    /** Where each landed task's build record is written, one directory per planned spec. */
     builds: "docs/builds",
     capabilities: "docs/capabilities",
     guide: "CLAUDE.md",
@@ -111,6 +119,16 @@ const DEFAULTS = {
     maxTurns: 350,
     /** Wall-clock minutes per attempt, for a session that hangs and so reports neither turns nor cost. */
     maxMinutesPerAttempt: 120,
+    /**
+     * The planner's own limits. It writes task files and nothing else, so a planning call
+     * that runs long is lost, not working — and on a timer an unbounded one is the one
+     * session that could spend without a ceiling. `planAttempts` is how many times one
+     * version of a spec may fail to plan before intake stops paying for it.
+     */
+    planMaxTurns: 60,
+    planMaxUsd: 15,
+    planMaxMinutes: 30,
+    planAttempts: 2,
     /** `opus` is the alias for the newest Opus. `inherit` passes no `--model` at all. */
     model: "opus",
   },
@@ -156,12 +174,23 @@ function readConfigFile() {
     // change owes, what verification it needs — would otherwise silently fall back to the
     // defaults, and a run that verified less than it should have is the failure mode this
     // whole package exists to prevent.
-    console.error(`agentic.config.json could not be parsed: ${err.message}`);
-    process.exit(1);
+    //
+    // Exit 2, not 1. The guards in .claude/hooks import this module, and Claude Code reads a
+    // hook's exit 1 as "the hook broke, carry on" but exit 2 as a refusal — so with 1, one
+    // stray comma here switched every guard off. With 2 they fail closed until it is fixed.
+    // To every script caller, 2 is simply a failure.
+    console.error(
+      `agentic.config.json could not be parsed: ${err.message}\n` +
+        "Every guard refuses until it parses again — fix the file by hand.",
+    );
+    process.exit(2);
   }
 }
 
 export const config = merge(DEFAULTS, readConfigFile());
+
+/** The ways a project may share its queue — see `project.workflow` in DEFAULTS. */
+export const WORKFLOWS = ["solo", "team"];
 
 const isPositiveInt = (n) => Number.isInteger(n) && n > 0;
 
@@ -191,11 +220,17 @@ function regexProblems(list, where, flags = "") {
  */
 export function validateConfig(cfg) {
   const problems = [];
+  if (!WORKFLOWS.includes(cfg.project?.workflow)) {
+    problems.push(`project.workflow must be ${WORKFLOWS.join(" or ")} (got ${JSON.stringify(cfg.project?.workflow)})`);
+  }
   const budget = cfg.budget ?? {};
-  for (const key of ["attempts", "maxTurns", "maxMinutesPerAttempt"]) {
+  for (const key of ["attempts", "maxTurns", "maxMinutesPerAttempt", "planMaxTurns", "planMaxMinutes", "planAttempts"]) {
     if (!isPositiveInt(budget[key])) {
       problems.push(`budget.${key} must be a positive integer (got ${JSON.stringify(budget[key])})`);
     }
+  }
+  if (!(typeof budget.planMaxUsd === "number" && budget.planMaxUsd > 0)) {
+    problems.push(`budget.planMaxUsd must be a positive number (got ${JSON.stringify(budget.planMaxUsd)})`);
   }
   if (typeof budget.model !== "string" || !budget.model.trim()) {
     problems.push("budget.model must be a model name or alias");
@@ -346,7 +381,12 @@ export function resolveBaseBranch(configured, { originHead = "", existing = [] }
 }
 
 /** The branch work happens on. Everything refuses to build anywhere else. */
-export const WORK_BRANCH = resolveWorkBranch(config.project.branch, git("rev-parse", "--abbrev-ref", "HEAD"));
+// AGENT_WORK_BRANCH is what the timer is installed with (lib/schedule.mjs): a cycle it fires
+// on another branch then refuses rather than building there.
+export const WORK_BRANCH = resolveWorkBranch(
+  config.project.branch || process.env.AGENT_WORK_BRANCH,
+  git("rev-parse", "--abbrev-ref", "HEAD"),
+);
 
 /** The branch pull requests target and "shipped" is measured against. */
 export const BASE_BRANCH = resolveBaseBranch(config.project.baseBranch, {
@@ -357,5 +397,34 @@ export const BASE_BRANCH = resolveBaseBranch(config.project.baseBranch, {
     .filter(Boolean),
 });
 
+/**
+ * The branches nothing here pushes to: the base branch, `project.branch` when one is named,
+ * and the usual shared names (`main`, `master`, `develop`). One list, so the shell guard, auto-ship and the session
+ * banner cannot disagree about which branch is safe — they did, over `develop`.
+ */
+export const PROTECTED_BRANCHES = Object.freeze(
+  [...new Set([BASE_BRANCH, config.project.branch, "main", "master", "develop"].filter(Boolean))],
+);
+
 /** The project's own name, for briefs and launchd labels. */
 export const PROJECT_NAME = config.project.name || "this repository";
+
+/** `solo` or `team` — how this project shares its queue (`project.workflow`). */
+export const WORKFLOW = config.project.workflow;
+
+/**
+ * Why the queue may not plan or build on `branch`, or null when it may.
+ *
+ * In a team the base branch is shared: a spec planned there by one developer's loop is
+ * planned again by the next one's, and a task committed there reaches everyone unreviewed.
+ * So team mode refuses it outright and the developer works on a branch of their own. Solo
+ * mode builds wherever it is, the base branch included. Pure, so the rule is testable.
+ */
+export function workflowRefusal({ workflow = WORKFLOW, branch, base = BASE_BRANCH } = {}) {
+  if (workflow !== "team" || !branch || branch !== base) return null;
+  return (
+    `project.workflow is "team", and this checkout is on ${base}, the branch everyone shares.\n` +
+    "Plan and build on a branch of your own, then open a pull request:\n\n" +
+    "  git switch -c feat/<name>"
+  );
+}

@@ -231,7 +231,34 @@ export function sequenceProblems(paths, delegated) {
     previousTierLast = Math.max(...seen);
     previousTier = inTier.join(" / ");
   }
+
+  // An agent that both designs and reviews owes two calls, not one. Attendance is counted
+  // by name, so a single design pass before the build also read as the review — and the
+  // built page was never looked at. Its last call has to come after the last writer's.
+  const lastBuild = [...buildAgents].map(lastAt).reduce((max, i) => Math.max(max, i), -1);
+  for (const agent of designAgents) {
+    if (!reviewOrder.includes(agent) || lastBuild < 0) continue;
+    const reviewedAt = lastAt(agent);
+    if (reviewedAt >= 0 && reviewedAt < lastBuild) {
+      problems.push(
+        `${agent} designed this screen but never reviewed what was built from it. Its second ` +
+          "pass reads the finished page, after every writer is done.",
+      );
+    }
+  }
   return problems;
+}
+
+/**
+ * Everything that stops a verified tree from being accepted on the delegations seen: the
+ * departments that never saw it and the ones that saw it out of order. Empty means it may
+ * land. One function, so the attempt loop and the give-up path cannot judge differently.
+ */
+export function acceptanceProblems(paths, delegated, current = delegated) {
+  return [
+    ...explainMissing(paths, delegated, current).map((d) => `${d.agent} (${d.label}) never saw this change`),
+    ...sequenceProblems(paths, delegated),
+  ];
 }
 
 /**

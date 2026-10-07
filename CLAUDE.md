@@ -90,6 +90,7 @@ npm run loop                        # preflight → observe → plan → drain �
 npm run schedule -- install         # run the loop on a timer (Task Scheduler / launchd)
 npm run auto:status                 # every attempt, its turns, cost and why it failed
 npm run lessons                     # what past runs recorded for future ones
+npm run owes                        # which reviews and skills the working tree's change owes (the runner's rule)
 npm run pr                          # the pull-request URL for the current branch
 npm run test:claude-contract        # check the installed Claude CLI still emits what the runner reads
 ```
@@ -103,19 +104,34 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
   diff and compared with the subagents actually seen in the run's stream: `ui-ux-reviewer` designs a
   screen first; `data-engineer`, `backend-engineer`, `frontend-engineer` build; `qa-engineer`,
   `security-reviewer` (when owned paths changed) and `code-reviewer` (unless the diff is markdown
-  alone, `exceptWhenOnly`) review together, in one tier. A retry keeps the design and build
+  outside `.claude/` alone, `exceptWhenOnly`) review together, in one tier. A retry keeps the design and build
   delegations of the run's earlier attempts, since their work is still in the tree; a review counts
   only in the attempt it judged. The agents are in `.claude/agents/`.
 - **Verification is paid once per tree.** Specialists run the tests for what they changed; the lead
-  runs `npm run verify` once, before the reviews; the runner verifies the finished tree and reuses
-  that pass while the tree is byte-for-byte unchanged. Before an attempt starts, the runner probes
+  runs `npm run verify` once, before the reviews (inside a run it starts the API itself); the runner
+  verifies the finished tree itself — it never takes the session's word for a pass — and reuses its
+  own pass while the tree is byte-for-byte unchanged. Before an attempt starts, the runner probes
   every service `cycle.preflight` and `verify.service.dependsOn` name and exits 4 without
   spending anything (the drain puts the task back in `todo/`) when one is down and cannot be
   started; `--no-preflight` skips that.
+- **Solo or team** is `project.workflow`. `solo` (the default) builds on whatever branch is checked
+  out, the base branch included. `team` never plans or builds on the base branch — `queue plan`/`drain`,
+  `loop`, `auto` and `schedule install` refuse there — so each spec is written, planned and built on a
+  branch of its own and reaches the base through a pull request. `specs/`, `.agent-queue/todo/` and
+  `.agent-queue/planned/` are tracked (planning commits them as `Plan <spec>`); `doing/`, `done/` and `failed/`
+  are per machine and gitignored. A task has landed when a commit reachable from HEAD names it on a
+  `Task:` line, which survives a rebase or squash merge. Each spec's tasks live in a folder named for
+  the spec (`adhoc` for hand-queued tasks) and a task's identity is `<spec>/<name>`, so every spec
+  numbers from `01-`; planning an edited spec again numbers on past the names it already used, and a
+  planning call that writes outside its folder or reuses a name queues nothing.
 - **The work branch** is `project.branch`, or whichever branch is checked out when that is `null`.
-  The runner refuses a dirty tree, commits each task with a `Task: <brief>` trailer, and **never
-  pushes unless `AGENT_AUTO_PUSH=1`** — and nothing here merges. Pull requests go to
-  `project.baseBranch` (else `origin/HEAD`); `auto-ship` opens one with `gh` when it is installed.
+  The runner refuses a dirty tree that is not its own salvage (`--salvage` takes it over), a live
+  drain and a half-finished git operation, commits each task with a `Task: <brief>` trailer, and
+  **never pushes unless `AGENT_AUTO_PUSH=1`** — and nothing here merges. Pull requests go to
+  `project.baseBranch` (else `origin/HEAD`); `npm run pr` prints the URL, and
+  `npm run auto:ship -- "<subject>" --push` pushes a non-protected branch and opens one with `gh`.
+  In `team`, a drain builds only the briefs its own branch added, and the guard refuses a commit
+  on the base branch.
 - **Spend is bounded** by `AGENT_MAX_USD_PER_TASK` (default 50), `AGENT_MAX_USD_PER_DRAIN` (200) and
   `AGENT_MAX_RUNS_PER_TASK` (3). Each attempt is also stopped by the CLI itself at `budget.maxTurns`
   parent turns (`--max-turns`) and at what is left of the task's ceiling (`--max-budget-usd`), and
@@ -132,14 +148,17 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
   new version's fixtures.
 - **Guards run in every permission mode.** `.claude/hooks/` refuses reading or writing `.env*` and the
   per-environment `appsettings.*.json`, edits to build output, `dotnet ef database drop`, destructive
-  SQL, `git reset --hard`, `git add -A`, force-pushes, pushes to a protected branch, every merge
-  route and the VPS deploy (`npm run deploy:vps`, through `hooks.deniedCommands`) — for the Bash and PowerShell tools alike, with git's global options (`git -C …`) seen
+  SQL, `git reset --hard` and its equivalents (`checkout -- .`, `restore .`, `stash clear`,
+  `branch -D`), `git add -A`, force-pushes, pushes to a protected branch (and, in `team`, a commit
+  on the base branch), every merge route and the VPS deploy (`npm run deploy:vps`, through `hooks.deniedCommands`) — for the Bash and PowerShell tools alike, with git's global options (`git -C …`) seen
   through — and reading the secret files through the Read and Grep tools. `npm run test:hooks`
   holds a block case and a neighbouring allow case for each rule; add both when you add a rule.
 - **Records.** `.agent-runs/` (git-ignored) is every attempt, with its raw stream beside its log
-  (`<run>-attempt-N.stream.jsonl`); `docs/builds/` is one committed record per landed task;
-  `.claude/memory/lessons/` is what runs learned, injected into later briefs, each naming the task
-  that taught it (the runner exports `AGENT_TASK` to the session).
+  (`<run>-attempt-N.stream.jsonl`); each task's commit is its code, its brief leaving `todo/` and its
+  build record — `docs/builds/<date-time>-<spec>/<task>.md`, one directory per planning of a spec, stamped with when
+  planning started (`docs/builds/adhoc/` for a task queued by hand), written just before the commit;
+  `.claude/memory/lessons/` is what runs learned, injected into later briefs; a lesson names
+  no task, since the task that taught it means nothing to the unrelated ones that read it.
 
 ## Backend architecture
 

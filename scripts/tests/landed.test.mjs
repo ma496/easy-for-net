@@ -6,7 +6,7 @@ test("a commit touching only the queue's own lanes built nothing", () => {
   assert.equal(
     carriesProductCode([
       ".agent-queue/todo/06-lead-filters.md",
-      "docs/builds/06-lead-filters.md",
+      ".agent-queue/planned.json",
     ]),
     false,
   );
@@ -16,14 +16,14 @@ test("one application file is enough to count as work", () => {
   assert.equal(
     carriesProductCode([
       ".agent-queue/todo/06-lead-filters.md",
-      "docs/builds/06-lead-filters.md",
       "apps/api/public/leads.html",
     ]),
     true,
   );
 });
 
-test("docs outside docs/builds are the product's own documentation", () => {
+test("a build record is bookkeeping; other docs are the product's own documentation", () => {
+  assert.equal(carriesProductCode(["docs/builds/2026-10-06T14-03-27-leads/leads-01-filters.md"]), false);
   assert.equal(carriesProductCode(["docs/capabilities/lead-intelligence.md"]), true);
 });
 
@@ -40,6 +40,6 @@ test("productFiles names what actually changed", () => {
 });
 
 test("git show output parses the same way", () => {
-  assert.equal(carriesProductCodeFromShow("\n.agent-queue/done/x.md\ndocs/builds/x.md\n"), false);
-  assert.equal(carriesProductCodeFromShow("\n.agent-queue/done/x.md\napps/api/public/leads.html\n"), true);
+  assert.equal(carriesProductCodeFromShow("\n.agent-queue/todo/x.md\n.agent-runs/x.json\n"), false);
+  assert.equal(carriesProductCodeFromShow("\n.agent-queue/todo/x.md\napps/api/public/leads.html\n"), true);
 });

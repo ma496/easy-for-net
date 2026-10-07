@@ -10,15 +10,35 @@
  * `agentic.config.json`.
  */
 import { config, PROJECT_NAME } from "./project-config.mjs";
+import { nextNumber } from "./planning.mjs";
 
-export function buildPlanBrief() {
+/**
+ * `scope` is the spec's folder (lib/task-names.mjs): every task file is written inside it.
+ * `taken` the names an earlier plan of the same spec already used there, which must not be
+ * reused — numbering carries on after the highest.
+ */
+export function buildPlanBrief({ scope = "plan", taken = [], replaced = [] } = {}) {
+  const withdrawn = new Set(replaced);
+  const kept = taken.filter((n) => !withdrawn.has(n));
+  const earlier = taken.length
+    ? `\n\nThis spec was planned before, and its folder already uses these names: ${taken.join(", ")}.\n` +
+      `Do not reuse any of them; number the new tasks from ${nextNumber(taken)}.` +
+      (replaced.length
+        ? `\nThe spec has changed since. ${replaced.join(", ")} were planned from the old version and never\n` +
+          "built; they have been withdrawn, and your plan replaces them — cover whatever of the spec\n" +
+          "they would have covered, as it now reads." +
+          (kept.length
+            ? ` ${kept.join(", ")} already exist and stay; plan only what the\nspec asks for beyond them, and a new task may depend on one of them by name.`
+            : "")
+        : " A new task may depend\non one of those by name.")
+    : "";
   const guide = config.docs.guide ?? "CLAUDE.md";
   const capabilities = config.docs.capabilities;
 
   return `You are planning work in the ${PROJECT_NAME} repository. Read ${guide}
 first. Write NO implementation code — your entire output is task files.
 
-Split the spec below into task files under .agent-queue/todo/. A task file becomes one
+Split the spec below into task files under .agent-queue/todo/${scope}/. A task file becomes one
 commit, worked by an agent that reads ONLY that file.
 
 Find the seams. The unit is the smallest thing worth reviewing and shipping on its own,
@@ -40,8 +60,10 @@ that has not run yet. Every task that needs another task's code must declare it 
 "Depends-on:" line; the queue holds it until that task is done. Two tasks that need each
 other both ways are one task — merge them.
 
-Name each file .agent-queue/todo/NN-short-slug.md, numbered in dependency order, and use
-exactly this shape:
+Write each file as .agent-queue/todo/${scope}/NN-short-slug.md — in exactly that folder, a
+two-digit number in dependency order, then a lowercase slug.${earlier}
+
+Use exactly this shape:
 
 <one line: what this does — it becomes the commit subject>
 Depends-on: 01-earlier-task, 02-other-task     (omit this line entirely if nothing blocks it)
@@ -61,7 +83,9 @@ Depends-on: 01-earlier-task, 02-other-task     (omit this line entirely if nothi
 - the specific things a person would check by hand
 
 If the spec is already written as a single self-contained task brief, do not re-split it:
-queue it as one file, carrying over any dependency it names.
+queue it as one file, written the same way, carrying over any dependency it names. A
+dependency names a task of this plan by its file name without .md; a task from another plan
+is named <its folder>/<its file name without .md>.
 ${
   capabilities
     ? `

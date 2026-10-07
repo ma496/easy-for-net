@@ -12,6 +12,8 @@ export const OUTCOMES = {
   verified: { mark: "✓", landed: true },
   shipped: { mark: "⇪", landed: true },
   planned: { mark: "◇" },
+  // A planning call that ran but whose output was refused: misnamed tasks, or edits outside the queue.
+  rejected: { mark: "◆" },
   failed: { mark: "✗", unfinished: true },
   abandoned: { mark: "–", unfinished: true },
   // Out of money is not out of ideas: nothing judged the approach.

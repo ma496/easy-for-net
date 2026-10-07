@@ -29,7 +29,7 @@
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
-import { homedir, platform } from "node:os";
+import { homedir, hostname, platform } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { wantsAutoPush, wantsRefuseDirtyStart } from "./lib/agent-flags.mjs";
@@ -40,7 +40,8 @@ import {
   parseCeiling,
 } from "./lib/budget.mjs";
 import { isAlive, killTree } from "./lib/proc.mjs";
-import { config, resolveModel, WORK_BRANCH } from "./lib/project-config.mjs";
+import { parseLock } from "./lib/queue-lock.mjs";
+import { config, resolveModel, WORK_BRANCH, workflowRefusal } from "./lib/project-config.mjs";
 import {
   launchdLabel,
   posixCommand,
@@ -204,6 +205,7 @@ const env = scheduleEnv({
   maxRunsPerTask: argOf("max-runs-per-task", process.env.AGENT_MAX_RUNS_PER_TASK ?? "3"),
   autoPush,
   refuseDirty,
+  workBranch: WORK_BRANCH,
 });
 
 // --- actions --------------------------------------------------------------------------------
@@ -229,7 +231,11 @@ if (action === "uninstall") {
   // outlive the scheduler's own job: an agent-run mid-task keeps its claude session and keeps
   // editing files with nobody expecting it to. "Uninstall" has to mean stopped, so the drain
   // holding the queue lock is stopped with everything it started.
-  const holder = existsSync(LOCK) ? Number(readFileSync(LOCK, "utf8").trim()) : 0;
+  // The lock is JSON ({ pid, host, … }); reading it as a bare number gave NaN, so nothing
+  // was ever stopped while this still said nothing was scheduled. A lock another host
+  // wrote names a pid on that machine, which is nothing to kill here.
+  const lock = existsSync(LOCK) ? parseLock(readFileSync(LOCK, "utf8")) : null;
+  const holder = lock && (!lock.host || lock.host === hostname()) ? lock.pid : 0;
   if (holder && holder !== process.pid && isAlive(holder)) {
     console.log(`Stopping the drain in flight (pid ${holder}) and everything it started…`);
     killTree(holder);
@@ -244,11 +250,20 @@ if (action === "uninstall") {
   process.exit(0);
 }
 
+// A timer on the shared base branch of a team would plan and build there every minute —
+// the one place team mode never builds. Refused at install, not just at each firing, so
+// the mistake is seen once by the person making it rather than logged every minute.
+const refusal = workflowRefusal({ branch: WORK_BRANCH });
+if (refusal) {
+  console.error(`${refusal}\n\nThen install the timer from that branch.`);
+  process.exit(1);
+}
+
 mkdirSync(LOG_DIR, { recursive: true });
 const name = scheduler.install(env, interval);
 
 console.log(`Scheduled: ${name}`);
-console.log(`  every ${Math.max(60, interval)}s, building on ${config.project.branch || `the checked-out branch (now ${WORK_BRANCH})`}`);
+console.log(`  every ${Math.max(60, interval)}s, building on ${WORK_BRANCH}${config.project.branch ? "" : " (the branch checked out now; a cycle that fires on another one refuses)"}`);
 console.log(`  spend ceilings: ${formatCeiling(maxUsdPerTask)} per task, ${formatCeiling(maxUsdPerDrain)} per drain`);
 console.log(`  model: ${env.AGENT_MODEL}`);
 console.log(autoPush ? "  AGENT_AUTO_PUSH=1 — each verified commit is pushed" : "  AGENT_AUTO_PUSH=0 — commits stay local");
