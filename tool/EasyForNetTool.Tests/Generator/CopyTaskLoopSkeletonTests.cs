@@ -4,13 +4,13 @@ using EasyForNetTool.Generator;
 
 /// <summary>
 /// Unit tests for <see cref="CreateProjectGenerator.CopyTaskLoopSkeleton"/>, run against the template's own
-/// task-loop files, so a new project starts with the loop's guides and an empty shared queue - and none
+/// task-loop files, so a new project starts with the loop's guides and no queue - and none
 /// of the template repository's own work.
 /// </summary>
 public class CopyTaskLoopSkeletonTests
 {
     /// <summary>
-    /// Tests that the skeleton holds exactly the guides and an empty planned/ - no lane, no plan record, and no build record.
+    /// Tests that the skeleton holds exactly the guides - no queue, no lesson, no build record and no .gitkeep.
     /// </summary>
     [Fact]
     public void Should_Lay_Out_Only_The_Shared_Skeleton()
@@ -30,8 +30,6 @@ public class CopyTaskLoopSkeletonTests
                 .ToArray();
             Assert.Equal(
                 [
-                    ".agent-queue/planned/.gitkeep",
-                    ".claude/memory/lessons/.gitkeep",
                     "docs/AGENTIC_WORKFLOW.md",
                     "docs/capabilities/README.md",
                     "specs/README.md",
@@ -39,6 +37,7 @@ public class CopyTaskLoopSkeletonTests
                 ],
                 files);
             Assert.False(Directory.Exists(Path.Combine(target, "docs", "builds")));
+            Assert.False(Directory.Exists(Path.Combine(target, ".agent-queue")));
         }
         finally
         {

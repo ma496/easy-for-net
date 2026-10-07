@@ -54,9 +54,8 @@ What you get:
   `docker-compose.prod.yml`, `docker-compose.coolify.yml`, `.env.docker.example` and `docker/`.
 - `CLAUDE.md` and the agentic layer: `.claude` (agents, commands, hooks, `settings.json`, status
   line, skills, `memory/README.md`), `scripts/` (the loop's engine), and an empty task-loop skeleton —
-  `specs/{README,TEMPLATE}.md`, `docs/AGENTIC_WORKFLOW.md`, `docs/capabilities/README.md`,
-  an empty `.agent-queue/planned/` (one plan record per spec, kept by `.gitkeep`) and an empty
-  `.claude/memory/lessons`.
+  `specs/{README,TEMPLATE}.md`, `docs/AGENTIC_WORKFLOW.md` and `docs/capabilities/README.md`
+  (`.agent-queue/` and `.claude/memory/lessons/` appear when the loop first writes to them).
 
 Namespaces, project file names, `InternalsVisibleTo`, the `ReflectionCache.AddFrom…` call, the npm
 package names (web and root), `agentic.config.json`'s `project.name`, the app's display name and the

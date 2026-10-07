@@ -58,9 +58,9 @@ would want.
   `tool/EasyForNetTool/new-project-claude.md` and `new-project-readme.md` (`{{Name}}` / `{{name}}`
   replaced with the project name)
 - **the task loop's records as an empty skeleton** (`CopyTaskLoopSkeleton`): `specs/README.md`,
-  `specs/TEMPLATE.md`, `docs/AGENTIC_WORKFLOW.md`, `docs/capabilities/README.md`,
-  `.agent-queue/planned/.gitkeep`, and `.claude/memory/lessons/.gitkeep`. The queue creates its
-  lanes itself (`doing/`, `done/` and `failed/` are per machine, gitignored by the copied
+  `specs/TEMPLATE.md`, `docs/AGENTIC_WORKFLOW.md` and `docs/capabilities/README.md`, with no
+  `.gitkeep` anywhere. The queue creates its lanes and `planned/` itself, the first lesson creates
+  `.claude/memory/lessons/` (`doing/`, `done/` and `failed/` are per machine, gitignored by the copied
   `.gitignore`), and `docs/builds/` appears with the first landed task;
   `CopyTaskLoopSkeletonTests` pins the exact file list.
 
