@@ -1,5 +1,6 @@
 namespace EasyForNetTool;
 
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -19,14 +20,27 @@ public static class JsonPropertyUpdater
         if (!File.Exists(filePath))
             return;
 
-        var json = JsonNode.Parse(File.ReadAllText(filePath))!;
+        var text = File.ReadAllText(filePath);
+        var json = JsonNode.Parse(text)!;
         if (!IsPropertyExist(json, propertyPath))
             return;
 
         SetProperty(json, propertyPath, ConvertValue(value));
 
-        var options = new JsonSerializerOptions { WriteIndented = true };
-        await File.WriteAllTextAsync(filePath, json.ToJsonString(options));
+        // The default encoder HTML-escapes <, >, &, ', + and every non-ASCII character (">=24" becomes
+        // ">=24"), so the relaxed one keeps the file's untouched values as written. LF and the
+        // trailing newline keep the rewrite from touching lines it did not change.
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            NewLine = "\n",
+        };
+        var output = json.ToJsonString(options);
+        if (text.EndsWith('\n'))
+            output += "\n";
+
+        await File.WriteAllTextAsync(filePath, output);
     }
 
     /// <summary>
