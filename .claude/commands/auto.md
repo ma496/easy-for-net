@@ -56,7 +56,8 @@ yourself to the same bar here.
 
 ## 5. Commit, then stop
 
-Commit — deliberately, staging only the paths this task touched, never `git add -A`.
+Commit through the `commit` skill — staging only the paths this task touched, never
+`git add -A`, with no co-author or attribution trailer.
 Committing is routine here: it is what lets the next task build on this one. `git commit` is
 in the `ask` list of settings.json, so in the default permission mode this one step still
 waits for a click; run the session in acceptEdits or bypass mode to finish unattended.

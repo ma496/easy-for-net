@@ -330,7 +330,8 @@ Adding a language means a resource file `Features/Localization/Core/Resources/<c
 - API: `backend-feature`, `backend-endpoint`, `backend-entity`, `backend-tests`, `multi-tenancy`, `permissions`, `feature-management`, `settings`, `background-jobs`, `file-storage`, `notifications`
 - Web: `rtk-query-api`, `frontend-page`, `frontend-crud`, `ui-component`, `redux-state`, `localization`, `frontend-tests`
 - Spanning both: `api-error-handling`
-- Process: spec-driven development — `specs/README.md`, the `.claude/commands` (`/orient`, `/feature`, `/fix`, `/auto`, `/queue`, `/spec-split`, `/check`, `/verify`, `/ship`, `/review-diff`, `/trace`, `/commit-msg`, `/pr-msg`), and the agents in `.claude/agents`
+- Committing: `commit` — stages deliberately and commits as the configured git user, with no co-author or attribution trailer
+- Process: spec-driven development — `specs/README.md`, the `.claude/commands` (`/orient`, `/feature`, `/fix`, `/auto`, `/queue`, `/spec-split`, `/check`, `/verify`, `/ship`, `/review-diff`, `/trace`, `/pr-msg`), and the agents in `.claude/agents`
 - This repository and the CLI: `new-project` (scaffolding), `template-maintenance`
 
 Every skill except those last two ships to generated projects, so keep them generic.

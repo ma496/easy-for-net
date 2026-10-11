@@ -55,12 +55,8 @@ the reviewer that asked for it, before committing.
 
 ## 7. Commit, then stop
 
-Commit — deliberately, staging only the paths this feature touched:
-
-```bash
-git add <the specific files>        # never `git add -A`
-git commit
-```
+Commit through the `commit` skill — staging only the paths this feature touched, never
+`git add -A`, as the configured git user with no co-author or attribution trailer.
 
 Then **stop**. Pushing is the owner's: the guard refuses an agent's push to a protected
 branch, so give them the command (`! git push`). Never merge a pull request.
