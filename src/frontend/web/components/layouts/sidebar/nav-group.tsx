@@ -3,6 +3,7 @@
 import { NavItem, NavItemGroup } from '@/nav-items'
 import { SidebarNavItem } from './nav-item'
 import { cn } from '@/lib/utils'
+import { humanizeKey } from '@/i18n'
 
 /**
  * Props for the {@link SidebarNavGroup} component, receiving the entry to render along with shared sidebar state (current menu, path, translator, toggle handler, rail mode).
@@ -31,7 +32,7 @@ export const SidebarNavGroup = ({ group, currentMenu, pathname, t, onToggleMenu,
   if (isNavItemGroup(group)) {
     return (
       <div className="pt-5 first:pt-1">
-        <h2 className={cn('mb-1.5 truncate px-2.5 text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase rtl:tracking-normal', compact && 'lg:hidden')}>{t(group.title)}</h2>
+        <h2 className={cn('mb-1.5 truncate px-2.5 text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase rtl:tracking-normal', compact && 'lg:hidden')}>{t(group.title) || humanizeKey(group.title)}</h2>
         {compact && <div className="mx-auto mb-2 hidden h-px w-6 bg-border lg:block" />}
         <ul className="space-y-0.5">
           {group.items.map((item, index) => (

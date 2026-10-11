@@ -136,7 +136,7 @@ function DataTableGrid<TData>({ className = '', suppressScrollX = false, suppres
             ) : (
               <tr>
                 <td colSpan={columns.length}>
-                  <DataTableEmpty message={emptyMessage ?? t('table.noRecords')} />
+                  <DataTableEmpty message={emptyMessage ?? (t('table.noRecords') || 'No records found')} />
                 </td>
               </tr>
             )}

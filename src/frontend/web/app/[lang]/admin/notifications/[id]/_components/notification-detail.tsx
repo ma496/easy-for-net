@@ -1,6 +1,6 @@
 'use client'
 import { useNotificationGetQuery, useNotificationMarkAsReadMutation, useNotificationMarkAsUnreadMutation, NotificationType } from '@/store/api/notifications'
-import { useTranslation } from '@/i18n'
+import { useTranslation, humanizeKey } from '@/i18n'
 import { format } from 'date-fns'
 import { AlertCircle, AlertTriangle, BellOff, CheckCircle, Info, Check, EyeOff } from 'lucide-react'
 import { Badge, Button, ApiErrorMessages, Loader } from '@/components/ui'
@@ -30,7 +30,7 @@ export const NotificationDetail = ({ id }: NotificationDetailProps) => {
         return
       } else {
         successToast.fire({
-          text: t('notifications.markedAsRead'),
+          text: t('notifications.markedAsRead') || 'Notification marked as read',
         })
       }
     }
@@ -44,7 +44,7 @@ export const NotificationDetail = ({ id }: NotificationDetailProps) => {
         return
       } else {
         successToast.fire({
-          text: t('notifications.markedAsUnread'),
+          text: t('notifications.markedAsUnread') || 'Notification marked as unread',
         })
       }
     }
@@ -67,13 +67,13 @@ export const NotificationDetail = ({ id }: NotificationDetailProps) => {
   const getTypeBadge = (type: NotificationType) => {
     switch (type) {
       case NotificationType.Warning:
-        return <Badge variant="warning">{t('notifications.types.warning')}</Badge>
+        return <Badge variant="warning">{t('notifications.types.warning') || 'Warning'}</Badge>
       case NotificationType.Error:
-        return <Badge variant="danger">{t('notifications.types.error')}</Badge>
+        return <Badge variant="danger">{t('notifications.types.error') || 'Error'}</Badge>
       case NotificationType.Success:
-        return <Badge variant="success">{t('notifications.types.success')}</Badge>
+        return <Badge variant="success">{t('notifications.types.success') || 'Success'}</Badge>
       default:
-        return <Badge variant="primary">{t('notifications.types.info')}</Badge>
+        return <Badge variant="primary">{t('notifications.types.info') || 'Info'}</Badge>
     }
   }
 
@@ -99,7 +99,7 @@ export const NotificationDetail = ({ id }: NotificationDetailProps) => {
         <span className="grid size-12 place-content-center rounded-xl bg-surface-2 text-muted-foreground">
           <BellOff className="h-5 w-5" />
         </span>
-        <p className="text-sm font-medium text-foreground">{t('notifications.notFound')}</p>
+        <p className="text-sm font-medium text-foreground">{t('notifications.notFound') || 'Notification not found'}</p>
       </div>
     )
   }
@@ -114,13 +114,13 @@ export const NotificationDetail = ({ id }: NotificationDetailProps) => {
           <span className={cn('grid size-12 shrink-0 place-content-center rounded-xl', tile.className)}>{tile.icon}</span>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-lg font-semibold tracking-tight wrap-break-word text-foreground sm:text-xl">{t(notification.titleKey, variables)}</h2>
+              <h2 className="text-lg font-semibold tracking-tight wrap-break-word text-foreground sm:text-xl">{t(notification.titleKey, variables) || humanizeKey(notification.titleKey)}</h2>
               {getTypeBadge(notification.type)}
               {notification.isRead ? (
-                <Badge variant="secondary">{t('notifications.read')}</Badge>
+                <Badge variant="secondary">{t('notifications.read') || 'Read'}</Badge>
               ) : (
                 <Badge variant="primary" type="outline">
-                  {t('notifications.unread')}
+                  {t('notifications.unread') || 'Unread'}
                 </Badge>
               )}
             </div>
@@ -130,37 +130,37 @@ export const NotificationDetail = ({ id }: NotificationDetailProps) => {
             {notification.isRead ? (
               <Button variant="outline" size="sm" onClick={handleMarkAsUnread} isLoading={isMarkingAsUnread}>
                 <EyeOff className="h-4 w-4" />
-                {t('notifications.markAsUnread')}
+                {t('notifications.markAsUnread') || 'Mark as unread'}
               </Button>
             ) : (
               <Button variant="primary" size="sm" onClick={handleMarkAsRead} isLoading={isMarkingAsRead}>
                 <Check className="h-4 w-4" />
-                {t('notifications.markAsRead')}
+                {t('notifications.markAsRead') || 'Mark as read'}
               </Button>
             )}
           </div>
         </div>
 
-        <p className="mt-5 border-t border-border pt-5 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap text-foreground">{t(notification.messageKey, variables)}</p>
+        <p className="mt-5 border-t border-border pt-5 text-sm leading-relaxed wrap-break-word whitespace-pre-wrap text-foreground">{t(notification.messageKey, variables) || humanizeKey(notification.messageKey)}</p>
 
         <dl className="mt-5 grid gap-x-6 gap-y-4 border-t border-border pt-5 grid-cols-2 text-sm lg:grid-cols-4">
           <div className="min-w-0">
-            <dt className="text-xs text-muted-foreground">{t('table.columns.group')}</dt>
+            <dt className="text-xs text-muted-foreground">{t('table.columns.group') || 'Group'}</dt>
             <dd className="mt-1 wrap-break-word text-foreground">
-              {notification.group ? t(`notifications.groups.${notification.group}`, { defaultValue: notification.group }) : <span className="text-subtle-foreground">&mdash;</span>}
+              {notification.group ? t(`notifications.groups.${notification.group}`) || notification.group : <span className="text-subtle-foreground">&mdash;</span>}
             </dd>
           </div>
           <div className="min-w-0">
-            <dt className="text-xs text-muted-foreground">{t('table.columns.status')}</dt>
-            <dd className="mt-1 text-foreground">{notification.isRead ? t('notifications.read') : t('notifications.unread')}</dd>
+            <dt className="text-xs text-muted-foreground">{t('table.columns.status') || 'Status'}</dt>
+            <dd className="mt-1 text-foreground">{notification.isRead ? t('notifications.read') || 'Read' : t('notifications.unread') || 'Unread'}</dd>
           </div>
           <div className="min-w-0">
-            <dt className="text-xs text-muted-foreground">{t('table.columns.date')}</dt>
+            <dt className="text-xs text-muted-foreground">{t('table.columns.date') || 'Date'}</dt>
             <dd className="mt-1 text-foreground tabular-nums">{formatRelativeTime(notification.createdAt, i18n.language)}</dd>
           </div>
           {notification.createdAt !== notification.updatedAt && notification.updatedAt && (
             <div className="min-w-0">
-              <dt className="text-xs text-muted-foreground">{t('table.columns.updated')}</dt>
+              <dt className="text-xs text-muted-foreground">{t('table.columns.updated') || 'Updated'}</dt>
               <dd className="mt-1 text-foreground">{formatRelativeTime(notification.updatedAt, i18n.language)}</dd>
             </div>
           )}
@@ -169,7 +169,7 @@ export const NotificationDetail = ({ id }: NotificationDetailProps) => {
 
       {notification.metadata && (
         <section className="min-w-0 rounded-xl border border-border bg-surface p-5 shadow-xs sm:p-6">
-          <h3 className="mb-3 text-base font-semibold text-foreground">{t('notifications.metadata')}</h3>
+          <h3 className="mb-3 text-base font-semibold text-foreground">{t('notifications.metadata') || 'Metadata'}</h3>
           <pre className="max-h-96 overflow-auto rounded-lg bg-surface-2 p-4 font-mono text-xs leading-relaxed text-foreground" dir="ltr">
             {JSON.stringify(JSON.parse(notification.metadata), null, 2)}
           </pre>

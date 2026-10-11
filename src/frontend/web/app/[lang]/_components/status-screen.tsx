@@ -44,7 +44,7 @@ export const StatusScreen = ({ code, icon: Icon, title, message }: StatusScreenP
           <h1 className="text-2xl font-semibold tracking-tight wrap-break-word sm:text-3xl">{title}</h1>
           <p className="mt-3 text-sm leading-relaxed wrap-break-word text-muted-foreground sm:text-base">{message}</p>
           <Button type="button" variant="outline" size="lg" className="mt-8" icon={<ArrowLeft className="size-4 rtl:-scale-x-100" />} onClick={() => router.back()}>
-            {t('common.back')}
+            {t('common.back') || 'Back'}
           </Button>
         </div>
       </main>

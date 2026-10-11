@@ -70,8 +70,8 @@ export const FileUploadExample = () => {
           rounded="full"
           onClick={async () => {
             const result = await confirmDeleteAlert({
-              title: t('file.deleteTitle'),
-              text: t('file.deleteConfirm'),
+              title: t('file.deleteTitle') || 'Delete File',
+              text: t('file.deleteConfirm') || 'Are you sure you want to delete this file?',
             })
             if (result.isConfirmed) {
               await deleteFile()
@@ -128,8 +128,8 @@ export const FileUploadExample = () => {
                           rounded="full"
                           onClick={async () => {
                             const result = await confirmDeleteAlert({
-                              title: t('file.deleteTitle'),
-                              text: t('file.deleteConfirm'),
+                              title: t('file.deleteTitle') || 'Delete File',
+                              text: t('file.deleteConfirm') || 'Are you sure you want to delete this file?',
                             })
                             if (result.isConfirmed) {
                               await deleteFile()

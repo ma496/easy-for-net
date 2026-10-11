@@ -27,7 +27,7 @@ export const BrandMark = ({ href = '/', compactOnPhone = false, className }: Bra
       <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
         <Image className="size-5" src="/assets/images/icon.png" alt="logo" width={20} height={20} unoptimized priority />
       </span>
-      <span className={cn('truncate text-[15px] font-semibold tracking-tight text-foreground', compactOnPhone && 'max-sm:sr-only')}>{t('brand.name')}</span>
+      <span className={cn('truncate text-[15px] font-semibold tracking-tight text-foreground', compactOnPhone && 'max-sm:sr-only')}>{t('brand.name') || 'Easy For Net'}</span>
     </LocalizedLink>
   )
 }

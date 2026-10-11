@@ -40,7 +40,7 @@ export const NotificationFilterPanel = ({ filters, onChange, onSearch, onClear }
   const groupOptions = [
     { label: t('notifications.all') || 'All', value: '' },
     ...(groupsData?.groups ?? []).map((group) => ({
-      label: t(`notifications.groups.${group}`, { defaultValue: group }),
+      label: t(`notifications.groups.${group}`) || group,
       value: group,
     })),
   ]
@@ -70,7 +70,7 @@ export const NotificationFilterPanel = ({ filters, onChange, onSearch, onClear }
         {/* IsRead Status Filter */}
         <div className="flex flex-col gap-1.5">
           <label htmlFor="isRead" className="text-xs font-medium text-muted-foreground">
-            {t('table.columns.status')}
+            {t('table.columns.status') || 'Status'}
           </label>
           <Select
             name="isRead"
@@ -78,7 +78,7 @@ export const NotificationFilterPanel = ({ filters, onChange, onSearch, onClear }
             options={isReadOptions}
             value={filters.isRead}
             onChange={(_, value) => onChange({ ...filters, isRead: value })}
-            placeholder={t('notifications.all')}
+            placeholder={t('notifications.all') || 'All'}
             searchable={false}
             clearable={false}
             size="sm"
@@ -88,7 +88,7 @@ export const NotificationFilterPanel = ({ filters, onChange, onSearch, onClear }
         {/* Group Filter */}
         <div className="flex flex-col gap-1.5">
           <label htmlFor="group" className="text-xs font-medium text-muted-foreground">
-            {t('table.columns.group')}
+            {t('table.columns.group') || 'Group'}
           </label>
           <Select
             name="group"

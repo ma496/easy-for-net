@@ -148,7 +148,7 @@ the refusal is never this application's job, translating it least of all.
 | --- | --- |
 | A query failed and the screen cannot render | `<ApiErrorMessages error={error} />` in place of the content |
 | A form submit failed | `apiErrorAlert(result.error)` — a modal listing the messages |
-| A mutation succeeded | `successToast.fire({ text: t('page.users.createSuccess') })` |
+| A mutation succeeded | `successToast.fire({ text: t('page.users.createSuccess') || 'User created successfully' })` |
 | A soft failure the API reports in the body | `await errorAlert({ text: response.data.message })` |
 
 ```tsx

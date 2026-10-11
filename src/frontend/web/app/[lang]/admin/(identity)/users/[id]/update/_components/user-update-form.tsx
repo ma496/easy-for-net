@@ -16,16 +16,16 @@ const createValidationSchema = (t: (key: string, params?: Record<string, string 
   return Yup.object().shape({
     username: Yup.string(),
     firstName: Yup.string()
-      .min(3, t('validation.minLength', { min: 3 }))
-      .max(50, t('validation.maxLength', { max: 50 })),
+      .min(3, t('validation.minLength', { min: 3 }) || `Field must be at least ${3} characters`)
+      .max(50, t('validation.maxLength', { max: 50 }) || `Field must not exceed ${50} characters`),
     lastName: Yup.string()
-      .min(3, t('validation.minLength', { min: 3 }))
-      .max(50, t('validation.maxLength', { max: 50 })),
+      .min(3, t('validation.minLength', { min: 3 }) || `Field must be at least ${3} characters`)
+      .max(50, t('validation.maxLength', { max: 50 }) || `Field must not exceed ${50} characters`),
     isActive: Yup.boolean()
       .required(),
     roles: Yup.array().of(Yup.string())
-      .required(t('validation.required'))
-      .min(1, t('validation.atLeastOneSelected')),
+      .required(t('validation.required') || 'Field is required')
+      .min(1, t('validation.atLeastOneSelected') || 'At least one item must be selected'),
   })
 }
 
@@ -67,7 +67,7 @@ export const UserUpdateForm = ({ userId }: UserUpdateFormProps) => {
   if (!isLoadingUser && !getUserError && !userData) {
     return (
       <FormState>
-        {t('error.server.userNotFound')}
+        {t('error.server.userNotFound') || 'User not found'}
       </FormState>
     )
   }
@@ -86,7 +86,7 @@ export const UserUpdateForm = ({ userId }: UserUpdateFormProps) => {
     }
 
     successToast.fire({
-      text: t('page.users.updateSuccess'),
+      text: t('page.users.updateSuccess') || 'User updated successfully',
     })
     router.push('/admin/users')
   }
@@ -105,32 +105,32 @@ export const UserUpdateForm = ({ userId }: UserUpdateFormProps) => {
     >
       {() => (
         <Form noValidate>
-          <FormSection title={t('page.users.accountDetails')}>
+          <FormSection title={t('page.users.accountDetails') || 'Account details'}>
             <div className="sm:col-span-2">
               <FormInput
                 name="username"
-                label={t('form.label.username')}
-                placeholder={t('form.placeholder.username')}
+                label={t('form.label.username') || 'Username'}
+                placeholder={t('form.placeholder.username') || 'Enter username'}
                 disabled={true}
               />
             </div>
             <FormInput
               name="firstName"
-              label={t('form.label.firstName')}
-              placeholder={t('form.placeholder.firstName')}
+              label={t('form.label.firstName') || 'First Name'}
+              placeholder={t('form.placeholder.firstName') || 'Enter first name'}
               autoFocus={true}
             />
             <FormInput
               name="lastName"
-              label={t('form.label.lastName')}
-              placeholder={t('form.placeholder.lastName')}
+              label={t('form.label.lastName') || 'Last Name'}
+              placeholder={t('form.placeholder.lastName') || 'Enter last name'}
             />
           </FormSection>
           <FormSection columns={1}>
             <FormLazyMultiSelect
               name="roles"
-              label={t('form.label.roles')}
-              placeholder={t('form.placeholder.roles')}
+              label={t('form.label.roles') || 'Roles'}
+              placeholder={t('form.placeholder.roles') || 'Select roles'}
               selectedItemIds={userData.roles}
               useLazyQuery={useLazyRoleListQuery}
               getLabel={(role) => role.name}
@@ -142,9 +142,9 @@ export const UserUpdateForm = ({ userId }: UserUpdateFormProps) => {
             <div className="rounded-lg border border-border px-4 py-3">
               <FormCheckbox
                 name="isActive"
-                label={t('form.label.isActive')}
+                label={t('form.label.isActive') || 'Active'}
               />
-              <p className="mt-1 ps-5 text-xs text-muted-foreground">{t('page.users.isActiveDescription')}</p>
+              <p className="mt-1 ps-5 text-xs text-muted-foreground">{t('page.users.isActiveDescription') || 'An inactive user cannot sign in.'}</p>
             </div>
           </FormSection>
           <FormActions>
@@ -154,14 +154,14 @@ export const UserUpdateForm = ({ userId }: UserUpdateFormProps) => {
               onClick={() => router.push('/admin/users')}
               disabled={isUserSaving || isLoadingUser}
             >
-              {t('common.cancel')}
+              {t('common.cancel') || 'Cancel'}
             </Button>
             <Button
               type="submit"
               disabled={isUserSaving || isLoadingUser}
               isLoading={isUserSaving}
             >
-              {t('common.submit')}
+              {t('common.submit') || 'Submit'}
             </Button>
           </FormActions>
         </Form>

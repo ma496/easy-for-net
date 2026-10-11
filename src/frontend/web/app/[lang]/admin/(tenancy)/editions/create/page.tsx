@@ -15,7 +15,7 @@ interface EditionCreatePageProps {
  */
 const EditionCreate = async ({ params }: EditionCreatePageProps) => {
   const { lang } = await params
-  const title = await getServerTranslation(lang, 'page.editions.create.title')
+  const title = (await getServerTranslation(lang, 'page.editions.create.title')) || 'Create Edition'
 
   return (
     <AdminPageContent

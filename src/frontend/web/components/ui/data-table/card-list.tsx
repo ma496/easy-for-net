@@ -43,7 +43,7 @@ export function DataTableCardList<TData>({ className = '', emptyMessage }: DataT
   }
 
   if (rows.length === 0) {
-    return <DataTableEmpty message={emptyMessage ?? t('table.noRecords')} />
+    return <DataTableEmpty message={emptyMessage ?? (t('table.noRecords') || 'No records found')} />
   }
 
   return (

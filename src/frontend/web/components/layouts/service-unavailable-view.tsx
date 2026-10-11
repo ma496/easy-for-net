@@ -13,8 +13,8 @@ import { Button } from '@/components/ui'
 export const ServiceUnavailableView = () => {
   const { t } = useTranslation()
   const [isRetrying, setIsRetrying] = useState(false)
-  const title = t('error.serviceUnavailable.title')
-  const brandName = t('brand.name')
+  const title = t('error.serviceUnavailable.title') || 'Service Unavailable'
+  const brandName = t('brand.name') || 'Easy For Net'
 
   // The route's own metadata title names a page this screen has replaced (and, when the server
   // rendered it with the API already down, is an untranslated key), so the tab says what is shown.
@@ -40,9 +40,9 @@ export const ServiceUnavailableView = () => {
         </div>
         <span className="badge badge-warning mb-3">503</span>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">{title}</h1>
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">{t('error.serviceUnavailable.message')}</p>
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">{t('error.serviceUnavailable.message') || 'The server is currently unreachable. Please try again in a few moments.'}</p>
         <Button type="button" size="lg" className="mt-8" icon={<RefreshCw className="size-4" />} isLoading={isRetrying} onClick={retry}>
-          {t('error.serviceUnavailable.retry')}
+          {t('error.serviceUnavailable.retry') || 'Retry'}
         </Button>
       </div>
     </div>

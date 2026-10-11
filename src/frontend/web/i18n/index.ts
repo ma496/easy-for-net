@@ -17,3 +17,4 @@ export { decideLocaleRouting, type LocaleRoutingCookies, type LocaleRoutingDecis
 export { useTranslation } from './client'
 export { getDictionary, getServerTranslation } from './server'
 export { getTranslation } from './non-component'
+export { humanizeKey } from './translate'

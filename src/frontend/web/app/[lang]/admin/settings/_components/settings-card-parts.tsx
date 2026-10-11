@@ -13,20 +13,20 @@ export const SourceBadge = ({ marker }: { marker: SourceMarker }) => {
   if (marker === 'own') {
     return (
       <Badge variant="primary" type="solid">
-        {t('page.settings.source.own')}
+        {t('page.settings.source.own') || 'Set here'}
       </Badge>
     )
   }
   if (marker === 'platform') {
     return (
       <Badge variant="info" type="outline">
-        {t('page.settings.source.platform')}
+        {t('page.settings.source.platform') || 'Platform'}
       </Badge>
     )
   }
   return (
     <Badge variant="secondary" type="outline">
-      {t('page.settings.source.default')}
+      {t('page.settings.source.default') || 'Default'}
     </Badge>
   )
 }
@@ -59,7 +59,7 @@ export const SettingField = ({ id, label, marker, changed, extraBadges, children
           {extraBadges}
           {changed && (
             <Badge variant="warning" type="outline">
-              {t('page.settings.changed')}
+              {t('page.settings.changed') || 'Changed'}
             </Badge>
           )}
         </div>
@@ -103,11 +103,11 @@ export const SettingsCard = ({ title, description, isCustomized, canUpdate, dirt
           <h2 className="text-base font-semibold text-foreground">{title}</h2>
           {isCustomized ? (
             <Badge variant="primary" type="solid">
-              {t('page.settings.customized')}
+              {t('page.settings.customized') || 'Customized here'}
             </Badge>
           ) : (
             <Badge variant="secondary" type="outline">
-              {t('page.settings.inherited')}
+              {t('page.settings.inherited') || 'Inherited'}
             </Badge>
           )}
         </div>
@@ -122,19 +122,19 @@ export const SettingsCard = ({ title, description, isCustomized, canUpdate, dirt
 
         {canUpdate && (
           <CardFooter className="flex flex-wrap items-center justify-end gap-3 border-t border-border bg-surface-2/50 py-3 sm:py-3">
-            {dirty && <span className="me-auto text-sm text-muted-foreground">{t('page.settings.unsaved')}</span>}
+            {dirty && <span className="me-auto text-sm text-muted-foreground">{t('page.settings.unsaved') || 'Unsaved changes'}</span>}
             {isCustomized && (
               <Button type="button" variant="outline" onClick={onReset} disabled={isBusy} isLoading={isResetting} icon={<RotateCcw />}>
-                {t('page.settings.resetToInherited')}
+                {t('page.settings.resetToInherited') || 'Reset to inherited'}
               </Button>
             )}
             {dirty && (
               <Button type="button" variant="outline" onClick={onDiscard} disabled={isBusy}>
-                {t('page.settings.discard')}
+                {t('page.settings.discard') || 'Discard changes'}
               </Button>
             )}
             <Button type="submit" isLoading={isSaving} disabled={!dirty || isBusy}>
-              {t('common.save')}
+              {t('common.save') || 'Save'}
             </Button>
           </CardFooter>
         )}

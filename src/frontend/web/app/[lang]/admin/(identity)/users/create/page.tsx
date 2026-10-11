@@ -14,7 +14,7 @@ interface UserCreatePageProps {
  */
 const UserCreate = async ({ params }: UserCreatePageProps) => {
   const { lang } = await params
-  const title = await getServerTranslation(lang, 'page.users.create.title')
+  const title = (await getServerTranslation(lang, 'page.users.create.title')) || 'Create User'
 
   return (
     <AdminPageContent

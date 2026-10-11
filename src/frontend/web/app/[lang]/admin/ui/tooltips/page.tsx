@@ -15,7 +15,7 @@ interface TooltipPageProps {
  */
 const TooltipPage = async ({ params }: TooltipPageProps) => {
   const { lang } = await params
-  const title = await getServerTranslation(lang, 'page.ui.tooltip.title')
+  const title = (await getServerTranslation(lang, 'page.ui.tooltip.title')) || 'UI Tooltip'
 
   return (
     <AdminPageContent title={title} description="Hover tooltips in every direction, and text that truncates with its full value in a tooltip." plain>

@@ -43,7 +43,7 @@ export const AccountShell = ({ title, description, backHref, children }: Account
             className="mb-4 inline-flex items-center gap-1.5 rounded-md text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           >
             <ArrowLeft className="size-4 rtl:-scale-x-100" />
-            {t('common.back')}
+            {t('common.back') || 'Back'}
           </LocalizedLink>
         )}
         <div className="mb-6">

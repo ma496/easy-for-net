@@ -23,14 +23,14 @@ export function DataTableCardSort<TData>() {
   return (
     <div className="mb-3 flex items-center gap-2">
       <label htmlFor={selectId} className="shrink-0 text-sm text-muted-foreground">
-        {t('table.sort.label')}
+        {t('table.sort.label') || 'Sort by'}
       </label>
       <Select
         name="sort"
         id={selectId}
         className="min-w-0 flex-1"
         options={[
-          { value: '', label: t('table.sort.none') },
+          { value: '', label: t('table.sort.none') || 'Default order' },
           ...sortable.map((column) => {
             const header = column.columnDef.header
             return { value: column.id, label: typeof header === 'string' ? header : column.id }
@@ -38,7 +38,7 @@ export function DataTableCardSort<TData>() {
         ]}
         value={current?.id ?? ''}
         onChange={(_, value) => table.setSorting(value ? [{ id: value, desc: descending }] : [])}
-        placeholder={t('table.sort.none')}
+        placeholder={t('table.sort.none') || 'Default order'}
         searchable={false}
         clearable={false}
         showValidation={false}
@@ -48,8 +48,8 @@ export function DataTableCardSort<TData>() {
         className="btn btn-secondary size-9 shrink-0 p-0"
         disabled={!current}
         onClick={() => current && table.setSorting([{ id: current.id, desc: !descending }])}
-        aria-label={descending ? t('table.sort.descending') : t('table.sort.ascending')}
-        title={descending ? t('table.sort.descending') : t('table.sort.ascending')}
+        aria-label={descending ? t('table.sort.descending') || 'Descending — tap to sort ascending' : t('table.sort.ascending') || 'Ascending — tap to sort descending'}
+        title={descending ? t('table.sort.descending') || 'Descending — tap to sort ascending' : t('table.sort.ascending') || 'Ascending — tap to sort descending'}
       >
         {descending ? <ArrowDownWideNarrow className="h-4 w-4" /> : <ArrowUpNarrowWide className="h-4 w-4" />}
       </button>

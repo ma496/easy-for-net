@@ -38,7 +38,7 @@ export const NotificationBell = () => {
         aria-expanded={isOpen}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span className="sr-only">{t('common.notifications')}</span>
+        <span className="sr-only">{t('common.notifications') || 'Notifications'}</span>
         {/* The badge is anchored to the glyph, not the button, so it sits on the bell's shoulder */}
         <span className="relative inline-flex">
           <Bell size={18} aria-hidden="true" />

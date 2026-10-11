@@ -9,7 +9,7 @@ import { SiteNav } from './_components/site-nav'
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params
   return {
-    title: await getServerTranslation(lang, 'page.home.title'),
+    title: (await getServerTranslation(lang, 'page.home.title')) || 'Home',
   }
 }
 

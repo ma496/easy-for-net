@@ -6,7 +6,7 @@ import { getServerTranslation } from '@/i18n'
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params
   return {
-    title: await getServerTranslation(lang, 'page.auth.forgotPassword.title'),
+    title: (await getServerTranslation(lang, 'page.auth.forgotPassword.title')) || 'Forget Password',
   }
 }
 
@@ -17,8 +17,8 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
 const ForgetPassword = async ({ params }: { params: Promise<{ lang: string }> }) => {
   const { lang } = await params
   const [title, description] = await Promise.all([
-    getServerTranslation(lang, 'page.auth.forgotPassword.title'),
-    getServerTranslation(lang, 'page.auth.forgotPassword.description'),
+    getServerTranslation(lang, 'page.auth.forgotPassword.title').then((text) => text || 'Forget Password'),
+    getServerTranslation(lang, 'page.auth.forgotPassword.description').then((text) => text || 'Enter your email to reset your password'),
   ])
 
   return (

@@ -3,7 +3,7 @@
 import { useQueryState, parseAsStringEnum } from 'nuqs'
 import type { ReactNode } from 'react'
 import { Globe, Languages, Type } from 'lucide-react'
-import { useTranslation } from '@/i18n'
+import { useTranslation, humanizeKey } from '@/i18n'
 import { useAppSelector } from '@/store/hooks'
 import { isAllowed } from '@/lib/utils'
 import { Tabs } from '@/components/ui'
@@ -43,13 +43,13 @@ export const LocalizationManager = () => {
           <Globe className="h-4 w-4" />
         </span>
         <div className="min-w-0 self-center wrap-break-word text-muted-foreground">
-          <div className="text-foreground">{activeTenant ? t('page.localization.scope.tenant', { tenant: activeTenant.name }) : t('page.localization.scope.platform')}</div>
-          {!canUpdate && <div>{t('page.localization.readOnly')}</div>}
+          <div className="text-foreground">{activeTenant ? t('page.localization.scope.tenant', { tenant: activeTenant.name }) || `You are editing texts and languages for ${activeTenant.name}. Anything not changed here is inherited from the platform.` : t('page.localization.scope.platform') || 'You are editing platform-wide texts and languages. Every tenant inherits these unless it sets its own.'}</div>
+          {!canUpdate && <div>{t('page.localization.readOnly') || 'You can view these settings but not change them.'}</div>}
         </div>
       </div>
 
       <Tabs
-        items={LOCALIZATION_TABS.map((candidate) => ({ value: candidate, label: t(`page.localization.tabs.${candidate}`), icon: TAB_ICONS[candidate] }))}
+        items={LOCALIZATION_TABS.map((candidate) => ({ value: candidate, label: t(`page.localization.tabs.${candidate}`) || humanizeKey(candidate), icon: TAB_ICONS[candidate] }))}
         value={tab}
         onValueChange={setTab}
         panelClassName="min-w-0 rounded-xl border border-border bg-surface p-4 shadow-xs sm:p-6"

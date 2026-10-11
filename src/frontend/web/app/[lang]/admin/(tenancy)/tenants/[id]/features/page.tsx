@@ -20,7 +20,7 @@ interface TenantFeaturesPageProps {
  */
 const TenantFeatures = async ({ params }: TenantFeaturesPageProps) => {
   const { lang, id } = await params
-  const title = await getServerTranslation(lang, 'page.features.tenantTitle')
+  const title = (await getServerTranslation(lang, 'page.features.tenantTitle')) || 'Tenant Features'
 
   return (
     <AdminPageContent title={title} plain>

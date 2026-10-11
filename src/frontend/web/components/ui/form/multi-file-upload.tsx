@@ -95,7 +95,7 @@ export const MultiFileUpload = ({
     const newFileNames = [...fileNames]
     for (const file of files) {
       if (file.size > maxBytes) {
-        errorAlert({ text: t('file.tooLarge', { max: formatMegabytes(maxBytes) }) })
+        errorAlert({ text: t('file.tooLarge', { max: formatMegabytes(maxBytes) }) || `File is too large. You can only upload files up to ${formatMegabytes(maxBytes)} MB.` })
         continue
       }
 
@@ -126,7 +126,7 @@ export const MultiFileUpload = ({
     if (!file || replacingIndex === null) return
 
     if (file.size > maxBytes) {
-      errorAlert({ text: t('file.tooLarge', { max: formatMegabytes(maxBytes) }) })
+      errorAlert({ text: t('file.tooLarge', { max: formatMegabytes(maxBytes) }) || `File is too large. You can only upload files up to ${formatMegabytes(maxBytes)} MB.` })
       e.target.value = ''
       return
     }
@@ -158,8 +158,8 @@ export const MultiFileUpload = ({
   const handleRemove = async (index: number) => {
     const fileNameToRemove = fileNames[index]
     const result = await confirmDeleteAlert({
-      title: t('file.deleteTitle'),
-      text: t('file.deleteConfirm'),
+      title: t('file.deleteTitle') || 'Delete File',
+      text: t('file.deleteConfirm') || 'Are you sure you want to delete this file?',
     })
 
     if (result.isConfirmed) {
@@ -214,7 +214,7 @@ export const MultiFileUpload = ({
                     e.stopPropagation()
                     handleReplaceClick(index)
                   }}
-                  title={t('common.edit')}
+                  title={t('common.edit') || 'Edit'}
                 />
                 <IconButton
                   variant="danger"
@@ -225,7 +225,7 @@ export const MultiFileUpload = ({
                     e.stopPropagation()
                     handleRemove(index)
                   }}
-                  title={t('common.delete')}
+                  title={t('common.delete') || 'Delete'}
                 />
               </div>
             </div>
@@ -244,7 +244,7 @@ export const MultiFileUpload = ({
           ) : (
             <>
               <Plus className="mb-2 h-8 w-8 text-subtle-foreground" />
-              <span className="text-xs text-subtle-foreground">{t('file.upload')}</span>
+              <span className="text-xs text-subtle-foreground">{t('file.upload') || 'File Upload'}</span>
             </>
           )}
           <input id={inputId} type="file" multiple accept={accept} className="hidden" onChange={handleFileChange} disabled={isUploading} />

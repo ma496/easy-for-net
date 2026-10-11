@@ -24,7 +24,7 @@ export const SiteNav = () => {
           <BrandMark />
           <nav className="hidden items-center gap-1 md:flex">
             <a href="#features" className="rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground">
-              {t('page.home.features.titleBadge')}
+              {t('page.home.features.titleBadge') || 'Features'}
             </a>
             <LocalizedLink
               href={REPOSITORY_URL}
@@ -32,7 +32,7 @@ export const SiteNav = () => {
               rel="noopener noreferrer"
               className="rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground"
             >
-              {t('page.home.hero.viewSource')}
+              {t('page.home.hero.viewSource') || 'View Source'}
             </LocalizedLink>
           </nav>
         </div>
@@ -40,7 +40,7 @@ export const SiteNav = () => {
         <div className="flex shrink-0 items-center gap-1.5">
           <SiteControls />
           <LocalizedLink href={isAuthenticated ? '/admin' : '/signin'} className="btn btn-primary btn-sm ms-1.5 hidden sm:inline-flex">
-            {isAuthenticated ? t('page.home.hero.dashboardDetail') : t('page.home.hero.signin')}
+            {isAuthenticated ? t('page.home.hero.dashboardDetail') || 'Dashboard' : t('page.home.hero.signin') || 'Signin'}
             <ArrowRight className="size-3.5 rtl:-scale-x-100" />
           </LocalizedLink>
         </div>

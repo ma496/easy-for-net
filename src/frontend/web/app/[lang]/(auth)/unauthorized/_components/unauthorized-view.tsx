@@ -10,5 +10,5 @@ import { StatusScreen } from '../../../_components/status-screen'
 export const UnauthorizedView = () => {
   const { t } = useTranslation()
 
-  return <StatusScreen code={403} icon={ShieldAlert} title={t('error.403.title')} message={t('error.403.message')} />
+  return <StatusScreen code={403} icon={ShieldAlert} title={t('error.403.title') || 'Forbidden'} message={t('error.403.message') || 'You are not allowed to access this resource.'} />
 }

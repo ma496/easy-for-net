@@ -19,11 +19,11 @@ const createValidationSchema = (t: (key: string, params?: Record<string, string 
   return Yup.object({
     firstName: Yup.string().when('lastName', {
       is: (lastName: string) => lastName && lastName.length > 0,
-      then: (schema) => schema.required(t('validation.required')),
+      then: (schema) => schema.required(t('validation.required') || 'Field is required'),
       otherwise: (schema) => schema.optional(),
     }),
     lastName: Yup.string().optional(),
-    email: Yup.string().required(t('validation.required')).email(t('validation.invalidEmail')),
+    email: Yup.string().required(t('validation.required') || 'Field is required').email(t('validation.invalidEmail') || 'Invalid email'),
     image: Yup.string().optional(),
   })
 }
@@ -46,7 +46,7 @@ export const UpdateProfile = () => {
     return (
       <div className="flex min-h-64 flex-col items-center justify-center gap-3 rounded-xl border border-border bg-surface shadow-xs" role="status">
         <Loader />
-        <span className="text-sm text-muted-foreground">{t('common.loading')}</span>
+        <span className="text-sm text-muted-foreground">{t('common.loading') || 'Loading...'}</span>
       </div>
     )
   }
@@ -71,7 +71,7 @@ export const UpdateProfile = () => {
     if (userInfo.data) {
       dispatch(setUserInfo(userInfo.data))
       successToast.fire({
-        text: t('page.profile.updateSuccess'),
+        text: t('page.profile.updateSuccess') || 'Profile updated successfully',
       })
     }
   }
@@ -108,7 +108,7 @@ export const UpdateProfile = () => {
               {({ open, isUploading, isDeleting, deleteFile, selectedFileUrl }) => (
                 <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-start">
                   <div className="size-20 shrink-0 overflow-hidden rounded-full bg-surface-2 ring-1 ring-border">
-                    <Image src={selectedFileUrl || '/assets/images/default-avatar.svg'} alt={t('page.profile.altImage')} width={80} height={80} unoptimized className="h-full w-full object-cover" />
+                    <Image src={selectedFileUrl || '/assets/images/default-avatar.svg'} alt={t('page.profile.altImage') || 'Profile Image'} width={80} height={80} unoptimized className="h-full w-full object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-base font-semibold text-foreground">{[values.firstName, values.lastName].filter(Boolean).join(' ') || values.email}</p>
@@ -118,8 +118,8 @@ export const UpdateProfile = () => {
                     <IconButton
                       variant="outline"
                       onClick={open}
-                      aria-label={t('common.edit')}
-                      title={t('common.edit')}
+                      aria-label={t('common.edit') || 'Edit'}
+                      title={t('common.edit') || 'Edit'}
                       icon={<Pencil className="h-4 w-4" />}
                       isLoading={isUploading}
                       disabled={isUploading || isDeleting}
@@ -128,16 +128,16 @@ export const UpdateProfile = () => {
                       variant="outline-danger"
                       onClick={async () => {
                         const result = await confirmDeleteAlert({
-                          title: t('page.profile.deleteAvatarTitle'),
-                          text: t('page.profile.deleteAvatarConfirm'),
+                          title: t('page.profile.deleteAvatarTitle') || 'Delete Profile Picture',
+                          text: t('page.profile.deleteAvatarConfirm') || 'Are you sure you want to delete your profile picture?',
                         })
                         if (result.isConfirmed) {
                           await deleteFile()
                           setFieldValue('image', undefined)
                         }
                       }}
-                      aria-label={t('common.delete')}
-                      title={t('common.delete')}
+                      aria-label={t('common.delete') || 'Delete'}
+                      title={t('common.delete') || 'Delete'}
                       icon={<Trash2 className="h-4 w-4" />}
                       isLoading={isDeleting}
                       disabled={isUploading || isDeleting || (!selectedFileUrl && !values.image)}
@@ -149,19 +149,19 @@ export const UpdateProfile = () => {
           </div>
 
           <div className="grid gap-5 p-5 sm:grid-cols-2 sm:p-6">
-            <FormInput label={t('form.label.firstName')} name="firstName" type="text" placeholder={t('form.placeholder.firstName')} autoFocus={true} icon={<User size={16} />} />
-            <FormInput label={t('form.label.lastName')} name="lastName" type="text" placeholder={t('form.placeholder.lastName')} icon={<User size={16} />} />
+            <FormInput label={t('form.label.firstName') || 'First Name'} name="firstName" type="text" placeholder={t('form.placeholder.firstName') || 'Enter first name'} autoFocus={true} icon={<User size={16} />} />
+            <FormInput label={t('form.label.lastName') || 'Last Name'} name="lastName" type="text" placeholder={t('form.placeholder.lastName') || 'Enter last name'} icon={<User size={16} />} />
             <div className="sm:col-span-2">
-              <FormInput label={t('form.label.email')} name="email" type="email" placeholder={t('form.placeholder.email')} icon={<Mail size={16} />} required={true} />
+              <FormInput label={t('form.label.email') || 'Email'} name="email" type="email" placeholder={t('form.placeholder.email') || 'Enter email'} icon={<Mail size={16} />} required={true} />
             </div>
           </div>
 
           <div className="flex flex-col-reverse gap-2 rounded-b-xl border-t border-border bg-surface-2/50 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
             <LocalizedLink href="/admin" className="btn btn-secondary">
-              {t('common.cancel')}
+              {t('common.cancel') || 'Cancel'}
             </LocalizedLink>
             <Button type="submit" isLoading={isUpdatingProfile || isLoadingUserProfile}>
-              {t('common.submit')}
+              {t('common.submit') || 'Submit'}
             </Button>
           </div>
         </Form>

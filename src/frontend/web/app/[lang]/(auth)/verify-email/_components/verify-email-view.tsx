@@ -42,7 +42,7 @@ export const VerifyEmailView = () => {
           <div className="mb-5 flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Loader2 className="size-6 animate-spin" />
           </div>
-          <h1 className="text-xl font-semibold tracking-tight">{t('page.verifyEmail.verifying')}</h1>
+          <h1 className="text-xl font-semibold tracking-tight">{t('page.verifyEmail.verifying') || 'Verifying your email...'}</h1>
         </>
       )}
 
@@ -51,10 +51,10 @@ export const VerifyEmailView = () => {
           <div className="mb-5 flex size-12 items-center justify-center rounded-xl bg-success/10 text-success">
             <CheckCircle className="size-6" />
           </div>
-          <h1 className="text-xl font-semibold tracking-tight">{t('page.verifyEmail.verifiedTitle')}</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{t('page.verifyEmail.verifiedMessage')}</p>
+          <h1 className="text-xl font-semibold tracking-tight">{t('page.verifyEmail.verifiedTitle') || 'Email Verified!'}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t('page.verifyEmail.verifiedMessage') || 'Your email has been successfully verified. You can now sign in.'}</p>
           <LocalizedLink href="/signin" className="btn btn-primary btn-lg mt-6 w-full">
-            {t('page.verifyEmail.buttonSignin')}
+            {t('page.verifyEmail.buttonSignin') || 'Sign In Now'}
           </LocalizedLink>
         </>
       )}
@@ -64,10 +64,10 @@ export const VerifyEmailView = () => {
           <div className="mb-5 flex size-12 items-center justify-center rounded-xl bg-danger/10 text-danger">
             <XCircle className="size-6" />
           </div>
-          <h1 className="text-xl font-semibold tracking-tight">{t('page.verifyEmail.failedTitle')}</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{t('page.verifyEmail.failedMessage')}</p>
+          <h1 className="text-xl font-semibold tracking-tight">{t('page.verifyEmail.failedTitle') || 'Verification Failed'}</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{t('page.verifyEmail.failedMessage') || 'The verification link is invalid or has expired.'}</p>
           <LocalizedLink href="/signin" className="btn btn-secondary btn-lg mt-6 w-full">
-            {t('page.auth.signin.backToSignin')}
+            {t('page.auth.signin.backToSignin') || 'Back to Sign In'}
           </LocalizedLink>
         </>
       )}

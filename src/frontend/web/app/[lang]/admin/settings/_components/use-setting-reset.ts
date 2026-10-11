@@ -15,12 +15,12 @@ export const useSettingReset = (name: SettingName, settingTitle: string, ownSour
 
   const reset = async () => {
     const confirmed = await confirmDeleteAlert({
-      title: t('page.settings.resetTitle', { setting: settingTitle }),
+      title: t('page.settings.resetTitle', { setting: settingTitle }) || `Reset ${settingTitle} settings?`,
       text:
         ownSource === SettingSource.Tenant
-          ? t('page.settings.resetConfirmTenant', { setting: settingTitle })
-          : t('page.settings.resetConfirmPlatform', { setting: settingTitle }),
-      confirmButtonText: t('page.settings.resetConfirmButton'),
+          ? t('page.settings.resetConfirmTenant', { setting: settingTitle }) || `This tenant's own ${settingTitle} settings will be removed, and the platform's values will apply instead.`
+          : t('page.settings.resetConfirmPlatform', { setting: settingTitle }) || `The platform's own ${settingTitle} settings will be removed, and the defaults will apply instead. Tenants that set their own values keep them.`,
+      confirmButtonText: t('page.settings.resetConfirmButton') || 'Yes, reset',
     })
     if (!confirmed.isConfirmed) return
 
@@ -30,7 +30,7 @@ export const useSettingReset = (name: SettingName, settingTitle: string, ownSour
       return
     }
 
-    successToast.fire({ text: t('page.settings.resetSuccess', { setting: settingTitle }) })
+    successToast.fire({ text: t('page.settings.resetSuccess', { setting: settingTitle }) || `${settingTitle} settings reset to inherited values` })
     await onReset()
   }
 

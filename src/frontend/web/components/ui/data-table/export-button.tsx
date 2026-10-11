@@ -3,7 +3,7 @@
 import { Menu, MenuButton, MenuItem, MenuItems, MenuSection, MenuHeading } from '@headlessui/react'
 import { Download, FileSpreadsheet, FileText, Loader2 } from 'lucide-react'
 import { ExportFormat } from '@/lib/utils'
-import { useTranslation } from '@/i18n'
+import { useTranslation, humanizeKey } from '@/i18n'
 import { useAppSelector } from '@/store/hooks'
 import { DataTableToolbarButton } from './toolbar-button'
 
@@ -32,7 +32,7 @@ export function DataTableExportButton({ onExport, isExporting = false, disabled 
     <Menu>
       <MenuButton
         as={DataTableToolbarButton}
-        label={t('table.export.button')}
+        label={t('table.export.button') || 'Export'}
         icon={isExporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
         disabled={disabled || isExporting}
       />
@@ -45,7 +45,7 @@ export function DataTableExportButton({ onExport, isExporting = false, disabled 
           <MenuSection key={format} className={index > 0 ? 'mt-1 border-t border-border pt-1' : undefined}>
             <MenuHeading className="flex items-center gap-2 px-2.5 py-1.5 text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase">
               <Icon size={14} />
-              {t(labelKey)}
+              {t(labelKey) || humanizeKey(labelKey)}
             </MenuHeading>
             {[false, true].map((all) => (
               <MenuItem key={String(all)}>
@@ -54,7 +54,7 @@ export function DataTableExportButton({ onExport, isExporting = false, disabled 
                   className="flex w-full cursor-pointer items-center rounded-md py-1.5 ps-8 pe-3 text-sm whitespace-nowrap data-focus:bg-surface-2"
                   onClick={() => onExport(format, all)}
                 >
-                  {t(all ? 'table.export.allRecords' : 'table.export.currentPage')}
+                  {all ? t('table.export.allRecords') || 'All Records' : t('table.export.currentPage') || 'Current Page'}
                 </button>
               </MenuItem>
             ))}

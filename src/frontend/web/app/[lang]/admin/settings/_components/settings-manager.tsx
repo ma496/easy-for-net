@@ -40,8 +40,8 @@ export const SettingsManager = () => {
         <Settings2 className="h-4 w-4" />
       </span>
       <div className="min-w-0 self-center wrap-break-word text-muted-foreground">
-        <div className="text-foreground">{activeTenant ? t('page.settings.scope.tenant', { tenant: activeTenant.name }) : t('page.settings.scope.platform')}</div>
-        {!canUpdate && <div>{t('page.settings.readOnly')}</div>}
+        <div className="text-foreground">{activeTenant ? t('page.settings.scope.tenant', { tenant: activeTenant.name }) || `You are editing settings for ${activeTenant.name}. Anything not set here is inherited from the platform.` : t('page.settings.scope.platform') || 'You are editing platform-wide settings. Every tenant inherits these unless it sets its own.'}</div>
+        {!canUpdate && <div>{t('page.settings.readOnly') || 'You can view these settings but not change them.'}</div>}
       </div>
     </div>
   )
@@ -74,7 +74,7 @@ export const SettingsManager = () => {
           <span className="grid size-12 place-content-center rounded-xl bg-surface-2 text-muted-foreground">
             <Settings2 className="h-5 w-5" />
           </span>
-          <p className="text-sm font-medium text-foreground">{t('page.settings.empty')}</p>
+          <p className="text-sm font-medium text-foreground">{t('page.settings.empty') || 'No settings are available'}</p>
         </div>
       )
     }

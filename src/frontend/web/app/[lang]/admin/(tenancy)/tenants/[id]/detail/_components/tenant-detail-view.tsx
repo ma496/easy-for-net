@@ -129,7 +129,7 @@ export const TenantDetailView = ({ tenantId }: TenantDetailViewProps) => {
         <div className="flex size-12 items-center justify-center rounded-xl bg-surface-2 text-muted-foreground">
           <Building2 className="size-5" />
         </div>
-        <p className="text-sm text-muted-foreground">{t('page.tenants.notFound')}</p>
+        <p className="text-sm text-muted-foreground">{t('page.tenants.notFound') || 'Tenant not found'}</p>
       </div>
     )
   }
@@ -142,9 +142,9 @@ export const TenantDetailView = ({ tenantId }: TenantDetailViewProps) => {
 
   const statusBadge =
     tenant.status === TenantStatus.Active ? (
-      <Badge variant="success">{t('page.tenants.status.active')}</Badge>
+      <Badge variant="success">{t('page.tenants.status.active') || 'Active'}</Badge>
     ) : (
-      <Badge variant="danger">{t('page.tenants.status.suspended')}</Badge>
+      <Badge variant="danger">{t('page.tenants.status.suspended') || 'Suspended'}</Badge>
     )
 
   return (
@@ -159,7 +159,7 @@ export const TenantDetailView = ({ tenantId }: TenantDetailViewProps) => {
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="min-w-0 text-xl font-semibold tracking-tight break-words text-foreground">{tenant.name}</h2>
               {statusBadge}
-              {tenant.systemCreated && <Badge variant="info" type="outline">{t('page.tenants.systemCreated')}</Badge>}
+              {tenant.systemCreated && <Badge variant="info" type="outline">{t('page.tenants.systemCreated') || 'System-created'}</Badge>}
             </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
               <span className="inline-flex min-w-0 items-center gap-1.5">
@@ -179,13 +179,13 @@ export const TenantDetailView = ({ tenantId }: TenantDetailViewProps) => {
             {canViewFeatures && (
               <LocalizedLink href={`/admin/tenants/${tenant.id}/features`} className="btn btn-secondary btn-sm">
                 <SlidersHorizontal className="size-3.5" />
-                {t('page.features.actionLabel')}
+                {t('page.features.actionLabel') || 'Features'}
               </LocalizedLink>
             )}
             {canOpenUpdate && (
               <LocalizedLink href={`/admin/tenants/${tenant.id}/update`} className="btn btn-primary btn-sm">
                 <Pencil className="size-3.5" />
-                {t('common.edit')}
+                {t('common.edit') || 'Edit'}
               </LocalizedLink>
             )}
           </div>
@@ -194,14 +194,14 @@ export const TenantDetailView = ({ tenantId }: TenantDetailViewProps) => {
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
         <section className={cn('rounded-xl border border-border bg-surface p-5 shadow-xs sm:p-6', canViewMembers ? 'lg:col-span-2' : 'lg:col-span-3')}>
-          <h3 className="text-base font-semibold text-foreground">{t('page.tenants.detail.information')}</h3>
+          <h3 className="text-base font-semibold text-foreground">{t('page.tenants.detail.information') || 'Tenant Information'}</h3>
           <dl className="mt-2 divide-y divide-border">
-            <DetailRow label={t('table.columns.name')}>{tenant.name}</DetailRow>
-            <DetailRow label={t('table.columns.identifier')}>
+            <DetailRow label={t('table.columns.name') || 'Name'}>{tenant.name}</DetailRow>
+            <DetailRow label={t('table.columns.identifier') || 'Identifier'}>
               <span className="font-mono text-[13px]">{tenant.identifier}</span>
             </DetailRow>
-            <DetailRow label={t('table.columns.status')}>{statusBadge}</DetailRow>
-            <DetailRow label={t('table.columns.edition')}>
+            <DetailRow label={t('table.columns.status') || 'Status'}>{statusBadge}</DetailRow>
+            <DetailRow label={t('table.columns.edition') || 'Edition'}>
               {tenant.editionName ? (
                 <Badge variant="info" type="outline">{tenant.editionName}</Badge>
               ) : (
@@ -211,31 +211,31 @@ export const TenantDetailView = ({ tenantId }: TenantDetailViewProps) => {
             {/* Only the system-created tenant has a type worth naming, so the row is left out entirely rather than
                 shown holding a dash for every ordinary tenant. */}
             {tenant.systemCreated && (
-              <DetailRow label={t('table.columns.type')}>
-                <Badge variant="info">{t('page.tenants.systemCreated')}</Badge>
+              <DetailRow label={t('table.columns.type') || 'Type'}>
+                <Badge variant="info">{t('page.tenants.systemCreated') || 'System-created'}</Badge>
               </DetailRow>
             )}
-            <DetailRow label={t('table.columns.created')}>
+            <DetailRow label={t('table.columns.created') || 'Created'}>
               <span className="tabular-nums">{formatMoment(tenant.createdAt)}</span>
             </DetailRow>
-            <DetailRow label={t('table.columns.updated')}>
+            <DetailRow label={t('table.columns.updated') || 'Updated'}>
               <span className="tabular-nums">{formatMoment(tenant.updatedAt)}</span>
             </DetailRow>
           </dl>
         </section>
 
-        {canViewMembers && <SeatsCard tenantId={tenantId} title={t('page.tenants.detail.seats')} />}
+        {canViewMembers && <SeatsCard tenantId={tenantId} title={t('page.tenants.detail.seats') || 'Seats'} />}
       </div>
 
       {canViewMembers && (
         <section className="rounded-xl border border-border bg-surface p-4 shadow-xs sm:p-6">
           <div className="mb-4 flex items-center justify-between gap-3">
-            <h3 className="text-base font-semibold text-foreground">{t('page.tenants.detail.membersTitle')}</h3>
+            <h3 className="text-base font-semibold text-foreground">{t('page.tenants.detail.membersTitle') || 'Members'}</h3>
             <LocalizedLink
               href={`/admin/tenants/${tenant.id}/members`}
               className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
             >
-              {t('common.viewAll')}
+              {t('common.viewAll') || 'View all'}
               <ArrowRight className="size-3.5 rtl:-scale-x-100" />
             </LocalizedLink>
           </div>

@@ -10,7 +10,7 @@ import { StatusScreen } from './_components/status-screen'
 const NotFound = () => {
   const { t } = useTranslation()
 
-  return <StatusScreen code={404} icon={FileQuestion} title={t('error.404.title')} message={t('error.404.message')} />
+  return <StatusScreen code={404} icon={FileQuestion} title={t('error.404.title') || 'Not Found'} message={t('error.404.message') || 'The requested resource was not found.'} />
 }
 
 export default NotFound

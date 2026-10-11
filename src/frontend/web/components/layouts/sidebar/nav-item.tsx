@@ -5,6 +5,7 @@ import { NavItem } from '@/nav-items'
 import AnimateHeight from 'react-animate-height'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { humanizeKey } from '@/i18n'
 import { RailFlyout } from './rail-flyout'
 
 /**
@@ -57,7 +58,7 @@ export const SidebarNavItem = ({ item, currentMenu, pathname, t, onToggleMenu, c
               )}
             >
               {child.icon && <child.icon size={15} className="shrink-0" />}
-              <span className="truncate">{t(child.title)}</span>
+              <span className="truncate">{t(child.title) || humanizeKey(child.title)}</span>
             </Link>
           </li>
         )
@@ -71,7 +72,7 @@ export const SidebarNavItem = ({ item, currentMenu, pathname, t, onToggleMenu, c
           openOnClick
           content={(close) => (
             <div className="w-56 rounded-lg border border-border bg-surface p-1.5 shadow-lg">
-              <p className="truncate px-2.5 pt-1 pb-1.5 text-xs font-semibold text-foreground">{t(item.title)}</p>
+              <p className="truncate px-2.5 pt-1 pb-1.5 text-xs font-semibold text-foreground">{t(item.title) || humanizeKey(item.title)}</p>
               <ul className="space-y-0.5">{submenuLinks(true, close)}</ul>
             </div>
           )}
@@ -79,7 +80,7 @@ export const SidebarNavItem = ({ item, currentMenu, pathname, t, onToggleMenu, c
           {(flyoutOpen) => (
             <button
               type="button"
-              aria-label={compact ? t(item.title) : undefined}
+              aria-label={compact ? t(item.title) || humanizeKey(item.title) : undefined}
               className={cn(
                 rowClass,
                 hasActiveChild ? 'text-foreground hover:bg-surface-2' : idleClass,
@@ -93,7 +94,7 @@ export const SidebarNavItem = ({ item, currentMenu, pathname, t, onToggleMenu, c
               aria-expanded={compact ? flyoutOpen : isOpen}
             >
               {item.icon && <item.icon size={18} className={cn('shrink-0', hasActiveChild ? 'text-primary' : 'text-subtle-foreground group-hover:text-foreground')} />}
-              <span className={cn('flex-1 truncate text-start', compact && 'lg:hidden')}>{t(item.title)}</span>
+              <span className={cn('flex-1 truncate text-start', compact && 'lg:hidden')}>{t(item.title) || humanizeKey(item.title)}</span>
               <ChevronRight size={15} className={cn('shrink-0 text-subtle-foreground transition-transform duration-200 rtl:rotate-180', isOpen && 'rotate-90 rtl:rotate-90', compact && 'lg:hidden')} />
             </button>
           )}
@@ -110,16 +111,16 @@ export const SidebarNavItem = ({ item, currentMenu, pathname, t, onToggleMenu, c
   const isActive = matchesUrl(item.url, path) || (item.children?.some((child) => matchesUrl(child.url, path)) ?? false)
 
   return (
-    <RailFlyout enabled={compact} content={() => <div className={labelClass}>{t(item.title)}</div>}>
+    <RailFlyout enabled={compact} content={() => <div className={labelClass}>{t(item.title) || humanizeKey(item.title)}</div>}>
       {() => (
         <Link
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           href={item.url as any}
-          aria-label={compact ? t(item.title) : undefined}
+          aria-label={compact ? t(item.title) || humanizeKey(item.title) : undefined}
           className={cn(rowClass, isActive ? activeClass : idleClass, compact && 'lg:justify-center lg:px-0')}
         >
           {item.icon && <item.icon size={18} className={cn('shrink-0', isActive ? 'text-primary' : 'text-subtle-foreground group-hover:text-foreground')} />}
-          <span className={cn('truncate', compact && 'lg:hidden')}>{t(item.title)}</span>
+          <span className={cn('truncate', compact && 'lg:hidden')}>{t(item.title) || humanizeKey(item.title)}</span>
         </Link>
       )}
     </RailFlyout>

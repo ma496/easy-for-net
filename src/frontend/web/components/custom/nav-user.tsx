@@ -86,19 +86,19 @@ export const NavUser = () => {
           <li>
             <LocalizedLink href="/profile" onClick={handleLinkClick}>
               <User size={16} className="shrink-0 text-muted-foreground" />
-              {t('navigation.profile')}
+              {t('navigation.profile') || 'Profile'}
             </LocalizedLink>
           </li>
           <li>
             <LocalizedLink href="/change-password" onClick={handleLinkClick}>
               <Lock size={16} className="shrink-0 text-muted-foreground" />
-              {t('navigation.changePassword')}
+              {t('navigation.changePassword') || 'Change Password'}
             </LocalizedLink>
           </li>
           <li className="mt-1 border-t border-border pt-1">
             <button type="button" className="text-danger! hover:bg-danger/10!" onClick={signoutAction}>
               {isSigningOut ? <Loader size="sm" className="shrink-0" variant="danger" /> : <LogOut size={16} className="shrink-0 rtl:-scale-x-100" />}
-              {t('page.auth.signout')}
+              {t('page.auth.signout') || 'Sign Out'}
             </button>
           </li>
         </ul>

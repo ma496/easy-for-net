@@ -68,12 +68,12 @@ export const EditionTable = () => {
       if (dataToExport.length === 0) return
 
       const rows = dataToExport.map((edition) => ({
-        [t('table.columns.name')]: edition.name,
-        [t('table.columns.description')]: edition.description ?? '',
-        [t('table.columns.displayOrder')]: edition.displayOrder,
-        [t('table.columns.tenantCount')]: edition.tenantCount,
+        [(t('table.columns.name') || 'Name')]: edition.name,
+        [(t('table.columns.description') || 'Description')]: edition.description ?? '',
+        [(t('table.columns.displayOrder') || 'Order')]: edition.displayOrder,
+        [(t('table.columns.tenantCount') || 'Tenants')]: edition.tenantCount,
       }))
-      exportData(format, rows, t('page.editions.title'), 'editions')
+      exportData(format, rows, t('page.editions.title') || 'Editions', 'editions')
     } finally {
       setIsExporting(false)
     }
@@ -81,8 +81,8 @@ export const EditionTable = () => {
 
   const handleDelete = async (editionId: string) => {
     const result = await confirmDeleteAlert({
-      title: t('page.editions.deleteTitle'),
-      text: t('page.editions.deleteConfirm'),
+      title: t('page.editions.deleteTitle') || 'Delete Edition',
+      text: t('page.editions.deleteConfirm') || 'Are you sure you want to delete this edition?',
     })
 
     if (result.isConfirmed) {
@@ -91,7 +91,7 @@ export const EditionTable = () => {
         apiErrorAlert(response.error)
         return
       }
-      successToast.fire({ text: t('page.editions.deleteSuccess') })
+      successToast.fire({ text: t('page.editions.deleteSuccess') || 'Edition deleted successfully' })
     }
   }
 
@@ -99,28 +99,28 @@ export const EditionTable = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const columns: ColumnDef<EditionListDto, any>[] = [
     columnHelper.accessor('name', {
-      header: t('table.columns.name'),
+      header: t('table.columns.name') || 'Name',
       cell: (info) => <span className="font-medium text-foreground">{info.getValue()}</span>,
     }),
     columnHelper.accessor('description', {
       meta: { card: 'subtitle' },
-      header: t('table.columns.description'),
+      header: t('table.columns.description') || 'Description',
       cell: (info) => <span className="line-clamp-2 max-w-md text-muted-foreground">{info.getValue() ?? ''}</span>,
       enableSorting: false,
     }),
     columnHelper.accessor('displayOrder', {
-      header: t('table.columns.displayOrder'),
+      header: t('table.columns.displayOrder') || 'Order',
       cell: (info) => <span className="tabular-nums">{info.getValue()}</span>,
     }),
     // Counted per page off the tenant rows rather than held on the plan, so it cannot be sorted on.
     columnHelper.accessor('tenantCount', {
-      header: t('table.columns.tenantCount'),
+      header: t('table.columns.tenantCount') || 'Tenants',
       cell: (info) => <Badge variant="primary">{info.getValue()}</Badge>,
       enableSorting: false,
     }),
     columnHelper.display({
       id: 'actions',
-      header: t('table.actions'),
+      header: t('table.actions') || 'Actions',
       cell: (info) => {
         const edition = info.row.original
         // A plan tenants are on cannot be deleted, so the action is omitted rather than shown and
@@ -131,19 +131,19 @@ export const EditionTable = () => {
           <DataTableRowActions
             actions={[
               {
-                label: t('common.edit'),
+                label: t('common.edit') || 'Edit',
                 icon: <Pencil className="h-4 w-4" />,
                 href: `/admin/editions/${edition.id}/update`,
                 hidden: !canUpdate,
               },
               {
-                label: t('page.features.actionLabel'),
+                label: t('page.features.actionLabel') || 'Features',
                 icon: <SlidersHorizontal className="h-4 w-4" />,
                 href: `/admin/editions/${edition.id}/features`,
                 hidden: !canViewFeatures,
               },
               {
-                label: t('common.delete'),
+                label: t('common.delete') || 'Delete',
                 icon: <Trash2 className="h-4 w-4" />,
                 variant: 'danger',
                 onClick: () => handleDelete(edition.id),
@@ -181,7 +181,7 @@ export const EditionTable = () => {
     >
       <DataTableToolbar>
         {canCreate && (
-          <DataTableToolbarButton primary label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/editions/create" />
+          <DataTableToolbarButton primary label={t('table.createLink') || 'Create'} icon={<Plus size={16} />} href="/admin/editions/create" />
         )}
         <DataTableExportButton onExport={handleExport} isExporting={isExporting} disabled={isGettingEditions || !editionListResponse?.total} />
       </DataTableToolbar>

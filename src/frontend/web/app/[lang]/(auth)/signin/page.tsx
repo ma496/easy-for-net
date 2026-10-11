@@ -6,7 +6,7 @@ import { getServerTranslation } from '@/i18n'
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params
   return {
-    title: await getServerTranslation(lang, 'page.auth.signin.title'),
+    title: (await getServerTranslation(lang, 'page.auth.signin.title')) || 'Sign In',
   }
 }
 
@@ -17,8 +17,8 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
 const BoxedSignIn = async ({ params }: { params: Promise<{ lang: string }> }) => {
   const { lang } = await params
   const [title, description] = await Promise.all([
-    getServerTranslation(lang, 'page.auth.signin.title'),
-    getServerTranslation(lang, 'page.auth.signin.description'),
+    getServerTranslation(lang, 'page.auth.signin.title').then((text) => text || 'Sign In'),
+    getServerTranslation(lang, 'page.auth.signin.description').then((text) => text || 'Enter your credentials to sign in'),
   ])
 
   return (

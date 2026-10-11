@@ -116,14 +116,14 @@ export const LocalizationLanguageEditor = ({ canUpdate }: LocalizationLanguageEd
       apiErrorAlert(result.error)
       return
     }
-    successToast.fire({ text: t('page.localization.languages.saveSuccess') })
+    successToast.fire({ text: t('page.localization.languages.saveSuccess') || 'Languages updated' })
     router.refresh()
   }
 
   const handleReset = async () => {
     const confirmed = await confirmDeleteAlert({
-      title: t('page.localization.languages.resetTitle'),
-      text: t('page.localization.languages.resetConfirm'),
+      title: t('page.localization.languages.resetTitle') || 'Reset languages?',
+      text: t('page.localization.languages.resetConfirm') || 'This removes your customization and falls back to what is inherited.',
     })
     if (!confirmed.isConfirmed) return
 
@@ -132,7 +132,7 @@ export const LocalizationLanguageEditor = ({ canUpdate }: LocalizationLanguageEd
       apiErrorAlert(result.error)
       return
     }
-    successToast.fire({ text: t('page.localization.languages.resetSuccess') })
+    successToast.fire({ text: t('page.localization.languages.resetSuccess') || 'Languages reset to the inherited settings' })
     setIsCustomizing(false)
     setDraftEnabled(data.inheritedEnabledCultures)
     setDraftDefault(data.inheritedDefaultCulture ?? '')
@@ -142,12 +142,12 @@ export const LocalizationLanguageEditor = ({ canUpdate }: LocalizationLanguageEd
 
   const inheritedSummary = t('page.localization.languages.inheritedSummary', {
     languages: data.inheritedEnabledCultures.map((code) => nameOf(data, code)).join(', '),
-    default: data.inheritedDefaultCulture ? nameOf(data, data.inheritedDefaultCulture) : t('page.localization.languages.noDefault'),
-  })
+    default: data.inheritedDefaultCulture ? nameOf(data, data.inheritedDefaultCulture) : t('page.localization.languages.noDefault') || "None — use the visitor's browser language",
+  }) || `Inherited: ${data.inheritedEnabledCultures.map((code) => nameOf(data, code)).join(', ')} · Default: ${data.inheritedDefaultCulture ? nameOf(data, data.inheritedDefaultCulture) : t('page.localization.languages.noDefault') || "None — use the visitor's browser language"}`
 
   const currentUrlLanguageWillSwitch = editable && !draftEnabled.includes(i18n.language)
 
-  const defaultLanguageOptions = [{ value: '', label: t('page.localization.languages.noDefault') }, ...draftEnabled.map((code) => ({ value: code, label: nameOf(data, code) }))]
+  const defaultLanguageOptions = [{ value: '', label: t('page.localization.languages.noDefault') || "None — use the visitor's browser language" }, ...draftEnabled.map((code) => ({ value: code, label: nameOf(data, code) }))]
 
   return (
     <div className="flex flex-col gap-6">
@@ -156,13 +156,13 @@ export const LocalizationLanguageEditor = ({ canUpdate }: LocalizationLanguageEd
           {data.isInherited ? (
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary" type="outline">
-                {t('page.localization.languages.inherited')}
+                {t('page.localization.languages.inherited') || 'Inherited'}
               </Badge>
-              <span className="text-sm text-muted-foreground">{isPlatformScope ? t('page.localization.languages.inheritedFromShipped') : t('page.localization.languages.inheritedFromPlatform')}</span>
+              <span className="text-sm text-muted-foreground">{isPlatformScope ? t('page.localization.languages.inheritedFromShipped') || 'Built-in: every language, no default' : t('page.localization.languages.inheritedFromPlatform') || 'Inherited from the platform'}</span>
             </div>
           ) : (
             <Badge variant="primary" type="solid">
-              {t('page.localization.languages.customized')}
+              {t('page.localization.languages.customized') || 'Customized'}
             </Badge>
           )}
           <p className="mt-2 text-sm wrap-break-word text-muted-foreground">{inheritedSummary}</p>
@@ -172,21 +172,21 @@ export const LocalizationLanguageEditor = ({ canUpdate }: LocalizationLanguageEd
           (data.isInherited ? (
             !isCustomizing && (
               <Button type="button" variant="outline" size="sm" className="self-start" onClick={() => setIsCustomizing(true)}>
-                {t('page.localization.languages.customize')}
+                {t('page.localization.languages.customize') || 'Customize'}
               </Button>
             )
           ) : (
             <Button type="button" variant="outline" size="sm" className="self-start" onClick={handleReset} disabled={isBusy}>
               <RotateCcw className="h-4 w-4" />
-              {t('page.localization.languages.resetToInherited')}
+              {t('page.localization.languages.resetToInherited') || 'Reset to inherited'}
             </Button>
           ))}
       </div>
 
       <div className="border-t border-border pt-6">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <span className="text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase">{t('page.localization.languages.enabled')}</span>
-          <span className="text-xs text-muted-foreground tabular-nums">{t('page.localization.languages.enabledCount', { count: draftEnabled.length, total: data.languages.length })}</span>
+          <span className="text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase">{t('page.localization.languages.enabled') || 'Enabled languages'}</span>
+          <span className="text-xs text-muted-foreground tabular-nums">{t('page.localization.languages.enabledCount', { count: draftEnabled.length, total: data.languages.length }) || `${draftEnabled.length} of ${data.languages.length} enabled`}</span>
         </div>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {data.languages.map((language) => {
@@ -199,10 +199,10 @@ export const LocalizationLanguageEditor = ({ canUpdate }: LocalizationLanguageEd
                 key={language.code}
                 className={cn('flex min-w-0 items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors', checked ? 'border-primary/40 bg-primary/5' : 'border-border bg-surface')}
               >
-                <div className="min-w-0 flex-1">{isLastEnabled ? <Tooltip content={t('page.localization.languages.atLeastOne')}>{checkbox}</Tooltip> : checkbox}</div>
+                <div className="min-w-0 flex-1">{isLastEnabled ? <Tooltip content={t('page.localization.languages.atLeastOne') || 'At least one language must stay enabled'}>{checkbox}</Tooltip> : checkbox}</div>
                 {language.isRtl && (
                   <Badge variant="info" type="outline">
-                    {t('page.localization.languages.rtl')}
+                    {t('page.localization.languages.rtl') || 'RTL'}
                   </Badge>
                 )}
                 <span className="shrink-0 rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">{language.code}</span>
@@ -216,29 +216,29 @@ export const LocalizationLanguageEditor = ({ canUpdate }: LocalizationLanguageEd
         <div className="w-full sm:w-80">
           <Select
             name="defaultCulture"
-            label={t('form.label.defaultLanguage')}
+            label={t('form.label.defaultLanguage') || 'Default language'}
             value={draftDefault}
             options={defaultLanguageOptions}
-            placeholder={t('page.localization.languages.noDefault')}
+            placeholder={t('page.localization.languages.noDefault') || "None — use the visitor's browser language"}
             disabled={!editable}
             clearable={false}
             searchable={false}
             onChange={(_, value) => handleDefaultChange(value)}
           />
         </div>
-        {defaultClearedByToggle && <div className="mt-1.5 text-xs text-warning">{t('page.localization.languages.defaultCleared')}</div>}
+        {defaultClearedByToggle && <div className="mt-1.5 text-xs text-warning">{t('page.localization.languages.defaultCleared') || 'The default language was cleared because it was just disabled'}</div>}
       </div>
 
-      {currentUrlLanguageWillSwitch && <div className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2.5 text-sm text-warning">{t('page.localization.languages.currentWillSwitch')}</div>}
+      {currentUrlLanguageWillSwitch && <div className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2.5 text-sm text-warning">{t('page.localization.languages.currentWillSwitch') || 'The language you are viewing this screen in is being disabled — you will be switched to the default.'}</div>}
 
       {canUpdate && (
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-5">
-          {isDirty && <span className="me-auto text-sm text-muted-foreground">{t('page.localization.languages.unsaved')}</span>}
+          {isDirty && <span className="me-auto text-sm text-muted-foreground">{t('page.localization.languages.unsaved') || 'You have unsaved changes'}</span>}
           <Button type="button" variant="outline" onClick={handleCancel} disabled={isBusy}>
-            {t('common.cancel')}
+            {t('common.cancel') || 'Cancel'}
           </Button>
           <Button type="button" onClick={handleSave} isLoading={isSaving} disabled={saveDisabled}>
-            {t('common.save')}
+            {t('common.save') || 'Save'}
           </Button>
         </div>
       )}

@@ -6,7 +6,7 @@ import { getServerTranslation } from '@/i18n'
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params
   return {
-    title: await getServerTranslation(lang, 'page.profile.title'),
+    title: (await getServerTranslation(lang, 'page.profile.title')) || 'Profile',
   }
 }
 
@@ -17,8 +17,8 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
 const Profile = async ({ params }: { params: Promise<{ lang: string }> }) => {
   const { lang } = await params
   const [title, description] = await Promise.all([
-    getServerTranslation(lang, 'page.profile.title'),
-    getServerTranslation(lang, 'page.profile.description'),
+    getServerTranslation(lang, 'page.profile.title').then((text) => text || 'Profile'),
+    getServerTranslation(lang, 'page.profile.description').then((text) => text || 'Update your personal information'),
   ])
 
   return (

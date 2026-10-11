@@ -30,11 +30,11 @@ export const Header = () => {
           type="button"
           className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground rtl:-scale-x-100"
           onClick={() => dispatch(toggleSidebar())}
-          aria-label={t('common.menu')}
+          aria-label={t('common.menu') || 'Menu'}
         >
           <PanelLeft size={18} />
         </button>
-        <LocalizedLink href="/admin" className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20 lg:hidden" aria-label={t('brand.name')}>
+        <LocalizedLink href="/admin" className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20 lg:hidden" aria-label={t('brand.name') || 'Easy For Net'}>
           <Image className="size-5" src="/assets/images/icon.png" alt="" width={20} height={20} unoptimized />
         </LocalizedLink>
         <div className="hidden h-5 w-px bg-border sm:block" />

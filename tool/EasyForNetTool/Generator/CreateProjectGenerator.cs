@@ -121,26 +121,6 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
     }
 
     /// <summary>
-    /// Removes every culture but <paramref name="keptLocales"/> from the web app's
-    /// <c>i18n/offline-resources.json</c> - the strings bundled for when the API is down, keyed by
-    /// culture - so it names exactly the locales the project routes to.
-    /// </summary>
-    /// <param name="offlineResourcesPath">The path of the generated web app's offline resources file.</param>
-    /// <param name="keptLocales">The culture codes to keep.</param>
-    internal static async Task KeepOfflineResourceLocalesAsync(string offlineResourcesPath, IReadOnlyCollection<string> keptLocales)
-    {
-        if (!File.Exists(offlineResourcesPath))
-            return;
-
-        var resources = JsonNode.Parse(await File.ReadAllTextAsync(offlineResourcesPath))!.AsObject();
-        foreach (var locale in resources.Select(entry => entry.Key).Where(locale => !keptLocales.Contains(locale)).ToList())
-            resources.Remove(locale);
-
-        var options = new JsonSerializerOptions { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
-        await File.WriteAllTextAsync(offlineResourcesPath, resources.ToJsonString(options) + "\n");
-    }
-
-    /// <summary>
     /// Matches a line that opens or closes a component-example region in the web app: a
     /// <c>// efn:examples:start</c> / <c>// efn:examples:end</c> comment in TypeScript, or the same
     /// marker as a <c>/* ... */</c> comment in CSS, alone on its line.
@@ -358,9 +338,10 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             await AdjustNamespaceAsync(backendTestProjectTargetPath, backendTestProjectRootNamespace, $"{pascalCaseProjectName}.Tests");
             // replace Easy For Net text with project name in web project and in the shipped backend
             // locale resources - the brand name a caller reads back from GET /localization/resources
-            // is one of the strings this project name has to reach.
+            // is one of the strings this project name has to reach, and so is the English default the
+            // web app's translator calls carry for it (`t('brand.name') || 'Easy For Net'`).
             var titleCaseProjectName = kebabCaseProjectName.Split('-').Select(x => char.ToUpper(x[0]) + x[1..]).Aggregate((current, next) => current + " " + next);
-            await ReplaceInFiles(webTargetPath, @"Easy\s+For\s+Net", titleCaseProjectName, ".json");
+            await ReplaceInFiles(webTargetPath, @"Easy\s+For\s+Net", titleCaseProjectName, ".json", ".ts", ".tsx");
             await ReplaceInFiles(Path.Combine(backendProjectTargetPath, "Features", "Localization", "Core", "Resources"), @"Easy\s+For\s+Net", titleCaseProjectName, ".json");
             // update package.json and package-lock.json
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(webTargetPath, "package.json"), "name", kebabCaseProjectName);
@@ -415,9 +396,6 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
                     content = Regex.Replace(content, @"locales: \[[^\]]+\]", "locales: ['en']");
                     await File.WriteAllTextAsync(configTsPath, content);
                 }
-
-                // 3. Keep only English in the web app's offline fallback strings
-                await KeepOfflineResourceLocalesAsync(Path.Combine(webTargetPath, "i18n", "offline-resources.json"), ["en"]);
             }
 
             // create solution file

@@ -17,7 +17,7 @@ interface RoleUpdatePageProps {
  */
 const RoleUpdate = async ({ params }: RoleUpdatePageProps) => {
   const { lang, id } = await params
-  const title = await getServerTranslation(lang, 'page.roles.update.title')
+  const title = (await getServerTranslation(lang, 'page.roles.update.title')) || 'Update Role'
 
   return (
     <AdminPageContent

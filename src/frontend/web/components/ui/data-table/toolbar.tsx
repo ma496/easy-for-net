@@ -34,7 +34,7 @@ export function DataTableToolbar<TData>({ title, children }: DataTableToolbarPro
             type="text"
             id={useId()}
             className="form-input w-full ps-9 sm:w-72"
-            placeholder={t('table.searchPlaceholder')}
+            placeholder={t('table.searchPlaceholder') || 'Search...'}
             value={table.getState().globalFilter}
             onChange={(e) => table.setGlobalFilter(String(e.target.value))}
           />

@@ -15,8 +15,8 @@ const createValidationSchema = (t: (key: string, params?: Record<string, string 
   return Yup.object().shape({
     roles: Yup.array()
       .of(Yup.string())
-      .required(t('validation.required'))
-      .min(1, t('validation.atLeastOneSelected')),
+      .required(t('validation.required') || 'Field is required')
+      .min(1, t('validation.atLeastOneSelected') || 'At least one item must be selected'),
   })
 }
 
@@ -64,7 +64,7 @@ export const TenantMemberRolesModal = ({ tenantId, member, isOpen, onClose }: Te
     }
 
     successToast.fire({
-      text: t('page.tenants.members.rolesSuccess'),
+      text: t('page.tenants.members.rolesSuccess') || 'Member roles updated successfully',
     })
     onClose()
   }
@@ -75,7 +75,7 @@ export const TenantMemberRolesModal = ({ tenantId, member, isOpen, onClose }: Te
       onClose={onClose}
       size="lg"
     >
-      <Modal.Header>{t('page.tenants.members.rolesTitle')}</Modal.Header>
+      <Modal.Header>{t('page.tenants.members.rolesTitle') || 'Change Member Roles'}</Modal.Header>
       <Formik<FormValues>
         initialValues={{ roles: currentRoleIds }}
         enableReinitialize={true}
@@ -86,8 +86,8 @@ export const TenantMemberRolesModal = ({ tenantId, member, isOpen, onClose }: Te
           <Form noValidate className="grid grid-cols-1 gap-4">
             <FormLazyMultiSelect<RoleListDto, RoleListRequest>
               name="roles"
-              label={t('form.label.roles')}
-              placeholder={t('form.placeholder.roles')}
+              label={t('form.label.roles') || 'Roles'}
+              placeholder={t('form.placeholder.roles') || 'Select roles'}
               useLazyQuery={useLazyRoleListQuery}
               getLabel={(role) => role.name}
               getValue={(role) => role.id}
@@ -112,13 +112,13 @@ export const TenantMemberRolesModal = ({ tenantId, member, isOpen, onClose }: Te
                 onClick={onClose}
                 disabled={isSavingRoles}
               >
-                {t('common.cancel')}
+                {t('common.cancel') || 'Cancel'}
               </Button>
               <Button
                 type="submit"
                 isLoading={isSavingRoles}
               >
-                {t('common.submit')}
+                {t('common.submit') || 'Submit'}
               </Button>
             </div>
           </Form>
