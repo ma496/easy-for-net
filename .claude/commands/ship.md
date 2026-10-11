@@ -1,6 +1,6 @@
 ---
 description: Verify, review, and commit the working tree — then stop for approval to push
-allowed-tools: Bash, PowerShell, Read, Edit, Write, Grep, Glob, Agent
+allowed-tools: Bash, PowerShell, Read, Edit, Write, Grep, Glob, Agent, Skill
 ---
 
 Ship the work in the current working tree.
@@ -18,8 +18,9 @@ merge a pull request.
 3. **Stage deliberately.** `git status` first. Stage only files that belong to this change.
    Do not `git add -A` — unrelated edits must not ride along. Never stage the environment
    file.
-4. **Commit.** One-line imperative summary, then a body: what changed, why, and how it was
-   verified.
+4. **Commit** through the `commit` skill: one-line imperative summary, then a body — what
+   changed, why, and how it was verified. It commits as the configured git user, with no
+   co-author or attribution trailer.
 5. **Stop.** Report the commit, the gates that ran and the ones that were skipped, and how
    many commits are now unpushed. Wait.
 6. **Push.** The guard refuses an agent's push to `main`, `master`, `develop`, the base branch or
