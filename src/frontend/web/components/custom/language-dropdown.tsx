@@ -31,7 +31,8 @@ interface LanguageDropdownProps {
  * and switches to the one picked: it writes a `preferred-language` cookie so the choice survives a
  * later visit with no locale in the URL, then navigates to the same page under that locale segment.
  * RTL and the flags shown come from the same list, so a scope that enables only a subset of the
- * shipped languages never offers one it does not serve.
+ * shipped languages never offers one it does not serve. Renders nothing when the scope serves a
+ * single language.
  */
 export const LanguageDropdown = ({ className = '', onlyFlag = false }: LanguageDropdownProps) => {
   const { i18n } = useTranslation()
@@ -51,6 +52,9 @@ export const LanguageDropdown = ({ className = '', onlyFlag = false }: LanguageD
     i18n.changeLanguage(code)
     handleLinkClick()
   }
+
+  // With one language there is nothing to switch to — a single-language project, or a scope that enables just one.
+  if (dictionary.languages.length <= 1) return null
 
   return (
     <div className={cn('dropdown', className)}>
