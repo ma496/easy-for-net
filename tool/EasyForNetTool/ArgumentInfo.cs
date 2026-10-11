@@ -52,6 +52,15 @@ public class ArgumentInfo
                         Required = false,
                         Default = "false",
                     },
+                    new ArgumentOption
+                    {
+                        Name = "--examples",
+                        ShortName = "-e",
+                        PropertyName = nameof(CreateProjectArgument.IncludeExamples),
+                        Description = "Include the UI component example pages.",
+                        Required = false,
+                        Default = "false",
+                    },
                 ]
             },
         ];

@@ -36,12 +36,13 @@ dotnet efn --version
 To create a new project using the EasyForNet tool, run the following command:
 
 ```sh
-dotnet efn cp -n {name} -o {path} -m {true|false}
+dotnet efn cp -n {name} -o {path} -m {true|false} -e {true|false}
 ```
 
 - `-n {name}`: Specifies the name of the new project.
 - `-o {path}`: (Optional) Specifies the output directory for the new project.
 - `-m {true|false}`: (Optional) Enable multi-language support. Default is `false`. When `false`, only English language files are included. When `true`, all supported languages (English, Urdu, Chinese, Arabic, Hindi, Spanish, French, Russian) are included.
+- `-e {true|false}`: (Optional) Include the UI component example pages (buttons, cards, date picker, date view, file upload, form elements, tooltips, tree view) under `/admin/ui`. Default is `false`, which leaves them out together with their sidebar group, search entries and translation keys.
 
 The new project is a git repository with one initial commit. The tool prints the seeded administrators'
 password when it finishes (see **Seeded Accounts**).

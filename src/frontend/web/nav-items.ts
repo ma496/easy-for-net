@@ -1,6 +1,8 @@
-import { Users, Shield, Home, User, Lock, Palette, Zap, Calendar, TreePine, FormInput, Upload, Clock, Bell, Building2, Layers, Languages, Settings } from 'lucide-react'
+import { Users, Shield, Home, User, Lock, Bell, Building2, Layers, Languages, Settings } from 'lucide-react'
+// efn:examples:start
+import { Palette, Zap, Calendar, TreePine, FormInput, Upload, Clock } from 'lucide-react'
+// efn:examples:end
 import type { ElementType } from 'react'
-
 
 /** A grouped section of nav items rendered together under a shared heading in the sidebar/navigation. */
 export interface NavItemGroup {
@@ -172,6 +174,7 @@ export const navItems: (NavItem | NavItemGroup)[] = [
       },
     ],
   },
+  // efn:examples:start
   {
     title: 'navigation.components',
     items: [
@@ -200,7 +203,6 @@ export const navItems: (NavItem | NavItemGroup)[] = [
         url: '/admin/ui/date-view',
         icon: Clock,
       },
-
       {
         title: 'navigation.uiTreeview',
         url: '/admin/ui/treeview',
@@ -218,6 +220,7 @@ export const navItems: (NavItem | NavItemGroup)[] = [
       },
     ],
   },
+  // efn:examples:end
   {
     title: 'navigation.changePassword',
     url: '/change-password',

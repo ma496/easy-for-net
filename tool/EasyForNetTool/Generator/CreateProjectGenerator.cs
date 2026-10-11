@@ -141,9 +141,103 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
     }
 
     /// <summary>
+    /// Matches a line that opens or closes a component-example region in the web app: a
+    /// <c>// efn:examples:start</c> / <c>// efn:examples:end</c> comment in TypeScript, or the same
+    /// marker as a <c>/* ... */</c> comment in CSS, alone on its line.
+    /// </summary>
+    private static readonly Regex ExampleMarkerLine = new(
+        @"^[ \t]*(?://[ \t]*efn:examples:(?<kind>start|end)|/\*[ \t]*efn:examples:(?<kind>start|end)[ \t]*\*/)[ \t]*$");
+
+    /// <summary>
+    /// Matches a <c>navigation</c> or <c>search</c> key that belongs to a component example page
+    /// (<c>uiButtons</c>, <c>uiDatePicker</c>, ...).
+    /// </summary>
+    private static readonly Regex ExampleResourceKey = new(@"^ui[A-Z]");
+
+    /// <summary>
+    /// Removes the web app's component-example regions - the lines between an
+    /// <c>efn:examples:start</c> and an <c>efn:examples:end</c> marker, markers included - or, when
+    /// <paramref name="keepExamples"/> is true, only the marker lines, so no marker reaches a
+    /// generated project either way. Only files holding a marker are rewritten.
+    /// </summary>
+    /// <param name="webTargetPath">The generated web app's directory.</param>
+    /// <param name="keepExamples">Whether the example code stays.</param>
+    /// <exception cref="InvalidOperationException">A file holds an unbalanced or nested marker.</exception>
+    internal static async Task StripExampleRegionsAsync(string webTargetPath, bool keepExamples)
+    {
+        var extensions = new[] { ".ts", ".tsx", ".css" };
+        var skipped = new[] { "node_modules", ".next" };
+        var files = Directory
+            .EnumerateFiles(webTargetPath, "*.*", SearchOption.AllDirectories)
+            .Where(f => extensions.Contains(Path.GetExtension(f)))
+            .Where(f => !Path.GetRelativePath(webTargetPath, f).Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).Any(skipped.Contains));
+
+        foreach (var file in files)
+        {
+            var text = await File.ReadAllTextAsync(file);
+            if (!text.Contains("efn:examples:"))
+                continue;
+
+            // keep the file's own line endings: split on \n and leave any \r on its line
+            var lines = text.Split('\n');
+            var kept = new List<string>(lines.Length);
+            var inRegion = false;
+            foreach (var line in lines)
+            {
+                var marker = ExampleMarkerLine.Match(line.TrimEnd('\r'));
+                if (marker.Success)
+                {
+                    var opens = marker.Groups["kind"].Value == "start";
+                    if (opens == inRegion)
+                        throw new InvalidOperationException($"Unbalanced efn:examples marker in '{file}'.");
+                    inRegion = opens;
+                    continue;
+                }
+                if (!inRegion || keepExamples)
+                    kept.Add(line);
+            }
+            if (inRegion)
+                throw new InvalidOperationException($"Unclosed efn:examples region in '{file}'.");
+
+            await File.WriteAllTextAsync(file, string.Join('\n', kept));
+        }
+    }
+
+    /// <summary>
+    /// Removes the translation keys only the component example pages use from every shipped resource
+    /// file: the <c>page.ui</c> subtree, <c>navigation.components</c>, and every <c>navigation</c> and
+    /// <c>search</c> key named <c>ui&lt;Name&gt;</c>. Every culture loses the same keys, so they keep
+    /// one key set.
+    /// </summary>
+    /// <param name="resourcesPath">The API's <c>Features/Localization/Core/Resources</c> directory.</param>
+    internal static async Task RemoveExampleResourceKeysAsync(string resourcesPath)
+    {
+        if (!Directory.Exists(resourcesPath))
+            return;
+
+        var options = new JsonSerializerOptions { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+        foreach (var file in Directory.EnumerateFiles(resourcesPath, "*.json"))
+        {
+            var resources = JsonNode.Parse(await File.ReadAllTextAsync(file))!.AsObject();
+
+            (resources["page"] as JsonObject)?.Remove("ui");
+            (resources["navigation"] as JsonObject)?.Remove("components");
+            foreach (var section in new[] { "navigation", "search" })
+            {
+                if (resources[section] is not JsonObject keys)
+                    continue;
+                foreach (var key in keys.Select(entry => entry.Key).Where(key => ExampleResourceKey.IsMatch(key)).ToList())
+                    keys.Remove(key);
+            }
+
+            await File.WriteAllTextAsync(file, resources.ToJsonString(options) + "\n");
+        }
+    }
+
+    /// <summary>
     /// Generates a new project from the template repository with the specified name and options.
     /// </summary>
-    /// <param name="argument">The create-project argument containing name, output path, and multi-language flag.</param>
+    /// <param name="argument">The create-project argument containing name, output path, and the multi-language and examples flags.</param>
     public override async Task Generate(CreateProjectArgument argument)
     {
         var version = Helpers.GetVersion();
@@ -283,6 +377,19 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             var claudeSkillsPath = Path.Combine(targetPath, ".claude");
             await ReplaceInFiles(claudeSkillsPath, $@"{Regex.Escape(backendProjectRootNamespace)}\.", $@"{pascalCaseProjectName}.", ".md");
             await ReplaceInFiles(claudeSkillsPath, @"EasyForNet\.slnx", $@"{pascalCaseProjectName}.slnx", ".md");
+
+            // The component example pages (admin/ui) ship only on request; the code that exists for
+            // them elsewhere - their nav and search entries, their platform route prefix - sits between
+            // efn:examples markers, and their translation keys follow a naming convention.
+            await StripExampleRegionsAsync(webTargetPath, argument.IncludeExamples);
+            if (!argument.IncludeExamples)
+            {
+                Console.WriteLine("Removing component example pages...");
+                var examplePagesPath = Path.Combine(webTargetPath, "app", "[lang]", "admin", "ui");
+                if (Directory.Exists(examplePagesPath))
+                    Directory.Delete(examplePagesPath, true);
+                await RemoveExampleResourceKeysAsync(Path.Combine(backendProjectTargetPath, "Features", "Localization", "Core", "Resources"));
+            }
 
             // Cleanup localization files when multiLanguage is false: the API's shipped resource files
             // decide which cultures exist, and the web's routing locale set must name the same ones.

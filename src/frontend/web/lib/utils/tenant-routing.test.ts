@@ -138,7 +138,9 @@ describe('isPlatformAccessiblePath', () => {
     '/admin/users',
     '/admin/roles/abc/update',
     '/admin/notifications',
+    // efn:examples:start
     '/admin/ui/buttons',
+    // efn:examples:end
     '/admin/tenants',
     '/admin/tenants/abc/detail',
     '/admin/localization',
