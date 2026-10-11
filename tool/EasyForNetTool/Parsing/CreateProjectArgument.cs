@@ -26,4 +26,5 @@ public class CreateProjectArgument : Argument
     }
     public string Output { get; set; } = null!;
     public bool MultiLanguage { get; set; }
+    public bool IncludeExamples { get; set; }
 }

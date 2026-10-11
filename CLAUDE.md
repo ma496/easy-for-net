@@ -322,6 +322,8 @@ Client permission checks use the `Allow` map in `allow.ts`, kept in sync with th
 
 Adding a language means a resource file `Features/Localization/Core/Resources/<code>.json` with every English key, a `LanguageCatalog` entry, the code in `i18n/config.ts`, the culture's copy of the bundled strings in `i18n/offline-resources.json` and a flag at `public/assets/images/flags/<CODE>.svg`; `i18n/locales.test.ts` fails when `i18nConfig.locales` differs from the backend's resource files. The CLI's `-m false` (default) mode ships English only — it deletes the non-English resource files, reduces `i18n/config.ts` to `['en']` and keeps only `en` in `i18n/offline-resources.json` — so check the generator's locale list when changing this.
 
+The component example pages (`app/[lang]/admin/ui/`) ship only with the CLI's `-e true`. The default, `-e false`, deletes them, removes the code between `// efn:examples:start` / `// efn:examples:end` markers (`/* … */` in CSS) elsewhere in the web app, and drops the `page.ui.*`, `navigation.components`, `navigation.ui<Name>` and `search.ui<Name>` keys. A new example page keeps to those key names and marks what it adds outside its directory; see `template-maintenance`.
+
 ## Task guides
 
 `.claude/skills/` holds step-by-step guides for the recurring tasks here. Consult the matching one before writing code.

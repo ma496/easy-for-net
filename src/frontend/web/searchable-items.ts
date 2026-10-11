@@ -68,7 +68,7 @@ export const searchableItems: SearchableItem[] = [
     title: 'search.notifications',
     url: '/admin/notifications',
   },
-
+  // efn:examples:start
   {
     title: 'search.uiFormElements',
     url: '/admin/ui/form-elements',
@@ -101,4 +101,5 @@ export const searchableItems: SearchableItem[] = [
     title: 'search.uiTooltips',
     url: '/admin/ui/tooltips',
   },
+  // efn:examples:end
 ]
