@@ -39,7 +39,8 @@ npm run dev
 
 It starts PostgreSQL and Redis with Docker (`docker-compose.yml`) when they are not already answering,
 installs the web app's packages when they are missing, and runs the API (http://localhost:5000, Swagger
-at `/swagger`) and the web app (http://localhost:3000) together in one terminal. **Ctrl+C stops both**; the
+at `/swagger`) and the web app (http://localhost:3000) together in one terminal. The web app starts only
+once the API answers on `/health`, so its first page never meets an API still building. **Ctrl+C stops both**; the
 containers keep running until `docker compose down` (which keeps the data).
 
 ```sh
