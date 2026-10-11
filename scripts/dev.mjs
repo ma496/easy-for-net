@@ -14,9 +14,9 @@
  *    project's container (a PostgreSQL installed on the machine) is warned about, not used silently.
  * 2. Stops an API already running from this checkout, which would hold the port and lock bin/.
  * 3. Installs the web app's packages when node_modules is missing.
- * 4. Starts the API (serve-api.mjs, Development) and `next dev`, with each line prefixed by
- *    where it came from. Ctrl+C, or either process exiting, stops both. The containers are left
- *    running; `docker compose down` stops them.
+ * 4. Starts the API (serve-api.mjs, Development), waits for its /health to answer, then starts
+ *    `next dev`, with each line prefixed by where it came from. Ctrl+C, or either process
+ *    exiting, stops both. The containers are left running; `docker compose down` stops them.
  */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -29,6 +29,8 @@ const API_ONLY = args.includes("--api-only");
 const WEB_ONLY = args.includes("--web-only");
 const WEB = join(REPO_ROOT, "src", "frontend", "web");
 const API_PORT = process.env.PORT || "5000";
+/** How long the web app waits for the API to answer before starting regardless. */
+const API_WAIT_SECONDS = 600;
 /**
  * The two services, each with the probe that reads its address from the connection string, the
  * Compose service and container port that serve it, and the .env variable that moves its host port.
@@ -63,10 +65,15 @@ if (!API_ONLY && !existsSync(join(WEB, "node_modules"))) {
 }
 
 const children = [];
+let stopping = false;
+for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => stopAll(0));
 if (!WEB_ONLY) {
   children.push(
     start("api", "node", [join(REPO_ROOT, "scripts", "serve-api.mjs")], { cwd: REPO_ROOT, env: { PORT: API_PORT } }),
   );
+  // The web app renders its pages from the API (translations, session), so a page opened while the
+  // API is still building answers "service unavailable". Start it only once the API answers.
+  if (!API_ONLY) await waitForApi();
 }
 if (!API_ONLY) children.push(start("web", "npm", ["run", "dev"], { cwd: WEB }));
 
@@ -80,14 +87,36 @@ console.log(
     .join("\n"),
 );
 
-let stopping = false;
 function stopAll(code) {
   if (stopping) return;
   stopping = true;
   for (const child of children) if (child.exitCode === null) killTree(child.pid);
   process.exit(code);
 }
-for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => stopAll(0));
+
+/**
+ * Wait until the API's /health answers, for as long as the API process lives (its exit stops
+ * everything through start()). A first run builds the API and migrates the database, which can
+ * take minutes, so the wait is long; past it the web app is started anyway with a warning.
+ */
+async function waitForApi() {
+  const url = `http://localhost:${API_PORT}/health`;
+  const deadline = Date.now() + API_WAIT_SECONDS * 1000;
+  console.log(`dev: waiting for the API at ${url} before starting the web app…`);
+  while (Date.now() < deadline) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(2000) });
+      if (res.ok) {
+        console.log("dev: the API is up; starting the web app.");
+        return;
+      }
+    } catch {
+      // Not listening yet.
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+  console.log(`dev: warning: the API did not answer within ${API_WAIT_SECONDS} seconds; starting the web app anyway.`);
+}
 
 /** Start one process, prefixing every line it writes, and stop everything when it exits. */
 function start(name, cmd, cmdArgs, { cwd, env = {} }) {

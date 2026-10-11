@@ -28,7 +28,7 @@ loop.mjs            the whole cycle: look → observe → plan → drain → rep
 | `open-pr.mjs` | Prints (or opens) the pull-request page for the current branch. Never merges. |
 | `gate.mjs` | The static gate: solution build, backend and tool tests, web lint + `tsc` + vitest, engine and hook tests, web build. `--changed` runs only the steps whose watched paths changed (`lib/gate-scope.mjs` decides). |
 | `serve-api.mjs` | Starts the API on `$PORT` as Development — what verify starts for a live check. |
-| `dev.mjs` | `npm run dev`: the whole app for a developer — PostgreSQL and Redis through `docker compose` when the probes say they are down, then the API (via `serve-api.mjs`) and `next dev` side by side, each line prefixed. Not part of the loop or the gate. |
+| `dev.mjs` | `npm run dev`: the whole app for a developer — PostgreSQL and Redis through `docker compose` when the probes say they are down, then the API (via `serve-api.mjs`) and, once its `/health` answers, `next dev` beside it, each line prefixed. Not part of the loop or the gate. |
 | `stop-api.mjs` | Stops this checkout's running API (anything running from `src/backend/Source/bin/`), which on Windows locks the build output. The gate runs it before `dotnet build`; `npm run stop:api`. |
 | `pg-ready.mjs` | Whether PostgreSQL accepts connections — the dependency probe for verify and the loop. |
 | `redis-ready.mjs` | Whether the Redis in `ConnectionStrings:Redis` accepts a TCP connection — the same probe, for the session store. |

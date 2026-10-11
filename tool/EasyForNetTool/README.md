@@ -66,7 +66,8 @@ npm run dev
 
 It starts PostgreSQL and Redis with Docker (`docker-compose.yml`) when they are not already answering,
 installs the web app's packages when they are missing, and runs the API and the web app together in one
-terminal, each line prefixed by where it came from:
+terminal, each line prefixed by where it came from. The web app starts only once the API answers on
+`/health`, so its first page never meets an API still building:
 
 - API: [http://localhost:5000](http://localhost:5000), Swagger at [/swagger](http://localhost:5000/swagger/index.html)
 - Web app: [http://localhost:3000](http://localhost:3000)
