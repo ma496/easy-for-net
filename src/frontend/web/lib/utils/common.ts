@@ -58,10 +58,10 @@ export const shortName = (name: string | undefined, username: string | undefined
 
 /**
  * Returns true if the given i18n key resolves to a translated string
- * (i.e. the translator returns a value other than the key itself),
+ * (i.e. the translator returns a non-empty value for it),
  * allowing callers to safely fall back when a key is missing.
  */
 export const isTranslationKeyExist = (key: string) => {
   const { t } = getTranslation()
-  return t(key) !== key
+  return t(key) !== ''
 }

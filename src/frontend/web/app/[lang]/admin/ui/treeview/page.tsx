@@ -15,7 +15,7 @@ interface TreeviewPageProps {
  */
 const TreeviewPage = async ({ params }: TreeviewPageProps) => {
   const { lang } = await params
-  const title = await getServerTranslation(lang, 'page.ui.treeview.title')
+  const title = (await getServerTranslation(lang, 'page.ui.treeview.title')) || 'UI Tree View'
 
   return (
     <AdminPageContent title={title} description="Hierarchical data with expand, collapse and checkbox selection." plain>

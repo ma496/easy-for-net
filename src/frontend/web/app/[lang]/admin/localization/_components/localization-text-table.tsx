@@ -73,8 +73,8 @@ export const LocalizationTextTable = ({ canUpdate }: LocalizationTextTableProps)
 
   const handleReset = async (row: TextListItemDto) => {
     const confirmed = await confirmDeleteAlert({
-      title: t('page.localization.texts.resetTitle'),
-      text: t('page.localization.texts.resetConfirm'),
+      title: t('page.localization.texts.resetTitle') || 'Reset this text?',
+      text: t('page.localization.texts.resetConfirm') || 'This removes your override and falls back to the inherited value.',
     })
     if (!confirmed.isConfirmed) return
 
@@ -83,7 +83,7 @@ export const LocalizationTextTable = ({ canUpdate }: LocalizationTextTableProps)
       apiErrorAlert(result.error)
       return
     }
-    successToast.fire({ text: t('page.localization.texts.resetSuccess') })
+    successToast.fire({ text: t('page.localization.texts.resetSuccess') || 'Text reset to the inherited value' })
     router.refresh()
   }
 
@@ -94,7 +94,7 @@ export const LocalizationTextTable = ({ canUpdate }: LocalizationTextTableProps)
   const columns: ColumnDef<TextListItemDto, any>[] = [
     columnHelper.accessor('key', {
       meta: { card: 'title' },
-      header: t('table.columns.key'),
+      header: t('table.columns.key') || 'Key',
       enableSorting: false,
       minSize: 160,
       maxSize: 260,
@@ -106,7 +106,7 @@ export const LocalizationTextTable = ({ canUpdate }: LocalizationTextTableProps)
     }),
     columnHelper.accessor('inheritedValue', {
       meta: { card: 'wide' },
-      header: isPlatformScope ? t('table.columns.defaultValue') : t('table.columns.inheritedValue'),
+      header: isPlatformScope ? t('table.columns.defaultValue') || 'Default value' : t('table.columns.inheritedValue') || 'Inherited value',
       enableSorting: false,
       minSize: 200,
       cell: (info) => {
@@ -116,7 +116,7 @@ export const LocalizationTextTable = ({ canUpdate }: LocalizationTextTableProps)
             <div className="line-clamp-3 whitespace-pre-wrap">{info.getValue()}</div>
             {!isPlatformScope && row.inheritedValue !== row.defaultValue && (
               <Badge variant="info" type="outline" className="mt-1">
-                {t('page.localization.texts.fromPlatform')}
+                {t('page.localization.texts.fromPlatform') || 'From platform'}
               </Badge>
             )}
           </div>
@@ -125,7 +125,7 @@ export const LocalizationTextTable = ({ canUpdate }: LocalizationTextTableProps)
     }),
     columnHelper.accessor('value', {
       meta: { card: 'wide' },
-      header: t('table.columns.override'),
+      header: t('table.columns.override') || 'Override',
       enableSorting: false,
       minSize: 200,
       cell: (info) => {
@@ -133,14 +133,14 @@ export const LocalizationTextTable = ({ canUpdate }: LocalizationTextTableProps)
         if (value == null) {
           return (
             <span className="text-subtle-foreground">
-              — <span className="sr-only">{t('page.localization.texts.notOverridden')}</span>
+              — <span className="sr-only">{t('page.localization.texts.notOverridden') || 'Not overridden'}</span>
             </span>
           )
         }
         return (
           <div dir={dir} className="flex flex-col items-start gap-1">
             <Badge variant="primary" type="solid">
-              {t('page.localization.texts.setHere')}
+              {t('page.localization.texts.setHere') || 'Set here'}
             </Badge>
             <span className="line-clamp-3 font-medium whitespace-pre-wrap text-foreground">{value}</span>
           </div>
@@ -151,13 +151,13 @@ export const LocalizationTextTable = ({ canUpdate }: LocalizationTextTableProps)
       ? [
           columnHelper.display({
             id: 'actions',
-            header: t('table.actions'),
+            header: t('table.actions') || 'Actions',
             cell: (info) => (
               <DataTableRowActions
                 actions={[
-                  { label: t('common.edit'), icon: <Pencil className="h-4 w-4" />, onClick: () => setEditingRow(info.row.original) },
+                  { label: t('common.edit') || 'Edit', icon: <Pencil className="h-4 w-4" />, onClick: () => setEditingRow(info.row.original) },
                   {
-                    label: t('page.localization.texts.reset'),
+                    label: t('page.localization.texts.reset') || 'Reset to inherited',
                     icon: <RotateCcw className="h-4 w-4" />,
                     variant: 'warning',
                     onClick: () => handleReset(info.row.original),
@@ -180,7 +180,7 @@ export const LocalizationTextTable = ({ canUpdate }: LocalizationTextTableProps)
     )
   }
 
-  const emptyMessage = data && data.total === 0 && onlyOverridden && !url.search ? t('page.localization.texts.noOverrides') : undefined
+  const emptyMessage = data && data.total === 0 && onlyOverridden && !url.search ? t('page.localization.texts.noOverrides') || 'Nothing is overridden in this language yet.' : undefined
 
   return (
     <>
@@ -216,7 +216,7 @@ export const LocalizationTextTable = ({ canUpdate }: LocalizationTextTableProps)
           <Checkbox
             name="onlyOverridden"
             className="w-full sm:w-auto"
-            label={t('page.localization.texts.onlyOverridden')}
+            label={t('page.localization.texts.onlyOverridden') || 'Only overridden'}
             checked={onlyOverridden}
             onChange={(event) => {
               url.filters.setMany({ overridden: event.target.checked ? 'true' : null })

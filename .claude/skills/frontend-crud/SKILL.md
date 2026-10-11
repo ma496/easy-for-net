@@ -86,7 +86,7 @@ return (
 ```
 
 Columns are built with `createColumnHelper<UserListDto>()`; the actions column is
-`columnHelper.display({ id: 'actions', header: t('table.actions'), ... })` and renders
+`columnHelper.display({ id: 'actions', header: t('table.actions') || 'Actions', ... })` and renders
 `DataTableRowActions` — a three-dot trigger opening a portaled menu of labelled actions, which
 renders nothing when every entry is hidden. Gate each entry with `hidden` rather than leaving it out
 of the array, give it a translated `label`, and use `href` for navigation (locale-aware) or `onClick`
@@ -96,14 +96,14 @@ for a mutation; `variant` is `default | primary | success | warning | danger`:
 cell: (info) => (
   <DataTableRowActions
     actions={[
-      { label: t('common.edit'), icon: <Pencil className="h-4 w-4" />, href: `/admin/users/${info.row.original.id}/update`, hidden: !canUpdate },
-      { label: t('common.delete'), icon: <Trash2 className="h-4 w-4" />, variant: 'danger', onClick: () => handleDelete(info.row.original.id), disabled: isDeletingUser, hidden: !canDelete },
+      { label: t('common.edit') || 'Edit', icon: <Pencil className="h-4 w-4" />, href: `/admin/users/${info.row.original.id}/update`, hidden: !canUpdate },
+      { label: t('common.delete') || 'Delete', icon: <Trash2 className="h-4 w-4" />, variant: 'danger', onClick: () => handleDelete(info.row.original.id), disabled: isDeletingUser, hidden: !canDelete },
     ]}
   />
 ),
 ```
 
-Headers are translated (`t('table.columns.email')`). Set `enableSorting: false` on computed columns —
+Headers are translated (`t('table.columns.email') || 'Email'`). Set `enableSorting: false` on computed columns —
 and remember any sortable column must also be whitelisted in the backend list validator.
 
 Below `md` the same `<DataTable />` renders each row as a card instead of a table row, with a sort
@@ -115,8 +115,8 @@ identifier), `badge` for a status pill at the end of the heading, by the actions
 phone can do without, `title` when the heading is not the first column:
 
 ```tsx
-columnHelper.accessor('email', { meta: { card: 'subtitle' }, header: t('table.columns.email'), cell: (info) => info.getValue() }),
-columnHelper.accessor('isActive', { meta: { card: 'badge' }, header: t('table.columns.isActive'), cell: ... }),
+columnHelper.accessor('email', { meta: { card: 'subtitle' }, header: t('table.columns.email') || 'Email', cell: (info) => info.getValue() }),
+columnHelper.accessor('isActive', { meta: { card: 'badge' }, header: t('table.columns.isActive') || 'Active', cell: ... }),
 ```
 
 Gating combines the caller's permissions with facts about the row. A row whose DTO extends
@@ -140,7 +140,7 @@ screen's main action (create) to fill it with the accent colour. Export is
 `DataTableExportButton` (`onExport(format, all)`), filters `DataTableFilterButton`:
 
 ```tsx
-{canCreate && <DataTableToolbarButton primary label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/users/create" />}
+{canCreate && <DataTableToolbarButton primary label={t('table.createLink') || 'Create'} icon={<Plus size={16} />} href="/admin/users/create" />}
 <DataTableExportButton onExport={handleExport} isExporting={isExporting} disabled={isFetching || !data?.total} />
 ```
 
@@ -153,20 +153,20 @@ const seatsExhausted = seats?.limit != null && seats.used >= seats.limit
 
 {canCreate &&
   (seatsExhausted ? (
-    <DataTableToolbarButton primary label={t('page.users.seatLimitReached')} icon={<Plus size={16} />} disabled />
+    <DataTableToolbarButton primary label={t('page.users.seatLimitReached') || "Your plan's user limit has been reached"} icon={<Plus size={16} />} disabled />
   ) : (
-    <DataTableToolbarButton primary label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/users/create" />
+    <DataTableToolbarButton primary label={t('table.createLink') || 'Create'} icon={<Plus size={16} />} href="/admin/users/create" />
   ))}
 ```
 
 Delete uses the shared alert helpers:
 
 ```tsx
-const result = await confirmDeleteAlert({ title: t('page.users.deleteTitle'), text: t('page.users.deleteConfirm') })
+const result = await confirmDeleteAlert({ title: t('page.users.deleteTitle') || 'Delete User', text: t('page.users.deleteConfirm') || 'Are you sure you want to delete this user?' })
 if (!result.isConfirmed) return
 const response = await deleteUser({ id })
 if (response.error) { apiErrorAlert(response.error); return }
-if (response.data?.success) successToast.fire({ text: t('page.users.deleteSuccess') })
+if (response.data?.success) successToast.fire({ text: t('page.users.deleteSuccess') || 'User deleted successfully' })
 else if (response.data?.message) await errorAlert({ text: response.data.message })
 ```
 
@@ -210,11 +210,11 @@ Formik + Yup, with the schema built from `t` so messages are localized:
 const createValidationSchema = (t: (key: string, params?: Record<string, string | number>) => string) =>
   Yup.object().shape({
     username: Yup.string()
-      .required(t('validation.required'))
-      .min(3, t('validation.minLength', { min: 3 })),
+      .required(t('validation.required') || 'Field is required')
+      .min(3, t('validation.minLength', { min: 3 }) || 'Field must be at least 3 characters'),
     roles: Yup.array().of(Yup.string())
-      .required(t('validation.required'))
-      .min(1, t('validation.atLeastOneSelected')),
+      .required(t('validation.required') || 'Field is required')
+      .min(1, t('validation.atLeastOneSelected') || 'At least one item must be selected'),
   })
 
 type FormValues = Yup.InferType<ReturnType<typeof createValidationSchema>>
@@ -227,22 +227,22 @@ before the round trip. Then:
 <Formik<FormValues> initialValues={{ /* ... */ }} validationSchema={validationSchema} onSubmit={onSubmit}>
   {() => (
     <Form noValidate className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      <FormInput name="username" label={t('form.label.username')} placeholder={t('form.placeholder.username')} required autoFocus />
+      <FormInput name="username" label={t('form.label.username') || 'Username'} placeholder={t('form.placeholder.username') || 'Enter username'} required autoFocus />
       <FormLazyMultiSelect<RoleListDto, RoleListRequest>
         name="roles"
-        label={t('form.label.roles')}
+        label={t('form.label.roles') || 'Roles'}
         useLazyQuery={useLazyRoleListQuery}
         getLabel={(role) => role.name}
         getValue={(role) => role.id}
         pageSize={20}
         required
       />
-      <FormCheckbox name="isActive" label={t('form.label.isActive')} />
+      <FormCheckbox name="isActive" label={t('form.label.isActive') || 'Active'} />
       <div className="flex justify-end gap-4 sm:col-span-2">
         <Button type="button" variant="outline" onClick={() => router.push('/admin/users')} disabled={isSaving}>
-          {t('common.cancel')}
+          {t('common.cancel') || 'Cancel'}
         </Button>
-        <Button type="submit" isLoading={isSaving}>{t('common.submit')}</Button>
+        <Button type="submit" isLoading={isSaving}>{t('common.submit') || 'Submit'}</Button>
       </div>
     </Form>
   )}
@@ -266,13 +266,13 @@ Submit handler:
 ```tsx
 const result = await createUser(payload)
 if (result.error) { apiErrorAlert(result.error); return }
-successToast.fire({ text: t('page.users.createSuccess') })
+successToast.fire({ text: t('page.users.createSuccess') || 'User created successfully' })
 router.push('/admin/users')          // useLocalizedRouter, unprefixed path
 ```
 
 The **update** form additionally loads the row and guards the render order:
 `isLoading` → `<Loader />`, `error` → `<ApiErrorMessages error={...} />`, no data →
-`t('error.server.userNotFound')` (each centred, in `FormState` where the form uses `form-layout`),
+`t('error.server.userNotFound') || 'User not found'` (each centred, in `FormState` where the form uses `form-layout`),
 and only then the form, with `initialValues` taken from the
 fetched row. A lazy select there takes `selectedItemIds={userData.roles}` so the already-chosen
 options are fetched and labelled. The id travels in the path, so the payload is

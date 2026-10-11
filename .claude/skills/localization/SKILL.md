@@ -32,18 +32,16 @@ On the web, `getDictionary(locale)` in `i18n/server.ts` is a `cache()`d server f
 that forwards the request's cookies — one fetch per request, shared by the root layout and every
 `getServerTranslation` call. The root layout hands the whole response to `TranslationProvider`, which
 publishes it to `useTranslation` (via context) and `getTranslation` (via a module-level copy). When the
-API cannot be reached the dictionary holds only `i18n/offline-resources.json` — the brand name and the
-service-unavailable screen, per locale — and every other key renders as-is. A string the outage path
-shows belongs in that file too, with the backend's exact value: `i18n/offline-resources.test.ts`
-compares the two.
+API cannot be reached the dictionary is empty, and every call site's own English default renders (see
+below) — the web app bundles no message files.
 
 ## Three ways to translate
 
 | Where | Use | Import |
 | --- | --- | --- |
-| Client component | `const { t, i18n } = useTranslation()` then `t('page.users.title')` | `@/i18n` |
-| Server component | `await getServerTranslation(lang, 'page.users.title')` | `@/i18n` |
-| Non-component module (alerts, utils) | `const { t } = getTranslation()` | `@/i18n` |
+| Client component | `const { t, i18n } = useTranslation()` then `t('page.users.title') || 'Users'` | `@/i18n` |
+| Server component | `(await getServerTranslation(lang, 'page.users.title')) || 'Users'` | `@/i18n` |
+| Non-component module (alerts, utils) | `const { t } = getTranslation()` then `t('common.error') || 'Error'` | `@/i18n` |
 
 **Always import from the `@/i18n` barrel, never from `@/i18n/server`, `@/i18n/client` or another
 subpath.** The barrel is safe in client components because `server.ts` loads `next/headers` lazily
@@ -55,9 +53,23 @@ bundle.
 after the provider mounted and does **not** react to a language change without a reload. Prefer
 passing already-translated text into helpers where you can.
 
-All three look the key up in the flat dictionary (`i18n/translate.ts`) and return **the key itself**
-when it is missing — which is why `isTranslationKeyExist(key)` (`@/lib/utils`) exists for optional
-copy, and why a raw key showing in the UI means a missing entry rather than a crash.
+All three look the key up in the flat dictionary (`i18n/translate.ts`) and return **`''`** when it is
+missing, so **every call carries its English default after `||`** — the key's exact value in `en.json`.
+That default is what renders when the API is down or the key is not served; `isTranslationKeyExist(key)`
+(`@/lib/utils`) tells optional copy apart. `i18n/default-texts.test.ts` fails when a call with a
+literal key has no default, or a plain-string default differs from `en.json` — so when you change an
+English value, change its defaults too.
+
+- **Precedence.** `||` binds looser than `.`, `+`, `===`, `&&` and `??`: write
+  `(t('k') || 'X').toLowerCase()` and `a && (t('k') || 'X')`. A server call is awaited inside
+  parentheses — `(await getServerTranslation(lang, 'k')) || 'X'` — or, inside `Promise.all`,
+  `getServerTranslation(lang, 'k').then((text) => text || 'X')`.
+- **Variables.** Interpolate the default yourself, with the same values:
+  `` t('page.users.count', { count }) || `${count} users` ``.
+- **A key known only at run time** (an enum value, a key held in data such as `nav-items.ts`) falls back
+  to `humanizeKey` (`@/i18n`), which sentence-cases the last segment:
+  `` t(`page.sales.status.${status}`) || humanizeKey(status) ``. Prefer literal keys where the set is
+  small — a ternary of two `t('…')` calls rather than `t(cond ? 'a' : 'b')` — so each gets its exact English.
 
 Interpolation is `${name}` in the JSON value:
 
@@ -66,8 +78,8 @@ Interpolation is `${name}` in the JSON value:
 ```
 
 ```tsx
-t('validation.minLength', { min: 3 })
-t('page.tenants.switcher.switchSuccess', { tenant: name })
+t('validation.minLength', { min: 3 }) || 'Field must be at least 3 characters'
+t('page.tenants.switcher.switchSuccess', { tenant: name }) || `You are now working in ${name}`
 ```
 
 ## Adding keys
@@ -99,7 +111,8 @@ Two namespaces are contracts with the backend, not free-form copy:
 - `notifications.<name>.title` / `.message` must match the `TitleKey`/`MessageKey` strings a
   notification is created with — see the `notifications` skill.
 
-Never hard-code user-facing strings in components; the only literals in JSX should be keys.
+Never hard-code user-facing strings in components; the only literals in JSX should be keys and the
+English default after each `t('…') ||`.
 
 ## Overrides and language settings
 
@@ -153,13 +166,10 @@ only that subset.
 2. Add `{ name, isRtl }` for the code to `LanguageCatalog` (`Features/Localization/Core/LanguageCatalog.cs`).
 3. Add the code to `i18nConfig.locales` in `i18n/config.ts` — `i18n/locales.test.ts` fails when that
    list differs from the backend's resource files.
-4. Add the code to `i18n/offline-resources.json` with the same keys as `en`, each value copied from the
-   new resource file — `i18n/offline-resources.test.ts` fails unless that file covers exactly the
-   routable locales.
-5. Make sure `public/assets/images/flags/<CODE>.svg` exists — `LanguageDropdown` loads the flag by the
+4. Make sure `public/assets/images/flags/<CODE>.svg` exists — `LanguageDropdown` loads the flag by the
    upper-cased code.
 
-Removing a language is the same five places in reverse. Stored `LanguageSetting` rows that still
+Removing a language is the same four places in reverse. Stored `LanguageSetting` rows that still
 enable the removed code are not rewritten, so re-save the affected scopes' languages from the admin
 screen (the update endpoint accepts only shipped cultures).
 
@@ -179,9 +189,9 @@ extend its directory list when you want a new feature's screens held to the same
 ## Single-language projects
 
 `dotnet efn cp` defaults to `-m false`, which deletes the non-English resource files, reduces
-`locales` in `i18n/config.ts` to `['en']` and keeps only `en` in `i18n/offline-resources.json`.
+`locales` in `i18n/config.ts` to `['en']`.
 In such a project there is exactly one resource file to update — but keep using `t()` and keys
-anyway, so adding a language later is only the five steps above.
+anyway, so adding a language later is only the four steps above.
 The generator rewrites `config.ts` with a regular expression matching `locales: [ … ]`, so keep that
 property spelled exactly so (one space after the colon) with no `]` inside the array.
 
@@ -192,5 +202,6 @@ property spelled exactly so (one space after the colon) with no `]` inside the a
 - [ ] Translators imported from `@/i18n`; server components use `getServerTranslation`, client
       components `useTranslation`
 - [ ] New markup uses logical (RTL-safe) utilities
-- [ ] A new language is registered in all five places, offline strings and flag included
+- [ ] Every `t('…')` / `getServerTranslation` call carries its English default after `||`
+- [ ] A new language is registered in all four places, flag included
 - [ ] `dotnet test` (resource-file test) and `npm run test` (locale and tenant-screen tests) pass

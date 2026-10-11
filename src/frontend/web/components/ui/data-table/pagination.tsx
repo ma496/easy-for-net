@@ -136,7 +136,7 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
     <div className={cn('mt-4 flex flex-col items-center justify-center gap-3 border-t border-border pt-4 md:flex-row md:justify-between', className)}>
       <div className="flex items-center justify-center sm:ms-0">
         <div className="flex items-center">
-          <span className="text-[13px] whitespace-nowrap text-muted-foreground">{t('table.pagination.showingEntries', { from, to, totalRecords: rowCount || 0 })}</span>
+          <span className="text-[13px] whitespace-nowrap text-muted-foreground">{t('table.pagination.showingEntries', { from, to, totalRecords: rowCount || 0 }) || `Showing ${from} to ${to} of ${rowCount || 0} entries`}</span>
         </div>
         <div className="flex items-center ms-3">
           <select

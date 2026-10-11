@@ -16,12 +16,12 @@ import { apiErrorAlert, errorAlert, successAlert } from '@/lib/utils'
 const createValidationSchema = (t: (key: string, params?: Record<string, string | number>) => string) => {
   return Yup.object().shape({
     password: Yup.string()
-      .required(t('validation.required'))
-      .min(8, t('validation.minLength', { min: 8 }))
-      .max(50, t('validation.maxLength', { max: 50 })),
+      .required(t('validation.required') || 'Field is required')
+      .min(8, t('validation.minLength', { min: 8 }) || `Field must be at least ${8} characters`)
+      .max(50, t('validation.maxLength', { max: 50 }) || `Field must not exceed ${50} characters`),
     confirmPassword: Yup.string()
-      .required(t('validation.required'))
-      .oneOf([Yup.ref('password')], t('validation.mustMatch', { otherField: t('form.label.newPassword') })),
+      .required(t('validation.required') || 'Field is required')
+      .oneOf([Yup.ref('password')], t('validation.mustMatch', { otherField: t('form.label.newPassword') || 'New Password' }) || `Field must match with ${t('form.label.newPassword') || 'New Password'}`),
   })
 }
 
@@ -41,7 +41,7 @@ export const ResetPasswordForm = () => {
   const onSubmit = async (data: ResetPasswordFormValues) => {
     if (!token) {
       errorAlert({
-        text: t('error.server.invalidToken'),
+        text: t('error.server.invalidToken') || 'Invalid token',
       })
       return
     }
@@ -57,8 +57,8 @@ export const ResetPasswordForm = () => {
     }
 
     successAlert({
-      title: t('page.auth.resetPassword.success'),
-      text: t('page.auth.resetPassword.hasBeenReset'),
+      title: t('page.auth.resetPassword.success') || 'Password reset successfully',
+      text: t('page.auth.resetPassword.hasBeenReset') || 'Your password has been reset successfully',
     })
     router.push('/signin')
   }
@@ -74,14 +74,14 @@ export const ResetPasswordForm = () => {
     >
       {() => (
         <Form noValidate className="space-y-5">
-          <FormPasswordInput name="password" label={t('form.label.newPassword')} placeholder={t('form.placeholder.newPassword')} icon={<Lock size={16} />} autoFocus={true} required={true} />
-          <FormPasswordInput name="confirmPassword" label={t('form.label.confirmPassword')} placeholder={t('form.placeholder.confirmPassword')} icon={<Lock size={16} />} required={true} />
+          <FormPasswordInput name="password" label={t('form.label.newPassword') || 'New Password'} placeholder={t('form.placeholder.newPassword') || 'Enter new password'} icon={<Lock size={16} />} autoFocus={true} required={true} />
+          <FormPasswordInput name="confirmPassword" label={t('form.label.confirmPassword') || 'Confirm Password'} placeholder={t('form.placeholder.confirmPassword') || 'Enter confirm password'} icon={<Lock size={16} />} required={true} />
           <Button type="submit" size="lg" className="w-full" isLoading={isResettingPassword}>
-            {t('page.auth.resetPassword.button')}
+            {t('page.auth.resetPassword.button') || 'Reset Password'}
           </Button>
           <p className="text-center text-sm">
             <LocalizedLink href="/signin" className="font-medium text-primary hover:underline">
-              {t('page.auth.signin.backToSignin')}
+              {t('page.auth.signin.backToSignin') || 'Back to Sign In'}
             </LocalizedLink>
           </p>
         </Form>

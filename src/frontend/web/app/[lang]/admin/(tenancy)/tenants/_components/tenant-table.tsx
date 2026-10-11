@@ -137,13 +137,13 @@ export const TenantTable = () => {
       // Every header and the sheet name are translated, because the export is read by the person who
       // asked for it and not by the API.
       const rows = dataToExport.map((tenant) => ({
-        [t('table.columns.name')]: tenant.name,
-        [t('table.columns.identifier')]: tenant.identifier,
-        [t('table.columns.status')]: tenant.status === TenantStatus.Active ? t('page.tenants.status.active') : t('page.tenants.status.suspended'),
-        [t('table.columns.userCount')]: tenant.userCount,
-        [t('table.columns.edition')]: tenant.editionName ?? '',
+        [(t('table.columns.name') || 'Name')]: tenant.name,
+        [(t('table.columns.identifier') || 'Identifier')]: tenant.identifier,
+        [(t('table.columns.status') || 'Status')]: tenant.status === TenantStatus.Active ? t('page.tenants.status.active') || 'Active' : t('page.tenants.status.suspended') || 'Suspended',
+        [(t('table.columns.userCount') || 'Users')]: tenant.userCount,
+        [(t('table.columns.edition') || 'Edition')]: tenant.editionName ?? '',
       }))
-      exportData(format, rows, t('page.tenants.title'), 'tenants')
+      exportData(format, rows, t('page.tenants.title') || 'Tenants', 'tenants')
     } finally {
       setIsExporting(false)
     }
@@ -151,8 +151,8 @@ export const TenantTable = () => {
 
   const handleDelete = async (tenantId: string) => {
     const result = await confirmDeleteAlert({
-      title: t('page.tenants.deleteTitle'),
-      text: t('page.tenants.deleteConfirm'),
+      title: t('page.tenants.deleteTitle') || 'Delete Tenant',
+      text: t('page.tenants.deleteConfirm') || 'Are you sure you want to delete this tenant?',
     })
 
     if (result.isConfirmed) {
@@ -162,7 +162,7 @@ export const TenantTable = () => {
         return
       }
       if (response.data?.success) {
-        successToast.fire({ text: t('page.tenants.deleteSuccess') })
+        successToast.fire({ text: t('page.tenants.deleteSuccess') || 'Tenant deleted successfully' })
       } else if (response.data?.message) {
         await errorAlert({ text: response.data?.message })
       }
@@ -171,8 +171,8 @@ export const TenantTable = () => {
 
   const handleSuspend = async (tenantId: string) => {
     const result = await confirmAlert({
-      title: t('page.tenants.suspendTitle'),
-      text: t('page.tenants.suspendConfirm'),
+      title: t('page.tenants.suspendTitle') || 'Suspend Tenant',
+      text: t('page.tenants.suspendConfirm') || 'Are you sure you want to suspend this tenant? Its members lose access until it is reactivated.',
     })
 
     if (result.isConfirmed) {
@@ -181,14 +181,14 @@ export const TenantTable = () => {
         apiErrorAlert(response.error)
         return
       }
-      successToast.fire({ text: t('page.tenants.suspendSuccess') })
+      successToast.fire({ text: t('page.tenants.suspendSuccess') || 'Tenant suspended successfully' })
     }
   }
 
   const handleReactivate = async (tenantId: string) => {
     const result = await confirmAlert({
-      title: t('page.tenants.reactivateTitle'),
-      text: t('page.tenants.reactivateConfirm'),
+      title: t('page.tenants.reactivateTitle') || 'Reactivate Tenant',
+      text: t('page.tenants.reactivateConfirm') || 'Are you sure you want to reactivate this tenant?',
     })
 
     if (result.isConfirmed) {
@@ -197,7 +197,7 @@ export const TenantTable = () => {
         apiErrorAlert(response.error)
         return
       }
-      successToast.fire({ text: t('page.tenants.reactivateSuccess') })
+      successToast.fire({ text: t('page.tenants.reactivateSuccess') || 'Tenant reactivated successfully' })
     }
   }
 
@@ -207,19 +207,19 @@ export const TenantTable = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const columns: ColumnDef<TenantListDto, any>[] = [
     columnHelper.accessor('name', {
-      header: t('table.columns.name'),
+      header: t('table.columns.name') || 'Name',
       cell: (info) => <span className="font-medium text-foreground">{info.getValue()}</span>,
     }),
     columnHelper.accessor('identifier', {
       meta: { card: 'subtitle' },
-      header: t('table.columns.identifier'),
+      header: t('table.columns.identifier') || 'Identifier',
       cell: (info) => <span className="font-mono text-[13px] text-muted-foreground">{info.getValue()}</span>,
     }),
     // Filled per page by the API from the editions table rather than held on the tenant row, so like
     // the member count it cannot be sorted on. A tenant on no plan shows a dash rather than an empty
     // cell, so "no plan" and "not loaded" do not look the same.
     columnHelper.accessor('editionName', {
-      header: t('table.columns.edition'),
+      header: t('table.columns.edition') || 'Edition',
       cell: (info) =>
         info.getValue() ? (
           <Badge variant="info" type="outline">{info.getValue()}</Badge>
@@ -231,23 +231,23 @@ export const TenantTable = () => {
     // The count is computed per page by the API and is not a column of the tenants table, so it
     // cannot be sorted on.
     columnHelper.accessor('userCount', {
-      header: t('table.columns.userCount'),
+      header: t('table.columns.userCount') || 'Users',
       cell: (info) => <Badge variant="primary">{info.getValue()}</Badge>,
       enableSorting: false,
     }),
     columnHelper.accessor('status', {
       meta: { card: 'badge' },
-      header: t('table.columns.status'),
+      header: t('table.columns.status') || 'Status',
       cell: (info) =>
         info.getValue() === TenantStatus.Active ? (
-          <Badge variant="success">{t('page.tenants.status.active')}</Badge>
+          <Badge variant="success">{t('page.tenants.status.active') || 'Active'}</Badge>
         ) : (
-          <Badge variant="danger">{t('page.tenants.status.suspended')}</Badge>
+          <Badge variant="danger">{t('page.tenants.status.suspended') || 'Suspended'}</Badge>
         ),
     }),
     columnHelper.display({
       id: 'actions',
-      header: t('table.actions'),
+      header: t('table.actions') || 'Actions',
       cell: (info) => {
         const tenant = info.row.original
         // The system-created tenant is protected from every lifecycle change,
@@ -262,31 +262,31 @@ export const TenantTable = () => {
             <DataTableRowActions
               actions={[
                 {
-                  label: t('common.edit'),
+                  label: t('common.edit') || 'Edit',
                   icon: <Pencil className="h-4 w-4" />,
                   href: `/admin/tenants/${tenant.id}/update`,
                   hidden: !(canUpdate && canChangeLifecycle),
                 },
                 {
-                  label: t('page.tenants.actions.detail'),
+                  label: t('page.tenants.actions.detail') || 'Detail',
                   icon: <Eye className="h-4 w-4" />,
                   href: `/admin/tenants/${tenant.id}/detail`,
                   hidden: !canViewDetail,
                 },
                 {
-                  label: t('page.tenants.actions.members'),
+                  label: t('page.tenants.actions.members') || 'Members',
                   icon: <Users className="h-4 w-4" />,
                   href: `/admin/tenants/${tenant.id}/members`,
                   hidden: !canViewMembers,
                 },
                 {
-                  label: t('page.features.actionLabel'),
+                  label: t('page.features.actionLabel') || 'Features',
                   icon: <SlidersHorizontal className="h-4 w-4" />,
                   href: `/admin/tenants/${tenant.id}/features`,
                   hidden: !canViewFeatures,
                 },
                 {
-                  label: t('page.tenants.enterButton'),
+                  label: t('page.tenants.enterButton') || 'Enter',
                   icon: <LogIn className="h-4 w-4" />,
                   variant: 'primary',
                   onClick: () => enterTenant(tenant.id, tenant.name),
@@ -294,7 +294,7 @@ export const TenantTable = () => {
                   hidden: !(canEnter(tenant.id) && isActive) || isCurrent,
                 },
                 {
-                  label: t('page.tenants.actions.suspend'),
+                  label: t('page.tenants.actions.suspend') || 'Suspend',
                   icon: <PauseCircle className="h-4 w-4" />,
                   variant: 'warning',
                   onClick: () => handleSuspend(tenant.id),
@@ -302,7 +302,7 @@ export const TenantTable = () => {
                   hidden: !(canSuspend && canChangeLifecycle && isActive),
                 },
                 {
-                  label: t('page.tenants.actions.reactivate'),
+                  label: t('page.tenants.actions.reactivate') || 'Reactivate',
                   icon: <PlayCircle className="h-4 w-4" />,
                   variant: 'success',
                   onClick: () => handleReactivate(tenant.id),
@@ -310,7 +310,7 @@ export const TenantTable = () => {
                   hidden: !(canReactivate && canChangeLifecycle && tenant.status === TenantStatus.Suspended),
                 },
                 {
-                  label: t('common.delete'),
+                  label: t('common.delete') || 'Delete',
                   icon: <Trash2 className="h-4 w-4" />,
                   variant: 'danger',
                   onClick: () => handleDelete(tenant.id),
@@ -320,7 +320,7 @@ export const TenantTable = () => {
               ]}
             />
             {/* The tenant the session is acting in is a status rather than an action, so it stays beside the menu. */}
-            {canEnter(tenant.id) && isActive && isCurrent && <Badge variant="info">{t('page.tenants.enterCurrent')}</Badge>}
+            {canEnter(tenant.id) && isActive && isCurrent && <Badge variant="info">{t('page.tenants.enterCurrent') || 'Current'}</Badge>}
           </div>
         )
       },
@@ -358,7 +358,7 @@ export const TenantTable = () => {
         />
 
         {canCreate && (
-          <DataTableToolbarButton primary label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/tenants/create" />
+          <DataTableToolbarButton primary label={t('table.createLink') || 'Create'} icon={<Plus size={16} />} href="/admin/tenants/create" />
         )}
         <DataTableExportButton onExport={handleExport} isExporting={isExporting} disabled={isGettingTenants || !tenantListResponse?.total} />
       </DataTableToolbar>

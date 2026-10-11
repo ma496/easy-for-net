@@ -16,14 +16,14 @@ const createValidationSchema = (t: (key: string, params?: Record<string, string 
   return Yup.object().shape({
     name: Yup.string()
       .trim()
-      .required(t('validation.required'))
-      .min(2, t('validation.minLength', { min: 2 }))
-      .max(128, t('validation.maxLength', { max: 128 })),
-    description: Yup.string().trim().max(512, t('validation.maxLength', { max: 512 })),
+      .required(t('validation.required') || 'Field is required')
+      .min(2, t('validation.minLength', { min: 2 }) || `Field must be at least ${2} characters`)
+      .max(128, t('validation.maxLength', { max: 128 }) || `Field must not exceed ${128} characters`),
+    description: Yup.string().trim().max(512, t('validation.maxLength', { max: 512 }) || `Field must not exceed ${512} characters`),
     displayOrder: Yup.number()
-      .typeError(t('validation.number'))
-      .min(0, t('validation.min', { min: 0 }))
-      .required(t('validation.required')),
+      .typeError(t('validation.number') || 'Must be a number')
+      .min(0, t('validation.min', { min: 0 }) || `Must be at least ${0}`)
+      .required(t('validation.required') || 'Field is required'),
   })
 }
 
@@ -53,7 +53,7 @@ export const EditionCreateForm = () => {
     }
 
     successToast.fire({
-      text: t('page.editions.createSuccess'),
+      text: t('page.editions.createSuccess') || 'Edition created successfully',
     })
     router.push('/admin/editions')
   }
@@ -72,23 +72,23 @@ export const EditionCreateForm = () => {
         <Form noValidate className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <FormInput
             name="name"
-            label={t('form.label.editionName')}
-            placeholder={t('form.placeholder.editionName')}
+            label={t('form.label.editionName') || 'Name'}
+            placeholder={t('form.placeholder.editionName') || 'Enter edition name'}
             autoFocus={true}
             required={true}
           />
           <FormInput
             name="displayOrder"
             type="number"
-            label={t('form.label.editionDisplayOrder')}
+            label={t('form.label.editionDisplayOrder') || 'Display Order'}
             required={true}
           />
           <FormTextarea
             className="sm:col-span-2 [&_textarea]:h-auto [&_textarea]:min-h-24 [&_textarea]:py-2"
             rows={4}
             name="description"
-            label={t('form.label.editionDescription')}
-            placeholder={t('form.placeholder.editionDescription')}
+            label={t('form.label.editionDescription') || 'Description'}
+            placeholder={t('form.placeholder.editionDescription') || 'Enter edition description'}
           />
           <div className="mt-1 flex justify-end gap-2 border-t border-border pt-5 sm:col-span-2">
             <Button
@@ -97,13 +97,13 @@ export const EditionCreateForm = () => {
               onClick={() => router.push('/admin/editions')}
               disabled={isSavingEdition}
             >
-              {t('common.cancel')}
+              {t('common.cancel') || 'Cancel'}
             </Button>
             <Button
               type="submit"
               isLoading={isSavingEdition}
             >
-              {t('common.submit')}
+              {t('common.submit') || 'Submit'}
             </Button>
           </div>
         </Form>

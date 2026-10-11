@@ -8,7 +8,7 @@ export const Footer = () => {
   return (
     <footer className="mx-auto w-full max-w-[1400px] px-4 pb-6 text-xs text-subtle-foreground sm:px-6 lg:px-8">
       <div className="border-t border-border pt-5">
-        © {new Date().getFullYear()} {t('brand.name')}. {t('common.allRightsReserved')}
+        © {new Date().getFullYear()} {t('brand.name') || 'Easy For Net'}. {t('common.allRightsReserved') || 'All rights reserved.'}
       </div>
     </footer>
   )

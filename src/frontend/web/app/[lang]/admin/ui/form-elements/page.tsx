@@ -15,7 +15,7 @@ interface FormElementsPageProps {
  */
 const FormElementsPage = async ({ params }: FormElementsPageProps) => {
   const { lang } = await params
-  const title = await getServerTranslation(lang, 'page.ui.formElements.title')
+  const title = (await getServerTranslation(lang, 'page.ui.formElements.title')) || 'UI Form Elements'
 
   return (
     <AdminPageContent title={title} description="Text, choice and date controls, standalone or bound to Formik, with validation and disabled states." plain>

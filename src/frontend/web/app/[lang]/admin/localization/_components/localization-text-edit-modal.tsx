@@ -55,15 +55,15 @@ export const LocalizationTextEditModal = ({ isOpen, onClose, culture, cultureNam
       apiErrorAlert(result.error)
       return
     }
-    successToast.fire({ text: t('page.localization.texts.saveSuccess') })
+    successToast.fire({ text: t('page.localization.texts.saveSuccess') || 'Text saved' })
     onClose()
     router.refresh()
   }
 
   const handleReset = async () => {
     const confirmed = await confirmDeleteAlert({
-      title: t('page.localization.texts.resetTitle'),
-      text: t('page.localization.texts.resetConfirm'),
+      title: t('page.localization.texts.resetTitle') || 'Reset this text?',
+      text: t('page.localization.texts.resetConfirm') || 'This removes your override and falls back to the inherited value.',
     })
     if (!confirmed.isConfirmed) return
 
@@ -72,14 +72,14 @@ export const LocalizationTextEditModal = ({ isOpen, onClose, culture, cultureNam
       apiErrorAlert(result.error)
       return
     }
-    successToast.fire({ text: t('page.localization.texts.resetSuccess') })
+    successToast.fire({ text: t('page.localization.texts.resetSuccess') || 'Text reset to the inherited value' })
     onClose()
     router.refresh()
   }
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">
-      <Modal.Header>{t('page.localization.texts.editTitle')}</Modal.Header>
+      <Modal.Header>{t('page.localization.texts.editTitle') || 'Edit text'}</Modal.Header>
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-2">
@@ -92,21 +92,21 @@ export const LocalizationTextEditModal = ({ isOpen, onClose, culture, cultureNam
         </div>
 
         <div>
-          <div className="label form-label">{isPlatformScope ? t('page.localization.texts.defaultLabel') : t('page.localization.texts.inheritedLabel')}</div>
+          <div className="label form-label">{isPlatformScope ? t('page.localization.texts.defaultLabel') || 'Default value' : t('page.localization.texts.inheritedLabel') || 'Inherited value'}</div>
           <div className="max-h-40 overflow-y-auto rounded-md border border-border bg-surface-2 p-3 text-sm wrap-break-word whitespace-pre-wrap text-muted-foreground" dir={dir}>
             {row.inheritedValue}
           </div>
         </div>
 
         <div>
-          <Textarea name="overrideValue" label={t('page.localization.texts.overrideLabel')} rows={6} maxLength={4000} dir={dir} value={value} onChange={(event) => setValue(event.target.value)} />
+          <Textarea name="overrideValue" label={t('page.localization.texts.overrideLabel') || 'Your text'} rows={6} maxLength={4000} dir={dir} value={value} onChange={(event) => setValue(event.target.value)} />
           <div className="text-end text-xs text-muted-foreground">{value.length}/4000</div>
-          {trimmed.length === 0 && <div className="mt-1 text-sm text-danger">{t('validation.required')}</div>}
+          {trimmed.length === 0 && <div className="mt-1 text-sm text-danger">{t('validation.required') || 'Field is required'}</div>}
         </div>
 
         {placeholders.length > 0 && (
           <div className="flex flex-col gap-2">
-            <span className="text-sm text-muted-foreground">{t('page.localization.texts.placeholders')}</span>
+            <span className="text-sm text-muted-foreground">{t('page.localization.texts.placeholders') || 'Keep these placeholders:'}</span>
             <div className="flex flex-wrap gap-2">
               {placeholders.map((name) =>
                 missingPlaceholders.includes(name) ? (
@@ -120,7 +120,7 @@ export const LocalizationTextEditModal = ({ isOpen, onClose, culture, cultureNam
                 ),
               )}
             </div>
-            {missingPlaceholders.length > 0 && <span className="text-sm text-warning">{t('page.localization.texts.placeholderMissing')}</span>}
+            {missingPlaceholders.length > 0 && <span className="text-sm text-warning">{t('page.localization.texts.placeholderMissing') || 'A placeholder is missing — the app will show it empty.'}</span>}
           </div>
         )}
 
@@ -128,16 +128,16 @@ export const LocalizationTextEditModal = ({ isOpen, onClose, culture, cultureNam
           <div>
             {row.value != null && (
               <Button type="button" variant="outline-warning" onClick={handleReset} disabled={isBusy}>
-                {t('page.localization.texts.reset')}
+                {t('page.localization.texts.reset') || 'Reset to inherited'}
               </Button>
             )}
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose} disabled={isBusy}>
-              {t('common.cancel')}
+              {t('common.cancel') || 'Cancel'}
             </Button>
             <Button type="button" onClick={handleSave} isLoading={isSaving} disabled={!canSave || isBusy}>
-              {t('common.save')}
+              {t('common.save') || 'Save'}
             </Button>
           </div>
         </div>

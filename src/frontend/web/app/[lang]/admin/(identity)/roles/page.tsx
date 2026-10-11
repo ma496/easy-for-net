@@ -14,7 +14,7 @@ interface RolesProps {
  */
 const Roles = async ({ params }: RolesProps) => {
   const { lang } = await params
-  const title = await getServerTranslation(lang, 'page.roles.title')
+  const title = (await getServerTranslation(lang, 'page.roles.title')) || 'Roles'
   return (
     <AdminPageContent title={title}>
       <RoleTable />

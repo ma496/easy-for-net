@@ -17,7 +17,7 @@ interface UserUpdatePageProps {
  */
 const UserUpdate = async ({ params }: UserUpdatePageProps) => {
   const { lang, id } = await params
-  const title = await getServerTranslation(lang, 'page.users.update.title')
+  const title = (await getServerTranslation(lang, 'page.users.update.title')) || 'Update User'
 
   return (
     <AdminPageContent

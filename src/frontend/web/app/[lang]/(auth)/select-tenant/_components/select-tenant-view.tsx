@@ -31,7 +31,7 @@ export const SelectTenantView = () => {
   }
 
   return (
-    <AccountShell title={t('page.selectTenant.title')} description={t('page.selectTenant.description')}>
+    <AccountShell title={t('page.selectTenant.title') || 'Select Tenant'} description={t('page.selectTenant.description') || 'Choose the tenant you want to work in.'}>
       {tenants.length === 0 ? (
         // Nothing left to choose from: every tenant this account belonged to is gone, suspended, or has
         // removed it. Signing up creates a tenant, so the way back is a new account rather than a screen
@@ -40,9 +40,9 @@ export const SelectTenantView = () => {
           <div className="mb-4 flex size-12 items-center justify-center rounded-xl bg-surface-2 text-muted-foreground">
             <Building2 className="size-6" />
           </div>
-          <p className="max-w-sm text-sm text-muted-foreground">{t('page.selectTenant.emptyDescription')}</p>
+          <p className="max-w-sm text-sm text-muted-foreground">{t('page.selectTenant.emptyDescription') || 'You do not belong to an active tenant. Ask an administrator to add you to theirs, or sign up to create your own.'}</p>
           <LocalizedLink href="/profile" className="btn btn-primary mt-6">
-            {t('page.selectTenant.emptyAction')}
+            {t('page.selectTenant.emptyAction') || 'Go to your profile'}
           </LocalizedLink>
         </div>
       ) : (

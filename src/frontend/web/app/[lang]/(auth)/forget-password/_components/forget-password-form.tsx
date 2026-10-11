@@ -15,8 +15,8 @@ import { successAlert, apiErrorAlert } from '@/lib/utils'
 const createValidationSchema = (t: (key: string, params?: Record<string, string | number>) => string) => {
   return Yup.object().shape({
     email: Yup.string()
-      .required(t('validation.required'))
-      .email(t('validation.invalidEmail')),
+      .required(t('validation.required') || 'Field is required')
+      .email(t('validation.invalidEmail') || 'Invalid email'),
   })
 }
 
@@ -41,8 +41,8 @@ export const ForgetPasswordForm = () => {
       return
     }
     successAlert({
-      title: t('page.auth.forgotPassword.success'),
-      text: t('page.auth.forgotPassword.checkEmail'),
+      title: t('page.auth.forgotPassword.success') || 'Password Reset Link Sent',
+      text: t('page.auth.forgotPassword.checkEmail') || 'Please check your email for password reset instructions',
     })
     router.push('/signin')
   }
@@ -57,13 +57,13 @@ export const ForgetPasswordForm = () => {
     >
       {() => (
         <Form noValidate className="space-y-5">
-          <FormInput name="email" type="email" label={t('form.label.email')} placeholder={t('form.placeholder.email')} icon={<Mail size={16} />} autoFocus={true} required={true} />
+          <FormInput name="email" type="email" label={t('form.label.email') || 'Email'} placeholder={t('form.placeholder.email') || 'Enter email'} icon={<Mail size={16} />} autoFocus={true} required={true} />
           <Button type="submit" size="lg" className="w-full" isLoading={isForgettingPassword}>
-            {t('page.auth.forgotPassword.button')}
+            {t('page.auth.forgotPassword.button') || 'Send Reset Link'}
           </Button>
           <p className="text-center text-sm">
             <LocalizedLink href="/signin" className="font-medium text-primary hover:underline">
-              {t('page.auth.signin.backToSignin')}
+              {t('page.auth.signin.backToSignin') || 'Back to Sign In'}
             </LocalizedLink>
           </p>
         </Form>

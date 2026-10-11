@@ -30,9 +30,9 @@ export const TenantFilterPanel = ({ filters, onChange, onSearch, onClear }: Tena
   const { t } = useTranslation()
 
   const statusOptions = [
-    { label: t('table.filter.allStatuses'), value: '' },
-    { label: t('page.tenants.status.active'), value: TenantStatus.Active },
-    { label: t('page.tenants.status.suspended'), value: TenantStatus.Suspended },
+    { label: t('table.filter.allStatuses') || 'All Statuses', value: '' },
+    { label: t('page.tenants.status.active') || 'Active', value: TenantStatus.Active },
+    { label: t('page.tenants.status.suspended') || 'Suspended', value: TenantStatus.Suspended },
   ]
 
   const activeFiltersCount = [filters.status].filter(Boolean).length
@@ -47,7 +47,7 @@ export const TenantFilterPanel = ({ filters, onChange, onSearch, onClear }: Tena
             htmlFor="status"
             className="text-xs font-medium text-muted-foreground"
           >
-            {t('table.filter.tenantStatus')}
+            {t('table.filter.tenantStatus') || 'Tenant Status'}
           </label>
           <Select
             name="status"
@@ -55,7 +55,7 @@ export const TenantFilterPanel = ({ filters, onChange, onSearch, onClear }: Tena
             options={statusOptions}
             value={filters.status}
             onChange={(_, value) => onChange({ ...filters, status: value })}
-            placeholder={t('table.filter.allStatuses')}
+            placeholder={t('table.filter.allStatuses') || 'All Statuses'}
             searchable={false}
             clearable={false}
             size="sm"
@@ -70,7 +70,7 @@ export const TenantFilterPanel = ({ filters, onChange, onSearch, onClear }: Tena
           icon={<Search className="h-4 w-4" />}
           size="sm"
         >
-          {t('table.filter.search')}
+          {t('table.filter.search') || 'Search'}
         </Button>
         <Button
           variant="secondary"
@@ -79,7 +79,7 @@ export const TenantFilterPanel = ({ filters, onChange, onSearch, onClear }: Tena
           icon={<X className="h-4 w-4" />}
           size="sm"
         >
-          {t('table.filter.clear')}
+          {t('table.filter.clear') || 'Clear'}
         </Button>
       </div>
     </div>

@@ -15,7 +15,7 @@ interface SettingsPageProps {
  */
 const SettingsPage = async ({ params }: SettingsPageProps) => {
   const { lang } = await params
-  const title = await getServerTranslation(lang, 'page.settings.title')
+  const title = (await getServerTranslation(lang, 'page.settings.title')) || 'Settings'
 
   return (
     <AdminPageContent title={title} plain>

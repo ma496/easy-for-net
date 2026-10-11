@@ -20,11 +20,11 @@ import { apiErrorAlert, successToast } from '@/lib/utils'
  */
 const createValidationSchema = (t: (key: string, params?: Record<string, string | number>) => string) => {
   return Yup.object().shape({
-    userId: Yup.string().required(t('validation.required')),
+    userId: Yup.string().required(t('validation.required') || 'Field is required'),
     roles: Yup.array()
       .of(Yup.string())
-      .required(t('validation.required'))
-      .min(1, t('validation.atLeastOneSelected')),
+      .required(t('validation.required') || 'Field is required')
+      .min(1, t('validation.atLeastOneSelected') || 'At least one item must be selected'),
   })
 }
 
@@ -62,7 +62,7 @@ export const TenantMemberAddModal = ({ tenantId, isOpen, onClose }: TenantMember
     }
 
     successToast.fire({
-      text: t('page.tenants.members.addSuccess'),
+      text: t('page.tenants.members.addSuccess') || 'Member added successfully',
     })
     resetForm()
     onClose()
@@ -74,7 +74,7 @@ export const TenantMemberAddModal = ({ tenantId, isOpen, onClose }: TenantMember
       onClose={onClose}
       size="lg"
     >
-      <Modal.Header>{t('page.tenants.members.addTitle')}</Modal.Header>
+      <Modal.Header>{t('page.tenants.members.addTitle') || 'Add Member'}</Modal.Header>
       <Formik<FormValues>
         initialValues={{
           userId: '',
@@ -87,8 +87,8 @@ export const TenantMemberAddModal = ({ tenantId, isOpen, onClose }: TenantMember
           <Form noValidate className="grid grid-cols-1 gap-4">
             <FormLazySelect<UserListDto, UserListRequest>
               name="userId"
-              label={t('form.label.user')}
-              placeholder={t('form.placeholder.user')}
+              label={t('form.label.user') || 'User'}
+              placeholder={t('form.placeholder.user') || 'Select user'}
               useLazyQuery={useLazyUserListQuery}
               getLabel={(user) => user.username}
               getValue={(user) => user.id}
@@ -98,8 +98,8 @@ export const TenantMemberAddModal = ({ tenantId, isOpen, onClose }: TenantMember
             />
             <FormLazyMultiSelect<RoleListDto, RoleListRequest>
               name="roles"
-              label={t('form.label.roles')}
-              placeholder={t('form.placeholder.roles')}
+              label={t('form.label.roles') || 'Roles'}
+              placeholder={t('form.placeholder.roles') || 'Select roles'}
               useLazyQuery={useLazyRoleListQuery}
               getLabel={(role) => role.name}
               getValue={(role) => role.id}
@@ -126,13 +126,13 @@ export const TenantMemberAddModal = ({ tenantId, isOpen, onClose }: TenantMember
                 }}
                 disabled={isAddingMember}
               >
-                {t('common.cancel')}
+                {t('common.cancel') || 'Cancel'}
               </Button>
               <Button
                 type="submit"
                 isLoading={isAddingMember}
               >
-                {t('common.submit')}
+                {t('common.submit') || 'Submit'}
               </Button>
             </div>
           </Form>

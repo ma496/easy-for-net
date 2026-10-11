@@ -16,14 +16,14 @@ import { Lock } from 'lucide-react'
 const createValidationSchema = (t: (key: string, params?: Record<string, string | number>) => string) => {
   return Yup.object().shape({
     currentPassword: Yup.string()
-      .required(t('validation.required')),
+      .required(t('validation.required') || 'Field is required'),
     newPassword: Yup.string()
-      .required(t('validation.required'))
-      .min(8, t('validation.minLength', { min: 8 }))
-      .max(50, t('validation.maxLength', { max: 50 })),
+      .required(t('validation.required') || 'Field is required')
+      .min(8, t('validation.minLength', { min: 8 }) || `Field must be at least ${8} characters`)
+      .max(50, t('validation.maxLength', { max: 50 }) || `Field must not exceed ${50} characters`),
     confirmPassword: Yup.string()
-      .required(t('validation.required'))
-      .oneOf([Yup.ref('newPassword')], t('validation.mustMatch', { otherField: t('form.label.newPassword') })),
+      .required(t('validation.required') || 'Field is required')
+      .oneOf([Yup.ref('newPassword')], t('validation.mustMatch', { otherField: t('form.label.newPassword') || 'New Password' }) || `Field must match with ${t('form.label.newPassword') || 'New Password'}`),
   })
 }
 
@@ -52,7 +52,7 @@ export const ChangePasswordForm = () => {
     // An alert the user dismisses rather than a toast, because the full page load below would wipe a
     // toast before it could be read.
     await successAlert({
-      text: t('page.profile.changePasswordSuccess'),
+      text: t('page.profile.changePasswordSuccess') || 'Password changed successfully',
     })
     // Changing the password ends every session this account had, so it is a sign-out path and has to
     // leave nothing of the tenant behind like any other: leaveSignedOut loads the sign-in page afresh,
@@ -74,18 +74,18 @@ export const ChangePasswordForm = () => {
       {() => (
         <Form noValidate className="rounded-xl border border-border bg-surface shadow-xs">
           <div className="space-y-5 p-5 sm:p-6">
-            <FormPasswordInput name="currentPassword" label={t('form.label.currentPassword')} placeholder={t('form.placeholder.currentPassword')} icon={<Lock size={16} />} autoFocus={true} required={true} />
+            <FormPasswordInput name="currentPassword" label={t('form.label.currentPassword') || 'Current Password'} placeholder={t('form.placeholder.currentPassword') || 'Enter current password'} icon={<Lock size={16} />} autoFocus={true} required={true} />
             <div className="grid gap-5 border-t border-border pt-5 sm:grid-cols-2">
-              <FormPasswordInput name="newPassword" label={t('form.label.newPassword')} placeholder={t('form.placeholder.newPassword')} icon={<Lock size={16} />} required={true} />
-              <FormPasswordInput name="confirmPassword" label={t('form.label.confirmPassword')} placeholder={t('form.placeholder.confirmPassword')} icon={<Lock size={16} />} required={true} />
+              <FormPasswordInput name="newPassword" label={t('form.label.newPassword') || 'New Password'} placeholder={t('form.placeholder.newPassword') || 'Enter new password'} icon={<Lock size={16} />} required={true} />
+              <FormPasswordInput name="confirmPassword" label={t('form.label.confirmPassword') || 'Confirm Password'} placeholder={t('form.placeholder.confirmPassword') || 'Enter confirm password'} icon={<Lock size={16} />} required={true} />
             </div>
           </div>
           <div className="flex flex-col-reverse gap-2 rounded-b-xl border-t border-border bg-surface-2/50 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
             <LocalizedLink href="/admin" className="btn btn-secondary">
-              {t('common.cancel')}
+              {t('common.cancel') || 'Cancel'}
             </LocalizedLink>
             <Button type="submit" isLoading={isChangingPassword}>
-              {t('common.submit')}
+              {t('common.submit') || 'Submit'}
             </Button>
           </div>
         </Form>

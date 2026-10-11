@@ -24,35 +24,35 @@ export const Hero = () => {
       <div className="mx-auto max-w-6xl px-4 pt-16 pb-16 text-center sm:px-6 sm:pt-24 lg:pt-28">
         <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-surface/80 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm sm:text-sm">
           <span className="size-1.5 shrink-0 rounded-full bg-primary" />
-          <span className="truncate">{t('page.home.hero.badge')}</span>
+          <span className="truncate">{t('page.home.hero.badge') || 'Open Source Multi-Tenant .NET & Next.js Template'}</span>
         </div>
 
         <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-semibold tracking-tight wrap-break-word text-foreground sm:text-6xl lg:text-7xl">
-          <span className="block">{t('page.home.hero.titleFocus')}</span>
-          <span className="block text-primary">{t('page.home.hero.titleHighlight')}</span>
+          <span className="block">{t('page.home.hero.titleFocus') || 'Focus on'}</span>
+          <span className="block text-primary">{t('page.home.hero.titleHighlight') || 'Business Logic'}</span>
         </h1>
 
         <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-          {t('page.home.hero.description')}
+          {t('page.home.hero.description') || 'Skip the plumbing. A production-ready foundation with tenants, roles and permissions, plan-based features, localization and real-time notifications already built and tested.'}
         </p>
 
         <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
           {
             authState.isAuthenticated ? (
               <LocalizedLink href="/admin" className="btn btn-primary btn-lg">
-                {t('page.home.hero.dashboardDetail')}
+                {t('page.home.hero.dashboardDetail') || 'Dashboard'}
                 <ArrowRight className="size-4 rtl:-scale-x-100" />
               </LocalizedLink>
             ) : (
               <LocalizedLink href="/signin" className="btn btn-primary btn-lg">
-                {t('page.home.hero.signin')}
+                {t('page.home.hero.signin') || 'Signin'}
                 <ArrowRight className="size-4 rtl:-scale-x-100" />
               </LocalizedLink>
             )
           }
           <LocalizedLink href={REPOSITORY_URL} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-lg">
             <Code2 className="size-4" />
-            {t('page.home.hero.viewSource')}
+            {t('page.home.hero.viewSource') || 'View Source'}
           </LocalizedLink>
         </div>
 

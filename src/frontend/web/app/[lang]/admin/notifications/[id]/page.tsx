@@ -16,9 +16,9 @@ interface NotificationDetailPageProps {
  */
 const NotificationDetailPage = async ({ params }: NotificationDetailPageProps) => {
   const { lang, id } = await params
-  const title = await getServerTranslation(lang, 'page.notifications.title')
-  const detailTitle = await getServerTranslation(lang, 'page.notifications.detail.title')
-  const back = await getServerTranslation(lang, 'common.back')
+  const title = (await getServerTranslation(lang, 'page.notifications.title')) || 'Notifications'
+  const detailTitle = (await getServerTranslation(lang, 'page.notifications.detail.title')) || 'Notification Details'
+  const back = (await getServerTranslation(lang, 'common.back')) || 'Back'
 
   return (
     <AdminPageContent

@@ -14,7 +14,7 @@ interface TenantCreatePageProps {
  */
 const TenantCreate = async ({ params }: TenantCreatePageProps) => {
   const { lang } = await params
-  const title = await getServerTranslation(lang, 'page.tenants.create.title')
+  const title = (await getServerTranslation(lang, 'page.tenants.create.title')) || 'Create Tenant'
 
   return (
     <AdminPageContent

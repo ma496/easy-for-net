@@ -70,7 +70,7 @@ export const FormLazySelect = <TItem, TRequest>({
   required = false,
 }: FormLazySelectProps<TItem, TRequest>) => {
   const { t } = useTranslation()
-  const placeholder = placeholderProp ?? t('common.selectPlaceholder')
+  const placeholder = placeholderProp ?? (t('common.selectPlaceholder') || 'Select…')
   const [field, meta, helpers] = useField(name)
   const { submitCount } = useFormikContext()
   const isDirty = meta.initialValue !== meta.value
@@ -343,7 +343,7 @@ export const FormLazySelect = <TItem, TRequest>({
                   id={`${controlId}-search`}
                   type="text"
                   icon={<Search className="pointer-events-none h-4 w-4 text-subtle-foreground" />}
-                  placeholder={t('common.search')}
+                  placeholder={t('common.search') || 'Search...'}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   autoFocus
@@ -358,7 +358,7 @@ export const FormLazySelect = <TItem, TRequest>({
                     <Loader />
                   </li>
                 )}
-                {!isFetching && fetchedOptions.length === 0 && <li className="px-3 py-6 text-center text-sm text-subtle-foreground">{t('common.noOptions')}</li>}
+                {!isFetching && fetchedOptions.length === 0 && <li className="px-3 py-6 text-center text-sm text-subtle-foreground">{t('common.noOptions') || 'No options'}</li>}
                 {fetchedOptions.map((opt) => (
                   <li
                     key={opt.value}

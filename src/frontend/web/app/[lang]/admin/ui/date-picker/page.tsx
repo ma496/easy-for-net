@@ -15,7 +15,7 @@ interface DatePickerPageProps {
  */
 const DatePickerPage = async ({ params }: DatePickerPageProps) => {
   const { lang } = await params
-  const title = await getServerTranslation(lang, 'page.ui.datePicker.title')
+  const title = (await getServerTranslation(lang, 'page.ui.datePicker.title')) || 'UI Date Picker'
 
   return (
     <AdminPageContent title={title} description="Single, multiple and range date selection, standalone or bound to Formik." plain>

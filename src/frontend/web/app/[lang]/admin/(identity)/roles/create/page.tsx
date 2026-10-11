@@ -14,7 +14,7 @@ interface RoleCreatePageProps {
  */
 const RoleCreate = async ({ params }: RoleCreatePageProps) => {
   const { lang } = await params
-  const title = await getServerTranslation(lang, 'page.roles.create.title')
+  const title = (await getServerTranslation(lang, 'page.roles.create.title')) || 'Create Role'
 
   return (
     <AdminPageContent

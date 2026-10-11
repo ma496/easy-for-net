@@ -14,7 +14,7 @@ interface UsersProps {
  */
 const Users = async ({ params }: UsersProps) => {
   const { lang } = await params
-  const title = await getServerTranslation(lang, 'page.users.title')
+  const title = (await getServerTranslation(lang, 'page.users.title')) || 'Users'
   return (
     <AdminPageContent title={title}>
       <UserTable />

@@ -22,7 +22,7 @@ interface SigninSettingsCardProps {
 /** The `Signin` setting: whether an account must verify its email address before it may sign in. */
 export const SigninSettingsCard = ({ settings: initialSettings, ownSource, canUpdate, onReset }: SigninSettingsCardProps) => {
   const { t } = useTranslation()
-  const title = t('page.settings.signin.title')
+  const title = t('page.settings.signin.title') || 'Sign-in'
   // What the card shows as resolved: the load it mounted with, then each save's answer.
   const [settings, setSettings] = useState(initialSettings)
   const [updateSetting, { isLoading: isSaving, error: saveError, reset: clearSaveError }] = useSettingUpdateMutation()
@@ -38,7 +38,7 @@ export const SigninSettingsCard = ({ settings: initialSettings, ownSource, canUp
     const next = toSigninSettings(result.data) ?? settings
     setSettings(next)
     resetForm({ values: signinFormValues(next) })
-    successToast.fire({ text: t('page.settings.saveSuccess', { setting: title }) })
+    successToast.fire({ text: t('page.settings.saveSuccess', { setting: title }) || `${title} settings saved` })
   }
 
   const fieldId = 'setting-signin-isEmailVerificationRequired'
@@ -49,7 +49,7 @@ export const SigninSettingsCard = ({ settings: initialSettings, ownSource, canUp
         <Form noValidate>
           <SettingsCard
             title={title}
-            description={t('page.settings.signin.description')}
+            description={t('page.settings.signin.description') || 'Rules applied when people sign in.'}
             isCustomized={hasOwnOverride(signinSources(settings), ownSource)}
             canUpdate={canUpdate}
             dirty={dirty}
@@ -64,17 +64,17 @@ export const SigninSettingsCard = ({ settings: initialSettings, ownSource, canUp
           >
             <div>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <FormCheckbox id={fieldId} name="isEmailVerificationRequired" label={t('page.settings.signin.isEmailVerificationRequired')} disabled={!canUpdate} />
+                <FormCheckbox id={fieldId} name="isEmailVerificationRequired" label={t('page.settings.signin.isEmailVerificationRequired') || 'Require a verified email address to sign in'} disabled={!canUpdate} />
                 <div className="flex flex-wrap items-center gap-1">
                   <SourceBadge marker={markerOf(settings.isEmailVerificationRequired.source, ownSource)} />
                   {values.isEmailVerificationRequired !== initialValues.isEmailVerificationRequired && (
                     <Badge variant="warning" type="outline">
-                      {t('page.settings.changed')}
+                      {t('page.settings.changed') || 'Changed'}
                     </Badge>
                   )}
                 </div>
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">{t('page.settings.signin.isEmailVerificationRequiredHelp')}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t('page.settings.signin.isEmailVerificationRequiredHelp') || 'When on, an account must confirm its email address before it can sign in.'}</p>
             </div>
           </SettingsCard>
         </Form>

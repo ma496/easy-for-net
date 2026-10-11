@@ -61,8 +61,8 @@ export function DataTableRowActions({ actions, className }: DataTableRowActionsP
     <Menu>
       <MenuButton
         className={cn('icon-btn size-8 data-active:bg-surface-2 data-active:text-foreground', className)}
-        aria-label={t('table.actions')}
-        title={t('table.actions')}
+        aria-label={t('table.actions') || 'Actions'}
+        title={t('table.actions') || 'Actions'}
       >
         <MoreHorizontal className="h-4 w-4" />
       </MenuButton>

@@ -17,7 +17,7 @@ interface ChangePermissionsPageProps {
  */
 const ChangePermissions = async ({ params }: ChangePermissionsPageProps) => {
   const { lang, id } = await params
-  const title = await getServerTranslation(lang, 'page.roles.changePermissions.title')
+  const title = (await getServerTranslation(lang, 'page.roles.changePermissions.title')) || 'Change Permissions'
 
   return (
     <AdminPageContent

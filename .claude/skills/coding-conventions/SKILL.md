@@ -122,8 +122,8 @@ declared right above the component. Exported components, hooks and DTO interface
 **Imports use the `@/` alias** (`@/store/api/identity`, `@/components/ui/form`, `@/lib/utils`,
 `@/i18n`, `@/hooks`, `@/allow`, `@/feature-names`).
 
-**No hard-coded user-visible strings.** Everything goes through `t('…')` from `@/i18n`
-(client) or `getServerTranslation(lang, '…')` (server component), with the key added to the API's
+**No hard-coded user-visible strings.** Everything goes through `t('…') || 'English'` from `@/i18n`
+(client) or `(await getServerTranslation(lang, '…')) || 'English'` (server component), with the key added to the API's
 `Features/Localization/Core/Resources/en.json` — and to every other `<code>.json` there when the
 project is multi-language. Import translators from `@/i18n` itself, never a subpath. Key namespaces
 already in use:
@@ -136,7 +136,9 @@ already in use:
 - `error.server.*` — messages keyed off backend error codes
 - `common.*` — shared verbs (`common.submit`, `common.cancel`)
 
-Interpolation uses `${name}` inside the JSON value and `t('validation.minLength', { min: 3 })`.
+Interpolation uses `${name}` inside the JSON value and `t('validation.minLength', { min: 3 }) || 'Field must be at least 3 characters'`.
+Every call carries its English default after `||` — the key's exact `en.json` value — since a missing
+key translates to `''` (see the `localization` skill).
 
 **Types mirror the API.** A DTO interface in `store/api/**/…-dtos.ts` has the same name as the
 C# class it mirrors, with camelCase members, and extends `BaseDto<string>`, `GenericAuditableDto<string>`,

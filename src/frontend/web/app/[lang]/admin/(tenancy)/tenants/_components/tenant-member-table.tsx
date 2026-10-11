@@ -67,8 +67,8 @@ export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
 
   const handleRemove = async (member: TenantMemberListDto) => {
     const result = await confirmDeleteAlert({
-      title: t('page.tenants.members.removeTitle'),
-      text: t('page.tenants.members.removeConfirm'),
+      title: t('page.tenants.members.removeTitle') || 'Remove Member',
+      text: t('page.tenants.members.removeConfirm') || 'Are you sure you want to remove this member from the tenant?',
     })
 
     if (result.isConfirmed) {
@@ -77,7 +77,7 @@ export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
         apiErrorAlert(response.error)
         return
       }
-      successToast.fire({ text: t('page.tenants.members.removeSuccess') })
+      successToast.fire({ text: t('page.tenants.members.removeSuccess') || 'Member removed successfully' })
     }
   }
 
@@ -86,24 +86,24 @@ export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
   const columns: ColumnDef<TenantMemberListDto, any>[] = [
     columnHelper.accessor('username', {
       meta: { card: 'title' },
-      header: t('table.columns.userName'),
+      header: t('table.columns.userName') || 'User Name',
       cell: (info) => <span className="font-medium text-foreground">{info.getValue()}</span>,
     }),
     columnHelper.accessor('email', {
       meta: { card: 'subtitle' },
-      header: t('table.columns.email'),
+      header: t('table.columns.email') || 'Email',
       cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
     }),
     columnHelper.accessor('firstName', {
-      header: t('table.columns.firstName'),
+      header: t('table.columns.firstName') || 'First Name',
       cell: (info) => info.getValue(),
     }),
     columnHelper.accessor('lastName', {
-      header: t('table.columns.lastName'),
+      header: t('table.columns.lastName') || 'Last Name',
       cell: (info) => info.getValue(),
     }),
     columnHelper.accessor('roles', {
-      header: t('table.columns.roles'),
+      header: t('table.columns.roles') || 'Roles',
       cell: (info) => (
         <div className="flex flex-wrap gap-1">
           {info.getValue().map((role: TenantMemberRoleDto) => (
@@ -114,7 +114,7 @@ export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
       enableSorting: false,
     }),
     columnHelper.accessor('memberSince', {
-      header: t('table.columns.date'),
+      header: t('table.columns.date') || 'Date',
       cell: (info) => (
         <span className="whitespace-nowrap text-muted-foreground tabular-nums">{format(new Date(info.getValue()), 'PP')}</span>
       ),
@@ -122,28 +122,28 @@ export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
     }),
     columnHelper.accessor('isActive', {
       meta: { card: 'badge' },
-      header: t('table.columns.isActive'),
+      header: t('table.columns.isActive') || 'Active',
       cell: (info) =>
         info.getValue() ? (
-          <Badge variant="success">{t('table.filter.active')}</Badge>
+          <Badge variant="success">{t('table.filter.active') || 'Active'}</Badge>
         ) : (
-          <Badge variant="danger">{t('table.filter.inactive')}</Badge>
+          <Badge variant="danger">{t('table.filter.inactive') || 'Inactive'}</Badge>
         ),
     }),
     columnHelper.display({
       id: 'actions',
-      header: t('table.actions'),
+      header: t('table.actions') || 'Actions',
       cell: (info) => (
         <DataTableRowActions
           actions={[
             {
-              label: t('page.tenants.members.rolesButton'),
+              label: t('page.tenants.members.rolesButton') || 'Change Roles',
               icon: <UserCog className="h-4 w-4" />,
               onClick: () => setRolesMember(info.row.original),
               hidden: !canUpdateRoles,
             },
             {
-              label: t('page.tenants.members.removeTitle'),
+              label: t('page.tenants.members.removeTitle') || 'Remove Member',
               icon: <Trash2 className="h-4 w-4" />,
               variant: 'danger',
               onClick: () => handleRemove(info.row.original),
@@ -182,9 +182,9 @@ export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
         <DataTableToolbar>
           {canAdd &&
             (seatsExhausted ? (
-              <DataTableToolbarButton primary label={t('page.tenants.members.seatLimitReached')} icon={<Plus size={16} />} disabled />
+              <DataTableToolbarButton primary label={t('page.tenants.members.seatLimitReached') || "This tenant's plan user limit has been reached"} icon={<Plus size={16} />} disabled />
             ) : (
-              <DataTableToolbarButton primary label={t('page.tenants.members.addButton')} icon={<Plus size={16} />} onClick={() => setIsAddOpen(true)} />
+              <DataTableToolbarButton primary label={t('page.tenants.members.addButton') || 'Add Member'} icon={<Plus size={16} />} onClick={() => setIsAddOpen(true)} />
             ))}
         </DataTableToolbar>
 

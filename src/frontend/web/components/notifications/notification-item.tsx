@@ -1,5 +1,5 @@
 'use client'
-import { useTranslation } from '@/i18n'
+import { useTranslation, humanizeKey } from '@/i18n'
 import { NotificationDto, NotificationType } from '@/store/api/notifications'
 import { AlertTriangle, AlertCircle, CheckCircle, Info } from 'lucide-react'
 import { LocalizedLink } from '@/components/ui'
@@ -37,10 +37,10 @@ export const NotificationItem = ({ notification }: NotificationItemProps) => {
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
-          <h4 className="truncate text-sm font-medium text-foreground">{t(notification.titleKey, notificationVariables(notification.metadata))}</h4>
+          <h4 className="truncate text-sm font-medium text-foreground">{t(notification.titleKey, notificationVariables(notification.metadata)) || humanizeKey(notification.titleKey)}</h4>
           {!notification.isRead && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" />}
         </div>
-        <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{t(notification.messageKey, notificationVariables(notification.metadata))}</p>
+        <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{t(notification.messageKey, notificationVariables(notification.metadata)) || humanizeKey(notification.messageKey)}</p>
         <span className="mt-1 block text-[11px] text-subtle-foreground">{formatRelativeTime(notification.createdAt, i18n.language)}</span>
       </div>
     </LocalizedLink>

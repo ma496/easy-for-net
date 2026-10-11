@@ -4,7 +4,7 @@ import ReactApexChart from 'react-apexcharts'
 import { ApexOptions } from 'apexcharts'
 import { useAppSelector } from '@/store/hooks'
 import { CreditCard, DollarSign, Inbox, ShoppingCart, Tag, TrendingDown, TrendingUp, Wallet } from 'lucide-react'
-import { useTranslation } from '@/i18n'
+import { useTranslation, humanizeKey } from '@/i18n'
 import { Badge } from '@/components/ui'
 import { cn } from '@/lib/utils'
 
@@ -178,7 +178,7 @@ export const SaleDashboard = () => {
               value: { show: true, fontSize: '26px', fontWeight: 600, color: tk.foreground, offsetY: -12, formatter: (value: string) => formats.number.format(Number(value)) },
               total: {
                 show: true,
-                label: t('page.dashboard.sales'),
+                label: t('page.dashboard.sales') || 'Sales',
                 fontSize: '13px',
                 color: tk['muted-foreground'],
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -247,7 +247,7 @@ export const SaleDashboard = () => {
           return (
             <div key={kpi.key} className="rounded-xl border border-border bg-surface p-5 shadow-xs">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-sm font-medium text-muted-foreground">{t(`page.dashboard.${kpi.key}`)}</span>
+                <span className="text-sm font-medium text-muted-foreground">{t(`page.dashboard.${kpi.key}`) || humanizeKey(kpi.key)}</span>
                 <span className="grid size-8 shrink-0 place-content-center rounded-lg bg-surface-2 text-muted-foreground">
                   <Icon className="size-4" />
                 </span>
@@ -268,14 +268,14 @@ export const SaleDashboard = () => {
       <div className="grid gap-6 xl:grid-cols-3">
         <ChartCard
           className="xl:col-span-2"
-          title={t('page.dashboard.revenue')}
+          title={t('page.dashboard.revenue') || 'Revenue'}
           subtitle={
             <span>
-              {t('page.dashboard.totalProfit')} <span className="ms-1 font-semibold text-foreground tabular-nums">{formats.currency.format(18750)}</span>
+              {t('page.dashboard.totalProfit') || 'Total Profit'} <span className="ms-1 font-semibold text-foreground tabular-nums">{formats.currency.format(18750)}</span>
             </span>
           }
           actions={
-            <div className="inline-flex rounded-lg bg-surface-2 p-0.5" role="group" aria-label={t('page.dashboard.revenue')}>
+            <div className="inline-flex rounded-lg bg-surface-2 p-0.5" role="group" aria-label={t('page.dashboard.revenue') || 'Revenue'}>
               {PERIODS.map((candidate) => (
                 <button
                   key={candidate}
@@ -287,7 +287,7 @@ export const SaleDashboard = () => {
                     period === candidate ? 'bg-surface text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground',
                   )}
                 >
-                  {t(`page.dashboard.${candidate}`)}
+                  {t(`page.dashboard.${candidate}`) || humanizeKey(candidate)}
                 </button>
               ))}
             </div>
@@ -298,8 +298,8 @@ export const SaleDashboard = () => {
               <ReactApexChart
                 key={`revenue-${chartKey}`}
                 series={[
-                  { name: t('page.dashboard.income'), data: revenue.income },
-                  { name: t('page.dashboard.expenses'), data: revenue.expenses },
+                  { name: t('page.dashboard.income') || 'Income', data: revenue.income },
+                  { name: t('page.dashboard.expenses') || 'Expenses', data: revenue.expenses },
                 ]}
                 options={revenueOptions(tokens)}
                 type="area"
@@ -312,7 +312,7 @@ export const SaleDashboard = () => {
           </div>
         </ChartCard>
 
-        <ChartCard title={t('page.dashboard.salesByCategory')}>
+        <ChartCard title={t('page.dashboard.salesByCategory') || 'Sales By Category'}>
           <div className="flex flex-1 items-center">
             <div className="w-full">
               {tokens ? (
@@ -327,12 +327,12 @@ export const SaleDashboard = () => {
 
       {/* Daily sales, summary and orders */}
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        <ChartCard title={t('page.dashboard.dailySales')} subtitle={t('page.dashboard.goToColumns')}>
+        <ChartCard title={t('page.dashboard.dailySales') || 'Daily Sales'} subtitle={t('page.dashboard.goToColumns') || 'Go to columns for details'}>
           {tokens ? (
             <ReactApexChart
               key={`daily-${chartKey}`}
               series={[
-                { name: t('page.dashboard.sales'), data: [58, 65, 72, 83, 59, 75, 68] },
+                { name: t('page.dashboard.sales') || 'Sales', data: [58, 65, 72, 83, 59, 75, 68] },
                 { name: 'Last Week', data: [42, 53, 48, 35, 41, 62, 55] },
               ]}
               options={dailyOptions(tokens)}
@@ -345,7 +345,7 @@ export const SaleDashboard = () => {
           )}
         </ChartCard>
 
-        <ChartCard title={t('page.dashboard.summary')}>
+        <ChartCard title={t('page.dashboard.summary') || 'Summary'}>
           <ul className="flex flex-1 flex-col justify-center gap-6">
             {summary.map((item) => {
               const Icon = item.icon
@@ -356,7 +356,7 @@ export const SaleDashboard = () => {
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="mb-2 flex items-baseline justify-between gap-2 text-sm">
-                      <span className="text-muted-foreground">{t(`page.dashboard.${item.key}`)}</span>
+                      <span className="text-muted-foreground">{t(`page.dashboard.${item.key}`) || humanizeKey(item.key)}</span>
                       <span className="font-semibold text-foreground tabular-nums">{formats.currency.format(item.value)}</span>
                     </div>
                     <div className="h-1.5 rounded-full bg-surface-2">
@@ -371,7 +371,7 @@ export const SaleDashboard = () => {
 
         <ChartCard
           className="overflow-hidden md:col-span-2 xl:col-span-1"
-          title={t('page.dashboard.totalOrders')}
+          title={t('page.dashboard.totalOrders') || 'Total Orders'}
           actions={
             <span className="grid size-9 place-content-center rounded-lg bg-success/10 text-success">
               <ShoppingCart className="size-4" />
@@ -389,7 +389,7 @@ export const SaleDashboard = () => {
             {tokens ? (
               <ReactApexChart
                 key={`orders-${chartKey}`}
-                series={[{ name: t('page.dashboard.sales'), data: [45, 52, 49, 65, 58, 72, 63, 75, 60, 68] }]}
+                series={[{ name: t('page.dashboard.sales') || 'Sales', data: [45, 52, 49, 65, 58, 72, 63, 75, 60, 68] }]}
                 options={ordersOptions(tokens)}
                 type="area"
                 height={180}

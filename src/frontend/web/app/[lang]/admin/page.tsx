@@ -15,8 +15,8 @@ interface SalesProps {
  */
 const Sales = async ({ params }: SalesProps) => {
   const { lang } = await params
-  const title = await getServerTranslation(lang, 'page.dashboard.title')
-  const description = await getServerTranslation(lang, 'page.dashboard.description')
+  const title = (await getServerTranslation(lang, 'page.dashboard.title')) || 'Dashboard'
+  const description = (await getServerTranslation(lang, 'page.dashboard.description')) || 'An overview of revenue, orders and sales.'
 
   return (
     <AdminPageContent title={title} description={description} plain>

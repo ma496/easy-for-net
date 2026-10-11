@@ -274,7 +274,7 @@ export const ChangePermissionsForm = ({ roleId }: ChangePermissionsFormProps) =>
     }
 
     successToast.fire({
-      text: t('page.roles.permissionsUpdateSuccess'),
+      text: t('page.roles.permissionsUpdateSuccess') || 'Permissions updated successfully',
     })
     router.push('/admin/roles')
   }
@@ -307,7 +307,7 @@ export const ChangePermissionsForm = ({ roleId }: ChangePermissionsFormProps) =>
       {/* Header: which role, and how much of the catalogue it holds */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-4 sm:px-6">
         <div className="min-w-0">
-          <div className="text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase">{t('page.roles.permissions')}</div>
+          <div className="text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase">{t('page.roles.permissions') || 'Permissions'}</div>
           <div className="mt-0.5 truncate text-base font-semibold text-foreground">{role?.name}</div>
         </div>
         <Badge variant="primary" className="tabular-nums">
@@ -320,13 +320,13 @@ export const ChangePermissionsForm = ({ roleId }: ChangePermissionsFormProps) =>
           <div className="flex size-12 items-center justify-center rounded-xl bg-surface-2 text-muted-foreground">
             <ShieldOff className="size-5" />
           </div>
-          <p className="text-sm text-muted-foreground">{t('common.noResults')}</p>
+          <p className="text-sm text-muted-foreground">{t('common.noResults') || 'No results found'}</p>
         </div>
       ) : (
         <div className="grid md:grid-cols-[14rem_minmax(0,1fr)]">
           {/* Permission groups: wrapping chips on a phone, a side list from md */}
-          <nav aria-label={t('page.roles.permissionGroups')} className="border-b border-border p-4 md:border-e md:border-b-0 sm:px-6 md:px-3 md:py-5">
-            <div className="mb-2 hidden px-3 text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase md:block">{t('page.roles.permissionGroups')}</div>
+          <nav aria-label={t('page.roles.permissionGroups') || 'Permission Groups'} className="border-b border-border p-4 md:border-e md:border-b-0 sm:px-6 md:px-3 md:py-5">
+            <div className="mb-2 hidden px-3 text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase md:block">{t('page.roles.permissionGroups') || 'Permission Groups'}</div>
             <div className="flex flex-wrap gap-2 md:flex-col md:flex-nowrap md:gap-0.5">
               {permissionTreeNodes.map((group) => {
                 const ids = leafIds(group)
@@ -369,14 +369,14 @@ export const ChangePermissionsForm = ({ roleId }: ChangePermissionsFormProps) =>
                 />
               </div>
               <div className="relative w-full sm:max-w-64">
-                <label htmlFor={searchId} className="sr-only">{t('common.search')}</label>
+                <label htmlFor={searchId} className="sr-only">{t('common.search') || 'Search...'}</label>
                 <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-subtle-foreground" />
                 <input
                   id={searchId}
                   type="text"
                   name="searchPermissions"
                   className="form-input h-9 ps-9"
-                  placeholder={t('common.search')}
+                  placeholder={t('common.search') || 'Search...'}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -388,7 +388,7 @@ export const ChangePermissionsForm = ({ roleId }: ChangePermissionsFormProps) =>
                 <div className="flex size-12 items-center justify-center rounded-xl bg-surface-2 text-muted-foreground">
                   <SearchX className="size-5" />
                 </div>
-                <p className="text-sm text-muted-foreground">{t('common.noResults')}</p>
+                <p className="text-sm text-muted-foreground">{t('common.noResults') || 'No results found'}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -410,10 +410,10 @@ export const ChangePermissionsForm = ({ roleId }: ChangePermissionsFormProps) =>
       {/* Sticky action footer: Save stays in reach however long the group is */}
       <div className="sticky bottom-0 z-10 flex justify-end gap-2 rounded-b-xl border-t border-border bg-surface px-4 py-3 *:flex-1 sm:px-6 sm:*:flex-none">
         <Button variant="outline" onClick={() => router.push('/admin/roles')} disabled={isChangingPermissions}>
-          {t('common.cancel')}
+          {t('common.cancel') || 'Cancel'}
         </Button>
         <Button variant="default" onClick={handleSubmit} isLoading={isChangingPermissions}>
-          {t('common.save')}
+          {t('common.save') || 'Save'}
         </Button>
       </div>
     </div>

@@ -54,7 +54,7 @@ export const FormMultiSelect = ({
   required = false,
 }: FormMultiSelectProps) => {
   const { t } = useTranslation()
-  const placeholder = placeholderProp ?? t('common.selectPlaceholder')
+  const placeholder = placeholderProp ?? (t('common.selectPlaceholder') || 'Select…')
   const [field, meta, helpers] = useField(name)
   const { submitCount } = useFormikContext()
   const isDirty = Array.isArray(meta.initialValue) && Array.isArray(meta.value) ? JSON.stringify(meta.initialValue) !== JSON.stringify(meta.value) : meta.initialValue !== meta.value
@@ -203,7 +203,7 @@ export const FormMultiSelect = ({
                     id={`${controlId}-search`}
                     type="text"
                     icon={<Search className="pointer-events-none h-4 w-4 text-subtle-foreground" />}
-                    placeholder={t('common.search')}
+                    placeholder={t('common.search') || 'Search...'}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     autoFocus
@@ -213,7 +213,7 @@ export const FormMultiSelect = ({
               )}
               <OptionsScrollArea maxHeight={listMaxHeight} isRTL={isRTL}>
                 <ul>
-                  {filteredOptions.length === 0 && <li className="px-3 py-6 text-center text-sm text-subtle-foreground">{t('common.noOptions')}</li>}
+                  {filteredOptions.length === 0 && <li className="px-3 py-6 text-center text-sm text-subtle-foreground">{t('common.noOptions') || 'No options'}</li>}
                   {filteredOptions.map((opt) => (
                     <li
                       key={opt.value}

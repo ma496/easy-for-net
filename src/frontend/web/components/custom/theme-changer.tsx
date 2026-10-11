@@ -5,7 +5,7 @@ import { toggleTheme } from '@/store/slices'
 import { Sun, Moon, Laptop, Check } from 'lucide-react'
 import { Dropdown, type DropdownRef } from '@/components/ui'
 import { useAppSelector } from '@/store/hooks'
-import { useTranslation } from '@/i18n'
+import { useTranslation, humanizeKey } from '@/i18n'
 import { cn } from '@/lib/utils'
 
 /**
@@ -38,7 +38,7 @@ export const ThemeChanger = ({ theme, className }: ThemeChangerProps) => {
       placement={isRtl ? 'bottom-start' : 'bottom-end'}
       btnClassName={cn('icon-btn', className)}
       button={
-        <span title={t('common.theme')} aria-label={t('common.theme')}>
+        <span title={t('common.theme') || 'Theme'} aria-label={t('common.theme') || 'Theme'}>
           <current.icon size={18} />
         </span>
       }
@@ -55,7 +55,7 @@ export const ThemeChanger = ({ theme, className }: ThemeChangerProps) => {
               }}
             >
               <option.icon size={16} className="shrink-0" />
-              <span className="flex-1">{t(option.label)}</span>
+              <span className="flex-1">{t(option.label) || humanizeKey(option.label)}</span>
               {theme === option.value && <Check size={14} className="shrink-0" />}
             </button>
           </li>

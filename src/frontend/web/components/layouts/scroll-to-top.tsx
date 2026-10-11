@@ -20,7 +20,7 @@ export const ScrollToTop = () => {
   return (
     <button
       type="button"
-      aria-label={t('common.scrollToTop')}
+      aria-label={t('common.scrollToTop') || 'Scroll to top'}
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       className={cn(
         'fixed end-6 bottom-6 z-40 flex size-10 items-center justify-center rounded-full border border-border bg-surface text-muted-foreground shadow-md transition-all duration-200 hover:text-foreground',

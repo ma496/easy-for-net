@@ -27,10 +27,10 @@ export const AuthShell = ({ title, description, showBack = false, children }: Au
   const { t } = useTranslation()
 
   const highlights = [
-    t('page.home.features.items.tenancy.title'),
-    t('page.home.features.items.permissions.title'),
-    t('page.home.features.items.plans.title'),
-    t('page.home.features.items.notifications.title'),
+    t('page.home.features.items.tenancy.title') || 'Multi-Tenancy',
+    t('page.home.features.items.permissions.title') || 'Roles & Permissions',
+    t('page.home.features.items.plans.title') || 'Plans & Feature Flags',
+    t('page.home.features.items.notifications.title') || 'Real-Time Notifications',
   ]
 
   return (
@@ -47,12 +47,12 @@ export const AuthShell = ({ title, description, showBack = false, children }: Au
         <div className="relative max-w-md">
           <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/80 px-3 py-1 text-xs font-medium text-muted-foreground">
             <span className="size-1.5 rounded-full bg-primary" />
-            {t('page.home.hero.badge')}
+            {t('page.home.hero.badge') || 'Open Source Multi-Tenant .NET & Next.js Template'}
           </span>
           <h2 className="mt-6 text-4xl font-semibold tracking-tight text-foreground xl:text-5xl">
-            {t('page.home.hero.titleFocus')} <span className="text-primary">{t('page.home.hero.titleHighlight')}</span>
+            {t('page.home.hero.titleFocus') || 'Focus on'} <span className="text-primary">{t('page.home.hero.titleHighlight') || 'Business Logic'}</span>
           </h2>
-          <p className="mt-4 text-base leading-relaxed text-muted-foreground">{t('page.home.hero.description')}</p>
+          <p className="mt-4 text-base leading-relaxed text-muted-foreground">{t('page.home.hero.description') || 'Skip the plumbing. A production-ready foundation with tenants, roles and permissions, plan-based features, localization and real-time notifications already built and tested.'}</p>
           <ul className="mt-8 space-y-3">
             {highlights.map((highlight) => (
               <li key={highlight} className="flex items-center gap-3 text-sm text-foreground">
@@ -66,13 +66,13 @@ export const AuthShell = ({ title, description, showBack = false, children }: Au
         </div>
 
         <p className="relative text-xs text-subtle-foreground">
-          © {new Date().getFullYear()} {t('brand.name')}. {t('common.allRightsReserved')}
+          © {new Date().getFullYear()} {t('brand.name') || 'Easy For Net'}. {t('common.allRightsReserved') || 'All rights reserved.'}
         </p>
       </aside>
 
       <main className="flex min-h-screen min-w-0 flex-col">
         <header className="flex items-center justify-between gap-3 px-4 py-4 sm:px-6">
-          {showBack ? <BackLink label={t('common.back')} /> : <BrandMark className="lg:invisible" />}
+          {showBack ? <BackLink label={t('common.back') || 'Back'} /> : <BrandMark className="lg:invisible" />}
           <SiteControls />
         </header>
 

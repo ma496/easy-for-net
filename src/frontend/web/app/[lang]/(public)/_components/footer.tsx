@@ -10,9 +10,9 @@ import { REPOSITORY_URL } from './links'
  */
 export const Footer = async ({ lang }: { lang: string }) => {
   const [brandName, allRightsReserved, viewSource] = await Promise.all([
-    getServerTranslation(lang, 'brand.name'),
-    getServerTranslation(lang, 'common.allRightsReserved'),
-    getServerTranslation(lang, 'page.home.hero.viewSource'),
+    getServerTranslation(lang, 'brand.name').then((text) => text || 'Easy For Net'),
+    getServerTranslation(lang, 'common.allRightsReserved').then((text) => text || 'All rights reserved.'),
+    getServerTranslation(lang, 'page.home.hero.viewSource').then((text) => text || 'View Source'),
   ])
 
   return (

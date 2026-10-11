@@ -18,7 +18,7 @@ interface TenantDetailPageProps {
  */
 const TenantDetail = async ({ params }: TenantDetailPageProps) => {
   const { lang, id } = await params
-  const title = await getServerTranslation(lang, 'page.tenants.detail.title')
+  const title = (await getServerTranslation(lang, 'page.tenants.detail.title')) || 'Tenant Detail'
 
   return (
     <AdminPageContent title={title} plain>

@@ -15,7 +15,7 @@ interface CardsPageProps {
  */
 const CardsPage = async ({ params }: CardsPageProps) => {
   const { lang } = await params
-  const title = await getServerTranslation(lang, 'page.ui.cards.title')
+  const title = (await getServerTranslation(lang, 'page.ui.cards.title')) || 'UI Cards'
 
   return (
     <AdminPageContent title={title} description="The card surface and the compositions built from its header, content and footer." plain>

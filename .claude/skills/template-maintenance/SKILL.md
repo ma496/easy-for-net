@@ -118,9 +118,7 @@ names out of them — they address the solution by globbing the root `*.slnx` an
 
 Translations ship as the API's resource files, so without multi-language the generator deletes
 `{ur,zh,ar,hi,es,fr,ru}.json` from `src/backend/Source/Features/Localization/Core/Resources` and
-regex-rewrites one literal to English only: `locales: [...]` in `i18n/config.ts`; it also drops every
-culture but `en` from the web app's `i18n/offline-resources.json` (`KeepOfflineResourceLocalesAsync`).
-Changing the shape
+regex-rewrites one literal to English only: `locales: [...]` in `i18n/config.ts`. Changing the shape
 of that literal makes the regex miss silently (and `i18n/locales.test.ts` then fails in the generated
 project); adding or removing a shipped language means updating the generator's list too.
 `LanguageCatalog` is left whole — an entry with no resource file is harmless.
@@ -191,7 +189,7 @@ npm run gate                         # also runs every tool/*.Tests project it f
 
 The tool tests cover argument parsing, string helpers, `Helpers`, `NamespaceRewriter`, and the
 generator's file rewrites (`CustomizeAppSettingsAsync`, `WriteDockerEnvAsync`,
-`KeepOfflineResourceLocalesAsync`, `StripExampleRegionsAsync`, `RemoveExampleResourceKeysAsync`); `Generate` itself has no automated test (it shells out to `git`
+`StripExampleRegionsAsync`, `RemoveExampleResourceKeysAsync`); `Generate` itself has no automated test (it shells out to `git`
 and `dotnet`).
 
 ### Testing the generator locally

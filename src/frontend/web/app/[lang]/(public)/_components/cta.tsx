@@ -9,11 +9,11 @@ import { REPOSITORY_URL } from './links'
  */
 export const CTA = async ({ lang }: { lang: string }) => {
   const [title, description, button, opensource, license] = await Promise.all([
-    getServerTranslation(lang, 'page.home.cta.title'),
-    getServerTranslation(lang, 'page.home.cta.description'),
-    getServerTranslation(lang, 'page.home.cta.button'),
-    getServerTranslation(lang, 'page.home.cta.opensource'),
-    getServerTranslation(lang, 'page.home.cta.license'),
+    getServerTranslation(lang, 'page.home.cta.title').then((text) => text || 'Open Source & Community Driven'),
+    getServerTranslation(lang, 'page.home.cta.description').then((text) => text || 'Fork it, or scaffold a fresh project with the dotnet efn CLI. Docker, a one-command VPS deploy and a spec-driven AI workflow come included.'),
+    getServerTranslation(lang, 'page.home.cta.button').then((text) => text || 'Star on GitHub'),
+    getServerTranslation(lang, 'page.home.cta.opensource').then((text) => text || 'Open Source'),
+    getServerTranslation(lang, 'page.home.cta.license').then((text) => text || 'MIT Licensed. Free to use for personal and commercial projects.'),
   ])
 
   return (

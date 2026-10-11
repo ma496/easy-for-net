@@ -140,7 +140,7 @@ export const FeatureValueEditor = ({ providerName, providerKey, returnUrl }: Fea
       return
     }
 
-    successToast.fire({ text: t('page.features.saveSuccess') })
+    successToast.fire({ text: t('page.features.saveSuccess') || 'Features updated successfully' })
     router.push(returnUrl)
   }
 
@@ -166,7 +166,7 @@ export const FeatureValueEditor = ({ providerName, providerKey, returnUrl }: Fea
         <div className="flex size-12 items-center justify-center rounded-xl bg-surface-2 text-muted-foreground">
           <Layers className="size-5" />
         </div>
-        <p className="text-sm text-muted-foreground">{t('page.features.none')}</p>
+        <p className="text-sm text-muted-foreground">{t('page.features.none') || 'No features have been defined'}</p>
       </div>
     )
   }
@@ -184,12 +184,12 @@ export const FeatureValueEditor = ({ providerName, providerKey, returnUrl }: Fea
   /** Where a value came from, said in a way an administrator can act on. */
   const sourceBadge = (feature: FeatureDto) => {
     if (feature.providerName === providerName) {
-      return <Badge variant="primary" type="solid">{t('page.features.setHere')}</Badge>
+      return <Badge variant="primary" type="solid">{t('page.features.setHere') || 'Set here'}</Badge>
     }
     if (feature.providerName === FeatureValueProvider.Edition) {
-      return <Badge variant="info" type="outline">{t('page.features.fromEdition')}</Badge>
+      return <Badge variant="info" type="outline">{t('page.features.fromEdition') || 'From edition'}</Badge>
     }
-    return <Badge variant="secondary" type="outline">{t('page.features.fromDefault')}</Badge>
+    return <Badge variant="secondary" type="outline">{t('page.features.fromDefault') || 'Default'}</Badge>
   }
 
   return (
@@ -199,7 +199,7 @@ export const FeatureValueEditor = ({ providerName, providerKey, returnUrl }: Fea
         <nav className="min-w-0 md:sticky md:top-20">
           <div className="mb-2 hidden items-center gap-2 px-1 text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase md:flex">
             <Layers className="size-3.5" />
-            {t('page.features.groups')}
+            {t('page.features.groups') || 'Groups'}
           </div>
           <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1 md:mx-0 md:flex-col md:overflow-visible md:px-0 md:pb-0">
             {groups.map((group) => {
@@ -254,7 +254,7 @@ export const FeatureValueEditor = ({ providerName, providerKey, returnUrl }: Fea
                 type="text"
                 name="searchFeatures"
                 className="[&_.form-input]:h-9 [&_.form-input]:text-sm"
-                placeholder={t('common.search')}
+                placeholder={t('common.search') || 'Search...'}
                 value={search}
                 icon={<Search className="size-4" />}
                 onChange={(event) => setSearch(event.target.value)}
@@ -287,13 +287,13 @@ export const FeatureValueEditor = ({ providerName, providerKey, returnUrl }: Fea
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm font-medium text-foreground">{feature.displayName}</span>
                         {sourceBadge(feature)}
-                        {isDirty && <Badge variant="warning" type="outline">{t('page.features.unsaved')}</Badge>}
+                        {isDirty && <Badge variant="warning" type="outline">{t('page.features.unsaved') || 'Unsaved'}</Badge>}
                       </div>
                       {feature.description && (
                         <p className="mt-1 text-[13px] text-muted-foreground">{feature.description}</p>
                       )}
                       {parentOff && (
-                        <p className="mt-1 text-xs font-medium text-warning">{t('page.features.parentDisabled')}</p>
+                        <p className="mt-1 text-xs font-medium text-warning">{t('page.features.parentDisabled') || 'Not in force while the feature above it is off'}</p>
                       )}
                     </div>
 
@@ -302,8 +302,8 @@ export const FeatureValueEditor = ({ providerName, providerKey, returnUrl }: Fea
                         <button
                           type="button"
                           className="icon-btn size-8"
-                          title={t('page.features.resetToInherited')}
-                          aria-label={t('page.features.resetToInherited')}
+                          title={t('page.features.resetToInherited') || 'Reset to inherited'}
+                          aria-label={t('page.features.resetToInherited') || 'Reset to inherited'}
                           onClick={() => setValue(feature.name, null)}
                         >
                           <RotateCcw className="size-3.5" />
@@ -362,7 +362,7 @@ export const FeatureValueEditor = ({ providerName, providerKey, returnUrl }: Fea
                 <div className="flex size-12 items-center justify-center rounded-xl bg-surface-2 text-muted-foreground">
                   <Search className="size-5" />
                 </div>
-                <p className="text-sm text-muted-foreground">{t('page.features.noMatches')}</p>
+                <p className="text-sm text-muted-foreground">{t('page.features.noMatches') || 'No features match your search'}</p>
               </li>
             )}
           </ul>
@@ -372,16 +372,16 @@ export const FeatureValueEditor = ({ providerName, providerKey, returnUrl }: Fea
             {changedCount > 0 && (
               <span className="me-auto flex items-center gap-2 text-sm text-muted-foreground">
                 <span className="size-2 rounded-full bg-warning" />
-                {t('page.features.unsavedCount', { count: changedCount })}
+                {t('page.features.unsavedCount', { count: changedCount }) || `${changedCount} unsaved change(s)`}
               </span>
             )}
             <div className="flex items-center gap-2">
               <Button type="button" variant="outline" onClick={() => router.push(returnUrl)} disabled={isSaving}>
-                {t('common.cancel')}
+                {t('common.cancel') || 'Cancel'}
               </Button>
               {canManage && (
                 <Button type="button" onClick={onSave} isLoading={isSaving} disabled={changedCount === 0}>
-                  {t('common.save')}
+                  {t('common.save') || 'Save'}
                 </Button>
               )}
             </div>

@@ -7,7 +7,7 @@ import '../../styles/tailwind.css'
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params
-  const brandName = await getServerTranslation(lang, 'brand.name')
+  const brandName = (await getServerTranslation(lang, 'brand.name')) || 'Easy For Net'
 
   return {
     title: {

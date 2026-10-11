@@ -108,9 +108,7 @@ function getErrorMessage(error: unknown): string | null {
  * application can always name, whatever the response looked like.
  */
 function titleForStatus(status: number, t: (key: string) => string): string {
-  const key = `error.${status}.title`
-  const translated = t(key)
-  return translated !== key ? translated : t('common.error')
+  return t(`error.${status}.title`) || t('common.error') || 'Error'
 }
 
 /**
@@ -118,9 +116,7 @@ function titleForStatus(status: number, t: (key: string) => string): string {
  * reason of its own to show instead - a body with no `errors`, `detail`, `message` or `title`.
  */
 function messageForStatus(status: number, t: (key: string) => string): string {
-  const key = `error.${status}.message`
-  const translated = t(key)
-  return translated !== key ? translated : t('error.500.message')
+  return t(`error.${status}.message`) || t('error.500.message') || 'An error occurred while processing the request.'
 }
 
 /**
@@ -162,7 +158,7 @@ export function getApiErrorMessages(
   // Plain { messages: string[] } object
   if (error && typeof error === 'object' && 'messages' in error && Array.isArray((error as Record<string, unknown>).messages)) {
     return {
-      title: t('common.error'),
+      title: t('common.error') || 'Error',
       messages: (error as { messages: string[] }).messages,
     }
   }
@@ -170,7 +166,7 @@ export function getApiErrorMessages(
   // A transport-level failure (FETCH_ERROR / PARSING_ERROR / CUSTOM_ERROR) or any other unknown shape
   const msg = getErrorMessage(error)
   return {
-    title: t('common.error'),
-    messages: [msg ?? t('error.500.message')],
+    title: t('common.error') || 'Error',
+    messages: [msg ?? (t('error.500.message') || 'An error occurred while processing the request.')],
   }
 }

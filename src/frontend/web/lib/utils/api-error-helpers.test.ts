@@ -11,10 +11,11 @@ const knownKeys = new Set([
 
 /**
  * A dictionary standing in for the translation function, answering `translated:<key>` for the keys it
- * knows and the key itself for the ones it does not - the same as a real `t` does for a missing key,
- * which is what makes "a code was translated on the client" a thing a test can catch.
+ * knows and `''` for the ones it does not - the same as a real `t` does for a missing key, leaving the
+ * caller's English default to show - which is what makes "a code was translated on the client" a thing
+ * a test can catch.
  */
-const t = (key: string): string => (knownKeys.has(key) ? `translated:${key}` : key)
+const t = (key: string): string => (knownKeys.has(key) ? `translated:${key}` : '')
 
 /** A refusal body in the shape the API sends: one or more errors, each already carrying the message to show. */
 const refusalBody = (errors: { name?: string; code: string; reason: string }[], status = 403): Record<string, unknown> => ({
@@ -83,7 +84,7 @@ describe('getApiErrorMessages', () => {
     const result = getApiErrorMessages({ status: 599, data: {} }, t)
 
     expect(result!.title).toBe('translated:common.error')
-    expect(result!.messages).toEqual(['error.500.message'])
+    expect(result!.messages).toEqual(['An error occurred while processing the request.'])
   })
 
   it('shows a top-level detail when the body carries no structured errors', () => {

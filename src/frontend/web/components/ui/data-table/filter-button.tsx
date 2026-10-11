@@ -20,7 +20,7 @@ export const DataTableFilterButton = ({ isOpen, onToggle, activeFiltersCount = 0
   const { t } = useTranslation()
 
   return (
-    <DataTableToolbarButton label={t('table.filter.button')} icon={<Filter size={16} />} active={isOpen} aria-expanded={isOpen} onClick={onToggle}>
+    <DataTableToolbarButton label={t('table.filter.button') || 'Filters'} icon={<Filter size={16} />} active={isOpen} aria-expanded={isOpen} onClick={onToggle}>
     {activeFiltersCount > 0 && (
       <span className="absolute -top-1.5 -end-1.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground ring-2 ring-surface">
         {activeFiltersCount}

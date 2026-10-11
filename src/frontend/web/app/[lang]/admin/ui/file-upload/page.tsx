@@ -15,7 +15,7 @@ interface FileUploadPageProps {
  */
 const FileUploadPage = async ({ params }: FileUploadPageProps) => {
   const { lang } = await params
-  const title = await getServerTranslation(lang, 'page.ui.fileUpload.title')
+  const title = (await getServerTranslation(lang, 'page.ui.fileUpload.title')) || 'UI File Upload'
 
   return (
     <AdminPageContent title={title} description="Single, fully custom and multi-file uploads with size limits and validation." plain>

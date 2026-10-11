@@ -17,15 +17,15 @@ const createValidationSchema = (t: (key: string, params?: Record<string, string 
   return Yup.object().shape({
     name: Yup.string()
       .trim()
-      .required(t('validation.required'))
-      .min(2, t('validation.minLength', { min: 2 }))
-      .max(100, t('validation.maxLength', { max: 100 })),
+      .required(t('validation.required') || 'Field is required')
+      .min(2, t('validation.minLength', { min: 2 }) || `Field must be at least ${2} characters`)
+      .max(100, t('validation.maxLength', { max: 100 }) || `Field must not exceed ${100} characters`),
     identifier: Yup.string()
       .trim()
-      .required(t('validation.required'))
-      .min(3, t('validation.minLength', { min: 3 }))
-      .max(50, t('validation.maxLength', { max: 50 }))
-      .matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, t('validation.tenantIdentifier')),
+      .required(t('validation.required') || 'Field is required')
+      .min(3, t('validation.minLength', { min: 3 }) || `Field must be at least ${3} characters`)
+      .max(50, t('validation.maxLength', { max: 50 }) || `Field must not exceed ${50} characters`)
+      .matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, t('validation.tenantIdentifier') || 'Use lower-case letters, digits and single hyphens, starting and ending with a letter or digit'),
     // Optional: a tenant on no plan is legitimate, and falls through to whatever the deployment and
     // the feature definitions declare.
     editionId: Yup.string(),
@@ -58,7 +58,7 @@ export const TenantCreateForm = () => {
     }
 
     successToast.fire({
-      text: t('page.tenants.createSuccess'),
+      text: t('page.tenants.createSuccess') || 'Tenant created successfully',
     })
     router.push('/admin/tenants')
   }
@@ -77,22 +77,22 @@ export const TenantCreateForm = () => {
         <Form noValidate className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <FormInput
             name="name"
-            label={t('form.label.tenantName')}
-            placeholder={t('form.placeholder.tenantName')}
+            label={t('form.label.tenantName') || 'Tenant Name'}
+            placeholder={t('form.placeholder.tenantName') || 'Enter tenant name'}
             autoFocus={true}
             required={true}
           />
           <FormInput
             name="identifier"
-            label={t('form.label.tenantIdentifier')}
-            placeholder={t('form.placeholder.tenantIdentifier')}
+            label={t('form.label.tenantIdentifier') || 'Identifier'}
+            placeholder={t('form.placeholder.tenantIdentifier') || 'Enter identifier (for example acme)'}
             required={true}
           />
           <FormLazySelect<EditionListDto, EditionListRequest>
             name="editionId"
             className="sm:col-span-2"
-            label={t('navigation.editions')}
-            placeholder={t('form.placeholder.edition')}
+            label={t('navigation.editions') || 'Editions'}
+            placeholder={t('form.placeholder.edition') || 'Select an edition'}
             useLazyQuery={useLazyEditionListQuery}
             getLabel={(edition) => edition.name}
             getValue={(edition) => edition.id}
@@ -105,13 +105,13 @@ export const TenantCreateForm = () => {
               onClick={() => router.push('/admin/tenants')}
               disabled={isSavingTenant}
             >
-              {t('common.cancel')}
+              {t('common.cancel') || 'Cancel'}
             </Button>
             <Button
               type="submit"
               isLoading={isSavingTenant}
             >
-              {t('common.submit')}
+              {t('common.submit') || 'Submit'}
             </Button>
           </div>
         </Form>

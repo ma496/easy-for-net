@@ -15,7 +15,7 @@ interface ButtonsPageProps {
  */
 const ButtonsPage = async ({ params }: ButtonsPageProps) => {
   const { lang } = await params
-  const title = await getServerTranslation(lang, 'page.ui.buttons.title')
+  const title = (await getServerTranslation(lang, 'page.ui.buttons.title')) || 'UI Buttons'
 
   return (
     <AdminPageContent title={title} description="Buttons, icon buttons and badges in every variant, size and state." plain>

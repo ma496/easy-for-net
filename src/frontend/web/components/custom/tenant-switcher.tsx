@@ -50,7 +50,7 @@ export const TenantSwitcher = ({ className = '' }: TenantSwitcherProps) => {
   const canViewDetail = isAllowed(authState, [Allow.Tenant_Detail])
   // The tenant name is shown persistently; a user whose active tenant was suspended, deleted or
   // whose membership was revoked keeps the chrome and is told that no tenant is selected.
-  const activeTenantName = activeTenant?.name ?? t('page.tenants.switcher.noTenant')
+  const activeTenantName = activeTenant?.name ?? (t('page.tenants.switcher.noTenant') || 'No tenant selected')
   // Switching is offered whenever the list holds a tenant other than the active one - that covers
   // both a user who belongs to several tenants and a user left without an active tenant, who must
   // still be able to pick one of the tenants they belong to.
@@ -94,11 +94,11 @@ export const TenantSwitcher = ({ className = '' }: TenantSwitcherProps) => {
   return (
     <div className={cn('flex items-center gap-1', className)}>
       {canViewDetail && detailHref ? (
-        <LocalizedLink href={detailHref} className={tenantSwitcherVariants({ interactive: true })} title={`${activeTenantName} - ${t('page.tenants.switcher.viewDetail')}`}>
+        <LocalizedLink href={detailHref} className={tenantSwitcherVariants({ interactive: true })} title={`${activeTenantName} - ${t('page.tenants.switcher.viewDetail') || 'View tenant detail'}`}>
           {name}
         </LocalizedLink>
       ) : (
-        <div className={tenantSwitcherVariants({ interactive: false })} title={`${t('page.tenants.switcher.label')}: ${activeTenantName}`}>
+        <div className={tenantSwitcherVariants({ interactive: false })} title={`${t('page.tenants.switcher.label') || 'Tenant'}: ${activeTenantName}`}>
           {name}
         </div>
       )}
@@ -116,7 +116,7 @@ export const TenantSwitcher = ({ className = '' }: TenantSwitcherProps) => {
             button={isBusy ? <Loader size="sm" className="shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
           >
             <ul className="w-full sm:w-64">
-              <li className="px-2.5 pt-1.5 pb-1 text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase">{t('page.tenants.switcher.switchTo')}</li>
+              <li className="px-2.5 pt-1.5 pb-1 text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase">{t('page.tenants.switcher.switchTo') || 'Switch tenant'}</li>
               {tenants.map((tenant) => (
                 <li key={tenant.id} className="flex items-center">
                   <button
@@ -134,8 +134,8 @@ export const TenantSwitcher = ({ className = '' }: TenantSwitcherProps) => {
                       disabled={isBusy}
                       // The dropdown's list styles stretch every row button to full width; this one only holds an icon.
                       className="w-auto! shrink-0 px-2! text-muted-foreground! hover:text-foreground!"
-                      title={t('page.tenants.switcher.viewDetail')}
-                      aria-label={t('page.tenants.switcher.viewDetail')}
+                      title={t('page.tenants.switcher.viewDetail') || 'View tenant detail'}
+                      aria-label={t('page.tenants.switcher.viewDetail') || 'View tenant detail'}
                       onClick={() => openDetail(tenant.id)}
                     >
                       <ArrowUpRight className="h-4 w-4" />
@@ -153,8 +153,8 @@ export const TenantSwitcher = ({ className = '' }: TenantSwitcherProps) => {
           type="button"
           disabled={isBusy}
           className="icon-btn"
-          title={t('page.tenants.switcher.exitTenant')}
-          aria-label={t('page.tenants.switcher.exitTenant')}
+          title={t('page.tenants.switcher.exitTenant') || 'Exit tenant'}
+          aria-label={t('page.tenants.switcher.exitTenant') || 'Exit tenant'}
           onClick={() => exitTenant()}
         >
           {isBusy ? <Loader size="sm" className="shrink-0" /> : <LogOut className="h-4 w-4 shrink-0" />}

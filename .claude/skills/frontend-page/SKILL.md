@@ -41,7 +41,7 @@ interface TenantDetailPageProps {
 /** Server-rendered tenant detail page that resolves the localized title and renders the detail view. */
 const TenantDetail = async ({ params }: TenantDetailPageProps) => {
   const { lang, id } = await params
-  const title = await getServerTranslation(lang, 'page.tenants.detail.title')
+  const title = (await getServerTranslation(lang, 'page.tenants.detail.title')) || 'Tenant Detail'
 
   return (
     <AdminPageContent title={title} plain>
@@ -132,8 +132,9 @@ the existing namespaces: `page.<area>.*` (or `page.<area>.<screen>.*`), `form.la
 `form.placeholder.*`, `validation.*`, `table.*`, `navigation.*`, `search.*`, `error.server.*`,
 `common.*`.
 
-Server components use `await getServerTranslation(lang, key)`; client components use
-`const { t } = useTranslation()` and `t('key', { min: 3 })` (placeholders are `${min}` in the JSON).
+Server components use `(await getServerTranslation(lang, key)) || 'English'`; client components use
+`const { t } = useTranslation()` and `t('key', { min: 3 }) || 'English'` (placeholders are `${min}` in the JSON;
+the default after `||` is the key's `en.json` value, which renders when the key is not served).
 Both come from `@/i18n`, never a subpath. The `localization` skill covers the third (non-component)
 translator, overrides and adding a language.
 

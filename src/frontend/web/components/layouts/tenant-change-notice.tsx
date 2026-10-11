@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useTranslation } from '@/i18n'
+import { useTranslation, humanizeKey } from '@/i18n'
 import { successToast } from '@/lib/utils'
 import { takeTenantChangeNotice } from '@/store/tenant-cache'
 
@@ -16,7 +16,7 @@ export const TenantChangeNotice = () => {
   useEffect(() => {
     const notice = takeTenantChangeNotice()
     if (notice) {
-      successToast.fire({ text: t(notice.messageKey, { tenant: notice.tenant }) })
+      successToast.fire({ text: t(notice.messageKey, { tenant: notice.tenant }) || humanizeKey(notice.messageKey) })
     }
     // Read once per document: the notice is consumed on the first render that finds it.
     // eslint-disable-next-line react-hooks/exhaustive-deps

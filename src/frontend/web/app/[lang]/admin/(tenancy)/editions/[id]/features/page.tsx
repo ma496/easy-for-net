@@ -20,7 +20,7 @@ interface EditionFeaturesPageProps {
  */
 const EditionFeatures = async ({ params }: EditionFeaturesPageProps) => {
   const { lang, id } = await params
-  const title = await getServerTranslation(lang, 'page.features.editionTitle')
+  const title = (await getServerTranslation(lang, 'page.features.editionTitle')) || 'Edition Features'
 
   return (
     <AdminPageContent title={title} plain>

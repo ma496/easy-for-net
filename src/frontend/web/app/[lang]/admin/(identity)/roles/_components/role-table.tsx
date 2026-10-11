@@ -78,8 +78,8 @@ export const RoleTable = () => {
 
   const handleDelete = async (roleId: string) => {
     const result = await confirmDeleteAlert({
-      title: t('page.roles.deleteTitle'),
-      text: t('page.roles.deleteConfirm'),
+      title: t('page.roles.deleteTitle') || 'Delete Role',
+      text: t('page.roles.deleteConfirm') || 'Are you sure you want to delete this role?',
     })
 
     if (result.isConfirmed) {
@@ -90,7 +90,7 @@ export const RoleTable = () => {
       }
       if (response.data?.success) {
         successToast.fire({
-          text: t('page.roles.deleteSuccess'),
+          text: t('page.roles.deleteSuccess') || 'Role deleted successfully',
         })
       } else if (response.data?.message) {
         await errorAlert({
@@ -104,40 +104,40 @@ export const RoleTable = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const columns: ColumnDef<RoleListDto, any>[] = [
     columnHelper.accessor('name', {
-      header: t('table.columns.name'),
+      header: t('table.columns.name') || 'Name',
       cell: (info) => <span className="font-medium text-foreground">{info.getValue()}</span>,
     }),
     columnHelper.accessor('description', {
       meta: { card: 'subtitle' },
-      header: t('table.columns.description'),
+      header: t('table.columns.description') || 'Description',
       // Long descriptions are clamped so one role cannot stretch its row; the card shows the subtitle in full.
       cell: (info) => <span className="line-clamp-2 max-w-xl text-muted-foreground">{info.getValue()}</span>,
     }),
     columnHelper.accessor('userCount', {
-      header: t('table.columns.userCount'),
+      header: t('table.columns.userCount') || 'Users',
       cell: (info) => <Badge variant='primary'>{info.getValue()}</Badge>,
       enableSorting: false,
     }),
     columnHelper.display({
       id: 'actions',
-      header: t('table.actions'),
+      header: t('table.actions') || 'Actions',
       cell: (info) => (
         <DataTableRowActions
           actions={[
             {
-              label: t('common.edit'),
+              label: t('common.edit') || 'Edit',
               icon: <Pencil className="h-4 w-4" />,
               href: `/admin/roles/${info.row.original.id}/update`,
               hidden: !canUpdate,
             },
             {
-              label: t('page.roles.permissions'),
+              label: t('page.roles.permissions') || 'Permissions',
               icon: <Shield className="h-4 w-4" />,
               href: `/admin/roles/${info.row.original.id}/change-permissions`,
               hidden: !canChangePermissions,
             },
             {
-              label: t('common.delete'),
+              label: t('common.delete') || 'Delete',
               icon: <Trash2 className="h-4 w-4" />,
               variant: 'danger',
               onClick: () => handleDelete(info.row.original.id),
@@ -174,7 +174,7 @@ export const RoleTable = () => {
     >
       <DataTableToolbar>
         {canCreate && (
-          <DataTableToolbarButton primary label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/roles/create" />
+          <DataTableToolbarButton primary label={t('table.createLink') || 'Create'} icon={<Plus size={16} />} href="/admin/roles/create" />
         )}
         <DataTableExportButton onExport={handleExport} isExporting={isExporting} disabled={isGettingRoles || !roleListResponse?.total} />
       </DataTableToolbar>

@@ -147,14 +147,14 @@ export const Sidebar = () => {
             <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
               <Image className="size-5" src="/assets/images/icon.png" alt="logo" width={20} height={20} unoptimized priority />
             </span>
-            <span className={cn('truncate text-[15px] font-semibold tracking-tight text-foreground', compact && 'lg:hidden')}>{t('brand.name')}</span>
+            <span className={cn('truncate text-[15px] font-semibold tracking-tight text-foreground', compact && 'lg:hidden')}>{t('brand.name') || 'Easy For Net'}</span>
           </Link>
 
           <button
             type="button"
             className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground lg:hidden"
             onClick={() => dispatch(toggleSidebar())}
-            aria-label={t('common.close')}
+            aria-label={t('common.close') || 'Close'}
           >
             <X size={18} />
           </button>
@@ -163,8 +163,8 @@ export const Sidebar = () => {
               type="button"
               className="hidden size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-surface-2 hover:text-foreground lg:flex rtl:rotate-180"
               onClick={() => dispatch(toggleSidebar())}
-              aria-label={t('common.collapseSidebar')}
-              title={t('common.collapseSidebar')}
+              aria-label={t('common.collapseSidebar') || 'Collapse sidebar'}
+              title={t('common.collapseSidebar') || 'Collapse sidebar'}
             >
               <PanelLeftClose size={18} />
             </button>

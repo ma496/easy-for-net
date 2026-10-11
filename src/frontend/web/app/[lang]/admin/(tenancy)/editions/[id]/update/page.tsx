@@ -18,7 +18,7 @@ interface EditionUpdatePageProps {
  */
 const EditionUpdate = async ({ params }: EditionUpdatePageProps) => {
   const { lang, id } = await params
-  const title = await getServerTranslation(lang, 'page.editions.update.title')
+  const title = (await getServerTranslation(lang, 'page.editions.update.title')) || 'Update Edition'
 
   return (
     <AdminPageContent

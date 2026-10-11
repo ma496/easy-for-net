@@ -15,7 +15,7 @@ interface LocalizationPageProps {
  */
 const LocalizationPage = async ({ params }: LocalizationPageProps) => {
   const { lang } = await params
-  const title = await getServerTranslation(lang, 'page.localization.title')
+  const title = (await getServerTranslation(lang, 'page.localization.title')) || 'Localization'
 
   return (
     <AdminPageContent title={title} plain>

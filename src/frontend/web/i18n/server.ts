@@ -8,9 +8,9 @@ import { emptyLocalizationResources, type LocalizationResourcesResponse } from '
  * Request-memoized fetch of the merged localization resources for one culture from the API,
  * forwarding the incoming `cookie` header so the caller's own tenant/platform overrides resolve
  * exactly as they would for any other request of theirs. `cache()` means every server component
- * and `getServerTranslation` call within one request shares the single fetch. Falls back to a
- * dictionary holding only the bundled offline strings (see `emptyLocalizationResources`) when the API
- * cannot be reached - every other key renders as itself rather than crashing.
+ * and `getServerTranslation` call within one request shares the single fetch. Falls back to an empty
+ * dictionary (see `emptyLocalizationResources`) when the API cannot be reached, so every call site's
+ * own English default renders rather than crashing.
  *
  * `next/headers` is loaded dynamically rather than imported at the top of the file: this module is
  * re-exported from the shared `@/i18n` barrel that client components also import (for
@@ -58,7 +58,8 @@ export const getDictionary = cache(async (locale: Locale): Promise<LocalizationR
 /**
  * This method you should use in server components.
  * Resolves a single translation key from the merged resources for the given locale, with the same
- * `${name}` interpolation the client and non-component translators support.
+ * `${name}` interpolation the client and non-component translators support, or `''` when the key is
+ * missing - follow it with the English default: `(await getServerTranslation(lang, 'key')) || 'English'`.
  */
 export const getServerTranslation = async (langCode: string, key: string, variables?: Record<string, string | number>): Promise<string> => {
   const dictionary = await getDictionary(langCode as Locale)

@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom'
 import { useLocalizedRouter } from '@/hooks'
 import { SearchableItem, searchableItems } from '@/searchable-items'
 import { authUrls } from '@/auth-urls'
-import { useTranslation } from '@/i18n'
+import { humanizeKey, useTranslation } from '@/i18n'
 import { useAppSelector } from '@/store/hooks'
 import { CornerDownLeft, FileText, Search } from 'lucide-react'
 import { cn, isAllowed, isPathAvailable } from '@/lib/utils'
@@ -51,7 +51,7 @@ export const SearchComponent = () => {
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return (q ? available.filter((item) => t(item.title).toLowerCase().includes(q)) : available).slice(0, 8)
+    return (q ? available.filter((item) => (t(item.title) || humanizeKey(item.title)).toLowerCase().includes(q)) : available).slice(0, 8)
   }, [available, query, t])
 
   // The element focused before the palette opened, given focus back when it closes.
@@ -139,16 +139,16 @@ export const SearchComponent = () => {
         className="hidden h-9 w-56 items-center gap-2 rounded-md border border-border bg-surface px-3 text-sm text-subtle-foreground shadow-xs transition-colors hover:bg-surface-2 hover:text-muted-foreground md:flex lg:w-64"
       >
         <Search size={15} className="shrink-0" />
-        <span className="flex-1 truncate text-start">{t('common.search')}</span>
+        <span className="flex-1 truncate text-start">{t('common.search') || 'Search...'}</span>
         <span className="kbd">Ctrl K</span>
       </button>
-      <button type="button" className="icon-btn md:hidden" aria-label={t('common.search')} onClick={openPalette}>
+      <button type="button" className="icon-btn md:hidden" aria-label={t('common.search') || 'Search...'} onClick={openPalette}>
         <Search size={18} />
       </button>
 
       {open &&
         createPortal(
-          <div className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-[12vh]" role="dialog" aria-modal="true" aria-label={t('common.search')} onKeyDown={handleDialogKeyDown}>
+          <div className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-[12vh]" role="dialog" aria-modal="true" aria-label={t('common.search') || 'Search...'} onKeyDown={handleDialogKeyDown}>
             <div className="absolute inset-0 animate-fade-in bg-overlay backdrop-blur-sm" onClick={close} />
             <div className="relative w-full max-w-xl animate-scale-in overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
               <div className="flex items-center gap-3 border-b border-border px-4">
@@ -159,7 +159,7 @@ export const SearchComponent = () => {
                   type="text"
                   autoComplete="off"
                   className="h-12 w-full bg-transparent text-[15px] text-foreground outline-none placeholder:text-subtle-foreground"
-                  placeholder={t('common.search')}
+                  placeholder={t('common.search') || 'Search...'}
                   value={query}
                   onChange={(event) => {
                     setQuery(event.target.value)
@@ -172,7 +172,7 @@ export const SearchComponent = () => {
                 </button>
               </div>
               <ul className="max-h-[50vh] overflow-y-auto p-1.5">
-                {results.length === 0 && <li className="px-3 py-8 text-center text-sm text-muted-foreground">{t('common.noResults')}</li>}
+                {results.length === 0 && <li className="px-3 py-8 text-center text-sm text-muted-foreground">{t('common.noResults') || 'No results found'}</li>}
                 {results.map((item, index) => {
                   const Icon = iconByUrl.get(item.url) ?? FileText
                   return (
@@ -191,7 +191,7 @@ export const SearchComponent = () => {
                         >
                           <Icon size={14} />
                         </span>
-                        <span className="flex-1 truncate">{highlightText(t(item.title))}</span>
+                        <span className="flex-1 truncate">{highlightText(t(item.title) || humanizeKey(item.title))}</span>
                         {index === activeIndex && <CornerDownLeft size={14} className="shrink-0 opacity-70 rtl:-scale-x-100" />}
                       </button>
                     </li>

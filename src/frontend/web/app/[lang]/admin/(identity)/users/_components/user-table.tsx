@@ -149,8 +149,8 @@ export const UserTable = () => {
 
   const handleDelete = async (userId: string) => {
     const result = await confirmDeleteAlert({
-      title: t('page.users.deleteTitle'),
-      text: t('page.users.deleteConfirm'),
+      title: t('page.users.deleteTitle') || 'Delete User',
+      text: t('page.users.deleteConfirm') || 'Are you sure you want to delete this user?',
     })
 
     if (result.isConfirmed) {
@@ -161,7 +161,7 @@ export const UserTable = () => {
       }
       if (response.data?.success) {
         successToast.fire({
-          text: t('page.users.deleteSuccess'),
+          text: t('page.users.deleteSuccess') || 'User deleted successfully',
         })
       } else if (response.data?.message) {
         await errorAlert({
@@ -176,7 +176,7 @@ export const UserTable = () => {
   const columns: ColumnDef<UserListDto, any>[] = [
     columnHelper.accessor('username', {
       meta: { card: 'title' },
-      header: t('table.columns.userName'),
+      header: t('table.columns.userName') || 'User Name',
       // The initial tile and the name, here and as the card's heading. The email keeps its own
       // sortable column, so it is not repeated under the name.
       cell: (info) => (
@@ -190,19 +190,19 @@ export const UserTable = () => {
     }),
     columnHelper.accessor('email', {
       meta: { card: 'subtitle' },
-      header: t('table.columns.email'),
+      header: t('table.columns.email') || 'Email',
       cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
     }),
     columnHelper.accessor('firstName', {
-      header: t('table.columns.firstName'),
+      header: t('table.columns.firstName') || 'First Name',
       cell: (info) => info.getValue(),
     }),
     columnHelper.accessor('lastName', {
-      header: t('table.columns.lastName'),
+      header: t('table.columns.lastName') || 'Last Name',
       cell: (info) => info.getValue(),
     }),
     columnHelper.accessor('roles', {
-      header: t('table.columns.roles'),
+      header: t('table.columns.roles') || 'Roles',
       cell: (info) => (
         <div className="flex flex-wrap gap-1">
           {info.getValue().map((role: UserRoleDto) => (
@@ -216,32 +216,32 @@ export const UserTable = () => {
     }),
     columnHelper.accessor('isActive', {
       meta: { card: 'badge' },
-      header: t('table.columns.isActive'),
+      header: t('table.columns.isActive') || 'Active',
       cell: (info) =>
         info.getValue() ? (
           <Badge variant="success">
-            {t('table.filter.active')}
+            {t('table.filter.active') || 'Active'}
           </Badge>
         ) : (
           <Badge variant="danger">
-            {t('table.filter.inactive')}
+            {t('table.filter.inactive') || 'Inactive'}
           </Badge>
         ),
     }),
     columnHelper.display({
       id: 'actions',
-      header: t('table.actions'),
+      header: t('table.actions') || 'Actions',
       cell: (info) => (
         <DataTableRowActions
           actions={[
             {
-              label: t('common.edit'),
+              label: t('common.edit') || 'Edit',
               icon: <Pencil className="h-4 w-4" />,
               href: `/admin/users/${info.row.original.id}/update`,
               hidden: !canUpdate,
             },
             {
-              label: t('common.delete'),
+              label: t('common.delete') || 'Delete',
               icon: <Trash2 className="h-4 w-4" />,
               variant: 'danger',
               onClick: () => handleDelete(info.row.original.id),
@@ -286,9 +286,9 @@ export const UserTable = () => {
 
         {canCreate &&
           (seatsExhausted ? (
-            <DataTableToolbarButton primary label={t('page.users.seatLimitReached')} icon={<Plus size={16} />} disabled />
+            <DataTableToolbarButton primary label={t('page.users.seatLimitReached') || "Your plan's user limit has been reached"} icon={<Plus size={16} />} disabled />
           ) : (
-            <DataTableToolbarButton primary label={t('table.createLink')} icon={<Plus size={16} />} href="/admin/users/create" />
+            <DataTableToolbarButton primary label={t('table.createLink') || 'Create'} icon={<Plus size={16} />} href="/admin/users/create" />
           ))}
         <DataTableExportButton onExport={handleExport} isExporting={isExporting} disabled={isGettingUsers || !userListResponse?.total} />
       </DataTableToolbar>

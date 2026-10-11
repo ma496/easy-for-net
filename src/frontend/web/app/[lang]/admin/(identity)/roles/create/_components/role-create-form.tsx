@@ -15,12 +15,12 @@ import { FormSection, FormActions } from '../../../_components/form-layout'
 const createValidationSchema = (t: (key: string, params?: Record<string, string | number>) => string) => {
   return Yup.object().shape({
     name: Yup.string()
-      .required(t('validation.required'))
-      .min(2, t('validation.minLength', { min: 2 }))
-      .max(50, t('validation.maxLength', { max: 50 })),
+      .required(t('validation.required') || 'Field is required')
+      .min(2, t('validation.minLength', { min: 2 }) || `Field must be at least ${2} characters`)
+      .max(50, t('validation.maxLength', { max: 50 }) || `Field must not exceed ${50} characters`),
     description: Yup.string()
-      .min(10, t('validation.minLength', { min: 10 }))
-      .max(255, t('validation.maxLength', { max: 255 })),
+      .min(10, t('validation.minLength', { min: 10 }) || `Field must be at least ${10} characters`)
+      .max(255, t('validation.maxLength', { max: 255 }) || `Field must not exceed ${255} characters`),
   })
 }
 
@@ -46,7 +46,7 @@ export const RoleCreateForm = () => {
     }
 
     successToast.fire({
-      text: t('page.roles.createSuccess'),
+      text: t('page.roles.createSuccess') || 'Role created successfully',
     })
     router.push('/admin/roles')
   }
@@ -65,15 +65,15 @@ export const RoleCreateForm = () => {
           <FormSection columns={1}>
             <FormInput
               name="name"
-              label={t('form.label.roleName')}
-              placeholder={t('form.placeholder.roleName')}
+              label={t('form.label.roleName') || 'Role Name'}
+              placeholder={t('form.placeholder.roleName') || 'Enter role name'}
               autoFocus={true}
               required={true}
             />
             <FormTextarea
               name="description"
-              label={t('form.label.roleDescription')}
-              placeholder={t('form.placeholder.roleDescription')}
+              label={t('form.label.roleDescription') || 'Description'}
+              placeholder={t('form.placeholder.roleDescription') || 'Enter role description'}
               rows={4}
             />
           </FormSection>
@@ -84,13 +84,13 @@ export const RoleCreateForm = () => {
               onClick={() => router.push('/admin/roles')}
               disabled={isSavingRole}
             >
-              {t('common.cancel')}
+              {t('common.cancel') || 'Cancel'}
             </Button>
             <Button
               type="submit"
               isLoading={isSavingRole}
             >
-              {t('common.submit')}
+              {t('common.submit') || 'Submit'}
             </Button>
           </FormActions>
         </Form>

@@ -33,7 +33,7 @@ export const CookieConsentDialog = ({ isOpen, onAccept, onDecline }: CookieConse
     >
       <div role="dialog" aria-labelledby="cookie-consent-title" className="fixed inset-x-3 bottom-3 z-[80] sm:inset-x-auto sm:start-6 sm:bottom-6 sm:w-[26rem]">
         <div className="relative rounded-2xl border border-border bg-surface p-5 shadow-lg">
-          <button onClick={onDecline} type="button" className="icon-btn absolute end-3 top-3 size-7" aria-label={t('common.close')}>
+          <button onClick={onDecline} type="button" className="icon-btn absolute end-3 top-3 size-7" aria-label={t('common.close') || 'Close'}>
             <X size={15} />
           </button>
           <div className="flex gap-4">
@@ -42,17 +42,17 @@ export const CookieConsentDialog = ({ isOpen, onAccept, onDecline }: CookieConse
             </span>
             <div className="min-w-0 pe-6">
               <h2 id="cookie-consent-title" className="text-sm font-semibold text-foreground">
-                {t('cookieConsent.title')}
+                {t('cookieConsent.title') || 'We value your privacy'}
               </h2>
-              <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{t('cookieConsent.description')}</p>
+              <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{t('cookieConsent.description') || 'We use cookies to enhance your browsing experience. By continuing to visit this site you agree to our use of cookies.'}</p>
             </div>
           </div>
           <div className="mt-4 flex items-center justify-end gap-2">
             <Button variant="outline" size="sm" onClick={onDecline}>
-              {t('cookieConsent.decline')}
+              {t('cookieConsent.decline') || 'Decline'}
             </Button>
             <Button size="sm" onClick={onAccept}>
-              {t('cookieConsent.accept')}
+              {t('cookieConsent.accept') || 'Accept'}
             </Button>
           </div>
         </div>

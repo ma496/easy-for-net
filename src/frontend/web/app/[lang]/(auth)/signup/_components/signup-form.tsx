@@ -37,34 +37,34 @@ export const SignupForm = () => {
 
   const validationSchema = Yup.object().shape({
     username: Yup.string()
-      .required(t('validation.required'))
-      .min(3, t('validation.minLength', { min: 3 }))
-      .max(50, t('validation.maxLength', { max: 50 })),
+      .required(t('validation.required') || 'Field is required')
+      .min(3, t('validation.minLength', { min: 3 }) || `Field must be at least ${3} characters`)
+      .max(50, t('validation.maxLength', { max: 50 }) || `Field must not exceed ${50} characters`),
     email: Yup.string()
-      .required(t('validation.required'))
-      .email(t('validation.email'))
-      .max(100, t('validation.maxLength', { max: 100 })),
+      .required(t('validation.required') || 'Field is required')
+      .email(t('validation.email') || 'Invalid email format')
+      .max(100, t('validation.maxLength', { max: 100 }) || `Field must not exceed ${100} characters`),
     password: Yup.string()
-      .required(t('validation.required'))
-      .min(8, t('validation.minLength', { min: 8 }))
-      .max(50, t('validation.maxLength', { max: 50 })),
+      .required(t('validation.required') || 'Field is required')
+      .min(8, t('validation.minLength', { min: 8 }) || `Field must be at least ${8} characters`)
+      .max(50, t('validation.maxLength', { max: 50 }) || `Field must not exceed ${50} characters`),
     confirmPassword: Yup.string()
-      .required(t('validation.required'))
-      .oneOf([Yup.ref('password')], t('validation.mustMatch', { otherField: t('form.label.password') })),
+      .required(t('validation.required') || 'Field is required')
+      .oneOf([Yup.ref('password')], t('validation.mustMatch', { otherField: t('form.label.password') || 'Password' }) || `Field must match with ${t('form.label.password') || 'Password'}`),
     // Signing up creates the tenant the account will work in: an account belonging to none could
     // exercise no permission at all, so there is no useful half-way state to leave somebody in. The
     // bounds mirror the API's own tenant rules, so the form refuses what the server would refuse.
     tenantName: Yup.string()
       .trim()
-      .required(t('validation.required'))
-      .min(2, t('validation.minLength', { min: 2 }))
-      .max(100, t('validation.maxLength', { max: 100 })),
+      .required(t('validation.required') || 'Field is required')
+      .min(2, t('validation.minLength', { min: 2 }) || `Field must be at least ${2} characters`)
+      .max(100, t('validation.maxLength', { max: 100 }) || `Field must not exceed ${100} characters`),
     tenantIdentifier: Yup.string()
       .trim()
-      .required(t('validation.required'))
-      .min(3, t('validation.minLength', { min: 3 }))
-      .max(50, t('validation.maxLength', { max: 50 }))
-      .matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, t('validation.tenantIdentifier')),
+      .required(t('validation.required') || 'Field is required')
+      .min(3, t('validation.minLength', { min: 3 }) || `Field must be at least ${3} characters`)
+      .max(50, t('validation.maxLength', { max: 50 }) || `Field must not exceed ${50} characters`)
+      .matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, t('validation.tenantIdentifier') || 'Use lower-case letters, digits and single hyphens, starting and ending with a letter or digit'),
   })
 
   type SignupFormValues = Yup.InferType<typeof validationSchema>
@@ -78,10 +78,10 @@ export const SignupForm = () => {
 
     setRegisteredEmail(values.email)
     if (response.data?.isEmailVerificationRequired) {
-      setSuccessMessage(t('page.auth.signup.successVerifyEmail'))
+      setSuccessMessage(t('page.auth.signup.successVerifyEmail') || 'Registration successful! Please check your email to verify your account.')
       setCountdown(15)
     } else {
-      setSuccessMessage(t('page.auth.signup.successMessage'))
+      setSuccessMessage(t('page.auth.signup.successMessage') || 'Registration successful! Go to sign in page.')
     }
   }
 
@@ -95,7 +95,7 @@ export const SignupForm = () => {
         return
       }
       successToast.fire({
-        text: t('page.verifyEmail.resendSuccess'),
+        text: t('page.verifyEmail.resendSuccess') || 'Verification email has been resent.',
       })
       setCountdown(15)
     } catch {
@@ -104,14 +104,14 @@ export const SignupForm = () => {
   }
 
   if (successMessage) {
-    const isVerificationRequired = successMessage === t('page.auth.signup.successVerifyEmail')
+    const isVerificationRequired = successMessage === (t('page.auth.signup.successVerifyEmail') || 'Registration successful! Please check your email to verify your account.')
 
     return (
       <div className="flex flex-col items-center text-center">
         <div className="mb-5 flex size-12 items-center justify-center rounded-xl bg-success/10 text-success">
           <CheckCircle className="size-6" />
         </div>
-        <h2 className="text-xl font-semibold tracking-tight">{t('page.auth.signup.successTitle')}</h2>
+        <h2 className="text-xl font-semibold tracking-tight">{t('page.auth.signup.successTitle') || 'Success!'}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{successMessage}</p>
         <div className="mt-6 flex w-full flex-col gap-2">
           {isVerificationRequired && (
@@ -123,12 +123,12 @@ export const SignupForm = () => {
               disabled={countdown > 0 || isResendingVerifyEmail}
               isLoading={isResendingVerifyEmail}
             >
-              {countdown > 0 ? t('page.verifyEmail.resendWait', { seconds: countdown }) : t('page.verifyEmail.resendButton')}
+              {countdown > 0 ? t('page.verifyEmail.resendWait', { seconds: countdown }) || `Please wait ${countdown}s` : t('page.verifyEmail.resendButton') || 'Resend Verification Email'}
             </Button>
           )}
 
           <LocalizedLink href="/signin" className="btn btn-primary w-full">
-            {t('page.auth.signin.backToSignin')}
+            {t('page.auth.signin.backToSignin') || 'Back to Sign In'}
           </LocalizedLink>
         </div>
       </div>
@@ -143,27 +143,27 @@ export const SignupForm = () => {
     >
       {() => (
         <Form className="space-y-5">
-          <FormInput label={t('form.label.username')} name="username" placeholder={t('form.placeholder.username')} icon={<Mail size={16} />} autoFocus={true} required={true} />
-          <FormInput label={t('form.label.email')} name="email" placeholder={t('form.placeholder.email')} icon={<Mail size={16} />} required={true} />
-          <FormPasswordInput label={t('form.label.password')} name="password" placeholder={t('form.placeholder.password')} icon={<Lock size={16} />} required={true} />
-          <FormPasswordInput label={t('form.label.confirmPassword')} name="confirmPassword" placeholder={t('form.placeholder.confirmPassword')} icon={<Lock size={16} />} required={true} />
+          <FormInput label={t('form.label.username') || 'Username'} name="username" placeholder={t('form.placeholder.username') || 'Enter username'} icon={<Mail size={16} />} autoFocus={true} required={true} />
+          <FormInput label={t('form.label.email') || 'Email'} name="email" placeholder={t('form.placeholder.email') || 'Enter email'} icon={<Mail size={16} />} required={true} />
+          <FormPasswordInput label={t('form.label.password') || 'Password'} name="password" placeholder={t('form.placeholder.password') || 'Enter password'} icon={<Lock size={16} />} required={true} />
+          <FormPasswordInput label={t('form.label.confirmPassword') || 'Confirm Password'} name="confirmPassword" placeholder={t('form.placeholder.confirmPassword') || 'Enter confirm password'} icon={<Lock size={16} />} required={true} />
 
           <div className="border-t border-border pt-5">
-            <p className="mb-4 text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase">{t('page.auth.signup.tenantSectionTitle')}</p>
+            <p className="mb-4 text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase">{t('page.auth.signup.tenantSectionTitle') || 'Your tenant'}</p>
             <div className="space-y-5">
-              <FormInput label={t('form.label.tenantName')} name="tenantName" placeholder={t('form.placeholder.tenantName')} icon={<Building2 size={16} />} required={true} />
-              <FormInput label={t('form.label.tenantIdentifier')} name="tenantIdentifier" placeholder={t('form.placeholder.tenantIdentifier')} icon={<Building2 size={16} />} required={true} />
+              <FormInput label={t('form.label.tenantName') || 'Tenant Name'} name="tenantName" placeholder={t('form.placeholder.tenantName') || 'Enter tenant name'} icon={<Building2 size={16} />} required={true} />
+              <FormInput label={t('form.label.tenantIdentifier') || 'Identifier'} name="tenantIdentifier" placeholder={t('form.placeholder.tenantIdentifier') || 'Enter identifier (for example acme)'} icon={<Building2 size={16} />} required={true} />
             </div>
           </div>
 
           <Button type="submit" size="lg" className="w-full" isLoading={isSubmittingSignup}>
-            {t('page.auth.signup.button')}
+            {t('page.auth.signup.button') || 'Sign Up'}
           </Button>
 
           <p className="text-center text-sm text-muted-foreground">
-            {t('page.auth.signup.alreadyHaveAccount')}{' '}
+            {t('page.auth.signup.alreadyHaveAccount') || 'Already have an account?'}{' '}
             <LocalizedLink href="/signin" className="font-medium text-primary hover:underline">
-              {t('page.auth.signup.signinLink')}
+              {t('page.auth.signup.signinLink') || 'Sign In'}
             </LocalizedLink>
           </p>
         </Form>
