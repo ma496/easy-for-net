@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Queue monitor</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #fff; --line: #e3e6eb; --text: #1d2330; --muted: #6a7282;
+    --accent: #2f6fde; --accent-bg: #e8f0fd; --ok: #1f8a4c; --warn: #b7791f; --bad: #c53030;
+    --sub: #7c4dff; --sub-bg: #f1ecff; --chip: #eef1f5; --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #11141a; --panel: #181c24; --line: #2a303b; --text: #e3e7ee; --muted: #8c95a5;
+      --accent: #6b9cff; --accent-bg: #1c2740; --ok: #4cc283; --warn: #e0a84a; --bad: #f07272;
+      --sub: #b49cff; --sub-bg: #241d3a; --chip: #232936;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--text); }
+  button { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  header { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px 18px;
+    border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 3; }
+  header h1 { font-size: 16px; margin: 0 6px 0 0; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px;
+    background: var(--chip); font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; display: inline-block; }
+  .dot.running { background: var(--accent); animation: pulse 1.4s infinite; }
+  .dot.done { background: var(--ok); }
+  .dot.failed { background: var(--bad); }
+  .dot.stale, .dot.stopped { background: var(--warn); }
+  @keyframes pulse { 50% { opacity: .3; } }
+  .totals { color: var(--muted); font-size: 13px; margin-left: auto; }
+  main { padding: 16px 18px; }
+  .kanban { min-height: calc(100vh - 160px); }
+  /* The live view is a slide-over, opened from a task in doing/ (or a past attempt's log) and closed again. */
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(1000px, 100vw); z-index: 10; border-radius: 0;
+    border-width: 0 0 0 1px; box-shadow: -12px 0 32px rgba(0,0,0,.18); animation: slidein .18s ease-out; }
+  @keyframes slidein { from { transform: translateX(40px); opacity: 0; } }
+  .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 9; }
+  .close { font-size: 18px; line-height: 1; padding: 2px 8px; border: 0; background: none; cursor: pointer; color: var(--muted); }
+  .close:hover { color: var(--text); }
+  #liveBadge { cursor: pointer; }
+  section.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; min-width: 0; display: flex; flex-direction: column; }
+  .panel-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  .panel-head h2 { font-size: 14px; margin: 0; }
+  .grow { flex: 1; }
+  input[type="search"] { font: inherit; font-size: 13px; padding: 4px 8px; border-radius: 7px; border: 1px solid var(--line);
+    background: var(--bg); color: var(--text); min-width: 150px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: transparent;
+    border-radius: 7px; padding: 3px 9px; cursor: pointer; font-size: 12.5px; white-space: nowrap; }
+  .chip:hover { border-color: var(--accent); }
+  .chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); font-weight: 600; }
+  .chip small { color: var(--muted); font-weight: 400; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .kanban { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; padding: 12px; overflow: auto; }
+  @media (max-width: 720px) { .kanban { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .col h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 0 0 8px; }
+  .card { border: 1px solid var(--line); border-left: 3px solid var(--line); background: var(--panel);
+    border-radius: 8px; padding: 8px 9px; margin-bottom: 8px; cursor: pointer; }
+  .card:hover { border-color: var(--accent); }
+  .card.doing { border-left-color: var(--accent); }
+  .card.done { border-left-color: var(--ok); }
+  .card.failed { border-left-color: var(--bad); }
+  .card.live { box-shadow: 0 0 0 2px var(--accent); }
+  .status-line { margin-top: 6px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+  .taskhead { padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--accent-bg); display: grid; gap: 2px; font-size: 12.5px; }
+  .th-title { display: flex; align-items: center; gap: 4px; }
+  .th-title .small { margin-left: auto; }
+  .th-sub { font-size: 13px; }
+  .card.flash { animation: flash 1.2s; }
+  @keyframes flash { 30% { box-shadow: 0 0 0 3px var(--warn); } }
+  .card .nm { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .card .tt { font-size: 13px; margin: 2px 0 4px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px; font-size: 11px; color: var(--muted); }
+  .dep { font-family: var(--mono); border: 0; background: none; padding: 0; cursor: pointer; color: inherit; font-size: 11px; }
+  .dep:hover { text-decoration: underline; }
+  .dep.wait { color: var(--warn); }
+  .agents-mini { margin-top: 8px; border-top: 1px dashed var(--line); padding-top: 6px; display: grid; gap: 4px; }
+  .agents-mini .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .agent-line { display: grid; grid-template-columns: auto 1fr; gap: 2px 6px; align-items: center; text-align: left;
+    border: 1px solid transparent; background: var(--sub-bg); border-radius: 6px; padding: 4px 6px; cursor: pointer; font-size: 12px; width: 100%; }
+  .agent-line:hover { border-color: var(--sub); }
+  .agent-line .an { font-weight: 600; color: var(--sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .agent-line .ad { grid-column: 2; color: var(--muted); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .agentbar { padding: 8px 12px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 6px; }
+  .agentinfo { padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--sub-bg); font-size: 12.5px; display: grid; gap: 2px; }
+  .agentinfo b { color: var(--sub); }
+  [hidden] { display: none !important; }
+  .filters { padding: 6px 12px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .filters .lbl { font-size: 12px; color: var(--muted); margin-right: 2px; }
+  .feed { font-family: var(--mono); font-size: 12.5px; flex: 1; min-height: 0; overflow: auto; padding: 6px 12px; }
+  .row { padding: 3px 0; white-space: pre-wrap; word-break: break-word; cursor: pointer; border-radius: 4px; }
+  .row:hover { background: var(--chip); }
+  .row .body { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .row.open .body { display: block; }
+  .row.sub { margin-left: 16px; padding-left: 8px; border-left: 2px solid var(--sub); }
+  .row .who { color: var(--sub); font-weight: 600; margin-right: 6px; }
+  .row.text .body { font-family: system-ui, sans-serif; font-size: 13px; }
+  .row.tool .k { color: var(--accent); }
+  .row.delegate .k, .row.skill .k { color: var(--sub); font-weight: 600; }
+  .row.task .k { color: var(--warn); }
+  .row.progress { color: var(--muted); }
+  .row.report { background: var(--sub-bg); padding: 6px 8px; margin: 4px 0; }
+  .row.report .body { font-family: system-ui, sans-serif; font-size: 13px; -webkit-line-clamp: 8; }
+  .row.report .k { color: var(--sub); font-weight: 700; }
+  .row.result { font-weight: 700; padding: 6px 0; }
+  .row.result.ok { color: var(--ok); } .row.result.bad { color: var(--bad); }
+  .row .d { color: var(--muted); }
+  .open-log { border: 1px solid var(--sub); color: var(--sub); background: transparent; border-radius: 5px;
+    font-size: 11px; padding: 0 6px; margin-left: 6px; cursor: pointer; font-family: system-ui, sans-serif; }
+  .muted { color: var(--muted); }
+  button.small { font-size: 12px; padding: 3px 9px; border-radius: 6px; border: 1px solid var(--line);
+    background: var(--chip); cursor: pointer; }
+  .newrows { position: sticky; bottom: 4px; left: 0; display: block; margin: 0 auto; border-radius: 999px; padding: 4px 12px;
+    background: var(--accent); color: #fff; border: 0; cursor: pointer; font-family: system-ui, sans-serif; font-size: 12px; }
+  details.log { border-top: 1px solid var(--line); }
+  details.log summary { padding: 8px 12px; cursor: pointer; font-size: 13px; }
+  details.log pre { margin: 0; padding: 8px 12px; max-height: 320px; overflow: auto; font-size: 11.5px; }
+  dialog { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--text); width: min(780px, 94vw); padding: 0; }
+  dialog::backdrop { background: rgba(0,0,0,.45); }
+  dialog .body { padding: 14px 16px; max-height: 78vh; overflow: auto; }
+  .run { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin-top: 10px; }
+  .run .fail { color: var(--bad); white-space: pre-wrap; margin-top: 4px; font-size: 13px; }
+  .empty { color: var(--muted); font-size: 12px; padding: 4px 0 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Queue monitor</h1>
+  <span id="drain" class="badge"><span class="dot"></span>…</span>
+  <span id="liveBadge" class="badge"><span class="dot"></span>…</span>
+  <span id="totals" class="totals"></span>
+</header>
+<main>
+  <section class="panel">
+    <div class="panel-head">
+      <h2>Specs</h2>
+      <div id="tabs" class="chips grow"></div>
+      <input type="search" id="taskFilter" placeholder="Filter tasks…" aria-label="Filter tasks">
+    </div>
+    <div id="kanban" class="kanban"></div>
+  </section>
+</main>
+<div id="drawerBackdrop" class="backdrop" hidden></div>
+<section id="liveDrawer" class="panel drawer" hidden role="dialog" aria-modal="true" aria-labelledby="feedTitle">
+    <div class="panel-head">
+      <h2 id="feedTitle">Live</h2>
+      <span id="feedMeta" class="muted grow" style="font-size:12px"></span>
+      <input type="search" id="search" placeholder="Search log…" aria-label="Search the log">
+      <button class="small" id="pause" aria-pressed="false" title="Stop scrolling to new rows">Pause</button>
+      <button class="small" id="followLive" hidden>Back to live</button>
+      <button class="close" id="closeDrawer" aria-label="Close the live view" title="Close (Esc)">✕</button>
+    </div>
+    <div id="taskhead" class="taskhead" hidden></div>
+    <div id="agentbar" class="agentbar" role="toolbar" aria-label="Whose log to show"></div>
+    <div id="agentinfo" class="agentinfo" hidden></div>
+    <div id="filters" class="filters" role="toolbar" aria-label="Which rows to show"></div>
+    <div id="feed" class="feed"></div>
+    <details class="log" id="logBox"><summary>drain.log (last 200 lines)</summary><pre id="log"></pre></details>
+</section>
+<dialog id="detail"><div class="body" id="detailBody"></div></dialog>
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined && text !== null) e.textContent = String(text);
+  return e;
+};
+const dot = (status) => el("span", `dot ${status ?? ""}`);
+const usd = (n) => (typeof n === "number" ? `$${n.toFixed(2)}` : "");
+const ago = (iso) => {
+  if (!iso) return "";
+  const s = Math.round((Date.now() - Date.parse(iso)) / 1000);
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.round(s / 60)}m ago`;
+  if (s < 86400) return `${Math.round(s / 3600)}h ago`;
+  return `${Math.round(s / 86400)}d ago`;
+};
+const dur = (ms) => {
+  if (typeof ms !== "number") return "";
+  const s = Math.round(ms / 1000);
+  return s < 60 ? `${s}s` : s < 3600 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
+};
+const kTokens = (n) => (typeof n === "number" ? `${Math.round(n / 1000)}k tokens` : "");
+
+// ===== board ===============================================================================
+let board = null;
+let lastBoardJson = "";
+let selectedSpec = localStorage.getItem("monitor.spec");
+let taskFilter = "";
+
+async function loadBoard() {
+  try {
+    const res = await fetch("/api/board", { cache: "no-store" });
+    const text = await res.text();
+    if (text !== lastBoardJson) {
+      lastBoardJson = text;
+      board = JSON.parse(text);
+      renderBoard();
+      renderTaskHead();
+    }
+    renderHeader();
+  } catch {
+    const d = $("drain");
+    d.replaceChildren(dot("failed"), document.createTextNode("monitor offline"));
+  }
+}
+
+function renderHeader() {
+  if (!board) return;
+  const d = board.drain;
+  $("drain").replaceChildren(dot(d.state === "running" ? "running" : d.state === "stale" ? "stale" : ""),
+    document.createTextNode(d.state === "running" ? `drain running · pid ${d.pid}`
+      : d.state === "stale" ? `stale lock · last heartbeat ${ago(d.heartbeatAt)}` : "drain idle"));
+  $("drain").title = d.startedAt ? `drain started ${d.startedAt}` : "";
+  const lb = $("liveBadge");
+  if (board.live) {
+    const writing = Date.now() - Date.parse(board.live.updatedAt) < 120000 && !board.live.finished;
+    const running = board.live.agents.filter((a) => a.status === "running").length;
+    lb.replaceChildren(dot(writing ? "running" : ""), document.createTextNode(
+      `${writing ? "writing" : "last write"} ${ago(board.live.updatedAt)}${board.live.stem ? ` · ${board.live.stem}` : ""}${running ? ` · ${running} agent${running > 1 ? "s" : ""} running` : ""}`));
+  } else {
+    lb.replaceChildren(dot(), document.createTextNode("no runs yet"));
+  }
+  const t = board.totals;
+  $("totals").textContent = `${t.done} done · ${t.doing} doing · ${t.todo} waiting · ${t.failed} failed · ${usd(t.costUsd)} spent`;
+}
+
+function renderBoard() {
+  const specs = board.specs;
+  if (!specs.some((s) => s.name === selectedSpec)) selectedSpec = specs[0]?.name ?? null;
+  $("tabs").replaceChildren(...specs.map((s) => {
+    const b = el("button", "chip", s.name);
+    b.setAttribute("aria-pressed", String(s.name === selectedSpec));
+    if (s.counts.doing) b.prepend(dot("running"));
+    b.append(el("small", null, `${s.counts.done}/${s.tasks.length}`));
+    b.onclick = () => { selectedSpec = s.name; localStorage.setItem("monitor.spec", s.name); renderBoard(); };
+    return b;
+  }));
+  const spec = specs.find((s) => s.name === selectedSpec);
+  const q = taskFilter.toLowerCase();
+  const visible = (t) => !q || t.name.toLowerCase().includes(q) || t.title.toLowerCase().includes(q);
+  const cols = [["todo", "Todo"], ["doing", "Doing"], ["done", "Done"], ["failed", "Failed"]];
+  $("kanban").replaceChildren(...cols.map(([lane, label]) => {
+    const col = el("div", "col");
+    const tasks = spec ? spec.tasks.filter((t) => t.lane === lane && visible(t)) : [];
+    col.append(el("h3", null, `${label} · ${tasks.length}`));
+    if (!tasks.length) col.append(el("div", "empty", "—"));
+    for (const t of tasks) col.append(card(t));
+    return col;
+  }));
+}
+
+const isLiveTask = (t) => board.live && board.live.stem === t.stem && !board.live.finished;
+
+function card(t) {
+  const c = el("div", `card ${t.lane}${isLiveTask(t) ? " live" : ""}`);
+  c.id = `card-${t.stem}`;
+  c.tabIndex = 0;
+  c.setAttribute("role", "button");
+  c.append(el("div", "nm", `${t.mark ? `${t.mark} ` : ""}${t.name}`), el("div", "tt", t.title));
+  const meta = el("div", "meta");
+  if (t.attempts) meta.append(el("span", null, `${t.attempts} attempt${t.attempts > 1 ? "s" : ""}`));
+  if (t.costUsd) meta.append(el("span", null, usd(t.costUsd)));
+  if (t.lastOutcome) meta.append(el("span", null, t.lastOutcome));
+  if (t.lane === "todo") {
+    for (const d of t.deps) {
+      const b = el("button", `dep${d.landed ? "" : " wait"}`, `${d.landed ? "✓" : "⏳"} ${d.stem.split("/").pop()}`);
+      b.title = `Depends on ${d.stem} — click to show it`;
+      b.onclick = (e) => { e.stopPropagation(); revealTask(d.stem); };
+      meta.append(b);
+    }
+  }
+  c.append(meta);
+  // A task being built shows only where it stands; its live detail is one click away.
+  const open = t.lane === "doing" ? () => watchTask(t) : () => openDetail(t);
+  if (t.lane === "doing") {
+    const s = doingStatus(t);
+    const line = el("div", "status-line");
+    line.append(dot(s.dot), document.createTextNode(` ${s.text}`));
+    c.append(line);
+    c.title = "Click to watch it live";
+  }
+  c.onclick = open;
+  c.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } };
+  return c;
+}
+
+/** One line for a task in doing/: building now, or stopped and why. */
+function doingStatus(t) {
+  const live = isLiveTask(t) ? board.live : null;
+  const writing = live && Date.now() - Date.parse(live.updatedAt) < 120000;
+  if (writing) {
+    const running = live.agents.filter((a) => a.status === "running").length;
+    return { dot: "running", text: `building${running ? ` · ${running} agent${running > 1 ? "s" : ""} working` : ""}` };
+  }
+  if (board.drain.state === "running") return { dot: "running", text: "starting" };
+  return { dot: "stale", text: `stopped${t.lastOutcome ? ` · ${t.lastOutcome}` : ""}${live ? ` · ${ago(live.updatedAt)}` : ""}` };
+}
+
+/** Open a task's live view in the feed panel. */
+function watchTask(t) {
+  if (!feed.source || !feed.following || feed.view !== "all") follow("live");
+  else { openDrawer(); renderTaskHead(); }
+}
+
+/** The task the feed is showing, with its status and a way to its history. */
+function renderTaskHead() {
+  const box = $("taskhead");
+  const t = feed.following && board ? board.specs.flatMap((s) => s.tasks).find((x) => x.stem === board.live?.stem) : null;
+  if (!t) { box.hidden = true; return; }
+  box.hidden = false;
+  const s = t.lane === "doing" ? doingStatus(t) : { dot: t.lane === "done" ? "done" : "", text: t.lane };
+  const agents = board.live.agents;
+  const title = el("div", "th-title");
+  title.append(dot(s.dot), el("b", null, ` ${t.stem}`), el("span", "muted", ` · ${s.text}`));
+  const hist = el("button", "small", "History");
+  hist.onclick = () => openDetail(t);
+  title.append(hist);
+  box.replaceChildren(title, el("div", "th-sub", t.title));
+  const stats = [`${agents.length} subagent${agents.length === 1 ? "" : "s"}`,
+    `${agents.filter((a) => a.status === "running").length} running`,
+    `${agents.filter((a) => a.status === "done").length} done`,
+    t.attempts ? `${t.attempts} earlier attempt${t.attempts > 1 ? "s" : ""} · ${usd(t.costUsd)}` : "",
+    `last write ${ago(board.live.updatedAt)}`].filter(Boolean).join(" · ");
+  box.append(el("div", "muted", stats));
+}
+
+/** The live run's subagents; each opens its own log. */
+function agentList(agents) {
+  const box = el("div", "agents-mini");
+  const running = agents.filter((a) => a.status === "running").length;
+  box.append(el("div", "lbl", `Subagents · ${running} running · ${agents.length} total`));
+  for (const a of agents) {
+    const b = el("button", "agent-line");
+    b.title = `Open ${a.label}'s log`;
+    b.append(dot(a.status), el("span", "an", a.label));
+    const tail = a.status === "running" && a.current ? a.current : a.description;
+    b.append(el("span", "ad", `${a.toolUses ? `${a.toolUses} tools · ` : ""}${tail}`));
+    b.onclick = (e) => { e.stopPropagation(); $("detail").open && $("detail").close(); showAgent(a.id); };
+    box.append(b);
+  }
+  return box;
+}
+
+function revealTask(stem) {
+  const spec = stem.includes("/") ? stem.slice(0, stem.lastIndexOf("/")) : null;
+  if (spec && spec !== selectedSpec && board.specs.some((s) => s.name === spec)) {
+    selectedSpec = spec;
+    renderBoard();
+  }
+  if (taskFilter) { taskFilter = ""; $("taskFilter").value = ""; renderBoard(); }
+  const node = document.getElementById(`card-${stem}`);
+  if (!node) return;
+  node.scrollIntoView({ behavior: "smooth", block: "center" });
+  node.classList.remove("flash");
+  void node.offsetWidth;
+  node.classList.add("flash");
+}
+
+function openDetail(t) {
+  const body = $("detailBody");
+  body.replaceChildren();
+  const head = el("div");
+  head.style.cssText = "display:flex;gap:8px;align-items:center";
+  head.append(el("strong", null, t.stem));
+  const close = el("button", "small", "Close");
+  close.style.marginLeft = "auto";
+  close.onclick = () => $("detail").close();
+  head.append(close);
+  body.append(head, el("p", null, t.title), el("div", "muted", `lane: ${t.lane}`));
+  if (t.deps.length) body.append(el("div", "muted", `depends on: ${t.deps.map((d) => `${d.stem}${d.landed ? " ✓" : " (waiting)"}`).join(", ")}`));
+  if (isLiveTask(t)) {
+    const b = el("button", "small", "Watch the live attempt");
+    b.style.marginTop = "8px";
+    b.onclick = () => { $("detail").close(); showAgent("all"); };
+    body.append(b);
+    if (board.live.agents.length) body.append(agentList(board.live.agents));
+  }
+  if (!t.runs.length) body.append(el("p", "empty", "No finished attempts in the journal yet."));
+  for (const r of [...t.runs].reverse()) {
+    const box = el("div", "run");
+    box.append(el("div", null, `${r.mark} ${r.outcome ?? "?"} · ${r.attempts} attempt(s) · ${usd(r.costUsd)}${r.turns.length ? ` · turns ${r.turns.join("/")}` : ""}`));
+    box.append(el("div", "muted", `${r.id} · ${r.startedAt ?? ""} → ${r.finishedAt ?? ""}`));
+    if (r.delegations.length) box.append(el("div", "muted", `delegated: ${r.delegations.join(" → ")}`));
+    if (r.failure) box.append(el("div", "fail", r.failure));
+    const btns = el("div");
+    btns.style.marginTop = "6px";
+    for (let i = 1; i <= r.attempts; i++) {
+      const b = el("button", "small", `View attempt ${i} log`);
+      b.style.marginRight = "6px";
+      b.onclick = () => { $("detail").close(); follow(`${r.id}-attempt-${i}.stream.jsonl`); };
+      btns.append(b);
+    }
+    box.append(btns);
+    body.append(box);
+  }
+  $("detail").showModal();
+}
+
+$("taskFilter").addEventListener("input", (e) => { taskFilter = e.target.value; if (board) renderBoard(); });
+
+// ===== feed ================================================================================
+const KINDS = [
+  { key: "text", label: "Messages", kinds: ["text"] },
+  { key: "tool", label: "Tools", kinds: ["tool"] },
+  { key: "agents", label: "Agents & skills", kinds: ["delegate", "skill", "report"] },
+  { key: "progress", label: "Progress", kinds: ["progress"] },
+  { key: "task", label: "Background", kinds: ["task"] },
+  { key: "result", label: "Result", kinds: ["result"] },
+];
+const feed = {
+  source: null, file: null, following: true,
+  rows: [], agents: [], view: "all",
+  // Progress repeats what an agent's own streamed tool calls already show; it is off unless a
+  // log has nothing else (an agent whose own events the stream does not carry).
+  on: new Set(["text", "tool", "agents", "task", "result"]),
+  progressAuto: true,
+  search: "", paused: false, unseen: 0,
+};
+
+function openDrawer() {
+  $("liveDrawer").hidden = false;
+  $("drawerBackdrop").hidden = false;
+}
+
+/** Close the live view and its stream; nothing is read while it is closed. */
+function closeDrawer() {
+  $("liveDrawer").hidden = true;
+  $("drawerBackdrop").hidden = true;
+  if (feed.source) feed.source.close();
+  feed.source = null;
+}
+
+function follow(file, view = "all") {
+  openDrawer();
+  if (feed.source) feed.source.close();
+  feed.following = file === "live";
+  feed.file = null;
+  feed.rows = [];
+  feed.agents = [];
+  feed.view = view;
+  $("feed").replaceChildren(el("div", "muted", feed.following ? "Waiting for a stream…" : "Loading…"));
+  $("feedTitle").textContent = feed.following ? "Live" : "Attempt log";
+  $("followLive").hidden = feed.following;
+  $("feedMeta").textContent = "";
+  const src = new EventSource(`/api/stream?file=${encodeURIComponent(file)}`);
+  feed.source = src;
+  src.addEventListener("backlog", (e) => {
+    const d = JSON.parse(e.data);
+    if (feed.file && feed.file !== d.file && feed.view !== "all") feed.view = "all"; // a new attempt: its agents are new
+    feed.file = d.file;
+    feed.rows = d.rows;
+    feed.skipped = d.skipped;
+    updateCounts(d);
+    renderFeed();
+  });
+  src.addEventListener("rows", (e) => {
+    const d = JSON.parse(e.data);
+    feed.rows.push(...d.rows);
+    updateCounts(d);
+    appendRows(d.rows);
+  });
+  src.addEventListener("missing", () => {
+    $("feed").replaceChildren(el("div", "muted", "That stream file is not on disk (older runs kept only a .log)."));
+    src.close();
+  });
+}
+
+/** Show one agent's log ("all", "lead" or an agent id), switching to the live run if needed. */
+function showAgent(view) {
+  const known = view === "all" || view === "lead" || feed.agents.some((a) => a.id === view);
+  if (!feed.source || !feed.following || (!known && feed.file)) follow("live", view);
+  else { openDrawer(); feed.view = view; renderFeed(); }
+}
+
+function updateCounts(d) {
+  feed.agents = d.agents ?? feed.agents;
+  $("feedMeta").textContent = `${feed.file ?? ""} · ${d.turns} lead turns · ${d.subagentTurns} subagent turns`;
+  renderTaskHead();
+  renderAgentBar();
+  renderAgentInfo();
+}
+
+const selectedAgent = () => feed.agents.find((a) => a.id === feed.view) ?? null;
+
+function progressShown() {
+  if (!feed.progressAuto) return feed.on.has("progress");
+  const a = selectedAgent();
+  return Boolean(a && a.streamed === 0);
+}
+
+function rowVisible(r) {
+  if (feed.view === "lead" && r.agent !== null) return false;
+  if (feed.view !== "all" && feed.view !== "lead" && r.agent !== feed.view) return false;
+  const group = KINDS.find((k) => k.kinds.includes(r.kind));
+  if (group) {
+    const on = group.key === "progress" ? progressShown() : feed.on.has(group.key);
+    if (!on) return false;
+  }
+  if (feed.search) {
+    const hay = `${r.who} ${r.text} ${r.detail ?? ""}`.toLowerCase();
+    if (!hay.includes(feed.search)) return false;
+  }
+  return true;
+}
+
+function renderAgentBar() {
+  const bar = $("agentbar");
+  const chip = (view, label, extra) => {
+    const b = el("button", "chip");
+    b.setAttribute("aria-pressed", String(feed.view === view));
+    if (extra?.status) b.append(dot(extra.status));
+    b.append(document.createTextNode(label));
+    if (extra?.note) b.append(el("small", null, extra.note));
+    b.onclick = () => { feed.view = view; renderFeed(); };
+    return b;
+  };
+  bar.replaceChildren(
+    chip("all", "All"),
+    chip("lead", "Lead"),
+    ...feed.agents.map((a) => {
+      const b = chip(a.id, a.label, { status: a.status, note: a.toolUses ? `${a.toolUses} tools` : "" });
+      b.title = a.description;
+      return b;
+    }),
+  );
+  bar.hidden = false;
+}
+
+function renderAgentInfo() {
+  const box = $("agentinfo");
+  const a = selectedAgent();
+  if (!a) { box.hidden = true; return; }
+  box.hidden = false;
+  const parent = a.parent ? feed.agents.find((p) => p.id === a.parent)?.label : "lead";
+  const line1 = el("div");
+  line1.append(dot(a.status), document.createTextNode(" "), el("b", null, a.label),
+    document.createTextNode(` — ${a.description}`));
+  const stats = [a.status, a.toolUses ? `${a.toolUses} tool calls` : "", a.turns ? `${a.turns} turns` : "",
+    kTokens(a.tokens), dur(a.durationMs), `started by ${parent}`, a.background ? "background" : ""].filter(Boolean).join(" · ");
+  box.replaceChildren(line1, el("div", "muted", stats));
+  if (a.status === "running" && a.current) box.append(el("div", null, `now: ${a.current}`));
+  if (a.streamed === 0) box.append(el("div", "muted", "The stream carries only this agent's progress and final report, not its own messages."));
+}
+
+function renderFilters() {
+  const bar = $("filters");
+  bar.replaceChildren(el("span", "lbl", "Show"));
+  for (const k of KINDS) {
+    const b = el("button", "chip", k.label);
+    const on = k.key === "progress" ? progressShown() : feed.on.has(k.key);
+    b.setAttribute("aria-pressed", String(on));
+    b.onclick = () => {
+      if (k.key === "progress") { feed.progressAuto = false; if (on) feed.on.delete("progress"); else feed.on.add("progress"); }
+      else if (on) feed.on.delete(k.key); else feed.on.add(k.key);
+      renderFeed();
+    };
+    bar.append(b);
+  }
+}
+
+const MAX_DOM = 5000;
+
+function renderFeed() {
+  renderTaskHead();
+  renderAgentBar();
+  renderAgentInfo();
+  renderFilters();
+  const box = $("feed");
+  const shown = feed.rows.filter(rowVisible);
+  const nodes = shown.slice(-MAX_DOM).map(rowEl);
+  box.replaceChildren();
+  if (feed.skipped) box.append(el("div", "muted", `… ${feed.skipped} earlier rows dropped from memory`));
+  if (shown.length > MAX_DOM) box.append(el("div", "muted", `… ${shown.length - MAX_DOM} earlier matching rows not drawn — narrow the filters`));
+  if (!shown.length) box.append(el("div", "muted", feed.rows.length ? "No rows match these filters." : "Nothing yet."));
+  box.append(...nodes);
+  feed.unseen = 0;
+  box.scrollTop = box.scrollHeight;
+}
+
+function appendRows(rows) {
+  const box = $("feed");
+  const fresh = rows.filter(rowVisible);
+  if (!fresh.length) return;
+  const placeholder = box.querySelector(":scope > .muted:last-child");
+  if (placeholder && !box.querySelector(".row")) placeholder.remove();
+  const atEnd = box.scrollTop + box.clientHeight >= box.scrollHeight - 40;
+  box.querySelector(".newrows")?.remove();
+  for (const r of fresh) box.append(rowEl(r));
+  while (box.querySelectorAll(".row").length > MAX_DOM) box.querySelector(".row").remove();
+  if (!feed.paused && atEnd) {
+    box.scrollTop = box.scrollHeight;
+  } else {
+    feed.unseen += fresh.length;
+    const b = el("button", "newrows", `↓ ${feed.unseen} new`);
+    b.onclick = () => { feed.unseen = 0; b.remove(); box.scrollTop = box.scrollHeight; };
+    box.append(b);
+  }
+}
+
+function rowEl(r) {
+  const row = el("div", `row ${r.kind}${r.sub ? " sub" : ""}`);
+  const body = el("div", "body");
+  row.append(body);
+  row.title = "Click to expand";
+  row.onclick = (e) => { if (e.target.closest("button")) return; row.classList.toggle("open"); };
+  if (r.kind === "result") {
+    row.classList.add(r.ok ? "ok" : "bad");
+    body.textContent = `${r.ok ? "✓" : "✗"} ${r.text}${typeof r.turns === "number" ? ` · ${r.turns} turns` : ""}${typeof r.costUsd === "number" ? ` · ${usd(r.costUsd)}` : ""}`;
+    if (r.detail) body.append(el("div", "d", r.detail));
+    return row;
+  }
+  if (r.sub && feed.view === "all") body.append(el("span", "who", r.who));
+  if (r.kind === "text") { body.append(document.createTextNode(r.text)); return row; }
+  if (r.kind === "report") {
+    body.append(el("span", "k", `${r.ok ? "■" : "✗"} final report\n`), document.createTextNode(r.text));
+    return row;
+  }
+  const icon = { tool: "→", delegate: "⇢ agent", skill: "✦ skill", task: "⧗", progress: "·" }[r.kind] ?? "·";
+  body.append(el("span", "k", `${icon} ${r.text}`));
+  if (r.detail) body.append(el("span", "d", `  ${r.detail}`));
+  if (r.kind === "delegate" && r.spawns) {
+    const b = el("button", "open-log", "open log");
+    b.onclick = () => { feed.view = r.spawns; renderFeed(); };
+    body.append(b);
+  }
+  return row;
+}
+
+let searchTimer = null;
+$("search").addEventListener("input", (e) => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { feed.search = e.target.value.trim().toLowerCase(); renderFeed(); }, 150);
+});
+$("pause").onclick = () => {
+  feed.paused = !feed.paused;
+  $("pause").textContent = feed.paused ? "Resume" : "Pause";
+  $("pause").setAttribute("aria-pressed", String(feed.paused));
+  if (!feed.paused) { $("feed").querySelector(".newrows")?.click(); }
+};
+$("followLive").onclick = () => follow("live");
+$("closeDrawer").onclick = closeDrawer;
+$("drawerBackdrop").onclick = closeDrawer;
+$("liveBadge").onclick = () => showAgent("all");
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !$("liveDrawer").hidden && !$("detail").open) closeDrawer();
+});
+
+// ===== drain.log ===========================================================================
+async function loadLog() {
+  if (!$("logBox").open) return;
+  try {
+    const res = await fetch("/api/drain-log?lines=200", { cache: "no-store" });
+    const { lines } = await res.json();
+    const pre = $("log");
+    const atEnd = pre.scrollTop + pre.clientHeight >= pre.scrollHeight - 20;
+    pre.textContent = lines.join("\n") || "(empty)";
+    if (atEnd) pre.scrollTop = pre.scrollHeight;
+  } catch { /* the board poll reports the monitor being down */ }
+}
+$("logBox").addEventListener("toggle", loadLog);
+
+renderFilters();
+loadBoard();
+setInterval(loadBoard, 3000);
+setInterval(loadLog, 3000);
+setInterval(renderHeader, 15000);
+</script>
+</body>
+</html>

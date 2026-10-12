@@ -89,6 +89,7 @@ npm run auto -- "<task>"            # build one task now, outside the queue
 npm run loop                        # preflight → observe → plan → drain → report
 npm run schedule -- install         # run the loop on a timer (Task Scheduler / launchd)
 npm run auto:status                 # every attempt, its turns, cost and why it failed
+npm run monitor                     # read-only web page: tasks by lane per spec, live stream of the run (127.0.0.1:4000)
 npm run lessons                     # what past runs recorded for future ones
 npm run owes                        # which reviews and skills the working tree's change owes (the runner's rule)
 npm run pr                          # the pull-request URL for the current branch

@@ -17,6 +17,7 @@
     "auto": "node scripts/agent-run.mjs",
     "auto:ship": "node scripts/auto-ship.mjs",
     "auto:status": "node scripts/run-journal.mjs",
+    "monitor": "node scripts/monitor.mjs",
     "queue": "node scripts/agent-queue.mjs",
     "loop": "node scripts/loop.mjs",
     "schedule": "node scripts/schedule-drain.mjs",
