@@ -168,7 +168,9 @@
       {
         "name": "smoke",
         "description": "health, OpenAPI document, anonymous refusal",
-        "when": ["^src/backend/Source/"],
+        "when": [
+          "^src/backend/Source/(?!Features/Localization/Core/Resources/)"
+        ],
         "run": "node scripts/smoke.mjs {{api}}",
         "needsService": true,
         "skipNote": "the API was untouched"

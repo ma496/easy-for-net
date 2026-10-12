@@ -65,9 +65,13 @@ const DOTNET = [
   /^\.config\/dotnet-tools\.json$/,
   /^\.editorconfig$/,
 ];
+// The shipped translation files are embedded in the API, so they still rebuild it, but only the
+// resource-store tests read them — a change to them alone does not run the whole backend suite.
+const RESOURCES = /^src\/backend\/Source\/Features\/Localization\/Core\/Resources\//;
+const DOTNET_TESTS = [/^src\/backend\/(?!Source\/Features\/Localization\/Core\/Resources\/)/, ...DOTNET.slice(1)];
 const TOOL_PATHS = [/^tool\//, /^global\.json$/, /^[^/]+\.slnx?$/, /^src\/backend\/Source\/appsettings[^/]*\.json$/];
 const WEB_PATHS = [/^src\/frontend\/web\//];
-const WEB_TESTS = [...WEB_PATHS, /^src\/backend\/Source\/Features\/Localization\/Core\/Resources\//];
+const WEB_TESTS = [...WEB_PATHS, RESOURCES];
 const ENGINE = [/^scripts\//, /^agentic\.config\.json$/, /^package(-lock)?\.json$/];
 const HOOKS = [/^\.claude\/hooks\//, /^\.claude\/settings\.json$/, /^\.claude\/statusline\.mjs$/, /^scripts\/lib\//, /^agentic\.config\.json$/];
 
@@ -101,7 +105,16 @@ const steps = [
     // fails with MSB3027 for a reason that has nothing to do with the change.
     before: () => runSync("node", ["scripts/stop-api.mjs"], { cwd: REPO_ROOT, stdio: "inherit" }),
   },
-  { area: "api", name: "backend tests", cmd: "dotnet", args: ["test", relative(REPO_ROOT, API_TESTS), "--no-build", "-nologo"], watches: DOTNET },
+  { area: "api", name: "backend tests", cmd: "dotnet", args: ["test", relative(REPO_ROOT, API_TESTS), "--no-build", "-nologo"], watches: DOTNET_TESTS },
+  {
+    area: "api",
+    name: "backend resource tests",
+    cmd: "dotnet",
+    args: ["test", relative(REPO_ROOT, API_TESTS), "--no-build", "-nologo", "--filter", "FullyQualifiedName~LocalizationResourceStoreTests"],
+    watches: [RESOURCES],
+    // Covered already when the whole suite runs.
+    supersededBy: "backend tests",
+  },
   ...toolTestDirs.map((dir) => ({ area: "api", name: `tests: ${dir}`, cmd: "dotnet", args: ["test", dir, "-nologo"], watches: TOOL_PATHS })),
   {
     area: "web",
@@ -142,6 +155,7 @@ if (CHANGED) {
   for (const p of scope.unknown.slice(0, 8)) console.log(`  unwatched: ${p}`);
   planned = scope.steps;
 }
+planned = planned.filter((s) => !s.supersededBy || !planned.some((o) => o.name === s.supersededBy));
 
 if (PLAN) {
   console.log(planned.length ? planned.map((s) => `  would run: ${s.name}`).join("\n") : "  would run: nothing");
