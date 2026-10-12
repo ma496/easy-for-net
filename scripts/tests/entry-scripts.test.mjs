@@ -38,6 +38,7 @@ const ENTRIES = [
   { file: "claude-contract.mjs", args: ["--help"] },
   { file: "stop-api.mjs", args: ["--list"] },
   { file: "deploy-vps.mjs", args: ["--help"] },
+  { file: "monitor.mjs", args: ["--help"] },
 ];
 
 for (const { file, args } of ENTRIES) {

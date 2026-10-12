@@ -115,6 +115,45 @@ export function isSubagentEvent(event, rootSession) {
 }
 
 /**
+ * A task's lifecycle — a subagent, or a backgrounded shell command — as the session's own
+ * `system` events report it: `task_started`, any number of `task_progress` (what it is doing
+ * now, and its running usage), `task_updated` (a status patch, named by task id alone), then
+ * `task_notification` when it ends, whose `summary` is a subagent's final report.
+ *
+ * `toolUseId` is the call that started the task — for a subagent, the `Agent` call, which is
+ * also the `parent_tool_use_id` its own events carry. A background subagent's own events never
+ * appear in the stream at all, so these are the only record of what it did.
+ *
+ * Null for every other event. Only the monitor reads this; the runner decides nothing from it.
+ */
+export function backgroundTaskOf(raw) {
+  if (!raw || raw.type !== "system") return null;
+  const str = (v) => (typeof v === "string" ? v : null);
+  const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null);
+  const base = { id: str(raw.task_id), toolUseId: str(raw.tool_use_id), type: null, description: "", usage: null, lastTool: null };
+  switch (raw.subtype) {
+    case "task_started":
+      return { ...base, status: "started", type: str(raw.task_type), description: str(raw.description) ?? "" };
+    case "task_progress":
+      return {
+        ...base,
+        status: "progress",
+        description: str(raw.description) ?? "",
+        lastTool: str(raw.last_tool_name),
+        usage: raw.usage && typeof raw.usage === "object"
+          ? { toolUses: num(raw.usage.tool_uses), tokens: num(raw.usage.total_tokens), durationMs: num(raw.usage.duration_ms) }
+          : null,
+      };
+    case "task_updated":
+      return str(raw.patch?.status) ? { ...base, status: "updated", description: raw.patch.status } : null;
+    case "task_notification":
+      return { ...base, status: str(raw.status) ?? "ended", description: str(raw.summary) ?? "" };
+    default:
+      return null;
+  }
+}
+
+/**
  * The result subtypes that mean the session stopped itself on a limit rather than finishing.
  * `error_max_turns` is what `--max-turns` produces; it still carries a cost, which is why
  * the runner passes that flag rather than relying on killing the process.

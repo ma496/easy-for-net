@@ -119,6 +119,9 @@ const TOOL_DETAIL = {
   WebFetch: (i) => i.url,
 };
 
+/** The one detail that identifies a tool call, or "" when the tool has none worth showing. */
+export const toolDetail = (use) => TOOL_DETAIL[use?.name]?.(use.input ?? {}) ?? "";
+
 const truncate = (text, n = 96) => {
   const one = String(text ?? "").replace(/\s+/g, " ").trim();
   return one.length > n ? `${one.slice(0, n - 1)}…` : one;
@@ -155,7 +158,7 @@ export function renderEvent(line, state = {}) {
     }
   }
   for (const use of event.toolUses) {
-    const detail = TOOL_DETAIL[use.name]?.(use.input);
+    const detail = toolDetail(use);
     out.push(`${lead}→ ${use.name}${detail ? `  ${truncate(detail, 84)}` : ""}`);
   }
   return out.length ? out.join("\n") : null;
