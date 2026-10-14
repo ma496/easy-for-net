@@ -10,12 +10,26 @@ Stack: xUnit v3 + `FastEndpoints.Testing` + FluentAssertions + Bogus. Tests boot
 `appsettings.Testing.json`; the Testing environment migrates on startup, `App.SetupAsync` runs
 `TestsDataSeeder`, and `App.TearDownAsync` drops the database at the end of the run.
 
+`App.PreSetupAsync` first clones the database from a template (`TestDatabaseTemplate`):
+`<db>_tpl_<key>` on the same server, a copy of the database as the host leaves it — migrated and
+seeded by `DataSeeder`, before `TestsDataSeeder` — keyed on the migrations, `ShareData/` and the
+`Seed` configuration and rebuilt at least daily. The first run after any of those change builds the
+database the long way and saves a new template; later runs skip the migrations and the platform
+seed. Every failure there is logged and falls back to the long way, so a server without the right
+to create databases from a template still runs the suite.
+
 ```sh
 npm run stop:api    # a running API locks the build output the test run rebuilds
 dotnet test src/backend/Tests/Backend.Tests.csproj
 dotnet test src/backend/Tests/Backend.Tests.csproj --filter "FullyQualifiedName~UserCreateTests"
 dotnet test src/backend/Tests/Backend.Tests.csproj --filter "FullyQualifiedName~UserCreateTests.Valid_Input"
+# several classes in one run, without rebuilding — the cheap way to check a change
+dotnet test src/backend/Tests/Backend.Tests.csproj --no-build --filter "FullyQualifiedName~UserCreateTests|FullyQualifiedName~Architect"
 ```
+
+Every invocation pays a fixed start-up — host boot, the test database, the seed — of tens of
+seconds whatever the filter selects, so one run of three classes costs far less than three runs
+of one. Build once, then pass `--no-build` until you edit source again, and combine filters with `|`.
 
 If the run fails at startup, the database is almost always the cause — check that PostgreSQL is up
 and the connection string in `appsettings.Testing.json` resolves.
