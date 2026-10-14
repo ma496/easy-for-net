@@ -73,7 +73,7 @@
   .card.flash { animation: flash 1.2s; }
   @keyframes flash { 30% { box-shadow: 0 0 0 3px var(--warn); } }
   .card .nm { font-family: var(--mono); font-size: 12px; color: var(--muted); }
-  .card .tt { font-size: 13px; margin: 2px 0 4px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .card .tt { font-size: 13px; margin: 2px 0 4px; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .meta { display: flex; flex-wrap: wrap; gap: 6px; font-size: 11px; color: var(--muted); }
   .dep { font-family: var(--mono); border: 0; background: none; padding: 0; cursor: pointer; color: inherit; font-size: 11px; }
   .dep:hover { text-decoration: underline; }
@@ -92,19 +92,25 @@
   .filters { padding: 6px 12px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   .filters .lbl { font-size: 12px; color: var(--muted); margin-right: 2px; }
   .feed { font-family: var(--mono); font-size: 12.5px; flex: 1; min-height: 0; overflow: auto; padding: 6px 12px; }
-  .row { padding: 3px 0; white-space: pre-wrap; word-break: break-word; cursor: pointer; border-radius: 4px; }
-  .row:hover { background: var(--chip); }
-  .row .body { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .row { padding: 3px 0; white-space: pre-wrap; word-break: break-word; border-radius: 4px; }
+  /* Only a row whose text is cut off can be expanded, and only that row says so. */
+  .row.clamped { cursor: pointer; }
+  .row.clamped:hover { background: var(--chip); }
+  .row .more { display: none; border: 0; background: none; padding: 0; margin-top: 2px; cursor: pointer;
+    color: var(--accent); font: 11.5px system-ui, sans-serif; }
+  .row.clamped .more { display: inline-block; }
+  .row .more:hover { text-decoration: underline; }
+  .row .body { display: -webkit-box; -webkit-line-clamp: 4; line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
   .row.open .body { display: block; }
   .row.sub { margin-left: 16px; padding-left: 8px; border-left: 2px solid var(--sub); }
   .row .who { color: var(--sub); font-weight: 600; margin-right: 6px; }
   .row.text .body { font-family: system-ui, sans-serif; font-size: 13px; }
   .row.tool .k { color: var(--accent); }
-  .row.delegate .k, .row.skill .k { color: var(--sub); font-weight: 600; }
+  .row.delegate .k, .row.skill .k, .row.resume .k { color: var(--sub); font-weight: 600; }
   .row.task .k { color: var(--warn); }
   .row.progress { color: var(--muted); }
   .row.report { background: var(--sub-bg); padding: 6px 8px; margin: 4px 0; }
-  .row.report .body { font-family: system-ui, sans-serif; font-size: 13px; -webkit-line-clamp: 8; }
+  .row.report .body { font-family: system-ui, sans-serif; font-size: 13px; -webkit-line-clamp: 8; line-clamp: 8; }
   .row.report .k { color: var(--sub); font-weight: 700; }
   .row.result { font-weight: 700; padding: 6px 0; }
   .row.result.ok { color: var(--ok); } .row.result.bad { color: var(--bad); }
@@ -203,6 +209,7 @@ async function loadBoard() {
       board = JSON.parse(text);
       renderBoard();
       renderTaskHead();
+      renderDetail();
     }
     renderHeader();
   } catch {
@@ -363,8 +370,21 @@ function revealTask(stem) {
   node.classList.add("flash");
 }
 
+/** The task the History dialog shows; it is drawn again from every new board while open. */
+let detailStem = null;
+
 function openDetail(t) {
+  detailStem = t.stem;
+  $("detail").showModal();
+  renderDetail();
+}
+
+function renderDetail() {
+  if (!detailStem || !$("detail").open || !board) return;
+  const t = board.specs.flatMap((s) => s.tasks).find((x) => x.stem === detailStem);
+  if (!t) return;
   const body = $("detailBody");
+  const scroll = body.scrollTop;
   body.replaceChildren();
   const head = el("div");
   head.style.cssText = "display:flex;gap:8px;align-items:center";
@@ -400,7 +420,7 @@ function openDetail(t) {
     box.append(btns);
     body.append(box);
   }
-  $("detail").showModal();
+  body.scrollTop = scroll;
 }
 
 $("taskFilter").addEventListener("input", (e) => { taskFilter = e.target.value; if (board) renderBoard(); });
@@ -409,7 +429,7 @@ $("taskFilter").addEventListener("input", (e) => { taskFilter = e.target.value; 
 const KINDS = [
   { key: "text", label: "Messages", kinds: ["text"] },
   { key: "tool", label: "Tools", kinds: ["tool"] },
-  { key: "agents", label: "Agents & skills", kinds: ["delegate", "skill", "report"] },
+  { key: "agents", label: "Agents & skills", kinds: ["delegate", "resume", "skill", "report"] },
   { key: "progress", label: "Progress", kinds: ["progress"] },
   { key: "task", label: "Background", kinds: ["task"] },
   { key: "result", label: "Result", kinds: ["result"] },
@@ -543,7 +563,8 @@ function renderAgentInfo() {
   line1.append(dot(a.status), document.createTextNode(" "), el("b", null, a.label),
     document.createTextNode(` — ${a.description}`));
   const stats = [a.status, a.toolUses ? `${a.toolUses} tool calls` : "", a.turns ? `${a.turns} turns` : "",
-    kTokens(a.tokens), dur(a.durationMs), `started by ${parent}`, a.background ? "background" : ""].filter(Boolean).join(" · ");
+    kTokens(a.tokens), dur(a.durationMs), `started by ${parent}`,
+    a.resumes ? `resumed ${a.resumes}×` : "", a.background ? "background" : ""].filter(Boolean).join(" · ");
   box.replaceChildren(line1, el("div", "muted", stats));
   if (a.status === "running" && a.current) box.append(el("div", null, `now: ${a.current}`));
   if (a.streamed === 0) box.append(el("div", "muted", "The stream carries only this agent's progress and final report, not its own messages."));
@@ -580,9 +601,29 @@ function renderFeed() {
   if (shown.length > MAX_DOM) box.append(el("div", "muted", `… ${shown.length - MAX_DOM} earlier matching rows not drawn — narrow the filters`));
   if (!shown.length) box.append(el("div", "muted", feed.rows.length ? "No rows match these filters." : "Nothing yet."));
   box.append(...nodes);
+  markClamped(nodes);
   feed.unseen = 0;
   box.scrollTop = box.scrollHeight;
 }
+
+/**
+ * Give the "show more" toggle to the rows whose text the line clamp actually cut off. Reads
+ * every height before writing any class, so a long backlog is measured in one layout.
+ */
+function markClamped(rows) {
+  const cut = rows.map((row) => {
+    if (row.classList.contains("open")) return true;
+    const body = row.querySelector(":scope > .body");
+    return Boolean(body) && body.scrollHeight > body.clientHeight + 1;
+  });
+  rows.forEach((row, i) => row.classList.toggle("clamped", cut[i]));
+}
+
+let resizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => markClamped([...$("feed").querySelectorAll(".row")]), 150);
+});
 
 function appendRows(rows) {
   const box = $("feed");
@@ -592,7 +633,9 @@ function appendRows(rows) {
   if (placeholder && !box.querySelector(".row")) placeholder.remove();
   const atEnd = box.scrollTop + box.clientHeight >= box.scrollHeight - 40;
   box.querySelector(".newrows")?.remove();
-  for (const r of fresh) box.append(rowEl(r));
+  const nodes = fresh.map(rowEl);
+  box.append(...nodes);
+  markClamped(nodes);
   while (box.querySelectorAll(".row").length > MAX_DOM) box.querySelector(".row").remove();
   if (!feed.paused && atEnd) {
     box.scrollTop = box.scrollHeight;
@@ -608,8 +651,21 @@ function rowEl(r) {
   const row = el("div", `row ${r.kind}${r.sub ? " sub" : ""}`);
   const body = el("div", "body");
   row.append(body);
-  row.title = "Click to expand";
-  row.onclick = (e) => { if (e.target.closest("button")) return; row.classList.toggle("open"); };
+  const more = el("button", "more", "show more");
+  const toggle = () => {
+    const open = row.classList.toggle("open");
+    more.textContent = open ? "show less" : "show more";
+    more.setAttribute("aria-expanded", String(open));
+  };
+  more.setAttribute("aria-expanded", "false");
+  more.onclick = (e) => { e.stopPropagation(); toggle(); };
+  // A click on the text expands it too, unless it lands on a button or is the end of a selection.
+  row.onclick = (e) => {
+    const sel = getSelection();
+    if (!row.classList.contains("clamped") || e.target.closest("button") || (String(sel) && row.contains(sel.anchorNode))) return;
+    toggle();
+  };
+  row.append(more);
   if (r.kind === "result") {
     row.classList.add(r.ok ? "ok" : "bad");
     body.textContent = `${r.ok ? "✓" : "✗"} ${r.text}${typeof r.turns === "number" ? ` · ${r.turns} turns` : ""}${typeof r.costUsd === "number" ? ` · ${usd(r.costUsd)}` : ""}`;
@@ -622,7 +678,7 @@ function rowEl(r) {
     body.append(el("span", "k", `${r.ok ? "■" : "✗"} final report\n`), document.createTextNode(r.text));
     return row;
   }
-  const icon = { tool: "→", delegate: "⇢ agent", skill: "✦ skill", task: "⧗", progress: "·" }[r.kind] ?? "·";
+  const icon = { tool: "→", delegate: "⇢ agent", resume: "⟲", skill: "✦ skill", task: "⧗", progress: "·" }[r.kind] ?? "·";
   body.append(el("span", "k", `${icon} ${r.text}`));
   if (r.detail) body.append(el("span", "d", `  ${r.detail}`));
   if (r.kind === "delegate" && r.spawns) {
@@ -670,7 +726,6 @@ renderFilters();
 loadBoard();
 setInterval(loadBoard, 3000);
 setInterval(loadLog, 3000);
-setInterval(renderHeader, 15000);
 </script>
 </body>
 </html>

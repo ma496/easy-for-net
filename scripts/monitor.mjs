@@ -152,7 +152,7 @@ const trackers = new Map();
 function trackerFor(name) {
   let t = trackers.get(name);
   if (!t) {
-    t = { name, offset: 0, carry: "", state: {}, rows: [], dropped: 0, listeners: new Set(), usedAt: 0 };
+    t = { name, offset: 0, carry: "", state: {}, rows: [], dropped: 0, counts: "", listeners: new Set(), usedAt: 0 };
     trackers.set(name, t);
     advance(t);
   }
@@ -167,7 +167,7 @@ function advance(t) {
   if (!read) return;
   if (read.text === null) {
     // Rewritten from the start: read it again, and tell every feed to start over.
-    Object.assign(t, { offset: 0, carry: "", state: {}, rows: [], dropped: 0 });
+    Object.assign(t, { offset: 0, carry: "", state: {}, rows: [], dropped: 0, counts: "" });
     for (const l of t.listeners) l.reset();
     advance(t);
     return;
@@ -176,7 +176,16 @@ function advance(t) {
   const lines = (t.carry + read.text).split("\n");
   t.carry = lines.pop() ?? ""; // A line the runner has not finished writing.
   const rows = lines.flatMap((line) => describeEvent(line, t.state));
-  if (!rows.length) return;
+  if (!lines.length) return;
+  // Lines that add no row can still move an agent (a status patch, its usage), so when the
+  // counts changed every feed hears of it: an empty `rows` event carries the new ones.
+  const counts = JSON.stringify(trackerCounts(t));
+  const moved = counts !== t.counts;
+  t.counts = counts;
+  if (!rows.length) {
+    if (moved) for (const l of t.listeners) l.rows([]);
+    return;
+  }
   t.rows.push(...rows);
   if (t.rows.length > MAX_ROWS) {
     t.dropped += t.rows.length - MAX_ROWS;

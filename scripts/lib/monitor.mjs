@@ -106,6 +106,12 @@ function newAgent(state, use, spawnedBy) {
     tracked: false,
     current: "",
     hasReport: false,
+    // How many times the lead sent it back to work after it reported, and the run it is on now.
+    resumes: 0,
+    runId: null,
+    // What the runs before this one used: each run's usage counts from zero.
+    priorToolUses: 0,
+    priorDurationMs: 0,
     startSeq: state.seq,
   };
   if (use.id) state.agents[use.id] = agent;
@@ -127,7 +133,7 @@ export function agentsOf(state) {
  *
  * Row: `{ seq, agent, who, sub, kind, text, detail?, ok?, costUsd?, turns? }` — `agent` is the
  * id of the `Agent` call whose log the row belongs to (null for the lead), `who` its label,
- * `kind` one of text | tool | delegate | skill | task | progress | report | result. A
+ * `kind` one of text | tool | delegate | resume | skill | task | progress | report | result. A
  * delegate row belongs to the agent that delegated, and names the new one in `spawns`.
  */
 export function describeEvent(line, state) {
@@ -156,10 +162,32 @@ export function describeEvent(line, state) {
       if (task.id) state.taskAgent[task.id] = agent.id;
       agent.tracked = true;
       const mine = { agent: agent.id, who: agent.label, sub: true };
-      if (task.status === "progress") {
-        if (task.usage?.toolUses != null) agent.toolUses = task.usage.toolUses;
+      // An event of a run the agent has since been resumed out of says nothing about it now.
+      const stale = Boolean(task.runId && agent.runId && task.runId !== agent.runId);
+      if (task.status === "started") {
+        // The same task starting again is the agent resumed (a SendMessage after the reviews):
+        // it is working once more, until its next notification. A new run id says so even when
+        // the start overtakes the previous run's notification; an older CLI has only the status.
+        const resumed = task.runId && agent.runId ? stale : agent.status !== "running";
+        if (task.runId) agent.runId = task.runId;
+        if (resumed) {
+          agent.status = "running";
+          agent.current = "";
+          agent.hasReport = false;
+          agent.resumes += 1;
+          agent.priorToolUses = agent.toolUses;
+          agent.priorDurationMs = agent.durationMs ?? 0;
+          push({ ...mine, kind: "resume", text: "resumed", detail: clip(task.prompt, 1000) });
+        }
+      } else if (stale) {
+        // The earlier run's report still belongs in the log; its status does not.
+        if (task.status !== "progress" && task.status !== "updated" && task.description) {
+          push({ ...mine, kind: "report", ok: ENDED[task.status] === "done", text: clipProse(task.description, 8000) });
+        }
+      } else if (task.status === "progress") {
+        if (task.usage?.toolUses != null) agent.toolUses = agent.priorToolUses + task.usage.toolUses;
         if (task.usage?.tokens != null) agent.tokens = task.usage.tokens;
-        if (task.usage?.durationMs != null) agent.durationMs = task.usage.durationMs;
+        if (task.usage?.durationMs != null) agent.durationMs = agent.priorDurationMs + task.usage.durationMs;
         const now = clip(task.description, 300);
         // The first progress event often repeats the agent's own description; show what changed.
         if (now && now !== agent.current && now !== agent.description) {
@@ -168,7 +196,7 @@ export function describeEvent(line, state) {
         if (now) agent.current = now;
       } else if (task.status === "updated") {
         if (agent.status === "running" && ENDED[task.description]) agent.status = ENDED[task.description];
-      } else if (task.status !== "started") {
+      } else {
         agent.status = ENDED[task.status] ?? "done";
         agent.current = "";
         agent.hasReport = Boolean(task.description);
