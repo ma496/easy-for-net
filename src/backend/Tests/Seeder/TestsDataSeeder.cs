@@ -155,9 +155,11 @@ public class TestsDataSeeder(IUserService userService,
                 await roleService.CreateAsync(new Role { SystemCreated = true, Name = roleName });
             var rolePermissions = await permissionService.GetRolePermissionsAsync(role.Id);
             var permissionsToAssign = permissions.Where(p => !rolePermissions.Any(rp => rp.Name == p.Name)).ToList();
-            foreach (var permission in permissionsToAssign)
+            // One round trip for the whole set: a role here holds every permission, and one save
+            // per row was a few hundred round trips paid by every test run.
+            if (permissionsToAssign.Count > 0)
             {
-                await roleService.AssignPermissionAsync(role.Id, permission.Id);
+                await roleService.AssignPermissionsAsync(role.Id, permissionsToAssign.Select(p => p.Id).ToList());
             }
 
             var user = await userService.GetByUsernameAsync(username) ??

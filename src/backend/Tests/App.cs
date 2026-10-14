@@ -23,6 +23,21 @@ namespace Backend.Tests;
 /// </remarks>
 public class App : AppFixture<Program>
 {
+    private TestDatabaseTemplate? _template;
+
+    /// <summary>
+    /// Clones the test database from its template, when a current one exists, before the host starts
+    /// and migrates it - see <see cref="TestDatabaseTemplate"/>.
+    /// </summary>
+    protected override async ValueTask PreSetupAsync()
+    {
+        _template = TestDatabaseTemplate.Create();
+        if (_template is not null)
+        {
+            await _template.RestoreAsync();
+        }
+    }
+
     /// <summary>
     /// Configures the web host builder for the test application.
     /// </summary>
@@ -47,6 +62,12 @@ public class App : AppFixture<Program>
     /// </summary>
     protected override async ValueTask SetupAsync()
     {
+        // Saved before the test seed, so the template holds only what the host itself makes.
+        if (_template is not null)
+        {
+            await _template.CaptureAsync();
+        }
+
         await using var scope = Services.CreateAsyncScope();
         await scope.ServiceProvider.GetRequiredService<TestsDataSeeder>().SeedAsync();
     }
