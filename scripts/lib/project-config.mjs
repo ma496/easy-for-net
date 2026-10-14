@@ -125,6 +125,12 @@ const DEFAULTS = {
      */
     maxMinutesPerTask: 240,
     /**
+     * Seconds of quiet after a session's stream says it has finished (a final result, nothing
+     * pending in the background) before a CLI that has not exited is closed and the attempt
+     * judged as finished. Without it, one finished task waited out its whole per-attempt limit.
+     */
+    settleSeconds: 60,
+    /**
      * The planner's own limits. It writes task files and nothing else, so a planning call
      * that runs long is lost, not working — and on a timer an unbounded one is the one
      * session that could spend without a ceiling. `planAttempts` is how many times one
@@ -229,7 +235,7 @@ export function validateConfig(cfg) {
     problems.push(`project.workflow must be ${WORKFLOWS.join(" or ")} (got ${JSON.stringify(cfg.project?.workflow)})`);
   }
   const budget = cfg.budget ?? {};
-  for (const key of ["attempts", "maxTurns", "maxMinutesPerAttempt", "maxMinutesPerTask", "planMaxTurns", "planMaxMinutes", "planAttempts"]) {
+  for (const key of ["attempts", "maxTurns", "maxMinutesPerAttempt", "maxMinutesPerTask", "settleSeconds", "planMaxTurns", "planMaxMinutes", "planAttempts"]) {
     if (!isPositiveInt(budget[key])) {
       problems.push(`budget.${key} must be a positive integer (got ${JSON.stringify(budget[key])})`);
     }

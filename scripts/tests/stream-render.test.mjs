@@ -89,6 +89,18 @@ test("events split across chunk boundaries are still parsed", async () => {
   assert.equal(res.costUsd, 3.75);
 });
 
+test("onEvent sees every line that parsed, as its raw event, and nothing that did not", async () => {
+  const events = [
+    { type: "system", subtype: "background_tasks_changed", tasks: [] },
+    { type: "assistant", message: { content: [] } },
+    { type: "result", is_error: false, total_cost_usd: 1 },
+  ];
+  const seen = [];
+  const feed = [JSON.stringify(events[0]), "not json", JSON.stringify(events[1]), "", JSON.stringify(events[2])].join("\n");
+  await renderStream(Readable.from([feed]), () => {}, { onEvent: (raw) => seen.push(raw) });
+  assert.deepEqual(seen, events);
+});
+
 test("a stream error resolves rather than rejecting", async () => {
   const broken = new Readable({ read() { this.destroy(new Error("boom")); } });
   const res = await renderStream(broken, () => {});

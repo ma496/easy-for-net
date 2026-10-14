@@ -49,7 +49,7 @@ import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { appendRun, priorFailureBrief, priorTaskRuns, readRuns, LOG_DIR } from "./run-journal.mjs";
 import { formatForBrief, readLessons, selectLessons } from "./lib/memory.mjs";
-import { renderStream } from "./lib/stream-render.mjs";
+import { runStreaming as runClaudeSession } from "./lib/claude-session.mjs";
 import {
   assumedRateFromHistory,
   describeSpend,
@@ -74,7 +74,7 @@ import {
   restoreSalvage,
   salvageBrief,
 } from "./lib/salvage.mjs";
-import { IS_WINDOWS, hasExecutable, isAlive, killTree, killTreeHard, runWithDeadline, spawnPortable } from "./lib/proc.mjs";
+import { hasExecutable, isAlive, runWithDeadline } from "./lib/proc.mjs";
 import { liveHolder } from "./lib/queue-lock.mjs";
 import {
   assertValidConfig, config, modelArgs, positiveInt, resolveModel, WORK_BRANCH, workflowRefusal,
@@ -217,6 +217,17 @@ const MAX_MINUTES_PER_TASK = (() => {
   return positiveInt(raw, config.budget.maxMinutesPerTask, "AGENT_MAX_MINUTES_PER_TASK");
 })();
 const TASK_DEADLINE_MS = Date.now() + MAX_MINUTES_PER_TASK * 60_000;
+/**
+ * Seconds of quiet after a session's stream says it has finished — a final result, nothing
+ * pending in the background — before a CLI that has not exited is closed and the attempt
+ * judged as finished (lib/session-settle.mjs). One sat on a reviewed, finished task until its
+ * two-hour limit filed it as stopped. `off` disables it.
+ */
+const SETTLE_SECONDS = (() => {
+  const raw = process.env.AGENT_SETTLE_SECONDS ?? argOf("settle-seconds", undefined);
+  if (raw !== undefined && String(raw).trim().toLowerCase() === "off") return Infinity;
+  return positiveInt(raw, config.budget.settleSeconds, "AGENT_SETTLE_SECONDS");
+})();
 /** How often a running session's deadline is checked, and how long a stopped one gets to go. */
 const DEADLINE_CHECK_MS = 15_000;
 const STOP_GRACE_MS = 30_000;
@@ -405,115 +416,33 @@ childEnv.AGENT_VERIFY_URL = `http://127.0.0.1:${verifyServer.address().port}/ver
 const runLive = (cmd, args) => spawnSync(cmd, args, { stdio: "inherit", encoding: "utf8" });
 
 /**
- * Spawn a streaming `claude` call and narrate it while it runs.
+ * Spawn a streaming `claude` call and narrate it while it runs (lib/claude-session.mjs).
  *
  * Async, unlike everything else here, because a synchronous spawn cannot show anything
  * until it returns — which is the whole problem this replaces. stderr stays inherited so
  * real errors land in the log untouched.
  */
 async function runStreaming(cmd, args, { input, streamFile }) {
-  // Through proc.mjs, so an npm-installed `claude.cmd` starts on Windows as the native
-  // binary does. The prompt goes in on stdin rather than as an argument: brief, memory,
-  // history and feedback together can pass Windows' 32,767-character command line, and a
-  // spawn that fails on length reads downstream as "nothing ran" — the account-blocked path.
-  const child = spawnPortable(cmd, args, {
-    stdio: ["pipe", "pipe", "inherit"],
-    env: { ...process.env, ...childEnv },
-    // Its own process group on POSIX, so killTree reaches everything the session started.
-    detached: !IS_WINDOWS,
-  });
-  // Detached, it no longer hears the terminal's Ctrl-C or the drain's SIGTERM — so this
-  // process passes them on rather than leaving a session writing to a tree it abandoned.
-  const forward = () => {
-    killTree(child.pid);
-    process.exit(130);
-  };
-  const signals = ["SIGINT", "SIGTERM", "SIGHUP"];
-  for (const sig of signals) process.on(sig, forward);
-  child.stdin.on("error", () => {}); // A child that exits early closes the pipe; that is not ours to throw.
-  child.stdin.end(input);
   // Every raw line, kept beside the rendered log. The rendered log is lossy by design, and
   // when the CLI's format moves this is the file a new fixture is cut from.
   const raw = streamFile ? createWriteStream(streamFile) : null;
-  let killedFor = null;
-  let settle = null; // resolves the status below; set once the promise exists
-  let exitCode = null;
-  let escalation = null;
-  // Kill and keep killing: the first stop takes the tree as it stands; if the session is
-  // still not gone a grace period later, the tree is taken again and the pipes are cut, so a
-  // background shell or server that inherited them can no longer hold the runner open.
-  const kill = () => {
-    // The whole tree: on Windows `child.kill` ends only the shell or the CLI itself and
-    // leaves the dotnet and node processes it started holding the ports and the files.
-    if (!killTreeHard(child.pid)) child.kill("SIGTERM");
-  };
-  const stop = (why) => {
-    if (killedFor) return;
-    killedFor = why;
-    kill();
-    escalation = setTimeout(() => {
-      console.error("\n  ✗ the session did not end after it was stopped — stopping it again and closing its output.");
-      kill();
-      child.stdout.destroy(new Error(`stopped (${why})`));
-      settle?.(exitCode ?? 1);
-    }, STOP_GRACE_MS);
-  };
-  // The dollar ceilings in lib/budget.mjs are checked between tasks, deliberately: killing
-  // a task mid-edit leaves a half-finished tree. But that leaves a single attempt able to
-  // spend without limit, and one did — $240 against a $50 per-task ceiling. So the CLI is
-  // given the remaining budget and turn cap itself (see the call site), and this is the
-  // backstop for a session that ignores them.
-  const rendered = renderStream(child.stdout, undefined, {
-    maxTurns: BACKSTOP_TURNS,
-    onLimit: () => stop("turns"),
+  const res = await runClaudeSession(cmd, args, {
+    input,
+    env: { ...process.env, ...childEnv },
     onLine: raw ? (line) => raw.write(`${line}\n`) : undefined,
+    maxTurns: BACKSTOP_TURNS,
+    attemptEndsAt: Number.isFinite(MAX_MINUTES) ? Date.now() + MAX_MINUTES * 60_000 : Infinity,
+    taskEndsAt: Date.now() + taskTimeLeftMs(),
+    settleMs: SETTLE_SECONDS * 1000,
+    stopGraceMs: STOP_GRACE_MS,
+    checkMs: DEADLINE_CHECK_MS,
+    describeTimeout: (which) =>
+      which === "attempt"
+        ? `\n  ✗ stopped: the attempt ran past ${MAX_MINUTES} minutes (AGENT_MAX_MINUTES_PER_ATTEMPT)`
+        : `\n  ✗ stopped: the task ran past ${MAX_MINUTES_PER_TASK} minutes (AGENT_MAX_MINUTES_PER_TASK)`,
   });
-  // A deadline on the wall clock, checked often, rather than one long setTimeout: a machine
-  // that sleeps through a timer's due time can wake to find it still waiting, and an attempt
-  // once ran six hours past its limit. Whichever ends first — the attempt's own limit or what
-  // is left of the task's — stops it.
-  const attemptEnds = Number.isFinite(MAX_MINUTES) ? Date.now() + MAX_MINUTES * 60_000 : Infinity;
-  const taskEnds = Date.now() + taskTimeLeftMs();
-  const deadline = Math.min(attemptEnds, taskEnds);
-  const timer = Number.isFinite(deadline)
-    ? setInterval(() => {
-        if (Date.now() < deadline) return;
-        console.error(
-          deadline === attemptEnds
-            ? `\n  ✗ stopped: the attempt ran past ${MAX_MINUTES} minutes (AGENT_MAX_MINUTES_PER_ATTEMPT)`
-            : `\n  ✗ stopped: the task ran past ${MAX_MINUTES_PER_TASK} minutes (AGENT_MAX_MINUTES_PER_TASK)`,
-        );
-        stop("time");
-      }, DEADLINE_CHECK_MS)
-    : null;
-  const status = await new Promise((res) => {
-    let done = false;
-    settle = (code) => {
-      if (done) return;
-      done = true;
-      res(code);
-    };
-    child.on("error", () => settle(1));
-    child.on("exit", (code) => {
-      exitCode = code ?? 1;
-    });
-    child.on("close", (code) => settle(code ?? 1));
-  });
-  if (timer) clearInterval(timer);
-  if (escalation) clearTimeout(escalation);
-  for (const sig of signals) process.off(sig, forward);
-  const outcome = await rendered;
-  if (raw) await new Promise((res) => raw.end(res));
-  // Spread rather than cherry-pick. Naming the fields here meant that adding `subagents`
-  // to renderStream left them undefined at the call site: a task passed verify, then the
-  // enforcement that reads them crashed on it. A field added at one end must not need
-  // remembering at the other.
-  return {
-    status,
-    ...outcome,
-    timedOut: killedFor === "time",
-    timeLimit: deadline === attemptEnds ? "attempt" : "task",
-  };
+  if (raw) await new Promise((done) => raw.end(done));
+  return res;
 }
 const branchName = () => run("git", ["rev-parse", "--abbrev-ref", "HEAD"]).stdout.trim();
 
@@ -854,6 +783,7 @@ ${carried.slice(-6000)}`;
     subtype: claudeRes.resultSubtype ?? null,
     cli: claudeRes.cliVersion ?? null,
     timedOut: Boolean(claudeRes.timedOut),
+    ...(claudeRes.settled ? { settled: true } : {}),
   });
   // Where this attempt's wall clock went: each delegation paired with the second it was
   // dispatched, and how long the attempt ran in total. One line per attempt, so the question

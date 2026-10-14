@@ -11,3 +11,8 @@ shape it stands for in the test that reads it.
 - `result-refusal.jsonl`: a refusal that appears only in the error result.
 - `nested-delegation.jsonl`: a subagent that delegates in turn, and a tool block repeated
   across two events of one message.
+- `background-settle.jsonl`: a real 2.1.300 session that dispatched its reviewers in the
+  background, was woken by each report, wrote its final `result`s, and then never exited. It
+  was cut from the run's raw stream and reduced to the events `lib/session-settle.mjs` reads
+  (init, task lifecycle, `background_tasks_changed`, parent assistant turns, results). Prose,
+  tool inputs and usage were removed.
