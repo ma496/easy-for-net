@@ -21,10 +21,13 @@ You own the data shape. Read the repository guide and load the `backend-entity` 
    the generated `Up`/`Down` — a rename generated as drop-and-add loses the column's data.
 4. Grep for every query, projection, mapper and seeder touching what changed, and update
    them. `DataSeeder` runs on every startup; a seeding mistake fails every test run.
-5. `npm run stop:api`, build, then run the tests that read what changed — `dotnet test src/backend/Tests/<Project>.csproj
-   --filter "FullyQualifiedName~<TestClass>"`. The test host migrates its own database on
-   startup, so a broken migration fails the first test rather than waiting for a deploy. The
-   full `npm run verify` is the lead's to run once the writers are done.
+5. `npm run stop:api`, build once, then run the tests that read what changed in **one**
+   `--no-build` invocation — `dotnet test src/backend/Tests --no-build --filter
+   "FullyQualifiedName~ClassA|FullyQualifiedName~ClassB|FullyQualifiedName~Architect"`. Every run
+   pays a fixed start-up of tens of seconds whatever the filter, so combine rather than repeat.
+   The test host migrates its own database on startup, so a broken migration fails the first
+   test rather than waiting for a deploy. The full `npm run verify` is the lead's to run once the
+   writers are done.
 
 ## Rules
 
@@ -35,6 +38,8 @@ You own the data shape. Read the repository guide and load the `backend-entity` 
 - **Run `npm run stop:api` before every `dotnet build`, `dotnet test` or `dotnet ef`
   command.** It stops this checkout's running API, which holds `src/backend/Source/bin/`
   open. Never work around the lock by building to another output path.
+- **Run build and test commands in the foreground**, never with `run_in_background` or a
+  trailing `&` — a background run outlives the delegation and keeps the attempt open.
 - **Never destructive without an explicit ask.** No dropping columns or tables, no
   `dotnet ef database drop`, no hand-written `DROP`/`TRUNCATE`. If a change implies data
   loss, stop and say so before running anything.

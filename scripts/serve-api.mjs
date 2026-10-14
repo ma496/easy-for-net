@@ -13,9 +13,13 @@ import { spawnPortable } from "./lib/proc.mjs";
 import { REPO_ROOT } from "./lib/project-config.mjs";
 
 const port = process.env.PORT || "5000";
+// Set by verify when its gate has just built the solution: compiling it again here only adds
+// tens of seconds to every live check. Anything else — a developer, a gate that skipped the
+// build — leaves `dotnet run` to build as usual.
+const prebuilt = process.env.SERVICE_PREBUILT === "1" ? ["--no-build"] : [];
 const child = spawnPortable(
   "dotnet",
-  ["run", "--project", join(REPO_ROOT, "src", "backend", "Source"), "--no-launch-profile", "--urls", `http://localhost:${port}`],
+  ["run", "--project", join(REPO_ROOT, "src", "backend", "Source"), ...prebuilt, "--no-launch-profile", "--urls", `http://localhost:${port}`],
   {
     cwd: REPO_ROOT,
     stdio: "inherit",

@@ -22,7 +22,7 @@
  * and `INERT` does not name runs the whole gate — an unlisted file is never assumed harmless.
  * GATE_FULL=1 (what `npm run verify -- --full` sets) ignores `--changed`.
  */
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { workingTreePaths } from "./lib/changed-paths.mjs";
 import { selectGateSteps } from "./lib/gate-scope.mjs";
@@ -178,6 +178,15 @@ console.log("\n=== gate summary ===");
 for (const r of results) console.log(`  ${r.ok ? "PASS" : "FAIL"}  ${r.name}  (${r.seconds}s)`);
 const skipped = runnable.filter((s) => !planned.includes(s)).map((s) => s.name);
 if (skipped.length) console.log(`  skipped, nothing they watch changed: ${skipped.join(", ")}`);
+// What ran, for the caller that asked: verify reads it to time each step and to know whether
+// this gate just built the API, so the live check can start it without compiling it again.
+if (process.env.GATE_REPORT_FILE) {
+  try {
+    writeFileSync(process.env.GATE_REPORT_FILE, JSON.stringify({ steps: results, skipped }));
+  } catch {
+    /* a report nobody can write is a report nobody reads; the gate's own verdict stands */
+  }
+}
 const failed = results.find((r) => !r.ok);
 if (failed) {
   console.log(`\nThe gate failed at "${failed.name}". Nothing after it ran.`);

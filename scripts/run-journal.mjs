@@ -213,6 +213,25 @@ ${advice}
 `;
 }
 
+/**
+ * One line on the time a run spent verifying, from the `verifies` the runner journals: how
+ * long, over how many verifies, how many reused a pass rather than running again, and how many
+ * the session asked for. Null for a run journalled before verifies were recorded.
+ */
+export function verifySummary(run) {
+  const verifies = Array.isArray(run?.verifies) ? run.verifies : [];
+  if (verifies.length === 0) return null;
+  const seconds = verifies.reduce((sum, v) => sum + (Number(v.seconds) || 0), 0);
+  const reused = verifies.filter((v) => v.reused).length;
+  const bySession = verifies.filter((v) => v.by === "session").length;
+  const time = seconds >= 60 ? `${Math.floor(seconds / 60)}m ${seconds % 60}s` : `${seconds}s`;
+  return (
+    `verify ${time} over ${verifies.length} run(s)` +
+    (reused ? `, ${reused} reused` : "") +
+    (bySession ? `, ${bySession} asked by the session` : "")
+  );
+}
+
 // --- CLI ------------------------------------------------------------------------------
 if (process.argv[1] && process.argv[1].endsWith("run-journal.mjs")) {
   const argv = process.argv.slice(2);
@@ -245,6 +264,8 @@ if (process.argv[1] && process.argv[1].endsWith("run-journal.mjs")) {
     );
     console.log(`   ${(r.task ?? "").split("\n")[0].slice(0, 96)}`);
     if (r.failure) console.log(`   └─ ${r.failure.split("\n")[0].slice(0, 96)}`);
+    const verified = verifySummary(r);
+    if (verified) console.log(`   · ${verified}`);
   });
 
   // Planning calls are journal entries too — they spend real money — but they are not

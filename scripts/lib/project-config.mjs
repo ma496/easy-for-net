@@ -120,6 +120,11 @@ const DEFAULTS = {
     /** Wall-clock minutes per attempt, for a session that hangs and so reports neither turns nor cost. */
     maxMinutesPerAttempt: 120,
     /**
+     * Wall-clock minutes for the whole task — every attempt and the verifies between them. The
+     * per-attempt limit alone let three attempts and their verifies run for most of a day.
+     */
+    maxMinutesPerTask: 240,
+    /**
      * The planner's own limits. It writes task files and nothing else, so a planning call
      * that runs long is lost, not working — and on a timer an unbounded one is the one
      * session that could spend without a ceiling. `planAttempts` is how many times one
@@ -224,7 +229,7 @@ export function validateConfig(cfg) {
     problems.push(`project.workflow must be ${WORKFLOWS.join(" or ")} (got ${JSON.stringify(cfg.project?.workflow)})`);
   }
   const budget = cfg.budget ?? {};
-  for (const key of ["attempts", "maxTurns", "maxMinutesPerAttempt", "planMaxTurns", "planMaxMinutes", "planAttempts"]) {
+  for (const key of ["attempts", "maxTurns", "maxMinutesPerAttempt", "maxMinutesPerTask", "planMaxTurns", "planMaxMinutes", "planAttempts"]) {
     if (!isPositiveInt(budget[key])) {
       problems.push(`budget.${key} must be a positive integer (got ${JSON.stringify(budget[key])})`);
     }

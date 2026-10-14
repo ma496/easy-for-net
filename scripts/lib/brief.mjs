@@ -13,6 +13,7 @@
  * attempt to learn what a paragraph could have said.
  */
 import { config, PROJECT_NAME } from "./project-config.mjs";
+import { taskVerifyCommand } from "./verify-scope.mjs";
 
 /** The longest agent name, so the routing table's arrows line up. */
 function pad(rows) {
@@ -92,6 +93,7 @@ export function buildBrief({ memory = "", history = "" } = {}) {
   const routing = routingTable();
   const design = designAgents();
   const guide = config.docs.guide ?? "CLAUDE.md";
+  const verify = taskVerifyCommand(config.commands.verify);
 
   return `You are working unattended in the ${PROJECT_NAME} repository. No human will
 answer a question, so do not ask one — make the reasonable call, state the assumption in
@@ -99,15 +101,21 @@ your final message, and finish the task.
 
 Read ${guide} first and follow its conventions exactly.
 ${conventionsBlock()}
-When you are done, \`${config.commands.verify}\` must pass. It runs the gate steps the paths
+When you are done, \`${verify}\` must pass. It runs the gate steps the paths
 you touched can break, and adds whatever live checks they demand. Do not commit or push —
-the runner handles that.
+the runner handles that. It judges this task's own (uncommitted) change: what is
+already committed on the branch was verified when it was committed.
 
-**Run \`${config.commands.verify}\` once, when the writers have finished and before the
+**Run \`${verify}\` once, when the writers have finished and before the
 reviews.** Each run costs minutes. While building, and after fixing what a review names, run
 the narrow check for what changed instead — one test class or file, the typecheck, the lint —
 and tell every specialist you delegate to the same. The runner verifies the finished tree
 itself and hands back anything that fails, so a second full run only repeats its work.
+
+**Run every build, test and verify command in the foreground**, and tell your specialists
+the same — never \`run_in_background\`, never a trailing \`&\`. A background check outlives the
+step that started it, holds the build output and the test database, and keeps the attempt
+open long after the work is done. Pass the longest timeout the tool allows to \`${verify}\`.
 
 ## The team this task goes through
 
@@ -128,10 +136,10 @@ This is not a formality. A designer that runs only after the build gives its opi
 when acting on it means rebuilding. A run that writes the page first and asks afterwards is
 refused.
 
-Then the writers, then \`${config.commands.verify}\`, then:
+Then the writers, then \`${verify}\`, then:
 `
     : `
-The writers first, then \`${config.commands.verify}\`, then:
+The writers first, then \`${verify}\`, then:
 `
 }
 ${reviewTiers().join("\n")}
