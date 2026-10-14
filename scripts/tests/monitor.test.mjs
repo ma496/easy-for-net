@@ -106,6 +106,62 @@ test("each agent keeps its own log, stats and status, and a second of a kind is 
   assert.equal(rows.filter((r) => r.kind === "task").length, 0);
 });
 
+test("an agent resumed by SendMessage runs again under its own log until its next report", () => {
+  const started = system("task_started", { task_id: "k1", tool_use_id: "A1", task_type: "local_agent" });
+  const ended = (summary) => system("task_notification", { task_id: "k1", tool_use_id: "A1", status: "completed", summary });
+  const { rows, state } = describeAll([
+    spawn("m1", "A1", "frontend-engineer"),
+    started,
+    ended("Built."),
+    assistant("m2", [{ type: "tool_use", id: "S1", name: "SendMessage", input: { to: "k1", message: "Apply the review fixes" } }]),
+    system("task_started", { task_id: "k1", tool_use_id: "S1", task_type: "local_agent", is_backgrounded: true, prompt: "Apply the review fixes" }),
+    system("task_progress", { task_id: "k1", tool_use_id: "S1", description: "Editing the table", usage: { tool_uses: 2 } }),
+    // The resumed agent's own events still name the Agent call that first started it.
+    assistant("s1", [{ type: "tool_use", id: "t1", name: "Edit", input: { file_path: "x.tsx" } }], "A1"),
+  ]);
+  let [agent] = agentsOf(state);
+  assert.deepEqual({ status: agent.status, resumes: agent.resumes, toolUses: agent.toolUses, current: agent.current },
+    { status: "running", resumes: 1, toolUses: 2, current: "Editing the table" });
+  assert.deepEqual(rows.filter((r) => r.agent === "A1").map((r) => [r.kind, r.text]),
+    [["report", "Built."], ["resume", "resumed"], ["progress", "Editing the table"], ["tool", "Edit"]]);
+
+  describeEvent(system("task_notification", { task_id: "k1", tool_use_id: "S1", status: "completed", summary: "Fixed." }), state);
+  [agent] = agentsOf(state);
+  assert.equal(agent.status, "done");
+  // A repeated start for an agent already running is not a second resume.
+  describeEvent(started, state);
+  describeEvent(started, state);
+  assert.equal(agentsOf(state)[0].resumes, 2);
+});
+
+test("a resumed run adds its usage to the earlier runs' and clears the old report", () => {
+  const { state } = describeAll([
+    spawn("m1", "A1", "frontend-engineer"),
+    system("task_started", { task_id: "k1", run_id: "r1", tool_use_id: "A1", task_type: "local_agent" }),
+    system("task_progress", { task_id: "k1", run_id: "r1", tool_use_id: "A1", description: "Building", usage: { tool_uses: 40, total_tokens: 200000, duration_ms: 60000 } }),
+    system("task_notification", { task_id: "k1", run_id: "r1", tool_use_id: "A1", status: "completed", summary: "Built." }),
+    system("task_started", { task_id: "k1", run_id: "r2", tool_use_id: "S1", task_type: "local_agent" }),
+    // Each run counts tool calls and time from zero; tokens are the agent's whole context.
+    system("task_progress", { task_id: "k1", run_id: "r2", tool_use_id: "S1", description: "Fixing", usage: { tool_uses: 2, total_tokens: 203000, duration_ms: 5000 } }),
+  ]);
+  const [agent] = agentsOf(state);
+  assert.deepEqual({ toolUses: agent.toolUses, tokens: agent.tokens, durationMs: agent.durationMs, hasReport: agent.hasReport },
+    { toolUses: 42, tokens: 203000, durationMs: 65000, hasReport: false });
+});
+
+test("a resume that overtakes the earlier run's report still leaves the agent running", () => {
+  const { rows, state } = describeAll([
+    spawn("m1", "A1", "frontend-engineer"),
+    system("task_started", { task_id: "k1", run_id: "r1", tool_use_id: "A1", task_type: "local_agent" }),
+    system("task_started", { task_id: "k1", run_id: "r2", tool_use_id: "S1", task_type: "local_agent" }),
+    system("task_updated", { task_id: "k1", run_id: "r1", patch: { status: "completed" } }),
+    system("task_notification", { task_id: "k1", run_id: "r1", tool_use_id: "A1", status: "completed", summary: "Built." }),
+  ]);
+  const [agent] = agentsOf(state);
+  assert.deepEqual({ status: agent.status, resumes: agent.resumes }, { status: "running", resumes: 1 });
+  assert.deepEqual(rows.filter((r) => r.agent === "A1").map((r) => r.kind), ["resume", "report"]);
+});
+
 test("the session's result ends only agents the CLI does not track itself", () => {
   const result = JSON.stringify({ type: "result", subtype: "success", is_error: false, total_cost_usd: 1, num_turns: 2, result: "" });
   const { state } = describeAll([

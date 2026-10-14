@@ -121,7 +121,10 @@ export function isSubagentEvent(event, rootSession) {
  * `task_notification` when it ends, whose `summary` is a subagent's final report.
  *
  * `toolUseId` is the call that started the task — for a subagent, the `Agent` call, which is
- * also the `parent_tool_use_id` its own events carry. A background subagent's own events never
+ * also the `parent_tool_use_id` its own events carry. A subagent resumed by `SendMessage` starts
+ * again under the same task id but a new `runId`, with that call as `toolUseId` and the message
+ * as `prompt`, while its own events keep the original `parent_tool_use_id`; each run counts its
+ * own `tool_uses` and `duration_ms` from zero. A background subagent's own events never
  * appear in the stream at all, so these are the only record of what it did.
  *
  * Null for every other event. The monitor reads it to show a task's progress, and
@@ -131,10 +134,10 @@ export function backgroundTaskOf(raw) {
   if (!raw || raw.type !== "system") return null;
   const str = (v) => (typeof v === "string" ? v : null);
   const num = (v) => (typeof v === "number" && Number.isFinite(v) ? v : null);
-  const base = { id: str(raw.task_id), toolUseId: str(raw.tool_use_id), type: null, description: "", usage: null, lastTool: null };
+  const base = { id: str(raw.task_id), runId: str(raw.run_id), toolUseId: str(raw.tool_use_id), type: null, description: "", usage: null, lastTool: null };
   switch (raw.subtype) {
     case "task_started":
-      return { ...base, status: "started", type: str(raw.task_type), description: str(raw.description) ?? "" };
+      return { ...base, status: "started", type: str(raw.task_type), description: str(raw.description) ?? "", prompt: str(raw.prompt) ?? "" };
     case "task_progress":
       return {
         ...base,
