@@ -23,14 +23,17 @@
  */
 import { spawnSync } from "node:child_process";
 import { mkdirSync, openSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { request as httpRequest } from "node:http";
 import { createServer } from "node:net";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { apiAdoptionVerdict } from "./lib/api-identity.mjs";
 import { workingTreePaths } from "./lib/changed-paths.mjs";
+import { gateBuilt, readGateReport, stepTimings } from "./lib/gate-report.mjs";
 import { IS_WINDOWS, killTree, runCommandSync, sleepSync, spawnCommand } from "./lib/proc.mjs";
 import { BASE_BRANCH, compileRules, config, fill } from "./lib/project-config.mjs";
+import { shouldForwardVerify } from "./lib/verify-scope.mjs";
 
 // Same reason as agent-run.mjs: cwd may hold only committed code, so the checks are driven
 // from this file's own directory and run against cwd.
@@ -38,6 +41,47 @@ const SCRIPTS = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(SCRIPTS, "..");
 
 const argv = process.argv.slice(2);
+
+// --- 0. inside an unattended run, the runner verifies -----------------------------------
+// The runner verifies the finished tree itself and cannot take the session's word for a pass,
+// so a lead's verify followed by the runner's was the same gate twice. A plain verify asked
+// from inside a run goes to the runner instead (lib/verify-scope.mjs says which calls may);
+// its pass is then the runner's own and is reused when the session ends on the same tree.
+if (shouldForwardVerify(argv, process.env)) {
+  const answer = await askRunner(process.env.AGENT_VERIFY_URL);
+  if (answer) {
+    process.stdout.write(answer.output ?? "");
+    console.log(
+      answer.status === 0
+        ? "\n(verify was run by the task runner; it reuses this pass after the session if the tree does not change.)"
+        : "\n(verify was run by the task runner.)",
+    );
+    process.exit(answer.status === 0 ? 0 : 1);
+  }
+  console.log("The task runner did not answer — verifying here instead.");
+}
+
+/** The runner's verdict, or null when it cannot be reached. No timeout: a verify takes minutes. */
+function askRunner(url) {
+  return new Promise((resolve) => {
+    const req = httpRequest(url, { method: "POST" }, (res) => {
+      const chunks = [];
+      res.on("data", (c) => chunks.push(c));
+      res.on("end", () => {
+        if (res.statusCode !== 200) return resolve(null);
+        try {
+          resolve(JSON.parse(Buffer.concat(chunks).toString("utf8")));
+        } catch {
+          resolve(null);
+        }
+      });
+      res.on("error", () => resolve(null));
+    });
+    req.on("error", () => resolve(null));
+    req.end();
+  });
+}
+
 const flag = (name) => argv.includes(`--${name}`);
 const argOf = (name, fallback) => {
   const i = argv.indexOf(`--${name}`);
@@ -141,15 +185,27 @@ const record = (name, status, detail) => {
 // `--full` tells it to ignore them and run everything.
 mkdirSync(RUNS_DIR, { recursive: true });
 const changedFile = join(RUNS_DIR, `verify-changed-${process.pid}.txt`);
+const gateReportFile = join(RUNS_DIR, `verify-gate-${process.pid}.json`);
 writeFileSync(changedFile, changed.map((p) => `${p}\n`).join(""));
 say(`\n=== gate: ${config.verify.gate}${FULL ? " (--full)" : ""} ===`);
 const gate = runCommand(config.verify.gate, {
-  env: { ...process.env, GATE_CHANGED_PATHS_FILE: changedFile, ...(FULL ? { GATE_FULL: "1" } : {}) },
+  env: {
+    ...process.env,
+    GATE_CHANGED_PATHS_FILE: changedFile,
+    GATE_REPORT_FILE: gateReportFile,
+    ...(FULL ? { GATE_FULL: "1" } : {}),
+  },
 });
 rmSync(changedFile, { force: true });
+const gateReport = readGateReport(gateReportFile);
+rmSync(gateReportFile, { force: true });
+const gateSteps = stepTimings(gateReport);
+// The gate just compiled what the service runs, so starting it need not compile it again.
+// Only a step that ran and passed in this very gate counts; anything else builds as before.
+const SERVICE_PREBUILT = gateBuilt(gateReport, SERVICE?.prebuiltBy);
 if (gate.status !== 0) {
   record("gate", "fail", "the static gate failed");
-  if (JSON_OUT) console.log(JSON.stringify({ ok: false, results, changed }, null, 2));
+  if (JSON_OUT) console.log(JSON.stringify({ ok: false, results, changed, gateSteps }, null, 2));
   process.exit(1);
 }
 record("gate", "pass");
@@ -218,7 +274,11 @@ async function startOwnService(port) {
   // there would open a console window of its own.
   const child = spawnCommand(SERVICE.start, {
     cwd: CWD,
-    env: { ...process.env, [SERVICE.portEnv ?? "PORT"]: String(port) },
+    env: {
+      ...process.env,
+      [SERVICE.portEnv ?? "PORT"]: String(port),
+      ...(SERVICE_PREBUILT ? { SERVICE_PREBUILT: "1" } : {}),
+    },
     detached: !IS_WINDOWS,
     windowsHide: true,
     stdio: ["ignore", log, log],
@@ -392,7 +452,7 @@ if (needsLive) {
     // this script exists to prevent.
     record("live checks", "fail", liveFailure);
     stopOwnService();
-    if (JSON_OUT) console.log(JSON.stringify({ ok: false, results, changed }, null, 2));
+    if (JSON_OUT) console.log(JSON.stringify({ ok: false, results, changed, gateSteps }, null, 2));
     process.exit(1);
   }
 }
@@ -425,7 +485,7 @@ const skipped = CHECKS.filter((c) => !demandedNames.has(c.name)).map(
 );
 
 if (JSON_OUT) {
-  console.log(JSON.stringify({ ok: failed.length === 0, results, skipped, changed }, null, 2));
+  console.log(JSON.stringify({ ok: failed.length === 0, results, skipped, changed, gateSteps }, null, 2));
 } else {
   console.log(`\n${"=".repeat(70)}`);
   for (const r of results) console.log(`  ${r.status === "pass" ? "✓" : "✗"} ${r.name}`);

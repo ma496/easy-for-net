@@ -35,10 +35,11 @@ says which change owes which procedure.
 ## 3. Verify — the part that is not optional
 
 ```bash
-npm run verify -- --autostart
+npm run verify -- --autostart --scope working
 ```
 
-It reads the diff and runs what that diff demands. **A required check that could not run
+It reads this task's uncommitted change and runs what that change demands — what is already
+committed on the branch was verified when it was committed. **A required check that could not run
 counts as a failure** — that is the point of it.
 
 If it fails, fix the cause and run it again. **Do not** make it pass by widening a type,

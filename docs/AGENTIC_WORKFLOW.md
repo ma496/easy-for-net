@@ -141,6 +141,7 @@ gets them from the command `npm run schedule -- install` wrote.
 | `AGENT_MAX_RUNS_PER_TASK` | 3 | Starts of one brief before it goes to `failed/`. |
 | `AGENT_MAX_TURNS_PER_ATTEMPT` | `budget.maxTurns` | Parent turns per attempt (`--max-turns`). |
 | `AGENT_MAX_MINUTES_PER_ATTEMPT` | `budget.maxMinutesPerAttempt` | Wall clock per attempt. |
+| `AGENT_MAX_MINUTES_PER_TASK` | `budget.maxMinutesPerTask` | Wall clock for the whole task; no attempt starts past it, and a session running when it passes is stopped. `off` removes it. |
 | `AGENT_VERIFY_TIMEOUT_MINUTES` | 60 | How long one verify may run before it is stopped and counted as failed. |
 | `AGENT_ASSUMED_USD_PER_CALL` | learned from history, else 1 | What a call whose stream carried no cost is charged at. |
 | `AGENT_MODEL` | `budget.model` | The model every session and the planner run on; `inherit` passes none. |
@@ -150,8 +151,15 @@ gets them from the command `npm run schedule -- install` wrote.
 | `AGENT_SKIP_CLI_CONTRACT` | 0 | `1` skips the loop's once-per-CLI-version contract check. |
 
 The runner itself sets `AGENT_RUN_ID` (the session's run; inside one, `verify` starts the API
-when a live check needs it), `AGENT_NO_AUTOSTART` (from `--no-autostart`) and
-`AGENT_FROM_DRAIN` (a drain started this run, so anything in the tree is its salvage).
+when a live check needs it), `AGENT_NO_AUTOSTART` (from `--no-autostart`),
+`AGENT_VERIFY_URL` (a loopback endpoint, behind a per-run token, through which the session's plain
+`verify` is run by the runner — whose pass, fingerprinted by the runner, is reused after the
+session when the tree has not changed; a verify with `--full`, `--json` or another scope runs
+locally) and `AGENT_FROM_DRAIN` (a drain started this run, so anything in the tree is its salvage).
+
+The runner verifies with `--scope working`: the task's uncommitted change, since everything
+committed before it was verified when it landed. Pass `--verify-scope branch` to judge the whole
+branch instead.
 
 The flags worth knowing: `queue -- drain --max N` (stop after N tasks), `--no-plan` (build
 without intake); `loop --dry-run`; `auto --salvage` (take over uncommitted work already in the

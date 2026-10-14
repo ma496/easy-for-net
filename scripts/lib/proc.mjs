@@ -121,3 +121,150 @@ export function isAlive(pid) {
     return err.code === "EPERM";
   }
 }
+
+/**
+ * Every pid below `root` in a `[pid, parentPid]` table, nearest first. Pure, so the walk is
+ * tested without a process table; a cycle (a reused pid naming its own descendant as parent)
+ * is walked once rather than for ever.
+ */
+export function descendantsOf(pairs, root) {
+  const children = new Map();
+  for (const [pid, parent] of pairs) {
+    if (!children.has(parent)) children.set(parent, []);
+    children.get(parent).push(pid);
+  }
+  const found = [];
+  const seen = new Set([root]);
+  const queue = [root];
+  while (queue.length > 0) {
+    for (const child of children.get(queue.shift()) ?? []) {
+      if (seen.has(child)) continue;
+      seen.add(child);
+      found.push(child);
+      queue.push(child);
+    }
+  }
+  return found;
+}
+
+/** `[pid, parentPid]` for every process, or `[]` when the table cannot be read. */
+function processTable() {
+  const res = IS_WINDOWS
+    ? spawnSync(
+        "powershell",
+        [
+          "-NoProfile",
+          "-NonInteractive",
+          "-Command",
+          "Get-CimInstance Win32_Process | ForEach-Object { \"$($_.ProcessId) $($_.ParentProcessId)\" }",
+        ],
+        { encoding: "utf8", windowsHide: true, timeout: 30_000 },
+      )
+    : spawnSync("ps", ["-A", "-o", "pid=,ppid="], { encoding: "utf8", timeout: 30_000 });
+  return String(res.stdout ?? "")
+    .split("\n")
+    .map((line) => line.trim().split(/\s+/).map(Number))
+    .filter(([pid, parent]) => Number.isInteger(pid) && Number.isInteger(parent) && pid > 0);
+}
+
+/** Force one pid down, ignoring a process that is already gone. */
+function killOne(pid) {
+  if (IS_WINDOWS) {
+    spawnSync("taskkill", ["/PID", String(pid), "/F"], { stdio: "ignore", windowsHide: true });
+    return;
+  }
+  try {
+    process.kill(pid, "SIGKILL");
+  } catch {
+    /* already gone */
+  }
+}
+
+/**
+ * `killTree`, and then every process that was below `pid` when it was called, one by one.
+ *
+ * `taskkill /T` follows the tree as it stands while it walks it, and stops where a link is
+ * already broken or a process refuses — and a session's background shells, test hosts and
+ * servers are exactly the processes that keep a stopped attempt's pipes open, so the runner
+ * waited on them for hours. The table is read first, so what was below the session is known
+ * before anything in the middle of the tree dies.
+ */
+export function killTreeHard(pid) {
+  if (!pid) return false;
+  const below = descendantsOf(processTable(), pid);
+  const stopped = killTree(pid);
+  for (const child of below.reverse()) {
+    if (isAlive(child)) killOne(child);
+  }
+  return stopped || below.length > 0;
+}
+
+/**
+ * Run a command to completion with a hard deadline, asynchronously.
+ *
+ * `spawnSync`'s own timeout kills only the process it started — the shell or `node`, not the
+ * `dotnet test` beneath it — and then waits for pipes the survivors still hold. This kills the
+ * whole tree at the deadline, and stops waiting on the pipes a short grace after the process
+ * itself has exited, so a hung check costs its timeout and nothing more.
+ *
+ * @returns {Promise<{status: number, stdout: string, stderr: string, timedOut: boolean, error?: Error}>}
+ */
+export function runWithDeadline(cmd, args = [], { timeoutMs, maxBytes = 64 * 1024 * 1024, graceMs = 15_000, ...options } = {}) {
+  return new Promise((resolve) => {
+    let child;
+    try {
+      child = spawnPortable(cmd, args, { ...options, stdio: ["ignore", "pipe", "pipe"], detached: !IS_WINDOWS });
+    } catch (error) {
+      resolve({ status: 1, stdout: "", stderr: "", timedOut: false, error });
+      return;
+    }
+    const out = [];
+    const err = [];
+    let bytes = 0;
+    const collect = (sink) => (chunk) => {
+      if (bytes >= maxBytes) return;
+      bytes += chunk.length;
+      sink.push(chunk);
+    };
+    child.stdout.on("data", collect(out));
+    child.stderr.on("data", collect(err));
+
+    let timedOut = false;
+    let settled = false;
+    let exitCode = null;
+    let grace = null;
+    const finish = (status, error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(deadline);
+      clearTimeout(grace);
+      resolve({
+        status,
+        stdout: Buffer.concat(out).toString("utf8"),
+        stderr: Buffer.concat(err).toString("utf8"),
+        timedOut,
+        ...(error ? { error } : {}),
+      });
+    };
+    const deadline = Number.isFinite(timeoutMs)
+      ? setTimeout(() => {
+          timedOut = true;
+          killTreeHard(child.pid);
+          // Whatever still holds the pipes is not worth waiting for once the deadline has passed.
+          grace = setTimeout(() => {
+            child.stdout.destroy();
+            child.stderr.destroy();
+            finish(exitCode ?? 1);
+          }, graceMs);
+        }, Math.max(0, timeoutMs))
+      : null;
+    child.on("error", (error) => finish(1, error));
+    child.on("exit", (code) => {
+      exitCode = code ?? 1;
+      // An orphan that inherited the pipes keeps "close" from ever firing; give the output a
+      // moment to drain, then stop waiting for it.
+      if (!grace) grace = setTimeout(() => finish(exitCode), graceMs);
+    });
+    child.on("close", (code) => finish(timedOut ? (exitCode ?? code ?? 1) : (code ?? exitCode ?? 1)));
+  });
+}

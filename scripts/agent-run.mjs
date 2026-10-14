@@ -8,6 +8,7 @@
  *   npm run auto -- "..." --no-commit        # verify only, leave the work uncommitted
  *   npm run auto -- "..." --no-autostart     # never start the stack for a live check
  *   npm run auto -- "..." --verify-port 5100 # live checks against a dedicated API port
+ *   npm run auto -- "..." --verify-scope branch # judge the whole branch, not only this task's change
  *   npm run auto -- "..." --no-preflight     # start even when a service verify needs is down
  *   npm run auto -- "..." --salvage          # take over the uncommitted work already in the tree
  *
@@ -41,6 +42,8 @@
  * that is how work accumulates for review. Pass --safe to require approval for edits.
  */
 import { spawnSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
+import { createServer } from "node:http";
 import { createWriteStream, readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -71,13 +74,14 @@ import {
   restoreSalvage,
   salvageBrief,
 } from "./lib/salvage.mjs";
-import { IS_WINDOWS, hasExecutable, isAlive, killTree, spawnPortable } from "./lib/proc.mjs";
+import { IS_WINDOWS, hasExecutable, isAlive, killTree, killTreeHard, runWithDeadline, spawnPortable } from "./lib/proc.mjs";
 import { liveHolder } from "./lib/queue-lock.mjs";
 import {
   assertValidConfig, config, modelArgs, positiveInt, resolveModel, WORK_BRANCH, workflowRefusal,
 } from "./lib/project-config.mjs";
 import { fsKey, stemOf } from "./lib/task-names.mjs";
 import { treeFingerprint, workingTreePaths } from "./lib/changed-paths.mjs";
+import { runnerVerifyArgs, TASK_VERIFY_SCOPE } from "./lib/verify-scope.mjs";
 import { attemptOutcome } from "./lib/attempt-outcome.mjs";
 import { buildBrief } from "./lib/brief.mjs";
 import { ensureDependencies, taskDependencies } from "./lib/dependencies.mjs";
@@ -200,6 +204,24 @@ const MAX_MINUTES = (() => {
   if (raw !== undefined && String(raw).trim().toLowerCase() === "off") return Infinity;
   return positiveInt(raw, config.budget.maxMinutesPerAttempt, "AGENT_MAX_MINUTES_PER_ATTEMPT");
 })();
+/**
+ * Wall-clock minutes the whole task may run: every attempt and the verifies between them. The
+ * per-attempt limit bounds one session, but three sessions and their verifies could still hold
+ * the queue for most of a day. No attempt starts past it, and a session running when it passes
+ * is stopped like one past its own limit — its work stays in the tree and is verified once more.
+ * `off` disables it.
+ */
+const MAX_MINUTES_PER_TASK = (() => {
+  const raw = process.env.AGENT_MAX_MINUTES_PER_TASK ?? argOf("max-task-minutes", undefined);
+  if (raw !== undefined && String(raw).trim().toLowerCase() === "off") return Infinity;
+  return positiveInt(raw, config.budget.maxMinutesPerTask, "AGENT_MAX_MINUTES_PER_TASK");
+})();
+const TASK_DEADLINE_MS = Date.now() + MAX_MINUTES_PER_TASK * 60_000;
+/** How often a running session's deadline is checked, and how long a stopped one gets to go. */
+const DEADLINE_CHECK_MS = 15_000;
+const STOP_GRACE_MS = 30_000;
+/** Milliseconds left before the task's ceiling; Infinity when there is none. */
+const taskTimeLeftMs = () => (Number.isFinite(MAX_MINUTES_PER_TASK) ? TASK_DEADLINE_MS - Date.now() : Infinity);
 /** The port a live check prefers; it moves off it when a stranger is already there. */
 const DEFAULT_VERIFY_PORT = String(config.verify.service?.port ?? 3000);
 const PERMISSION_MODE = flag("safe") ? "acceptEdits" : "bypassPermissions";
@@ -269,20 +291,24 @@ const run = (cmd, args, opts = {}) =>
  * so the feedback can say so rather than presenting a killed run as a failing one.
  */
 const VERIFY_TIMEOUT_MS = positiveInt(process.env.AGENT_VERIFY_TIMEOUT_MINUTES, 60, "AGENT_VERIFY_TIMEOUT_MINUTES") * 60_000;
-function runVerify(extraArgs = []) {
-  const args = [
-    join(SCRIPTS, "verify.mjs"),
-    "--port",
-    argOf("verify-port", DEFAULT_VERIFY_PORT),
+async function runVerify(extraArgs = []) {
+  const args = runnerVerifyArgs({
+    script: join(SCRIPTS, "verify.mjs"),
+    port: argOf("verify-port", DEFAULT_VERIFY_PORT),
     // The branch this task was based on. Judging against a stale base would report every
     // file on the base branch as part of this change.
-    "--base",
-    argOf("verify-base", WORK_BRANCH),
-    ...extraArgs,
-  ];
-  if (!flag("no-autostart")) args.push("--autostart");
-  const res = run("node", args, { timeout: VERIFY_TIMEOUT_MS, killSignal: "SIGKILL" });
-  const timedOut = res.error?.code === "ETIMEDOUT";
+    base: argOf("verify-base", WORK_BRANCH),
+    // The task's own change: everything committed before it was verified when it committed.
+    scope: argOf("verify-scope", TASK_VERIFY_SCOPE),
+    autostart: !flag("no-autostart"),
+    extra: extraArgs,
+  });
+  // Asynchronous and tree-killing: spawnSync's timeout stopped only `node verify.mjs` and then
+  // waited on the pipes its `dotnet test` and API still held, so a hung check outlived its limit.
+  // Without AGENT_VERIFY_URL, whatever this process inherited: this verify is the one that runs.
+  const { AGENT_VERIFY_URL: _forwarded, ...env } = process.env;
+  const res = await runWithDeadline("node", args, { timeoutMs: VERIFY_TIMEOUT_MS, maxBytes: CAPTURE_BYTES, env });
+  const timedOut = res.timedOut;
   const output =
     `${res.stdout ?? ""}\n${res.stderr ?? ""}` +
     (timedOut ? `\nverify did not finish within ${VERIFY_TIMEOUT_MS / 60_000} minutes and was stopped.\n` : "") +
@@ -305,9 +331,13 @@ let lastPass = null;
 // seconds after it failed, on the same bytes. The verify after a session never reuses one,
 // since that session may have fixed the environment rather than the code.
 let lastResult = null;
-function verifyTree({ reuseFailure = false } = {}) {
+// Every verify this run asked for, journalled with the run: who asked, how long it took, and
+// whether a pass was reused — what "how much of a task is spent verifying" is answered from.
+const verifyLog = [];
+async function verifyTree({ reuseFailure = false, by = "runner" } = {}) {
   const fingerprint = treeFingerprint();
   if (lastPass?.fingerprint === fingerprint) {
+    verifyLog.push({ by, seconds: 0, status: 0, reused: true });
     return {
       ...lastPass.result,
       output: "verify: nothing has changed since it passed on this tree earlier in this run — reusing that result.\n",
@@ -315,15 +345,63 @@ function verifyTree({ reuseFailure = false } = {}) {
     };
   }
   if (reuseFailure && lastResult?.fingerprint === fingerprint && lastResult.result.status !== 0) {
+    verifyLog.push({ by, seconds: 0, status: lastResult.result.status, reused: true });
     return { ...lastResult.result, reused: true };
   }
+  const verifyStarted = Date.now();
   // Never reused: a pass the session reports or records. Anything the session can write it
-  // can forge, and this verify is the one check it cannot touch.
-  const result = runVerify();
+  // can forge, and this verify is the one check it cannot touch. A verify the session asks
+  // for through the endpoint below is still this one — run here, fingerprinted here.
+  const result = await runVerify();
+  verifyLog.push({
+    by,
+    seconds: Math.round((Date.now() - verifyStarted) / 1000),
+    status: result.status,
+    reused: false,
+    ...(result.timedOut ? { timedOut: true } : {}),
+  });
+  // A tree edited while verify ran was judged half-old, half-new; remember nothing about it.
+  if (treeFingerprint() !== fingerprint) return result;
   if (result.status === 0) lastPass = { fingerprint, result };
   lastResult = { fingerprint, result };
   return result;
 }
+
+/**
+ * The verify a session asks for, run by the runner.
+ *
+ * The lead verifies the finished tree before its reviews, and the runner then verified the
+ * same bytes again after the session — minutes per attempt — because a pass the session
+ * reports cannot be trusted. Through this endpoint the session asks and the runner answers:
+ * it runs `verifyTree` itself, so the pass it records is its own, and the verify after the
+ * session reuses it only when the tree's fingerprint has not moved since. Bound to loopback,
+ * behind a per-run token, and one verify at a time.
+ */
+const VERIFY_TOKEN = randomBytes(16).toString("hex");
+let verifyQueue = Promise.resolve();
+const verifyServer = createServer((req, res) => {
+  if (req.method !== "POST" || req.url !== `/verify/${VERIFY_TOKEN}`) {
+    res.writeHead(404).end();
+    return;
+  }
+  verifyQueue = verifyQueue
+    .then(async () => {
+      console.log("\n  ▸ the session asked for verify — running it here, where its result counts");
+      const result = await verifyTree({ by: "session" });
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ status: result.status, output: result.output, timedOut: Boolean(result.timedOut) }));
+    })
+    .catch((error) => {
+      res.writeHead(500).end(String(error?.message ?? error));
+    });
+});
+// A verify takes minutes; nothing about the request itself should time it out.
+verifyServer.requestTimeout = 0;
+verifyServer.headersTimeout = 0;
+await new Promise((resolve) => verifyServer.listen(0, "127.0.0.1", resolve));
+verifyServer.unref();
+childEnv.AGENT_VERIFY_URL = `http://127.0.0.1:${verifyServer.address().port}/verify/${VERIFY_TOKEN}`;
+
 const runLive = (cmd, args) => spawnSync(cmd, args, { stdio: "inherit", encoding: "utf8" });
 
 /**
@@ -358,12 +436,27 @@ async function runStreaming(cmd, args, { input, streamFile }) {
   // when the CLI's format moves this is the file a new fixture is cut from.
   const raw = streamFile ? createWriteStream(streamFile) : null;
   let killedFor = null;
+  let settle = null; // resolves the status below; set once the promise exists
+  let exitCode = null;
+  let escalation = null;
+  // Kill and keep killing: the first stop takes the tree as it stands; if the session is
+  // still not gone a grace period later, the tree is taken again and the pipes are cut, so a
+  // background shell or server that inherited them can no longer hold the runner open.
+  const kill = () => {
+    // The whole tree: on Windows `child.kill` ends only the shell or the CLI itself and
+    // leaves the dotnet and node processes it started holding the ports and the files.
+    if (!killTreeHard(child.pid)) child.kill("SIGTERM");
+  };
   const stop = (why) => {
     if (killedFor) return;
     killedFor = why;
-    // The whole tree: on Windows `child.kill` ends only the shell or the CLI itself and
-    // leaves the dotnet and node processes it started holding the ports and the files.
-    if (!killTree(child.pid)) child.kill("SIGTERM");
+    kill();
+    escalation = setTimeout(() => {
+      console.error("\n  ✗ the session did not end after it was stopped — stopping it again and closing its output.");
+      kill();
+      child.stdout.destroy(new Error(`stopped (${why})`));
+      settle?.(exitCode ?? 1);
+    }, STOP_GRACE_MS);
   };
   // The dollar ceilings in lib/budget.mjs are checked between tasks, deliberately: killing
   // a task mid-edit leaves a half-finished tree. But that leaves a single attempt able to
@@ -375,17 +468,39 @@ async function runStreaming(cmd, args, { input, streamFile }) {
     onLimit: () => stop("turns"),
     onLine: raw ? (line) => raw.write(`${line}\n`) : undefined,
   });
-  const timer = Number.isFinite(MAX_MINUTES)
-    ? setTimeout(() => {
-        console.error(`\n  ✗ stopped: the attempt ran past ${MAX_MINUTES} minutes (AGENT_MAX_MINUTES_PER_ATTEMPT)`);
+  // A deadline on the wall clock, checked often, rather than one long setTimeout: a machine
+  // that sleeps through a timer's due time can wake to find it still waiting, and an attempt
+  // once ran six hours past its limit. Whichever ends first — the attempt's own limit or what
+  // is left of the task's — stops it.
+  const attemptEnds = Number.isFinite(MAX_MINUTES) ? Date.now() + MAX_MINUTES * 60_000 : Infinity;
+  const taskEnds = Date.now() + taskTimeLeftMs();
+  const deadline = Math.min(attemptEnds, taskEnds);
+  const timer = Number.isFinite(deadline)
+    ? setInterval(() => {
+        if (Date.now() < deadline) return;
+        console.error(
+          deadline === attemptEnds
+            ? `\n  ✗ stopped: the attempt ran past ${MAX_MINUTES} minutes (AGENT_MAX_MINUTES_PER_ATTEMPT)`
+            : `\n  ✗ stopped: the task ran past ${MAX_MINUTES_PER_TASK} minutes (AGENT_MAX_MINUTES_PER_TASK)`,
+        );
         stop("time");
-      }, MAX_MINUTES * 60_000)
+      }, DEADLINE_CHECK_MS)
     : null;
   const status = await new Promise((res) => {
-    child.on("error", () => res(1));
-    child.on("close", (code) => res(code ?? 1));
+    let done = false;
+    settle = (code) => {
+      if (done) return;
+      done = true;
+      res(code);
+    };
+    child.on("error", () => settle(1));
+    child.on("exit", (code) => {
+      exitCode = code ?? 1;
+    });
+    child.on("close", (code) => settle(code ?? 1));
   });
-  if (timer) clearTimeout(timer);
+  if (timer) clearInterval(timer);
+  if (escalation) clearTimeout(escalation);
   for (const sig of signals) process.off(sig, forward);
   const outcome = await rendered;
   if (raw) await new Promise((res) => raw.end(res));
@@ -393,7 +508,12 @@ async function runStreaming(cmd, args, { input, streamFile }) {
   // to renderStream left them undefined at the call site: a task passed verify, then the
   // enforcement that reads them crashed on it. A field added at one end must not need
   // remembering at the other.
-  return { status, ...outcome, timedOut: killedFor === "time" };
+  return {
+    status,
+    ...outcome,
+    timedOut: killedFor === "time",
+    timeLimit: deadline === attemptEnds ? "attempt" : "task",
+  };
 }
 const branchName = () => run("git", ["rev-parse", "--abbrev-ref", "HEAD"]).stdout.trim();
 
@@ -426,6 +546,7 @@ function finish(outcome, { attempts, failure }) {
     // What each attempt's time was spent on. Turns say how much happened; this says when.
     phases: attemptPhases.slice(),
     endings: attemptEndings.slice(),
+    verifies: verifyLog.slice(),
   });
 }
 
@@ -620,7 +741,22 @@ if (Number.isFinite(MAX_USD_PER_TASK) && taskSpentUsd >= MAX_USD_PER_TASK) {
 // `budgetExhausted` is checked here rather than mid-attempt: an attempt that has crossed
 // the ceiling still finishes and is still accepted if it verifies, and what the ceiling
 // stops is the attempt that would have come after it.
-while (attempt < MAX_ATTEMPTS && !passed && !budgetExhausted) {
+//
+// The task's wall-clock ceiling works the same way: no attempt starts once it has passed, and
+// what is in the tree goes down the same give-up path, verified once more before it is judged.
+let taskTimeExhausted = false;
+const taskTimeUp = () => {
+  if (taskTimeLeftMs() > 0) return false;
+  if (!taskTimeExhausted) {
+    taskTimeExhausted = true;
+    feedback =
+      `The task ran past ${MAX_MINUTES_PER_TASK} minutes of wall clock (AGENT_MAX_MINUTES_PER_TASK), ` +
+      "so no further attempt was started.";
+    console.error(`\n${feedback}`);
+  }
+  return true;
+};
+while (attempt < MAX_ATTEMPTS && !passed && !budgetExhausted && !taskTimeUp()) {
   attempt++;
 
   // Salvage-on-retry: if the tree already has WIP (restored park or prior attempt in this
@@ -633,7 +769,7 @@ while (attempt < MAX_ATTEMPTS && !passed && !budgetExhausted) {
     log(
       `Attempt ${attempt} of ${MAX_ATTEMPTS} — salvaging ${dirtyNow.length} existing file(s) (verify first)`,
     );
-    const pre = verifyTree({ reuseFailure: true });
+    const pre = await verifyTree({ reuseFailure: true });
     salvageVerifyOutput = pre.output;
     process.stdout.write(pre.output);
     if (pre.status === 0) {
@@ -774,7 +910,9 @@ ${carried.slice(-6000)}`;
   const ending = attemptOutcome(claudeRes);
   if (ending === "limit") {
     const why = claudeRes.timedOut
-      ? `after ${MAX_MINUTES} minutes, the per-attempt time limit`
+      ? claudeRes.timeLimit === "task"
+        ? `when the task reached ${MAX_MINUTES_PER_TASK} minutes, its time limit`
+        : `after ${MAX_MINUTES} minutes, the per-attempt time limit`
       : claudeRes.resultSubtype === "error_max_budget_usd"
         ? "on what was left of the task's spend ceiling"
         : `after ${claudeRes.turns} turns, the per-attempt limit`;
@@ -813,7 +951,7 @@ ${carried.slice(-6000)}`;
   }
 
   log(`Attempt ${attempt} — verifying`);
-  const verify = verifyTree();
+  const verify = await verifyTree();
   const output = verify.output;
   process.stdout.write(output);
   writeFileSync(join(LOG_DIR, `${RUN_ID}-attempt-${attempt}.log`), output);
@@ -987,7 +1125,7 @@ if (!passed) {
 
     // The same port and base as every other verify in this run; this one used to drop both
     // and judge the work against a different branch on the default port.
-    const salvage = verifyTree({ reuseFailure: true });
+    const salvage = await verifyTree({ reuseFailure: true });
     process.stdout.write(salvage.output);
 
     // A green gate is not the whole bar. An attempt refused for a missing or out-of-order

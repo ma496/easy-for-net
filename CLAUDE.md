@@ -136,7 +136,15 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
 - **Spend is bounded** by `AGENT_MAX_USD_PER_TASK` (default 50), `AGENT_MAX_USD_PER_DRAIN` (200) and
   `AGENT_MAX_RUNS_PER_TASK` (3). Each attempt is also stopped by the CLI itself at `budget.maxTurns`
   parent turns (`--max-turns`) and at what is left of the task's ceiling (`--max-budget-usd`), and
-  after `AGENT_MAX_MINUTES_PER_ATTEMPT` (120) of wall clock.
+  after `AGENT_MAX_MINUTES_PER_ATTEMPT` (120) of wall clock; no attempt starts once the task has run
+  `AGENT_MAX_MINUTES_PER_TASK` (240). A stopped session is killed with everything below it, and the
+  runner stops waiting on pipes an orphan still holds.
+- **A task is verified on its own change.** The runner and the brief run verify with
+  `--scope working` — what is committed on the branch was verified when it was committed — while
+  `/verify`, `/ship` and a pull request still judge the whole branch. Inside a run, the lead's plain
+  `npm run verify` is answered by the runner (`AGENT_VERIFY_URL`, a loopback endpoint), which runs
+  it itself and reuses that pass after the session when the tree has not changed, so the same gate
+  is not run twice; `npm run auto:status` shows each run's verify time.
 - **Every session runs on `opus`**, the alias for the newest Opus: the runner and the planner
   through `budget.model` (overridden by `AGENT_MODEL`; `inherit` passes no `--model`), and every
   agent in `.claude/agents/` through its `model:` line.

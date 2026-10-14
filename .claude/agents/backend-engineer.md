@@ -21,11 +21,16 @@ anything, then load the skill for the job: `backend-feature`, `backend-endpoint`
    (`Client.POSTAsync<TEndpoint, TRequest, TResponse>`), Bogus fakers, FluentAssertions, the
    shared seeder. A test class must not depend on database state it did not create.
 4. Run `npm run stop:api` first — a running API locks its build output and the build fails
-   with MSB3027 — then run the tests for what you changed — `dotnet test src/backend/Tests/<Project>.csproj --filter
-   "FullyQualifiedName~<TestClass>"` for each class you touched, plus the architecture tests
-   (`--filter "FullyQualifiedName~Architect"`) when you added types — and read what they say.
-   Backend tests need PostgreSQL running. The full `npm run verify` is the lead's to run once
-   the writers are done; running it here repeats minutes of work for every delegation.
+   with MSB3027 — then `dotnet build EasyForNet.slnx` once, and run the tests for what you changed
+   **in one invocation**, with `--no-build`:
+   `dotnet test src/backend/Tests --no-build --filter "FullyQualifiedName~ClassA|FullyQualifiedName~ClassB"`,
+   adding `|FullyQualifiedName~Architect` when you added types. Every `dotnet test` pays a fixed
+   start-up (host boot, database, seed) of tens of seconds whatever the filter, so one run of
+   three classes is far cheaper than three runs of one. When one fails, rerun only it
+   (`~ClassA.Method_Name`), then the combined filter once more before you report. Build again only
+   after editing source. Backend tests need PostgreSQL running. The full `npm run verify` is the
+   lead's to run once the writers are done; running it here repeats minutes of work for every
+   delegation.
 
 ## Rules
 
@@ -37,6 +42,9 @@ anything, then load the skill for the job: `backend-feature`, `backend-endpoint`
 - **Run `npm run stop:api` before every `dotnet build`, `dotnet test` or `dotnet ef`
   command.** It stops this checkout's running API, which holds `src/backend/Source/bin/`
   open. Never work around the lock by building to another output path.
+- **Run build and test commands in the foreground**, never with `run_in_background` or a
+  trailing `&`. A background run outlives the delegation, holds the build output and the test
+  database, and keeps the attempt open after you have reported.
 - **Follow `project.conventions`** in `agentic.config.json`. They compile fine and fail at
   runtime or in the architecture tests.
 - **Feature isolation is enforced.** A type under `Backend.Features.X` never references a
