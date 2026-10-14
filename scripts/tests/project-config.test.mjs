@@ -16,6 +16,15 @@ test("a non-positive or non-integer budget is refused, naming the key", () => {
   }
 });
 
+test("the settle period is a positive whole number of seconds", () => {
+  assert.equal(config.budget.settleSeconds, 60);
+  for (const bad of [0, -5, 1.5, "60", null]) {
+    const cfg = valid();
+    cfg.budget.settleSeconds = bad;
+    assert.match(validateConfig(cfg).join("\n"), /budget\.settleSeconds must be a positive integer/, String(bad));
+  }
+});
+
 test("an invalid department regex is refused rather than silently dropped", () => {
   const cfg = valid();
   cfg.departments[0].match = ["(unclosed"];

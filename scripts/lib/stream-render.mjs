@@ -177,10 +177,12 @@ export function renderEvent(line, state = {}) {
  * `limits.maxTurns` is a backstop. The runner passes `--max-turns` to the CLI, which stops
  * the session itself and still reports what it cost; this only kills a session that went
  * past it anyway. `limits.onLine` sees every raw line, which is how the runner keeps the
- * stream on disk.
+ * stream on disk; `limits.onEvent` sees every line that parsed, as the raw event object, which
+ * is how the runner notices a session that has finished but not exited (lib/session-settle.mjs)
+ * without parsing the feed a second time.
  */
 export function renderStream(readable, write = (s) => console.log(s), limits = {}) {
-  const { maxTurns = Infinity, onLimit = () => {}, onLine = () => {} } = limits;
+  const { maxTurns = Infinity, onLimit = () => {}, onLine = () => {}, onEvent = () => {} } = limits;
   return new Promise((resolve) => {
     const state = {};
     // Parent turns, counted as they stream. The dollar figure only arrives in the final
@@ -226,6 +228,7 @@ export function renderStream(readable, write = (s) => console.log(s), limits = {
       onLine(line);
       const raw = parseLine(line);
       if (raw) {
+        onEvent(raw);
         const event = normalizeEvent(raw);
         if (event.sessionId && !state.rootSession) state.rootSession = event.sessionId;
         if (event.kind === "system" && event.subtype === "init" && typeof raw.claude_code_version === "string") {

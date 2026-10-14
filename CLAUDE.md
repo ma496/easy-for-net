@@ -138,7 +138,9 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
   parent turns (`--max-turns`) and at what is left of the task's ceiling (`--max-budget-usd`), and
   after `AGENT_MAX_MINUTES_PER_ATTEMPT` (120) of wall clock; no attempt starts once the task has run
   `AGENT_MAX_MINUTES_PER_TASK` (240). A stopped session is killed with everything below it, and the
-  runner stops waiting on pipes an orphan still holds.
+  runner stops waiting on pipes an orphan still holds. A session whose stream has finished — a final
+  `result`, nothing pending in the background — but whose CLI does not exit is closed after
+  `budget.settleSeconds` (60, `AGENT_SETTLE_SECONDS`) of quiet and judged as finished, not timed out.
 - **A task is verified on its own change.** The runner and the brief run verify with
   `--scope working` — what is committed on the branch was verified when it was committed — while
   `/verify`, `/ship` and a pull request still judge the whole branch. Inside a run, the lead's plain

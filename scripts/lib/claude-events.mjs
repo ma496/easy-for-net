@@ -124,7 +124,8 @@ export function isSubagentEvent(event, rootSession) {
  * also the `parent_tool_use_id` its own events carry. A background subagent's own events never
  * appear in the stream at all, so these are the only record of what it did.
  *
- * Null for every other event. Only the monitor reads this; the runner decides nothing from it.
+ * Null for every other event. The monitor reads it to show a task's progress, and
+ * `lib/session-settle.mjs` reads it to know what the session is still waiting on.
  */
 export function backgroundTaskOf(raw) {
   if (!raw || raw.type !== "system") return null;
@@ -151,6 +152,21 @@ export function backgroundTaskOf(raw) {
     default:
       return null;
   }
+}
+
+/**
+ * The tasks the session is still waiting on, as the CLI announces them: every
+ * `background_tasks_changed` event carries the **whole** pending list (`tasks[].task_id`),
+ * so the latest one replaces whatever came before. An empty array means nothing is left
+ * running in the background.
+ *
+ * Null for every other event, and for one whose list is not an array — a release that moves
+ * the field must not read as "nothing pending" and get a working session closed.
+ */
+export function backgroundTasksOf(raw) {
+  if (!raw || raw.type !== "system" || raw.subtype !== "background_tasks_changed") return null;
+  if (!Array.isArray(raw.tasks)) return null;
+  return raw.tasks.map((task) => (typeof task?.task_id === "string" ? task.task_id : null)).filter(Boolean);
 }
 
 /**
@@ -194,6 +210,13 @@ export function schemaProblems(raw) {
 
   if (raw.type === "system" && raw.subtype === "init" && typeof raw.claude_code_version !== "string") {
     problems.push("system/init: `claude_code_version` is missing");
+  }
+
+  if (raw.type === "system" && raw.subtype === "background_tasks_changed") {
+    if (!Array.isArray(raw.tasks)) problems.push("background_tasks_changed: `tasks` is not an array");
+    else if (raw.tasks.some((task) => typeof task?.task_id !== "string")) {
+      problems.push("background_tasks_changed: `tasks[].task_id` is missing");
+    }
   }
   return problems;
 }

@@ -219,6 +219,7 @@
     "maxTurns": 350,
     "maxMinutesPerAttempt": 120,
     "maxMinutesPerTask": 240,
+    "settleSeconds": 60,
     "model": "opus"
   },
   "hooks": {

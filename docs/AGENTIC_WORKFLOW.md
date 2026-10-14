@@ -142,6 +142,7 @@ gets them from the command `npm run schedule -- install` wrote.
 | `AGENT_MAX_TURNS_PER_ATTEMPT` | `budget.maxTurns` | Parent turns per attempt (`--max-turns`). |
 | `AGENT_MAX_MINUTES_PER_ATTEMPT` | `budget.maxMinutesPerAttempt` | Wall clock per attempt. |
 | `AGENT_MAX_MINUTES_PER_TASK` | `budget.maxMinutesPerTask` | Wall clock for the whole task; no attempt starts past it, and a session running when it passes is stopped. `off` removes it. |
+| `AGENT_SETTLE_SECONDS` | `budget.settleSeconds` (60) | Quiet after a session's stream says it has finished (a final result, nothing pending in the background) before a CLI that has not exited is closed and the attempt judged as finished, not timed out. `off` removes it. |
 | `AGENT_VERIFY_TIMEOUT_MINUTES` | 60 | How long one verify may run before it is stopped and counted as failed. |
 | `AGENT_ASSUMED_USD_PER_CALL` | learned from history, else 1 | What a call whose stream carried no cost is charged at. |
 | `AGENT_MODEL` | `budget.model` | The model every session and the planner run on; `inherit` passes none. |

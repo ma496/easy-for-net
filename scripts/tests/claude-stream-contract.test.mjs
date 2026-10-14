@@ -17,7 +17,8 @@ import { dirname, join } from "node:path";
 import { Readable } from "node:stream";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { isSubagentEvent, normalizeEvent, parseLine, schemaProblems, scrubEventLine } from "../lib/claude-events.mjs";
+import { backgroundTasksOf, isSubagentEvent, normalizeEvent, parseLine, schemaProblems, scrubEventLine } from "../lib/claude-events.mjs";
+import { createSettleTracker } from "../lib/session-settle.mjs";
 import { renderStream } from "../lib/stream-render.mjs";
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures", "claude-stream");
@@ -170,6 +171,45 @@ test("a subagent's own delegation is not credited to the session", async () => {
 test("a tool block repeated across events of one message is counted once", async () => {
   const res = await replay(read("synthetic", "nested-delegation.jsonl"));
   assert.equal(res.subagents.filter((s) => s === "backend-engineer").length, 1);
+});
+
+test("a session that finished but never exited settles at its last event, and not before", () => {
+  // Cut from a real 2.1.300 run: reviewers in the background, a wake-up per report, the
+  // final results, then a process that sat idle until its two-hour limit.
+  const events = lines(read("synthetic", "background-settle.jsonl")).map(parseLine);
+  const problems = events.flatMap((raw, i) => schemaProblems(raw).map((p) => `line ${i + 1}: ${p}`));
+  assert.deepEqual(problems, []);
+
+  const QUIET = 1_000;
+  const tracker = createSettleTracker({ quietMs: QUIET });
+  // One second between events, so every point but the last is followed by more stream
+  // inside the quiet window — and is asked whether it could have settled there.
+  const settledEarly = [];
+  events.forEach((raw, i) => {
+    tracker.observe(raw, i * QUIET);
+    if (i < events.length - 1 && tracker.isSettled(i * QUIET + QUIET - 1)) settledEarly.push(i + 1);
+  });
+  assert.deepEqual(settledEarly, [], "never settled while the session was still going");
+
+  const end = (events.length - 1) * QUIET;
+  assert.equal(tracker.isSettled(end + QUIET - 1), false, "not inside the quiet window");
+  assert.equal(tracker.isSettled(end + QUIET), true, "settled once the final results went quiet");
+  assert.deepEqual(tracker.state().pending, []);
+  assert.equal(tracker.state().results, 7, "one result per wake-up");
+
+  // A release that moves the list must fail here by name, not read as "nothing pending".
+  const moved = { type: "system", subtype: "background_tasks_changed", tasks: [{ id: "a1" }] };
+  assert.match(schemaProblems(moved).join("\n"), /tasks\[\]\.task_id/);
+  assert.match(schemaProblems({ ...moved, tasks: undefined }).join("\n"), /`tasks` is not an array/);
+  assert.equal(backgroundTasksOf({ ...moved, tasks: undefined }), null);
+
+  // Every point where the CLI announced work still pending must have been unsettled however
+  // long it then stayed quiet.
+  const replayTo = createSettleTracker({ quietMs: QUIET });
+  events.forEach((raw, i) => {
+    replayTo.observe(raw, i);
+    if ((backgroundTasksOf(raw) ?? []).length > 0) assert.equal(replayTo.isSettled(i + QUIET * 100), false, `line ${i + 1}`);
+  });
 });
 
 // --- the scrubber -----------------------------------------------------------------------
