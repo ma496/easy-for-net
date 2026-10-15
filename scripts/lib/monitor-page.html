@@ -115,6 +115,10 @@
   .row.result { font-weight: 700; padding: 6px 0; }
   .row.result.ok { color: var(--ok); } .row.result.bad { color: var(--bad); }
   .row .d { color: var(--muted); }
+  .row .time { color: var(--muted); font-size: 11px; margin-right: 8px; font-variant-numeric: tabular-nums; }
+  /* The runner's own steps (verifying, committing) mark where the session's narration stops. */
+  .row.phase { margin: 6px 0; padding: 5px 8px; border-left: 3px solid var(--accent); background: var(--accent-bg); }
+  .row.phase .k { color: var(--accent); font-weight: 700; }
   .open-log { border: 1px solid var(--sub); color: var(--sub); background: transparent; border-radius: 5px;
     font-size: 11px; padding: 0 6px; margin-left: 6px; cursor: pointer; font-family: system-ui, sans-serif; }
   .muted { color: var(--muted); }
@@ -193,6 +197,22 @@ const dur = (ms) => {
   return s < 60 ? `${s}s` : s < 3600 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
 };
 const kTokens = (n) => (typeof n === "number" ? `${Math.round(n / 1000)}k tokens` : "");
+/** A wall-clock time in the viewer's zone: 14:02:09, or 14:02 with `short`. */
+const clock = (iso, short = false) => {
+  const t = Date.parse(iso ?? "");
+  if (!Number.isFinite(t)) return "";
+  return new Date(t).toLocaleTimeString([], short ? { hour: "2-digit", minute: "2-digit" } : { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+};
+/** A date and time for a tooltip or a history entry. */
+const stamp = (iso) => {
+  const t = Date.parse(iso ?? "");
+  return Number.isFinite(t) ? new Date(t).toLocaleString() : "";
+};
+/** How long since a moment, as a duration ("12m 3s"). */
+const since = (iso) => {
+  const t = Date.parse(iso ?? "");
+  return Number.isFinite(t) ? dur(Math.max(0, Date.now() - t)) : "";
+};
 
 // ===== board ===============================================================================
 let board = null;
@@ -275,6 +295,16 @@ function card(t) {
   if (t.attempts) meta.append(el("span", null, `${t.attempts} attempt${t.attempts > 1 ? "s" : ""}`));
   if (t.costUsd) meta.append(el("span", null, usd(t.costUsd)));
   if (t.lastOutcome) meta.append(el("span", null, t.lastOutcome));
+  const last = t.runs.at(-1);
+  if (t.lane === "doing" && isLiveTask(t) && board.live.runStartedAt) {
+    const s = el("span", null, `started ${clock(board.live.runStartedAt, true)} · ${since(board.live.runStartedAt)}`);
+    s.title = stamp(board.live.runStartedAt);
+    meta.append(s);
+  } else if ((t.lane === "done" || t.lane === "failed") && last) {
+    const s = el("span", null, [last.durationMs != null ? `took ${dur(last.durationMs)}` : "", ago(last.finishedAt)].filter(Boolean).join(" · "));
+    s.title = last.finishedAt ? `finished ${stamp(last.finishedAt)}` : "";
+    meta.append(s);
+  }
   if (t.lane === "todo") {
     for (const d of t.deps) {
       const b = el("button", `dep${d.landed ? "" : " wait"}`, `${d.landed ? "✓" : "⏳"} ${d.stem.split("/").pop()}`);
@@ -298,16 +328,27 @@ function card(t) {
   return c;
 }
 
-/** One line for a task in doing/: building now, or stopped and why. */
+/**
+ * One line for a task in doing/: the runner's own step (verifying, committing), building,
+ * starting, or stopped and why. A run outside a drain (`npm run auto`) holds no lock, so
+ * without one only recent activity says it is still going.
+ */
 function doingStatus(t) {
   const live = isLiveTask(t) ? board.live : null;
-  const writing = live && Date.now() - Date.parse(live.updatedAt) < 120000;
-  if (writing) {
-    const running = live.agents.filter((a) => a.status === "running").length;
-    return { dot: "running", text: `building${running ? ` · ${running} agent${running > 1 ? "s" : ""} working` : ""}` };
+  const draining = board.drain.state === "running";
+  const stopped = { dot: "stale", text: `stopped${t.lastOutcome ? ` · ${t.lastOutcome}` : ""}${live ? ` · ${ago(live.updatedAt)}` : ""}` };
+  if (!live) return draining ? { dot: "running", text: "starting" } : stopped;
+  if (live.runnerActive && live.phase) {
+    const fresh = live.phase.at && Date.now() - Date.parse(live.phase.at) < 30 * 60000;
+    if (draining || fresh) return { dot: "running", text: `${live.phase.text}${live.phase.at ? ` · ${since(live.phase.at)}` : ""}` };
+    return stopped;
   }
-  if (board.drain.state === "running") return { dot: "running", text: "starting" };
-  return { dot: "stale", text: `stopped${t.lastOutcome ? ` · ${t.lastOutcome}` : ""}${live ? ` · ${ago(live.updatedAt)}` : ""}` };
+  const quiet = Date.now() - Date.parse(live.updatedAt);
+  const running = live.agents.filter((a) => a.status === "running").length;
+  const agents = running ? ` · ${running} agent${running > 1 ? "s" : ""} working` : "";
+  if (quiet < 120000) return { dot: "running", text: `building${agents}` };
+  if (draining) return { dot: "running", text: `building${agents} · quiet ${dur(quiet)}` };
+  return stopped;
 }
 
 /** Open a task's live view in the feed panel. */
@@ -326,16 +367,26 @@ function renderTaskHead() {
   const agents = board.live.agents;
   const title = el("div", "th-title");
   title.append(dot(s.dot), el("b", null, ` ${t.stem}`), el("span", "muted", ` · ${s.text}`));
-  const hist = el("button", "small", "History");
-  hist.onclick = () => openDetail(t);
-  title.append(hist);
+  // A first attempt has nothing in the journal yet, so there is no history to open.
+  if (t.runs.length) {
+    const hist = el("button", "small", "History");
+    hist.onclick = () => openDetail(t);
+    title.append(hist);
+  }
   box.replaceChildren(title, el("div", "th-sub", t.title));
+  const live = board.live;
+  const times = [
+    live.runStartedAt ? `run started ${clock(live.runStartedAt)}` : "",
+    live.runStartedAt && !live.finished ? `${since(live.runStartedAt)} elapsed` : "",
+    live.attempt ? `attempt ${live.attempt}${live.attemptStartedAt ? ` started ${clock(live.attemptStartedAt)}` : ""}` : "",
+    `last write ${ago(live.updatedAt)}`].filter(Boolean).join(" · ");
+  const timeLine = el("div", "muted", times);
+  timeLine.title = live.runStartedAt ? `run started ${stamp(live.runStartedAt)}` : "";
   const stats = [`${agents.length} subagent${agents.length === 1 ? "" : "s"}`,
     `${agents.filter((a) => a.status === "running").length} running`,
     `${agents.filter((a) => a.status === "done").length} done`,
-    t.attempts ? `${t.attempts} earlier attempt${t.attempts > 1 ? "s" : ""} · ${usd(t.costUsd)}` : "",
-    `last write ${ago(board.live.updatedAt)}`].filter(Boolean).join(" · ");
-  box.append(el("div", "muted", stats));
+    t.attempts ? `${t.attempts} earlier attempt${t.attempts > 1 ? "s" : ""} · ${usd(t.costUsd)}` : ""].filter(Boolean).join(" · ");
+  box.append(timeLine, el("div", "muted", stats));
 }
 
 /** The live run's subagents; each opens its own log. */
@@ -406,7 +457,8 @@ function renderDetail() {
   for (const r of [...t.runs].reverse()) {
     const box = el("div", "run");
     box.append(el("div", null, `${r.mark} ${r.outcome ?? "?"} · ${r.attempts} attempt(s) · ${usd(r.costUsd)}${r.turns.length ? ` · turns ${r.turns.join("/")}` : ""}`));
-    box.append(el("div", "muted", `${r.id} · ${r.startedAt ?? ""} → ${r.finishedAt ?? ""}`));
+    box.append(el("div", "muted", [r.id, r.startedAt ? `${stamp(r.startedAt)} → ${r.finishedAt ? clock(r.finishedAt) : "?"}` : "",
+      r.durationMs != null ? `took ${dur(r.durationMs)}` : "", r.finishedAt ? ago(r.finishedAt) : ""].filter(Boolean).join(" · ")));
     if (r.delegations.length) box.append(el("div", "muted", `delegated: ${r.delegations.join(" → ")}`));
     if (r.failure) box.append(el("div", "fail", r.failure));
     const btns = el("div");
@@ -427,6 +479,7 @@ $("taskFilter").addEventListener("input", (e) => { taskFilter = e.target.value; 
 
 // ===== feed ================================================================================
 const KINDS = [
+  { key: "phase", label: "Runner", kinds: ["phase"] },
   { key: "text", label: "Messages", kinds: ["text"] },
   { key: "tool", label: "Tools", kinds: ["tool"] },
   { key: "agents", label: "Agents & skills", kinds: ["delegate", "resume", "skill", "report"] },
@@ -439,7 +492,7 @@ const feed = {
   rows: [], agents: [], view: "all",
   // Progress repeats what an agent's own streamed tool calls already show; it is off unless a
   // log has nothing else (an agent whose own events the stream does not carry).
-  on: new Set(["text", "tool", "agents", "task", "result"]),
+  on: new Set(["phase", "text", "tool", "agents", "task", "result"]),
   progressAuto: true,
   search: "", paused: false, unseen: 0,
 };
@@ -545,7 +598,8 @@ function renderAgentBar() {
     chip("all", "All"),
     chip("lead", "Lead"),
     ...feed.agents.map((a) => {
-      const b = chip(a.id, a.label, { status: a.status, note: a.toolUses ? `${a.toolUses} tools` : "" });
+      const note = [a.toolUses ? `${a.toolUses} tools` : "", dur(a.durationMs)].filter(Boolean).join(" · ");
+      const b = chip(a.id, a.label, { status: a.status, note });
       b.title = a.description;
       return b;
     }),
@@ -563,7 +617,7 @@ function renderAgentInfo() {
   line1.append(dot(a.status), document.createTextNode(" "), el("b", null, a.label),
     document.createTextNode(` — ${a.description}`));
   const stats = [a.status, a.toolUses ? `${a.toolUses} tool calls` : "", a.turns ? `${a.turns} turns` : "",
-    kTokens(a.tokens), dur(a.durationMs), `started by ${parent}`,
+    kTokens(a.tokens), dur(a.durationMs), `started by ${parent}${a.startedAt ? ` at ${clock(a.startedAt)}` : ""}`,
     a.resumes ? `resumed ${a.resumes}×` : "", a.background ? "background" : ""].filter(Boolean).join(" · ");
   box.replaceChildren(line1, el("div", "muted", stats));
   if (a.status === "running" && a.current) box.append(el("div", null, `now: ${a.current}`));
@@ -666,9 +720,19 @@ function rowEl(r) {
     toggle();
   };
   row.append(more);
+  // Only a row whose line said when it was written shows a time; none is guessed.
+  if (r.at) {
+    const time = el("span", "time", clock(r.at));
+    time.title = stamp(r.at);
+    body.append(time);
+  }
+  if (r.kind === "phase") {
+    body.append(el("span", "k", `▶ ${r.text}`));
+    return row;
+  }
   if (r.kind === "result") {
     row.classList.add(r.ok ? "ok" : "bad");
-    body.textContent = `${r.ok ? "✓" : "✗"} ${r.text}${typeof r.turns === "number" ? ` · ${r.turns} turns` : ""}${typeof r.costUsd === "number" ? ` · ${usd(r.costUsd)}` : ""}`;
+    body.append(`${r.ok ? "✓" : "✗"} ${r.text}${typeof r.turns === "number" ? ` · ${r.turns} turns` : ""}${typeof r.costUsd === "number" ? ` · ${usd(r.costUsd)}` : ""}`);
     if (r.detail) body.append(el("div", "d", r.detail));
     return row;
   }
