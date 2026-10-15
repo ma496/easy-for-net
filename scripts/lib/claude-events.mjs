@@ -65,6 +65,8 @@ export function normalizeEvent(raw) {
     sessionId: typeof raw.session_id === "string" ? raw.session_id : null,
     parentToolUseId: "parent_tool_use_id" in raw ? raw.parent_tool_use_id ?? null : undefined,
     messageId: typeof raw.message?.id === "string" ? raw.message.id : null,
+    // When the CLI wrote it; `assistant` and `user` events carry one, `system` and `result` do not.
+    at: typeof raw.timestamp === "string" && Number.isFinite(Date.parse(raw.timestamp)) ? raw.timestamp : null,
     texts: [],
     toolUses: [],
     result: null,

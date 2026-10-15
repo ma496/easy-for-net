@@ -96,12 +96,14 @@ function board() {
   const lockHeld = isHeld(lock, { host: hostname(), isAlive, mtimeMs });
   const live = newestStream(streamFiles());
   let liveAgents = [];
+  let liveState = {};
   if (live) {
     const t = trackerFor(live.name);
     advance(t);
     liveAgents = agentsOf(t.state);
+    liveState = t.state;
   }
-  return boardSnapshot({ lanes, specs, runs: readRuns(), lock, lockHeld, live, liveAgents });
+  return boardSnapshot({ lanes, specs, runs: readRuns(), lock, lockHeld, live, liveAgents, liveState });
 }
 
 /** The last `count` lines of drain.log, read from its tail rather than whole. */

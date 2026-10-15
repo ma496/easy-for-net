@@ -44,7 +44,7 @@
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { createServer } from "node:http";
-import { createWriteStream, readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { appendFileSync, createWriteStream, readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { appendRun, priorFailureBrief, priorTaskRuns, readRuns, LOG_DIR } from "./run-journal.mjs";
@@ -424,8 +424,9 @@ const runLive = (cmd, args) => spawnSync(cmd, args, { stdio: "inherit", encoding
  */
 async function runStreaming(cmd, args, { input, streamFile }) {
   // Every raw line, kept beside the rendered log. The rendered log is lossy by design, and
-  // when the CLI's format moves this is the file a new fixture is cut from.
-  const raw = streamFile ? createWriteStream(streamFile) : null;
+  // when the CLI's format moves this is the file a new fixture is cut from. Appended to, not
+  // truncated: the runner's own `runner_phase` lines (see `recordPhase`) may already open it.
+  const raw = streamFile ? createWriteStream(streamFile, { flags: "a" }) : null;
   const res = await runClaudeSession(cmd, args, {
     input,
     env: { ...process.env, ...childEnv },
@@ -446,8 +447,26 @@ async function runStreaming(cmd, args, { input, streamFile }) {
 }
 const branchName = () => run("git", ["rev-parse", "--abbrev-ref", "HEAD"]).stdout.trim();
 
+/** The attempt whose stream file the runner's phases are written to. */
+let phaseAttempt = 1;
+
+/**
+ * Write one of the runner's own steps into the attempt's stream file, as a `runner_phase`
+ * line the CLI never emits, so the monitor's live view shows what happens before and after
+ * the session (verifying, accepting, committing) in order with it. Never fails the run.
+ */
+function recordPhase(text) {
+  try {
+    const line = { type: "runner_phase", text: String(text).trim(), attempt: phaseAttempt, at: new Date().toISOString() };
+    appendFileSync(join(LOG_DIR, `${RUN_ID}-attempt-${phaseAttempt}.stream.jsonl`), `${JSON.stringify(line)}\n`);
+  } catch {
+    // The monitor is a convenience; the run does not depend on it.
+  }
+}
+
 function log(section) {
   console.log(`\n${"=".repeat(70)}\n${section}\n${"=".repeat(70)}`);
+  recordPhase(section);
 }
 
 /** Record the run before exiting, so the journal never misses an outcome. */
@@ -687,6 +706,7 @@ const taskTimeUp = () => {
 };
 while (attempt < MAX_ATTEMPTS && !passed && !budgetExhausted && !taskTimeUp()) {
   attempt++;
+  phaseAttempt = attempt;
 
   // Salvage-on-retry: if the tree already has WIP (restored park or prior attempt in this
   // run), verify it *before* spending another full Claude build. Reviews-only when green;
@@ -862,6 +882,7 @@ ${carried.slice(-6000)}`;
   // other non-zero exit crashed; its tree, if any, is the next attempt's salvage.
   if (ending === "crashed") {
     console.error(`\nClaude Code exited with status ${claudeRes.status}.`);
+    recordPhase(`Claude Code exited with status ${claudeRes.status}`);
     feedback = `Claude Code itself exited non-zero (${claudeRes.status}).`;
     continue;
   }
@@ -873,6 +894,7 @@ ${carried.slice(-6000)}`;
   const produced = spawnSync("git", ["status", "--porcelain"], { encoding: "utf8" }).stdout ?? "";
   if (produced.trim() === "") {
     console.log(`\nAttempt ${attempt} produced no changes at all — not verifying an empty diff.`);
+    recordPhase(`Attempt ${attempt} produced no changes — not verifying an empty diff`);
     feedback =
       "The working tree is unchanged: the previous attempt wrote nothing. If the task " +
       "cannot be done as stated — for example because it needs code from a dependency " +
@@ -913,6 +935,7 @@ ${carried.slice(-6000)}`;
     // result that must never be accepted.
     if (!carriesProductCode(changedPaths)) {
       console.log(`\nAttempt ${attempt} verified, but the working tree holds no change to accept.`);
+      recordPhase(`Attempt ${attempt} verified, but holds no change to accept`);
       feedback =
         `\`${config.commands.verify}\` passed, but nothing was written: \`git status\` shows no changed ` +
         `file outside \`.agent-queue/\`. The gate is green because \`${WORK_BRANCH}\` ` +
@@ -933,6 +956,7 @@ ${carried.slice(-6000)}`;
         `\nAttempt ${attempt} verified but skipped ${owed.length} required department(s) — not accepting it.`,
       );
       for (const d of owed) console.log(`   missing: ${d.agent}  (${d.label})`);
+      recordPhase(`Attempt ${attempt} verified but skipped ${owed.map((d) => d.agent).join(", ")} — not accepted`);
 
       feedback =
         `The change passed \`${config.commands.verify}\`, but ${owed.length} department(s) that own ` +
@@ -971,6 +995,7 @@ ${carried.slice(-6000)}`;
     if (outOfOrder.length > 0) {
       console.log(`\nAttempt ${attempt} used every department, but out of sequence.`);
       for (const p of outOfOrder) console.log(`   ${p}`);
+      recordPhase(`Attempt ${attempt} used every department, but out of sequence — not accepted`);
       feedback =
         "Every required department saw this change, but not in the order the pipeline " +
         "requires:\n\n" +
@@ -991,6 +1016,7 @@ ${carried.slice(-6000)}`;
   }
 
   console.log(`\nVerification failed on attempt ${attempt}. Feeding the output back.`);
+  recordPhase(`Verification failed on attempt ${attempt}`);
   feedback = output;
 }
 
@@ -1013,6 +1039,7 @@ if (!passed && budgetExhausted && attempt < MAX_ATTEMPTS) {
     `${describeCeiling("AGENT_MAX_USD_PER_TASK", taskSpentUsd, MAX_USD_PER_TASK)} ` +
     `after ${attempt} attempt(s). The work did not verify, and no further attempt was started.`;
   console.error(`\n${reason}`);
+  recordPhase("Stopped on the per-task spend ceiling");
   console.error(
     "Raise AGENT_MAX_USD_PER_TASK, or split the task, and requeue it. Nothing was committed.",
   );
@@ -1052,6 +1079,7 @@ if (!passed) {
   if (left.length > 0) {
     console.error(`\nGave up after ${MAX_ATTEMPTS} attempt(s), but ${left.length} file(s) are changed.`);
     console.error("Verifying them before calling this a failure — it may be finished work.\n");
+    recordPhase(`Gave up after ${MAX_ATTEMPTS} attempt(s) — verifying the ${left.length} changed file(s) left`);
 
     // The same port and base as every other verify in this run; this one used to drop both
     // and judge the work against a different branch on the default port.
@@ -1084,6 +1112,7 @@ if (!passed) {
 
   if (!passed) {
     console.error(`\nGave up after ${MAX_ATTEMPTS} attempt(s). Verification never passed.`);
+    recordPhase(`Gave up after ${MAX_ATTEMPTS} attempt(s) — verification never passed`);
     console.error(`Output is in ${LOG_DIR}/.`);
     finish("failed", { attempts: attempt, failure: feedback });
     process.exit(1);
@@ -1116,6 +1145,7 @@ Verified and left uncommitted on ${WORK_BRANCH} (--no-commit).
 // The build record is written now, before the commit, so it lands in the task's own commit
 // rather than being left in the tree for the next one to sweep up. record-build.mjs never
 // fails the run; a task with no brief file (`npm run auto -- "<task>"`) has nothing to record.
+recordPhase("Committing");
 if (taskFile) runLive("node", [join(SCRIPTS, "record-build.mjs"), "--task", taskFile]);
 
 const shipArgs = [join(SCRIPTS, "auto-ship.mjs"), subject, "--commit-only", "--verified"];
@@ -1126,11 +1156,13 @@ const ship = runLive("node", shipArgs);
 if (ship.status !== 0) {
   // Verified but uncommitted is a failure for this runner: the queue's next task would
   // start on a dirty tree and fold this work into its own commit.
+  recordPhase("Verified, but the commit failed");
   finish("failed", { attempts: attempt, failure: "verified, but the commit failed" });
   console.error(`\nThe task verified but could not be committed. ${WORK_BRANCH} is left dirty.`);
   process.exit(ship.status ?? 1);
 }
 
+recordPhase(`Committed on ${WORK_BRANCH}`);
 finish("committed", { attempts: attempt });
 
 // Push is off by default. AGENT_AUTO_PUSH=1 pushes the work branch after each commit.

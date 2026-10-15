@@ -5,12 +5,14 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   agentsOf,
+  attemptOfStream,
   boardSnapshot,
   dependencyNames,
   describeEvent,
   isStreamFileName,
   newestStream,
   runIdOfStream,
+  runStartOf,
   titleOf,
 } from "../lib/monitor.mjs";
 
@@ -204,7 +206,49 @@ test("an error result carries its subtype", () => {
   assert.equal(rows[0].costUsd, 2);
 });
 
+const phase = (text, at) => JSON.stringify({ type: "runner_phase", text, attempt: 1, at });
+
+test("the runner's steps around the session are phase rows, and say when the runner is at work", () => {
+  const result = JSON.stringify({ type: "result", subtype: "success", is_error: false, total_cost_usd: 1, num_turns: 2, result: "" });
+  const state = {};
+  const before = describeEvent(phase("Attempt 1 of 3 — running Claude Code headless", "2026-10-15T10:00:00.000Z"), state);
+  assert.deepEqual(before.map((r) => [r.kind, r.text, r.at, r.agent]),
+    [["phase", "Attempt 1 of 3 — running Claude Code headless", "2026-10-15T10:00:00.000Z", null]]);
+  assert.equal(state.lastLine, "runner");
+  assert.equal(state.firstAt, "2026-10-15T10:00:00.000Z");
+
+  describeEvent(assistant("m1", [{ type: "text", text: "Working" }]), state);
+  describeEvent(result, state);
+  assert.equal(state.lastLine, "cli", "the session is at work once it writes");
+
+  const after = describeEvent(phase("Attempt 1 — verifying", "2026-10-15T10:20:00.000Z"), state);
+  assert.equal(after[0].kind, "phase");
+  assert.deepEqual(state.phase, { text: "Attempt 1 — verifying", at: "2026-10-15T10:20:00.000Z" });
+  assert.equal(state.lastLine, "runner");
+  // A phase with no usable time is still shown, without one.
+  assert.equal(describeEvent(phase("Committing", "not a time"), state)[0].at, undefined);
+});
+
+test("a row carries the time its line was written, and only then", () => {
+  const at = "2026-10-15T10:05:06.000Z";
+  const { rows, state } = describeAll([
+    JSON.stringify({ type: "assistant", session_id: "s", parent_tool_use_id: null, timestamp: at,
+      message: { id: "m1", content: [{ type: "tool_use", id: "A1", name: "Agent", input: { subagent_type: "qa-engineer", description: "check" } }] } }),
+    system("task_notification", { task_id: "k1", tool_use_id: "A1", status: "completed", summary: "Fine." }),
+  ]);
+  assert.equal(rows[0].at, at);
+  assert.equal(agentsOf(state)[0].startedAt, at);
+  assert.equal("at" in rows[1], false, "a task event says nothing about when, so its row has no time");
+});
+
 // --- names ----------------------------------------------------------------------------------
+
+test("a run's start and an attempt number are read from the stream name", () => {
+  assert.equal(runStartOf("run-2026-10-14T23-03-40-540Z"), "2026-10-14T23:03:40.540Z");
+  assert.equal(runStartOf("run-x"), null);
+  assert.equal(attemptOfStream("run-2026-10-14T23-03-40-540Z-attempt-2.stream.jsonl"), 2);
+  assert.equal(attemptOfStream("journal.jsonl"), null);
+});
 
 test("only a run's stream file name is accepted", () => {
   assert.equal(isStreamFileName("run-2026-10-12T10-53-43-943Z-attempt-1.stream.jsonl"), true);
@@ -291,6 +335,22 @@ test("a finished stream is attributed through the journal", () => {
     live: { name: "run-1-attempt-1.stream.jsonl", mtimeMs: 0 },
   });
   assert.deepEqual({ stem: snap.live.stem, finished: snap.live.finished }, { stem: "hrm/01-a", finished: true });
+});
+
+test("the live stream reports its run's start, its attempt and the runner's step", () => {
+  const snap = boardSnapshot({
+    lanes: { doing: [task("hrm/01-a.md", "A")] },
+    runs: [{ id: "run-0", taskSlug: "hrm/01-a", outcome: "failed", attempts: 1,
+      startedAt: "2026-10-15T09:00:00.000Z", finishedAt: "2026-10-15T09:30:00.000Z" }],
+    live: { name: "run-2026-10-15T10-00-00-000Z-attempt-2.stream.jsonl", mtimeMs: 0 },
+    liveState: { phase: { text: "Attempt 2 — verifying", at: "2026-10-15T10:20:00.000Z" }, lastLine: "runner", firstAt: "2026-10-15T10:00:01.000Z" },
+  });
+  assert.deepEqual(
+    { runStartedAt: snap.live.runStartedAt, attempt: snap.live.attempt, attemptStartedAt: snap.live.attemptStartedAt, phase: snap.live.phase.text, runnerActive: snap.live.runnerActive },
+    { runStartedAt: "2026-10-15T10:00:00.000Z", attempt: 2, attemptStartedAt: "2026-10-15T10:00:01.000Z", phase: "Attempt 2 — verifying", runnerActive: true },
+  );
+  assert.equal(snap.specs[0].tasks[0].runs[0].durationMs, 30 * 60_000);
+  assert.equal(boardSnapshot({ live: { name: "run-1-attempt-1.stream.jsonl", mtimeMs: 0 } }).live.runnerActive, false);
 });
 
 test("the drain is running, stale or idle as the lock and its liveness say", () => {

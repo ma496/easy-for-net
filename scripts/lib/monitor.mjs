@@ -39,6 +39,20 @@ export const isStreamFileName = (name) =>
 /** The run id a stream file belongs to, or null. */
 export const runIdOfStream = (name) => (isStreamFileName(name) ? name.replace(/-attempt-\d+\.stream\.jsonl$/, "") : null);
 
+/** Which attempt of its run a stream file is, or null. */
+export const attemptOfStream = (name) => (isStreamFileName(name) ? Number(/-attempt-(\d+)\.stream\.jsonl$/.exec(name)[1]) : null);
+
+/** When a run started, read from its id (`run-2026-10-14T23-03-40-540Z`), or null. */
+export function runStartOf(runId) {
+  const m = /^run-(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})-(\d{3})Z$/.exec(String(runId ?? ""));
+  return m ? `${m[1]}T${m[2]}:${m[3]}:${m[4]}.${m[5]}Z` : null;
+}
+
+/** The line `agent-run.mjs` writes into an attempt's stream for each of its own steps. */
+export const RUNNER_PHASE = "runner_phase";
+
+const isoOrNull = (v) => (typeof v === "string" && Number.isFinite(Date.parse(v)) ? v : null);
+
 /** The newest of `[{ name, mtimeMs }]` that is a stream file, or null. */
 export function newestStream(entries) {
   let best = null;
@@ -84,7 +98,7 @@ export function dependencyNames(text, stem) {
 /** How a task notification's status reads on an agent. */
 const ENDED = { completed: "done", failed: "failed", killed: "stopped", stopped: "stopped" };
 
-function newAgent(state, use, spawnedBy) {
+function newAgent(state, use, spawnedBy, at) {
   const type = use.input.subagent_type ? String(use.input.subagent_type) : "general-purpose";
   state.agentCount[type] = (state.agentCount[type] ?? 0) + 1;
   const n = state.agentCount[type];
@@ -112,6 +126,7 @@ function newAgent(state, use, spawnedBy) {
     // What the runs before this one used: each run's usage counts from zero.
     priorToolUses: 0,
     priorDurationMs: 0,
+    startedAt: at ?? null,
     startSeq: state.seq,
   };
   if (use.id) state.agents[use.id] = agent;
@@ -131,10 +146,16 @@ export function agentsOf(state) {
  * the calls already shown, the turns counted so far (`state.turns`, `state.subagentTurns`)
  * and the sequence number the next row gets.
  *
- * Row: `{ seq, agent, who, sub, kind, text, detail?, ok?, costUsd?, turns? }` — `agent` is the
- * id of the `Agent` call whose log the row belongs to (null for the lead), `who` its label,
- * `kind` one of text | tool | delegate | resume | skill | task | progress | report | result. A
- * delegate row belongs to the agent that delegated, and names the new one in `spawns`.
+ * Row: `{ seq, agent, who, sub, kind, text, at?, detail?, ok?, costUsd?, turns? }` — `agent` is
+ * the id of the `Agent` call whose log the row belongs to (null for the lead), `who` its label,
+ * `kind` one of text | tool | delegate | resume | skill | task | progress | report | result |
+ * phase. A delegate row belongs to the agent that delegated, and names the new one in `spawns`.
+ * `at` is when the line was written, present only where the line says so (an assistant event,
+ * a runner phase): a row is never given a guessed time.
+ *
+ * A phase row is one of the runner's own steps (`Attempt 1 — verifying`), which it writes into
+ * the stream before and after the session. `state.phase` holds the latest, and `state.lastLine`
+ * is "runner" while the runner's line is the newest in the file: the session is not running.
  */
 export function describeEvent(line, state) {
   const raw = parseLine(line);
@@ -154,6 +175,18 @@ export function describeEvent(line, state) {
     state.seq += 1;
     rows.push({ seq: state.seq, agent: null, who: "lead", sub: false, ...row });
   };
+
+  if (raw.type === RUNNER_PHASE) {
+    const at = isoOrNull(raw.at);
+    const text = clip(raw.text, 300);
+    if (!text) return rows;
+    state.phase = { text, at };
+    state.lastLine = "runner";
+    state.firstAt ??= at;
+    push({ kind: "phase", text, ...(at ? { at } : {}) });
+    return rows;
+  }
+  state.lastLine = "cli";
 
   const task = backgroundTaskOf(raw);
   if (task) {
@@ -213,6 +246,7 @@ export function describeEvent(line, state) {
 
   const event = normalizeEvent(raw);
   if (event.sessionId && !state.rootSession) state.rootSession = event.sessionId;
+  if (event.at) state.firstAt ??= event.at;
 
   if (event.kind === "result") {
     const { costUsd, numTurns, isError, subtype } = event.result;
@@ -244,7 +278,7 @@ export function describeEvent(line, state) {
   }
   state.turns = state.leadMessages.size;
   state.subagentTurns = state.subMessages.size;
-  const mine = { agent: agent?.id ?? null, who: agent?.label ?? (sub ? "subagent" : "lead"), sub };
+  const mine = { agent: agent?.id ?? null, who: agent?.label ?? (sub ? "subagent" : "lead"), sub, ...(event.at ? { at: event.at } : {}) };
 
   for (const text of event.texts) {
     const one = clipProse(text, 4000);
@@ -261,7 +295,7 @@ export function describeEvent(line, state) {
     }
     if (agent) agent.streamed += 1;
     if (DELEGATION_TOOLS.has(use.name)) {
-      const spawned = newAgent(state, use, mine.agent);
+      const spawned = newAgent(state, use, mine.agent, event.at);
       push({ ...mine, kind: "delegate", text: spawned.label, detail: spawned.description, spawns: spawned.id });
     } else if (use.name === SKILL_TOOL) {
       push({ ...mine, kind: "skill", text: skillNameOf(use.input) ?? "skill" });
@@ -276,10 +310,12 @@ export function describeEvent(line, state) {
 /** What a journal entry says about the task it ran, in the shape the page shows. */
 function runSummary(entry) {
   const delegations = (entry.phases ?? []).flatMap((p) => (p?.delegations ?? []).map((d) => d?.name).filter(Boolean));
+  const span = Date.parse(entry.finishedAt) - Date.parse(entry.startedAt);
   return {
     id: entry.id,
     startedAt: entry.startedAt ?? null,
     finishedAt: entry.finishedAt ?? null,
+    durationMs: Number.isFinite(span) && span >= 0 ? span : null,
     outcome: entry.outcome ?? null,
     mark: markOf(entry.outcome),
     failure: entry.failure ? clip(entry.failure, 600) : null,
@@ -295,10 +331,11 @@ function runSummary(entry) {
  *
  * `lanes` is `{ todo: [{ file, text }], … }` with `file` as `listTasks` names it; `specs` the
  * planned spec names; `runs` the journal; `lock` the parsed drain lock and `lockHeld` whether
- * `isHeld` judged it live; `live` the newest stream file `{ name, mtimeMs }`, and `liveAgents`
- * what `agentsOf` says that stream has started.
+ * `isHeld` judged it live; `live` the newest stream file `{ name, mtimeMs }`, `liveAgents`
+ * what `agentsOf` says that stream has started, and `liveState` the rest `describeEvent`
+ * gathered from it (`phase`, `lastLine`, `firstAt`).
  */
-export function boardSnapshot({ lanes = {}, specs = [], runs = [], lock = null, lockHeld = false, live = null, liveAgents = [], now = Date.now() } = {}) {
+export function boardSnapshot({ lanes = {}, specs = [], runs = [], lock = null, lockHeld = false, live = null, liveAgents = [], liveState = {}, now = Date.now() } = {}) {
   const tasks = new Map();
   for (const lane of LANES) {
     for (const { file, text } of lanes[lane] ?? []) {
@@ -375,6 +412,13 @@ export function boardSnapshot({ lanes = {}, specs = [], runs = [], lock = null, 
           finished: Boolean(liveEntry),
           stem: liveEntry?.taskSlug ?? (doing.length === 1 ? doing[0].stem : null),
           agents: liveAgents,
+          runStartedAt: runStartOf(liveRunId),
+          attempt: attemptOfStream(live.name),
+          attemptStartedAt: liveState.firstAt ?? null,
+          // The runner's latest step, and whether the runner rather than the session is at work
+          // now: before the session starts, and while it verifies and commits after it.
+          phase: liveState.phase ?? null,
+          runnerActive: liveState.lastLine === "runner",
         }
       : null,
     totals: {
