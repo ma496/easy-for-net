@@ -1,9 +1,9 @@
-namespace Backend.Tests.FeatureManagement;
-
 using Backend.Exceptions;
 using Backend.Features.Identity.Endpoints.Users;
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Tenancy.Endpoints.Tenants;
+
+namespace Backend.Tests.FeatureManagement;
 
 /// <summary>
 /// Pins the seat limit <c>Identity.MaxUserCount</c> sets: an account beyond it is refused on every

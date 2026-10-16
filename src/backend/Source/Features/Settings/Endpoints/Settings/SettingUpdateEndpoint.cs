@@ -1,10 +1,10 @@
-namespace Backend.Features.Settings.Endpoints.Settings;
-
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Backend.Features.Settings.Core;
 using Backend.Features.Tenancy.Core;
 using FluentValidation.Results;
+
+namespace Backend.Features.Settings.Endpoints.Settings;
 
 /// <summary>
 /// This endpoint that handles <c>PUT /settings/{name}</c> to replace the acting scope's own overrides of

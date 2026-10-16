@@ -1,9 +1,9 @@
-namespace Backend.Features.Notifications;
-
 using Backend.Attributes;
 using Backend.Features.Notifications.Core;
 using Backend.Features.Notifications.Core.Push;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+
+namespace Backend.Features.Notifications;
 
 /// <summary>
 /// Feature module that registers the notifications services with the DI container.

@@ -1,7 +1,7 @@
-namespace Backend.Features.FileManagement;
-
 using Backend.Attributes;
 using Backend.Features.FileManagement.Core;
+
+namespace Backend.Features.FileManagement;
 
 /// <summary>
 /// Feature module that registers the file management services with the DI container.

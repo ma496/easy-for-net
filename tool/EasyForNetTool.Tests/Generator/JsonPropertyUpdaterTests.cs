@@ -1,6 +1,6 @@
-namespace EasyForNetTool.Tests.Generator;
-
 using System.Text.Json;
+
+namespace EasyForNetTool.Tests.Generator;
 
 /// <summary>
 /// Unit tests for <see cref="JsonPropertyUpdater"/>.

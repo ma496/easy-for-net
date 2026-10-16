@@ -1,5 +1,3 @@
-namespace Backend.Features.Identity.Endpoints.Account;
-
 using Backend.ShareData.Entities;
 using Backend.External.Email;
 using Backend.Features.Identity.Core;
@@ -8,6 +6,8 @@ using Backend.Features.Settings.Core;
 using Backend.Features.Tenancy.Core;
 using Backend.Settings;
 using Microsoft.Extensions.Options;
+
+namespace Backend.Features.Identity.Endpoints.Account;
 
 /// <summary>
 /// Anonymous POST endpoint that registers a new account together with the tenant it will work in,

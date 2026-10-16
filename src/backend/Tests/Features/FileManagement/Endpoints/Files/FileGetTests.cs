@@ -1,7 +1,7 @@
-namespace Backend.Tests.Features.FileManagement.Endpoints.Files;
-
 using Backend.Features.FileManagement.Endpoints.Files;
 using Backend.Features.Tenancy.Endpoints.Tenants;
+
+namespace Backend.Tests.Features.FileManagement.Endpoints.Files;
 
 /// <summary>
 /// Tests for <see cref="FileGetEndpoint"/>: that a file attributed to another tenant is refused with the

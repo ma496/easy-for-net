@@ -1,10 +1,10 @@
-namespace Backend.Features.Identity.Endpoints.Account;
-
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Settings.Core;
+
+namespace Backend.Features.Identity.Endpoints.Account;
 
 /// <summary>
 /// Anonymous POST endpoint that authenticates a user by username/email and password and

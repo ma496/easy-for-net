@@ -1,6 +1,6 @@
-namespace Backend.Tests.Features.Identity.Sessions;
-
 using Backend.Features.Identity.Core.Sessions;
+
+namespace Backend.Tests.Features.Identity.Sessions;
 
 /// <summary>
 /// Tests for <see cref="ISessionRevocationService"/> itself: what each member ends, what it leaves, and that

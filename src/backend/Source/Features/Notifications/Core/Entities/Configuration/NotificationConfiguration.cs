@@ -1,7 +1,7 @@
-namespace Backend.Features.Notifications.Core.Entities.Configuration;
-
 using Backend.Features.Notifications.Core.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Backend.Features.Notifications.Core.Entities.Configuration;
 
 /// <summary>
 /// EF Core entity configuration for <see cref="Notification"/>. Maps the entity to the

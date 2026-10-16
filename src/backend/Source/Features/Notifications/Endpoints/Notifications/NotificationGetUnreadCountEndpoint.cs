@@ -1,7 +1,7 @@
-namespace Backend.Features.Notifications.Endpoints.Notifications;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
+
+namespace Backend.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// GET endpoint that returns the number of unread notifications the current user can see in the active

@@ -1,6 +1,6 @@
-namespace Backend.Features.Identity.Core;
-
 using Backend.Permissions;
+
+namespace Backend.Features.Identity.Core;
 
 /// <summary>
 /// Declares the permission hierarchy for the Identity feature (Users, Roles, and their CRUD sub-permissions).

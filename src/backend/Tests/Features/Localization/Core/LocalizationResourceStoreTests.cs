@@ -1,6 +1,6 @@
-namespace Backend.Tests.Features.Localization.Core;
-
 using Backend.Features.Localization.Core;
+
+namespace Backend.Tests.Features.Localization.Core;
 
 /// <summary>
 /// Shipped-resource consistency: every locale mirrors English's key set, no shipped value is empty,

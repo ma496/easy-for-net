@@ -1,7 +1,7 @@
-namespace Backend.Processors;
-
 using Backend.Features.Localization.Core;
 using Backend.Settings;
+
+namespace Backend.Processors;
 
 /// <summary>
 /// Global FastEndpoints pre-processor that rejects incoming requests whose declared

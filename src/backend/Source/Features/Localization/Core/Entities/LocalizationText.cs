@@ -1,6 +1,6 @@
-namespace Backend.Features.Localization.Core.Entities;
-
 using Backend.ShareData.Entities.Base;
+
+namespace Backend.Features.Localization.Core.Entities;
 
 /// <summary>
 /// One resolved translation value for a single key in a single culture, scoped to either a tenant or

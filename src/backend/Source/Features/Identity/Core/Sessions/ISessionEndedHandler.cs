@@ -1,6 +1,6 @@
-namespace Backend.Features.Identity.Core.Sessions;
-
 using Backend.Attributes;
+
+namespace Backend.Features.Identity.Core.Sessions;
 
 /// <summary>
 /// Reacts to sessions having ended - whatever ended them: a revocation, a sign-out, a refresh or a tenant

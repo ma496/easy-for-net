@@ -1,8 +1,8 @@
-namespace Backend.Tests.ErrorHandling;
-
 using System.Security.Claims;
 using Backend.Features.Localization.Core;
 using Microsoft.AspNetCore.Http;
+
+namespace Backend.Tests.ErrorHandling;
 
 /// <summary>
 /// Covers <see cref="ErrorLocalization.LocalizeErrorAsync"/>'s own failure handling against a fake

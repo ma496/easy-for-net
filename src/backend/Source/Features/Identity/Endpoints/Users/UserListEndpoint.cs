@@ -1,6 +1,6 @@
-namespace Backend.Features.Identity.Endpoints.Users;
-
 using Backend.Features.Identity.Core;
+
+namespace Backend.Features.Identity.Endpoints.Users;
 
 /// <summary>
 /// This endpoint that handles <c>GET /users</c> to return a paginated, filterable list of the user accounts the caller may administer, with their role assignments.

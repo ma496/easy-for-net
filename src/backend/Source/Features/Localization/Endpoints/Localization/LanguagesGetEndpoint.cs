@@ -1,6 +1,6 @@
-namespace Backend.Features.Localization.Endpoints.Localization;
-
 using Backend.Features.Localization.Core;
+
+namespace Backend.Features.Localization.Endpoints.Localization;
 
 /// <summary>
 /// This endpoint that handles <c>GET /localization/languages</c> to report the acting scope's effective

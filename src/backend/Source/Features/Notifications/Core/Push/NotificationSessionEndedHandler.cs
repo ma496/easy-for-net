@@ -1,6 +1,6 @@
-namespace Backend.Features.Notifications.Core.Push;
-
 using Backend.Features.Identity.Core.Sessions;
+
+namespace Backend.Features.Notifications.Core.Push;
 
 /// <summary>
 /// Closes this instance's hub connections whose credential named a session that has ended, so a signed-out,

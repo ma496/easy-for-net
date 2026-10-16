@@ -1,6 +1,6 @@
-namespace Backend.Features.Tenancy.Core;
-
 using System.Text.RegularExpressions;
+
+namespace Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// The single declaration of the tenant display-name and identifier rules, exposed as

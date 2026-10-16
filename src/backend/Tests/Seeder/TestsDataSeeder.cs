@@ -1,5 +1,3 @@
-namespace Backend.Tests.Seeder;
-
 using Backend.ShareData.Entities;
 using Backend.Features.FileManagement.Core.Entities;
 using Backend.Features.Identity.Core;
@@ -8,6 +6,8 @@ using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
 using Backend.Settings;
 using Microsoft.Extensions.Options;
+
+namespace Backend.Tests.Seeder;
 
 /// <summary>
 /// Seeds test data into the database including tenants, users, roles, memberships and permissions.

@@ -1,7 +1,7 @@
-namespace Backend.Tests.ErrorHandling;
-
 using System.Reflection;
 using Backend.Features.Localization.Core;
+
+namespace Backend.Tests.ErrorHandling;
 
 /// <summary>
 /// Guards the contract every <see cref="ErrorCodes"/> member depends on: that the code is a resource

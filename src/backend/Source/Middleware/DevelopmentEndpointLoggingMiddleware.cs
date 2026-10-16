@@ -1,6 +1,6 @@
-namespace Backend.Middleware;
-
 using System.Diagnostics;
+
+namespace Backend.Middleware;
 
 /// <summary>
 /// Logs one line per matched FastEndpoint during development - method, path, status and time - the

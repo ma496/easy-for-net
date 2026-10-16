@@ -1,6 +1,6 @@
-namespace Backend.Features.Settings.Core;
-
 using System.Text.Json.Nodes;
+
+namespace Backend.Features.Settings.Core;
 
 /// <summary>
 /// One setting as the acting scope resolves it, property by property - what <c>GET /settings</c> lists

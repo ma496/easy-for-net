@@ -1,9 +1,9 @@
-namespace Backend.Features.Settings.Core;
-
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+
+namespace Backend.Features.Settings.Core;
 
 /// <summary>
 /// The one JSON shape settings are stored, merged and served in.

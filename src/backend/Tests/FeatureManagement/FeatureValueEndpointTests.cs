@@ -1,6 +1,6 @@
-namespace Backend.Tests.FeatureManagement;
-
 using Backend.Features.Tenancy.Endpoints.FeatureValues;
+
+namespace Backend.Tests.FeatureManagement;
 
 /// <summary>
 /// Tests for the feature-management surface - reading and setting what a tenant or an edition is

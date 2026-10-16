@@ -1,7 +1,7 @@
-namespace Backend.Extensions;
-
 using System.Text.Json;
 using System.Text.Json.Serialization;
+
+namespace Backend.Extensions;
 
 /// <summary>
 /// Provides extension methods for object serialization.

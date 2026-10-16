@@ -1,6 +1,6 @@
-namespace Backend.Features.Localization.Endpoints.Localization;
-
 using Backend.Features.Localization.Core;
+
+namespace Backend.Features.Localization.Endpoints.Localization;
 
 /// <summary>
 /// This endpoint that handles <c>GET /localization/texts</c> to page through one culture's shipped

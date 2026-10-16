@@ -1,8 +1,8 @@
-namespace Backend.Features.Tenancy.Endpoints.Tenants;
-
 using Backend.ShareData.Entities;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
 /// <summary>
 /// This endpoint that handles <c>POST /tenants</c> to create a tenant from the platform, persisting

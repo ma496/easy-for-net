@@ -1,8 +1,8 @@
-namespace EasyForNetTool;
-
 using System.Reflection;
 using EasyForNetTool.Generator;
 using EasyForNetTool.Parsing;
+
+namespace EasyForNetTool;
 
 /// <summary>
 /// Main entry point for the EasyForNet CLI tool.

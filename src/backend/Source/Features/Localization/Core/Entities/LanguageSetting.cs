@@ -1,6 +1,6 @@
-namespace Backend.Features.Localization.Core.Entities;
-
 using Backend.ShareData.Entities.Base;
+
+namespace Backend.Features.Localization.Core.Entities;
 
 /// <summary>
 /// Which shipped cultures a tenant - or the platform, when <see cref="TenantId"/> is null - offers,

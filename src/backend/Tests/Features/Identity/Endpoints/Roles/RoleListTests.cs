@@ -1,7 +1,7 @@
-namespace Backend.Tests.Features.Identity.Endpoints.Roles;
-
 using Backend.Features.Identity.Endpoints.Roles;
 using Backend.Tests.Features.Tenancy;
+
+namespace Backend.Tests.Features.Identity.Endpoints.Roles;
 
 /// <summary>
 /// Tests for the <see cref="RoleListEndpoint"/> covering listing and pagination of roles, the roles a

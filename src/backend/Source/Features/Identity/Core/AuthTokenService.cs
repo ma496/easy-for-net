@@ -1,11 +1,11 @@
-namespace Backend.Features.Identity.Core;
-
 using Backend.Attributes;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Tenancy.Core;
 using System.Security.Cryptography;
 using System.Text;
+
+namespace Backend.Features.Identity.Core;
 
 /// <summary>
 /// Persists issued JWT (access/refresh) token pairs to the database and validates subsequent refresh-token requests.

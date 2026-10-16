@@ -1,7 +1,7 @@
-namespace Backend.Tests.Architect;
-
 using Backend.Attributes;
 using NetArchTest.Rules;
+
+namespace Backend.Tests.Architect;
 
 /// <summary>
 /// Custom NetArchTest rule that checks if a type has forbidden dependencies on types from other features.

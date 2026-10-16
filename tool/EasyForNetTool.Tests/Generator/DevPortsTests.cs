@@ -1,8 +1,8 @@
-namespace EasyForNetTool.Tests.Generator;
-
 using System.Net;
 using System.Net.Sockets;
 using EasyForNetTool.Generator;
+
+namespace EasyForNetTool.Tests.Generator;
 
 /// <summary>
 /// Unit tests for <see cref="DevPorts"/>.

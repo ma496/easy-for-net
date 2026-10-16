@@ -1,7 +1,7 @@
-namespace Backend.Tests.Features.Localization.Endpoints.Localization;
-
 using Backend.Features.Localization.Core.Entities;
 using Backend.Features.Localization.Endpoints.Localization;
+
+namespace Backend.Tests.Features.Localization.Endpoints.Localization;
 
 /// <summary>
 /// Tests for <see cref="LanguagesGetEndpoint"/>: row-level inheritance between a tenant's own settings,

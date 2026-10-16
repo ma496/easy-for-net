@@ -1,5 +1,3 @@
-namespace Backend.Tests.Features.Notifications.Core;
-
 using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Notifications.Core.Push;
@@ -7,6 +5,8 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 using Backend.Tests.Fakes;
 using Backend.Tests.Features.Notifications.Endpoints.Notifications;
 using Microsoft.AspNetCore.SignalR.Client;
+
+namespace Backend.Tests.Features.Notifications.Core;
 
 /// <summary>
 /// Tests that a notification hub connection is closed the moment the session that authenticated it ends -

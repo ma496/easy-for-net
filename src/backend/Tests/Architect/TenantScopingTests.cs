@@ -1,11 +1,11 @@
-namespace Backend.Tests.Architect;
-
 using Backend.ShareData.Entities;
 using Backend.ShareData.Entities.Base;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Notifications.Core.Entities;
 using Backend.Features.Tenancy.Core.Entities;
 using Microsoft.EntityFrameworkCore.Metadata;
+
+namespace Backend.Tests.Architect;
 
 /// <summary>
 /// Architectural check that a persisted kind cannot be added to the model without being subject to

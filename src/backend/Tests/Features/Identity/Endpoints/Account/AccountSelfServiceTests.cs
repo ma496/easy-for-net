@@ -1,5 +1,3 @@
-namespace Backend.Tests.Features.Identity.Endpoints.Account;
-
 using System.Text;
 using Backend.Features.Tenancy.Core;
 using Backend.Features.FileManagement.Endpoints.Files;
@@ -8,6 +6,8 @@ using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Identity.Endpoints.Users;
 using Backend.Tests.Features.Tenancy;
 using Microsoft.AspNetCore.Http;
+
+namespace Backend.Tests.Features.Identity.Endpoints.Account;
 
 /// <summary>
 /// Tests that the account self-service flows stay usable for an authenticated caller acting in no

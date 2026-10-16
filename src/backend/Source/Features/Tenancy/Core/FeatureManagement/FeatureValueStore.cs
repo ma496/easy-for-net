@@ -1,6 +1,6 @@
-namespace Backend.Features.Tenancy.Core.FeatureManagement;
-
 using Backend.Features.Tenancy.Core.Entities;
+
+namespace Backend.Features.Tenancy.Core.FeatureManagement;
 
 /// <summary>
 /// Default <see cref="IFeatureValueStore"/> implementation, and the only type that touches the

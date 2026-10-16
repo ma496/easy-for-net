@@ -1,5 +1,3 @@
-namespace Backend.Tests.Features.FileManagement;
-
 using System.Text;
 using Backend.Features.FileManagement.Core;
 using Backend.Features.FileManagement.Core.Entities;
@@ -7,6 +5,8 @@ using Backend.Features.FileManagement.Endpoints.Files;
 using Backend.Tests.Features.Tenancy;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+
+namespace Backend.Tests.Features.FileManagement;
 
 /// <summary>
 /// Base class for the file endpoint tests: what an upload of a small in-memory file looks like, and the

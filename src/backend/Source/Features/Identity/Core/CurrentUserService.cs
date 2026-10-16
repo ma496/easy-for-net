@@ -1,7 +1,7 @@
-namespace Backend.Features.Identity.Core;
-
 using System.Security.Claims;
 using Backend.Attributes;
+
+namespace Backend.Features.Identity.Core;
 
 /// <summary>
 /// Provides access to the identity, claims, roles, and permissions of the user making the current HTTP request.

@@ -80,9 +80,9 @@ with a written reason. Exempt a kind only when it truly belongs to no tenant (`T
 two disagree.
 
 ```csharp
-namespace Backend.Features.Identity.Core.Entities;
-
 using Backend.ShareData.Entities.Base;
+
+namespace Backend.Features.Identity.Core.Entities;
 
 /// <summary>
 /// A named bundle of permissions that can be assigned to one or more users. A role that names a
@@ -117,10 +117,10 @@ One class per entity implementing `IEntityTypeConfiguration<T>`; `OnModelCreatin
 configuration in the assembly, so there is nothing to register.
 
 ```csharp
-namespace Backend.Features.Notifications.Core.Entities.Configuration;
-
 using Backend.Features.Notifications.Core.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Backend.Features.Notifications.Core.Entities.Configuration;
 
 /// <summary>
 /// EF Core entity configuration for <see cref="Notification"/>. Maps it to the

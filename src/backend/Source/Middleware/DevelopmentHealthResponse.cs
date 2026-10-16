@@ -1,8 +1,8 @@
-namespace Backend.Middleware;
-
 using System.Text.Json;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+
+namespace Backend.Middleware;
 
 /// <summary>
 /// The body <c>/health</c> answers with in Development: the status, and the checkout the host was

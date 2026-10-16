@@ -1,9 +1,9 @@
-namespace Backend.Tests.Architect;
-
 using System.Diagnostics.CodeAnalysis;
 using Backend.Tests.Architect.Features.FeatureA;
 using Mono.Cecil;
 using TypeDefinition = Mono.Cecil.TypeDefinition;
+
+namespace Backend.Tests.Architect;
 
 /// <summary>
 /// Tests for <see cref="ArchitectHelper.GetDependencies"/> to verify the dependency resolution logic.

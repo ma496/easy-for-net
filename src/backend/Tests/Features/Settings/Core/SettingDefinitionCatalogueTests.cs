@@ -1,7 +1,7 @@
-namespace Backend.Tests.Features.Settings.Core;
-
 using Backend.Features.Settings.Core;
 using Microsoft.Extensions.Configuration;
+
+namespace Backend.Tests.Features.Settings.Core;
 
 /// <summary>
 /// Pins how the setting catalogue is composed and what it refuses. These construct the catalogue from

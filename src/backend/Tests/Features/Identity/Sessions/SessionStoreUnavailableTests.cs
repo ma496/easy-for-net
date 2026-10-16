@@ -1,11 +1,12 @@
-namespace Backend.Tests.Features.Identity.Sessions;
-
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Localization.Core;
 using Backend.Features.Localization.Endpoints.Localization;
 using Backend.Tests.Fakes;
 using Backend.Tests.Features.Tenancy;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using TokenRequest = Backend.Features.Identity.Endpoints.Account.TokenRequest;
+
+namespace Backend.Tests.Features.Identity.Sessions;
 
 /// <summary>
 /// Tests that a session store which cannot be reached fails closed: a 503 <c>sessionStoreUnavailable</c>,

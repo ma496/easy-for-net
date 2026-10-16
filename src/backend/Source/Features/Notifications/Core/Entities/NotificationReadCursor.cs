@@ -1,6 +1,6 @@
-namespace Backend.Features.Notifications.Core.Entities;
-
 using Backend.ShareData.Entities.Base;
+
+namespace Backend.Features.Notifications.Core.Entities;
 
 /// <summary>
 /// A user's "mark all as read" point for one audience. An audience notification (one with no

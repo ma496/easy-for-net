@@ -1,7 +1,7 @@
-namespace Backend.Features.Identity.Endpoints.Roles;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+
+namespace Backend.Features.Identity.Endpoints.Roles;
 
 /// <summary>
 /// This endpoint that handles <c>PUT /roles/{id}</c> to update a role's name and description (refusing system-created roles).

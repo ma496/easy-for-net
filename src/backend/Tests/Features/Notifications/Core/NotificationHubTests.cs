@@ -1,5 +1,3 @@
-namespace Backend.Tests.Features.Notifications.Core;
-
 using Backend.Features.Notifications.Core;
 using Backend.Features.Notifications.Core.Push;
 using Backend.Features.Notifications.Endpoints.Notifications;
@@ -11,6 +9,8 @@ using Backend.Tests.Fakes;
 using Backend.Tests.Features.Notifications.Endpoints.Notifications;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+
+namespace Backend.Tests.Features.Notifications.Core;
 
 /// <summary>
 /// Tests for the notification hub: which connections a committed notification is pushed to, that nothing

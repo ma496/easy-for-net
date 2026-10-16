@@ -1,7 +1,7 @@
-namespace Backend.Tests.Fakes;
-
 using System.Collections.Concurrent;
 using Backend.External.Email;
+
+namespace Backend.Tests.Fakes;
 
 /// <summary>
 /// The <see cref="IEmailTransport"/> the test host uses: it delivers nothing and records every message

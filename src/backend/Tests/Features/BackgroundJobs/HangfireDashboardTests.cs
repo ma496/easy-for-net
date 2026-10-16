@@ -1,6 +1,6 @@
-namespace Backend.Tests.Features.BackgroundJobs;
-
 using Backend.Tests.Seeder;
+
+namespace Backend.Tests.Features.BackgroundJobs;
 
 /// <summary>
 /// Tests the background-job dashboard as the endpoint it actually is: a request to the path it is

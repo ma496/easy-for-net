@@ -1,5 +1,3 @@
-namespace Backend.Tests.Features.Settings;
-
 using System.Text.Json.Nodes;
 using Backend.External.Email;
 using Backend.Features.Identity.Endpoints.Account;
@@ -10,6 +8,8 @@ using Backend.Tests.Fakes;
 using Hangfire;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
+
+namespace Backend.Tests.Features.Settings;
 
 /// <summary>
 /// Tests for the <c>Email</c> setting: its default taken from the <c>EmailSettings</c> configuration

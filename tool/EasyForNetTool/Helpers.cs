@@ -1,7 +1,7 @@
-namespace EasyForNetTool;
-
 using System.Reflection;
 using System.Text.RegularExpressions;
+
+namespace EasyForNetTool;
 
 /// <summary>
 /// Provides utility helper methods for the EasyForNet tool.

@@ -1,6 +1,6 @@
-namespace Backend.Tests.Features.Identity.Endpoints.Users;
-
 using Backend.Features.Identity.Endpoints.Users;
+
+namespace Backend.Tests.Features.Identity.Endpoints.Users;
 
 /// <summary>
 /// Tests that <see cref="UserUpdateEndpoint"/> and <see cref="UserDeleteEndpoint"/> end the live sessions

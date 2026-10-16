@@ -1,7 +1,7 @@
-namespace Backend.Tests.Features.Identity.Core;
-
 using System.Security.Cryptography;
 using Backend.Features.Identity.Core;
+
+namespace Backend.Tests.Features.Identity.Core;
 
 public class PasswordHasherTests
 {

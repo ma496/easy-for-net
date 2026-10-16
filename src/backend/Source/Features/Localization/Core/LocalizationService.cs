@@ -1,7 +1,7 @@
-namespace Backend.Features.Localization.Core;
-
 using Backend.Features.Localization.Core.Entities;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Localization.Core;
 
 /// <summary>
 /// Resolves the translation resources and language settings the caller's acting scope sees, and

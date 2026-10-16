@@ -1,6 +1,6 @@
-namespace Backend.Tests.Features.FileManagement.Core;
-
 using Backend.Features.FileManagement.Endpoints.Files;
+
+namespace Backend.Tests.Features.FileManagement.Core;
 
 /// <summary>
 /// The combined file proof: that a file belonging to an account rather than to a tenant's data follows

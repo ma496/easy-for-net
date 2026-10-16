@@ -1,8 +1,8 @@
-namespace Backend.Tests.Features.Localization;
-
 using Backend.Features.Localization.Core;
 using Backend.Features.Localization.Core.Entities;
 using Backend.Tests.Features.Tenancy;
+
+namespace Backend.Tests.Features.Localization;
 
 /// <summary>
 /// Base class for the localization suite. A tenant's own overrides are already isolated by

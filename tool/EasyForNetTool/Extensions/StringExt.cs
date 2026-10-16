@@ -1,6 +1,6 @@
-namespace EasyForNetTool.Extensions;
-
 using System.Text.Json;
+
+namespace EasyForNetTool.Extensions;
 
 /// <summary>
 /// Provides extension methods for string manipulation, including case conversions.

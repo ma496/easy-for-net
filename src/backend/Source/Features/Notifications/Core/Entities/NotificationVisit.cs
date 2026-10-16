@@ -1,6 +1,6 @@
-namespace Backend.Features.Notifications.Core.Entities;
-
 using Backend.ShareData.Entities.Base;
+
+namespace Backend.Features.Notifications.Core.Entities;
 
 /// <summary>
 /// A user's explicit read state for one audience notification - tenant-wide or platform-wide - since

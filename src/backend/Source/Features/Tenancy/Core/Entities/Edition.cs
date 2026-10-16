@@ -1,6 +1,6 @@
-namespace Backend.Features.Tenancy.Core.Entities;
-
 using Backend.ShareData.Entities.Base;
+
+namespace Backend.Features.Tenancy.Core.Entities;
 
 /// <summary>
 /// A plan the platform sells. An edition carries a set of feature values, and every tenant on it is

@@ -1,6 +1,6 @@
-namespace Backend.Features.Localization.Endpoints.Localization;
-
 using Backend.Features.Localization.Core;
+
+namespace Backend.Features.Localization.Endpoints.Localization;
 
 /// <summary>
 /// This endpoint that handles <c>PUT /localization/languages</c> to upsert the acting scope's own

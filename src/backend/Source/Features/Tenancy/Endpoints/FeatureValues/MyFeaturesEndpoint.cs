@@ -1,6 +1,6 @@
-namespace Backend.Features.Tenancy.Endpoints.FeatureValues;
-
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Tenancy.Endpoints.FeatureValues;
 
 /// <summary>
 /// This endpoint that handles <c>GET /features/mine</c> to tell the caller what their own plan

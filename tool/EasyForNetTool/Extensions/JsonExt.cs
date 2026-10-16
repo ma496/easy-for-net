@@ -1,7 +1,7 @@
-namespace EasyForNetTool.Extensions;
-
 using System.Text.Json;
 using System.Text.Json.Serialization;
+
+namespace EasyForNetTool.Extensions;
 
 /// <summary>
 /// Provides extension methods for object serialization.

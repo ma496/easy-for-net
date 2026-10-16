@@ -1,7 +1,7 @@
-namespace Backend.Features.Tenancy.Endpoints.Editions;
-
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Tenancy.Core.Entities;
+
+namespace Backend.Features.Tenancy.Endpoints.Editions;
 
 /// <summary>
 /// This endpoint that handles <c>POST /editions</c> to create a plan the platform can put tenants on.

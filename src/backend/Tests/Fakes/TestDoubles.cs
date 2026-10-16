@@ -1,9 +1,9 @@
-namespace Backend.Tests.Fakes;
-
 using Backend.External.Email;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Settings.Core;
+
+namespace Backend.Tests.Fakes;
 
 /// <summary>
 /// Registers the implementations the test host substitutes for production ones.

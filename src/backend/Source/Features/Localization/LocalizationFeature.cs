@@ -1,6 +1,6 @@
-namespace Backend.Features.Localization;
-
 using Backend.Features.Localization.Core;
+
+namespace Backend.Features.Localization;
 
 /// <summary>
 /// Feature module that registers the localization services with the DI container. The resource store

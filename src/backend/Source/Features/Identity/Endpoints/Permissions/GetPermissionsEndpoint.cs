@@ -1,6 +1,6 @@
-namespace Backend.Features.Identity.Endpoints.Permissions;
-
 using Backend.Features.Identity.Core;
+
+namespace Backend.Features.Identity.Endpoints.Permissions;
 
 /// <summary>
 /// GET endpoint that returns the list of permissions currently stored in the database,

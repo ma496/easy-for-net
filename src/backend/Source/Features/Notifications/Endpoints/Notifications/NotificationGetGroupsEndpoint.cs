@@ -1,9 +1,9 @@
-namespace Backend.Features.Notifications.Endpoints.Notifications;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
 using Backend.Features.Tenancy.Core;
 using Microsoft.EntityFrameworkCore;
+
+namespace Backend.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// GET endpoint that returns the distinct set of notification group names used for filtering in the UI.

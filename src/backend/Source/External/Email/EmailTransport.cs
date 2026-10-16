@@ -1,7 +1,7 @@
-namespace Backend.External.Email;
-
 using System.Net;
 using System.Net.Mail;
+
+namespace Backend.External.Email;
 
 /// <summary>One outgoing email message, independent of how it is delivered.</summary>
 /// <param name="To">Recipient email address.</param>

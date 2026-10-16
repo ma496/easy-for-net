@@ -1,7 +1,7 @@
-namespace Backend.Tests.Fakes;
-
 using System.Collections.Concurrent;
 using Backend.Features.Identity.Core.Sessions;
+
+namespace Backend.Tests.Fakes;
 
 /// <summary>
 /// Which ended sessions the test host's <see cref="FaultingSessionEndedHandler"/> should fail for. A test

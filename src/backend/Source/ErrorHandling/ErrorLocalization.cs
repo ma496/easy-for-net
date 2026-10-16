@@ -1,9 +1,9 @@
-namespace Backend.ErrorHandling;
-
 using Backend.Features.Localization.Core;
 using Backend.Processors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
+
+namespace Backend.ErrorHandling;
 
 /// <summary>
 /// The one place a coded error's message is put into the culture the request was served in - every

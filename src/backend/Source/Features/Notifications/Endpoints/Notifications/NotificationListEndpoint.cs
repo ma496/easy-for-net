@@ -1,9 +1,9 @@
-namespace Backend.Features.Notifications.Endpoints.Notifications;
-
 using Backend.Base.Dto;
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// GET endpoint that returns a paged, filterable list of the notifications the current user can see in the

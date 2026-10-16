@@ -1,6 +1,6 @@
-namespace Backend.Features.Identity.Endpoints.Account;
-
 using Backend.Features.Identity.Core;
+
+namespace Backend.Features.Identity.Endpoints.Account;
 
 /// <summary>
 /// Authenticated GET endpoint that returns the current user's basic profile data

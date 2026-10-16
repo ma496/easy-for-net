@@ -1,6 +1,6 @@
-namespace Backend.Features.Settings.Core;
-
 using Backend.Features.Settings.Core.Entities;
+
+namespace Backend.Features.Settings.Core;
 
 /// <summary>
 /// Reads and writes the stored overrides of settings. Internal to the <c>Settings</c> slice: other

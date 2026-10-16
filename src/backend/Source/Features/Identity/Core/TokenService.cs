@@ -1,9 +1,9 @@
-namespace Backend.Features.Identity.Core;
-
 using Backend.Attributes;
 using Backend.Features.Identity.Core.Entities;
 using System.Security.Cryptography;
 using System.Text;
+
+namespace Backend.Features.Identity.Core;
 
 /// <summary>
 /// Manages short-lived, single-use tokens (email verification, password reset, etc.) for <see cref="User"/> accounts.

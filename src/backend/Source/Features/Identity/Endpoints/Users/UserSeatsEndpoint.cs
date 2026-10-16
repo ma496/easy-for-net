@@ -1,7 +1,7 @@
-namespace Backend.Features.Identity.Endpoints.Users;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Identity.Endpoints.Users;
 
 /// <summary>
 /// This endpoint that handles <c>GET /users/seats</c> to report how many accounts the tenant being

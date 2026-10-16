@@ -1,8 +1,8 @@
-namespace Backend.Features.Notifications.Core;
-
 using Backend.Features.Notifications.Core.Entities;
 using Backend.Features.Notifications.Core.Push;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Notifications.Core;
 
 /// <summary>
 /// Application service for creating and querying notifications. A notification is addressed to a single

@@ -1,7 +1,7 @@
-namespace Backend.Features.Tenancy.Endpoints.Tenants;
-
 using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
 /// <summary>
 /// This endpoint that handles <c>DELETE /tenants/{id}</c> to retire a tenant, refusing the

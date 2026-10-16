@@ -1,10 +1,10 @@
-namespace Backend.Features.Tenancy.Endpoints.Tenants;
-
 using Backend.ShareData.Entities;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
 /// <summary>
 /// This endpoint that handles <c>PUT /tenants/{tenantId}/members/{userId}/roles</c> to replace what a

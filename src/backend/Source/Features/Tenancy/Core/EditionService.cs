@@ -1,6 +1,6 @@
-namespace Backend.Features.Tenancy.Core;
-
 using Backend.Features.Tenancy.Core.Entities;
+
+namespace Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// Defines lookup and lifecycle operations for <see cref="Edition"/> - the plans the platform sells.

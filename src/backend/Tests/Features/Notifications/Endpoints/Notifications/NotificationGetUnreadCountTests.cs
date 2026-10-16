@@ -1,8 +1,8 @@
-namespace Backend.Tests.Features.Notifications.Endpoints.Notifications;
-
 using Backend.Features.Notifications.Core;
 using Backend.Features.Notifications.Core.Entities;
 using Backend.Features.Notifications.Endpoints.Notifications;
+
+namespace Backend.Tests.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// Tests for the <see cref="NotificationGetUnreadCountEndpoint"/> covering unread notification counting

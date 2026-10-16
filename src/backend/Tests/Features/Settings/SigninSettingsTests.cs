@@ -1,5 +1,3 @@
-namespace Backend.Tests.Features.Settings;
-
 using System.Text.Json.Nodes;
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Settings.Core;
@@ -7,6 +5,9 @@ using Backend.Features.Settings.Endpoints.Settings;
 using Backend.Features.Tenancy.Endpoints.Tenants;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Tests.Fakes;
+using TokenRequest = Backend.Features.Identity.Endpoints.Account.TokenRequest;
+
+namespace Backend.Tests.Features.Settings;
 
 /// <summary>
 /// Tests for the <c>Signin</c> setting as sign-in reads it: the value of the tenant being entered, its own

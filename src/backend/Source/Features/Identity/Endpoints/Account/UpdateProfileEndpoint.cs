@@ -1,7 +1,7 @@
-namespace Backend.Features.Identity.Endpoints.Account;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.FileManagement.Core;
+
+namespace Backend.Features.Identity.Endpoints.Account;
 
 /// <summary>
 /// Authenticated POST endpoint that updates the current user's profile (email, name,

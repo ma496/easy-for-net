@@ -1,6 +1,6 @@
-namespace Backend.Features.Identity.Core.Entities;
-
 using Backend.ShareData.Entities.Base;
+
+namespace Backend.Features.Identity.Core.Entities;
 
 /// <summary>
 /// A short-lived, single-use token (e.g., email-verification or password-reset) issued to a <see cref="User"/>.

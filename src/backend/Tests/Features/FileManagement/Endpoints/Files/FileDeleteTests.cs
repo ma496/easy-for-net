@@ -1,6 +1,6 @@
-namespace Backend.Tests.Features.FileManagement.Endpoints.Files;
-
 using Backend.Features.FileManagement.Endpoints.Files;
+
+namespace Backend.Tests.Features.FileManagement.Endpoints.Files;
 
 /// <summary>
 /// Tests for <see cref="FileDeleteEndpoint"/>: that replacing or removing a file of another tenant is

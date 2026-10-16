@@ -1,8 +1,8 @@
-namespace Backend.Tests.Features.Notifications.Core;
-
 using Backend.Features.Notifications.Core;
 using Backend.Features.Notifications.Core.Entities;
 using Backend.Tests.Features.Notifications.Endpoints.Notifications;
+
+namespace Backend.Tests.Features.Notifications.Core;
 
 /// <summary>
 /// Tests for <see cref="INotificationRetentionService"/>: the daily job that hard-deletes notifications past

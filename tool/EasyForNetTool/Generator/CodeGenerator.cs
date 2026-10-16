@@ -1,6 +1,6 @@
-namespace EasyForNetTool.Generator;
-
 using EasyForNetTool.Parsing;
+
+namespace EasyForNetTool.Generator;
 
 /// <summary>
 /// Top-level code generator that dispatches to the appropriate generator based on argument type.

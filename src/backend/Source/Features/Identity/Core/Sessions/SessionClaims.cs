@@ -1,6 +1,6 @@
-namespace Backend.Features.Identity.Core.Sessions;
-
 using System.Security.Claims;
+
+namespace Backend.Features.Identity.Core.Sessions;
 
 /// <summary>
 /// The one place a session becomes claims and a token's two claims are read back. A token or cookie

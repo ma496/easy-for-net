@@ -1,7 +1,7 @@
-namespace Backend.Features.Settings.Core.Entities.Configuration;
-
 using Backend.Features.Settings.Core.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Backend.Features.Settings.Core.Entities.Configuration;
 
 /// <summary>
 /// EF Core entity configuration for <see cref="SettingValue"/>, mapping it to the

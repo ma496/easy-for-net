@@ -1,11 +1,11 @@
-namespace Backend.Tests.Features.Identity.Endpoints;
-
 using Backend.Features.Identity.Endpoints.Roles;
 using Backend.Features.Identity.Endpoints.Users;
 using Backend.Features.Notifications.Core;
 using Backend.Features.Notifications.Core.Entities;
 using Backend.Features.Notifications.Endpoints.Notifications;
 using Backend.Tests.Features.Tenancy;
+
+namespace Backend.Tests.Features.Identity.Endpoints;
 
 /// <summary>
 /// Tests for the user, role and notification endpoints called by a platform administrator acting in no

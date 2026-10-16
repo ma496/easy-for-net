@@ -1,6 +1,6 @@
-namespace Backend.Tests.Features.Identity.Endpoints.Roles;
-
 using Backend.Features.Identity.Endpoints.Roles;
+
+namespace Backend.Tests.Features.Identity.Endpoints.Roles;
 
 /// <summary>
 /// Tests that <see cref="ChangePermissionsEndpoint"/> and <see cref="RoleDeleteEndpoint"/> end the sessions

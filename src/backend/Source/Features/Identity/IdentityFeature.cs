@@ -1,8 +1,8 @@
-namespace Backend.Features.Identity;
-
 using Backend.Attributes;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Sessions;
+
+namespace Backend.Features.Identity;
 
 /// <summary>
 /// Feature module that registers the identity services with the DI container.

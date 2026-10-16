@@ -1,7 +1,7 @@
-namespace Backend.Features.Tenancy.Endpoints.Tenants;
-
 using Backend.ShareData.Entities;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
 /// <summary>
 /// This endpoint that handles <c>GET /tenants/{id}</c> to return one tenant - its display name, its

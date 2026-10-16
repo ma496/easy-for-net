@@ -1,8 +1,8 @@
-namespace Backend.Tests.Features.Identity.Endpoints.Roles;
-
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Roles;
 using Backend.Tests.Features.Tenancy;
+
+namespace Backend.Tests.Features.Identity.Endpoints.Roles;
 
 /// <summary>
 /// Tests for the <see cref="RoleGetEndpoint"/> covering retrieval of existing and non-existent roles,

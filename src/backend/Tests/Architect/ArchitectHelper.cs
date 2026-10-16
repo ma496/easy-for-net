@@ -1,7 +1,7 @@
-namespace Backend.Tests.Architect;
-
 using Mono.Cecil;
 using TypeDefinition = Mono.Cecil.TypeDefinition;
+
+namespace Backend.Tests.Architect;
 
 /// <summary>
 /// Helper for resolving type dependencies from compiled assemblies using Mono.Cecil.

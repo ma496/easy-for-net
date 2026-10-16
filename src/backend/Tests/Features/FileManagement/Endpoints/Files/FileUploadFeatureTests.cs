@@ -1,6 +1,6 @@
-namespace Backend.Tests.Features.FileManagement.Endpoints.Files;
-
 using Backend.Features.FileManagement.Endpoints.Files;
+
+namespace Backend.Tests.Features.FileManagement.Endpoints.Files;
 
 /// <summary>
 /// Tests for how <see cref="FileUploadEndpoint"/> holds an upload to the plan of the tenant it is made

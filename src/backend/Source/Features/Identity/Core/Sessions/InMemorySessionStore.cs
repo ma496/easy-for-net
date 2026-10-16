@@ -1,6 +1,6 @@
-namespace Backend.Features.Identity.Core.Sessions;
-
 using System.Collections.Concurrent;
+
+namespace Backend.Features.Identity.Core.Sessions;
 
 /// <summary>
 /// A process-local <see cref="ISessionStore"/> with the same semantics as the Redis one - expiry,

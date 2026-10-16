@@ -1,7 +1,7 @@
-namespace Backend.Tests.Features.Notifications.Endpoints.Notifications;
-
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Notifications.Endpoints.Notifications;
+
+namespace Backend.Tests.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// Tests for the notification surfaces as a platform account acting in platform scope sees them: its own

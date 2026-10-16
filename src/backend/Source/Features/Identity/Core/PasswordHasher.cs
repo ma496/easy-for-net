@@ -1,7 +1,7 @@
-namespace Backend.Features.Identity.Core;
-
 using System.Security.Cryptography;
 using Backend.Attributes;
+
+namespace Backend.Features.Identity.Core;
 
 /// <summary>
 /// Hashes and verifies user passwords using a salted PBKDF2 scheme with constant-time comparison.

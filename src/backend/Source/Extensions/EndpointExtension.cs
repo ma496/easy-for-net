@@ -1,9 +1,9 @@
-namespace Backend.Extensions;
-
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using FluentValidation.Results;
+
+namespace Backend.Extensions;
 
 /// <summary>
 /// Helper extensions for FastEndpoints that allow endpoints to raise a validation failure carrying a

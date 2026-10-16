@@ -1,8 +1,8 @@
-namespace Backend.ShareData;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Tenancy.Core;
 using Microsoft.EntityFrameworkCore.Design;
+
+namespace Backend.ShareData;
 
 /// <summary>
 /// Design-time factory used by the EF Core tools (for example when running

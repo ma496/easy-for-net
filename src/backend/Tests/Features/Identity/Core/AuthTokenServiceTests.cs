@@ -1,11 +1,12 @@
-namespace Backend.Tests.Features.Identity.Core;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Tenancy.Endpoints.Tenants;
 using Backend.Features.Tenancy.Core;
 using Backend.Tests.Features.Tenancy;
+using TokenRequest = Backend.Features.Identity.Endpoints.Account.TokenRequest;
+
+namespace Backend.Tests.Features.Identity.Core;
 
 /// <summary>
 /// Tests for <see cref="IAuthTokenService"/> and <see cref="IAuthTokenCleanService"/> covering token validation, saving, and expiration cleanup, and for the tenant a refresh carries forward.

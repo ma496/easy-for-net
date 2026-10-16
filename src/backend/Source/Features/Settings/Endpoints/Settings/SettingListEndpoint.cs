@@ -1,7 +1,7 @@
-namespace Backend.Features.Settings.Endpoints.Settings;
-
 using Backend.Features.Settings.Core;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Settings.Endpoints.Settings;
 
 /// <summary>
 /// This endpoint that handles <c>GET /settings</c> to list every declared setting as the acting scope

@@ -1,7 +1,7 @@
-namespace Backend.External.Email;
-
 using Backend.Features.Settings.Core;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.External.Email;
 
 /// <summary>
 /// Sends transactional email on behalf of the application, through the SMTP server the

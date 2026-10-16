@@ -1,7 +1,8 @@
-namespace Backend.Tests.Features.Tenancy.Core;
-
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Identity.Endpoints.Roles;
+using TokenRequest = Backend.Features.Identity.Endpoints.Account.TokenRequest;
+
+namespace Backend.Tests.Features.Tenancy.Core;
 
 /// <summary>
 /// Tests for which tenant a request acts in - exactly one, and never a guess.

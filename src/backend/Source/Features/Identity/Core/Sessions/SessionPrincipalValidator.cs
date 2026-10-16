@@ -1,7 +1,7 @@
-namespace Backend.Features.Identity.Core.Sessions;
-
 using System.Security.Claims;
 using Backend.Middleware;
+
+namespace Backend.Features.Identity.Core.Sessions;
 
 /// <summary>
 /// Decides, for the principal a token or cookie authenticated, whether the session it names is still

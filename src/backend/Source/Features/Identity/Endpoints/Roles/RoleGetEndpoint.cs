@@ -1,7 +1,7 @@
-namespace Backend.Features.Identity.Endpoints.Roles;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Identity.Endpoints.Roles;
 
 /// <summary>
 /// This endpoint that handles <c>GET /roles/{id}</c> to return a single role with its permission list and user count.

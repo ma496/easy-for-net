@@ -1,8 +1,8 @@
-namespace Backend.Tests.Architect;
-
 using Backend.Tests.Architect.Features.FeatureA;
 using Backend.Tests.Architect.Features.FeatureB;
 using Backend.Tests.Architect.Features.FeatureB.Stat;
+
+namespace Backend.Tests.Architect;
 
 /// <summary>
 /// Tests to verify that features do not have unauthorized dependencies on other features, and that the dependency detection logic works correctly.

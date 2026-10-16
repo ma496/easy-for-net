@@ -1,7 +1,7 @@
-namespace Backend.Features.Identity.Endpoints.Roles;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Sessions;
+
+namespace Backend.Features.Identity.Endpoints.Roles;
 
 /// <summary>
 /// This endpoint that handles <c>DELETE /roles/{id}</c> to remove an existing role (refusing to delete a system-created role).

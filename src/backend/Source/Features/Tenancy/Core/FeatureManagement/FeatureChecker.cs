@@ -1,7 +1,7 @@
-namespace Backend.Features.Tenancy.Core.FeatureManagement;
-
 using System.Globalization;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Tenancy.Core.FeatureManagement;
 
 /// <summary>
 /// Asks about features for the tenant the current request is acting in.

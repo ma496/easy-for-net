@@ -1,6 +1,6 @@
-namespace Backend.Tests.FeatureManagement;
-
 using Backend.Exceptions;
+
+namespace Backend.Tests.FeatureManagement;
 
 /// <summary>
 /// Pins the ambient checker: it answers for the tenant the scope established, converts typed values,

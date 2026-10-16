@@ -1,8 +1,8 @@
-namespace Backend.Tests.Features.Identity.Endpoints.Account;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Account;
+
+namespace Backend.Tests.Features.Identity.Endpoints.Account;
 
 /// <summary>
 /// Tests that completing a password reset ends every session of the account, and that a reset which does

@@ -1,11 +1,11 @@
-namespace Backend.Tests.Features.Identity.Endpoints.Account;
-
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Identity.Endpoints.Users;
 using Backend.Tests.Features.Tenancy;
+
+namespace Backend.Tests.Features.Identity.Endpoints.Account;
 
 /// <summary>
 /// Tests what self-service sign-up produces: an account, the tenant it works in, and the standing of

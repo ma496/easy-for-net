@@ -1,8 +1,8 @@
-namespace Backend.Tests.Fakes;
-
 using System.Collections.Concurrent;
 using System.Text.Json.Nodes;
 using Backend.Features.Settings.Core;
+
+namespace Backend.Tests.Fakes;
 
 /// <summary>
 /// Platform setting overrides the test host's setting store reports for particular tenants only - the

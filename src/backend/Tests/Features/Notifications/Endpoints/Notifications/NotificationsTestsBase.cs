@@ -1,10 +1,10 @@
-namespace Backend.Tests.Features.Notifications.Endpoints.Notifications;
-
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Notifications.Core;
 using Backend.Features.Notifications.Core.Entities;
 using Backend.Features.Notifications.Endpoints.Notifications;
 using Backend.Tests.Features.Tenancy;
+
+namespace Backend.Tests.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// Base class for notification endpoint tests: the four ways a notification can be addressed, arranged

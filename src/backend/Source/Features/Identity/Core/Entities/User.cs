@@ -1,6 +1,6 @@
-namespace Backend.Features.Identity.Core.Entities;
-
 using Backend.ShareData.Entities.Base;
+
+namespace Backend.Features.Identity.Core.Entities;
 
 /// <summary>
 /// Represents an authenticated principal in the system, holding identity, credentials, profile data, and role memberships.

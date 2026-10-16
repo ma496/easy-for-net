@@ -1,8 +1,8 @@
-namespace Backend.Tests.Features.Identity.Sessions;
-
 using Backend.Exceptions;
 using Backend.Features.Identity.Core.Sessions;
 using Microsoft.Extensions.Logging.Abstractions;
+
+namespace Backend.Tests.Features.Identity.Sessions;
 
 /// <summary>
 /// Tests for how ended sessions are announced, without a host: the store decorator announces exactly what it

@@ -1,6 +1,6 @@
-namespace EasyForNetTool.Generator;
-
 using System.Security.Cryptography;
+
+namespace EasyForNetTool.Generator;
 
 /// <summary>
 /// Random values a new project is created with, so no two generated projects share a password or key.

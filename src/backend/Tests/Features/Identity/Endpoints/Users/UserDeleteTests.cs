@@ -1,8 +1,8 @@
-namespace Backend.Tests.Features.Identity.Endpoints.Users;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Endpoints.Users;
 using Backend.Tests.Features.Tenancy;
+
+namespace Backend.Tests.Features.Identity.Endpoints.Users;
 
 /// <summary>
 /// Tests for the <see cref="UserDeleteEndpoint"/> covering deletion of users, non-existent users,

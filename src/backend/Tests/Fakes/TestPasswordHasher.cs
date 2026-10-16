@@ -1,7 +1,7 @@
-namespace Backend.Tests.Fakes;
-
 using System.Security.Cryptography;
 using Backend.Features.Identity.Core;
+
+namespace Backend.Tests.Fakes;
 
 /// <summary>
 /// The <see cref="IPasswordHasher"/> the test host uses in place of <c>PasswordHasher</c>.

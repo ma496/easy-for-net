@@ -1,6 +1,6 @@
-namespace EasyForNetTool.Tests.Parsing;
-
 using EasyForNetTool.Parsing;
+
+namespace EasyForNetTool.Tests.Parsing;
 
 /// <summary>
 /// Unit tests for <see cref="ArgumentParser"/> parsing the createproject options.

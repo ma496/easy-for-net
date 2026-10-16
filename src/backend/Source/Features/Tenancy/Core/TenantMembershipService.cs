@@ -1,9 +1,9 @@
-namespace Backend.Features.Tenancy.Core;
-
 using System.Globalization;
 using Backend.Features.Identity.Core;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core.FeatureManagement;
+
+namespace Backend.Features.Tenancy.Core;
 
 /// <summary>
 /// Owns who belongs to a tenant: whether an account holds a membership there, and the three changes

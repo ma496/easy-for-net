@@ -1,6 +1,6 @@
-namespace Backend.Features.Identity.Endpoints.Users;
-
 using Backend.Features.Identity.Core;
+
+namespace Backend.Features.Identity.Endpoints.Users;
 
 /// <summary>
 /// This endpoint that handles <c>GET /users/{id}</c> to return a single user with their role assignments.

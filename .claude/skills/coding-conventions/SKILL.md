@@ -10,15 +10,15 @@ already does — match it rather than introducing a personal style.
 
 ## C# (`src/backend/Source`, `src/backend/Tests`)
 
-**File header order.** The file-scoped namespace declaration is the **first line of the file** —
-nothing above it, not a `using`, not a comment, not a `#region`. Then one blank line, then the
-`using` directives, then a blank line, then the XML doc and the type:
+**File header order.** The `using` directives come **first**, at the top of the file. Then one
+blank line, then the file-scoped namespace declaration, then a blank line, then the XML doc and
+the type:
 
 ```csharp
-namespace Backend.Features.Tenancy.Endpoints.Editions;
-
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Tenancy.Core.Entities;
+
+namespace Backend.Features.Tenancy.Endpoints.Editions;
 
 /// <summary>
 /// This endpoint that handles <c>POST /editions</c> to create a plan the platform can put tenants on.
@@ -26,11 +26,15 @@ using Backend.Features.Tenancy.Core.Entities;
 sealed class EditionCreateEndpoint(IEditionService editionService) : Endpoint<EditionCreateRequest, EditionCreateResponse>
 ```
 
-Usings *inside* the namespace are the point of the ordering: every type in the file is resolved
-relative to its own namespace first, so a sibling type needs no import at all. Watch out for IDEs
-and "add missing using" quick fixes, which default to hoisting a new `using` above the namespace
-and silently break the shape — move it down into the block. A file that needs no import goes
-straight from the namespace line to the blank line and the type.
+Usings outside the namespace sit at the same level as the `global using` directives in
+`Meta.cs`, so a file's own imports compete with the global ones on equal terms. When a type name
+exists in two imported namespaces (`TokenRequest` is both the Identity sign-in request and
+`FastEndpoints.Security.TokenRequest`), the reference is ambiguous and needs an alias
+(`using TokenRequest = Backend.Features.Identity.Endpoints.Account.TokenRequest;`), never a
+`using` moved below the namespace. Write a namespace import in full (`using Backend.Features.X.Core;`),
+never relative to the file's own namespace. A file that needs no import opens with the namespace
+line. `.editorconfig` sets `csharp_using_directive_placement = outside_namespace`, so the IDE's
+"add missing using" puts a new import in the right place.
 
 Two kinds of file have no namespace and are exempt: `Meta.cs` in each project, which is nothing
 but `global using` directives, and `Program.cs`, whose top-level statements require its usings at

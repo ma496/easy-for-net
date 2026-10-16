@@ -1,6 +1,6 @@
-namespace Backend.Tests.Features.Localization.Endpoints.Localization;
-
 using Backend.Features.Localization.Endpoints.Localization;
+
+namespace Backend.Tests.Features.Localization.Endpoints.Localization;
 
 /// <summary>
 /// Tests for <see cref="ResourcesGetEndpoint"/>: the resolution chain (tenant beats platform beats

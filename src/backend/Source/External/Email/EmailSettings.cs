@@ -1,6 +1,6 @@
-namespace Backend.External.Email;
-
 using Backend.Features.Settings.Core;
+
+namespace Backend.External.Email;
 
 /// <summary>
 /// The SMTP server and sender outgoing email is delivered through - a setting (<c>Email</c>) the

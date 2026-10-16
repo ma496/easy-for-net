@@ -1,9 +1,9 @@
-namespace Backend.Features.Notifications.Endpoints.Notifications;
-
 using Backend.Base.Dto;
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core.Push;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// DELETE endpoint that removes a user-targeted notification owned by the current user.

@@ -1,7 +1,7 @@
-namespace Backend.Features.Identity.Endpoints.Roles;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+
+namespace Backend.Features.Identity.Endpoints.Roles;
 
 /// <summary>
 /// This endpoint that handles <c>POST /roles</c> to create a new role, attributed to the tenant being

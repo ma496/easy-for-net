@@ -1,6 +1,6 @@
-namespace Backend.Tests.Architect.Features.FeatureA;
-
 using Backend.Attributes;
+
+namespace Backend.Tests.Architect.Features.FeatureA;
 
 // ReSharper disable UnusedVariable
 
