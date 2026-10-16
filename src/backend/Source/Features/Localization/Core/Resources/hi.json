@@ -46,7 +46,8 @@
     "selectPlaceholder": "चुनें…",
     "noOptions": "कोई विकल्प नहीं",
     "scrollToTop": "ऊपर जाएँ",
-    "collapseSidebar": "साइडबार छोटा करें"
+    "collapseSidebar": "साइडबार छोटा करें",
+    "opensInNewTab": "(नए टैब में खुलता है)"
   },
   "navigation": {
     "home": "होम",
@@ -81,7 +82,7 @@
     "tenantsCreate": "बनाएं",
     "tenantsUpdate": "अपडेट करें",
     "tenantsMembers": "सदस्य",
-    "selectTenant": "टेनेंट चुनें",
+    "selectTenant": "आपके वर्कस्पेस",
     "tenantsDetail": "विवरण",
     "editions": "संस्करण",
     "editionsList": "सूची",
@@ -90,7 +91,10 @@
     "editionsFeatures": "सुविधाएँ",
     "tenantsFeatures": "सुविधाएँ",
     "localization": "स्थानीयकरण",
-    "settings": "सेटिंग्स"
+    "settings": "सेटिंग्स",
+    "otherWorkspaces": "अन्य वर्कस्पेस",
+    "platformAdministration": "प्लेटफ़ॉर्म प्रशासन",
+    "allWorkspaces": "सभी वर्कस्पेस"
   },
   "search": {
     "dashboard": "डैशबोर्ड",
@@ -134,7 +138,6 @@
       "tenantName": "टेनेंट नाम",
       "tenantIdentifier": "पहचानकर्ता",
       "user": "उपयोगकर्ता",
-      "tenant": "टेनेंट",
       "editionName": "नाम",
       "editionDescription": "विवरण",
       "editionDisplayOrder": "प्रदर्शन क्रम",
@@ -155,7 +158,6 @@
       "tenantName": "टेनेंट नाम दर्ज करें",
       "tenantIdentifier": "पहचानकर्ता दर्ज करें (उदाहरण के लिए acme)",
       "user": "उपयोगकर्ता चुनें",
-      "tenant": "टेनेंट पहचानकर्ता",
       "editionName": "संस्करण का नाम दर्ज करें",
       "editionDescription": "संस्करण का विवरण दर्ज करें",
       "edition": "एक संस्करण चुनें"
@@ -501,7 +503,14 @@
         "forgotPassword": "पासवर्ड भूल गए?",
         "signupLink": "साइन अप",
         "noAccount": "खाता नहीं है?",
-        "backToSignin": "साइन इन पर वापस जाएं"
+        "backToSignin": "साइन इन पर वापस जाएं",
+        "titleTenant": "${name} में साइन इन करें",
+        "suspendedTitle": "यह वर्कस्पेस निलंबित है",
+        "suspendedMessage": "जब तक कोई व्यवस्थापक इसे फिर से सक्रिय नहीं करता, साइन इन उपलब्ध नहीं है।",
+        "hostRequiredTitle": "अपने वर्कस्पेस के पते पर साइन इन करें",
+        "hostRequiredMessage": "आपका खाता एक वर्कस्पेस से जुड़ा है। साइन इन करने के लिए उसका पता खोलें। अगर आपको पता नहीं मालूम, तो अपना आमंत्रण ईमेल देखें।",
+        "ownWorkspace": "अपना वर्कस्पेस चाहते हैं?",
+        "createWorkspace": "एक बनाएँ"
       },
       "signup": {
         "title": "साइन अप",
@@ -512,7 +521,18 @@
         "successTitle": "सफलता!",
         "successVerifyEmail": "पंजीकरण सफल! कृपया अपने खाते को सत्यापित करने के लिए अपना ईमेल देखें।",
         "successMessage": "पंजीकरण सफल! साइन इन पेज पर जाएं।",
-        "tenantSectionTitle": "आपका टेनेंट"
+        "tenantSectionTitle": "आपका वर्कस्पेस",
+        "tenantHostTitle": "साइन अप मुख्य साइट पर होता है",
+        "tenantHostMessage": "आप ${name} के वर्कस्पेस पर हैं। अपना वर्कस्पेस बनाने के लिए मुख्य साइट पर साइन अप करें।",
+        "mainSiteMessage": "अपना वर्कस्पेस बनाने के लिए मुख्य साइट पर साइन अप करें।",
+        "tenantHostAction": "साइन अप पर जाएँ",
+        "workspaceName": "वर्कस्पेस का नाम",
+        "workspaceAddress": "वर्कस्पेस का पता",
+        "addressPreview": "आपके वर्कस्पेस का पता:",
+        "addressPlaceholder": "your-name",
+        "identifierHint": "छोटे अक्षर, अंक और हाइफ़न।",
+        "readyTitle": "आपका वर्कस्पेस तैयार है",
+        "goToWorkspace": "अपने वर्कस्पेस पर जाएँ"
       },
       "forgotPassword": {
         "title": "पासवर्ड भूल गए",
@@ -531,6 +551,13 @@
       "signout": "साइन आउट",
       "unauthorized": {
         "title": "अनधिकृत"
+      },
+      "workspaceNotFound": {
+        "title": "वर्कस्पेस नहीं मिला",
+        "message": "${host} पर कोई वर्कस्पेस नहीं है। पता जाँचें, या मुख्य साइट पर जाएँ।",
+        "messageNoHost": "इस पते पर कोई वर्कस्पेस नहीं है। पता जाँचें, या मुख्य साइट पर जाएँ।",
+        "homeAction": "होम पेज पर जाएँ",
+        "action": "मुख्य साइट पर जाएँ"
       }
     },
     "changePassword": {
@@ -608,35 +635,27 @@
         "removeConfirm": "क्या आप वाकई इस सदस्य को टेनेंट से हटाना चाहते हैं?",
         "removeSuccess": "सदस्य सफलतापूर्वक हटाया गया"
       },
-      "switcher": {
-        "label": "टेनेंट",
-        "switchTo": "टेनेंट बदलें",
-        "switchSuccess": "अब आप ${tenant} में कार्य कर रहे हैं",
-        "noTenant": "कोई टेनेंट चयनित नहीं",
-        "viewDetail": "टेनेंट विवरण देखें",
-        "exitTenant": "टेनेंट से बाहर निकलें",
-        "exitSuccess": "आप फिर से प्लेटफ़ॉर्म उपयोगकर्ता के रूप में कार्य कर रहे हैं"
-      },
       "detail": {
         "title": "टेनेंट विवरण",
         "information": "टेनेंट जानकारी",
         "membersTitle": "सदस्य",
         "seats": "सीटें"
       },
-      "enterButton": "प्रवेश करें",
-      "enterCurrent": "वर्तमान",
       "actions": {
         "detail": "विवरण",
         "members": "सदस्य",
         "suspend": "निलंबित करें",
         "reactivate": "पुनः सक्रिय करें"
-      }
+      },
+      "openWorkspace": "वर्कस्पेस खोलें"
     },
     "selectTenant": {
-      "title": "टेनेंट चुनें",
-      "description": "वह टेनेंट चुनें जिसमें आप कार्य करना चाहते हैं।",
+      "title": "आपके वर्कस्पेस",
+      "description": "हर वर्कस्पेस अपने पते पर, नए टैब में खुलता है।",
       "emptyDescription": "आप किसी सक्रिय टेनेंट से नहीं जुड़े हैं। किसी व्यवस्थापक से अपने टेनेंट में जोड़ने के लिए कहें, या अपना टेनेंट बनाने के लिए साइन अप करें।",
-      "emptyAction": "अपनी प्रोफ़ाइल पर जाएं"
+      "emptyAction": "अपनी प्रोफ़ाइल पर जाएं",
+      "current": "वर्तमान",
+      "noAddresses": "इस इंस्टॉलेशन पर वर्कस्पेस के पते कॉन्फ़िगर नहीं हैं।"
     },
     "editions": {
       "title": "संस्करण",

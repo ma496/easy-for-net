@@ -46,7 +46,8 @@
     "selectPlaceholder": "请选择…",
     "noOptions": "无选项",
     "scrollToTop": "回到顶部",
-    "collapseSidebar": "收起侧边栏"
+    "collapseSidebar": "收起侧边栏",
+    "opensInNewTab": "（在新标签页中打开）"
   },
   "navigation": {
     "home": "首页",
@@ -81,7 +82,7 @@
     "tenantsCreate": "创建",
     "tenantsUpdate": "更新",
     "tenantsMembers": "成员",
-    "selectTenant": "选择租户",
+    "selectTenant": "你的工作区",
     "tenantsDetail": "详情",
     "editions": "版本",
     "editionsList": "列表",
@@ -90,7 +91,10 @@
     "editionsFeatures": "功能",
     "tenantsFeatures": "功能",
     "localization": "本地化",
-    "settings": "设置"
+    "settings": "设置",
+    "otherWorkspaces": "其他工作区",
+    "platformAdministration": "平台管理",
+    "allWorkspaces": "所有工作区"
   },
   "search": {
     "dashboard": "仪表板",
@@ -134,7 +138,6 @@
       "tenantName": "租户名称",
       "tenantIdentifier": "标识符",
       "user": "用户",
-      "tenant": "租户",
       "editionName": "名称",
       "editionDescription": "描述",
       "editionDisplayOrder": "显示顺序",
@@ -155,7 +158,6 @@
       "tenantName": "输入租户名称",
       "tenantIdentifier": "输入标识符（例如 acme）",
       "user": "选择用户",
-      "tenant": "租户标识符",
       "editionName": "请输入版本名称",
       "editionDescription": "请输入版本描述",
       "edition": "请选择版本"
@@ -501,7 +503,14 @@
         "forgotPassword": "忘记密码？",
         "signupLink": "注册",
         "noAccount": "没有账户？",
-        "backToSignin": "返回登录"
+        "backToSignin": "返回登录",
+        "titleTenant": "登录到 ${name}",
+        "suspendedTitle": "此工作区已暂停",
+        "suspendedMessage": "在管理员重新激活之前无法登录。",
+        "hostRequiredTitle": "请在你的工作区地址登录",
+        "hostRequiredMessage": "你的账户属于某个工作区。请打开它的地址登录。如果你不知道地址，请查看邀请邮件。",
+        "ownWorkspace": "想要自己的工作区？",
+        "createWorkspace": "创建一个"
       },
       "signup": {
         "title": "注册",
@@ -512,7 +521,18 @@
         "successTitle": "成功！",
         "successVerifyEmail": "注册成功！请检查您的电子邮件以验证您的账户。",
         "successMessage": "注册成功！前往登录页面。",
-        "tenantSectionTitle": "您的租户"
+        "tenantSectionTitle": "你的工作区",
+        "tenantHostTitle": "注册需在主站点进行",
+        "tenantHostMessage": "你正在 ${name} 的工作区。要创建自己的工作区，请在主站点注册。",
+        "mainSiteMessage": "要创建自己的工作区，请在主站点注册。",
+        "tenantHostAction": "前往注册",
+        "workspaceName": "工作区名称",
+        "workspaceAddress": "工作区地址",
+        "addressPreview": "你的工作区地址：",
+        "addressPlaceholder": "your-name",
+        "identifierHint": "小写字母、数字和连字符。",
+        "readyTitle": "你的工作区已就绪",
+        "goToWorkspace": "前往你的工作区"
       },
       "forgotPassword": {
         "title": "忘记密码",
@@ -531,6 +551,13 @@
       "signout": "退出登录",
       "unauthorized": {
         "title": "未授权"
+      },
+      "workspaceNotFound": {
+        "title": "未找到工作区",
+        "message": "${host} 上没有工作区。请检查地址，或前往主站点。",
+        "messageNoHost": "此地址上没有工作区。请检查地址，或前往主站点。",
+        "homeAction": "前往首页",
+        "action": "前往主站点"
       }
     },
     "changePassword": {
@@ -608,35 +635,27 @@
         "removeConfirm": "您确定要将此成员从租户中移除吗？",
         "removeSuccess": "成员移除成功"
       },
-      "switcher": {
-        "label": "租户",
-        "switchTo": "切换租户",
-        "switchSuccess": "您现在正在 ${tenant} 中工作",
-        "noTenant": "未选择租户",
-        "viewDetail": "查看租户详情",
-        "exitTenant": "退出租户",
-        "exitSuccess": "您已重新以平台用户身份工作"
-      },
       "detail": {
         "title": "租户详情",
         "information": "租户信息",
         "membersTitle": "成员",
         "seats": "席位"
       },
-      "enterButton": "进入",
-      "enterCurrent": "当前",
       "actions": {
         "detail": "详情",
         "members": "成员",
         "suspend": "暂停",
         "reactivate": "重新激活"
-      }
+      },
+      "openWorkspace": "打开工作区"
     },
     "selectTenant": {
-      "title": "选择租户",
-      "description": "请选择您要使用的租户。",
+      "title": "你的工作区",
+      "description": "每个工作区都在其自己的地址、新标签页中打开。",
       "emptyDescription": "您不属于任何活跃租户。请让管理员将您加入其租户，或注册以创建您自己的租户。",
-      "emptyAction": "前往个人资料"
+      "emptyAction": "前往个人资料",
+      "current": "当前",
+      "noAddresses": "此安装未配置工作区地址。"
     },
     "editions": {
       "title": "版本",

@@ -1,4 +1,5 @@
 import { RequestBase } from '@/store/api'
+import { TenantStatus } from '@/store/api/tenancy/enums'
 
 /** Request body for the change-password endpoint, supplying the current and desired new password. */
 export interface ChangePasswordRequest extends RequestBase {
@@ -24,6 +25,8 @@ export interface GetUserInfoResponse {
   tenants: GetUserInfoTenant[]
   isPlatform: boolean
   roles: GetUserInfoRole[]
+  /** The platform origin, which a platform account opens to work in platform scope. */
+  platformUrl: string
 }
 
 /** Role summary embedded in GetUserInfoResponse, listing the role's permissions. */
@@ -40,11 +43,14 @@ export interface GetUserInfoPermission {
   displayName: string
 }
 
-/** A tenant the caller holds an active membership in, embedded in GetUserInfoResponse so the chrome can name the active tenant and offer the others to switch to. */
+/** A tenant the caller holds an active membership in, embedded in GetUserInfoResponse so the user menu can link to the other workspaces at their own addresses. */
 export interface GetUserInfoTenant {
   id: string
   name: string
   identifier: string
+  status: TenantStatus
+  /** The tenant's own origin, where its sign-in and session live; null when host resolution is off. */
+  url: string | null
 }
 
 /** Public-facing profile of the current user returned by /account/profile (no roles/permissions). */
@@ -96,14 +102,12 @@ export interface SignupResponse {
   isEmailVerificationRequired: boolean
 }
 
-/** Request body for the login (/account/token) endpoint, supplying username and password. */
+/** Request body for the login (/account/token) endpoint, supplying username and password; the request's host decides the tenant. */
 export interface TokenRequest extends RequestBase {
   username: string
   isEmail?: boolean
   email?: string
   password: string
-  /** The url-safe identifier of the tenant to start the session in. Optional: left out, the server resolves the tenant from the account's memberships. */
-  tenantIdentifier?: string
 }
 
 /** Response from the login endpoint, returning the issued access/refresh tokens and the user id. */

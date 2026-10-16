@@ -12,7 +12,8 @@ namespace Backend.Tests.Fakes;
 /// instead this decorator resolves against a fixed test configuration - the platform on
 /// <see cref="PlatformHost"/>, tenants on <c>{identifier}.</c><see cref="Suffix"/> - for a request carrying
 /// <see cref="GateHeader"/>, and hands every other request to the host's own resolver. The members that take
-/// no request (<see cref="ResolveHost"/>, <see cref="TenantUrl"/>, <see cref="PlatformUrl"/>) read the
+/// no request (<see cref="ResolveHost"/>, <see cref="TenantUrl"/>, <see cref="TenantUrlTemplate"/>,
+/// <see cref="PlatformUrl"/>) read the
 /// header off the request being served, so links an endpoint builds follow the test configuration too.
 /// Nothing outside the <c>TenantHosting</c> tests sends the header.
 /// </remarks>
@@ -59,6 +60,10 @@ public sealed class TenantHostingOverride(ITenantHostResolver inner, IHttpContex
     /// <inheritdoc />
     public string PlatformUrl()
         => IsGated(httpContextAccessor.HttpContext) ? _map.PlatformUrl() : inner.PlatformUrl();
+
+    /// <inheritdoc />
+    public string? TenantUrlTemplate()
+        => IsGated(httpContextAccessor.HttpContext) ? _map.TenantUrlTemplate() : inner.TenantUrlTemplate();
 
     /// <inheritdoc />
     /// <remarks>

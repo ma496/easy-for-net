@@ -232,15 +232,17 @@ reissues the session via `ITenantAuthorizationService.ReissueSessionAsync(userId
 tenant's normalized identifier so the new session is bound to its host. `POST /tenants/exit` does the
 same with `null, null`, platform accounts only. Both answer `tenantHostMismatch`
 on a resolved host: there, changing tenant is navigation to the other tenant's host (and a sign-in
-there), and switch/exit remain for bearer clients and hosts that resolve to `None`. On the web, always go through
-`useTenantSwitch()` (`hooks/use-tenant-switch.ts`): it lands on `/admin` through a full page load
-(`leaveForTenantChange` in `store/tenant-cache.ts`), so the store, session state, hub and layout all
-start again in the new scope — resetting the cache in place would refetch the mounted page's queries
-under the new session and flash a 403 on a page the new scope may not open. `lib/utils/tenant-routing.ts` decides which `/admin` screens work
+there), and switch/exit remain for bearer clients and hosts that resolve to `None`. The web app calls
+neither: each host keeps its own session, so another workspace is a plain link, opening in a new tab
+(`WorkspaceLink`), to the `url` `GET /account/get-info` reports for each tenant, or to `platformUrl` —
+never an address built from a domain written in the web app (sign-up alone builds one, from the
+`tenantUrlTemplate` `GET /tenants/host` answers). Sign-in names the workspace its host is and takes no
+tenant. `store/tenant-cache.test.ts` fails if anything in the web app calls `/tenants/switch` or
+`/tenants/exit` again. `lib/utils/tenant-routing.ts` decides which `/admin` screens work
 without a tenant (`platformAccessiblePathPrefixes`), which are platform-only
 (`platformOnlyPathPrefixes`, and `platformOnlyPathPatterns` for one record's screens such as
 `/admin/tenants/{id}/features`), and where a caller with a stale or missing tenant lands
-(`resolveTenantLanding` → `/select-tenant`); a new screen is tenant-only until listed there.
+(`isWithoutUsableTenant` → `/select-tenant`, which lists the caller's workspaces as links); a new screen is tenant-only until listed there.
 
 ## 8. Testing isolation
 

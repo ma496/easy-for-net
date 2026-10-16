@@ -29,11 +29,16 @@ sealed class TenantHostGetEndpoint(ITenantHostResolver tenantHostResolver, ITena
     {
         var host = tenantHostResolver.Resolve(HttpContext);
         var platformUrl = tenantHostResolver.PlatformUrl();
+        var tenantUrlTemplate = tenantHostResolver.TenantUrlTemplate();
 
         if (host is not { Kind: TenantHostKind.Tenant, Identifier: { } identifier })
         {
-            await Send.ResponseAsync(new TenantHostGetResponse { Kind = TenantHostGetResponse.PlatformKind, PlatformUrl = platformUrl },
-                cancellation: cancellationToken);
+            await Send.ResponseAsync(new TenantHostGetResponse
+            {
+                Kind = TenantHostGetResponse.PlatformKind,
+                PlatformUrl = platformUrl,
+                TenantUrlTemplate = tenantUrlTemplate
+            }, cancellation: cancellationToken);
             return;
         }
 
@@ -49,14 +54,16 @@ sealed class TenantHostGetEndpoint(ITenantHostResolver tenantHostResolver, ITena
             Name = tenant.Name,
             Identifier = tenant.Identifier,
             Status = tenant.Status,
-            PlatformUrl = platformUrl
+            PlatformUrl = platformUrl,
+            TenantUrlTemplate = tenantUrlTemplate
         }, cancellation: cancellationToken);
     }
 }
 
 /// <summary>
 /// What the request's host names: <c>platform</c>, or <c>tenant</c> with the tenant's name, identifier and
-/// status. <see cref="PlatformUrl"/> is always present; the tenant fields are null for <c>platform</c>.
+/// status. <see cref="PlatformUrl"/> is always present, and <see cref="TenantUrlTemplate"/> whenever host
+/// resolution is on; the tenant fields are null for <c>platform</c>.
 /// </summary>
 sealed class TenantHostGetResponse
 {
@@ -80,4 +87,11 @@ sealed class TenantHostGetResponse
 
     /// <summary>Gets or sets the platform origin, <c>Web:DefaultDomain</c>.</summary>
     public string PlatformUrl { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets the tenant origin template, <c>Web:TenantOriginTemplate</c> (for example
+    /// <c>http://{tenant}.localhost:3000</c>), with its <c>{tenant}</c> placeholder left in place - so a form
+    /// can show the origin a workspace not yet created will be served on - or null when host resolution is off.
+    /// </summary>
+    public string? TenantUrlTemplate { get; set; }
 }

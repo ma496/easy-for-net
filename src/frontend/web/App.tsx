@@ -5,7 +5,7 @@ import { toggleRTL, toggleTheme, setDarkMode, setUserInfo } from '@/store/slices
 import { AppLoading, ServiceUnavailableView, TranslationContext } from '@/components/layouts'
 import { i18nConfig, Locale } from '@/i18n'
 import { useLazyGetUserInfoQuery } from './store/api/identity'
-import { isAllowed, isPathAvailable, isTenantScopedPath, resolvePlatformLanding, resolveTenantLanding } from './lib/utils'
+import { isAllowed, isPathAvailable, isTenantScopedPath, isWithoutUsableTenant, resolvePlatformLanding } from './lib/utils'
 import { usePathname, useRouter } from 'next/navigation'
 import { getMatchedAuthUrl } from './auth-urls'
 import { CookieConsentDialog } from '@/components/custom'
@@ -55,8 +55,8 @@ function App({ children }: PropsWithChildren) {
     const go = (target: string) => router.replace(localized(target) as any)
 
     // A platform administrator acting in no tenant needs none: users, roles and notifications answer about the platform's own, and the tenants screens and the dashboard read no tenant data, so the
-    // lack of a selection never sends them to the chooser. Only a screen that genuinely needs a tenant - one not listed in tenant-routing - lands them on the dashboard instead. They can still pick a
-    // tenant from the header's switcher.
+    // lack of a selection never sends them to the workspaces list. Only a screen that genuinely needs a tenant - one not listed in tenant-routing - lands them on the dashboard instead. A tenant
+    // of theirs is another address, which the user menu links to.
     const platformLanding = resolvePlatformLanding(authState.user)
     if (platformLanding && !isPathAvailable(authState.user, pathToCheck)) {
       go(platformLanding)
@@ -64,19 +64,17 @@ function App({ children }: PropsWithChildren) {
     }
 
     // Opening a screen that only means anything inside a tenant while the session names none - because the tenant it was working in was suspended, deleted or left, and the last renewal dropped it -
-    // lands on the chooser instead of a tenant-scoped screen with no tenant behind it. The renewal re-reads the account info, which is how the state below comes to be seen at all. Account
-    // self-service, the platform tenancy screens, /unauthorized and the public routes are not tenant-scoped, so they stay reachable throughout.
-    if (isTenantScopedPath(pathToCheck) && !platformLanding) {
-      const tenantLanding = resolveTenantLanding(authState.user)
-      if (tenantLanding) {
-        go(tenantLanding)
-        return
-      }
+    // lands on the workspaces list, which links to the tenants still theirs at their own addresses, instead of a tenant-scoped screen with no tenant behind it. The renewal re-reads the account
+    // info, which is how the state below comes to be seen at all. Account self-service, the platform tenancy screens, /unauthorized and the public routes are not tenant-scoped, so they stay
+    // reachable throughout.
+    if (isTenantScopedPath(pathToCheck) && !platformLanding && isWithoutUsableTenant(authState.user)) {
+      go('/select-tenant')
+      return
     }
 
     // A screen belonging to the other scope is not a refusal but a wrong turn, so it lands on the dashboard rather than on /unauthorized: the permissions the platform's own screens declare are
-    // platform-scoped and a tenant session never carries them, so a caller acting in a tenant is not short of a grant anybody could give them. It is also the moment a platform account enters a tenant
-    // from the tenants table - the page it entered from belongs to the scope it has just left - and answering that with a refusal would make a successful switch read as a failure.
+    // platform-scoped and a tenant session never carries them, so a caller acting in a tenant is not short of a grant anybody could give them; a link that opened the other scope's
+    // screen is answered with the dashboard of the scope this host gives.
     if (!platformLanding && !isPathAvailable(authState.user, pathToCheck)) {
       go('/admin')
       return

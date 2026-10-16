@@ -1,8 +1,5 @@
 import { GetUserInfoResponse } from '@/store/api/identity'
 
-/** The screen an authenticated caller is sent to while no usable tenant selection stands: the chooser, which offers the tenants they may work in and a way out when there are none. */
-export type TenantLandingRoute = '/select-tenant'
-
 /** Paths outside `/admin` are never tenant-scoped, and these ones under it are the platform-tier tenancy screens, which a platform account works with while acting in no tenant at all. */
 const platformScopedPathPrefix = '/admin/tenants'
 
@@ -60,35 +57,20 @@ export const isActiveTenantStale = (user: GetUserInfoResponse | undefined): bool
 }
 
 /**
- * Decides where an authenticated caller has to land before any tenant-scoped
- * screen may open, from the user info the server just answered with:
+ * Returns true when an ordinary account is signed in with no tenant it may still act in - the tenant
+ * its session named was suspended, deleted or left it, so the last renewal dropped it, or the selection
+ * it still carries has gone stale. Such a session can open no tenant-scoped screen on this host, so the
+ * route guard sends it to the workspaces list, which links to the tenants that are still its own (each
+ * at its own address) and says so plainly when there are none. It never signs the account out: losing
+ * a tenant is a reason to point at another, not to end the session.
  *
- * - no usable selection - the tenant they were working in was suspended,
- *   deleted or left them, so their session was renewed without one - sends them
- *   to `/select-tenant` to choose again, and never signs them out: losing a
- *   tenant is a reason to offer them another, not to end the session;
- * - no tenant left to work in at all sends them to the same screen, which says
- *   so and offers them the way out. It is one screen rather than two because
- *   there is one thing to tell them: which tenants are theirs, and there may be
- *   none;
- * - a selection that still stands returns `null`, meaning the caller may go
- *   wherever they were headed.
- *
- * Signing in settles this for almost everybody: an ordinary account signs in to
- * exactly one tenant or is asked which one it meant, so it arrives here with a
- * selection already standing. What is left is a selection that stopped being
- * usable while the session was open.
- *
- * A platform account lands nowhere: it needs no tenant to work, since its own
- * authority lives in platform scope, so there is never a choice it has to make
- * before going on. It enters one of its tenants from the switcher or the tenants
- * table when it wants to, and leaves through the switcher's exit.
+ * Signing in never needs this: the host names the tenant, so an ordinary account arrives already acting
+ * in it or is refused. A platform account is never without one, since its own authority lives in
+ * platform scope.
  */
-export const resolveTenantLanding = (user: GetUserInfoResponse | undefined): TenantLandingRoute | null => {
-  if (!user) return null
-  if (user.isPlatform) return null
-  if (!user.activeTenant || isActiveTenantStale(user)) return '/select-tenant'
-  return null
+export const isWithoutUsableTenant = (user: GetUserInfoResponse | undefined): boolean => {
+  if (!user || user.isPlatform) return false
+  return !user.activeTenant || isActiveTenantStale(user)
 }
 
 /**
@@ -180,8 +162,7 @@ export const isPlatformOnlyPath = (pathname: string): boolean => {
  * Neither is a caller short of a grant somebody could give them, so both are
  * answered with the dashboard rather than a refusal. Navigation and search use
  * this to leave out what would only redirect, and the route guard uses it to
- * land a caller whose scope has just changed under them - which is what a
- * platform account entering one of its tenants from the tenants table does.
+ * land a caller who has followed a link into the wrong scope.
  */
 export const isPathAvailable = (user: GetUserInfoResponse | undefined, pathname: string): boolean => {
   if (isPlatformWithoutTenant(user)) {
@@ -192,10 +173,10 @@ export const isPathAvailable = (user: GetUserInfoResponse | undefined, pathname:
 
 /**
  * Decides where a platform account acting in no tenant goes after signing in:
- * the dashboard, rather than the tenant chooser, because it
+ * the dashboard, rather than the workspaces list, because it
  * needs no tenant. A `redirect` it was sent back with is honoured when it can
- * use that screen. Returns `null` for anyone else, whose landing
- * `resolveTenantLanding` decides.
+ * use that screen. Returns `null` for anyone else, who arrives already acting
+ * in the tenant the host names.
  */
 export const resolvePlatformLanding = (
   user: GetUserInfoResponse | undefined,

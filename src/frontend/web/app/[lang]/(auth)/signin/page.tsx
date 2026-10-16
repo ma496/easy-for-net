@@ -2,6 +2,7 @@ import { SigninForm } from './_components/signin-form'
 import { AuthShell } from '../_components/auth-shell'
 import { Metadata } from 'next'
 import { getServerTranslation } from '@/i18n'
+import { getHostWorkspace } from '@/lib/server/host-workspace'
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params
@@ -12,18 +13,17 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
 
 /**
  * Server-rendered sign-in route under the auth route group.
- * Loads the localized title/description, frames the sign-in form in the split auth layout, and renders the interactive form.
+ * Asks the API what the visitor's host names before rendering, so the form's own heading - the workspace's name on a tenant's
+ * address, the platform copy otherwise, or a "workspace not found" block - is right on the first paint, and frames the form in
+ * the split auth layout.
  */
 const BoxedSignIn = async ({ params }: { params: Promise<{ lang: string }> }) => {
-  const { lang } = await params
-  const [title, description] = await Promise.all([
-    getServerTranslation(lang, 'page.auth.signin.title').then((text) => text || 'Sign In'),
-    getServerTranslation(lang, 'page.auth.signin.description').then((text) => text || 'Enter your credentials to sign in'),
-  ])
+  await params
+  const hostWorkspace = await getHostWorkspace()
 
   return (
-    <AuthShell title={title} description={description}>
-      <SigninForm />
+    <AuthShell>
+      <SigninForm hostWorkspace={hostWorkspace} />
     </AuthShell>
   )
 }

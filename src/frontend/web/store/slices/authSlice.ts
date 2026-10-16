@@ -24,7 +24,7 @@ export const authSlice = createSlice({
       state.user = payload
       state.isAuthenticated = payload !== undefined
       // The tenant fields always come from the freshly fetched user info, so a
-      // switch, or a tenant the session lost when it was last renewed, is
+      // tenant the session lost when it was last renewed is
       // reflected here rather than leaving a stale selection in place.
       state.activeTenant = payload?.activeTenant
       state.tenants = payload?.tenants ?? []

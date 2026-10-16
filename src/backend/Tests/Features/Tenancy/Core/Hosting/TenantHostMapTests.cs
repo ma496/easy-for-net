@@ -91,6 +91,7 @@ public class TenantHostMapTests
         map.Resolve(new HostString("acme.localhost:3000")).Should().Be(TenantHost.None);
         map.Resolve(new HostString("app.localhost:3000")).Should().Be(TenantHost.None, "the platform host names nothing either while resolution is off");
         map.TenantUrl("acme").Should().BeNull();
+        map.TenantUrlTemplate().Should().BeNull();
         map.PlatformUrl().Should().Be(DevelopmentPlatform);
     }
 
@@ -100,6 +101,8 @@ public class TenantHostMapTests
         _development.TenantUrl(" Acme ").Should().Be("http://acme.localhost:3000");
         _development.PlatformUrl().Should().Be(DevelopmentPlatform);
         _production.TenantUrl("acme").Should().Be("https://acme.example.com");
+        _development.TenantUrlTemplate().Should().Be("http://{tenant}.localhost:3000");
+        _production.TenantUrlTemplate().Should().Be("https://{tenant}.example.com");
     }
 
     [Fact]

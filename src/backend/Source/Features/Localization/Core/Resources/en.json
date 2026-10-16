@@ -46,7 +46,8 @@
     "selectPlaceholder": "Select…",
     "noOptions": "No options",
     "scrollToTop": "Scroll to top",
-    "collapseSidebar": "Collapse sidebar"
+    "collapseSidebar": "Collapse sidebar",
+    "opensInNewTab": "(opens in a new tab)"
   },
   "navigation": {
     "home": "Home",
@@ -81,7 +82,7 @@
     "tenantsCreate": "Create",
     "tenantsUpdate": "Update",
     "tenantsMembers": "Members",
-    "selectTenant": "Select Tenant",
+    "selectTenant": "Your workspaces",
     "tenantsDetail": "Detail",
     "editions": "Editions",
     "editionsList": "List",
@@ -90,7 +91,10 @@
     "editionsFeatures": "Features",
     "tenantsFeatures": "Features",
     "localization": "Localization",
-    "settings": "Settings"
+    "settings": "Settings",
+    "otherWorkspaces": "Other workspaces",
+    "platformAdministration": "Platform administration",
+    "allWorkspaces": "All workspaces"
   },
   "search": {
     "dashboard": "Dashboard",
@@ -134,7 +138,6 @@
       "tenantName": "Tenant Name",
       "tenantIdentifier": "Identifier",
       "user": "User",
-      "tenant": "Tenant",
       "editionName": "Name",
       "editionDescription": "Description",
       "editionDisplayOrder": "Display Order",
@@ -155,7 +158,6 @@
       "tenantName": "Enter tenant name",
       "tenantIdentifier": "Enter identifier (for example acme)",
       "user": "Select user",
-      "tenant": "Tenant identifier",
       "editionName": "Enter edition name",
       "editionDescription": "Enter edition description",
       "edition": "Select an edition"
@@ -501,7 +503,14 @@
         "forgotPassword": "Forgot Password?",
         "signupLink": "Sign Up",
         "noAccount": "Don't have an account?",
-        "backToSignin": "Back to Sign In"
+        "backToSignin": "Back to Sign In",
+        "titleTenant": "Sign in to ${name}",
+        "suspendedTitle": "This workspace is suspended",
+        "suspendedMessage": "Signing in is unavailable until an administrator reactivates it.",
+        "hostRequiredTitle": "Sign in at your workspace's address",
+        "hostRequiredMessage": "Your account belongs to a workspace. Open its address to sign in. If you don't know it, check your invitation email.",
+        "ownWorkspace": "Want your own workspace?",
+        "createWorkspace": "Create one"
       },
       "signup": {
         "title": "Sign Up",
@@ -512,7 +521,18 @@
         "successTitle": "Success!",
         "successVerifyEmail": "Registration successful! Please check your email to verify your account.",
         "successMessage": "Registration successful! Go to sign in page.",
-        "tenantSectionTitle": "Your tenant"
+        "tenantSectionTitle": "Your workspace",
+        "tenantHostTitle": "Sign-up happens on the main site",
+        "tenantHostMessage": "You're on ${name}'s workspace. To create a workspace of your own, sign up on the main site.",
+        "mainSiteMessage": "To create a workspace of your own, sign up on the main site.",
+        "tenantHostAction": "Go to sign-up",
+        "workspaceName": "Workspace name",
+        "workspaceAddress": "Workspace address",
+        "addressPreview": "Your workspace address:",
+        "addressPlaceholder": "your-name",
+        "identifierHint": "Lower-case letters, digits and hyphens.",
+        "readyTitle": "Your workspace is ready",
+        "goToWorkspace": "Go to your workspace"
       },
       "forgotPassword": {
         "title": "Forget Password",
@@ -531,6 +551,13 @@
       "signout": "Sign Out",
       "unauthorized": {
         "title": "Unauthorized"
+      },
+      "workspaceNotFound": {
+        "title": "Workspace not found",
+        "message": "There is no workspace at ${host}. Check the address, or go to the main site.",
+        "messageNoHost": "There is no workspace at this address. Check the address, or go to the main site.",
+        "homeAction": "Go to home page",
+        "action": "Go to the main site"
       }
     },
     "changePassword": {
@@ -608,35 +635,27 @@
         "removeConfirm": "Are you sure you want to remove this member from the tenant?",
         "removeSuccess": "Member removed successfully"
       },
-      "switcher": {
-        "label": "Tenant",
-        "switchTo": "Switch tenant",
-        "switchSuccess": "You are now working in ${tenant}",
-        "noTenant": "No tenant selected",
-        "viewDetail": "View tenant detail",
-        "exitTenant": "Exit tenant",
-        "exitSuccess": "You are working as a platform user again"
-      },
       "detail": {
         "title": "Tenant Detail",
         "information": "Tenant Information",
         "membersTitle": "Members",
         "seats": "Seats"
       },
-      "enterButton": "Enter",
-      "enterCurrent": "Current",
       "actions": {
         "detail": "Detail",
         "members": "Members",
         "suspend": "Suspend",
         "reactivate": "Reactivate"
-      }
+      },
+      "openWorkspace": "Open workspace"
     },
     "selectTenant": {
-      "title": "Select Tenant",
-      "description": "Choose the tenant you want to work in.",
+      "title": "Your workspaces",
+      "description": "Each workspace opens at its own address, in a new tab.",
       "emptyDescription": "You do not belong to an active tenant. Ask an administrator to add you to theirs, or sign up to create your own.",
-      "emptyAction": "Go to your profile"
+      "emptyAction": "Go to your profile",
+      "current": "Current",
+      "noAddresses": "Workspace addresses are not configured on this installation."
     },
     "editions": {
       "title": "Editions",

@@ -5,12 +5,12 @@ import { SelectTenantView } from './_components/select-tenant-view'
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params
   return {
-    title: (await getServerTranslation(lang, 'page.selectTenant.title')) || 'Select Tenant',
+    title: (await getServerTranslation(lang, 'page.selectTenant.title')) || 'Your workspaces',
   }
 }
 
 /**
- * Server-rendered tenant selection route that renders the interactive chooser for a user holding an active membership in more than one tenant.
+ * Server-rendered tenant selection route that renders the list of links to the workspaces the signed-in account belongs to, each at its own address.
  */
 const SelectTenantPage = () => {
   return <SelectTenantView />

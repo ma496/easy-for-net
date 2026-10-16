@@ -46,7 +46,8 @@
     "selectPlaceholder": "Seleccionar…",
     "noOptions": "Sin opciones",
     "scrollToTop": "Volver arriba",
-    "collapseSidebar": "Contraer barra lateral"
+    "collapseSidebar": "Contraer barra lateral",
+    "opensInNewTab": "(se abre en una pestaña nueva)"
   },
   "navigation": {
     "home": "Inicio",
@@ -81,7 +82,7 @@
     "tenantsCreate": "Crear",
     "tenantsUpdate": "Actualizar",
     "tenantsMembers": "Miembros",
-    "selectTenant": "Seleccionar inquilino",
+    "selectTenant": "Tus espacios de trabajo",
     "tenantsDetail": "Detalle",
     "editions": "Ediciones",
     "editionsList": "Lista",
@@ -90,7 +91,10 @@
     "editionsFeatures": "Funciones",
     "tenantsFeatures": "Funciones",
     "localization": "Localización",
-    "settings": "Configuración"
+    "settings": "Configuración",
+    "otherWorkspaces": "Otros espacios de trabajo",
+    "platformAdministration": "Administración de la plataforma",
+    "allWorkspaces": "Todos los espacios de trabajo"
   },
   "search": {
     "dashboard": "Tablero",
@@ -134,7 +138,6 @@
       "tenantName": "Nombre del inquilino",
       "tenantIdentifier": "Identificador",
       "user": "Usuario",
-      "tenant": "Inquilino",
       "editionName": "Nombre",
       "editionDescription": "Descripción",
       "editionDisplayOrder": "Orden de visualización",
@@ -155,7 +158,6 @@
       "tenantName": "Ingrese el nombre del inquilino",
       "tenantIdentifier": "Ingrese el identificador (por ejemplo acme)",
       "user": "Seleccione un usuario",
-      "tenant": "Identificador del inquilino",
       "editionName": "Introduzca el nombre de la edición",
       "editionDescription": "Introduzca la descripción de la edición",
       "edition": "Seleccione una edición"
@@ -501,7 +503,14 @@
         "forgotPassword": "¿Olvidó su contraseña?",
         "signupLink": "Registrarse",
         "noAccount": "¿No tiene una cuenta?",
-        "backToSignin": "Volver a Iniciar Sesión"
+        "backToSignin": "Volver a Iniciar Sesión",
+        "titleTenant": "Inicia sesión en ${name}",
+        "suspendedTitle": "Este espacio de trabajo está suspendido",
+        "suspendedMessage": "No es posible iniciar sesión hasta que un administrador lo reactive.",
+        "hostRequiredTitle": "Inicia sesión en la dirección de tu espacio de trabajo",
+        "hostRequiredMessage": "Tu cuenta pertenece a un espacio de trabajo. Abre su dirección para iniciar sesión. Si no la conoces, revisa tu correo de invitación.",
+        "ownWorkspace": "¿Quieres tu propio espacio de trabajo?",
+        "createWorkspace": "Crea uno"
       },
       "signup": {
         "title": "Registrarse",
@@ -512,7 +521,18 @@
         "successTitle": "¡Éxito!",
         "successVerifyEmail": "¡Registro exitoso! Por favor verifique su correo electrónico.",
         "successMessage": "¡Registro exitoso! Vaya a la página de inicio de sesión.",
-        "tenantSectionTitle": "Tu inquilino"
+        "tenantSectionTitle": "Tu espacio de trabajo",
+        "tenantHostTitle": "El registro se hace en el sitio principal",
+        "tenantHostMessage": "Estás en el espacio de trabajo de ${name}. Para crear uno propio, regístrate en el sitio principal.",
+        "mainSiteMessage": "Para crear tu propio espacio de trabajo, regístrate en el sitio principal.",
+        "tenantHostAction": "Ir al registro",
+        "workspaceName": "Nombre del espacio de trabajo",
+        "workspaceAddress": "Dirección del espacio de trabajo",
+        "addressPreview": "Dirección de tu espacio de trabajo:",
+        "addressPlaceholder": "tu-nombre",
+        "identifierHint": "Letras minúsculas, dígitos y guiones.",
+        "readyTitle": "Tu espacio de trabajo está listo",
+        "goToWorkspace": "Ir a tu espacio de trabajo"
       },
       "forgotPassword": {
         "title": "Olvidé mi Contraseña",
@@ -531,6 +551,13 @@
       "signout": "Cerrar Sesión",
       "unauthorized": {
         "title": "No autorizado"
+      },
+      "workspaceNotFound": {
+        "title": "Espacio de trabajo no encontrado",
+        "message": "No hay ningún espacio de trabajo en ${host}. Comprueba la dirección o ve al sitio principal.",
+        "messageNoHost": "No hay ningún espacio de trabajo en esta dirección. Comprueba la dirección o ve al sitio principal.",
+        "homeAction": "Ir a la página de inicio",
+        "action": "Ir al sitio principal"
       }
     },
     "changePassword": {
@@ -608,35 +635,27 @@
         "removeConfirm": "¿Está seguro de que desea quitar a este miembro del inquilino?",
         "removeSuccess": "Miembro quitado exitosamente"
       },
-      "switcher": {
-        "label": "Inquilino",
-        "switchTo": "Cambiar de inquilino",
-        "switchSuccess": "Ahora está trabajando en ${tenant}",
-        "noTenant": "Ningún inquilino seleccionado",
-        "viewDetail": "Ver detalle del inquilino",
-        "exitTenant": "Salir del inquilino",
-        "exitSuccess": "Vuelves a trabajar como usuario de la plataforma"
-      },
       "detail": {
         "title": "Detalle del inquilino",
         "information": "Información del inquilino",
         "membersTitle": "Miembros",
         "seats": "Plazas"
       },
-      "enterButton": "Entrar",
-      "enterCurrent": "Actual",
       "actions": {
         "detail": "Detalle",
         "members": "Miembros",
         "suspend": "Suspender",
         "reactivate": "Reactivar"
-      }
+      },
+      "openWorkspace": "Abrir espacio de trabajo"
     },
     "selectTenant": {
-      "title": "Seleccionar inquilino",
-      "description": "Elija el inquilino en el que desea trabajar.",
+      "title": "Tus espacios de trabajo",
+      "description": "Cada espacio de trabajo se abre en su propia dirección, en una pestaña nueva.",
       "emptyDescription": "No perteneces a ningún inquilino activo. Pide a un administrador que te añada al suyo, o regístrate para crear el tuyo.",
-      "emptyAction": "Ir a tu perfil"
+      "emptyAction": "Ir a tu perfil",
+      "current": "Actual",
+      "noAddresses": "Las direcciones de los espacios de trabajo no están configuradas en esta instalación."
     },
     "editions": {
       "title": "Ediciones",

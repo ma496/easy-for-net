@@ -11,16 +11,47 @@ export function forwardedHostHeaders(host: string | null | undefined): Record<st
   return host ? { 'X-Forwarded-Host': host } : {}
 }
 
-/** Options for `serverApiFetch`: a plain `RequestInit`, plus whether to forward the visitor's cookies. */
+/** Options for `serverApiFetch`: a plain `RequestInit`, plus what of the visitor's request to forward. */
 export type ServerApiFetchInit = Omit<RequestInit, 'headers'> & {
   headers?: Record<string, string>
   /** Forward the incoming `cookie` header, so the API sees the visitor's own session. */
   forwardCookies?: boolean
+  /**
+   * Forward the visitor's host (the default), so the API resolves the tenant the browser's own calls
+   * do. `false` sends none, so the API resolves no host at all - which is how a page asks for the
+   * platform's own answer (its `platformUrl`) when the visitor's host names no workspace.
+   */
+  forwardHost?: boolean
+}
+
+/** What of the visitor's request `serverApiRequestHeaders` copies, read off its headers. */
+export interface IncomingRequestHeaders {
+  host: string | null | undefined
+  cookie: string | null | undefined
+}
+
+/**
+ * The headers a server-side API call carries: the caller's own, then the visitor's host (unless
+ * `forwardHost` is false) and cookies (only when `forwardCookies` is true). Pure, so which of the
+ * visitor's headers reach the API is testable without a request.
+ */
+export function serverApiRequestHeaders(
+  incoming: IncomingRequestHeaders,
+  { headers: extraHeaders, forwardCookies = false, forwardHost = true }: Pick<ServerApiFetchInit, 'headers' | 'forwardCookies' | 'forwardHost'> = {},
+): Record<string, string> {
+  const cookie = forwardCookies ? incoming.cookie : null
+
+  return {
+    ...extraHeaders,
+    ...(forwardHost ? forwardedHostHeaders(incoming.host) : {}),
+    ...(cookie ? { cookie } : {}),
+  }
 }
 
 /**
  * The one way the Next.js server calls the API: `path` (starting with `/`) on `API_INTERNAL_URL`, with
- * the incoming request's host forwarded (see `forwardedHostHeaders`) and, when asked, its cookies.
+ * the incoming request's host forwarded (see `forwardedHostHeaders`) unless `forwardHost` is false and,
+ * when asked, its cookies.
  *
  * `next/headers` is loaded dynamically rather than imported at the top of the file, for the reason
  * `i18n/server.ts` gives: that module, which calls this, is re-exported from the `@/i18n` barrel client
@@ -28,17 +59,12 @@ export type ServerApiFetchInit = Omit<RequestInit, 'headers'> & {
  * `headers()` call also comes before `API_INTERNAL_URL` is read, so a prerender attempt stops on Next's
  * dynamic-usage signal first and `next build` never needs the variable.
  */
-export async function serverApiFetch(path: string, { headers: extraHeaders, forwardCookies = false, ...init }: ServerApiFetchInit = {}): Promise<Response> {
-  const { headers } = await import('next/headers')
-  const headerList = await headers()
-  const cookie = forwardCookies ? headerList.get('cookie') : null
+export async function serverApiFetch(path: string, { headers, forwardCookies = false, forwardHost = true, ...init }: ServerApiFetchInit = {}): Promise<Response> {
+  const { headers: incomingHeaders } = await import('next/headers')
+  const headerList = await incomingHeaders()
 
   return fetch(`${environment.serverApiUrl}${path}`, {
     ...init,
-    headers: {
-      ...extraHeaders,
-      ...forwardedHostHeaders(headerList.get('host')),
-      ...(cookie ? { cookie } : {}),
-    },
+    headers: serverApiRequestHeaders({ host: headerList.get('host'), cookie: headerList.get('cookie') }, { headers, forwardCookies, forwardHost }),
   })
 }

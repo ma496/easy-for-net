@@ -1,6 +1,6 @@
 ---
 name: frontend-tests
-description: Write and run Vitest tests for the web app in src/frontend/web — colocated *.test.ts files, what is worth testing (pure helpers, route and tenant-scope rules, reducers, middleware, the tenant-change page load, client/API mirrors, locale files) and how to structure cases. Use when changing frontend logic that has rules worth pinning down.
+description: Write and run Vitest tests for the web app in src/frontend/web — colocated *.test.ts files, what is worth testing (pure helpers, route and tenant-scope rules, reducers, middleware, source-reading rules such as "nothing calls /tenants/switch", client/API mirrors, locale files) and how to structure cases. Use when changing frontend logic that has rules worth pinning down.
 ---
 
 # Frontend tests
@@ -88,16 +88,19 @@ browser:
 
 - **Security- and routing-shaped helpers**: redirect validation, `isAllowed`, `getMatchedAuthUrl`
   (including the "two entries match the same path" error), the tenant-scope rules in
-  `tenant-routing.ts` (`isPathAvailable`, `resolveTenantLanding`, …) for a platform account in no
+  `tenant-routing.ts` (`isPathAvailable`, `isWithoutUsableTenant`, …) for a platform account in no
   tenant, one inside a tenant, and an ordinary member. A new `/admin` route that is not tenant-only
   gets its case there.
 - **Data shaping**: `getApiErrorMessages`, upload-limit arithmetic, export row mapping, `shortName`.
 - **Reducers** — call `slice.reducer(state, action)` and assert on the state it returns.
 - **Middleware** — run an action through `middleware(api)(next)(action)` with a recording `dispatch`
   and assert on what it dispatched, and on what it left alone.
-- **Browser globals** a helper touches: `tenant-cache.test.ts` stubs `window` with `vi.stubGlobal`
-  (a recording `location.replace`, an in-memory `sessionStorage`), asserts the full page load and the
-  notice it hands to the next document, and `vi.unstubAllGlobals()` in `afterEach`.
+- **Rules only the source can show**: `tenant-cache.test.ts` reads every web source file and fails
+  when one calls `/tenants/switch` or `/tenants/exit`, or when a workspace link is built from a
+  hard-coded domain rather than `tenant.url`. Make such a scan prove it read something (a minimum
+  file count, a file it must have seen), so a moved tree cannot pass by being absent.
+- **Browser globals** a helper touches: stub `window` with `vi.stubGlobal` and
+  `vi.unstubAllGlobals()` in `afterEach`.
 - **Client/API mirrors**: `allow.test.ts` and `feature-names.test.ts` restate the backend constants and
   fail when `allow.ts` / `feature-names.ts` drift — add the new constant there when you add a
   permission or a feature.

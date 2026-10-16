@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { TenantStatus } from '@/store/api/tenancy/enums'
 import type { GetUserInfoTenant } from '@/store/api/identity'
 import { isAllowed, type AuthState } from './authentication-and-authorization'
 
@@ -12,6 +13,7 @@ const stateWithPermissions = (...permissions: string[]): AuthState => ({
     email: 'user@example.com',
     tenants: [],
     isPlatform: false,
+    platformUrl: 'http://app.example.com',
     roles: [
       {
         id: 'role-id',
@@ -23,7 +25,7 @@ const stateWithPermissions = (...permissions: string[]): AuthState => ({
 })
 
 /** A tenant the caller holds an active membership in, as the account info endpoint reports it. */
-const tenant = (id: string): GetUserInfoTenant => ({ id, name: `Tenant ${id}`, identifier: `t-${id}` })
+const tenant = (id: string): GetUserInfoTenant => ({ id, name: `Tenant ${id}`, identifier: `t-${id}`, status: TenantStatus.Active, url: `http://t-${id}.example.com` })
 
 const firstTenant = tenant('first')
 const secondTenant = tenant('second')
@@ -46,6 +48,7 @@ const stateActingIn = (activeTenant: GetUserInfoTenant | undefined, ...permissio
     activeTenant,
     tenants: activeTenant ? [firstTenant, secondTenant] : [],
     isPlatform: false,
+    platformUrl: 'http://app.example.com',
     roles: [
       {
         id: 'role-id',

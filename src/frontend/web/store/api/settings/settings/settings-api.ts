@@ -4,8 +4,8 @@ import { SettingDeleteRequest, SettingDto, SettingListResponse, SettingUpdateReq
 /**
  * RTK Query API for the settings admin screen: every declared setting as the acting scope resolves it,
  * and replacing or removing that scope's own overrides of one - the tenant's inside a tenant, the
- * platform's in platform scope. Uses the 'Settings' tag type, one row per setting name. Changing the
- * acting tenant drops this cache with the rest (`store/tenant-cache.ts`).
+ * platform's in platform scope. Uses the 'Settings' tag type, one row per setting name. Each host
+ * keeps its own session and so its own document and cache, so no other scope's settings are ever held here.
  */
 export const settingsApi = appApi
   .enhanceEndpoints({ addTagTypes: ['Settings'] })
