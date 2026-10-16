@@ -66,17 +66,18 @@ npm run dev
 
 It starts PostgreSQL and Redis with Docker (`docker-compose.yml`) when they are not already answering,
 installs the web app's packages when they are missing, and runs the API and the web app together in one
-terminal, each line prefixed by where it came from:
+terminal, each line prefixed by where it came from. The web app starts only once the API answers on
+`/health`, so its first page never meets an API still building:
 
 - API: [http://localhost:5000](http://localhost:5000), Swagger at [/swagger](http://localhost:5000/swagger/index.html)
-- Web app: [http://localhost:3000](http://localhost:3000)
+- Web app: [http://app.localhost:3000](http://app.localhost:3000) or [http://default.localhost:3000](http://default.localhost:3000) ([http://localhost:3000](http://localhost:3000) works too) — a dev proxy in front of `next dev` on :3001 that sends `/api`, `/hubs`, `/hangfire` and `/health` to the API, as Caddy does in production
 
-Press **Ctrl+C** to stop both. The containers keep running; `docker compose down` stops them (the data is kept).
+Press **Ctrl+C** to stop everything. The containers keep running; `docker compose down` stops them (the data is kept).
 
 ```sh
 npm run dev -- --no-docker      # use the PostgreSQL and Redis you already run
-npm run dev -- --api-only       # services + API, no web app
-npm run dev -- --web-only       # the web app alone, against an API started elsewhere
+npm run dev -- --api-only       # services + API, no web app and no proxy
+npm run dev -- --web-only       # the web app and the proxy, against an API started elsewhere on :5000
 npm run stop:api                # stop an API left running from this project (it locks bin/ on Windows)
 ```
 
@@ -85,7 +86,7 @@ To run the pieces separately instead:
 ```sh
 docker compose up -d                          # PostgreSQL (postgres/postgres) and Redis (password "redis"), on the ports DEV_POSTGRES_PORT / DEV_REDIS_PORT name (default 5432 / 6379)
 dotnet run --project src/backend/Source       # the API
-cd src/frontend/web && npm install && npm run dev
+npm run dev -- --web-only                     # the web app behind the dev proxy on :3000 (next dev alone on :3000 has no /api)
 ```
 
 Development and Testing apply migrations on startup. Any other environment applies them only when
@@ -172,8 +173,9 @@ Before deploying for real, set `DOMAIN`, `PUBLIC_URL` and the SMTP values. `.env
 documents every value; copy it to `.env` and fill it in if the file is missing.
 
 The API applies migrations on startup, so add the initial migration first (see **Run the Project**).
-`NEXT_PUBLIC_API_URL` is built into the web image from `PUBLIC_URL`, so changing the domain means
-rebuilding. Uploaded files and the Data Protection keys (which encrypt secret settings) live in named
+The web image is built with `NEXT_PUBLIC_API_URL=/api`, a relative URL the browser resolves against
+whatever host it is on (the proxy routes `/api` and `/hubs` to the API), so changing the domain needs no
+rebuild of the web image. Uploaded files and the Data Protection keys (which encrypt secret settings) live in named
 volumes; back up those and the database volume.
 
 ## Deploy to a VPS (Coolify)

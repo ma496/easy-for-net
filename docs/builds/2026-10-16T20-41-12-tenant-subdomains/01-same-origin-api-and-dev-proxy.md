@@ -1,4 +1,39 @@
-Reach the API same-origin through a development proxy that mirrors the Caddyfile
+# Reach the API same-origin through a development proxy that mirrors the Caddyfile
+
+| | |
+|---|---|
+| **Task** | `tenant-subdomains/01-same-origin-api-and-dev-proxy` |
+| **Landed** | 2026-10-16 |
+| **Commit** | the one whose message carries `Task: tenant-subdomains/01-same-origin-api-and-dev-proxy` |
+| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+
+## What changed
+
+| File | + | − |
+|------|---|---|
+| `.claude/skills/new-project/SKILL.md` | 2 | 1 |
+| `CLAUDE.md` | 1 | 1 |
+| `README.md` | 10 | 8 |
+| `docker-compose.coolify.yml` | 3 | 2 |
+| `docker-compose.prod.yml` | 3 | 2 |
+| `scripts/CLAUDE.md` | 4 | 3 |
+| `scripts/dev.mjs` | 49 | 12 |
+| `scripts/tests/entry-scripts.test.mjs` | 1 | 0 |
+| `src/frontend/web/.env.example` | 4 | 3 |
+| `src/frontend/web/Dockerfile` | 1 | 1 |
+| `src/frontend/web/config/environment.ts` | 26 | 5 |
+| `src/frontend/web/config/index.ts` | 1 | 1 |
+| `src/frontend/web/i18n/server.ts` | 13 | 9 |
+| `tool/EasyForNetTool/README.md` | 8 | 7 |
+| `tool/EasyForNetTool/new-project-claude.md` | 1 | 1 |
+| `tool/EasyForNetTool/new-project-readme.md` | 10 | 6 |
+| `scripts/dev-proxy.mjs` | 61 | 0 |
+| `scripts/lib/dev-proxy.mjs` | 117 | 0 |
+| `scripts/tests/dev-proxy.test.mjs` | 188 | 0 |
+| `src/frontend/web/lib/server/api-fetch.test.ts` | 17 | 0 |
+| `src/frontend/web/lib/server/api-fetch.ts` | 45 | 0 |
+
+## The brief this was built from
 
 The browser is about to reach the API as `<host>/api` and `<host>/hubs` on whatever host it is on, so that each tenant subdomain keeps its own cookie pair (the API's cookies carry no `Domain`). Production already routes `/api`, `/hubs`, `/hangfire*` and `/health` to the API in `docker/Caddyfile`; development has no such front door, and the web app is built with an absolute API URL. This task gives development the same shape — a dependency-free proxy on `:3000` in front of `next dev` on `:3001` and the API on `:5000` — and switches the web app to the relative `/api`, with server-side fetches naming the visitor's host. It changes no tenant behaviour: hosts are not resolved by the API yet (a later task does that), so everything behaves as today, only through one origin.
 
