@@ -6,7 +6,7 @@ namespace Backend.Base;
 public enum SortDirection
 {
     /// <summary>Ascending order (smallest/oldest first).</summary>
-    Asc = 0,
+    Asc,
     /// <summary>Descending order (largest/newest first).</summary>
-    Desc = 1
+    Desc
 }

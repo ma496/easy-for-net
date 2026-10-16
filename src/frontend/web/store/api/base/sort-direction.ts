@@ -1,5 +1,5 @@
-/** Numeric sort direction used by list request DTOs (0 = ascending, 1 = descending). */
+/** Sort direction used by list request DTOs, sent by name as the API serializes it. */
 export enum SortDirection {
-  Asc = 0,
-  Desc = 1,
+  Asc = 'Asc',
+  Desc = 'Desc',
 }

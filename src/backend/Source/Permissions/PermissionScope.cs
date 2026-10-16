@@ -15,17 +15,17 @@ public enum PermissionScope
     /// Exercisable only while acting inside a tenant. This is the default for a permission that
     /// names no scope.
     /// </summary>
-    Tenant = 0,
+    Tenant,
 
     /// <summary>
     /// Exercisable only by a platform account acting in no tenant, where the operation answers about
     /// the platform itself rather than about any one tenant.
     /// </summary>
-    Platform = 1,
+    Platform,
 
     /// <summary>
     /// Exercisable in both scopes, answering about the platform's own data in platform scope and
     /// about the tenant's in tenant scope.
     /// </summary>
-    Both = 2
+    Both
 }

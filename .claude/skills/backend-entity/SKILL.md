@@ -147,8 +147,8 @@ Rules the existing configurations follow:
 - **Always `ToTable("<PluralName>", "<feature-schema>")`** — each feature owns a PostgreSQL schema,
   its lowercase name (`identity`, `notifications`, `tenancy`, `filemanagement`, `localization`,
   `settings`).
-- Enums are stored as strings (`HasConversion<string>()`), unless a query must compare them
-  numerically (`Permission.Scope` uses `HasConversion<int>()`).
+- Enums declare no numeric values and are stored as strings (`HasConversion<string>()`) — an
+  equality comparison in a query translates just as well against the stored name.
 - Index every column you filter or sort on, `TenantId` included (leading a composite index when
   reads are "X of the active tenant").
 - **Uniqueness goes on the normalized column, scoped by tenant for tenant-owned kinds, and the raw

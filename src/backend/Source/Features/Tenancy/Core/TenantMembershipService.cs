@@ -445,21 +445,21 @@ public enum TenantMembershipChangeOutcome
     /// <summary>
     /// The change was persisted.
     /// </summary>
-    Applied = 0,
+    Applied,
 
     /// <summary>
     /// The account holds no membership of that tenant, so there was nothing to change. The caller
     /// reports this as a missing record: a membership is a record inside a tenant, and one the caller
     /// cannot see is indistinguishable from one that never existed.
     /// </summary>
-    MembershipNotFound = 1,
+    MembershipNotFound,
 
     /// <summary>
     /// The change would have left the tenant with no member holding tenant administration and was
     /// refused; nothing was persisted. The caller reports it with
     /// <see cref="ErrorCodes.LastTenantAdministrator"/>.
     /// </summary>
-    LastTenantAdministrator = 2
+    LastTenantAdministrator
 }
 
 /// <summary>
