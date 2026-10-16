@@ -1,4 +1,56 @@
-Expose the host's workspace to anonymous callers and build every link from the tenant's origin
+# Expose the host's workspace to anonymous callers and build every link from the tenant's origin
+
+| | |
+|---|---|
+| **Task** | `tenant-subdomains/03-tenant-host-endpoints-and-links` |
+| **Landed** | 2026-10-16 |
+| **Commit** | the one whose message carries `Task: tenant-subdomains/03-tenant-host-endpoints-and-links` |
+| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+
+## What changed
+
+| File | + | − |
+|------|---|---|
+| `.claude/skills/localization/SKILL.md` | 5 | 2 |
+| `.claude/skills/multi-tenancy/SKILL.md` | 11 | 1 |
+| `CLAUDE.md` | 3 | 3 |
+| `src/backend/Source/ErrorHandling/ErrorCodes.cs` | 1 | 0 |
+| `src/backend/Source/Features/Identity/Endpoints/Account/ForgetPasswordEndpoint.cs` | 8 | 4 |
+| `src/backend/Source/Features/Identity/Endpoints/Account/GetInfoEndpoint.cs` | 25 | 1 |
+| `src/backend/Source/Features/Identity/Endpoints/Account/ResendVerifyEmailEndpoint.cs` | 8 | 4 |
+| `src/backend/Source/Features/Identity/Endpoints/Account/SignupEndpoint.cs` | 21 | 4 |
+| `src/backend/Source/Features/Localization/Core/LocalizationService.cs` | 16 | 0 |
+| `src/backend/Source/Features/Localization/Core/Resources/ar.json` | 1 | 0 |
+| `src/backend/Source/Features/Localization/Core/Resources/en.json` | 1 | 0 |
+| `src/backend/Source/Features/Localization/Core/Resources/es.json` | 1 | 0 |
+| `src/backend/Source/Features/Localization/Core/Resources/fr.json` | 1 | 0 |
+| `src/backend/Source/Features/Localization/Core/Resources/hi.json` | 1 | 0 |
+| `src/backend/Source/Features/Localization/Core/Resources/ru.json` | 1 | 0 |
+| `src/backend/Source/Features/Localization/Core/Resources/ur.json` | 1 | 0 |
+| `src/backend/Source/Features/Localization/Core/Resources/zh.json` | 1 | 0 |
+| `src/backend/Source/Features/Localization/Endpoints/Localization/ResourcesGetEndpoint.cs` | 31 | 7 |
+| `src/backend/Source/Features/Tenancy/Core/Hosting/TenantHostMap.cs` | 32 | 0 |
+| `src/backend/Source/Features/Tenancy/Core/Hosting/TenantHostResolver.cs` | 26 | 0 |
+| `src/backend/Source/Features/Tenancy/Core/TenancyDtos.cs` | 4 | 2 |
+| `src/backend/Source/Features/Tenancy/Core/TenantService.cs` | 3 | 1 |
+| `src/backend/Source/Features/Tenancy/Core/TenantValidationRules.cs` | 46 | 3 |
+| `src/backend/Source/Features/Tenancy/Endpoints/Tenants/TenantCreateEndpoint.cs` | 2 | 1 |
+| `src/backend/Source/Features/Tenancy/Endpoints/Tenants/TenantUpdateEndpoint.cs` | 2 | 1 |
+| `src/backend/Tests/Fakes/PlatformSettingOverlays.cs` | 38 | 8 |
+| `src/backend/Tests/Fakes/TenantHostingOverride.cs` | 43 | 9 |
+| `src/backend/Tests/Fakes/TestDoubles.cs` | 4 | 2 |
+| `src/backend/Tests/Features/Tenancy/Endpoints/Tenants/TenantPermissionTests.cs` | 7 | 1 |
+| `tool/EasyForNetTool/new-project-claude.md` | 3 | 3 |
+| `.claude/memory/lessons/register-every-new-tenancy-endpoint-in-tenantpermissiontests.md` | 9 | 0 |
+| `src/backend/Source/Features/Tenancy/Endpoints/Tenants/TenantHostGetEndpoint.cs` | 84 | 0 |
+| `src/backend/Source/Features/Tenancy/Endpoints/Tenants/TenantTlsAllowedEndpoint.cs` | 56 | 0 |
+| `src/backend/Tests/Features/Localization/Endpoints/Localization/ResourcesGetHostTests.cs` | 92 | 0 |
+| `src/backend/Tests/Features/Tenancy/Core/Hosting/TenantHostLinksTests.cs` | 367 | 0 |
+| `src/backend/Tests/Features/Tenancy/Core/Hosting/TenantHostMapResolveHostTests.cs` | 48 | 0 |
+| `src/backend/Tests/Features/Tenancy/Endpoints/Tenants/TenantIdentifierReservedTests.cs` | 112 | 0 |
+
+## The brief this was built from
+
 Depends-on: 02-tenant-host-resolution-and-session-binding
 
 With the API resolving hosts, the anonymous surface needs to follow: the web app must be able to ask which workspace a host is, Caddy must be able to ask whether a host deserves a certificate, an anonymous visitor on a tenant host must see that tenant's text overrides, sign-up must happen on the platform host and send its verification link to the new tenant's origin, emails must link to the host they came from, and identifiers that would collide with infrastructure hosts must be refused. Every lookup here goes through `ITenantService.FindByIdentifierAsync` and `ITenantHostResolver` from the previous task; only these anonymous endpoints look a tenant up by identifier.

@@ -246,6 +246,7 @@
       "tenantRequired": "请提供租户以登录。",
       "tenantHostMismatch": "此登录属于其他地址。请在当前地址重新登录。",
       "tenantHostRequired": "请在您组织自己的地址登录。",
+      "tenantIdentifierReserved": "此标识符已被保留。请选择其他标识符。",
       "tenantIdentifierAlreadyExists": "租户标识符已存在",
       "duplicateTenantMembership": "此用户已是该租户的成员",
       "lastTenantAdministrator": "无法移除最后一位租户管理员",

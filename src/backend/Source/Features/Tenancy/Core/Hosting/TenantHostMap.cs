@@ -30,6 +30,9 @@ public sealed class TenantHostMap
     /// <summary>The label substituted for the placeholder when the template is checked for shape.</summary>
     private const string SampleLabel = "tenant";
 
+    /// <summary>The longest text, a port included, <see cref="ResolveHost"/> reads as a host.</summary>
+    private const int MaxHostLength = 260;
+
     private readonly string _template;
     private readonly string _defaultDomain;
     private readonly Authority? _platform;
@@ -109,6 +112,35 @@ public sealed class TenantHostMap
         var label = name[..^(suffix.Host.Length + 1)];
         return IsTenantLabel(label) ? TenantHost.ForTenant(label) : TenantHost.None;
     }
+
+    /// <summary>
+    /// What a host handed in as text names, by the same rules as <see cref="Resolve(HostString)"/>. An
+    /// empty value, one too long to be a host, or one carrying anything but a host name and an optional
+    /// port (a scheme, a path, user information, white-space) names nothing.
+    /// </summary>
+    /// <param name="host">A host name, with an optional port.</param>
+    /// <returns>The resolution; <see cref="TenantHost.None"/> whenever resolution is off.</returns>
+    public TenantHost ResolveHost(string? host)
+    {
+        if (string.IsNullOrEmpty(host) || host.Length > MaxHostLength
+            || host.Any(character => !(char.IsAsciiLetterOrDigit(character) || character is '.' or '-' or ':')))
+        {
+            return TenantHost.None;
+        }
+
+        return Resolve(new HostString(host));
+    }
+
+    /// <summary>
+    /// The origin links point at for a resolution: the tenant's origin for a tenant host, and the
+    /// platform origin for the platform host and for a host that names nothing.
+    /// </summary>
+    /// <param name="host">What the host names.</param>
+    /// <returns>The origin.</returns>
+    public string Origin(TenantHost host)
+        => host is { Kind: TenantHostKind.Tenant, Identifier: { } identifier } && TenantUrl(identifier) is { } tenantUrl
+            ? tenantUrl
+            : PlatformUrl();
 
     /// <summary>
     /// The origin a tenant is served on, or <see langword="null"/> when resolution is off.

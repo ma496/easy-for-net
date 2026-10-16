@@ -246,6 +246,7 @@
       "tenantRequired": "साइन इन करने के लिए कृपया टेनेंट बताएं।",
       "tenantHostMismatch": "यह साइन-इन किसी दूसरे पते का है। इस पते पर फिर से साइन इन करें।",
       "tenantHostRequired": "अपने संगठन के अपने पते पर साइन इन करें।",
+      "tenantIdentifierReserved": "यह पहचानकर्ता आरक्षित है। कोई दूसरा चुनें।",
       "tenantIdentifierAlreadyExists": "टेनेंट पहचानकर्ता पहले से मौजूद है",
       "duplicateTenantMembership": "यह उपयोगकर्ता पहले से ही इस टेनेंट का सदस्य है",
       "lastTenantAdministrator": "अंतिम टेनेंट प्रशासक को नहीं हटाया जा सकता",

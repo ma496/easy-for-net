@@ -73,7 +73,7 @@ public interface ITenantService
     /// </summary>
     /// <param name="identifier">The identifier, as typed or as a host label carries it.</param>
     /// <param name="cancellationToken">Token used to cancel the read.</param>
-    /// <returns>The tenant's id, normalized identifier and status, or <see langword="null"/>.</returns>
+    /// <returns>The tenant's id, name, identifier (as entered and normalized) and status, or <see langword="null"/>.</returns>
     /// <remarks>
     /// Unlike <see cref="Tenants"/> this is not narrowed to the caller's standing: it serves sign-in,
     /// which runs before there is a caller to narrow to and settles standing itself from the membership
@@ -192,6 +192,8 @@ public class TenantService(AppDbContext dbContext,
             .Select(tenant => new TenantLookupDto
             {
                 Id = tenant.Id,
+                Name = tenant.Name,
+                Identifier = tenant.Identifier,
                 IdentifierNormalized = tenant.IdentifierNormalized,
                 Status = tenant.Status
             })

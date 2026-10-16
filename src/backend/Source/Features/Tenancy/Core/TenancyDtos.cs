@@ -65,13 +65,15 @@ public sealed class TenantMemberPageDto : ListDto<TenantMemberDto>
 }
 
 /// <summary>
-/// A tenant found by its identifier: just what sign-in needs to authorize entering it and to record
-/// it on the session.
+/// A tenant found by its identifier: what sign-in needs to authorize entering it and to record it on
+/// the session, and what a tenant host shows a visitor before anybody signs in.
 /// </summary>
 [AllowOutside]
 public sealed class TenantLookupDto
 {
     public Guid Id { get; set; }
+    public string Name { get; set; } = null!;
+    public string Identifier { get; set; } = null!;
     public string IdentifierNormalized { get; set; } = null!;
     public TenantStatus Status { get; set; }
 }

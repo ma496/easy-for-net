@@ -1,6 +1,7 @@
 using Backend.ShareData.Entities;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
+using Backend.Settings;
 
 namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
@@ -99,7 +100,7 @@ sealed class TenantCreateValidator : Validator<TenantCreateRequest>
     public TenantCreateValidator()
     {
         RuleFor(x => x.Name).NotEmpty().TenantName();
-        RuleFor(x => x.Identifier).NotEmpty().TenantIdentifier();
+        RuleFor(x => x.Identifier).NotEmpty().TenantIdentifier(Resolve<IOptions<WebSetting>>().Value);
     }
 }
 

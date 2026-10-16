@@ -44,7 +44,8 @@ public static class TestDoubles
         services.Remove(registered);
 
         services.AddSingleton<ITenantHostResolver>(provider => new TenantHostingOverride(
-            (ITenantHostResolver)ActivatorUtilities.CreateInstance(provider, registered.ImplementationType!)));
+            (ITenantHostResolver)ActivatorUtilities.CreateInstance(provider, registered.ImplementationType!),
+            provider.GetRequiredService<Microsoft.AspNetCore.Http.IHttpContextAccessor>()));
 
         return services;
     }
@@ -61,7 +62,8 @@ public static class TestDoubles
         services.AddSingleton<PlatformSettingOverlays>();
         services.AddScoped<ISettingValueStore>(provider => new OverlayingSettingValueStore(
             (ISettingValueStore)ActivatorUtilities.CreateInstance(provider, registered.ImplementationType!),
-            provider.GetRequiredService<PlatformSettingOverlays>()));
+            provider.GetRequiredService<PlatformSettingOverlays>(),
+            provider.GetRequiredService<Microsoft.AspNetCore.Http.IHttpContextAccessor>()));
 
         return services;
     }

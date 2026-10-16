@@ -246,6 +246,7 @@
       "tenantRequired": "يرجى تحديد المستأجر لتسجيل الدخول.",
       "tenantHostMismatch": "تسجيل الدخول هذا يخص عنوانًا آخر. سجّل الدخول مرة أخرى على هذا العنوان.",
       "tenantHostRequired": "سجّل الدخول من العنوان الخاص بمؤسستك.",
+      "tenantIdentifierReserved": "هذا المعرّف محجوز. اختر معرّفًا آخر.",
       "tenantIdentifierAlreadyExists": "معرّف المستأجر موجود بالفعل",
       "duplicateTenantMembership": "هذا المستخدم عضو بالفعل في هذا المستأجر",
       "lastTenantAdministrator": "لا يمكن إزالة آخر مسؤول للمستأجر",

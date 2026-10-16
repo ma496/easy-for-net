@@ -31,6 +31,26 @@ public interface ITenantHostResolver
     /// <summary>The platform origin.</summary>
     /// <returns>The platform origin.</returns>
     string PlatformUrl();
+
+    /// <summary>
+    /// What a host name names, by the same rules as <see cref="Resolve(HttpContext)"/> applied to a host
+    /// handed in rather than the request's own - the question asked about a domain a certificate is
+    /// requested for. <see cref="TenantHost.None"/> for an empty or malformed host and whenever resolution
+    /// is off.
+    /// </summary>
+    /// <param name="host">A host name, with an optional port.</param>
+    /// <returns>The resolution.</returns>
+    TenantHost ResolveHost(string? host);
+
+    /// <summary>
+    /// The origin links built for this request point at: the tenant's origin on a tenant host, the platform
+    /// origin on the platform host, and <c>Web:DefaultDomain</c> when the host names nothing. Read from the
+    /// host alone - never from the caller's session - so an anonymous endpoint that mails a link sends the
+    /// visitor back to the host the request came from, whichever tenant a signed-in caller acts in.
+    /// </summary>
+    /// <param name="context">The request.</param>
+    /// <returns>The origin.</returns>
+    string RequestOrigin(HttpContext context);
 }
 
 /// <summary>
@@ -51,4 +71,10 @@ public sealed class TenantHostResolver(IOptions<WebSetting> webSetting) : ITenan
 
     /// <inheritdoc />
     public string PlatformUrl() => _map.PlatformUrl();
+
+    /// <inheritdoc />
+    public TenantHost ResolveHost(string? host) => _map.ResolveHost(host);
+
+    /// <inheritdoc />
+    public string RequestOrigin(HttpContext context) => _map.Origin(Resolve(context));
 }

@@ -1,8 +1,7 @@
 using Backend.External.Email;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
-using Backend.Settings;
-using Microsoft.Extensions.Options;
+using Backend.Features.Tenancy.Core.Hosting;
 
 namespace Backend.Features.Identity.Endpoints.Account;
 
@@ -14,11 +13,16 @@ namespace Backend.Features.Identity.Endpoints.Account;
 /// Usable with no tenant established, because starting password recovery is one of the
 /// account self-service flows that has to work with no tenant established: it names no tenant's
 /// data, and the account asking for it may hold no usable membership in any tenant.
+/// <para>
+/// The emailed link points at the host the request came from - the tenant's origin on a tenant host, the
+/// platform origin on the platform host, <c>Web:DefaultDomain</c> when the host names nothing - read from
+/// the host alone, never from a signed-in caller's session (<see cref="ITenantHostResolver.RequestOrigin"/>).
+/// </para>
 /// </remarks>
 sealed class ForgetPasswordEndpoint(ITokenService tokenService,
                                     IUserService userService,
                                     IEmailBackgroundJobs emailBackgroundJobs,
-                                    IOptions<WebSetting> webSetting)
+                                    ITenantHostResolver tenantHostResolver)
     : Endpoint<ForgetPasswordRequest, EmptyResponse>
 {
     public override void Configure()
@@ -52,7 +56,7 @@ sealed class ForgetPasswordEndpoint(ITokenService tokenService,
             @$"
             <div>
                 <p>Click the link below to reset your password:</p>
-                <a href=""{webSetting.Value.DefaultDomain}/reset-password?token={resetToken.Value}"">Reset Password</a>
+                <a href=""{tenantHostResolver.RequestOrigin(HttpContext)}/reset-password?token={resetToken.Value}"">Reset Password</a>
             </div>", true);
 
         await Send.OkAsync(cancellationToken);
