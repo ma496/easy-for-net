@@ -1,11 +1,11 @@
-namespace Backend.Tests.Features.Tenancy.Core;
-
 using Backend.ShareData.Entities;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Roles;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Tenancy.Endpoints.Tenants;
+
+namespace Backend.Tests.Features.Tenancy.Core;
 
 /// <summary>
 /// Tests for what a retained row still reserves - an identifier or a role name that was freed only by

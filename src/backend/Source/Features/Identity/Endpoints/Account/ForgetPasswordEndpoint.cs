@@ -1,10 +1,10 @@
-namespace Backend.Features.Identity.Endpoints.Account;
-
 using Backend.External.Email;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Settings;
 using Microsoft.Extensions.Options;
+
+namespace Backend.Features.Identity.Endpoints.Account;
 
 /// <summary>
 /// Anonymous POST endpoint that initiates the password-reset flow by emailing a reset

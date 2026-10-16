@@ -1,6 +1,6 @@
-namespace Backend.Tests.Fakes;
-
 using Backend.Features.Settings.Core;
+
+namespace Backend.Tests.Fakes;
 
 /// <summary>
 /// A setting that exists only in the test host and that nothing in the application reads, so the

@@ -1,8 +1,8 @@
-namespace EasyForNetTool;
-
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+
+namespace EasyForNetTool;
 
 /// <summary>
 /// Provides methods to read, update and write JSON properties in a file by a dot-separated path.

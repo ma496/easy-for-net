@@ -1,6 +1,6 @@
-namespace EasyForNetTool.Parsing;
-
 using EasyForNetTool.Extensions;
+
+namespace EasyForNetTool.Parsing;
 
 /// <summary>
 /// Base class for CLI argument parsers providing shared parsing utilities.

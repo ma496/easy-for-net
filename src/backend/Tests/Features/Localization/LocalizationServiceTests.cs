@@ -1,6 +1,6 @@
-namespace Backend.Tests.Features.Localization;
-
 using Backend.Features.Localization.Core;
+
+namespace Backend.Tests.Features.Localization;
 
 /// <summary>
 /// Tests for <see cref="LocalizationService"/>'s own resolution cache: it has to key a resolved

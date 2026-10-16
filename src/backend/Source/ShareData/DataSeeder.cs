@@ -1,5 +1,3 @@
-namespace Backend.ShareData;
-
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Identity.Core;
@@ -7,6 +5,8 @@ using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Notifications.Core;
 using Backend.Features.Notifications.Core.Entities;
 using Backend.Settings;
+
+namespace Backend.ShareData;
 
 /// <summary>
 /// Populates the database with baseline data on first run - including the default edition the

@@ -1,6 +1,6 @@
-namespace Backend.Features.FileManagement.Core;
-
 using Backend.Attributes;
+
+namespace Backend.Features.FileManagement.Core;
 
 /// <summary>
 /// Abstraction over the physical storage backend used by the file management feature.

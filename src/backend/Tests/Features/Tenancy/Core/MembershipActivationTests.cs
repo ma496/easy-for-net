@@ -1,8 +1,8 @@
-namespace Backend.Tests.Features.Tenancy.Core;
-
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Identity.Endpoints.Roles;
+
+namespace Backend.Tests.Features.Tenancy.Core;
 
 /// <summary>
 /// Tests for what makes a membership active, and for what a membership is not.

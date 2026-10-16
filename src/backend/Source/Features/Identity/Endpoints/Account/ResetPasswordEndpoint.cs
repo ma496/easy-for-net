@@ -1,8 +1,8 @@
-namespace Backend.Features.Identity.Endpoints.Account;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Core.Sessions;
+
+namespace Backend.Features.Identity.Endpoints.Account;
 
 /// <summary>
 /// Anonymous POST endpoint that completes the password-reset flow by validating a

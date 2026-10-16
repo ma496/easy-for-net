@@ -1,9 +1,9 @@
-namespace Backend.Tests.Middleware;
-
 using Backend.Middleware;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+
+namespace Backend.Tests.Middleware;
 
 public class DevelopmentEndpointLoggingMiddlewareTests
 {

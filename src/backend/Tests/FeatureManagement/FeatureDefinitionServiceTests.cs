@@ -1,6 +1,6 @@
-namespace Backend.Tests.FeatureManagement;
-
 using Backend.Exceptions;
+
+namespace Backend.Tests.FeatureManagement;
 
 /// <summary>
 /// Pins the shape of the composed feature catalogue. These run against purpose-built providers rather

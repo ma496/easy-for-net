@@ -1,7 +1,7 @@
-namespace Backend.Features.Identity.Endpoints.Account;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Sessions;
+
+namespace Backend.Features.Identity.Endpoints.Account;
 
 /// <summary>
 /// Authenticated POST endpoint that changes the current user's password after verifying the

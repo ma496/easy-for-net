@@ -1,8 +1,8 @@
-namespace Backend.Tests.Features.Identity.Sessions;
-
 using System.Security.Claims;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Sessions;
+
+namespace Backend.Tests.Features.Identity.Sessions;
 
 /// <summary>
 /// Tests that the projection of a stored session onto a principal is the only source of the claims it

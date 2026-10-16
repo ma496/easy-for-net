@@ -1,10 +1,10 @@
-namespace Backend.Tests.FeatureManagement;
-
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Identity.Endpoints.Permissions;
 using Backend.Features.Identity.Endpoints.Users;
 using Backend.Features.Tenancy.Endpoints.FeatureValues;
+
+namespace Backend.Tests.FeatureManagement;
 
 /// <summary>
 /// The acceptance tests for the mint-time contract: a permission whose feature the tenant's plan

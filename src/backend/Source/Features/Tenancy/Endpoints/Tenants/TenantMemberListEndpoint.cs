@@ -1,7 +1,7 @@
-namespace Backend.Features.Tenancy.Endpoints.Tenants;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
 /// <summary>
 /// This endpoint that handles <c>GET /tenants/{tenantId}/members</c> to return a paginated, searchable

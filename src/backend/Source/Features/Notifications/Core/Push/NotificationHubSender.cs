@@ -1,6 +1,6 @@
-namespace Backend.Features.Notifications.Core.Push;
-
 using Microsoft.AspNetCore.SignalR;
+
+namespace Backend.Features.Notifications.Core.Push;
 
 /// <summary>
 /// Sends one message to one hub group. It is the only thing that talks to SignalR, so it is the seam a test

@@ -1,6 +1,6 @@
-namespace Backend.Features.Settings.Core.Entities;
-
 using Backend.ShareData.Entities.Base;
+
+namespace Backend.Features.Settings.Core.Entities;
 
 /// <summary>
 /// The overrides one scope has made to one registered setting. A row with no <see cref="TenantId"/>

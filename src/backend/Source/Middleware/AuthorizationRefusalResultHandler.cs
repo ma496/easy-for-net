@@ -1,8 +1,8 @@
-namespace Backend.Middleware;
-
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Policy;
+
+namespace Backend.Middleware;
 
 /// <summary>
 /// Gives a reason to the refusal endpoint authorization produced, in the same error response every

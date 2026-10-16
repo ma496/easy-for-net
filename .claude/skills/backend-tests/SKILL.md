@@ -30,10 +30,10 @@ and `Features/<Feature>/Core/...` for service tests. One test class per endpoint
 ## Shape of a test class
 
 ```csharp
-namespace Backend.Tests.Features.Identity.Endpoints.Users;
-
 using Backend.Features.Identity.Endpoints.Users;
 using Backend.Tests.Seeder;
+
+namespace Backend.Tests.Features.Identity.Endpoints.Users;
 
 /// <summary>
 /// Tests for the <see cref="UserCreateEndpoint"/> covering validation and successful user creation.

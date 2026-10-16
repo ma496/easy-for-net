@@ -1,8 +1,8 @@
-namespace Backend.Tests.Features.Identity.Endpoints.Account;
-
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Tenancy.Core;
 using Backend.Tests.Features.Tenancy;
+
+namespace Backend.Tests.Features.Identity.Endpoints.Account;
 
 /// <summary>
 /// Tests that the identity call reports the tenants the caller may work in and the one they are

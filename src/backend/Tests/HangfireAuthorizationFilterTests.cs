@@ -1,7 +1,7 @@
-namespace Backend.Tests;
-
 using System.Security.Claims;
 using Backend.Features.Identity.Core;
+
+namespace Backend.Tests;
 
 /// <summary>
 /// Tests that the background-job dashboard is a platform-tier surface: an unauthenticated caller and a

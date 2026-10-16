@@ -1,6 +1,6 @@
-namespace Backend.Features.Identity.Core.Entities.Configuration;
-
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Backend.Features.Identity.Core.Entities.Configuration;
 
 /// <summary>
 /// EF Core entity configuration for <see cref="AuthToken"/>, mapping it to the <c>identity.AuthTokens</c> table

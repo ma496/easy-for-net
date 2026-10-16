@@ -1,8 +1,8 @@
-namespace Backend.Tests.Fakes;
-
 using System.Collections.Concurrent;
 using Backend.Exceptions;
 using Backend.Features.Identity.Core.Sessions;
+
+namespace Backend.Tests.Fakes;
 
 /// <summary>
 /// Which sessions and accounts the test host's session store should behave as if it could not reach its

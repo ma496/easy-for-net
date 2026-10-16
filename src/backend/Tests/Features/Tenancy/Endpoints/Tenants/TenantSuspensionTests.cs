@@ -1,5 +1,3 @@
-namespace Backend.Tests.Features.Tenancy.Endpoints.Tenants;
-
 using System.Text;
 using Backend.ShareData.Entities;
 using Backend.Tests.Features.Identity;
@@ -10,6 +8,8 @@ using Backend.Features.Identity.Endpoints.Users;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Endpoints.Tenants;
 using Microsoft.AspNetCore.Http;
+
+namespace Backend.Tests.Features.Tenancy.Endpoints.Tenants;
 
 /// <summary>
 /// Tests for what suspension does to the members of a tenant: that a tenant-scoped request stops

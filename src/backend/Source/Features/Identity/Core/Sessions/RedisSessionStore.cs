@@ -1,7 +1,7 @@
-namespace Backend.Features.Identity.Core.Sessions;
-
 using System.Text.Json;
 using StackExchange.Redis;
+
+namespace Backend.Features.Identity.Core.Sessions;
 
 /// <summary>
 /// The <see cref="ISessionStore"/> deployments use: sessions as JSON strings under keys that expire on

@@ -1,5 +1,3 @@
-namespace Backend.Features.Identity.Endpoints.Account;
-
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
@@ -7,6 +5,8 @@ using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Settings.Core;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
+
+namespace Backend.Features.Identity.Endpoints.Account;
 
 /// <summary>
 /// FastEndpoints refresh-token service that issues and validates access/refresh token

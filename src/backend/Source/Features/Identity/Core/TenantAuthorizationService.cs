@@ -1,10 +1,10 @@
-namespace Backend.Features.Identity.Core;
-
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Settings.Core;
 using Backend.Features.Tenancy.Core;
 using RefreshTokenIssuer = Backend.Features.Identity.Endpoints.Account.TokenService;
+
+namespace Backend.Features.Identity.Core;
 
 /// <summary>
 /// The one contract another feature may name to reach what this feature owns: user accounts, the

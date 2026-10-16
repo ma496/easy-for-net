@@ -1,5 +1,3 @@
-namespace Backend.Tests.Features.Tenancy.Endpoints.Tenants;
-
 using Backend.ShareData.Entities;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Account;
@@ -8,6 +6,9 @@ using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Tenancy.Endpoints.Tenants;
 using Backend.Tests.Features.Identity;
+using TokenRequest = Backend.Features.Identity.Endpoints.Account.TokenRequest;
+
+namespace Backend.Tests.Features.Tenancy.Endpoints.Tenants;
 
 /// <summary>
 /// Tests for <see cref="TenantSwitchEndpoint"/>: selecting the tenant a session acts in, what the

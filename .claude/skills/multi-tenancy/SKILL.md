@@ -42,9 +42,9 @@ way — never inside the transaction, and never by touching the session store. S
 the scope — they read it:
 
 ```csharp
-namespace Backend.Features.Invoices.Endpoints.Invoices;
-
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Invoices.Endpoints.Invoices;
 
 sealed class InvoiceSummaryEndpoint(AppDbContext dbContext, ITenantContext tenantContext)
     : EndpointWithoutRequest<InvoiceSummaryResponse>
@@ -85,9 +85,9 @@ Implement one marker from `Backend.ShareData.Entities.Base`:
   notifications, account-owned files). Use it only when such rows genuinely exist.
 
 ```csharp
-namespace Backend.Features.Invoices.Core.Entities;
-
 using Backend.ShareData.Entities.Base;
+
+namespace Backend.Features.Invoices.Core.Entities;
 
 public class Invoice : AuditableEntity<Guid>, ISoftDelete, IHaveTenant
 {

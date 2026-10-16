@@ -1,6 +1,6 @@
-namespace Backend.Features.FileManagement.Core.Entities;
-
 using Backend.ShareData.Entities.Base;
+
+namespace Backend.Features.FileManagement.Core.Entities;
 
 /// <summary>
 /// Persisted record of one uploaded file. A tenant-scoped file carries the tenant it was uploaded

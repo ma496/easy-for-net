@@ -1,8 +1,8 @@
-namespace Backend.Features.Identity.Core.Sessions;
-
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using StackExchange.Redis;
+
+namespace Backend.Features.Identity.Core.Sessions;
 
 /// <summary>
 /// The Redis pub/sub channel ended sessions are announced on, so every API instance - not only the one that

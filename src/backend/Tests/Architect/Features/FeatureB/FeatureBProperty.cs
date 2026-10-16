@@ -1,6 +1,6 @@
-namespace Backend.Tests.Architect.Features.FeatureB;
-
 using Backend.Tests.Architect.Features.FeatureA;
+
+namespace Backend.Tests.Architect.Features.FeatureB;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 

@@ -1,8 +1,8 @@
-namespace Backend.Features.Notifications.Core.Push;
-
 using System.Data.Common;
 using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+
+namespace Backend.Features.Notifications.Core.Push;
 
 /// <summary>
 /// Holds pushes raised inside an open <see cref="AppDbContext"/> transaction until that transaction

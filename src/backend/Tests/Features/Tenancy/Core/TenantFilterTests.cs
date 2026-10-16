@@ -1,7 +1,7 @@
-namespace Backend.Tests.Features.Tenancy.Core;
-
 using Backend.Exceptions;
 using Backend.Features.Identity.Core.Entities;
+
+namespace Backend.Tests.Features.Tenancy.Core;
 
 /// <summary>
 /// Tests for the tenant query filter and save-time attribution - the kernel the rest of the tenancy

@@ -1,6 +1,6 @@
-namespace Backend.Features.Localization.Endpoints.Localization;
-
 using Backend.Features.Localization.Core;
+
+namespace Backend.Features.Localization.Endpoints.Localization;
 
 /// <summary>
 /// This endpoint that handles <c>GET /localization/resources/{culture}</c> to serve one culture's

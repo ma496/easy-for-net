@@ -1,6 +1,6 @@
-namespace Backend.Features.Settings.Core;
-
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Settings.Core;
 
 /// <summary>
 /// Typed reads of the settings the slices declare - the published face of the <c>Settings</c> slice.

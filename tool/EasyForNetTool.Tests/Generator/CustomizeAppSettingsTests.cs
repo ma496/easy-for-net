@@ -1,7 +1,7 @@
-namespace EasyForNetTool.Tests.Generator;
-
 using System.Text.Json;
 using EasyForNetTool.Generator;
+
+namespace EasyForNetTool.Tests.Generator;
 
 /// <summary>
 /// Unit tests for <see cref="CreateProjectGenerator.CustomizeAppSettingsAsync"/>.

@@ -1,9 +1,10 @@
-namespace Backend.Tests;
-
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Tenancy.Endpoints.Tenants;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using TokenRequest = Backend.Features.Identity.Endpoints.Account.TokenRequest;
+
+namespace Backend.Tests;
 
 public static class TestsHelper
 {

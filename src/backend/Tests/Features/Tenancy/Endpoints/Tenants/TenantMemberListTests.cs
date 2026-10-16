@@ -1,7 +1,7 @@
-namespace Backend.Tests.Features.Tenancy.Endpoints.Tenants;
-
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Tenancy.Endpoints.Tenants;
+
+namespace Backend.Tests.Features.Tenancy.Endpoints.Tenants;
 
 /// <summary>
 /// Tests for <see cref="TenantMemberListEndpoint"/>: the page of accounts belonging to one tenant,

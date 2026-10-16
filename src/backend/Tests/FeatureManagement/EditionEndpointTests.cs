@@ -1,6 +1,6 @@
-namespace Backend.Tests.FeatureManagement;
-
 using Backend.Features.Tenancy.Endpoints.Editions;
+
+namespace Backend.Tests.FeatureManagement;
 
 /// <summary>
 /// Tests for the edition surface - the plans the platform sells.

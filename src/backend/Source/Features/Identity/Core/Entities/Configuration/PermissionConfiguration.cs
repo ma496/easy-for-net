@@ -1,6 +1,6 @@
-namespace Backend.Features.Identity.Core.Entities.Configuration;
-
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Backend.Features.Identity.Core.Entities.Configuration;
 
 /// <summary>
 /// EF Core entity configuration for <see cref="Permission"/>, mapping it to the <c>identity.Permissions</c> table

@@ -1,8 +1,8 @@
-namespace Backend.Tests.Features.FileManagement.Core;
-
 using Backend.Features.FileManagement.Core;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.FileProviders;
+
+namespace Backend.Tests.Features.FileManagement.Core;
 
 public class LocalStorageProviderTests : IDisposable
 {

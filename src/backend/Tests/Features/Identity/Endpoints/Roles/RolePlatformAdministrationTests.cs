@@ -1,9 +1,9 @@
-namespace Backend.Tests.Features.Identity.Endpoints.Roles;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Roles;
 using Backend.Tests.Features.Tenancy;
+
+namespace Backend.Tests.Features.Identity.Endpoints.Roles;
 
 /// <summary>
 /// Tests for how the platform tier reaches the role endpoints of a tenant: the reader, the rename, the

@@ -1,5 +1,3 @@
-namespace Backend.Tests.Features.Identity.Sessions;
-
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Backend.Features.Identity.Core;
@@ -9,6 +7,9 @@ using Backend.Features.Tenancy.Endpoints.Tenants;
 using Backend.Tests.Features.Tenancy;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Options;
+using TokenRequest = Backend.Features.Identity.Endpoints.Account.TokenRequest;
+
+namespace Backend.Tests.Features.Identity.Sessions;
 
 /// <summary>
 /// Tests that a token and an auth cookie say who the caller is and which session it is, and nothing

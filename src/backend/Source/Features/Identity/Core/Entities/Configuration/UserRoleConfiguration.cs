@@ -1,6 +1,6 @@
-namespace Backend.Features.Identity.Core.Entities.Configuration;
-
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Backend.Features.Identity.Core.Entities.Configuration;
 
 /// <summary>
 /// EF Core entity configuration for the <see cref="UserRole"/> junction, mapping it to <c>identity.UserRoles</c>

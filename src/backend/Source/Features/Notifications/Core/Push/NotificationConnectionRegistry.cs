@@ -1,6 +1,6 @@
-namespace Backend.Features.Notifications.Core.Push;
-
 using Microsoft.AspNetCore.SignalR;
+
+namespace Backend.Features.Notifications.Core.Push;
 
 /// <summary>
 /// One live connection to the notification hub on this API instance.

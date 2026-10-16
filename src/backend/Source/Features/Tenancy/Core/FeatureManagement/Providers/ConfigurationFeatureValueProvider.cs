@@ -1,6 +1,6 @@
-namespace Backend.Features.Tenancy.Core.FeatureManagement.Providers;
-
 using Microsoft.Extensions.Configuration;
+
+namespace Backend.Features.Tenancy.Core.FeatureManagement.Providers;
 
 /// <summary>
 /// Supplies the values the deployment set under the <c>FeatureManagement</c> configuration section.

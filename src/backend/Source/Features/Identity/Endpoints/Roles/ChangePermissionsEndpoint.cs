@@ -1,8 +1,8 @@
-namespace Backend.Features.Identity.Endpoints.Roles;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Core.Sessions;
+
+namespace Backend.Features.Identity.Endpoints.Roles;
 
 /// <summary>
 /// This endpoint that handles <c>PUT /roles/change-permissions/{id}</c> to replace a role's permission set in a single operation.

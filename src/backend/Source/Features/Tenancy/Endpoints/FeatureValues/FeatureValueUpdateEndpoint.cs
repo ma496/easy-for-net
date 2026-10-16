@@ -1,7 +1,7 @@
-namespace Backend.Features.Tenancy.Endpoints.FeatureValues;
-
 using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Tenancy.Endpoints.FeatureValues;
 
 /// <summary>
 /// This endpoint that handles <c>PUT /features</c> to set what one tenant or one edition is entitled

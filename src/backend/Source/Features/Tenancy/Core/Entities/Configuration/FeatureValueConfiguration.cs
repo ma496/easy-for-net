@@ -1,6 +1,6 @@
-namespace Backend.Features.Tenancy.Core.Entities.Configuration;
-
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Backend.Features.Tenancy.Core.Entities.Configuration;
 
 /// <summary>
 /// EF Core entity configuration for <see cref="FeatureValue"/>, mapping it to the

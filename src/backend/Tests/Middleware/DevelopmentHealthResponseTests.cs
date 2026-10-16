@@ -1,9 +1,9 @@
-namespace Backend.Tests.Middleware;
-
 using System.Text.Json;
 using Backend.Middleware;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+
+namespace Backend.Tests.Middleware;
 
 /// <summary>
 /// Tests the Development health body: which directory it names as the checkout, and what it writes.

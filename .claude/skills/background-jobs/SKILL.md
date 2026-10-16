@@ -19,10 +19,10 @@ depends on an interface and the job expression stays in one place — `EmailBack
 (`External/Email`) is the model:
 
 ```csharp
-namespace Backend.External.Email;
-
 using Backend.Features.Tenancy.Core;
 using Hangfire;
+
+namespace Backend.External.Email;
 
 /// <summary>
 /// Enqueues outgoing email messages onto the Hangfire job queue so that

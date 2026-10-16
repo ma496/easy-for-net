@@ -1,6 +1,6 @@
-namespace Backend.Features.FileManagement.Core;
-
 using Backend.Attributes;
+
+namespace Backend.Features.FileManagement.Core;
 
 /// <summary>
 /// <see cref="IStorageProvider"/> implementation that stores files on the local

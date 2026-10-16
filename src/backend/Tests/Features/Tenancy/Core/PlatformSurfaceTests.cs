@@ -1,9 +1,9 @@
-namespace Backend.Tests.Features.Tenancy.Core;
-
 using Backend.ShareData.Entities;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Roles;
 using Backend.Features.Tenancy.Endpoints.Tenants;
+
+namespace Backend.Tests.Features.Tenancy.Core;
 
 /// <summary>
 /// Tests for what platform administration reaches without a membership - the whole point of it being a

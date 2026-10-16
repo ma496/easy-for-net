@@ -1,7 +1,7 @@
-namespace Backend.Features.Localization.Core.Entities.Configuration;
-
 using Backend.Features.Localization.Core.Entities;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Backend.Features.Localization.Core.Entities.Configuration;
 
 /// <summary>
 /// EF Core entity configuration for <see cref="LanguageSetting"/>, mapping it to the

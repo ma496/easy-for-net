@@ -1,10 +1,10 @@
-namespace Backend.Features.Notifications.Endpoints.Notifications;
-
 using Backend.Base.Dto;
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
 using Backend.Features.Notifications.Core.Push;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// POST endpoint that marks a single notification as read for the current user.

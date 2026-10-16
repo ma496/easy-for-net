@@ -1,6 +1,6 @@
-namespace Backend.Features.Identity.Core.Sessions;
-
 using Backend.Attributes;
+
+namespace Backend.Features.Identity.Core.Sessions;
 
 /// <summary>
 /// Ends live sessions when something they were minted from has changed: the account, its password, the

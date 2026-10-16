@@ -1,8 +1,8 @@
-namespace Backend.Features.Notifications.Core.Push;
-
 using System.Security.Claims;
 using Backend.Processors;
 using Microsoft.AspNetCore.SignalR;
+
+namespace Backend.Features.Notifications.Core.Push;
 
 /// <summary>
 /// The server-to-client hub new notifications and read-state changes are pushed through. It declares no

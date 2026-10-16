@@ -1,7 +1,7 @@
-namespace Backend.Extensions;
-
 using System.Linq.Expressions;
 using System.Reflection;
+
+namespace Backend.Extensions;
 
 /// <summary>
 /// Extension methods that turn a LINQ <see cref="Expression"/> into a

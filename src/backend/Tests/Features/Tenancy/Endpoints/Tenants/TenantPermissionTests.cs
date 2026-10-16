@@ -1,5 +1,3 @@
-namespace Backend.Tests.Features.Tenancy.Endpoints.Tenants;
-
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Endpoints.Editions;
@@ -7,6 +5,8 @@ using Backend.Features.Tenancy.Endpoints.FeatureValues;
 using Backend.Features.Tenancy.Endpoints.Tenants;
 using Microsoft.AspNetCore.Routing;
 using System.Net.Http.Json;
+
+namespace Backend.Tests.Features.Tenancy.Endpoints.Tenants;
 
 /// <summary>
 /// Tests that every operation on the tenancy surface is gated by a named permission, that a caller who

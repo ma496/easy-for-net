@@ -1,6 +1,6 @@
-namespace Backend.Features.Notifications.Core.Push;
-
 using Backend.Features.Notifications.Core.Entities;
+
+namespace Backend.Features.Notifications.Core.Push;
 
 /// <summary>
 /// The names of the client methods the notification hub invokes. The hub is server-to-client only, so

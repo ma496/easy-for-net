@@ -1,7 +1,7 @@
-namespace Backend.Features.Settings;
-
 using Backend.Features.Settings.Core;
 using Microsoft.AspNetCore.DataProtection;
+
+namespace Backend.Features.Settings;
 
 /// <summary>
 /// Feature module that registers the settings services with the DI container.

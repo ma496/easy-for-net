@@ -1,10 +1,10 @@
-namespace Backend.Tests.FeatureManagement;
-
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Endpoints.Editions;
 using Backend.Features.Tenancy.Endpoints.FeatureValues;
 using Backend.Features.Tenancy.Endpoints.Tenants;
 using Backend.Tests.Features.Identity;
+
+namespace Backend.Tests.FeatureManagement;
 
 /// <summary>
 /// Tests for the sessions a plan change ends: moving a tenant onto another edition, changing a tenant's

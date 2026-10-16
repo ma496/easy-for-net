@@ -1,6 +1,6 @@
-namespace Backend.Tests.Features.Localization.Endpoints.Localization;
-
 using Backend.Features.Localization.Endpoints.Localization;
+
+namespace Backend.Tests.Features.Localization.Endpoints.Localization;
 
 /// <summary>
 /// Tests for <see cref="LanguagesDeleteEndpoint"/>: removing the acting scope's own row so it reverts

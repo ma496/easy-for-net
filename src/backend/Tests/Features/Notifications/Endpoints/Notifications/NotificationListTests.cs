@@ -1,6 +1,6 @@
-namespace Backend.Tests.Features.Notifications.Endpoints.Notifications;
-
 using Backend.Features.Notifications.Endpoints.Notifications;
+
+namespace Backend.Tests.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// Tests for the <see cref="NotificationListEndpoint"/> covering listing, pagination, filtering by read status and group, authorization,

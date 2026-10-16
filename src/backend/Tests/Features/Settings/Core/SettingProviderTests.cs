@@ -1,9 +1,9 @@
-namespace Backend.Tests.Features.Settings.Core;
-
 using System.Text.Json.Nodes;
 using Backend.Features.Identity.Core;
 using Backend.Features.Settings.Core;
 using Backend.Tests.Fakes;
+
+namespace Backend.Tests.Features.Settings.Core;
 
 /// <summary>
 /// Tests for <see cref="ISettingProvider"/>: typed resolution property by property - tenant override,

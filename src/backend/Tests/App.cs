@@ -1,8 +1,8 @@
-namespace Backend.Tests;
-
 using Backend.Tests.Architect;
 using Backend.Tests.Fakes;
 using Microsoft.AspNetCore.Hosting;
+
+namespace Backend.Tests;
 
 /// <summary>
 /// The application under test: one host, booted once for the whole assembly, migrated and seeded

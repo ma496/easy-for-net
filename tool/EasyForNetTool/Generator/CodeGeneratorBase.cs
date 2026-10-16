@@ -1,6 +1,6 @@
-namespace EasyForNetTool.Generator;
-
 using EasyForNetTool.Parsing;
+
+namespace EasyForNetTool.Generator;
 
 /// <summary>
 /// Base class for code generators that operate on a specific argument type.

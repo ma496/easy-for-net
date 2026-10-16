@@ -1,9 +1,9 @@
-namespace Backend.Features.Notifications.Endpoints.Notifications;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
 using Backend.Features.Notifications.Core.Push;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// POST endpoint that marks every notification the current user can see in the active scope as read: their

@@ -1,9 +1,9 @@
-namespace Backend.Tests.Features.Identity.Endpoints.Users;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Endpoints.Users;
 using Backend.Tests.Features.Tenancy;
 using Backend.Tests.Seeder;
+
+namespace Backend.Tests.Features.Identity.Endpoints.Users;
 
 /// <summary>
 /// Tests for the <see cref="UserCreateEndpoint"/> covering validation and successful user creation,

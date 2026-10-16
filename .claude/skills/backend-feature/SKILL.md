@@ -36,9 +36,9 @@ Features/<Feature>/
 ## 1. The feature module
 
 ```csharp
-namespace Backend.Features.Notifications;
-
 using Backend.Features.Notifications.Core;
+
+namespace Backend.Features.Notifications;
 
 /// <summary>
 /// Feature module that registers the notifications services with the DI container.

@@ -1,8 +1,8 @@
-namespace Backend.Features.Notifications.Endpoints.Notifications;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Notifications.Core;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// GET endpoint that returns a single notification by id, resolving its per-user read state.

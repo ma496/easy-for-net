@@ -1,8 +1,8 @@
-namespace Backend.Features.Identity.Core;
-
 using Backend.Attributes;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Identity.Core;
 
 /// <summary>
 /// Defines CRUD and lookup operations for <see cref="User"/> entities, including password management and role assignment.

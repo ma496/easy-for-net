@@ -1,6 +1,6 @@
-namespace Backend.Features.Identity.Core.Entities;
-
 using Backend.ShareData.Entities.Base;
+
+namespace Backend.Features.Identity.Core.Entities;
 
 /// <summary>
 /// Junction entity linking a <see cref="User"/> to a <see cref="Role"/>, representing the user's role memberships.

@@ -1,7 +1,7 @@
-namespace Backend.Features.Identity.Endpoints.Account;
-
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
+
+namespace Backend.Features.Identity.Endpoints.Account;
 
 /// <summary>
 /// Anonymous POST endpoint that marks a user's email as verified after validating the

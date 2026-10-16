@@ -1,6 +1,6 @@
-namespace Backend.Features.Tenancy.Core.Entities;
-
 using Backend.ShareData.Entities.Base;
+
+namespace Backend.Features.Tenancy.Core.Entities;
 
 /// <summary>
 /// One stored feature value, addressed by the provider that set it and the key that provider names.

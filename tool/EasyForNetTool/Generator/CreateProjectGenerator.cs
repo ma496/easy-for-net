@@ -1,5 +1,3 @@
-namespace EasyForNetTool.Generator;
-
 using System.Diagnostics;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -10,6 +8,8 @@ using EasyForNetTool.Parsing;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Formatting;
+
+namespace EasyForNetTool.Generator;
 
 /// <summary>
 /// Generates a complete EasyForNet project by cloning the template repository,

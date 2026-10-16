@@ -1,7 +1,7 @@
-namespace Backend.Features.Localization.Core;
-
 using System.Reflection;
 using System.Text.Json;
+
+namespace Backend.Features.Localization.Core;
 
 /// <summary>
 /// Loads the locale JSON files embedded in the assembly exactly once and answers every read against

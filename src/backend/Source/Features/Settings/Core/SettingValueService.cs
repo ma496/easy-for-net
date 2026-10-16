@@ -1,9 +1,9 @@
-namespace Backend.Features.Settings.Core;
-
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.DataProtection;
+
+namespace Backend.Features.Settings.Core;
 
 /// <summary>
 /// Resolves settings layer by layer and writes the acting scope's overrides. Internal to the

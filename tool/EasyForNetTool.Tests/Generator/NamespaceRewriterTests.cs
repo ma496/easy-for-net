@@ -1,7 +1,7 @@
-namespace EasyForNetTool.Tests.Generator;
-
 using EasyForNetTool.Generator;
 using Microsoft.CodeAnalysis.CSharp;
+
+namespace EasyForNetTool.Tests.Generator;
 
 /// <summary>
 /// Unit tests for the <see cref="NamespaceRewriter"/> syntax rewriter.

@@ -1,7 +1,7 @@
-namespace Backend.Features.Tenancy.Endpoints.Editions;
-
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Tenancy.Core.Entities;
+
+namespace Backend.Features.Tenancy.Endpoints.Editions;
 
 /// <summary>
 /// This endpoint that handles <c>PUT /editions/{id}</c> to rename a plan or change how it is described

@@ -1,6 +1,6 @@
-namespace Backend.Tests.Features.Notifications.Endpoints.Notifications;
-
 using Backend.Features.Notifications.Endpoints.Notifications;
+
+namespace Backend.Tests.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// Tests for the <see cref="NotificationDeleteEndpoint"/> covering deletion of user notifications, global notifications, and authorization.

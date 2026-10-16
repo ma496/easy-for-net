@@ -1,7 +1,7 @@
-namespace Backend.External.Email;
-
 using Backend.Features.Tenancy.Core;
 using Hangfire;
+
+namespace Backend.External.Email;
 
 /// <summary>
 /// Enqueues outgoing email messages onto the Hangfire job queue so that

@@ -1,6 +1,6 @@
-namespace EasyForNetTool.Tests.Extensions;
-
 using EasyForNetTool.Extensions;
+
+namespace EasyForNetTool.Tests.Extensions;
 
 /// <summary>
 /// Unit tests for the <see cref="StringExt"/> extension methods.

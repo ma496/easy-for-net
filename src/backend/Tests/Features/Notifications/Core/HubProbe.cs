@@ -1,5 +1,3 @@
-namespace Backend.Tests.Features.Notifications.Core;
-
 using System.Collections.Concurrent;
 using System.Text.Json.Serialization;
 using Backend.Features.Notifications.Core.Push;
@@ -8,6 +6,8 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+
+namespace Backend.Tests.Features.Notifications.Core;
 
 /// <summary>
 /// One real client connection to the notification hub, over the test server's in-memory WebSocket, that

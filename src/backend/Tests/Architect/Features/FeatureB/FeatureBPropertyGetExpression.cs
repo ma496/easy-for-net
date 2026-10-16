@@ -1,7 +1,7 @@
-namespace Backend.Tests.Architect.Features.FeatureB;
-
 using System.Diagnostics.CodeAnalysis;
 using Backend.Tests.Architect.Features.FeatureA;
+
+namespace Backend.Tests.Architect.Features.FeatureB;
 
 [SuppressMessage("Performance", "CA1822:Mark members as static")]
 /// <summary>

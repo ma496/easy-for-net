@@ -1,6 +1,6 @@
-namespace Backend.Features.Identity.Core;
-
 using Backend.Features.Settings.Core;
+
+namespace Backend.Features.Identity.Core;
 
 /// <summary>
 /// Declares the settings the Identity feature owns.

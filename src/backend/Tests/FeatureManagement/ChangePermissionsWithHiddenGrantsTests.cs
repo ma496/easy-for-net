@@ -1,6 +1,6 @@
-namespace Backend.Tests.FeatureManagement;
-
 using Backend.Features.Identity.Endpoints.Roles;
+
+namespace Backend.Tests.FeatureManagement;
 
 /// <summary>
 /// The role permission form is built from a catalogue the tenant's plan has already narrowed, so a

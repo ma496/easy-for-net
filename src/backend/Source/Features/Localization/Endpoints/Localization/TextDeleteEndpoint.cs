@@ -1,6 +1,6 @@
-namespace Backend.Features.Localization.Endpoints.Localization;
-
 using Backend.Features.Localization.Core;
+
+namespace Backend.Features.Localization.Endpoints.Localization;
 
 /// <summary>
 /// This endpoint that handles <c>DELETE /localization/texts</c> to remove the acting scope's override

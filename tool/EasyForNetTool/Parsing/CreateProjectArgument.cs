@@ -1,6 +1,6 @@
-namespace EasyForNetTool.Parsing;
-
 using System.Text.RegularExpressions;
+
+namespace EasyForNetTool.Parsing;
 
 /// <summary>
 /// Represents the parsed arguments for the "createproject" CLI command.

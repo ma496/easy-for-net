@@ -1,11 +1,12 @@
-namespace Backend.Tests.Features.Identity.Endpoints.Account;
-
 using System.Reflection;
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Identity.Endpoints.Users;
 using Backend.Tests.Features.Tenancy;
+using TokenRequest = Backend.Features.Identity.Endpoints.Account.TokenRequest;
+
+namespace Backend.Tests.Features.Identity.Endpoints.Account;
 
 /// <summary>
 /// Tests that authenticating is a platform-wide act needing no tenant, that a tenant may be named

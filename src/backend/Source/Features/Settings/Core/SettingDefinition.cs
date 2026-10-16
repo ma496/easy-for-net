@@ -1,9 +1,9 @@
-namespace Backend.Features.Settings.Core;
-
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
 using FluentValidation.Results;
+
+namespace Backend.Features.Settings.Core;
 
 /// <summary>
 /// One registered setting: its name, the class that carries its values, the properties that class

@@ -1,11 +1,11 @@
-namespace Backend.Tests.Features.Tenancy.Endpoints.Tenants;
-
 using Backend.ShareData.Entities;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Endpoints.Tenants;
 using Backend.Tests.Features.Identity;
+
+namespace Backend.Tests.Features.Tenancy.Endpoints.Tenants;
 
 /// <summary>
 /// Tests for the sessions a tenant administration change ends: removing a member, replacing a member's

@@ -1,6 +1,6 @@
-namespace Backend.Features.Identity.Core.Sessions;
-
 using StackExchange.Redis;
+
+namespace Backend.Features.Identity.Core.Sessions;
 
 /// <summary>
 /// Chooses the <see cref="ISessionStore"/> a host runs on: Redis everywhere except the test host, which

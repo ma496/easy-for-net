@@ -1,9 +1,9 @@
-namespace Backend.Tests.Features.Tenancy.Endpoints.Tenants;
-
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Roles;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Endpoints.Tenants;
+
+namespace Backend.Tests.Features.Tenancy.Endpoints.Tenants;
 
 /// <summary>
 /// Tests that a platform account is administered from platform scope only: a tenant's own

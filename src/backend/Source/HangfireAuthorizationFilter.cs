@@ -1,8 +1,8 @@
-namespace Backend;
-
 using System.Security.Claims;
 using Backend.Features.Identity.Core;
 using Hangfire.Dashboard;
+
+namespace Backend;
 
 /// <summary>
 /// Restricts the Hangfire dashboard to authenticated callers belonging to the platform tier, keeping

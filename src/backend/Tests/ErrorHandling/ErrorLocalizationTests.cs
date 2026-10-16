@@ -1,10 +1,10 @@
-namespace Backend.Tests.ErrorHandling;
-
 using System.Net.Http.Headers;
 using Backend.Features.Identity.Endpoints.Users;
 using Backend.Features.Localization.Core;
 using Backend.Tests.Features.Localization;
 using Backend.Tests.Seeder;
+
+namespace Backend.Tests.ErrorHandling;
 
 /// <summary>
 /// Tests that a business error's message - one carrying an <see cref="ErrorCodes"/> value with a

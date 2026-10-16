@@ -1,11 +1,11 @@
-namespace Backend.Tests.Features.Settings;
-
 using System.Text.Json.Nodes;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Settings.Core;
 using Backend.Features.Settings.Core.Entities;
 using Backend.Tests.Features.Tenancy;
 using Backend.Tests.Fakes;
+
+namespace Backend.Tests.Features.Settings;
 
 /// <summary>
 /// Base class for the settings suite. A tenant's own overrides are isolated by giving every test a

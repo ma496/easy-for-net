@@ -1,10 +1,10 @@
-namespace Backend.Tests.Architect;
-
 using System.Reflection;
 using Backend.Attributes;
 using Mono.Cecil;
 using NetArchTest.Rules;
 using TypeDefinition = Mono.Cecil.TypeDefinition;
+
+namespace Backend.Tests.Architect;
 
 /// <summary>
 /// Output of a feature dependency test containing success status, the failing feature namespace, and details of failed types.

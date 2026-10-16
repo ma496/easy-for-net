@@ -1,7 +1,7 @@
-namespace Backend.Features.Tenancy.Core.FeatureManagement;
-
 using System.Globalization;
 using System.Text.RegularExpressions;
+
+namespace Backend.Features.Tenancy.Core.FeatureManagement;
 
 /// <summary>
 /// Validates the textual form of a feature value before it is stored.

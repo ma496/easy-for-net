@@ -1,7 +1,7 @@
-namespace Backend.Tests.Features.Identity.Sessions;
-
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Tenancy.Endpoints.Tenants;
+
+namespace Backend.Tests.Features.Identity.Sessions;
 
 /// <summary>
 /// Tests for the account security stamp that ends a refresh chain across a credential change even when

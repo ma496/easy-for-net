@@ -1,6 +1,6 @@
-namespace Backend.Tests.Architect.Features.FeatureB;
-
 using Backend.Tests.Architect.Features.FeatureA;
+
+namespace Backend.Tests.Architect.Features.FeatureB;
 
 /// <summary>
 /// Test fixture class in FeatureB that has methods returning FeatureA types.

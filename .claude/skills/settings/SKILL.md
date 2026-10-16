@@ -67,9 +67,9 @@ and `<X>FeaturesProvider` it may already have. Providers are discovered by refle
 assembly (`SettingsFeature`), so there is nothing to register:
 
 ```csharp
-namespace Backend.Features.Invoices.Core;
-
 using Backend.Features.Settings.Core;
+
+namespace Backend.Features.Invoices.Core;
 
 /// <summary>Declares the settings the Invoices feature owns.</summary>
 public class InvoicesSettingsProvider : ISettingDefinitionProvider

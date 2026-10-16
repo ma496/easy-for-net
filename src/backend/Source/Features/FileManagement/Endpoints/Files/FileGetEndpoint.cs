@@ -1,7 +1,7 @@
-namespace Backend.Features.FileManagement.Endpoints.Files;
-
 using System.Diagnostics.CodeAnalysis;
 using Backend.Features.FileManagement.Core;
+
+namespace Backend.Features.FileManagement.Endpoints.Files;
 
 /// <summary>
 /// This endpoint exposes a GET operation to stream a previously uploaded file

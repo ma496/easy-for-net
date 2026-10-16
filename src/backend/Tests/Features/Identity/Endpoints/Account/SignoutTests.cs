@@ -1,7 +1,8 @@
-namespace Backend.Tests.Features.Identity.Endpoints.Account;
-
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Tests.Features.Tenancy;
+using TokenRequest = Backend.Features.Identity.Endpoints.Account.TokenRequest;
+
+namespace Backend.Tests.Features.Identity.Endpoints.Account;
 
 /// <summary>
 /// Tests that signing out ends the session outright: the tenant the session was acting in is recorded

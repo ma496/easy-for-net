@@ -1,6 +1,6 @@
-namespace EasyForNetTool;
-
 using EasyForNetTool.Parsing;
+
+namespace EasyForNetTool;
 
 /// <summary>
 /// Defines metadata about a CLI argument, including its type, names, description and available options.

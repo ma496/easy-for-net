@@ -1,8 +1,8 @@
-namespace Backend.Tests.Features.Tenancy.Core;
-
 using Backend.Exceptions;
 using Backend.Features.Notifications.Core;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Tests.Features.Tenancy.Core;
 
 /// <summary>
 /// Tests for tenant scope outside a user request - the standing of scheduled and queued work

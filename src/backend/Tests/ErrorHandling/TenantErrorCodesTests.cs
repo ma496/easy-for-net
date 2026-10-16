@@ -1,6 +1,6 @@
-namespace Backend.Tests.ErrorHandling;
-
 using System.Reflection;
+
+namespace Backend.Tests.ErrorHandling;
 
 /// <summary>
 /// Tests that the error-code catalogue declares a distinct code for each tenant failure, under the

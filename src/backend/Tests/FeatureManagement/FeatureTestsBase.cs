@@ -1,6 +1,6 @@
-namespace Backend.Tests.FeatureManagement;
-
 using Backend.Tests.Features.Tenancy;
+
+namespace Backend.Tests.FeatureManagement;
 
 /// <summary>
 /// Base class for the feature-management suite.

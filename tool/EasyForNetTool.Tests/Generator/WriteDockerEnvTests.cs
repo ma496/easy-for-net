@@ -1,6 +1,6 @@
-namespace EasyForNetTool.Tests.Generator;
-
 using EasyForNetTool.Generator;
+
+namespace EasyForNetTool.Tests.Generator;
 
 /// <summary>
 /// Unit tests for <see cref="CreateProjectGenerator.WriteDockerEnvAsync"/>, run against the template's own

@@ -1,6 +1,6 @@
-namespace Backend.Tests.Features.Identity.Sessions;
-
 using Backend.Features.Identity.Core.Sessions;
+
+namespace Backend.Tests.Features.Identity.Sessions;
 
 /// <summary>
 /// Tests for the semantics every <see cref="ISessionStore"/> promises - expiry, the per-user and

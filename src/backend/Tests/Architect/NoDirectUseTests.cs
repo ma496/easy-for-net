@@ -1,9 +1,9 @@
-namespace Backend.Tests.Architect;
-
 using Backend.Attributes;
 using Mono.Cecil;
 using NetArchTest.Rules;
 using TestResult = NetArchTest.Rules.TestResult;
+
+namespace Backend.Tests.Architect;
 
 /// <summary>
 /// Tests to verify that types decorated with <see cref="NoDirectUseAttribute"/> are not directly referenced by other types,

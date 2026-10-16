@@ -1,6 +1,6 @@
-namespace Backend.Permissions;
-
 using System.Text.Json.Serialization;
+
+namespace Backend.Permissions;
 
 /// <summary>
 /// Describes a single permission and supports a tree of child permissions

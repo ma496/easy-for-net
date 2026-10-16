@@ -1,6 +1,6 @@
-namespace Backend.Features.Identity.Core.Entities;
-
 using Backend.ShareData.Entities.Base;
+
+namespace Backend.Features.Identity.Core.Entities;
 
 /// <summary>
 /// A named, grantable action in the system. Permissions are assigned to roles and ultimately to users through those roles.

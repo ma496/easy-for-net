@@ -1,5 +1,3 @@
-namespace Backend.ShareData;
-
 using System.Linq.Expressions;
 using Backend.ShareData.Entities;
 using Backend.ShareData.Entities.Base;
@@ -12,6 +10,8 @@ using Backend.Features.Settings.Core.Entities;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+
+namespace Backend.ShareData;
 
 /// <summary>
 /// Central EF Core <see cref="DbContext"/> for the backend. Exposes the

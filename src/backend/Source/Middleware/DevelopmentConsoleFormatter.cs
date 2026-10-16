@@ -1,7 +1,7 @@
-namespace Backend.Middleware;
-
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
+
+namespace Backend.Middleware;
 
 /// <summary>
 /// The development console format: an Information line is its message alone, as the web app's dev

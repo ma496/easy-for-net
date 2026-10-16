@@ -1,8 +1,8 @@
-namespace Backend.Tests.Features.Settings.Endpoints.Settings;
-
 using System.Text.Json.Nodes;
 using Backend.Features.Settings.Core;
 using Backend.Features.Settings.Endpoints.Settings;
+
+namespace Backend.Tests.Features.Settings.Endpoints.Settings;
 
 /// <summary>
 /// Tests for <see cref="SettingUpdateEndpoint"/>: a platform write reaching every tenant that did not

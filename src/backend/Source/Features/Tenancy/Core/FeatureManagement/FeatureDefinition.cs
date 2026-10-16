@@ -1,6 +1,6 @@
-namespace Backend.Features.Tenancy.Core.FeatureManagement;
-
 using System.Text.Json.Serialization;
+
+namespace Backend.Features.Tenancy.Core.FeatureManagement;
 
 /// <summary>
 /// Describes a single feature - one thing a tenant's plan either grants or withholds - and supports a

@@ -1,7 +1,8 @@
-namespace Backend.Tests.Features.Identity.Endpoints.Account;
-
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Tests.Features.Tenancy;
+using TokenRequest = Backend.Features.Identity.Endpoints.Account.TokenRequest;
+
+namespace Backend.Tests.Features.Identity.Endpoints.Account;
 
 /// <summary>
 /// Tests for password changes: that the new password is what authenticates afterwards, that the old

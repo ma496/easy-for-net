@@ -7,7 +7,7 @@
     "coAuthor": null,
     "conventions": [
       "Features are isolated vertical slices: a type under Features/X never references a type under Features/Y unless that type is marked [AllowOutside]. Cross-feature access goes through a service interface, never through another feature's entities — the architecture tests fail the gate otherwise.",
-      "One endpoint is one file: the Endpoint, its Request, Validator, Response/DTOs and the Mapperly mapper live together. Global usings live in Meta.cs, and every C# file opens with its file-scoped namespace, then a blank line, then its using directives.",
+      "One endpoint is one file: the Endpoint, its Request, Validator, Response/DTOs and the Mapperly mapper live together. Global usings live in Meta.cs, and every C# file opens with its using directives, then a blank line, then its file-scoped namespace.",
       "A new permission is three edits that must agree: the constant in Permissions/Allow.cs, its definition in the feature's PermissionsProvider, and the mirror in src/frontend/web/allow.ts. A new feature (entitlement) is the same triple: FeatureNames.cs, the slice's FeaturesProvider, and feature-names.ts.",
       "An EF Core query reads only what it uses: a query whose rows are not modified and saved is AsNoTracking() and projects with Select (or a Mapperly ProjectTo) to the columns the response needs — never a whole entity loaded with Include and mapped afterwards; existence is AnyAsync, a count is CountAsync. A query that updates an entity loads it tracked, with no Include the update does not need. Every Skip/Take follows an OrderBy ending on a unique column (Process adds Id as tie-breaker); in Development and Testing an unordered row limit throws."
     ]
@@ -235,9 +235,9 @@
       {
         "paths": ["/src/backend/.*\\.cs$", "/tool/.*\\.cs$"],
         "except": ["/Migrations/", "/Program\\.cs$", "/NamespaceRewriterTests\\.cs$"],
-        "forbid": "^\\s*using\\s+[\\w.]+\\s*;(?=[\\s\\S]*^namespace\\s)",
+        "forbid": "(?<=^namespace\\s+[\\w.]+\\s*;[\\s\\S]*)^using\\s+(?:static\\s+)?[\\w.@]+(?:\\s*=\\s*[^;\\n]+)?\\s*;",
         "flags": "m",
-        "message": "a using directive comes before the namespace. Every C# file opens with its file-scoped namespace (`namespace X;`), then a blank line, then its using directives"
+        "message": "a using directive comes after the namespace. Every C# file opens with its using directives, then a blank line, then its file-scoped namespace (`namespace X;`)"
       },
       {
         "paths": ["/src/frontend/web/.*\\.tsx?$"],

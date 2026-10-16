@@ -1,8 +1,8 @@
-namespace Backend.Processors;
-
 using Backend.Features.Localization.Core;
 using Backend.Middleware;
 using Npgsql;
+
+namespace Backend.Processors;
 
 /// <summary>
 /// Global FastEndpoints post-processor that converts unhandled exceptions thrown

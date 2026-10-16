@@ -1,6 +1,6 @@
-namespace Backend.Middleware;
-
 using Backend.Features.Localization.Core;
+
+namespace Backend.Middleware;
 
 /// <summary>
 /// Answers 503 <c>sessionStoreUnavailable</c> for a request whose session could not be looked up,

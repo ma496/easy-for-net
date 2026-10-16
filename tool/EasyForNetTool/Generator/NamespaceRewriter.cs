@@ -1,9 +1,9 @@
-namespace EasyForNetTool.Generator;
-
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+
+namespace EasyForNetTool.Generator;
 
 /// <summary>
 /// A Roslyn syntax rewriter that replaces occurrences of an old root namespace with a new one

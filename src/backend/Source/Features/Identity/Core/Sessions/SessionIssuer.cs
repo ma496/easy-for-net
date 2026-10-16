@@ -1,8 +1,8 @@
-namespace Backend.Features.Identity.Core.Sessions;
-
 using System.Security.Cryptography;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Identity.Core.Sessions;
 
 /// <summary>
 /// Mints a session: reads what the account may do in the tenant it is about to act in, stores that as a

@@ -1,6 +1,6 @@
-namespace Backend.Features.Tenancy.Endpoints.Editions;
-
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Tenancy.Endpoints.Editions;
 
 /// <summary>
 /// This endpoint that handles <c>GET /editions</c> to return a paginated and searchable list of the

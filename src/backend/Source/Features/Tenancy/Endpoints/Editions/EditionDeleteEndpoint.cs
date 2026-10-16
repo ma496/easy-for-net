@@ -1,7 +1,7 @@
-namespace Backend.Features.Tenancy.Endpoints.Editions;
-
 using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Tenancy.Core;
+
+namespace Backend.Features.Tenancy.Endpoints.Editions;
 
 /// <summary>
 /// This endpoint that handles <c>DELETE /editions/{id}</c> to retire a plan.

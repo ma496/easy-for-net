@@ -1,7 +1,7 @@
-namespace EasyForNetTool.Generator;
-
 using System.Net;
 using System.Net.Sockets;
+
+namespace EasyForNetTool.Generator;
 
 /// <summary>
 /// The host ports a generated project's development PostgreSQL and Redis are published on.

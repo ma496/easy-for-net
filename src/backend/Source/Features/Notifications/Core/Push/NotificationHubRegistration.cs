@@ -1,5 +1,3 @@
-namespace Backend.Features.Notifications.Core.Push;
-
 using System.Text.Json.Serialization;
 using Backend.Features.Identity.Core.Sessions;
 using Backend.Settings;
@@ -7,6 +5,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.Net.Http.Headers;
 using StackExchange.Redis;
+
+namespace Backend.Features.Notifications.Core.Push;
 
 /// <summary>
 /// Registers and maps the notification hub. Called from <c>Program.cs</c> rather than from the slice's

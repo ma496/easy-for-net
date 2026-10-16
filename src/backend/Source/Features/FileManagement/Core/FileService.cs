@@ -1,9 +1,9 @@
-namespace Backend.Features.FileManagement.Core;
-
 using Backend.Features.Tenancy.Core;
 using Backend.Features.FileManagement.Core.Entities;
 using Backend.Features.Identity.Core;
 using Microsoft.AspNetCore.StaticFiles;
+
+namespace Backend.Features.FileManagement.Core;
 
 /// <summary>
 /// Application-level service for uploading, downloading, and deleting files. Acts as a

@@ -1,6 +1,6 @@
-namespace Backend.Features.Notifications.Core;
-
 using Backend.Features.Notifications.Core.Entities;
+
+namespace Backend.Features.Notifications.Core;
 
 /// <summary>
 /// The one definition of which notifications a caller can see in the scope they act in, so that every

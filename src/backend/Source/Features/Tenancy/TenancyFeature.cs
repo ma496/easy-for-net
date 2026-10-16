@@ -1,8 +1,8 @@
-namespace Backend.Features.Tenancy;
-
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Tenancy.Core.FeatureManagement;
 using Backend.Features.Tenancy.Core.FeatureManagement.Providers;
+
+namespace Backend.Features.Tenancy;
 
 /// <summary>
 /// Feature module that registers the tenancy services with the DI container.

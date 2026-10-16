@@ -1,6 +1,6 @@
-namespace Backend.Features.FileManagement.Core.Entities.Configuration;
-
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Backend.Features.FileManagement.Core.Entities.Configuration;
 
 /// <summary>
 /// EF Core entity configuration for <see cref="StoredFile"/>, mapping it to the

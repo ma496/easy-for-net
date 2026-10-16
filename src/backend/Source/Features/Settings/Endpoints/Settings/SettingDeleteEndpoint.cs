@@ -1,6 +1,6 @@
-namespace Backend.Features.Settings.Endpoints.Settings;
-
 using Backend.Features.Settings.Core;
+
+namespace Backend.Features.Settings.Endpoints.Settings;
 
 /// <summary>
 /// This endpoint that handles <c>DELETE /settings/{name}</c> to remove the acting scope's own overrides

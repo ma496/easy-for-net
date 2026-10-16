@@ -1,9 +1,9 @@
-namespace Backend.Tests.Features.Identity.Core;
-
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Identity.Endpoints.Account;
 using Backend.Features.Tenancy.Endpoints.Tenants;
 using Backend.Tests.Features.Tenancy;
+
+namespace Backend.Tests.Features.Identity.Core;
 
 /// <summary>
 /// Tests the one rule every authorization decision now rests on: a session carries only the

@@ -1,7 +1,7 @@
-namespace Backend.Features.Identity.Core.Sessions;
-
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+
+namespace Backend.Features.Identity.Core.Sessions;
 
 /// <summary>
 /// Hooks session validation into both authentication handlers, so a bearer token and an auth cookie

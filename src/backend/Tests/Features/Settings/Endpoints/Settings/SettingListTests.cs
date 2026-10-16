@@ -1,7 +1,7 @@
-namespace Backend.Tests.Features.Settings.Endpoints.Settings;
-
 using System.Text.Json.Nodes;
 using Backend.Features.Settings.Endpoints.Settings;
+
+namespace Backend.Tests.Features.Settings.Endpoints.Settings;
 
 /// <summary>
 /// Tests for <see cref="SettingListEndpoint"/>: every declared setting as the acting scope resolves it,

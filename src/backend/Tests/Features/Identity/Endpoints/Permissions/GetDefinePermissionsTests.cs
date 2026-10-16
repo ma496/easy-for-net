@@ -1,8 +1,8 @@
-namespace Backend.Tests.Features.Identity.Endpoints.Permissions;
-
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Endpoints.Permissions;
 using Backend.Tests.Features.Tenancy;
+
+namespace Backend.Tests.Features.Identity.Endpoints.Permissions;
 
 /// <summary>
 /// Tests for the <see cref="GetDefinePermissionsEndpoint"/> covering the catalogue a caller is offered:
