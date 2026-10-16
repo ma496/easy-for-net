@@ -1,5 +1,6 @@
 using Backend.Features.Identity.Core;
 using Backend.Features.Tenancy.Core;
+using Backend.Features.Tenancy.Core.Hosting;
 
 namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
@@ -28,7 +29,8 @@ namespace Backend.Features.Tenancy.Endpoints.Tenants;
 /// </para>
 /// </remarks>
 sealed class TenantExitEndpoint(ITenantAuthorizationService tenantAuthorizationService,
-                                ICurrentUserService currentUserService) : EndpointWithoutRequest<TenantExitResponse>
+                                ICurrentUserService currentUserService,
+                                ITenantHostResolver tenantHostResolver) : EndpointWithoutRequest<TenantExitResponse>
 {
     public override void Configure()
     {
@@ -45,6 +47,13 @@ sealed class TenantExitEndpoint(ITenantAuthorizationService tenantAuthorizationS
             return;
         }
 
+        // On a tenant or platform host the host decides the scope: leaving a tenant for platform scope is
+        // signing in on the platform host. With host resolution off (TenantHost.None) exit is unchanged.
+        if (tenantHostResolver.Resolve(HttpContext).IsResolved)
+        {
+            this.ThrowError(ErrorCodes.TenantHostMismatch, StatusCodes.Status403Forbidden);
+        }
+
         if (!currentUserService.IsPlatform())
         {
             await Send.ForbiddenAsync(cancellationToken);
@@ -55,7 +64,7 @@ sealed class TenantExitEndpoint(ITenantAuthorizationService tenantAuthorizationS
         // re-signed without a tenant claim, a fresh access/refresh pair is issued and "no tenant" is
         // recorded on the refresh-token row, so neither this session nor a later refresh of it can act
         // in the tenant just left.
-        var session = await tenantAuthorizationService.ReissueSessionAsync(userId, null, cancellationToken);
+        var session = await tenantAuthorizationService.ReissueSessionAsync(userId, null, null, cancellationToken);
 
         await Send.ResponseAsync(new TenantExitResponse { Session = session }, cancellation: cancellationToken);
     }

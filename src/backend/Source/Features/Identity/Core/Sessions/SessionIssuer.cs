@@ -16,10 +16,14 @@ public interface ISessionIssuer
     /// </summary>
     /// <param name="user">The account the session belongs to.</param>
     /// <param name="tenantId">The tenant the session acts in, or <see langword="null"/> for none.</param>
+    /// <param name="tenantIdentifier">
+    /// That tenant's normalized identifier, taken from the read the caller already made to authorize
+    /// entering it; ignored when <paramref name="tenantId"/> is <see langword="null"/>.
+    /// </param>
     /// <param name="cancellationToken">Token used to cancel the reads and the write.</param>
     /// <returns>The stored session.</returns>
     /// <exception cref="SessionStoreUnavailableException">The session could not be stored.</exception>
-    Task<SessionRecord> IssueAsync(User user, Guid? tenantId, CancellationToken cancellationToken = default);
+    Task<SessionRecord> IssueAsync(User user, Guid? tenantId, string? tenantIdentifier, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -34,7 +38,7 @@ public sealed class SessionIssuer(AppDbContext dbContext,
                                   IOptions<AuthSetting> authSetting) : ISessionIssuer
 {
     /// <inheritdoc />
-    public async Task<SessionRecord> IssueAsync(User user, Guid? tenantId, CancellationToken cancellationToken = default)
+    public async Task<SessionRecord> IssueAsync(User user, Guid? tenantId, string? tenantIdentifier, CancellationToken cancellationToken = default)
     {
         var grants = await SessionGrants.ReadAsync(dbContext, permissionFeatureFilter, user.Id, tenantId, user.IsPlatform, cancellationToken);
 
@@ -47,6 +51,7 @@ public sealed class SessionIssuer(AppDbContext dbContext,
             Email = user.Email,
             IsPlatform = user.IsPlatform,
             TenantId = tenantId,
+            TenantIdentifier = tenantId is null ? null : tenantIdentifier?.Trim().ToLowerInvariant(),
             Roles = grants.Roles,
             Permissions = grants.Permissions,
             SecurityStamp = user.SecurityStamp,

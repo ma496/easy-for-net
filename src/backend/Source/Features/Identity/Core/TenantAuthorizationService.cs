@@ -208,9 +208,13 @@ public interface ITenantAuthorizationService
     /// </summary>
     /// <param name="userId">The account whose session is re-established.</param>
     /// <param name="tenantId">The tenant the session is to act in, or <see langword="null"/> for none.</param>
+    /// <param name="tenantIdentifier">
+    /// That tenant's normalized identifier, from the read the caller made to authorize entering it, so
+    /// the session records it without a read of its own; <see langword="null"/> with no tenant.
+    /// </param>
     /// <param name="cancellationToken">Token used to cancel the reads.</param>
     /// <returns>The new session material, which a JWT client replaces its token pair with and a cookie client ignores.</returns>
-    Task<TenantSessionDto> ReissueSessionAsync(Guid userId, Guid? tenantId, CancellationToken cancellationToken = default);
+    Task<TenantSessionDto> ReissueSessionAsync(Guid userId, Guid? tenantId, string? tenantIdentifier, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -608,7 +612,7 @@ public class TenantAuthorizationService(AppDbContext dbContext,
     }
 
     /// <inheritdoc />
-    public async Task<TenantSessionDto> ReissueSessionAsync(Guid userId, Guid? tenantId, CancellationToken cancellationToken = default)
+    public async Task<TenantSessionDto> ReissueSessionAsync(Guid userId, Guid? tenantId, string? tenantIdentifier, CancellationToken cancellationToken = default)
     {
         var account = await userService.GetByIdAsync(userId)
             ?? throw new InvalidOperationException($"A session cannot be re-established for the unknown account '{userId}'.");
@@ -640,7 +644,7 @@ public class TenantAuthorizationService(AppDbContext dbContext,
         // established and never copied from the session it replaces: the role assignments and the
         // roles' permissions as they stand at this moment decide it, so authority the caller held in
         // the tenant they acted in a moment ago is not carried into this one.
-        var session = await sessionIssuer.IssueAsync(account, tenantId, cancellationToken);
+        var session = await sessionIssuer.IssueAsync(account, tenantId, tenantIdentifier, cancellationToken);
 
         // The session being replaced is deleted once its successor exists, so the access token the caller
         // switched with stops working at once instead of remaining a second way in to the tenant it left.

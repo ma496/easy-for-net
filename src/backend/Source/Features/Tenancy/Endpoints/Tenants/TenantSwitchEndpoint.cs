@@ -2,6 +2,7 @@ using Backend.ShareData.Entities;
 using Backend.Features.Identity.Core;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
+using Backend.Features.Tenancy.Core.Hosting;
 
 namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
@@ -51,7 +52,8 @@ namespace Backend.Features.Tenancy.Endpoints.Tenants;
 sealed class TenantSwitchEndpoint(AppDbContext dbContext,
                                   ITenantMembershipService tenantMembershipService,
                                   ITenantAuthorizationService tenantAuthorizationService,
-                                  ICurrentUserService currentUserService) : Endpoint<TenantSwitchRequest, TenantSwitchResponse>
+                                  ICurrentUserService currentUserService,
+                                  ITenantHostResolver tenantHostResolver) : Endpoint<TenantSwitchRequest, TenantSwitchResponse>
 {
     public override void Configure()
     {
@@ -68,6 +70,14 @@ sealed class TenantSwitchEndpoint(AppDbContext dbContext,
             return;
         }
 
+        // On a tenant or platform host the host decides the scope, so a session moves between tenants by
+        // signing in on the other host rather than by switching where it stands. With host resolution off
+        // (TenantHost.None) switching is unchanged.
+        if (tenantHostResolver.Resolve(HttpContext).IsResolved)
+        {
+            this.ThrowError(ErrorCodes.TenantHostMismatch, StatusCodes.Status403Forbidden);
+        }
+
         // A tenant is the scope rather than something inside one, so this read is restricted by
         // nothing but the soft-delete filter: a deleted tenant is absent here exactly as a tenant that
         // never existed is, which is what makes the one selection failure indistinguishable from the
@@ -76,7 +86,7 @@ sealed class TenantSwitchEndpoint(AppDbContext dbContext,
         var tenant = await dbContext.Tenants
             .AsNoTracking()
             .Where(candidate => candidate.Id == request.TenantId)
-            .Select(candidate => new { candidate.Id, candidate.Name, candidate.Identifier, candidate.Status })
+            .Select(candidate => new { candidate.Id, candidate.Name, candidate.Identifier, candidate.IdentifierNormalized, candidate.Status })
             .FirstOrDefaultAsync(cancellationToken);
         if (tenant == null)
         {
@@ -101,7 +111,7 @@ sealed class TenantSwitchEndpoint(AppDbContext dbContext,
         // is re-signed, a fresh access/refresh pair is issued and the selected tenant is recorded on
         // the refresh-token row, so neither this session nor a later refresh of it can act in the
         // tenant the caller was acting in before.
-        var session = await tenantAuthorizationService.ReissueSessionAsync(userId, tenant.Id, cancellationToken);
+        var session = await tenantAuthorizationService.ReissueSessionAsync(userId, tenant.Id, tenant.IdentifierNormalized, cancellationToken);
 
         var response = new TenantSwitchResponse
         {
