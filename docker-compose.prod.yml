@@ -80,8 +80,9 @@ services:
     build:
       context: ./src/frontend/web
       args:
-        # Inlined into the browser bundle at build time: change it and rebuild
-        NEXT_PUBLIC_API_URL: ${PUBLIC_URL}/api
+        # Inlined into the browser bundle at build time. Relative, so the browser reaches the API
+        # through the proxy on whatever host it is on
+        NEXT_PUBLIC_API_URL: /api
         NEXT_PUBLIC_APP_ENV: production
     restart: unless-stopped
     depends_on:

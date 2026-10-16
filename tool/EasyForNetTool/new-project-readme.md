@@ -39,14 +39,18 @@ npm run dev
 
 It starts PostgreSQL and Redis with Docker (`docker-compose.yml`) when they are not already answering,
 installs the web app's packages when they are missing, and runs the API (http://localhost:5000, Swagger
-at `/swagger`) and the web app (http://localhost:3000) together in one terminal. The web app starts only
-once the API answers on `/health`, so its first page never meets an API still building. **Ctrl+C stops both**; the
-containers keep running until `docker compose down` (which keeps the data).
+at `/swagger`) and the web app together in one terminal. The web app (`next dev` on :3001) sits behind a
+dev proxy on :3000 (`scripts/dev-proxy.mjs`) that, like Caddy in production, sends `/api`, `/hubs`,
+`/hangfire` and `/health` to the API and everything else to Next, so the browser reaches the API on its
+own origin. Open http://app.localhost:3000 or http://default.localhost:3000 (http://localhost:3000 works
+too). The web app starts only once the API answers on `/health`, so its first page never meets an API
+still building. **Ctrl+C stops everything**; the containers keep running until `docker compose down` (which
+keeps the data).
 
 ```sh
 npm run dev -- --no-docker      # use the PostgreSQL and Redis you already run
-npm run dev -- --api-only       # services + API, no web app
-npm run dev -- --web-only       # the web app alone, against an API started elsewhere
+npm run dev -- --api-only       # services + API, no web app and no proxy
+npm run dev -- --web-only       # the web app and the proxy, against an API started elsewhere on :5000
 npm run stop:api                # stop an API left running from this checkout (it locks bin/ on Windows)
 ```
 
@@ -55,7 +59,7 @@ To run the pieces separately instead:
 ```sh
 docker compose up -d                                      # PostgreSQL (postgres/postgres) and Redis (password "redis")
 dotnet run --project src/backend/Source                   # the API
-cd src/frontend/web && npm install && npm run dev         # the web app
+npm run dev -- --web-only                                 # the web app behind the dev proxy on :3000
 ```
 
 Development and Testing apply migrations on startup. If you use your own PostgreSQL or Redis instead
