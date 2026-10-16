@@ -267,7 +267,7 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
         // the tenant travels on the refresh-token row and is copied onto its successor, so a renewal that
         // did not ask would hand the same tenant back for as long as the session was refreshed.
         var sessionTenantId = ReadSessionTenant();
-        var actingTenantId = await UsableSessionTenantAsync(user, sessionTenantId);
+        var (actingTenantId, actingTenantIdentifier) = await UsableSessionTenantAsync(user, sessionTenantId);
 
         // Held to the sign-in setting of the tenant the renewed session will act in - or the platform's
         // when it acts in none, the tenant having been dropped above - read as it stands now, so a change
@@ -281,7 +281,7 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
         // to, which is not the same question as whether it may be acted in today - so a tenant that comes
         // back into service, or a membership that is restored, is picked up by the very next renewal
         // instead of costing the caller a fresh sign-in.
-        var session = await _sessionIssuer.IssueAsync(user, actingTenantId);
+        var session = await _sessionIssuer.IssueAsync(user, actingTenantId, actingTenantIdentifier);
 
         // The renewal replaces the session it renews: the old one is deleted once its successor exists, so
         // an access token still naming it stops working at once. The refresh-token row was already consumed
@@ -310,7 +310,7 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
     /// </summary>
     /// <param name="user">The account the session belongs to.</param>
     /// <param name="tenantId">The tenant the expiring session carried, or <see langword="null"/> for none.</param>
-    /// <returns>The tenant to renew into, or <see langword="null"/> when it may no longer be acted in.</returns>
+    /// <returns>The tenant to renew into and its normalized identifier, or both <see langword="null"/> when it may no longer be acted in.</returns>
     /// <remarks>
     /// A tenant that may no longer be acted in drops out of the session's claims rather than failing the
     /// renewal. The account keeps its session and is simply left acting in no tenant, which for an ordinary
@@ -325,22 +325,26 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
     /// makes a deleted tenant read as absent.
     /// </para>
     /// </remarks>
-    private async Task<Guid?> UsableSessionTenantAsync(User user, Guid? tenantId)
+    private async Task<(Guid? Id, string? Identifier)> UsableSessionTenantAsync(User user, Guid? tenantId)
     {
         if (tenantId is not { } sessionTenantId)
         {
-            return null;
+            return (null, null);
         }
 
-        var isUsable = await _dbContext.Tenants
+        // The identifier is read by the same query that settles usability, so recording it on the renewed
+        // session costs no read of its own.
+        var identifier = await _dbContext.Tenants
             .AsNoTracking()
             .AcrossAllTenants()
-            .AnyAsync(tenant => tenant.Id == sessionTenantId
-                                && tenant.Status == TenantStatus.Active
-                                && _dbContext.TenantMemberships.AcrossAllTenants()
-                                    .Any(membership => membership.TenantId == sessionTenantId && membership.UserId == user.Id));
+            .Where(tenant => tenant.Id == sessionTenantId
+                             && tenant.Status == TenantStatus.Active
+                             && _dbContext.TenantMemberships.AcrossAllTenants()
+                                 .Any(membership => membership.TenantId == sessionTenantId && membership.UserId == user.Id))
+            .Select(tenant => tenant.IdentifierNormalized)
+            .FirstOrDefaultAsync();
 
-        return isUsable ? sessionTenantId : null;
+        return identifier is null ? (null, null) : (sessionTenantId, identifier);
     }
 
     /// <summary>

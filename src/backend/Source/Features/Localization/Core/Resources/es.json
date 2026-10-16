@@ -244,6 +244,8 @@
       "notTenantMember": "No es miembro de este inquilino",
       "noActiveTenant": "No hay ningún inquilino activo seleccionado",
       "tenantRequired": "Indica un inquilino para iniciar sesión.",
+      "tenantHostMismatch": "Esta sesión pertenece a otra dirección. Vuelve a iniciar sesión en esta.",
+      "tenantHostRequired": "Inicia sesión en la dirección propia de tu organización.",
       "tenantIdentifierAlreadyExists": "El identificador del inquilino ya existe",
       "duplicateTenantMembership": "Este usuario ya es miembro de este inquilino",
       "lastTenantAdministrator": "No se puede quitar al último administrador del inquilino",

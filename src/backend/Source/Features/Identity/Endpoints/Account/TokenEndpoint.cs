@@ -1,4 +1,5 @@
 using Backend.Features.Tenancy.Core;
+using Backend.Features.Tenancy.Core.Hosting;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Core.Sessions;
@@ -36,7 +37,13 @@ namespace Backend.Features.Identity.Endpoints.Account;
 /// standing inside a tenant: a platform account works in one only once it has been made a member.
 /// </para>
 /// </remarks>
-sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, ISessionIssuer sessionIssuer, ISettingProvider settingProvider, IOptions<AuthSetting> authSetting) : Endpoint<TokenRequest, TokenResponse>
+sealed class TokenEndpoint(IUserService userService,
+                           AppDbContext dbContext,
+                           ITenantService tenantService,
+                           ITenantHostResolver tenantHostResolver,
+                           ISessionIssuer sessionIssuer,
+                           ISettingProvider settingProvider,
+                           IOptions<AuthSetting> authSetting) : Endpoint<TokenRequest, TokenResponse>
 {
     public override void Configure()
     {
@@ -61,9 +68,7 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, ISe
         // nor written to: they wait untouched for the account to be reactivated.
         if (!user.IsActive)
             this.ThrowError(ErrorCodes.UserNotActive);
-        var tenantId = string.IsNullOrWhiteSpace(req.TenantIdentifier)
-            ? await ResolveUnnamedTenantAsync(user, c)
-            : await ResolveNamedTenantAsync(user, req.TenantIdentifier, c);
+        var (tenantId, tenantIdentifier) = await ResolveTenantAsync(user, req.TenantIdentifier, c);
 
         // Whether the email must be verified is the setting of the tenant being entered - its own override,
         // else the platform's, else the default - so it is asked only once that tenant is known. A platform
@@ -81,7 +86,7 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, ISe
         // its grants narrowed to the scope that tenant puts it in. It is what every request made with
         // the token below is authorized on, until the session is renewed, switched, revoked or replaced
         // by a new sign-in. The token and the cookie carry only the account and the session's identifier.
-        var session = await sessionIssuer.IssueAsync(user, tenantId, c);
+        var session = await sessionIssuer.IssueAsync(user, tenantId, tenantIdentifier, c);
         TokenService.RecordSessionId(HttpContext, session.SessionId, user.SecurityStamp);
 
         var claims = SessionClaims.ForToken(user.Id, session.SessionId);
@@ -115,6 +120,59 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, ISe
     }
 
     /// <summary>
+    /// The tenant the session starts in, decided first by the host the request arrived on and then, when
+    /// the host names nothing, by the request and the account's memberships exactly as before hosts
+    /// named tenants.
+    /// </summary>
+    /// <param name="user">The account that has just authenticated.</param>
+    /// <param name="requestedIdentifier">The tenant identifier the request carries, if any.</param>
+    /// <param name="cancellationToken">Token used to cancel the reads.</param>
+    /// <returns>The tenant to start the session in and its normalized identifier, or both <see langword="null"/> for none.</returns>
+    /// <remarks>
+    /// The host chooses, it never grants. On a tenant host the tenant is the host's, entered through the
+    /// same named-tenant path a typed identifier takes, with its existence, membership and suspension
+    /// checks - platform accounts included. A request that names a different tenant beside it is refused
+    /// with <c>tenantHostMismatch</c> rather than one of the two being picked silently. On the platform
+    /// host a platform account signs in with no tenant; a tenant named there is refused with
+    /// <c>tenantHostMismatch</c> (entering a tenant is signing in on its host), and an ordinary account,
+    /// which has nothing to do in platform scope, with <c>tenantHostRequired</c>.
+    /// </remarks>
+    private async Task<(Guid? Id, string? Identifier)> ResolveTenantAsync(User user, string? requestedIdentifier, CancellationToken cancellationToken)
+    {
+        var host = tenantHostResolver.Resolve(HttpContext);
+        var named = !string.IsNullOrWhiteSpace(requestedIdentifier);
+
+        switch (host.Kind)
+        {
+            case TenantHostKind.Tenant:
+                if (named && !string.Equals(requestedIdentifier!.Trim(), host.Identifier, StringComparison.OrdinalIgnoreCase))
+                {
+                    this.ThrowError(x => x.TenantIdentifier, ErrorCodes.TenantHostMismatch);
+                }
+
+                return await ResolveNamedTenantAsync(user, host.Identifier!, cancellationToken);
+
+            case TenantHostKind.Platform:
+                if (named)
+                {
+                    this.ThrowError(x => x.TenantIdentifier, ErrorCodes.TenantHostMismatch);
+                }
+
+                if (!user.IsPlatform)
+                {
+                    this.ThrowError(ErrorCodes.TenantHostRequired);
+                }
+
+                return (null, null);
+
+            default:
+                return named
+                    ? await ResolveNamedTenantAsync(user, requestedIdentifier!, cancellationToken)
+                    : await ResolveUnnamedTenantAsync(user, cancellationToken);
+        }
+    }
+
+    /// <summary>
     /// The tenant the session starts in when the request named none: none at all for a platform
     /// account, and otherwise the single tenant the account holds an active membership of. A membership counts only while its row lives and its tenant
     /// exists and is not suspended, so an account whose only membership is of a suspended tenant has
@@ -122,7 +180,7 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, ISe
     /// </summary>
     /// <param name="user">The account that has just authenticated.</param>
     /// <param name="cancellationToken">Token used to cancel the read.</param>
-    /// <returns>The tenant to start the session in, or <see langword="null"/> for a platform account.</returns>
+    /// <returns>The tenant to start the session in and its normalized identifier, or both <see langword="null"/> for a platform account.</returns>
     /// <remarks>
     /// An ordinary account with anything other than exactly one such membership is refused rather than
     /// signed in without a tenant. Its permissions would be narrowed to a scope it exercises nothing
@@ -141,31 +199,33 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, ISe
     /// membership places nobody and a deleted tenant is not a tenant to start in.
     /// </para>
     /// </remarks>
-    private async Task<Guid?> ResolveUnnamedTenantAsync(User user, CancellationToken cancellationToken)
+    private async Task<(Guid? Id, string? Identifier)> ResolveUnnamedTenantAsync(User user, CancellationToken cancellationToken)
     {
         if (user.IsPlatform)
         {
-            return null;
+            return (null, null);
         }
 
-        var tenantIds = await dbContext.TenantMemberships
+        // Read from the tenant side, so each tenant appears once however many membership rows name it, and
+        // its identifier comes with it for the session to record.
+        var tenants = await dbContext.Tenants
             .AsNoTracking()
             .AcrossAllTenants()
-            .Where(membership => membership.UserId == user.Id
-                                 && dbContext.Tenants.Any(tenant => tenant.Id == membership.TenantId && tenant.Status == TenantStatus.Active))
-            .Select(membership => membership.TenantId)
-            .Distinct()
-            .OrderBy(tenantId => tenantId)
+            .Where(tenant => tenant.Status == TenantStatus.Active
+                             && dbContext.TenantMemberships.AcrossAllTenants()
+                                 .Any(membership => membership.TenantId == tenant.Id && membership.UserId == user.Id))
+            .OrderBy(tenant => tenant.Id)
+            .Select(tenant => new { tenant.Id, tenant.IdentifierNormalized })
             .Take(2)
             .ToListAsync(cancellationToken);
 
-        if (tenantIds.Count != 1)
+        if (tenants.Count != 1)
         {
             // An ordinary account has nothing to exercise in no tenant, so it is asked which one it meant.
             this.ThrowError(x => x.TenantIdentifier, ErrorCodes.TenantRequired);
         }
 
-        return tenantIds[0];
+        return (tenants[0].Id, tenants[0].IdentifierNormalized);
     }
 
     /// <summary>
@@ -177,29 +237,22 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, ISe
     /// <param name="user">The account that has just authenticated.</param>
     /// <param name="identifier">The tenant's url-safe identifier, as it was typed.</param>
     /// <param name="cancellationToken">Token used to cancel the reads.</param>
-    /// <returns>The tenant to start the session in.</returns>
+    /// <returns>The tenant to start the session in and its normalized identifier.</returns>
     /// <remarks>
     /// The guards run in a fixed order, and the order is part of the contract: existence first, then
     /// the caller's own standing, then the tenant's lifecycle - the same order
     /// <c>POST /tenants/switch</c> settles the same question in, so naming a tenant here and selecting
     /// it a moment later are refused for the same reasons with the same codes.
     /// <para>
-    /// The identifier is matched against the normalized form, so it is found however it was typed.
+    /// The tenant is found through <see cref="ITenantService.FindByIdentifierAsync"/>, against the normalized form, so it is found however it was typed.
     /// The read relaxes tenant restriction by name because it runs before
     /// any tenant is established; the soft-delete filter stays in force, so a deleted tenant is not a
     /// tenant to start in and reads as absent.
     /// </para>
     /// </remarks>
-    private async Task<Guid?> ResolveNamedTenantAsync(User user, string identifier, CancellationToken cancellationToken)
+    private async Task<(Guid? Id, string? Identifier)> ResolveNamedTenantAsync(User user, string identifier, CancellationToken cancellationToken)
     {
-        var normalizedIdentifier = identifier.Trim().ToLowerInvariant();
-
-        var tenant = await dbContext.Tenants
-            .AsNoTracking()
-            .AcrossAllTenants()
-            .Where(candidate => candidate.IdentifierNormalized == normalizedIdentifier)
-            .Select(candidate => new { candidate.Id, candidate.Status })
-            .FirstOrDefaultAsync(cancellationToken);
+        var tenant = await tenantService.FindByIdentifierAsync(identifier, cancellationToken);
         if (tenant == null)
         {
             this.ThrowError(ErrorCodes.TenantNotFound);
@@ -223,7 +276,7 @@ sealed class TokenEndpoint(IUserService userService, AppDbContext dbContext, ISe
             this.ThrowError(ErrorCodes.TenantSuspended);
         }
 
-        return tenant.Id;
+        return (tenant.Id, tenant.IdentifierNormalized);
     }
 }
 

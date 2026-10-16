@@ -267,6 +267,7 @@ public class AuthTokenService(AppDbContext dbContext, ITenantContext tenantConte
             Email = session.Email,
             IsPlatform = session.IsPlatform,
             TenantId = session.TenantId,
+            TenantIdentifier = session.TenantIdentifier,
             Roles = session.Roles,
             Permissions = session.Permissions,
             SecurityStamp = securityStamp,

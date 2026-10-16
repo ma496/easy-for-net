@@ -244,6 +244,8 @@
       "notTenantMember": "You are not a member of this tenant",
       "noActiveTenant": "No active tenant is selected",
       "tenantRequired": "Please provide a tenant to sign in.",
+      "tenantHostMismatch": "This sign-in belongs to a different address. Sign in again on this one.",
+      "tenantHostRequired": "Sign in at your organization's own address.",
       "tenantIdentifierAlreadyExists": "Tenant identifier already exists",
       "duplicateTenantMembership": "This user is already a member of this tenant",
       "lastTenantAdministrator": "The last tenant administrator cannot be removed",

@@ -83,18 +83,27 @@ public sealed class HubProbe : IAsyncDisposable
     /// The <c>Origin</c> header to send with the upgrade, as a browser would, or <see langword="null"/> to send
     /// none, as a non-browser client does.
     /// </param>
+    /// <param name="configureRequest">
+    /// Anything else to set on the upgrade request - its <c>Host</c>, say - or <see langword="null"/>.
+    /// </param>
     /// <returns>The unstarted probe.</returns>
-    public static HubProbe Create(TestServer server, string? accessToken, Guid userId, Guid? tenantId, string? origin = null)
+    public static HubProbe Create(TestServer server, string? accessToken, Guid userId, Guid? tenantId, string? origin = null,
+                                  Action<Microsoft.AspNetCore.Http.HttpRequest>? configureRequest = null)
     {
         var hubUri = new Uri(server.BaseAddress, NotificationHub.Path);
         var socketUri = accessToken is null
             ? hubUri
             : new Uri($"{hubUri}?access_token={Uri.EscapeDataString(accessToken)}");
         var webSocketClient = server.CreateWebSocketClient();
-        if (origin is not null)
+        webSocketClient.ConfigureRequest = request =>
         {
-            webSocketClient.ConfigureRequest = request => request.Headers.Origin = origin;
-        }
+            if (origin is not null)
+            {
+                request.Headers.Origin = origin;
+            }
+
+            configureRequest?.Invoke(request);
+        };
 
         var connection = new HubConnectionBuilder()
             .WithUrl(hubUri, options =>
@@ -121,9 +130,10 @@ public sealed class HubProbe : IAsyncDisposable
     /// arrives, which proves every earlier join has finished. Only for a connection expected to be admitted:
     /// a refused one is built with <see cref="Create"/> and started by the test.
     /// </remarks>
-    public static async Task<HubProbe> ConnectAsync(TestServer server, string accessToken, Guid userId, Guid? tenantId)
+    public static async Task<HubProbe> ConnectAsync(TestServer server, string accessToken, Guid userId, Guid? tenantId,
+                                                    string? origin = null, Action<Microsoft.AspNetCore.Http.HttpRequest>? configureRequest = null)
     {
-        var probe = Create(server, accessToken, userId, tenantId);
+        var probe = Create(server, accessToken, userId, tenantId, origin, configureRequest);
         try
         {
             await probe.Connection.StartAsync(TestContext.Current.CancellationToken);

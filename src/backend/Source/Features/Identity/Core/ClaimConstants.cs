@@ -16,6 +16,13 @@ public static class ClaimConstants
     public const string TenantId = "tenant_id";
 
     /// <summary>
+    /// Claim type carrying the normalized (lower-case) identifier of the tenant the session acts in,
+    /// present exactly when <see cref="TenantId"/> is. It is what a tenant host is compared against, so
+    /// that comparison needs no read beyond the session itself.
+    /// </summary>
+    public const string TenantIdentifier = "tenant_identifier";
+
+    /// <summary>
     /// Claim type marking the session as belonging to a platform account. It carries the account's
     /// tier and never a grant: what the session may do is decided by its permission claims, which are
     /// already narrowed to the scope it is acting in. It is present only for a platform account and

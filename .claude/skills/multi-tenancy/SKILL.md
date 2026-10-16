@@ -203,11 +203,26 @@ await userService.CreateAsync(entity, request.Password);
 await transaction.CommitAsync(ct);
 ```
 
-## 7. Switching and exiting
+## 7. The host, switching and exiting
+
+**The host chooses, it never grants.** `ITenantHostResolver` (`Features/Tenancy/Core/Hosting`,
+`[AllowOutside]`) parses `Request.Host` against `Web:DefaultDomain` (the platform origin) and
+`Web:TenantOriginTemplate` (`{tenant}` as the first host label): `Tenant(identifier)`, `Platform`, or
+`None` for an unknown host or an empty template, which turns the whole rule off. It reads no database;
+`TenantUrl(identifier)` and `PlatformUrl()` build links. The session is still the only authority:
+sign-in on a tenant host targets that tenant and still checks membership and status; on the platform
+host only a platform account signs in, with no tenant. `TenantHostSessionMiddleware` then refuses with
+403 `tenantHostMismatch` any authenticated request (the hub included) whose session's `tenant_identifier`
+claim is not the host's tenant, or that acts in a tenant on the platform host. Never authorize from the
+host, and never add a database read to resolve it on an ordinary request. Renaming a tenant's identifier
+ends every session in it, since they are bound to the old host.
 
 `POST /tenants/switch` (`TenantSwitchEndpoint`) requires a live membership and an active tenant, then
-reissues the session via `ITenantAuthorizationService.ReissueSessionAsync(userId, tenantId)`.
-`POST /tenants/exit` does the same with `null`, platform accounts only. On the web, always go through
+reissues the session via `ITenantAuthorizationService.ReissueSessionAsync(userId, tenantId, tenantIdentifier)`, passing the
+tenant's normalized identifier so the new session is bound to its host. `POST /tenants/exit` does the
+same with `null, null`, platform accounts only. Both answer `tenantHostMismatch`
+on a resolved host: there, changing tenant is navigation to the other tenant's host (and a sign-in
+there), and switch/exit remain for bearer clients and hosts that resolve to `None`. On the web, always go through
 `useTenantSwitch()` (`hooks/use-tenant-switch.ts`): it lands on `/admin` through a full page load
 (`leaveForTenantChange` in `store/tenant-cache.ts`), so the store, session state, hub and layout all
 start again in the new scope — resetting the cache in place would refetch the mounted page's queries

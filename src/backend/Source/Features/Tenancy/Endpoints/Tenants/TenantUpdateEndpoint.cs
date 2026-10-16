@@ -19,7 +19,8 @@ namespace Backend.Features.Tenancy.Endpoints.Tenants;
 /// <para>
 /// Moving the tenant onto another plan, or off one, changes what its sessions were minted with, so once
 /// the change is saved every session acting in the tenant is ended and its members come back under the
-/// new plan. A rename alone ends nothing, and no session in another tenant or in platform scope is
+/// new plan. Changing its identifier ends them the same way, since every session is bound to the host the
+/// old identifier named. Renaming the display name alone ends nothing, and no session in another tenant or in platform scope is
 /// touched either way.
 /// </para>
 /// </remarks>
@@ -74,6 +75,7 @@ sealed class TenantUpdateEndpoint(ITenantService tenantService,
         }
 
         var previousEditionId = entity.EditionId;
+        var previousIdentifierNormalized = entity.IdentifierNormalized;
 
         var requestMapper = new TenantUpdateRequestMapper();
         requestMapper.Update(request, entity);
@@ -87,9 +89,14 @@ sealed class TenantUpdateEndpoint(ITenantService tenantService,
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        // Not cancellable: the plan change has committed, so the caller going away must not leave the
-        // sessions minted under the old plan running.
-        if (entity.EditionId != previousEditionId)
+        // Not cancellable: the change has committed, so the caller going away must not leave the sessions
+        // minted under the old plan or for the old identifier running.
+        // A new identifier moves the tenant to another host, and every session in it is bound to the host
+        // it was minted for (TenantHostSessionMiddleware compares the identifier the session recorded), so
+        // they are ended too and their members sign in again on the new host. Compared normalized: a change
+        // of case or padding is not a new identifier and ends nothing.
+        if (entity.EditionId != previousEditionId
+            || !string.Equals(entity.IdentifierNormalized, previousIdentifierNormalized, StringComparison.Ordinal))
         {
             await sessionRevocationService.RevokeTenantAsync(entity.Id, CancellationToken.None);
         }

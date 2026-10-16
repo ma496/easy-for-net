@@ -244,6 +244,8 @@
       "notTenantMember": "آپ اس ٹیننٹ کے رکن نہیں ہیں",
       "noActiveTenant": "کوئی فعال ٹیننٹ منتخب نہیں ہے",
       "tenantRequired": "سائن ان کرنے کے لیے براہ کرم ٹیننٹ بتائیں۔",
+      "tenantHostMismatch": "یہ سائن ان کسی دوسرے پتے کا ہے۔ اس پتے پر دوبارہ سائن ان کریں۔",
+      "tenantHostRequired": "اپنی تنظیم کے اپنے پتے پر سائن ان کریں۔",
       "tenantIdentifierAlreadyExists": "ٹیننٹ کا شناخت کنندہ پہلے سے موجود ہے",
       "duplicateTenantMembership": "یہ صارف پہلے ہی اس ٹیننٹ کا رکن ہے",
       "lastTenantAdministrator": "آخری ٹیننٹ منتظم کو نہیں ہٹایا جا سکتا",

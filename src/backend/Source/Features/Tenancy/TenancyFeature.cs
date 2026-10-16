@@ -1,4 +1,5 @@
 using Backend.Features.Tenancy.Core;
+using Backend.Features.Tenancy.Core.Hosting;
 using Backend.Features.Tenancy.Core.FeatureManagement;
 using Backend.Features.Tenancy.Core.FeatureManagement.Providers;
 
@@ -23,6 +24,10 @@ public class TenancyFeature : IFeature
         services.AddScoped<ITenantMembershipQuery, TenantMembershipQuery>();
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<IEditionService, EditionService>();
+
+        // Singleton: it parses the request host against the Web settings, which are fixed at startup,
+        // and reads nothing else - so ordinary requests pay no database read for it.
+        services.AddSingleton<ITenantHostResolver, TenantHostResolver>();
 
         AddFeatureManagement(services);
     }
