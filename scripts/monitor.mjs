@@ -3,7 +3,7 @@
  * A read-only web page over the agent queue: every spec's tasks by lane, each task's attempts
  * from the journal, and the live narration of the attempt being built.
  *
- *   npm run monitor                     # http://127.0.0.1:4010
+ *   npm run monitor                     # http://127.0.0.1:4000
  *   npm run monitor -- --port 4020
  *   npm run monitor -- --runs-dir <dir> # read stream files and drain.log from another folder
  *
@@ -27,7 +27,7 @@ import { LOG_DIR, readRuns } from "./run-journal.mjs";
 const HELP = `npm run monitor [-- --port <n>] [--runs-dir <dir>]
 
 A read-only dashboard over .agent-queue/ and .agent-runs/ at http://127.0.0.1:<port>
-(default 4010, or MONITOR_PORT). It never changes the queue.`;
+(default 4000, or MONITOR_PORT). It never changes the queue.`;
 
 const argv = process.argv.slice(2);
 if (argv.includes("--help") || argv.includes("-h")) {
@@ -38,7 +38,7 @@ const flag = (name) => {
   const i = argv.indexOf(name);
   return i >= 0 ? argv[i + 1] : undefined;
 };
-const PORT = Number(flag("--port") ?? process.env.MONITOR_PORT ?? 4010);
+const PORT = Number(flag("--port") ?? process.env.MONITOR_PORT ?? 4000);
 if (!Number.isInteger(PORT) || PORT <= 0 || PORT > 65535) {
   console.error(`monitor: not a port: ${flag("--port") ?? process.env.MONITOR_PORT}`);
   process.exit(1);
