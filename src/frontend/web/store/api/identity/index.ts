@@ -1,3 +1,4 @@
+export { PermissionScope } from './enums'
 export {
   accountApi,
   useTokenMutation,

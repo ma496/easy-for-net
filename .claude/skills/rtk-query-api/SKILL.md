@@ -14,7 +14,7 @@ store/api/
   base/dto/*.ts                     # BaseDto, ListDto, ListRequestDto, RequestBase, SystemCreatedDto, …
   <feature>/
     index.ts                        # barrel for the feature: slices, hooks, DTO types, enums
-    enums.ts                        # optional: enums the feature's DTOs share
+    enums.ts                        # every TS enum the feature declares, and nothing else
     <area>/
       <area>-api.ts
       <area>-dtos.ts
@@ -69,8 +69,10 @@ export interface UserListRequest extends ListRequestDto<string>, RequestBase {
 
 Every enum crosses the API by name (`JsonStringEnumConverter`), so a TS enum carries string values
 (`SortDirection.Asc = 'Asc'`), never numbers. Those enums are either a TS `enum` (`TenantStatus`,
-`NotificationType`, in the feature's `enums.ts`) or an `as const` object plus a derived union type
-(`FeatureValueProvider` / `FeatureValueProviderName`). Every exported interface gets a one-line JSDoc.
+`NotificationType`, `PermissionScope`) — always in the feature's `enums.ts`, never in a DTO file —
+or an `as const` object plus a derived union type (`FeatureValueProvider` /
+`FeatureValueProviderName`), which mirrors API string constants rather than an enum and stays
+beside the DTOs. Every exported interface gets a one-line JSDoc.
 
 ## The API slice
 
