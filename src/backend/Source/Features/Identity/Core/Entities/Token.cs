@@ -15,9 +15,3 @@ public class Token : AuditableEntity<Guid>
     public Guid UserId { get; set; }
     public User User { get; set; } = null!;
 }
-
-public enum TokenPurpose
-{
-    EmailVerification,
-    PasswordReset
-}

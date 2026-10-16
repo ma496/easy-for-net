@@ -22,7 +22,8 @@ Features/<Feature>/
     <Name>Query.cs                       # optional narrow read contract for other features
     <Entity>ValidationRules.cs           # optional FluentValidation rules shared by several endpoints
     <Feature>Dtos.cs                     # optional DTOs the published services answer in
-    <Feature>Constants.cs, Enums.cs
+    <Feature>Constants.cs
+    Enums.cs                             # every enum the slice declares, and nothing else
     <Name>Setting.cs                     # options bound from configuration
     Entities/
       <Entity>.cs
