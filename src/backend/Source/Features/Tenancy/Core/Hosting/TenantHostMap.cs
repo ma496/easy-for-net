@@ -152,6 +152,13 @@ public sealed class TenantHostMap
             ? _template.Replace(TenantPlaceholder, identifier.Trim().ToLowerInvariant(), StringComparison.Ordinal)
             : null;
 
+    /// <summary>
+    /// The tenant origin template, <c>Web:TenantOriginTemplate</c>, with its <c>{tenant}</c> placeholder
+    /// left in place, or <see langword="null"/> when resolution is off.
+    /// </summary>
+    /// <returns>The tenant origin template.</returns>
+    public string? TenantUrlTemplate() => IsEnabled ? _template : null;
+
     /// <summary>The platform origin, <c>Web:DefaultDomain</c>.</summary>
     /// <returns>The platform origin.</returns>
     public string PlatformUrl() => _defaultDomain;

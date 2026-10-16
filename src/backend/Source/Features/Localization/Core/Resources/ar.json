@@ -46,7 +46,8 @@
     "selectPlaceholder": "اختر…",
     "noOptions": "لا توجد خيارات",
     "scrollToTop": "العودة إلى الأعلى",
-    "collapseSidebar": "طي الشريط الجانبي"
+    "collapseSidebar": "طي الشريط الجانبي",
+    "opensInNewTab": "(يفتح في علامة تبويب جديدة)"
   },
   "navigation": {
     "home": "الرئيسية",
@@ -81,7 +82,7 @@
     "tenantsCreate": "إنشاء",
     "tenantsUpdate": "تحديث",
     "tenantsMembers": "الأعضاء",
-    "selectTenant": "اختيار المستأجر",
+    "selectTenant": "مساحات عملك",
     "tenantsDetail": "التفاصيل",
     "editions": "الإصدارات",
     "editionsList": "قائمة",
@@ -90,7 +91,10 @@
     "editionsFeatures": "الميزات",
     "tenantsFeatures": "الميزات",
     "localization": "التوطين",
-    "settings": "الإعدادات"
+    "settings": "الإعدادات",
+    "otherWorkspaces": "مساحات العمل الأخرى",
+    "platformAdministration": "إدارة المنصة",
+    "allWorkspaces": "كل مساحات العمل"
   },
   "search": {
     "dashboard": "لوحة القيادة",
@@ -134,7 +138,6 @@
       "tenantName": "اسم المستأجر",
       "tenantIdentifier": "المعرّف",
       "user": "المستخدم",
-      "tenant": "المستأجر",
       "editionName": "الاسم",
       "editionDescription": "الوصف",
       "editionDisplayOrder": "ترتيب العرض",
@@ -155,7 +158,6 @@
       "tenantName": "أدخل اسم المستأجر",
       "tenantIdentifier": "أدخل المعرّف (مثال acme)",
       "user": "اختر المستخدم",
-      "tenant": "معرف المستأجر",
       "editionName": "أدخل اسم الإصدار",
       "editionDescription": "أدخل وصف الإصدار",
       "edition": "اختر إصدارًا"
@@ -501,7 +503,14 @@
         "forgotPassword": "هل نسيت كلمة المرور؟",
         "signupLink": "اشتراك",
         "noAccount": "ليس لديك حساب؟",
-        "backToSignin": "العودة لتسجيل الدخول"
+        "backToSignin": "العودة لتسجيل الدخول",
+        "titleTenant": "تسجيل الدخول إلى ${name}",
+        "suspendedTitle": "مساحة العمل هذه معلّقة",
+        "suspendedMessage": "تسجيل الدخول غير متاح حتى يعيد أحد المسؤولين تفعيلها.",
+        "hostRequiredTitle": "سجّل الدخول من عنوان مساحة عملك",
+        "hostRequiredMessage": "حسابك تابع لمساحة عمل. افتح عنوانها لتسجيل الدخول. إن لم تكن تعرفه، فراجع رسالة الدعوة في بريدك.",
+        "ownWorkspace": "هل تريد مساحة عمل خاصة بك؟",
+        "createWorkspace": "أنشئ واحدة"
       },
       "signup": {
         "title": "اشتراك",
@@ -512,7 +521,18 @@
         "successTitle": "نجاح!",
         "successVerifyEmail": "تم التسجيل بنجاح! يرجى التحقق من بريدك الإلكتروني لتفعيل حسابك.",
         "successMessage": "تم التسجيل بنجاح! اذهب لصفحة تسجيل الدخول.",
-        "tenantSectionTitle": "المستأجر الخاص بك"
+        "tenantSectionTitle": "مساحة عملك",
+        "tenantHostTitle": "يتم التسجيل عبر الموقع الرئيسي",
+        "tenantHostMessage": "أنت في مساحة عمل ${name}. لإنشاء مساحة عمل خاصة بك، سجّل عبر الموقع الرئيسي.",
+        "mainSiteMessage": "لإنشاء مساحة عمل خاصة بك، سجّل عبر الموقع الرئيسي.",
+        "tenantHostAction": "الانتقال إلى التسجيل",
+        "workspaceName": "اسم مساحة العمل",
+        "workspaceAddress": "عنوان مساحة العمل",
+        "addressPreview": "عنوان مساحة عملك:",
+        "addressPlaceholder": "your-name",
+        "identifierHint": "أحرف لاتينية صغيرة وأرقام وشرطات.",
+        "readyTitle": "مساحة عملك جاهزة",
+        "goToWorkspace": "الانتقال إلى مساحة عملك"
       },
       "forgotPassword": {
         "title": "نسيت كلمة المرور",
@@ -531,6 +551,13 @@
       "signout": "تسجيل الخروج",
       "unauthorized": {
         "title": "غير مصرح"
+      },
+      "workspaceNotFound": {
+        "title": "مساحة العمل غير موجودة",
+        "message": "لا توجد مساحة عمل على ${host}. تحقق من العنوان، أو انتقل إلى الموقع الرئيسي.",
+        "messageNoHost": "لا توجد مساحة عمل على هذا العنوان. تحقق من العنوان، أو انتقل إلى الموقع الرئيسي.",
+        "homeAction": "الانتقال إلى الصفحة الرئيسية",
+        "action": "الانتقال إلى الموقع الرئيسي"
       }
     },
     "changePassword": {
@@ -608,35 +635,27 @@
         "removeConfirm": "هل أنت متأكد أنك تريد إزالة هذا العضو من المستأجر؟",
         "removeSuccess": "تمت إزالة العضو بنجاح"
       },
-      "switcher": {
-        "label": "المستأجر",
-        "switchTo": "تبديل المستأجر",
-        "switchSuccess": "أنت تعمل الآن في ${tenant}",
-        "noTenant": "لم يتم اختيار مستأجر",
-        "viewDetail": "عرض تفاصيل المستأجر",
-        "exitTenant": "الخروج من المستأجر",
-        "exitSuccess": "أنت تعمل الآن كمستخدم للمنصة مرة أخرى"
-      },
       "detail": {
         "title": "تفاصيل المستأجر",
         "information": "معلومات المستأجر",
         "membersTitle": "الأعضاء",
         "seats": "المقاعد"
       },
-      "enterButton": "دخول",
-      "enterCurrent": "الحالي",
       "actions": {
         "detail": "التفاصيل",
         "members": "الأعضاء",
         "suspend": "تعليق",
         "reactivate": "إعادة التفعيل"
-      }
+      },
+      "openWorkspace": "فتح مساحة العمل"
     },
     "selectTenant": {
-      "title": "اختيار المستأجر",
-      "description": "اختر المستأجر الذي تريد العمل فيه.",
+      "title": "مساحات عملك",
+      "description": "تُفتح كل مساحة عمل على عنوانها الخاص، في علامة تبويب جديدة.",
       "emptyDescription": "أنت لا تنتمي إلى أي مستأجر نشط. اطلب من المسؤول إضافتك إلى مستأجره، أو سجّل حسابًا جديدًا لإنشاء مستأجر خاص بك.",
-      "emptyAction": "الذهاب إلى ملفك الشخصي"
+      "emptyAction": "الذهاب إلى ملفك الشخصي",
+      "current": "الحالية",
+      "noAddresses": "لم يتم إعداد عناوين مساحات العمل في هذا التثبيت."
     },
     "editions": {
       "title": "الإصدارات",

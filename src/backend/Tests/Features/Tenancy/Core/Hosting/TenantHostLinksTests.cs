@@ -48,11 +48,14 @@ public class TenantHostLinksTests(App app) : TenancyTestsBase(app)
         onPlatform.Name.Should().BeNull();
         onPlatform.Identifier.Should().BeNull();
         onPlatform.Status.Should().BeNull();
+        onPlatform.TenantUrlTemplate.Should().Be($"http://{{tenant}}.{TenantHostingOverride.Suffix}");
 
         using var unrelated = HostClient(UnrelatedHost);
         var (unrelatedResponse, onUnrelated) = await unrelated.GETAsync<TenantHostGetEndpoint, TenantHostGetResponse>();
         unrelatedResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         onUnrelated.Kind.Should().Be("platform");
+        onUnrelated.TenantUrlTemplate.Should().Be($"http://{{tenant}}.{TenantHostingOverride.Suffix}",
+            "a host naming nothing still answers while resolution is on");
 
         // Resolution off altogether: the shared host's own configuration.
         using var off = App.CreateClient(new ClientOptions { HandleCookies = false });
@@ -60,6 +63,7 @@ public class TenantHostLinksTests(App app) : TenancyTestsBase(app)
         offResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         withResolutionOff.Kind.Should().Be("platform");
         withResolutionOff.PlatformUrl.Should().Be(DefaultDomain);
+        withResolutionOff.TenantUrlTemplate.Should().BeNull("there is no tenant address to preview while resolution is off");
     }
 
     /// <summary>A tenant host answers its tenant - a suspended one with its status - and an unknown or deleted one 404.</summary>
@@ -77,6 +81,7 @@ public class TenantHostLinksTests(App app) : TenancyTestsBase(app)
         onTenant.Identifier.Should().Be(tenant.Identifier);
         onTenant.Status.Should().Be(TenantStatus.Active);
         onTenant.PlatformUrl.Should().Be(TenantHostingOverride.PlatformOrigin);
+        onTenant.TenantUrlTemplate.Should().Be($"http://{{tenant}}.{TenantHostingOverride.Suffix}");
 
         var suspended = await CreateTenantAsync(TenantStatus.Suspended);
         using var suspendedClient = HostClient(TenantHostingOverride.TenantHost(suspended.Identifier));

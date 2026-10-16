@@ -1,6 +1,6 @@
 ---
 name: redux-state
-description: Add or change client state in src/frontend/web/store — Redux Toolkit slices, store registration, typed useAppSelector/useAppDispatch hooks, the auth/tenant session state and the tenant-change reset sequence, and middleware. Use when you need state that is not server data, and to decide between a slice and the RTK Query cache.
+description: Add or change client state in src/frontend/web/store — Redux Toolkit slices, store registration, typed useAppSelector/useAppDispatch hooks, the auth/tenant session state, and middleware. Use when you need state that is not server data, and to decide between a slice and the RTK Query cache.
 ---
 
 # Client state
@@ -107,12 +107,9 @@ Select the narrowest value a component needs so unrelated updates do not re-rend
   own. `baseQueryWithReauth` re-reads the info after every successful token refresh (a renewal can
   drop a suspended or left tenant), and dispatches `signout()` then redirects to
   `/signin?redirect=…` when the refresh fails.
-- **Changing the acting tenant** goes through `useTenantSwitch()` (`enterTenant(id)` /
-  `exitTenant()`), which calls `leaveForTenantChange(href, notice)` from `store/tenant-cache.ts`: a
-  full page load to `/admin`, so the new document starts with a fresh store and nothing cached for the
-  previous tenant can render; `TenantChangeNotice` shows the success toast on arrival. Never reset the
-  cache in place — the still-mounted page refetches under the new session and flashes a 403. Do not
-  write a second switch path; see `multi-tenancy`.
+- **The acting tenant never changes in place.** Each host is one workspace with its own session, so
+  a document's store only ever holds one tenant's data; another workspace is a link to its address
+  (`tenant.url` from get-info), opened in a new tab. Do not write a switch path; see `multi-tenancy`.
 - **Ending the session** (sign-out, password change) calls `leaveSignedOut(signinHref)` — a full page
   load, so the next user of the browser starts with a fresh store.
 - Permission checks read this slice through `isAllowed(authState, [Allow.X])` and scope checks through
@@ -134,7 +131,7 @@ export const rtkErrorMiddleware: Middleware = (api) => (next) => (action: unknow
 ```
 
 Export new middleware from `store/middlewares/index.ts` and add it to the `concat(...)` chain
-**before** `appApi.middleware`. Reducers, the middleware and the tenant-change sequence all have
+**before** `appApi.middleware`. Reducers, the middleware and the sign-out page load all have
 colocated Vitest tests (`authSlice.test.ts`, `rtk-error-middleware.test.ts`, `tenant-cache.test.ts`) —
 extend them; see `frontend-tests`.
 
@@ -145,5 +142,4 @@ extend them; see `frontend-tests`.
 - [ ] Registered in `store/index.tsx` by `slice.name`
 - [ ] Reducers side-effect free; persistence handled outside
 - [ ] Consumers use `useAppSelector` / `useAppDispatch` with narrow selectors
-- [ ] State that belongs to a tenant is reset by the tenant-change sequence
 - [ ] Reducer/middleware behaviour pinned in a colocated `*.test.ts`

@@ -46,7 +46,8 @@
     "selectPlaceholder": "Sélectionner…",
     "noOptions": "Aucune option",
     "scrollToTop": "Revenir en haut",
-    "collapseSidebar": "Réduire la barre latérale"
+    "collapseSidebar": "Réduire la barre latérale",
+    "opensInNewTab": "(s'ouvre dans un nouvel onglet)"
   },
   "navigation": {
     "home": "Accueil",
@@ -81,7 +82,7 @@
     "tenantsCreate": "Créer",
     "tenantsUpdate": "Mettre à jour",
     "tenantsMembers": "Membres",
-    "selectTenant": "Sélectionner un locataire",
+    "selectTenant": "Vos espaces de travail",
     "tenantsDetail": "Détail",
     "editions": "Éditions",
     "editionsList": "Liste",
@@ -90,7 +91,10 @@
     "editionsFeatures": "Fonctionnalités",
     "tenantsFeatures": "Fonctionnalités",
     "localization": "Localisation",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "otherWorkspaces": "Autres espaces de travail",
+    "platformAdministration": "Administration de la plateforme",
+    "allWorkspaces": "Tous les espaces de travail"
   },
   "search": {
     "dashboard": "Tableau de bord",
@@ -134,7 +138,6 @@
       "tenantName": "Nom du locataire",
       "tenantIdentifier": "Identifiant",
       "user": "Utilisateur",
-      "tenant": "Locataire",
       "editionName": "Nom",
       "editionDescription": "Description",
       "editionDisplayOrder": "Ordre d’affichage",
@@ -155,7 +158,6 @@
       "tenantName": "Entrez le nom du locataire",
       "tenantIdentifier": "Entrez l'identifiant (par exemple acme)",
       "user": "Sélectionnez un utilisateur",
-      "tenant": "Identifiant du locataire",
       "editionName": "Saisissez le nom de l’édition",
       "editionDescription": "Saisissez la description de l’édition",
       "edition": "Sélectionnez une édition"
@@ -501,7 +503,14 @@
         "forgotPassword": "Mot de passe oublié ?",
         "signupLink": "S'inscrire",
         "noAccount": "Pas de compte ?",
-        "backToSignin": "Retour à la connexion"
+        "backToSignin": "Retour à la connexion",
+        "titleTenant": "Se connecter à ${name}",
+        "suspendedTitle": "Cet espace de travail est suspendu",
+        "suspendedMessage": "La connexion est indisponible jusqu'à ce qu'un administrateur le réactive.",
+        "hostRequiredTitle": "Connectez-vous à l'adresse de votre espace de travail",
+        "hostRequiredMessage": "Votre compte appartient à un espace de travail. Ouvrez son adresse pour vous connecter. Si vous ne la connaissez pas, consultez votre e-mail d'invitation.",
+        "ownWorkspace": "Vous voulez votre propre espace de travail ?",
+        "createWorkspace": "Créez-en un"
       },
       "signup": {
         "title": "S'inscrire",
@@ -512,7 +521,18 @@
         "successTitle": "Succès !",
         "successVerifyEmail": "Inscription réussie ! Veuillez vérifier votre email.",
         "successMessage": "Inscription réussie ! Allez à la page de connexion.",
-        "tenantSectionTitle": "Votre locataire"
+        "tenantSectionTitle": "Votre espace de travail",
+        "tenantHostTitle": "L'inscription se fait sur le site principal",
+        "tenantHostMessage": "Vous êtes sur l'espace de travail de ${name}. Pour créer le vôtre, inscrivez-vous sur le site principal.",
+        "mainSiteMessage": "Pour créer votre propre espace de travail, inscrivez-vous sur le site principal.",
+        "tenantHostAction": "Aller à l'inscription",
+        "workspaceName": "Nom de l'espace de travail",
+        "workspaceAddress": "Adresse de l'espace de travail",
+        "addressPreview": "Adresse de votre espace de travail :",
+        "addressPlaceholder": "votre-nom",
+        "identifierHint": "Lettres minuscules, chiffres et traits d'union.",
+        "readyTitle": "Votre espace de travail est prêt",
+        "goToWorkspace": "Aller à votre espace de travail"
       },
       "forgotPassword": {
         "title": "Mot de passe oublié",
@@ -531,6 +551,13 @@
       "signout": "Se déconnecter",
       "unauthorized": {
         "title": "Non autorisé"
+      },
+      "workspaceNotFound": {
+        "title": "Espace de travail introuvable",
+        "message": "Il n'y a aucun espace de travail à l'adresse ${host}. Vérifiez l'adresse ou allez sur le site principal.",
+        "messageNoHost": "Il n'y a aucun espace de travail à cette adresse. Vérifiez l'adresse ou allez sur le site principal.",
+        "homeAction": "Aller à la page d'accueil",
+        "action": "Aller sur le site principal"
       }
     },
     "changePassword": {
@@ -608,35 +635,27 @@
         "removeConfirm": "Êtes-vous sûr de vouloir retirer ce membre du locataire ?",
         "removeSuccess": "Membre retiré avec succès"
       },
-      "switcher": {
-        "label": "Locataire",
-        "switchTo": "Changer de locataire",
-        "switchSuccess": "Vous travaillez maintenant dans ${tenant}",
-        "noTenant": "Aucun locataire sélectionné",
-        "viewDetail": "Voir le détail du locataire",
-        "exitTenant": "Quitter le locataire",
-        "exitSuccess": "Vous travaillez de nouveau en tant qu’utilisateur de la plateforme"
-      },
       "detail": {
         "title": "Détail du locataire",
         "information": "Informations du locataire",
         "membersTitle": "Membres",
         "seats": "Places"
       },
-      "enterButton": "Entrer",
-      "enterCurrent": "Actuel",
       "actions": {
         "detail": "Détail",
         "members": "Membres",
         "suspend": "Suspendre",
         "reactivate": "Réactiver"
-      }
+      },
+      "openWorkspace": "Ouvrir l'espace de travail"
     },
     "selectTenant": {
-      "title": "Sélectionner un locataire",
-      "description": "Choisissez le locataire dans lequel vous souhaitez travailler.",
+      "title": "Vos espaces de travail",
+      "description": "Chaque espace de travail s'ouvre à sa propre adresse, dans un nouvel onglet.",
       "emptyDescription": "Vous n'appartenez à aucun locataire actif. Demandez à un administrateur de vous ajouter au sien, ou inscrivez-vous pour créer le vôtre.",
-      "emptyAction": "Aller à votre profil"
+      "emptyAction": "Aller à votre profil",
+      "current": "Actuel",
+      "noAddresses": "Les adresses des espaces de travail ne sont pas configurées sur cette installation."
     },
     "editions": {
       "title": "Éditions",

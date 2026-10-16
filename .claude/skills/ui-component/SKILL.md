@@ -13,7 +13,7 @@ description: Build or extend a shared React component in src/frontend/web/compon
 | `components/ui/form/` | Inputs — a bare one and, for most, a Formik-bound `Form*` twin | `Input`/`FormInput`, `Select`/`FormSelect`, `MultiSelect`/`FormMultiSelect`, `Checkbox`/`FormCheckbox`, `DatePicker`/`FormDatePicker`, `FormLazySelect`, `FormLazyMultiSelect`, `FileUpload`, `MultiFileUpload` |
 | `components/ui/data-table/` | The table system | `DataTableProvider`, `DataTable`, `DataTableToolbar`, `DataTableToolbarButton`, `DataTableFilterButton`, `DataTableExportButton`, `DataTableRowActions`, `DataTablePagination`, `DataTableSortIcon`, `DataTableCheckboxCell` |
 | `components/layouts/` | App shell and page chrome | `AdminPageContent`, `Sidebar`, `Header`, `Footer`, `MainContainer`, `SearchComponent`, `ServiceUnavailableView`, `ProviderComponent`, `TranslationProvider` |
-| `components/custom/` | App-specific composites tied to domain concepts | `NavUser`, `TenantSwitcher`, `LanguageDropdown`, `ThemeChanger`, `ImagePreview`, `BackLink`, `CookieConsentDialog` |
+| `components/custom/` | App-specific composites tied to domain concepts | `NavUser`, `WorkspaceLink`, `LanguageDropdown`, `ThemeChanger`, `ImagePreview`, `BackLink`, `CookieConsentDialog` |
 | `components/notifications/` | The notification bell/panel/item trio | `NotificationBell`, `NotificationPanel`, `NotificationItem` |
 
 Screen-specific pieces do **not** go here — they live in the route's `_components/` folder, or the
@@ -166,7 +166,7 @@ results"), never for caller-supplied text.
   (`ltr:text-left rtl:text-right`). Components that must branch in JS read
   `useAppSelector((state) => state.theme.rtlClass) === 'rtl'`. `i18n/tenant-screens.test.ts` fails on
   physical utilities (and `translate-x-`) in the tenancy, select-tenant, localization and settings
-  screens and `TenantSwitcher`.
+  screens, `NavUser`, `WorkspaceLink` and the sign-in and sign-up forms.
 - Icons come from `lucide-react`, sized with classes (`h-4 w-4`) or the `size` prop.
 
 ## Client vs server

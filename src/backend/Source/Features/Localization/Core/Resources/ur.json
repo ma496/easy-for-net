@@ -46,7 +46,8 @@
     "selectPlaceholder": "منتخب کریں…",
     "noOptions": "کوئی اختیار نہیں",
     "scrollToTop": "اوپر جائیں",
-    "collapseSidebar": "سائیڈبار سمیٹیں"
+    "collapseSidebar": "سائیڈبار سمیٹیں",
+    "opensInNewTab": "(نئے ٹیب میں کھلتا ہے)"
   },
   "navigation": {
     "home": "ہوم",
@@ -81,7 +82,7 @@
     "tenantsCreate": "بنائیں",
     "tenantsUpdate": "اپ ڈیٹ",
     "tenantsMembers": "اراکین",
-    "selectTenant": "ٹیننٹ منتخب کریں",
+    "selectTenant": "آپ کے ورک اسپیس",
     "tenantsDetail": "تفصیل",
     "editions": "ایڈیشنز",
     "editionsList": "فہرست",
@@ -90,7 +91,10 @@
     "editionsFeatures": "خصوصیات",
     "tenantsFeatures": "خصوصیات",
     "localization": "لوکلائزیشن",
-    "settings": "ترتیبات"
+    "settings": "ترتیبات",
+    "otherWorkspaces": "دیگر ورک اسپیس",
+    "platformAdministration": "پلیٹ فارم انتظامیہ",
+    "allWorkspaces": "تمام ورک اسپیس"
   },
   "search": {
     "dashboard": "ڈیش بورڈ",
@@ -134,7 +138,6 @@
       "tenantName": "ٹیننٹ کا نام",
       "tenantIdentifier": "شناخت کنندہ",
       "user": "صارف",
-      "tenant": "ٹیننٹ",
       "editionName": "نام",
       "editionDescription": "تفصیل",
       "editionDisplayOrder": "ترتیبِ نمائش",
@@ -155,7 +158,6 @@
       "tenantName": "ٹیننٹ کا نام درج کریں",
       "tenantIdentifier": "شناخت کنندہ درج کریں (مثال کے طور پر acme)",
       "user": "صارف منتخب کریں",
-      "tenant": "ٹیننٹ شناخت کنندہ",
       "editionName": "ایڈیشن کا نام درج کریں",
       "editionDescription": "ایڈیشن کی تفصیل درج کریں",
       "edition": "ایک ایڈیشن منتخب کریں"
@@ -501,7 +503,14 @@
         "forgotPassword": "پاس ورڈ بھول گئے؟",
         "signupLink": "سائن اپ",
         "noAccount": "اکاؤنٹ نہیں ہے؟",
-        "backToSignin": "سائن ان پر واپس جائیں"
+        "backToSignin": "سائن ان پر واپس جائیں",
+        "titleTenant": "${name} میں سائن اِن کریں",
+        "suspendedTitle": "یہ ورک اسپیس معطل ہے",
+        "suspendedMessage": "جب تک کوئی منتظم اسے دوبارہ فعال نہ کرے، سائن اِن دستیاب نہیں ہے۔",
+        "hostRequiredTitle": "اپنے ورک اسپیس کے پتے پر سائن اِن کریں",
+        "hostRequiredMessage": "آپ کا اکاؤنٹ ایک ورک اسپیس سے تعلق رکھتا ہے۔ سائن اِن کرنے کے لیے اس کا پتہ کھولیں۔ اگر آپ کو معلوم نہیں تو اپنی دعوتی ای میل دیکھیں۔",
+        "ownWorkspace": "اپنا ورک اسپیس چاہتے ہیں؟",
+        "createWorkspace": "ایک بنائیں"
       },
       "signup": {
         "title": "سائن اپ",
@@ -512,7 +521,18 @@
         "successTitle": "کامیابی!",
         "successVerifyEmail": "رجسٹریشن کامیاب! براہ کرم اپنے اکاؤنٹ کی تصدیق کے لیے اپنا ای میل چیک کریں۔",
         "successMessage": "رجسٹریشن کامیاب! سائن ان صفحہ پر جائیں۔",
-        "tenantSectionTitle": "آپ کا ٹیننٹ"
+        "tenantSectionTitle": "آپ کا ورک اسپیس",
+        "tenantHostTitle": "سائن اپ مرکزی سائٹ پر ہوتا ہے",
+        "tenantHostMessage": "آپ ${name} کے ورک اسپیس پر ہیں۔ اپنا ورک اسپیس بنانے کے لیے مرکزی سائٹ پر سائن اپ کریں۔",
+        "mainSiteMessage": "اپنا ورک اسپیس بنانے کے لیے مرکزی سائٹ پر سائن اپ کریں۔",
+        "tenantHostAction": "سائن اپ پر جائیں",
+        "workspaceName": "ورک اسپیس کا نام",
+        "workspaceAddress": "ورک اسپیس کا پتہ",
+        "addressPreview": "آپ کے ورک اسپیس کا پتہ:",
+        "addressPlaceholder": "your-name",
+        "identifierHint": "چھوٹے انگریزی حروف، ہندسے اور ہائفن۔",
+        "readyTitle": "آپ کا ورک اسپیس تیار ہے",
+        "goToWorkspace": "اپنے ورک اسپیس پر جائیں"
       },
       "forgotPassword": {
         "title": "پاس ورڈ بھول گئے",
@@ -531,6 +551,13 @@
       "signout": "سائن آؤٹ",
       "unauthorized": {
         "title": "غیر مجاز"
+      },
+      "workspaceNotFound": {
+        "title": "ورک اسپیس نہیں ملا",
+        "message": "${host} پر کوئی ورک اسپیس نہیں ہے۔ پتہ چیک کریں، یا مرکزی سائٹ پر جائیں۔",
+        "messageNoHost": "اس پتے پر کوئی ورک اسپیس نہیں ہے۔ پتہ چیک کریں، یا مرکزی سائٹ پر جائیں۔",
+        "homeAction": "ہوم پیج پر جائیں",
+        "action": "مرکزی سائٹ پر جائیں"
       }
     },
     "changePassword": {
@@ -608,35 +635,27 @@
         "removeConfirm": "کیا آپ واقعی اس رکن کو ٹیننٹ سے ہٹانا چاہتے ہیں؟",
         "removeSuccess": "رکن کامیابی سے ہٹا دیا گیا"
       },
-      "switcher": {
-        "label": "ٹیننٹ",
-        "switchTo": "ٹیننٹ تبدیل کریں",
-        "switchSuccess": "اب آپ ${tenant} میں کام کر رہے ہیں",
-        "noTenant": "کوئی ٹیننٹ منتخب نہیں",
-        "viewDetail": "ٹیننٹ کی تفصیل دیکھیں",
-        "exitTenant": "ٹیننٹ سے باہر نکلیں",
-        "exitSuccess": "آپ دوبارہ پلیٹ فارم صارف کے طور پر کام کر رہے ہیں"
-      },
       "detail": {
         "title": "ٹیننٹ کی تفصیل",
         "information": "ٹیننٹ کی معلومات",
         "membersTitle": "اراکین",
         "seats": "نشستیں"
       },
-      "enterButton": "داخل ہوں",
-      "enterCurrent": "موجودہ",
       "actions": {
         "detail": "تفصیل",
         "members": "اراکین",
         "suspend": "معطل کریں",
         "reactivate": "دوبارہ فعال کریں"
-      }
+      },
+      "openWorkspace": "ورک اسپیس کھولیں"
     },
     "selectTenant": {
-      "title": "ٹیننٹ منتخب کریں",
-      "description": "وہ ٹیننٹ منتخب کریں جس میں آپ کام کرنا چاہتے ہیں۔",
+      "title": "آپ کے ورک اسپیس",
+      "description": "ہر ورک اسپیس اپنے پتے پر، نئے ٹیب میں کھلتا ہے۔",
       "emptyDescription": "آپ کسی فعال ٹیننٹ سے وابستہ نہیں ہیں۔ کسی منتظم سے اپنے ٹیننٹ میں شامل کرنے کو کہیں، یا اپنا ٹیننٹ بنانے کے لیے سائن اپ کریں۔",
-      "emptyAction": "اپنے پروفائل پر جائیں"
+      "emptyAction": "اپنے پروفائل پر جائیں",
+      "current": "موجودہ",
+      "noAddresses": "اس انسٹالیشن پر ورک اسپیس کے پتے ترتیب نہیں دیے گئے۔"
     },
     "editions": {
       "title": "ایڈیشنز",

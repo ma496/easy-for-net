@@ -28,6 +28,13 @@ public interface ITenantHostResolver
     /// <returns>The tenant's origin.</returns>
     string? TenantUrl(string identifier);
 
+    /// <summary>
+    /// The tenant origin template with its <c>{tenant}</c> placeholder left in place, for a caller that
+    /// shows a tenant's origin before the tenant exists; <see langword="null"/> when resolution is off.
+    /// </summary>
+    /// <returns>The tenant origin template.</returns>
+    string? TenantUrlTemplate();
+
     /// <summary>The platform origin.</summary>
     /// <returns>The platform origin.</returns>
     string PlatformUrl();
@@ -68,6 +75,9 @@ public sealed class TenantHostResolver(IOptions<WebSetting> webSetting) : ITenan
 
     /// <inheritdoc />
     public string? TenantUrl(string identifier) => _map.TenantUrl(identifier);
+
+    /// <inheritdoc />
+    public string? TenantUrlTemplate() => _map.TenantUrlTemplate();
 
     /// <inheritdoc />
     public string PlatformUrl() => _map.PlatformUrl();

@@ -82,7 +82,7 @@ Interpolation is `${name}` in the JSON value:
 
 ```tsx
 t('validation.minLength', { min: 3 }) || 'Field must be at least 3 characters'
-t('page.tenants.switcher.switchSuccess', { tenant: name }) || `You are now working in ${name}`
+t('page.auth.signin.titleTenant', { name }) || `Sign in to ${name}`
 ```
 
 ## Adding keys
@@ -96,8 +96,8 @@ every other file mirrors — then to **every other resource file in that directo
 - a value is empty, or is the key itself.
 
 On the web, `i18n/tenant-screens.test.ts` (run by `npm run test`) reads the same resource files and
-fails when a tenancy error code or tenancy screen key it lists is undefined in any culture, or the
-tenant-switch message drops its `${tenant}` placeholder. Placeholders are not checked in general, so
+fails when a tenancy error code or tenancy screen key it lists is undefined in any culture, or a
+message that names a workspace drops its `${name}` or `${host}` placeholder. Placeholders are not checked in general, so
 keep every `${…}` of the English value in each translation yourself.
 
 Follow the established namespaces:
