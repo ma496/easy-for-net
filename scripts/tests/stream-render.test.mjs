@@ -117,6 +117,17 @@ test("delegations to specialists are collected, in order", async () => {
   assert.deepEqual(res.subagents, ["db-migrator", "code-reviewer"]);
 });
 
+test("delegations started in the background are named apart, since their skill loads are unseen", async () => {
+  const lines = [
+    assistant([{ type: "tool_use", name: "Agent", input: { subagent_type: "data-engineer", run_in_background: true } }]),
+    assistant([{ type: "tool_use", name: "Agent", input: { subagent_type: "backend-engineer", run_in_background: false } }]),
+    assistant([{ type: "tool_use", name: "Agent", input: { subagent_type: "code-reviewer" } }]),
+  ].join("\n");
+  const res = await renderStream(Readable.from([lines]), () => {});
+  assert.deepEqual(res.subagents, ["data-engineer", "backend-engineer", "code-reviewer"]);
+  assert.deepEqual(res.backgroundSubagents, ["data-engineer"]);
+});
+
 test("a run that delegated nothing reports an empty list, not undefined", async () => {
   const res = await renderStream(
     Readable.from([JSON.stringify({ type: "result", is_error: false })]), () => {});

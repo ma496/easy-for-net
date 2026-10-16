@@ -172,7 +172,9 @@ export function renderEvent(line, state = {}) {
  * the runs most likely to be misbehaving. `subagents` lists every specialist the *session
  * itself* delegated to, in order, which is how the runner tells a task that reviewed its
  * work from one that only said it would. `skills` lists the procedures loaded anywhere in
- * the run — a builder loading the endpoint guide is the procedure being read, whoever read it.
+ * the run — a builder loading the endpoint guide is the procedure being read, whoever read it —
+ * except inside a subagent started in the background, whose events never reach the stream;
+ * `backgroundSubagents` names those.
  *
  * `limits.maxTurns` is a backstop. The runner passes `--max-turns` to the CLI, which stops
  * the session itself and still reports what it cost; this only kills a session that went
@@ -216,6 +218,10 @@ export function renderStream(readable, write = (s) => console.log(s), limits = {
     // unchanged, because the department check reads that array.
     const subagents = [];
     const subagentAtSec = [];
+    // The delegations started with `run_in_background`. Such a subagent's own events never
+    // reach this stream, so a skill it loads is missing from `skills`; the runner names
+    // these when it reports a skill as not loaded, rather than claiming it was skipped.
+    const backgroundSubagents = [];
     const skills = [];
     // Each call is counted once, by its own id, however many events repeat its block.
     const seenCalls = new Set();
@@ -274,6 +280,7 @@ export function renderStream(readable, write = (s) => console.log(s), limits = {
             if (!sub && DELEGATION_TOOLS.has(use.name) && use.input.subagent_type) {
               subagents.push(String(use.input.subagent_type));
               subagentAtSec.push(Math.round((Date.now() - startedMs) / 1000));
+              if (use.input.run_in_background === true) backgroundSubagents.push(String(use.input.subagent_type));
             }
             if (use.name === SKILL_TOOL) {
               const named = skillNameOf(use.input);
@@ -303,6 +310,7 @@ export function renderStream(readable, write = (s) => console.log(s), limits = {
       cliVersion,
       subagents,
       subagentAtSec,
+      backgroundSubagents,
       elapsedSec: Math.round((Date.now() - startedMs) / 1000),
       skills,
       turns: turns(),

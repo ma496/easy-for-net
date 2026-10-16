@@ -116,6 +116,9 @@ itself and hands back anything that fails, so a second full run only repeats its
 the same — never \`run_in_background\`, never a trailing \`&\`. A background check outlives the
 step that started it, holds the build output and the test database, and keeps the attempt
 open long after the work is done. Pass the longest timeout the tool allows to \`${verify}\`.
+Delegate in the foreground too (\`run_in_background: false\`): a background subagent's own
+calls never reach the stream the runner reads, so a skill it loads is not seen. Reviewers in
+one tier still run together when you send their calls in one message.
 
 ## The team this task goes through
 

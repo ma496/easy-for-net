@@ -985,6 +985,10 @@ ${carried.slice(-6000)}`;
     if (owedSkills.length > 0) {
       console.log(`\nNote: ${owedSkills.length} skill(s) this change's shape usually calls for were not loaded:`);
       for (const sk of owedSkills) console.log(`   ${sk.skill} — ${sk.why}`);
+      const unseen = [...new Set(claudeRes.backgroundSubagents ?? [])];
+      if (unseen.length > 0) {
+        console.log(`   ${unseen.join(", ")} ran in the background, where its own skill loads never reach the stream — it may have loaded them unseen.`);
+      }
       console.log("   Not blocking: the reviews below are what decide whether this lands.\n");
     }
 
