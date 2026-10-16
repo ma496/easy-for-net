@@ -246,6 +246,7 @@
       "tenantRequired": "سائن ان کرنے کے لیے براہ کرم ٹیننٹ بتائیں۔",
       "tenantHostMismatch": "یہ سائن ان کسی دوسرے پتے کا ہے۔ اس پتے پر دوبارہ سائن ان کریں۔",
       "tenantHostRequired": "اپنی تنظیم کے اپنے پتے پر سائن ان کریں۔",
+      "tenantIdentifierReserved": "یہ شناخت کنندہ مخصوص ہے۔ کوئی دوسرا منتخب کریں۔",
       "tenantIdentifierAlreadyExists": "ٹیننٹ کا شناخت کنندہ پہلے سے موجود ہے",
       "duplicateTenantMembership": "یہ صارف پہلے ہی اس ٹیننٹ کا رکن ہے",
       "lastTenantAdministrator": "آخری ٹیننٹ منتظم کو نہیں ہٹایا جا سکتا",

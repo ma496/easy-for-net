@@ -246,6 +246,7 @@
       "tenantRequired": "Veuillez indiquer un locataire pour vous connecter.",
       "tenantHostMismatch": "Cette connexion appartient à une autre adresse. Reconnectez-vous sur celle-ci.",
       "tenantHostRequired": "Connectez-vous à l'adresse propre à votre organisation.",
+      "tenantIdentifierReserved": "Cet identifiant est réservé. Choisissez-en un autre.",
       "tenantIdentifierAlreadyExists": "L'identifiant du locataire existe déjà",
       "duplicateTenantMembership": "Cet utilisateur est déjà membre de ce locataire",
       "lastTenantAdministrator": "Le dernier administrateur du locataire ne peut pas être retiré",

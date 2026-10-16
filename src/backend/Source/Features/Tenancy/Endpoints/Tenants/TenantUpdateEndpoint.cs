@@ -2,6 +2,7 @@ using Backend.ShareData.Entities;
 using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Tenancy.Core.Entities;
 using Backend.Features.Tenancy.Core;
+using Backend.Settings;
 
 namespace Backend.Features.Tenancy.Endpoints.Tenants;
 
@@ -148,7 +149,7 @@ sealed class TenantUpdateValidator : Validator<TenantUpdateRequest>
     {
         RuleFor(x => x.Id).NotEmpty();
         RuleFor(x => x.Name).NotEmpty().TenantName();
-        RuleFor(x => x.Identifier).NotEmpty().TenantIdentifier();
+        RuleFor(x => x.Identifier).NotEmpty().TenantIdentifier(Resolve<IOptions<WebSetting>>().Value);
     }
 }
 

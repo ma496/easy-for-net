@@ -2,8 +2,7 @@ using Backend.External.Email;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Settings.Core;
-using Backend.Settings;
-using Microsoft.Extensions.Options;
+using Backend.Features.Tenancy.Core.Hosting;
 
 namespace Backend.Features.Identity.Endpoints.Account;
 
@@ -16,11 +15,16 @@ namespace Backend.Features.Identity.Endpoints.Account;
 /// the account self-service flows that has to work with no tenant established: it acts on the
 /// account's own email address, which an account created by self-service sign-up confirms before it
 /// belongs to any tenant.
+/// <para>
+/// The emailed link points at the host the request came from - the tenant's origin on a tenant host, the
+/// platform origin on the platform host, <c>Web:DefaultDomain</c> when the host names nothing - read from
+/// the host alone, never from a signed-in caller's session (<see cref="ITenantHostResolver.RequestOrigin"/>).
+/// </para>
 /// </remarks>
 sealed class ResendVerifyEmailEndpoint(IUserService userService,
                                ITokenService tokenService,
                                IEmailBackgroundJobs emailBackgroundJobs,
-                               IOptions<WebSetting> webSetting,
+                               ITenantHostResolver tenantHostResolver,
                                ISettingProvider settingProvider)
     : Endpoint<ResendVerifyEmailRequest, EmptyResponse>
 {
@@ -70,7 +74,7 @@ sealed class ResendVerifyEmailEndpoint(IUserService userService,
             @$"
             <div>
                 <p>Click the link below to verify your email:</p>
-                <a href=""{webSetting.Value.DefaultDomain}/verify-email?token={token.Value}"">Verify Email</a>
+                <a href=""{tenantHostResolver.RequestOrigin(HttpContext)}/verify-email?token={token.Value}"">Verify Email</a>
             </div>", true);
 
         await Send.OkAsync(cancellationToken);

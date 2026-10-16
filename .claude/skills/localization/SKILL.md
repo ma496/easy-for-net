@@ -25,8 +25,11 @@ wins:
 
 Which languages a scope offers resolves per row, not per key: the tenant's own `LanguageSetting`
 row → the platform's → every shipped culture enabled, no default. The culture served is the one
-requested if enabled, else the scope's default, else `en`, else the first enabled one. An anonymous
-caller, and a session acting in no tenant, sees platform overrides only.
+requested if enabled, else the scope's default, else `en`, else the first enabled one. A session acting
+in no tenant sees platform overrides only. An anonymous caller on a tenant host sees that tenant's texts
+and language settings — the endpoint names the tenant to `ILocalizationService` explicitly and opens no
+tenant scope — and anywhere else (the platform host, an unknown tenant's host, no host resolution) the
+platform's only.
 
 On the web, `getDictionary(locale)` in `i18n/server.ts` is a `cache()`d server fetch of that endpoint
 that forwards the request's cookies — one fetch per request, shared by the root layout and every

@@ -209,7 +209,17 @@ await transaction.CommitAsync(ct);
 `[AllowOutside]`) parses `Request.Host` against `Web:DefaultDomain` (the platform origin) and
 `Web:TenantOriginTemplate` (`{tenant}` as the first host label): `Tenant(identifier)`, `Platform`, or
 `None` for an unknown host or an empty template, which turns the whole rule off. It reads no database;
-`TenantUrl(identifier)` and `PlatformUrl()` build links. The session is still the only authority:
+`TenantUrl(identifier)` (null under an empty template) and `PlatformUrl()` build links, and
+`RequestOrigin(context)` — the host's tenant origin, else the platform origin — is what an emailed link
+starts from, so a reset or verification link returns to the host it was asked for on. Sign-up creates a
+tenant, so it answers only on the platform host or under `None` (`tenantHostMismatch` on a tenant
+host) and links its verification email to the new tenant's origin. The only anonymous lookups of a
+tenant by identifier are `GET /tenants/host` (what the request's host names, for the web app),
+`GET /tenants/tls-allowed?domain=` (whether a host deserves a certificate) and an anonymous
+`GET /localization/resources/{culture}` on a tenant host, which names that tenant to the localization
+service explicitly and opens no tenant scope. An identifier is a host label, so
+`TenantValidationRules.TenantIdentifier(...)` refuses infrastructure labels (`app`, `www`, `api`, …)
+and the platform host's own with `tenantIdentifierReserved`. The session is still the only authority:
 sign-in on a tenant host targets that tenant and still checks membership and status; on the platform
 host only a platform account signs in, with no tenant. `TenantHostSessionMiddleware` then refuses with
 403 `tenantHostMismatch` any authenticated request (the hub included) whose session's `tenant_identifier`
