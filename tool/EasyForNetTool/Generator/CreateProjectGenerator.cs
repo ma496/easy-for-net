@@ -125,14 +125,14 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
     /// <c>// efn:examples:start</c> / <c>// efn:examples:end</c> comment in TypeScript, or the same
     /// marker as a <c>/* ... */</c> comment in CSS, alone on its line.
     /// </summary>
-    private static readonly Regex ExampleMarkerLine = new(
+    private static readonly Regex _exampleMarkerLine = new(
         @"^[ \t]*(?://[ \t]*efn:examples:(?<kind>start|end)|/\*[ \t]*efn:examples:(?<kind>start|end)[ \t]*\*/)[ \t]*$");
 
     /// <summary>
     /// Matches a <c>navigation</c> or <c>search</c> key that belongs to a component example page
     /// (<c>uiButtons</c>, <c>uiDatePicker</c>, ...).
     /// </summary>
-    private static readonly Regex ExampleResourceKey = new(@"^ui[A-Z]");
+    private static readonly Regex _exampleResourceKey = new(@"^ui[A-Z]");
 
     /// <summary>
     /// Removes the web app's component-example regions - the lines between an
@@ -164,7 +164,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             var inRegion = false;
             foreach (var line in lines)
             {
-                var marker = ExampleMarkerLine.Match(line.TrimEnd('\r'));
+                var marker = _exampleMarkerLine.Match(line.TrimEnd('\r'));
                 if (marker.Success)
                 {
                     var opens = marker.Groups["kind"].Value == "start";
@@ -206,7 +206,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             {
                 if (resources[section] is not JsonObject keys)
                     continue;
-                foreach (var key in keys.Select(entry => entry.Key).Where(key => ExampleResourceKey.IsMatch(key)).ToList())
+                foreach (var key in keys.Select(entry => entry.Key).Where(key => _exampleResourceKey.IsMatch(key)).ToList())
                     keys.Remove(key);
             }
 

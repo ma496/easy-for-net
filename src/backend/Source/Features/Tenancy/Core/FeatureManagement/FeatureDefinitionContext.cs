@@ -14,7 +14,7 @@ namespace Backend.Features.Tenancy.Core.FeatureManagement;
 [AllowOutside]
 public class FeatureDefinitionContext
 {
-    private IList<FeatureDefinition> _features { get; } = [];
+    private readonly List<FeatureDefinition> _features = [];
 
     /// <summary>
     /// Adds a new top-level feature to the context.

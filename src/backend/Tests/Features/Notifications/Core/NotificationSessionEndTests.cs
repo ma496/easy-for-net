@@ -23,7 +23,7 @@ namespace Backend.Tests.Features.Notifications.Core;
 public class NotificationSessionEndTests(App app) : NotificationsTestsBase(app)
 {
     /// <summary>How long a connection is given to close once its session has ended.</summary>
-    private static readonly TimeSpan CloseTimeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan _closeTimeout = TimeSpan.FromSeconds(10);
 
     private INotificationHubSender Sender => Service<INotificationHubSender>();
 
@@ -208,7 +208,7 @@ public class NotificationSessionEndTests(App app) : NotificationsTestsBase(app)
     /// <summary>Waits, bounded, for the server to close the connection.</summary>
     private static async Task AssertClosedAsync(HubProbe probe)
     {
-        var close = () => probe.Closed.WaitAsync(CloseTimeout, TestContext.Current.CancellationToken);
+        var close = () => probe.Closed.WaitAsync(_closeTimeout, TestContext.Current.CancellationToken);
         await close.Should().NotThrowAsync("the connection's session ended, so the server closes it");
         probe.Connection.State.Should().Be(HubConnectionState.Disconnected);
     }

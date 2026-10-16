@@ -12,7 +12,7 @@ namespace Backend.Tests.Features.Notifications.Core;
 /// <para>
 /// The job is global - it spans every tenant and every user - so these tests only ever assert on rows they
 /// created themselves, identified by fresh ids, and they never create rows the job could remove from under
-/// another test: "old" rows are dated far past any retention period (<see cref="OldAge"/>), which no other
+/// another test: "old" rows are dated far past any retention period (<see cref="_oldAge"/>), which no other
 /// test writes, and the visits and cursors belong to fresh user ids no other test knows. The class shares the
 /// <c>Notifications</c> collection (through <see cref="NotificationsTestsBase"/>), so the job never runs while
 /// another notification test is between writing a visit row and asserting on it.
@@ -26,13 +26,13 @@ namespace Backend.Tests.Features.Notifications.Core;
 public class NotificationRetentionServiceTests(App app) : NotificationsTestsBase(app)
 {
     /// <summary>An age well past the default 90-day retention period.</summary>
-    private static readonly TimeSpan OldAge = TimeSpan.FromDays(400);
+    private static readonly TimeSpan _oldAge = TimeSpan.FromDays(400);
 
     /// <summary>An age well inside the retention period.</summary>
-    private static readonly TimeSpan RecentAge = TimeSpan.FromDays(1);
+    private static readonly TimeSpan _recentAge = TimeSpan.FromDays(1);
 
-    private readonly List<Guid> arrangedNotificationIds = [];
-    private readonly List<Guid> arrangedUserIds = [];
+    private readonly List<Guid> _arrangedNotificationIds = [];
+    private readonly List<Guid> _arrangedUserIds = [];
 
     private INotificationRetentionService RetentionService => Service<INotificationRetentionService>();
 
@@ -54,25 +54,25 @@ public class NotificationRetentionServiceTests(App app) : NotificationsTestsBase
 
             var old = new List<Guid>
             {
-                await ArrangeAsync(firstTenant, tenantMember, OldAge),
-                await ArrangeAsync(secondTenant, tenantMember, OldAge),
-                await ArrangeAsync(firstTenant, null, OldAge),
-                await ArrangeAsync(secondTenant, null, OldAge),
-                await ArrangeAsync(null, null, OldAge),
-                await ArrangeAsync(null, platformUser, OldAge),
+                await ArrangeAsync(firstTenant, tenantMember, _oldAge),
+                await ArrangeAsync(secondTenant, tenantMember, _oldAge),
+                await ArrangeAsync(firstTenant, null, _oldAge),
+                await ArrangeAsync(secondTenant, null, _oldAge),
+                await ArrangeAsync(null, null, _oldAge),
+                await ArrangeAsync(null, platformUser, _oldAge),
             };
-            var oldSoftDeleted = await ArrangeAsync(firstTenant, tenantMember, OldAge, softDeleted: true);
+            var oldSoftDeleted = await ArrangeAsync(firstTenant, tenantMember, _oldAge, softDeleted: true);
 
             var recent = new List<Guid>
             {
-                await ArrangeAsync(firstTenant, tenantMember, RecentAge),
-                await ArrangeAsync(secondTenant, tenantMember, RecentAge),
-                await ArrangeAsync(firstTenant, null, RecentAge),
-                await ArrangeAsync(secondTenant, null, RecentAge),
-                await ArrangeAsync(null, null, RecentAge),
-                await ArrangeAsync(null, platformUser, RecentAge),
+                await ArrangeAsync(firstTenant, tenantMember, _recentAge),
+                await ArrangeAsync(secondTenant, tenantMember, _recentAge),
+                await ArrangeAsync(firstTenant, null, _recentAge),
+                await ArrangeAsync(secondTenant, null, _recentAge),
+                await ArrangeAsync(null, null, _recentAge),
+                await ArrangeAsync(null, platformUser, _recentAge),
             };
-            var recentSoftDeleted = await ArrangeAsync(firstTenant, tenantMember, RecentAge, softDeleted: true);
+            var recentSoftDeleted = await ArrangeAsync(firstTenant, tenantMember, _recentAge, softDeleted: true);
 
             // Visits on an old tenant-wide and an old platform-wide row, unread so that no cursor rule could
             // be what removes them: only the cascade from the deleted notification can.
@@ -172,7 +172,7 @@ public class NotificationRetentionServiceTests(App app) : NotificationsTestsBase
     private Guid NewUserId()
     {
         var userId = Guid.NewGuid();
-        arrangedUserIds.Add(userId);
+        _arrangedUserIds.Add(userId);
         return userId;
     }
 
@@ -197,7 +197,7 @@ public class NotificationRetentionServiceTests(App app) : NotificationsTestsBase
             await DbContext.SaveChangesAsync(cancellationToken);
         }
 
-        arrangedNotificationIds.Add(notification.Id);
+        _arrangedNotificationIds.Add(notification.Id);
 
         var createdAt = DateTime.UtcNow - age;
         await DbContext.Database.ExecuteSqlInterpolatedAsync($"""
@@ -270,8 +270,8 @@ public class NotificationRetentionServiceTests(App app) : NotificationsTestsBase
     /// </summary>
     private async Task CleanUpAsync()
     {
-        var notificationIds = arrangedNotificationIds.ToArray();
-        var userIds = arrangedUserIds.ToArray();
+        var notificationIds = _arrangedNotificationIds.ToArray();
+        var userIds = _arrangedUserIds.ToArray();
         var cancellationToken = CancellationToken.None;
 
         await DbContext.Database.ExecuteSqlInterpolatedAsync($"""

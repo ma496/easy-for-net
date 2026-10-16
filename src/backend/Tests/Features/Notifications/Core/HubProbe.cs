@@ -24,10 +24,10 @@ namespace Backend.Tests.Features.Notifications.Core;
 public sealed class HubProbe : IAsyncDisposable
 {
     /// <summary>How long a test waits for something that should arrive.</summary>
-    private static readonly TimeSpan ArrivalTimeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan _arrivalTimeout = TimeSpan.FromSeconds(10);
 
     /// <summary>How often <see cref="ConnectAsync"/> re-sends its readiness sentinel while it waits.</summary>
-    private static readonly TimeSpan ReadinessResendInterval = TimeSpan.FromMilliseconds(100);
+    private static readonly TimeSpan _readinessResendInterval = TimeSpan.FromMilliseconds(100);
 
     /// <summary>The title key every sentinel carries, which is what keeps them out of the assertions.</summary>
     private const string SentinelTitleKey = "test.sentinel";
@@ -117,7 +117,7 @@ public sealed class HubProbe : IAsyncDisposable
     /// SignalR answers the handshake before the hub's <c>OnConnectedAsync</c> runs, so <c>StartAsync</c>
     /// completing says nothing about the groups; a push sent straight after it can miss the connection. The
     /// hub joins the account's own <c>u:</c> group last, so this sends a sentinel to that group - again every
-    /// <see cref="ReadinessResendInterval"/>, since one sent before the join reaches nobody - until one
+    /// <see cref="_readinessResendInterval"/>, since one sent before the join reaches nobody - until one
     /// arrives, which proves every earlier join has finished. Only for a connection expected to be admitted:
     /// a refused one is built with <see cref="Create"/> and started by the test.
     /// </remarks>
@@ -178,13 +178,13 @@ public sealed class HubProbe : IAsyncDisposable
     private async Task WaitUntilJoinedAsync(IHubContext<NotificationHub> hubContext)
     {
         var sentinelId = Guid.NewGuid();
-        var deadline = DateTime.UtcNow + ArrivalTimeout;
+        var deadline = DateTime.UtcNow + _arrivalTimeout;
         while (DateTime.UtcNow < deadline)
         {
             await hubContext.Clients.Group(UserGroup).SendAsync(
                 NotificationHubMethods.NotificationReceived, Sentinel(sentinelId), TestContext.Current.CancellationToken);
 
-            var resendAt = DateTime.UtcNow + ReadinessResendInterval;
+            var resendAt = DateTime.UtcNow + _readinessResendInterval;
             while (DateTime.UtcNow < resendAt)
             {
                 if (_notifications.Any(message => message.Id == sentinelId))
@@ -201,7 +201,7 @@ public sealed class HubProbe : IAsyncDisposable
             }
         }
 
-        throw new TimeoutException($"The connection did not join its groups within {ArrivalTimeout.TotalSeconds} seconds.");
+        throw new TimeoutException($"The connection did not join its groups within {_arrivalTimeout.TotalSeconds} seconds.");
     }
 
     private static NotificationReceivedMessage Sentinel(Guid id) => new()
@@ -215,7 +215,7 @@ public sealed class HubProbe : IAsyncDisposable
 
     private static async Task<T> WaitForAsync<T>(ConcurrentQueue<T> queue, Func<T, bool> predicate, string what)
     {
-        var deadline = DateTime.UtcNow + ArrivalTimeout;
+        var deadline = DateTime.UtcNow + _arrivalTimeout;
         while (DateTime.UtcNow < deadline)
         {
             var match = queue.FirstOrDefault(predicate);
@@ -227,6 +227,6 @@ public sealed class HubProbe : IAsyncDisposable
             await Task.Delay(20, TestContext.Current.CancellationToken);
         }
 
-        throw new TimeoutException($"No matching {what} message arrived within {ArrivalTimeout.TotalSeconds} seconds.");
+        throw new TimeoutException($"No matching {what} message arrived within {_arrivalTimeout.TotalSeconds} seconds.");
     }
 }

@@ -11,7 +11,7 @@ namespace Backend.Permissions;
 /// </remarks>
 public class PermissionDefinitionContext
 {
-    private IList<PermissionDefinition> _permissions { get; } = [];
+    private readonly List<PermissionDefinition> _permissions = [];
 
     /// <summary>
     /// Adds a new top-level permission to the context.
