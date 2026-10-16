@@ -67,7 +67,8 @@ export interface UserListRequest extends ListRequestDto<string>, RequestBase {
 }
 ```
 
-String enums the backend serializes by name are either a TS `enum` (`TenantStatus`,
+Every enum crosses the API by name (`JsonStringEnumConverter`), so a TS enum carries string values
+(`SortDirection.Asc = 'Asc'`), never numbers. Those enums are either a TS `enum` (`TenantStatus`,
 `NotificationType`, in the feature's `enums.ts`) or an `as const` object plus a derived union type
 (`FeatureValueProvider` / `FeatureValueProviderName`). Every exported interface gets a one-line JSDoc.
 

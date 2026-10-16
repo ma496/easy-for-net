@@ -3,8 +3,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace Backend.Features.Identity.Core.Entities.Configuration;
 
 /// <summary>
-/// EF Core entity configuration for <see cref="Token"/>, mapping it to the <c>identity.Tokens</c> table
-/// and defining its relationship to <see cref="User"/>.
+/// EF Core entity configuration for <see cref="Token"/>, mapping it to the <c>identity.Tokens</c> table,
+/// storing <see cref="TokenPurpose"/> as a string, and defining its relationship to <see cref="User"/>.
 /// </summary>
 public class TokenConfiguration : IEntityTypeConfiguration<Token>
 {
@@ -15,6 +15,9 @@ public class TokenConfiguration : IEntityTypeConfiguration<Token>
     public void Configure(EntityTypeBuilder<Token> builder)
     {
         builder.ToTable("Tokens", "identity");
+
+        builder.Property(t => t.Purpose)
+            .HasConversion<string>();
 
         builder.HasOne(t => t.User)
             .WithMany(u => u.Tokens)

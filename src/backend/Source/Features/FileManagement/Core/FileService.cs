@@ -88,31 +88,31 @@ public enum FileAccessStatus
     /// The file is attributed to the tenant the caller is acting in, or is owned by the calling
     /// account, and may be served or removed.
     /// </summary>
-    Granted = 1,
+    Granted,
 
     /// <summary>
     /// No stored file is recorded under that name, so there is nothing to serve and nothing to say
     /// about who it might have belonged to.
     /// </summary>
-    NotFound = 2,
+    NotFound,
 
     /// <summary>
     /// The file exists but is attributed to another tenant, or is owned by another account. This is
     /// what a known or guessed stored file name yields instead of another tenant's content.
     /// </summary>
-    CrossTenantAccess = 3,
+    CrossTenantAccess,
 
     /// <summary>
     /// The file is attributed to a tenant that is suspended. Its content is retained and simply
     /// stops being served until the tenant is reactivated.
     /// </summary>
-    TenantSuspended = 4,
+    TenantSuspended,
 
     /// <summary>
     /// The file is attributed to a tenant that no longer exists or has been deleted. As with
     /// suspension, the content is retained and no longer served.
     /// </summary>
-    TenantNotFound = 5
+    TenantNotFound
 }
 
 /// <summary>

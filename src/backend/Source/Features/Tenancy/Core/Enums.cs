@@ -14,6 +14,6 @@ namespace Backend.Features.Tenancy.Core;
 [AllowOutside]
 public enum TenantStatus
 {
-    Active = 1,
-    Suspended = 2
+    Active,
+    Suspended
 }

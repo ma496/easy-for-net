@@ -18,6 +18,6 @@ public class Token : AuditableEntity<Guid>
 
 public enum TokenPurpose
 {
-    EmailVerification = 1,
-    PasswordReset = 2
+    EmailVerification,
+    PasswordReset
 }
