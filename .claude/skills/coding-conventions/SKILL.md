@@ -98,8 +98,10 @@ interfaces, and non-obvious public methods. Add it; do not leave new types undoc
 | Feature (entitlement) constant | `Feature_Name` (`"Feature.Name"` value) | `Identity_MaxUserCount` |
 | Error code | `ErrorCodes` member (`public static readonly ErrorCode`), `camelCase` value | `UsernameAlreadyExists = new("usernameAlreadyExists")` |
 
-Private static readonly fields are `_camelCase`, private constants `PascalCase`, parameters
-`camelCase` (enforced as warnings by `.editorconfig`).
+Every private field — instance or static, readonly or not — is `_camelCase` (`_holding`, never
+`holding` or `Holding`); private constants are `PascalCase`, parameters `camelCase` (enforced as
+warnings by `.editorconfig`). A primary-constructor parameter is a parameter, not a field, so it
+stays `camelCase`; private state is a field, not a private auto-property.
 
 **Formatting.** 4-space indent, CRLF, UTF-8, and `insert_final_newline = false` — do not add a
 trailing newline to C# files.

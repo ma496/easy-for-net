@@ -28,7 +28,7 @@ public class TenantErrorCodesTests
     /// plus the platform permission that cannot be granted inside a tenant and the concurrency refusal
     /// a membership change answers with.
     /// </summary>
-    private static readonly Dictionary<string, string> TenantFailures = new()
+    private static readonly Dictionary<string, string> _tenantFailures = new()
     {
         [nameof(ErrorCodes.TenantNotFound)] = "tenantNotFound",
         [nameof(ErrorCodes.TenantSuspended)] = "tenantSuspended",
@@ -54,7 +54,7 @@ public class TenantErrorCodesTests
     {
         var declared = DeclaredCodes();
 
-        foreach (var (constant, code) in TenantFailures)
+        foreach (var (constant, code) in _tenantFailures)
         {
             declared.Should().ContainKey(constant,
                 "{0} is the code the refusal for this failure is answered with, and the one every caller resolving it reads",
@@ -64,7 +64,7 @@ public class TenantErrorCodesTests
                 "the value is the contract: the constant's name is not what a caller receives or acts on");
         }
 
-        foreach (var code in TenantFailures.Values)
+        foreach (var code in _tenantFailures.Values)
         {
             declared.Values.Count(value => value == code).Should().Be(1,
                 "{0} names exactly one failure, so that a caller reading it is told which one happened",

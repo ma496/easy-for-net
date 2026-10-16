@@ -21,7 +21,7 @@ public class SessionTokenTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// The registered JWT claims a token legitimately carries beside the two that matter.
     /// </summary>
-    private static readonly string[] RegisteredClaims = ["iss", "aud", "exp", "nbf", "iat"];
+    private static readonly string[] _registeredClaims = ["iss", "aud", "exp", "nbf", "iat"];
 
     /// <summary>
     /// Verifies the access token's payload holds the account and the session and no grant: the keys are
@@ -35,7 +35,7 @@ public class SessionTokenTests(App app) : TenancyTestsBase(app)
 
         var payload = TestsHelper.PayloadOf(tokens.AccessToken);
 
-        payload.Keys.Order().Should().Equal(string.Join(",", RegisteredClaims).Split(',').Append(System.Security.Claims.ClaimTypes.NameIdentifier).Append("sid").Order(),
+        payload.Keys.Order().Should().Equal(string.Join(",", _registeredClaims).Split(',').Append(System.Security.Claims.ClaimTypes.NameIdentifier).Append("sid").Order(),
             "the token names the caller and the session; what the session grants is read from the store on every request");
         payload[ClaimTypes.NameIdentifier].GetString().Should().Be(TestUsers.TenantAdminUserId.ToString());
         payload["sid"].GetString().Should().MatchRegex("^[0-9a-f]{32}$", "the session identifier is an opaque random value");

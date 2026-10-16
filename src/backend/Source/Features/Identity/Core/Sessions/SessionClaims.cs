@@ -10,7 +10,7 @@ namespace Backend.Features.Identity.Core.Sessions;
 /// </summary>
 public static class SessionClaims
 {
-    private static readonly HashSet<string> ProjectedTypes =
+    private static readonly HashSet<string> _projectedTypes =
     [
         ClaimTypes.Role,
         ClaimTypes.Name,
@@ -66,7 +66,7 @@ public static class SessionClaims
         // Whatever of these the token or cookie arrived carrying is dropped first, so the stored session is
         // the only source of them: a credential minted before this scheme, or forged into a cookie ticket
         // key, cannot add a role, a permission or a tenant the session does not hold.
-        foreach (var claim in identity.Claims.Where(claim => ProjectedTypes.Contains(claim.Type)).ToList())
+        foreach (var claim in identity.Claims.Where(claim => _projectedTypes.Contains(claim.Type)).ToList())
         {
             identity.RemoveClaim(claim);
         }

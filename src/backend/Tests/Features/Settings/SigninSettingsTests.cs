@@ -24,7 +24,7 @@ public class SigninSettingsTests(App app) : SettingsTestsBase(app)
     /// <summary>The route the refresh-token service registers, addressed directly because a refresh is anonymous.</summary>
     private const string RefreshRoute = "api/account/refresh-token";
 
-    private static readonly JsonObject VerificationRequired = new() { ["isEmailVerificationRequired"] = true };
+    private static readonly JsonObject _verificationRequired = new() { ["isEmailVerificationRequired"] = true };
 
     private PlatformSettingOverlays Overlays => Service<PlatformSettingOverlays>();
 
@@ -33,7 +33,7 @@ public class SigninSettingsTests(App app) : SettingsTestsBase(app)
     {
         var tenant = await CreateTenantAsync();
         var member = await CreateTenantUserAsync(tenant.Id);
-        Overlays.Apply(tenant.Id, Signin, VerificationRequired);
+        Overlays.Apply(tenant.Id, Signin, _verificationRequired);
 
         var (response, refusal) = await SignInAsync<ProblemDetails>(member.Username, tenant);
 
@@ -47,7 +47,7 @@ public class SigninSettingsTests(App app) : SettingsTestsBase(app)
         var tenant = await CreateTenantAsync();
         var member = await CreateTenantUserAsync(tenant.Id);
         await MarkEmailVerifiedAsync(member);
-        Overlays.Apply(tenant.Id, Signin, VerificationRequired);
+        Overlays.Apply(tenant.Id, Signin, _verificationRequired);
 
         var (response, _) = await SignInAsync<TokenResponse>(member.Username, tenant);
 
@@ -61,7 +61,7 @@ public class SigninSettingsTests(App app) : SettingsTestsBase(app)
         var member = await CreateTenantUserAsync(tenant.Id);
         // Signed in before the platform requirement stands: the administrator's account is unverified too.
         var administrator = await TenantClientAsync(tenant.Id);
-        Overlays.Apply(tenant.Id, Signin, VerificationRequired);
+        Overlays.Apply(tenant.Id, Signin, _verificationRequired);
 
         var (listResponse, before) = await administrator.GETAsync<SettingListEndpoint, SettingListResponse>();
         listResponse.StatusCode.Should().Be(HttpStatusCode.OK, "a session created before the requirement keeps working");
@@ -87,8 +87,8 @@ public class SigninSettingsTests(App app) : SettingsTestsBase(app)
         var relaxedMember = await CreateTenantUserAsync(relaxed.Id);
         var strictMember = await CreateTenantUserAsync(strict.Id);
         await SetTenantValuesAsync(relaxed.Id, Signin, new JsonObject { ["isEmailVerificationRequired"] = false });
-        Overlays.Apply(relaxed.Id, Signin, VerificationRequired);
-        Overlays.Apply(strict.Id, Signin, VerificationRequired);
+        Overlays.Apply(relaxed.Id, Signin, _verificationRequired);
+        Overlays.Apply(strict.Id, Signin, _verificationRequired);
 
         var (relaxedResponse, _) = await SignInAsync<TokenResponse>(relaxedMember.Username, relaxed);
         var (strictResponse, refusal) = await SignInAsync<ProblemDetails>(strictMember.Username, strict);
@@ -106,7 +106,7 @@ public class SigninSettingsTests(App app) : SettingsTestsBase(app)
         var administrator = await TenantClientAsync(tenant.Id);
 
         var (putResponse, _) = await administrator.PUTAsync<SettingUpdateEndpoint, SettingUpdateRequest, SettingDto>(
-            new() { Name = Signin, Values = VerificationRequired.DeepClone().AsObject() });
+            new() { Name = Signin, Values = _verificationRequired.DeepClone().AsObject() });
         putResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         (await administrator.GETAsync<SettingListEndpoint, SettingListResponse>()).Response.StatusCode
@@ -125,8 +125,8 @@ public class SigninSettingsTests(App app) : SettingsTestsBase(app)
         var strict = await CreateTenantAsync();
         var member = await CreateDualTenantMemberAsync(relaxed.Id, strict.Id);
         await SetTenantValuesAsync(relaxed.Id, Signin, new JsonObject { ["isEmailVerificationRequired"] = false });
-        Overlays.Apply(relaxed.Id, Signin, VerificationRequired);
-        Overlays.Apply(strict.Id, Signin, VerificationRequired);
+        Overlays.Apply(relaxed.Id, Signin, _verificationRequired);
+        Overlays.Apply(strict.Id, Signin, _verificationRequired);
         var client = await ClientForAsync(member.Username, relaxed.Id);
 
         var (response, refusal) = await client.POSTAsync<TenantSwitchEndpoint, TenantSwitchRequest, ProblemDetails>(
@@ -145,8 +145,8 @@ public class SigninSettingsTests(App app) : SettingsTestsBase(app)
         var member = await CreateDualTenantMemberAsync(first.Id, second.Id);
         await SetTenantValuesAsync(first.Id, Signin, new JsonObject { ["isEmailVerificationRequired"] = false });
         await SetTenantValuesAsync(second.Id, Signin, new JsonObject { ["isEmailVerificationRequired"] = false });
-        Overlays.Apply(first.Id, Signin, VerificationRequired);
-        Overlays.Apply(second.Id, Signin, VerificationRequired);
+        Overlays.Apply(first.Id, Signin, _verificationRequired);
+        Overlays.Apply(second.Id, Signin, _verificationRequired);
         var client = await ClientForAsync(member.Username, first.Id);
 
         var (response, switched) = await client.POSTAsync<TenantSwitchEndpoint, TenantSwitchRequest, TenantSwitchResponse>(
@@ -165,7 +165,7 @@ public class SigninSettingsTests(App app) : SettingsTestsBase(app)
         var administrator = await TenantClientAsync(tenant.Id);
 
         var (putResponse, _) = await administrator.PUTAsync<SettingUpdateEndpoint, SettingUpdateRequest, SettingDto>(
-            new() { Name = Signin, Values = VerificationRequired.DeepClone().AsObject() });
+            new() { Name = Signin, Values = _verificationRequired.DeepClone().AsObject() });
         putResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var anonymous = App.CreateClient(new ClientOptions { HandleCookies = false });

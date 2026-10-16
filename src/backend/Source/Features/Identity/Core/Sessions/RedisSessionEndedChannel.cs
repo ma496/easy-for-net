@@ -127,8 +127,8 @@ public sealed class RedisSessionEndedSubscriber(
     IOptions<RedisSetting> setting,
     ILogger<RedisSessionEndedSubscriber> logger) : BackgroundService
 {
-    private static readonly TimeSpan FirstRetryDelay = TimeSpan.FromSeconds(1);
-    private static readonly TimeSpan LongestRetryDelay = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan _firstRetryDelay = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan _longestRetryDelay = TimeSpan.FromSeconds(30);
 
     private readonly RedisChannel _channel = RedisSessionEndedChannel.For(setting.Value.InstanceName);
     private ISubscriber? _subscriber;
@@ -144,7 +144,7 @@ public sealed class RedisSessionEndedSubscriber(
         // waits out its connect timeout.
         await Task.Yield();
 
-        var delay = FirstRetryDelay;
+        var delay = _firstRetryDelay;
         while (!stoppingToken.IsCancellationRequested)
         {
             ISubscriber? subscriber = null;
@@ -173,7 +173,7 @@ public sealed class RedisSessionEndedSubscriber(
                 return;
             }
 
-            delay = TimeSpan.FromTicks(Math.Min(delay.Ticks * 2, LongestRetryDelay.Ticks));
+            delay = TimeSpan.FromTicks(Math.Min(delay.Ticks * 2, _longestRetryDelay.Ticks));
         }
     }
 
