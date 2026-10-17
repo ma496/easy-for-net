@@ -6,7 +6,7 @@
 import { parseRemote } from "./remote.mjs";
 
 /** Options that take a value, and the flags that do not. */
-const VALUE_OPTIONS = ["host", "user", "port", "identity", "domain", "repo", "branch", "name", "email"];
+const VALUE_OPTIONS = ["host", "user", "port", "identity", "domain", "repo", "branch", "name", "email", "dns-provider", "dns-token"];
 const FLAGS = ["check", "yes", "help"];
 
 /**
@@ -56,6 +56,77 @@ export function appNameFor(domain) {
   return String(domain).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
+/** The host the platform is served on; every other subdomain of the domain is a tenant's. */
+export function platformHost(domain) {
+  return `app.${String(domain).toLowerCase()}`;
+}
+
+/**
+ * The environment variable each common DNS provider's API token goes in, as Traefik's ACME client
+ * (lego) names it. Any other lego provider works too, with the token given as `NAME=value`.
+ */
+export const DNS_PROVIDERS = {
+  cloudflare: "CF_DNS_API_TOKEN",
+  digitalocean: "DO_AUTH_TOKEN",
+  duckdns: "DUCKDNS_TOKEN",
+  gandiv5: "GANDIV5_PERSONAL_ACCESS_TOKEN",
+  linode: "LINODE_TOKEN",
+  vultr: "VULTR_API_KEY",
+};
+
+/**
+ * `--dns-provider` and `--dns-token` into what Traefik's DNS-01 challenge needs: the provider and
+ * the one environment variable that holds the token. `{}` when neither is given (HTTP-01 only),
+ * `{ error }` when only one is, or when the provider's variable is not known and the token does not
+ * name it. An error never quotes the token.
+ */
+export function dnsChallenge(provider, token) {
+  if (!provider && !token) return {};
+  if (!provider) return { error: "--dns-token needs --dns-provider" };
+  if (!token) return { error: "--dns-provider needs a token: EFN_DNS_TOKEN=<token> (or --dns-token)" };
+  const name = String(provider).toLowerCase();
+  if (!/^[a-z0-9]+$/.test(name)) return { error: `--dns-provider '${provider}' is not a lego provider name (e.g. cloudflare)` };
+  const named = /^([A-Z][A-Z0-9_]*)=(.+)$/s.exec(token);
+  const envName = named ? named[1] : DNS_PROVIDERS[name];
+  const value = named ? named[2] : token;
+  if (!envName) {
+    return {
+      error: `the token variable of DNS provider '${name}' is not known: give the token as VARIABLE=token, naming ` +
+        `the variable lego's ${name} provider reads (known: ${Object.keys(DNS_PROVIDERS).join(", ")})`,
+    };
+  }
+  // The token is written into an env file on the server: nothing a real token holds needs quoting.
+  if (/[\s'"`\\$]/.test(value)) return { error: "--dns-token holds a space, a quote, a backslash or a $, which no DNS provider token does" };
+  return { provider: name, envName, value };
+}
+
+/** A label nobody creates a record for, so that it resolves only through a wildcard record. */
+export function randomLabel(random = Math.random) {
+  return `efn-check-${Math.floor(random() * 36 ** 8).toString(36).padStart(8, "0")}`;
+}
+
+/**
+ * What DNS says about a deployment's two records: `app.<domain>`, and `*.<domain>` probed through a
+ * random label. `resolve(name)` gives a name's addresses (or throws when it has none). Returns
+ * `{ missing, elsewhere }`, each a list of `{ record, name, addresses? }` in that order: `missing`
+ * stops a deploy, `elsewhere` (resolving, but not to the server) is a warning.
+ */
+export async function checkDomainDns({ domain, serverAddresses, resolve, label = randomLabel() }) {
+  const records = [
+    { record: platformHost(domain), name: platformHost(domain) },
+    { record: `*.${domain}`, name: `${label}.${domain}` },
+  ];
+  const answers = await Promise.all(records.map((r) => Promise.resolve().then(() => resolve(r.name)).catch(() => [])));
+  const missing = [];
+  const elsewhere = [];
+  records.forEach((r, i) => {
+    const addresses = answers[i] ?? [];
+    if (!addresses.length) missing.push(r);
+    else if (!addresses.some((ip) => serverAddresses.includes(ip))) elsewhere.push({ ...r, addresses });
+  });
+  return { missing, elsewhere };
+}
+
 /**
  * The two URLs Coolify can clone a repository from: HTTPS for a public one, SSH for a private
  * one read with a deploy key. `resolveHost` turns an SSH alias (`git@github-work:…`) into the
@@ -76,6 +147,9 @@ export function shellQuote(value) {
 
 /** The uploaded server script, in the SSH user's home directory. */
 export const REMOTE_SCRIPT = ".efn-deploy-vps.sh";
+
+/** The DNS provider's token on its way to the server, beside the script; the deploy phase deletes it. */
+export const REMOTE_DNS_TOKEN = ".efn-dns-token";
 
 /**
  * The command a server phase runs: the script as root, through sudo when the SSH user is not

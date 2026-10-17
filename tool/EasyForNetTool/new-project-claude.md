@@ -21,7 +21,7 @@ dotnet run --project src/backend/Source   # needs PostgreSQL and Redis (Connecti
 npm run dev                              # from the repository root: the whole app — PostgreSQL + Redis (Docker), the API on :5000, then the web app (next dev on :3001) behind the dev proxy on :3000 once the API's /health answers; open http://app.localhost:3000 or http://default.localhost:3000 (scripts/dev.mjs, scripts/dev-proxy.mjs; --no-docker, --api-only, --web-only)
 npm run stop:api                         # from the repository root: stop this checkout's running API before a build (it locks bin/ on Windows)
 docker compose up -d                     # from the repository root: PostgreSQL + Redis for development (docker-compose.yml)
-npm run deploy:vps -- --host <ip> --domain <domain> --email <email>   # deploy to a VPS through Coolify (scripts/deploy-vps.mjs + scripts/deploy/vps/remote.sh, docker-compose.coolify.yml)
+npm run deploy:vps -- --host <ip> --domain <domain> --email <email>   # deploy to a VPS through Coolify: the platform at app.<domain>, every tenant at <tenant>.<domain> (DNS: A app.<domain> and A *.<domain>; --dns-provider/--dns-token for a DNS-01 wildcard certificate) (scripts/deploy-vps.mjs + scripts/deploy/vps/remote.sh, docker-compose.coolify.yml)
 ```
 
 Backend tests — **require a running PostgreSQL** matching `appsettings.Testing.json` (not Redis: the Testing host keeps sessions in memory); the Testing environment migrates and seeds the database on startup:

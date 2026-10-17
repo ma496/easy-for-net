@@ -4,10 +4,14 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   appNameFor,
+  checkDomainDns,
   composeShape,
+  dnsChallenge,
   isValidDomain,
   parseDeployArgs,
   parseResults,
+  platformHost,
+  randomLabel,
   remoteCommand,
   repoUrls,
   shellQuote,
@@ -110,4 +114,133 @@ test("the Coolify stack runs the same services and reads the same values as the 
 test("the compose shape skips escaped dollars and nested keys", () => {
   const shape = composeShape("services:\n  db:\n    environment:\n      A: ${A:?x}\n    test: $${B}\nvolumes:\n  data:\n");
   assert.deepEqual(shape, { services: ["db"], variables: ["A"] });
+});
+
+test("both compose files hand the API the tenant template beside the platform origin", () => {
+  for (const file of ["docker-compose.prod.yml", "docker-compose.coolify.yml"]) {
+    const text = readFileSync(join(REPO_ROOT, file), "utf8");
+    assert.match(text, /^ {6}Web__DefaultDomain: \$\{PUBLIC_URL:\?set PUBLIC_URL\}$/m, file);
+    assert.match(text, /^ {6}Web__TenantOriginTemplate: \$\{TENANT_URL_TEMPLATE:\?set TENANT_URL_TEMPLATE\}$/m, file);
+  }
+});
+
+test(".env.docker.example fills every value the production stack requires", () => {
+  const example = readFileSync(join(REPO_ROOT, ".env.docker.example"), "utf8");
+  const values = Object.fromEntries([...example.matchAll(/^([A-Z_][A-Z0-9_]*)=(.*)$/gm)].map((m) => [m[1], m[2].trim()]));
+  const prod = readFileSync(join(REPO_ROOT, "docker-compose.prod.yml"), "utf8");
+  for (const [, name] of prod.matchAll(/\$\{([A-Z_][A-Z0-9_]*):\?/g)) assert.ok(name in values, `${name} is missing`);
+  assert.equal(values.DOMAIN, "example.com");
+  assert.equal(values.PUBLIC_URL, `https://${platformHost(values.DOMAIN)}`);
+  assert.equal(values.TENANT_URL_TEMPLATE, `https://{tenant}.${values.DOMAIN}`);
+});
+
+// --- the Caddyfile -------------------------------------------------------------------------
+
+test("Caddy serves the platform and every tenant subdomain with the same routes", () => {
+  const caddyfile = readFileSync(join(REPO_ROOT, "docker", "Caddyfile"), "utf8").replace(/\r\n/g, "\n");
+  // Top-level blocks: a name (none for the global options) at column 0 and `{`, up to `}` at column 0.
+  const blocks = Object.fromEntries([...caddyfile.matchAll(/^([^\s{#][^\n]*?)?\s*\{\n([\s\S]*?)^\}/gm)].map((m) => [m[1] ?? "", m[2]]));
+  assert.match(blocks[""] ?? "", /on_demand_tls \{\s*ask http:\/\/api:8080\/api\/tenants\/tls-allowed\s*\}/);
+  const routes = blocks["(app_routes)"];
+  assert.match(routes, /@api path \/api\/\* \/hubs\/\* \/hangfire \/hangfire\/\* \/health\n\s*handle @api \{\s*reverse_proxy api:8080\s*\}/);
+  assert.match(routes, /handle \{\s*reverse_proxy web:3000\s*\}/);
+  assert.match(blocks["app.{$DOMAIN}"], /import app_routes/);
+  assert.doesNotMatch(blocks["app.{$DOMAIN}"], /on_demand/);
+  assert.match(blocks["*.{$DOMAIN}"], /tls \{\s*on_demand\s*\}/);
+  assert.match(blocks["*.{$DOMAIN}"], /import app_routes/);
+});
+
+test("the Coolify Caddyfile answers whatever host Traefik forwards", () => {
+  const caddyfile = readFileSync(join(REPO_ROOT, "docker", "Caddyfile.coolify"), "utf8");
+  assert.match(caddyfile, /^:80 \{/m);
+});
+
+test("the server script attaches the platform host and the wildcard, and sets the tenant template", () => {
+  const script = readFileSync(join(REPO_ROOT, "scripts", "deploy", "vps", "remote.sh"), "utf8").replace(/\r\n/g, "\n");
+  assert.match(script, /url="https:\/\/app\.\$domain"/);
+  assert.match(script, /\$url:80,https:\/\/\*\.\$domain:80/);
+  assert.match(script, /set_env TENANT_URL_TEMPLATE "\$tenant_template"/);
+  assert.match(script, /tenant_template="https:\/\/\{tenant\}\.\$domain"/);
+  // The token file is deleted as soon as it is read.
+  assert.match(script, /dns_token=\$\(cat "\$token_file"[^\n]*\n\s*rm -f "\$token_file"/);
+  // Every line that reads the token sets it, checks it, or hands it to dns_challenge: none prints it.
+  for (const line of script.split("\n").filter((l) => /\$\{?dns_token\b/.test(l))) {
+    assert.match(line, /^\s*(dns_token=|if \[ -n "\$dns_provider" \] && \{|if \[ -n "\$dns_provider" \]; then dns_challenge )/, line);
+  }
+  // Inside dns_challenge the token ($3) is only written into the root-only env file.
+  const start = script.indexOf("dns_challenge() {");
+  const challenge = script.slice(start, script.indexOf("\n}\n", start));
+  assert.deepEqual(challenge.split("\n").filter((l) => l.includes('"$3"')), [String.raw`  printf '%s=%s\n' "$2" "$3" >"$env_file"`]);
+});
+
+// --- tenant subdomains and DNS -------------------------------------------------------------
+
+test("the DNS flags take values and are known options", () => {
+  const { options, errors } = parseDeployArgs(["--dns-provider", "cloudflare", "--dns-token=abc123"]);
+  assert.deepEqual(options, { "dns-provider": "cloudflare", "dns-token": "abc123" });
+  assert.deepEqual(errors, []);
+  assert.deepEqual(parseDeployArgs(["--dns-token"]).errors, ["--dns-token needs a value"]);
+});
+
+test("the platform is app.<domain>", () => {
+  assert.equal(platformHost("Example.com"), "app.example.com");
+});
+
+test("no DNS flags means HTTP-01 only, and one without the other is an error", () => {
+  assert.deepEqual(dnsChallenge(undefined, undefined), {});
+  assert.match(dnsChallenge("cloudflare", undefined).error, /--dns-provider needs a token: EFN_DNS_TOKEN/);
+  assert.match(dnsChallenge(undefined, "secret-token").error, /--dns-token needs --dns-provider/);
+});
+
+test("a known provider puts the token in its lego variable", () => {
+  assert.deepEqual(dnsChallenge("Cloudflare", "abc123"), { provider: "cloudflare", envName: "CF_DNS_API_TOKEN", value: "abc123" });
+  assert.deepEqual(dnsChallenge("digitalocean", "dop_v1_x"), { provider: "digitalocean", envName: "DO_AUTH_TOKEN", value: "dop_v1_x" });
+});
+
+test("any other provider names its variable in the token, and an error never quotes the token", () => {
+  assert.deepEqual(dnsChallenge("ovh", "OVH_APPLICATION_KEY=k=1"), { provider: "ovh", envName: "OVH_APPLICATION_KEY", value: "k=1" });
+  const unknown = dnsChallenge("route53", "super-secret-value");
+  assert.match(unknown.error, /VARIABLE=token/);
+  assert.doesNotMatch(unknown.error, /super-secret-value/);
+  assert.match(dnsChallenge("cloud flare", "x").error, /not a lego provider name/);
+  const quoted = dnsChallenge("cloudflare", "abc'; rm -rf /");
+  assert.match(quoted.error, /space, a quote/);
+  assert.doesNotMatch(quoted.error, /rm -rf/);
+});
+
+test("a random label is a valid DNS label that differs between runs", () => {
+  assert.match(randomLabel(), /^efn-check-[a-z0-9]{8}$/);
+  assert.equal(randomLabel(() => 0), "efn-check-00000000");
+  assert.notEqual(randomLabel(() => 0.1), randomLabel(() => 0.2));
+});
+
+test("the DNS check probes app.<domain> and the wildcard through a random label", async () => {
+  const asked = [];
+  const records = { "app.example.com": ["203.0.113.10"], "efn-check-abc.example.com": ["203.0.113.10"] };
+  const resolve = async (name) => {
+    asked.push(name);
+    if (!records[name]) throw Object.assign(new Error("not found"), { code: "ENOTFOUND" });
+    return records[name];
+  };
+  const result = await checkDomainDns({ domain: "example.com", serverAddresses: ["203.0.113.10"], resolve, label: "efn-check-abc" });
+  assert.deepEqual(result, { missing: [], elsewhere: [] });
+  assert.deepEqual(asked.sort(), ["app.example.com", "efn-check-abc.example.com"]);
+});
+
+test("a missing wildcard record is reported as missing, so the deploy refuses", async () => {
+  const resolve = async (name) => {
+    if (name === "app.example.com") return ["203.0.113.10"];
+    throw Object.assign(new Error("not found"), { code: "ENOTFOUND" });
+  };
+  const { missing, elsewhere } = await checkDomainDns({ domain: "example.com", serverAddresses: ["203.0.113.10"], resolve, label: "efn-check-x" });
+  assert.deepEqual(missing, [{ record: "*.example.com", name: "efn-check-x.example.com" }]);
+  assert.deepEqual(elsewhere, []);
+});
+
+test("records pointing at another address are a warning, not a refusal", async () => {
+  const resolve = async () => ["198.51.100.7"];
+  const { missing, elsewhere } = await checkDomainDns({ domain: "example.com", serverAddresses: ["203.0.113.10"], resolve, label: "efn-check-x" });
+  assert.deepEqual(missing, []);
+  assert.deepEqual(elsewhere.map((e) => e.record), ["app.example.com", "*.example.com"]);
+  assert.deepEqual(elsewhere[1].addresses, ["198.51.100.7"]);
 });
