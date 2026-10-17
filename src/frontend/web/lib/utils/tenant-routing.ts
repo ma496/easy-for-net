@@ -60,7 +60,7 @@ export const isActiveTenantStale = (user: GetUserInfoResponse | undefined): bool
  * Returns true when an ordinary account is signed in with no tenant it may still act in - the tenant
  * its session named was suspended, deleted or left it, so the last renewal dropped it, or the selection
  * it still carries has gone stale. Such a session can open no tenant-scoped screen on this host, so the
- * route guard sends it to the workspaces list, which links to the tenants that are still its own (each
+ * route guard sends it to the tenant picker (`/select-tenant`), which links to the tenants that are still its own (each
  * at its own address) and says so plainly when there are none. It never signs the account out: losing
  * a tenant is a reason to point at another, not to end the session.
  *
@@ -173,7 +173,7 @@ export const isPathAvailable = (user: GetUserInfoResponse | undefined, pathname:
 
 /**
  * Decides where a platform account acting in no tenant goes after signing in:
- * the dashboard, rather than the workspaces list, because it
+ * the dashboard, rather than the tenant picker, because it
  * needs no tenant. A `redirect` it was sent back with is honoured when it can
  * use that screen. Returns `null` for anyone else, who arrives already acting
  * in the tenant the host names.

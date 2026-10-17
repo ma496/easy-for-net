@@ -82,7 +82,7 @@
     "tenantsCreate": "بنائیں",
     "tenantsUpdate": "اپ ڈیٹ",
     "tenantsMembers": "اراکین",
-    "selectTenant": "آپ کے ورک اسپیس",
+    "selectTenant": "آپ کے ٹیننٹس",
     "tenantsDetail": "تفصیل",
     "editions": "ایڈیشنز",
     "editionsList": "فہرست",
@@ -92,9 +92,9 @@
     "tenantsFeatures": "خصوصیات",
     "localization": "لوکلائزیشن",
     "settings": "ترتیبات",
-    "otherWorkspaces": "دیگر ورک اسپیس",
+    "otherTenants": "دیگر ٹیننٹس",
     "platformAdministration": "پلیٹ فارم انتظامیہ",
-    "allWorkspaces": "تمام ورک اسپیس"
+    "allTenants": "تمام ٹیننٹس"
   },
   "search": {
     "dashboard": "ڈیش بورڈ",
@@ -248,6 +248,8 @@
       "tenantRequired": "سائن ان کرنے کے لیے براہ کرم ٹیننٹ بتائیں۔",
       "tenantHostMismatch": "یہ سائن ان کسی دوسرے پتے کا ہے۔ اس پتے پر دوبارہ سائن ان کریں۔",
       "tenantHostRequired": "اپنی تنظیم کے اپنے پتے پر سائن ان کریں۔",
+      "tenantAddressNotConfigured": "اس انسٹالیشن پر ٹیننٹس کے پتے ترتیب نہیں دیے گئے۔",
+      "signInTicketInvalid": "سائن اِن کا یہ لنک ختم ہو چکا ہے یا پہلے ہی استعمال ہو چکا ہے۔ اپنے پاس ورڈ سے سائن اِن کریں۔",
       "tenantIdentifierReserved": "یہ شناخت کنندہ مخصوص ہے۔ کوئی دوسرا منتخب کریں۔",
       "tenantIdentifierAlreadyExists": "ٹیننٹ کا شناخت کنندہ پہلے سے موجود ہے",
       "duplicateTenantMembership": "یہ صارف پہلے ہی اس ٹیننٹ کا رکن ہے",
@@ -505,12 +507,12 @@
         "noAccount": "اکاؤنٹ نہیں ہے؟",
         "backToSignin": "سائن ان پر واپس جائیں",
         "titleTenant": "${name} میں سائن اِن کریں",
-        "suspendedTitle": "یہ ورک اسپیس معطل ہے",
+        "suspendedTitle": "یہ ٹیننٹ معطل ہے",
         "suspendedMessage": "جب تک کوئی منتظم اسے دوبارہ فعال نہ کرے، سائن اِن دستیاب نہیں ہے۔",
-        "hostRequiredTitle": "اپنے ورک اسپیس کے پتے پر سائن اِن کریں",
-        "hostRequiredMessage": "آپ کا اکاؤنٹ ایک ورک اسپیس سے تعلق رکھتا ہے۔ سائن اِن کرنے کے لیے اس کا پتہ کھولیں۔ اگر آپ کو معلوم نہیں تو اپنی دعوتی ای میل دیکھیں۔",
-        "ownWorkspace": "اپنا ورک اسپیس چاہتے ہیں؟",
-        "createWorkspace": "ایک بنائیں"
+        "hostRequiredTitle": "اپنے ٹیننٹ کے پتے پر سائن اِن کریں",
+        "hostRequiredMessage": "آپ کا اکاؤنٹ ایک ٹیننٹ سے تعلق رکھتا ہے۔ سائن اِن کرنے کے لیے اس کا پتہ کھولیں۔ اگر آپ کو معلوم نہیں تو اپنی دعوتی ای میل دیکھیں۔",
+        "ownTenant": "اپنا ٹیننٹ چاہتے ہیں؟",
+        "createTenant": "ایک بنائیں"
       },
       "signup": {
         "title": "سائن اپ",
@@ -521,18 +523,18 @@
         "successTitle": "کامیابی!",
         "successVerifyEmail": "رجسٹریشن کامیاب! براہ کرم اپنے اکاؤنٹ کی تصدیق کے لیے اپنا ای میل چیک کریں۔",
         "successMessage": "رجسٹریشن کامیاب! سائن ان صفحہ پر جائیں۔",
-        "tenantSectionTitle": "آپ کا ورک اسپیس",
+        "tenantSectionTitle": "آپ کا ٹیننٹ",
         "tenantHostTitle": "سائن اپ مرکزی سائٹ پر ہوتا ہے",
-        "tenantHostMessage": "آپ ${name} کے ورک اسپیس پر ہیں۔ اپنا ورک اسپیس بنانے کے لیے مرکزی سائٹ پر سائن اپ کریں۔",
-        "mainSiteMessage": "اپنا ورک اسپیس بنانے کے لیے مرکزی سائٹ پر سائن اپ کریں۔",
+        "tenantHostMessage": "آپ ${name} پر ہیں۔ اپنا ٹیننٹ بنانے کے لیے مرکزی سائٹ پر سائن اپ کریں۔",
+        "mainSiteMessage": "اپنا ٹیننٹ بنانے کے لیے مرکزی سائٹ پر سائن اپ کریں۔",
         "tenantHostAction": "سائن اپ پر جائیں",
-        "workspaceName": "ورک اسپیس کا نام",
-        "workspaceAddress": "ورک اسپیس کا پتہ",
-        "addressPreview": "آپ کے ورک اسپیس کا پتہ:",
+        "tenantName": "ٹیننٹ کا نام",
+        "tenantAddress": "ٹیننٹ کا پتہ",
+        "addressPreview": "آپ کے ٹیننٹ کا پتہ:",
         "addressPlaceholder": "your-name",
         "identifierHint": "چھوٹے انگریزی حروف، ہندسے اور ہائفن۔",
-        "readyTitle": "آپ کا ورک اسپیس تیار ہے",
-        "goToWorkspace": "اپنے ورک اسپیس پر جائیں"
+        "readyTitle": "آپ کا ٹیننٹ تیار ہے",
+        "goToTenant": "اپنے ٹیننٹ پر جائیں"
       },
       "forgotPassword": {
         "title": "پاس ورڈ بھول گئے",
@@ -552,12 +554,17 @@
       "unauthorized": {
         "title": "غیر مجاز"
       },
-      "workspaceNotFound": {
-        "title": "ورک اسپیس نہیں ملا",
-        "message": "${host} پر کوئی ورک اسپیس نہیں ہے۔ پتہ چیک کریں، یا مرکزی سائٹ پر جائیں۔",
-        "messageNoHost": "اس پتے پر کوئی ورک اسپیس نہیں ہے۔ پتہ چیک کریں، یا مرکزی سائٹ پر جائیں۔",
+      "tenantNotFound": {
+        "title": "ٹیننٹ نہیں ملا",
+        "message": "${host} پر کوئی ٹیننٹ نہیں ہے۔ پتہ چیک کریں، یا مرکزی سائٹ پر جائیں۔",
+        "messageNoHost": "اس پتے پر کوئی ٹیننٹ نہیں ہے۔ پتہ چیک کریں، یا مرکزی سائٹ پر جائیں۔",
         "homeAction": "ہوم پیج پر جائیں",
         "action": "مرکزی سائٹ پر جائیں"
+      },
+      "ticketSignin": {
+        "title": "آپ کو سائن اِن کیا جا رہا ہے…",
+        "failedTitle": "ہم آپ کو خودکار طور پر سائن اِن نہیں کر سکے",
+        "action": "اپنے پاس ورڈ سے سائن اِن کریں"
       }
     },
     "changePassword": {
@@ -647,15 +654,15 @@
         "suspend": "معطل کریں",
         "reactivate": "دوبارہ فعال کریں"
       },
-      "openWorkspace": "ورک اسپیس کھولیں"
+      "signIn": "سائن ان"
     },
     "selectTenant": {
-      "title": "آپ کے ورک اسپیس",
-      "description": "ہر ورک اسپیس اپنے پتے پر، نئے ٹیب میں کھلتا ہے۔",
+      "title": "آپ کے ٹیننٹس",
+      "description": "ہر ٹیننٹ اپنے پتے پر، نئے ٹیب میں کھلتا ہے۔",
       "emptyDescription": "آپ کسی فعال ٹیننٹ سے وابستہ نہیں ہیں۔ کسی منتظم سے اپنے ٹیننٹ میں شامل کرنے کو کہیں، یا اپنا ٹیننٹ بنانے کے لیے سائن اپ کریں۔",
       "emptyAction": "اپنے پروفائل پر جائیں",
       "current": "موجودہ",
-      "noAddresses": "اس انسٹالیشن پر ورک اسپیس کے پتے ترتیب نہیں دیے گئے۔"
+      "noAddresses": "اس انسٹالیشن پر ٹیننٹس کے پتے ترتیب نہیں دیے گئے۔"
     },
     "editions": {
       "title": "ایڈیشنز",

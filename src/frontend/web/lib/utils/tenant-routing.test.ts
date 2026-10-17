@@ -234,7 +234,7 @@ describe('isWithoutUsableTenant', () => {
     expect(isWithoutUsableTenant(undefined)).toBe(false)
   })
 
-  it('holds for an ordinary caller who belongs to no tenant, so the guard can send them to their workspaces list', () => {
+  it('holds for an ordinary caller who belongs to no tenant, so the guard can send them to the tenant picker', () => {
     expect(isWithoutUsableTenant(userInfo({ tenants: [] }))).toBe(true)
   })
 

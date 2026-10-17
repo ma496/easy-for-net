@@ -125,7 +125,7 @@ Do **not** add tags when there is nothing to invalidate:
   and the reauth flow, not in the cache.
 - `permissions-api.ts` — the permission catalogue is static for the life of a deployment.
 - `files-api.ts` — uploads/downloads/deletes are addressed by file name, and nothing lists them.
-- `tenantHostGet` (`GET /tenants/host`) — what the host names, for client use; the sign-in and sign-up pages read it on the server instead, through `lib/server/host-workspace.ts`. There is no endpoint to change the acting tenant: each host keeps its own session,
+- `tenantHostGet` (`GET /tenants/host`) — what the host names, for client use; the sign-in and sign-up pages read it on the server instead, through `lib/server/host-tenant.ts`. There is no endpoint to change the acting tenant: each host keeps its own session,
   so another tenant is another address and another document, and its cache starts empty. See the
   `multi-tenancy` skill.
 

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 /**
- * Tests what the workspaces list is for once each host keeps its own session: a caller whose session
+ * Tests what the tenant picker (`/select-tenant`) is for once each host keeps its own session: a caller whose session
  * names no tenant is sent here, is offered the tenants that are still theirs as links to each one's own
  * address, and is told plainly when there are none - or when this installation gives tenants no
  * address at all - rather than shown an empty list.
@@ -58,7 +58,7 @@ const listKeys = [
   'common.opensInNewTab',
 ]
 
-describe('the workspaces list', () => {
+describe('the tenant picker', () => {
   it('reads the files the chain runs through, so a moved one cannot pass this by being absent', () => {
     expect(guardSource).toContain('isWithoutUsableTenant')
     expect(listSource).toContain('SelectTenantView')
@@ -79,7 +79,7 @@ describe('the workspaces list', () => {
   it('offers the tenants the caller may still work in, read from the session, as links to their own addresses', () => {
     expect(listSource).toContain('state.auth.tenants')
     expect(listSource).toContain('tenant.url')
-    expect(listSource).toContain('<WorkspaceLink')
+    expect(listSource).toContain('<TenantLink')
     expect(listSource).not.toContain('onClick')
   })
 

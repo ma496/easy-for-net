@@ -43,7 +43,7 @@ export interface GetUserInfoPermission {
   displayName: string
 }
 
-/** A tenant the caller holds an active membership in, embedded in GetUserInfoResponse so the user menu can link to the other workspaces at their own addresses. */
+/** A tenant the caller holds an active membership in, embedded in GetUserInfoResponse so the user menu can link to the other tenants at their own addresses. */
 export interface GetUserInfoTenant {
   id: string
   name: string
@@ -115,6 +115,22 @@ export interface TokenResponse {
   accessToken: string
   userId: string
   refreshToken: string
+}
+
+/** Request body for issuing a sign-in ticket (/account/sign-in-ticket) for one of the caller's tenants. */
+export interface SignInTicketRequest extends RequestBase {
+  tenantId: string
+}
+
+/** A single-use ticket that signs the caller in on the tenant's own address, and that address. */
+export interface SignInTicketResponse {
+  ticket: string
+  tenantUrl: string
+}
+
+/** Request body for redeeming a sign-in ticket (/account/sign-in-ticket/redeem) on the tenant's address. */
+export interface SignInTicketRedeemRequest extends RequestBase {
+  ticket: string
 }
 
 /** Request body for updating the current user's profile (email, name, image). */

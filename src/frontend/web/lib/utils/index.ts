@@ -17,4 +17,4 @@ export {
 export { planMegabytesToBytes, effectiveMaxUploadBytes, formatMegabytes } from './upload-limit'
 export { notificationVariables } from './notification-variables'
 export { formatRelativeTime } from './relative-time'
-export { tenantUrlFromTemplate, pathOnOrigin, workspaceSigninUrl } from './workspace-url'
+export { tenantUrlFromTemplate, pathOnOrigin, tenantSigninUrl, isDeploymentOrigin } from './tenant-url'

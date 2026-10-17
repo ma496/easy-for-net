@@ -96,7 +96,7 @@ browser:
 - **Middleware** — run an action through `middleware(api)(next)(action)` with a recording `dispatch`
   and assert on what it dispatched, and on what it left alone.
 - **Rules only the source can show**: `tenant-cache.test.ts` reads every web source file and fails
-  when one calls `/tenants/switch` or `/tenants/exit`, or when a workspace link is built from a
+  when one calls `/tenants/switch` or `/tenants/exit`, or when a tenant link is built from a
   hard-coded domain rather than `tenant.url`. Make such a scan prove it read something (a minimum
   file count, a file it must have seen), so a moved tree cannot pass by being absent.
 - **Browser globals** a helper touches: stub `window` with `vi.stubGlobal` and

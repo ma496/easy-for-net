@@ -82,7 +82,7 @@
     "tenantsCreate": "बनाएं",
     "tenantsUpdate": "अपडेट करें",
     "tenantsMembers": "सदस्य",
-    "selectTenant": "आपके वर्कस्पेस",
+    "selectTenant": "आपके टेनेंट",
     "tenantsDetail": "विवरण",
     "editions": "संस्करण",
     "editionsList": "सूची",
@@ -92,9 +92,9 @@
     "tenantsFeatures": "सुविधाएँ",
     "localization": "स्थानीयकरण",
     "settings": "सेटिंग्स",
-    "otherWorkspaces": "अन्य वर्कस्पेस",
+    "otherTenants": "अन्य टेनेंट",
     "platformAdministration": "प्लेटफ़ॉर्म प्रशासन",
-    "allWorkspaces": "सभी वर्कस्पेस"
+    "allTenants": "सभी टेनेंट"
   },
   "search": {
     "dashboard": "डैशबोर्ड",
@@ -248,6 +248,8 @@
       "tenantRequired": "साइन इन करने के लिए कृपया टेनेंट बताएं।",
       "tenantHostMismatch": "यह साइन-इन किसी दूसरे पते का है। इस पते पर फिर से साइन इन करें।",
       "tenantHostRequired": "अपने संगठन के अपने पते पर साइन इन करें।",
+      "tenantAddressNotConfigured": "इस इंस्टॉलेशन पर टेनेंट के पते कॉन्फ़िगर नहीं हैं।",
+      "signInTicketInvalid": "यह साइन-इन लिंक समाप्त हो गया है या पहले ही उपयोग हो चुका है। अपने पासवर्ड से साइन इन करें।",
       "tenantIdentifierReserved": "यह पहचानकर्ता आरक्षित है। कोई दूसरा चुनें।",
       "tenantIdentifierAlreadyExists": "टेनेंट पहचानकर्ता पहले से मौजूद है",
       "duplicateTenantMembership": "यह उपयोगकर्ता पहले से ही इस टेनेंट का सदस्य है",
@@ -505,12 +507,12 @@
         "noAccount": "खाता नहीं है?",
         "backToSignin": "साइन इन पर वापस जाएं",
         "titleTenant": "${name} में साइन इन करें",
-        "suspendedTitle": "यह वर्कस्पेस निलंबित है",
+        "suspendedTitle": "यह टेनेंट निलंबित है",
         "suspendedMessage": "जब तक कोई व्यवस्थापक इसे फिर से सक्रिय नहीं करता, साइन इन उपलब्ध नहीं है।",
-        "hostRequiredTitle": "अपने वर्कस्पेस के पते पर साइन इन करें",
-        "hostRequiredMessage": "आपका खाता एक वर्कस्पेस से जुड़ा है। साइन इन करने के लिए उसका पता खोलें। अगर आपको पता नहीं मालूम, तो अपना आमंत्रण ईमेल देखें।",
-        "ownWorkspace": "अपना वर्कस्पेस चाहते हैं?",
-        "createWorkspace": "एक बनाएँ"
+        "hostRequiredTitle": "अपने टेनेंट के पते पर साइन इन करें",
+        "hostRequiredMessage": "आपका खाता एक टेनेंट से जुड़ा है। साइन इन करने के लिए उसका पता खोलें। अगर आपको पता नहीं मालूम, तो अपना आमंत्रण ईमेल देखें।",
+        "ownTenant": "अपना टेनेंट चाहते हैं?",
+        "createTenant": "एक बनाएँ"
       },
       "signup": {
         "title": "साइन अप",
@@ -521,18 +523,18 @@
         "successTitle": "सफलता!",
         "successVerifyEmail": "पंजीकरण सफल! कृपया अपने खाते को सत्यापित करने के लिए अपना ईमेल देखें।",
         "successMessage": "पंजीकरण सफल! साइन इन पेज पर जाएं।",
-        "tenantSectionTitle": "आपका वर्कस्पेस",
+        "tenantSectionTitle": "आपका टेनेंट",
         "tenantHostTitle": "साइन अप मुख्य साइट पर होता है",
-        "tenantHostMessage": "आप ${name} के वर्कस्पेस पर हैं। अपना वर्कस्पेस बनाने के लिए मुख्य साइट पर साइन अप करें।",
-        "mainSiteMessage": "अपना वर्कस्पेस बनाने के लिए मुख्य साइट पर साइन अप करें।",
+        "tenantHostMessage": "आप ${name} पर हैं। अपना टेनेंट बनाने के लिए मुख्य साइट पर साइन अप करें।",
+        "mainSiteMessage": "अपना टेनेंट बनाने के लिए मुख्य साइट पर साइन अप करें।",
         "tenantHostAction": "साइन अप पर जाएँ",
-        "workspaceName": "वर्कस्पेस का नाम",
-        "workspaceAddress": "वर्कस्पेस का पता",
-        "addressPreview": "आपके वर्कस्पेस का पता:",
+        "tenantName": "टेनेंट का नाम",
+        "tenantAddress": "टेनेंट का पता",
+        "addressPreview": "आपके टेनेंट का पता:",
         "addressPlaceholder": "your-name",
         "identifierHint": "छोटे अक्षर, अंक और हाइफ़न।",
-        "readyTitle": "आपका वर्कस्पेस तैयार है",
-        "goToWorkspace": "अपने वर्कस्पेस पर जाएँ"
+        "readyTitle": "आपका टेनेंट तैयार है",
+        "goToTenant": "अपने टेनेंट पर जाएँ"
       },
       "forgotPassword": {
         "title": "पासवर्ड भूल गए",
@@ -552,12 +554,17 @@
       "unauthorized": {
         "title": "अनधिकृत"
       },
-      "workspaceNotFound": {
-        "title": "वर्कस्पेस नहीं मिला",
-        "message": "${host} पर कोई वर्कस्पेस नहीं है। पता जाँचें, या मुख्य साइट पर जाएँ।",
-        "messageNoHost": "इस पते पर कोई वर्कस्पेस नहीं है। पता जाँचें, या मुख्य साइट पर जाएँ।",
+      "tenantNotFound": {
+        "title": "टेनेंट नहीं मिला",
+        "message": "${host} पर कोई टेनेंट नहीं है। पता जाँचें, या मुख्य साइट पर जाएँ।",
+        "messageNoHost": "इस पते पर कोई टेनेंट नहीं है। पता जाँचें, या मुख्य साइट पर जाएँ।",
         "homeAction": "होम पेज पर जाएँ",
         "action": "मुख्य साइट पर जाएँ"
+      },
+      "ticketSignin": {
+        "title": "आपको साइन इन किया जा रहा है…",
+        "failedTitle": "हम आपको अपने-आप साइन इन नहीं कर सके",
+        "action": "अपने पासवर्ड से साइन इन करें"
       }
     },
     "changePassword": {
@@ -647,15 +654,15 @@
         "suspend": "निलंबित करें",
         "reactivate": "पुनः सक्रिय करें"
       },
-      "openWorkspace": "वर्कस्पेस खोलें"
+      "signIn": "साइन इन"
     },
     "selectTenant": {
-      "title": "आपके वर्कस्पेस",
-      "description": "हर वर्कस्पेस अपने पते पर, नए टैब में खुलता है।",
+      "title": "आपके टेनेंट",
+      "description": "हर टेनेंट अपने पते पर, नए टैब में खुलता है।",
       "emptyDescription": "आप किसी सक्रिय टेनेंट से नहीं जुड़े हैं। किसी व्यवस्थापक से अपने टेनेंट में जोड़ने के लिए कहें, या अपना टेनेंट बनाने के लिए साइन अप करें।",
       "emptyAction": "अपनी प्रोफ़ाइल पर जाएं",
       "current": "वर्तमान",
-      "noAddresses": "इस इंस्टॉलेशन पर वर्कस्पेस के पते कॉन्फ़िगर नहीं हैं।"
+      "noAddresses": "इस इंस्टॉलेशन पर टेनेंट के पते कॉन्फ़िगर नहीं हैं।"
     },
     "editions": {
       "title": "संस्करण",

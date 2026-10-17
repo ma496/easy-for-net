@@ -19,7 +19,7 @@ import { Allow } from '@/allow'
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
 import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableFilterButton, DataTableToolbarButton, DataTableExportButton } from '@/components/ui/data-table'
 import { TenantFilterPanel, TenantFilters } from './tenant-filter-panel'
-import { useTableUrlState } from '@/hooks'
+import { useOpenTenant, useTableUrlState } from '@/hooks'
 import { parseAsStringEnum } from 'nuqs'
 
 /**
@@ -84,14 +84,15 @@ export const TenantTable = () => {
   const canViewMembers = isAllowed(authState, [Allow.TenantMember_View])
   const canViewDetail = isAllowed(authState, [Allow.Tenant_Detail])
   const canViewFeatures = isAllowed(authState, [Allow.FeatureValue_View])
-  // A platform account opens a tenant's workspace from here only when it is a member of that tenant -
-  // the tenant's host refuses its sign-in otherwise - so the action is offered on exactly the rows among
-  // its memberships, linking to the address the account info reports for that membership. Each host
-  // keeps its own session, so this is a plain link to another origin, never a switch in place. It is
-  // membership rather than a permission, so it is read off the tenants the account belongs to rather
-  // than through isAllowed.
+  // The account signs in to a tenant from here only when it is a member of that tenant - the tenant's
+  // host refuses its sign-in otherwise - so the action is offered on exactly the rows among its
+  // memberships that have an address. Each host keeps its own session, so signing in asks the API for a
+  // single-use sign-in ticket and opens the tenant's address in a new tab, signed in there, never
+  // switching in place. It is membership rather than a permission, so it is read off the tenants the
+  // account belongs to rather than through isAllowed.
   const memberTenantUrls = new Map(authState.tenants.map((tenant) => [tenant.id, tenant.url]))
-  const workspaceUrlOf = (tenantId: string): string | null => (authState.user?.isPlatform ? (memberTenantUrls.get(tenantId) ?? null) : null)
+  const canOpenTenant = (tenantId: string): boolean => Boolean(memberTenantUrls.get(tenantId))
+  const { openTenant, isOpening } = useOpenTenant()
 
   const handleSearch = () => {
     url.filters.setMany({
@@ -254,7 +255,6 @@ export const TenantTable = () => {
         const canChangeLifecycle = !tenant.systemCreated
 
         const isActive = tenant.status === TenantStatus.Active
-        const workspaceUrl = workspaceUrlOf(tenant.id)
 
         return (
           <div className="flex items-center gap-2">
@@ -285,12 +285,12 @@ export const TenantTable = () => {
                   hidden: !canViewFeatures,
                 },
                 {
-                  label: t('page.tenants.openWorkspace') || 'Open workspace',
+                  label: t('page.tenants.signIn') || 'Sign in',
                   icon: <Building2 className="h-4 w-4" />,
                   variant: 'primary',
-                  href: workspaceUrl ?? undefined,
-                  external: true,
-                  hidden: !(workspaceUrl && isActive),
+                  onClick: () => openTenant(tenant.id),
+                  disabled: isOpening,
+                  hidden: !(canOpenTenant(tenant.id) && isActive),
                 },
                 {
                   label: t('page.tenants.actions.suspend') || 'Suspend',

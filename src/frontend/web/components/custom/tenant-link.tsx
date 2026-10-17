@@ -5,21 +5,21 @@ import { ArrowUpRight } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { cn } from '@/lib/utils'
 
-/** Props for WorkspaceLink: a plain anchor to another workspace's address, with an optional class for the trailing arrow. */
-export interface WorkspaceLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'target' | 'rel'> {
-  /** The workspace's absolute address - a tenant's `url` or the `platformUrl`, never one composed here. */
+/** Props for TenantLink: a plain anchor to another tenant's address, with an optional class for the trailing arrow. */
+export interface TenantLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'target' | 'rel'> {
+  /** The tenant's absolute address - a tenant's `url` or the `platformUrl`, never one composed here. */
   href: string
   /** Extra classes for the trailing arrow, such as a hover colour driven by the link's `group`. */
   arrowClassName?: string
 }
 
 /**
- * WorkspaceLink opens another workspace - a tenant's own address or the platform's - in a new tab. Each
- * host keeps its own session, so another workspace is never entered in place: it is a different site,
+ * TenantLink opens another tenant - a tenant's own address or the platform's - in a new tab. Each
+ * host keeps its own session, so another tenant is never entered in place: it is a different site,
  * reached through a plain anchor rather than a `LocalizedLink`, which would keep the visitor on this
  * origin. A trailing arrow marks the new tab, and screen readers are told the same in words.
  */
-export const WorkspaceLink = React.forwardRef<HTMLAnchorElement, WorkspaceLinkProps>(({ href, className, arrowClassName, children, ...props }, ref) => {
+export const TenantLink = React.forwardRef<HTMLAnchorElement, TenantLinkProps>(({ href, className, arrowClassName, children, ...props }, ref) => {
   const { t } = useTranslation()
 
   return (
@@ -30,20 +30,20 @@ export const WorkspaceLink = React.forwardRef<HTMLAnchorElement, WorkspaceLinkPr
     </a>
   )
 })
-WorkspaceLink.displayName = 'WorkspaceLink'
+TenantLink.displayName = 'TenantLink'
 
-/** Props for WorkspaceAddress. */
-interface WorkspaceAddressProps {
+/** Props for TenantAddress. */
+interface TenantAddressProps {
   /** The address to show, as text. */
   url: string
   className?: string
 }
 
 /**
- * WorkspaceAddress shows an address as text: isolated and left-to-right, so it reads correctly inside a
+ * TenantAddress shows an address as text: isolated and left-to-right, so it reads correctly inside a
  * right-to-left sentence, in a monospaced face that breaks anywhere rather than overflowing a phone.
  */
-export const WorkspaceAddress = ({ url, className }: WorkspaceAddressProps) => (
+export const TenantAddress = ({ url, className }: TenantAddressProps) => (
   <bdi dir="ltr" className={cn('font-mono text-xs break-all', className)}>
     {url}
   </bdi>

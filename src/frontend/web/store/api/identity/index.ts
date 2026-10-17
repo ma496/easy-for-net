@@ -2,6 +2,8 @@ export { PermissionScope } from './enums'
 export {
   accountApi,
   useTokenMutation,
+  useSignInTicketMutation,
+  useRedeemSignInTicketMutation,
   useSignupMutation,
   useVerifyEmailMutation,
   useResendVerifyEmailMutation,
@@ -27,6 +29,9 @@ export type {
   RefreshTokenResponse,
   ResendVerifyEmailRequest,
   ResetPasswordRequest,
+  SignInTicketRedeemRequest,
+  SignInTicketRequest,
+  SignInTicketResponse,
   SignupRequest,
   SignupResponse,
   TokenRequest,

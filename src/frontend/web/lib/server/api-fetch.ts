@@ -19,7 +19,7 @@ export type ServerApiFetchInit = Omit<RequestInit, 'headers'> & {
   /**
    * Forward the visitor's host (the default), so the API resolves the tenant the browser's own calls
    * do. `false` sends none, so the API resolves no host at all - which is how a page asks for the
-   * platform's own answer (its `platformUrl`) when the visitor's host names no workspace.
+   * platform's own answer (its `platformUrl`) when the visitor's host names no tenant.
    */
   forwardHost?: boolean
 }

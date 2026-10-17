@@ -97,7 +97,7 @@ every other file mirrors — then to **every other resource file in that directo
 
 On the web, `i18n/tenant-screens.test.ts` (run by `npm run test`) reads the same resource files and
 fails when a tenancy error code or tenancy screen key it lists is undefined in any culture, or a
-message that names a workspace drops its `${name}` or `${host}` placeholder. Placeholders are not checked in general, so
+message that names a tenant drops its `${name}` or `${host}` placeholder. Placeholders are not checked in general, so
 keep every `${…}` of the English value in each translation yourself.
 
 Follow the established namespaces:

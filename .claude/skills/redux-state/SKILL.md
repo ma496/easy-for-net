@@ -107,8 +107,8 @@ Select the narrowest value a component needs so unrelated updates do not re-rend
   own. `baseQueryWithReauth` re-reads the info after every successful token refresh (a renewal can
   drop a suspended or left tenant), and dispatches `signout()` then redirects to
   `/signin?redirect=…` when the refresh fails.
-- **The acting tenant never changes in place.** Each host is one workspace with its own session, so
-  a document's store only ever holds one tenant's data; another workspace is a link to its address
+- **The acting tenant never changes in place.** Each host is one tenant with its own session, so
+  a document's store only ever holds one tenant's data; another tenant is a link to its address
   (`tenant.url` from get-info), opened in a new tab. Do not write a switch path; see `multi-tenancy`.
 - **Ending the session** (sign-out, password change) calls `leaveSignedOut(signinHref)` — a full page
   load, so the next user of the browser starts with a fresh store.

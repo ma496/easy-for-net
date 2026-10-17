@@ -32,7 +32,7 @@ import {
 
 /**
  * Re-reads the account info once a membership mutation has succeeded for the signed-in account itself,
- * so the other workspaces the user menu links to - which come from that info, not from a cached query - pick up a
+ * so the other tenants the user menu links to - which come from that info, not from a cached query - pick up a
  * tenant the account was just added to or drop one it was just removed from. A mutation that touched
  * somebody else leaves the session state alone. A failed read keeps the previous info standing.
  */
@@ -70,7 +70,7 @@ const refreshOwnTenants = async (
  * user surfaces. Adding or removing a member also invalidates that tenant's 'Tenants' tags, because the
  * list and detail screens show how many accounts belong to it, and re-reads the account info when the
  * member is the caller. The acting tenant is never changed from here: each host keeps its own session,
- * so another workspace is another address, opened as a plain link.
+ * so another tenant is another address, opened as a plain link.
  */
 export const tenantsApi = appApi
   .enhanceEndpoints({
@@ -208,7 +208,7 @@ export const tenantsApi = appApi
         onQueryStarted: (arg, api) => refreshOwnTenants(arg.userId, api),
       }),
       // Anonymous and untagged: what the page's host names is fixed for the life of the document, and
-      // nothing in this app changes it. A 404 `tenantNotFound` means the host names no workspace.
+      // nothing in this app changes it. A 404 `tenantNotFound` means the host names no tenant.
       tenantHostGet: builder.query<TenantHostGetResponse, void>({
         query: () => ({
           url: '/tenants/host',

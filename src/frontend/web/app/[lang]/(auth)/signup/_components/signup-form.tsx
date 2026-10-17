@@ -10,8 +10,8 @@ import { NODE_MARK, withNode } from '@/components/custom'
 import { useLocalizedRouter } from '@/hooks'
 import { useState, useEffect, ReactNode, ChangeEvent } from 'react'
 import { Mail, Lock, CheckCircle, Building2, Globe } from 'lucide-react'
-import { apiErrorAlert, getErrorCode, pathOnOrigin, successToast, tenantUrlFromTemplate, workspaceSigninUrl } from '@/lib/utils'
-import type { HostWorkspace } from '@/lib/server/host-workspace'
+import { apiErrorAlert, getErrorCode, pathOnOrigin, successToast, tenantUrlFromTemplate, tenantSigninUrl } from '@/lib/utils'
+import type { HostTenant } from '@/lib/server/host-tenant'
 
 /** The shape the API accepts for a tenant identifier, which is also its address's first host label. */
 const tenantIdentifierPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -21,10 +21,10 @@ const tenantIdentifierInputId = 'signup-tenant-identifier'
 
 /** Props for SignupForm: what the visitor's host names, fetched on the server by the page. */
 interface SignupFormProps {
-  hostWorkspace: HostWorkspace
+  hostTenant: HostTenant
 }
 
-/** What the success view needs once the workspace exists. */
+/** What the success view needs once the tenant exists. */
 interface SignupResult {
   message: string
   isVerificationRequired: boolean
@@ -50,21 +50,21 @@ const SignupNotice = ({ title, message, children }: SignupNoticeProps) => (
   </div>
 )
 
-/** Props for the live preview of the address the identifier gives the new workspace. */
+/** Props for the live preview of the address the identifier gives the new tenant. */
 interface AddressPreviewProps {
   template: string
   identifier: string
 }
 
 /**
- * The address the new workspace will answer at, built live from the API's `tenantUrlTemplate`: the
+ * The address the new tenant will answer at, built live from the API's `tenantUrlTemplate`: the
  * template with a placeholder name while the field is empty, the typed identifier once it has the shape
  * the API accepts, and nothing while it has not (the validation error takes the slot instead).
  */
 const AddressPreview = ({ template, identifier }: AddressPreviewProps) => {
   const { t } = useTranslation()
   const normalized = identifier.trim().toLowerCase()
-  const label = t('page.auth.signup.addressPreview') || 'Your workspace address:'
+  const label = t('page.auth.signup.addressPreview') || 'Your tenant address:'
 
   if (!normalized) {
     const [before, after] = template.split('{tenant}')
@@ -93,13 +93,13 @@ const AddressPreview = ({ template, identifier }: AddressPreviewProps) => {
 }
 
 /**
- * Interactive client-side form that registers a new user together with the workspace (tenant) they will work in. Sign-up creates
- * a workspace, so it happens on the main site alone: on a tenant's own address the form gives way to a link to the main site's
- * sign-up. The identifier field previews the address it gives the new workspace, and a reserved name is refused on the field
- * itself. The success view links to the new workspace's own sign-in page, and offers a resend-verification-email countdown when
+ * Interactive client-side form that registers a new user together with the tenant they will work in. Sign-up creates
+ * a tenant, so it happens on the main site alone: on a tenant's own address the form gives way to a link to the main site's
+ * sign-up. The identifier field previews the address it gives the new tenant, and a reserved name is refused on the field
+ * itself. The success view links to the new tenant's own sign-in page, and offers a resend-verification-email countdown when
  * email verification is required.
  */
-export const SignupForm = ({ hostWorkspace }: SignupFormProps) => {
+export const SignupForm = ({ hostTenant }: SignupFormProps) => {
   const { t } = useTranslation()
   const router = useLocalizedRouter()
   const [result, setResult] = useState<SignupResult | undefined>(undefined)
@@ -121,10 +121,10 @@ export const SignupForm = ({ hostWorkspace }: SignupFormProps) => {
     }
   }, [countdown])
 
-  const host = hostWorkspace.kind === 'found' ? hostWorkspace.host : null
+  const host = hostTenant.kind === 'found' ? hostTenant.host : null
   const tenantHost = host?.kind === 'tenant' ? host : null
   const template = host?.tenantUrlTemplate ?? null
-  const platformUrl = host?.platformUrl ?? (hostWorkspace.kind === 'notFound' ? hostWorkspace.platformUrl : null)
+  const platformUrl = host?.platformUrl ?? (hostTenant.kind === 'notFound' ? hostTenant.platformUrl : null)
 
   const validationSchema = Yup.object().shape({
     username: Yup.string()
@@ -206,9 +206,9 @@ export const SignupForm = ({ hostWorkspace }: SignupFormProps) => {
     }
   }
 
-  if (tenantHost || hostWorkspace.kind === 'notFound') {
-    // Sign-up creates a workspace, which the API accepts on the main site alone - so on a tenant's
-    // address (or one that names no workspace) the way on is the main site's own sign-up.
+  if (tenantHost || hostTenant.kind === 'notFound') {
+    // Sign-up creates a tenant, which the API accepts on the main site alone - so on a tenant's
+    // address (or one that names no tenant) the way on is the main site's own sign-up.
     const signupUrl = platformUrl ? pathOnOrigin(platformUrl, router.localize('/signup')) : null
 
     return (
@@ -217,10 +217,10 @@ export const SignupForm = ({ hostWorkspace }: SignupFormProps) => {
         message={
           tenantHost
             ? withNode(
-                t('page.auth.signup.tenantHostMessage', { name: NODE_MARK }) || `You're on ${NODE_MARK}'s workspace. To create a workspace of your own, sign up on the main site.`,
+                t('page.auth.signup.tenantHostMessage', { name: NODE_MARK }) || `You're on ${NODE_MARK}. To create a tenant of your own, sign up on the main site.`,
                 <bdi className="font-medium text-foreground">{tenantHost.name}</bdi>,
               )
-            : t('page.auth.signup.mainSiteMessage') || 'To create a workspace of your own, sign up on the main site.'
+            : t('page.auth.signup.mainSiteMessage') || 'To create a tenant of your own, sign up on the main site.'
         }
       >
         {signupUrl ? (
@@ -230,7 +230,7 @@ export const SignupForm = ({ hostWorkspace }: SignupFormProps) => {
         ) : (
           // Without the platform's address there is no main site to point at; this origin's own home page still answers.
           <LocalizedLink href="/" className="btn btn-primary w-full">
-            {t('page.auth.workspaceNotFound.homeAction') || 'Go to home page'}
+            {t('page.auth.tenantNotFound.homeAction') || 'Go to home page'}
           </LocalizedLink>
         )}
         {tenantHost && (
@@ -243,9 +243,9 @@ export const SignupForm = ({ hostWorkspace }: SignupFormProps) => {
   }
 
   if (result) {
-    const workspaceAddress = tenantUrlFromTemplate(template, result.identifier)
+    const tenantAddress = tenantUrlFromTemplate(template, result.identifier)
     const signinPath = router.localize('/signin')
-    const signinUrl = platformUrl ? workspaceSigninUrl({ tenantUrlTemplate: template, platformUrl, identifier: result.identifier }, signinPath) : null
+    const signinUrl = platformUrl ? tenantSigninUrl({ tenantUrlTemplate: template, platformUrl, identifier: result.identifier }, signinPath) : null
 
     return (
       <div className="flex flex-col items-center text-center">
@@ -253,13 +253,13 @@ export const SignupForm = ({ hostWorkspace }: SignupFormProps) => {
           <CheckCircle className="size-6" />
         </div>
         <h1 className="text-2xl font-semibold tracking-tight wrap-break-word text-foreground">
-          {result.isVerificationRequired ? t('page.auth.signup.successTitle') || 'Success!' : t('page.auth.signup.readyTitle') || 'Your workspace is ready'}
+          {result.isVerificationRequired ? t('page.auth.signup.successTitle') || 'Success!' : t('page.auth.signup.readyTitle') || 'Your tenant is ready'}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">{result.message}</p>
-        {workspaceAddress && (
+        {tenantAddress && (
           <div className="mt-4 w-full rounded-lg bg-surface-2 px-3 py-2">
             <bdi dir="ltr" className="font-mono text-sm break-all text-foreground">
-              {workspaceAddress}
+              {tenantAddress}
             </bdi>
           </div>
         )}
@@ -272,7 +272,7 @@ export const SignupForm = ({ hostWorkspace }: SignupFormProps) => {
 
           {signinUrl ? (
             <a className="btn btn-primary w-full" href={signinUrl}>
-              {workspaceAddress ? t('page.auth.signup.goToWorkspace') || 'Go to your workspace' : t('page.auth.signin.backToSignin') || 'Back to Sign In'}
+              {tenantAddress ? t('page.auth.signup.goToTenant') || 'Go to your tenant' : t('page.auth.signin.backToSignin') || 'Back to Sign In'}
             </a>
           ) : (
             <LocalizedLink href="/signin" className="btn btn-primary w-full">
@@ -319,10 +319,10 @@ export const SignupForm = ({ hostWorkspace }: SignupFormProps) => {
             />
 
             <div className="border-t border-border pt-5">
-              <p className="mb-4 text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase rtl:tracking-normal">{t('page.auth.signup.tenantSectionTitle') || 'Your workspace'}</p>
+              <p className="mb-4 text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase rtl:tracking-normal">{t('page.auth.signup.tenantSectionTitle') || 'Your tenant'}</p>
               <div className="space-y-5">
                 <FormInput
-                  label={t('page.auth.signup.workspaceName') || 'Workspace name'}
+                  label={t('page.auth.signup.tenantName') || 'Tenant name'}
                   name="tenantName"
                   placeholder={t('form.placeholder.tenantName') || 'Enter tenant name'}
                   icon={<Building2 size={16} />}
@@ -330,7 +330,7 @@ export const SignupForm = ({ hostWorkspace }: SignupFormProps) => {
                 />
                 <FormInput
                   id={tenantIdentifierInputId}
-                  label={t('page.auth.signup.workspaceAddress') || 'Workspace address'}
+                  label={t('page.auth.signup.tenantAddress') || 'Tenant address'}
                   name="tenantIdentifier"
                   placeholder={t('form.placeholder.tenantIdentifier') || 'Enter identifier (for example acme)'}
                   icon={<Globe size={16} />}
