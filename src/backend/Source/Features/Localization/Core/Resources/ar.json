@@ -82,7 +82,7 @@
     "tenantsCreate": "إنشاء",
     "tenantsUpdate": "تحديث",
     "tenantsMembers": "الأعضاء",
-    "selectTenant": "مساحات عملك",
+    "selectTenant": "المستأجرون الخاصون بك",
     "tenantsDetail": "التفاصيل",
     "editions": "الإصدارات",
     "editionsList": "قائمة",
@@ -92,9 +92,9 @@
     "tenantsFeatures": "الميزات",
     "localization": "التوطين",
     "settings": "الإعدادات",
-    "otherWorkspaces": "مساحات العمل الأخرى",
+    "otherTenants": "المستأجرون الآخرون",
     "platformAdministration": "إدارة المنصة",
-    "allWorkspaces": "كل مساحات العمل"
+    "allTenants": "كل المستأجرين"
   },
   "search": {
     "dashboard": "لوحة القيادة",
@@ -248,6 +248,8 @@
       "tenantRequired": "يرجى تحديد المستأجر لتسجيل الدخول.",
       "tenantHostMismatch": "تسجيل الدخول هذا يخص عنوانًا آخر. سجّل الدخول مرة أخرى على هذا العنوان.",
       "tenantHostRequired": "سجّل الدخول من العنوان الخاص بمؤسستك.",
+      "tenantAddressNotConfigured": "لم يتم إعداد عناوين المستأجرين في هذا التثبيت.",
+      "signInTicketInvalid": "انتهت صلاحية رابط تسجيل الدخول هذا أو سبق استخدامه. سجّل الدخول بكلمة المرور.",
       "tenantIdentifierReserved": "هذا المعرّف محجوز. اختر معرّفًا آخر.",
       "tenantIdentifierAlreadyExists": "معرّف المستأجر موجود بالفعل",
       "duplicateTenantMembership": "هذا المستخدم عضو بالفعل في هذا المستأجر",
@@ -505,12 +507,12 @@
         "noAccount": "ليس لديك حساب؟",
         "backToSignin": "العودة لتسجيل الدخول",
         "titleTenant": "تسجيل الدخول إلى ${name}",
-        "suspendedTitle": "مساحة العمل هذه معلّقة",
+        "suspendedTitle": "هذا المستأجر معلّق",
         "suspendedMessage": "تسجيل الدخول غير متاح حتى يعيد أحد المسؤولين تفعيلها.",
-        "hostRequiredTitle": "سجّل الدخول من عنوان مساحة عملك",
-        "hostRequiredMessage": "حسابك تابع لمساحة عمل. افتح عنوانها لتسجيل الدخول. إن لم تكن تعرفه، فراجع رسالة الدعوة في بريدك.",
-        "ownWorkspace": "هل تريد مساحة عمل خاصة بك؟",
-        "createWorkspace": "أنشئ واحدة"
+        "hostRequiredTitle": "سجّل الدخول من عنوان المستأجر الخاص بك",
+        "hostRequiredMessage": "حسابك تابع لمستأجر. افتح عنوانه لتسجيل الدخول. إن لم تكن تعرفه، فراجع رسالة الدعوة في بريدك.",
+        "ownTenant": "هل تريد مستأجرًا خاصًا بك؟",
+        "createTenant": "أنشئ واحدة"
       },
       "signup": {
         "title": "اشتراك",
@@ -521,18 +523,18 @@
         "successTitle": "نجاح!",
         "successVerifyEmail": "تم التسجيل بنجاح! يرجى التحقق من بريدك الإلكتروني لتفعيل حسابك.",
         "successMessage": "تم التسجيل بنجاح! اذهب لصفحة تسجيل الدخول.",
-        "tenantSectionTitle": "مساحة عملك",
+        "tenantSectionTitle": "المستأجر الخاص بك",
         "tenantHostTitle": "يتم التسجيل عبر الموقع الرئيسي",
-        "tenantHostMessage": "أنت في مساحة عمل ${name}. لإنشاء مساحة عمل خاصة بك، سجّل عبر الموقع الرئيسي.",
-        "mainSiteMessage": "لإنشاء مساحة عمل خاصة بك، سجّل عبر الموقع الرئيسي.",
+        "tenantHostMessage": "أنت في ${name}. لإنشاء مستأجر خاص بك، سجّل عبر الموقع الرئيسي.",
+        "mainSiteMessage": "لإنشاء مستأجر خاص بك، سجّل عبر الموقع الرئيسي.",
         "tenantHostAction": "الانتقال إلى التسجيل",
-        "workspaceName": "اسم مساحة العمل",
-        "workspaceAddress": "عنوان مساحة العمل",
-        "addressPreview": "عنوان مساحة عملك:",
+        "tenantName": "اسم المستأجر",
+        "tenantAddress": "عنوان المستأجر",
+        "addressPreview": "عنوان المستأجر الخاص بك:",
         "addressPlaceholder": "your-name",
         "identifierHint": "أحرف لاتينية صغيرة وأرقام وشرطات.",
-        "readyTitle": "مساحة عملك جاهزة",
-        "goToWorkspace": "الانتقال إلى مساحة عملك"
+        "readyTitle": "المستأجر الخاص بك جاهز",
+        "goToTenant": "الانتقال إلى المستأجر الخاص بك"
       },
       "forgotPassword": {
         "title": "نسيت كلمة المرور",
@@ -552,12 +554,17 @@
       "unauthorized": {
         "title": "غير مصرح"
       },
-      "workspaceNotFound": {
-        "title": "مساحة العمل غير موجودة",
-        "message": "لا توجد مساحة عمل على ${host}. تحقق من العنوان، أو انتقل إلى الموقع الرئيسي.",
-        "messageNoHost": "لا توجد مساحة عمل على هذا العنوان. تحقق من العنوان، أو انتقل إلى الموقع الرئيسي.",
+      "tenantNotFound": {
+        "title": "المستأجر غير موجود",
+        "message": "لا يوجد مستأجر على ${host}. تحقق من العنوان، أو انتقل إلى الموقع الرئيسي.",
+        "messageNoHost": "لا يوجد مستأجر على هذا العنوان. تحقق من العنوان، أو انتقل إلى الموقع الرئيسي.",
         "homeAction": "الانتقال إلى الصفحة الرئيسية",
         "action": "الانتقال إلى الموقع الرئيسي"
+      },
+      "ticketSignin": {
+        "title": "جارٍ تسجيل دخولك…",
+        "failedTitle": "تعذّر تسجيل دخولك تلقائيًا",
+        "action": "سجّل الدخول بكلمة المرور"
       }
     },
     "changePassword": {
@@ -647,15 +654,15 @@
         "suspend": "تعليق",
         "reactivate": "إعادة التفعيل"
       },
-      "openWorkspace": "فتح مساحة العمل"
+      "signIn": "تسجيل الدخول"
     },
     "selectTenant": {
-      "title": "مساحات عملك",
-      "description": "تُفتح كل مساحة عمل على عنوانها الخاص، في علامة تبويب جديدة.",
+      "title": "المستأجرون الخاصون بك",
+      "description": "يُفتح كل مستأجر على عنوانه الخاص، في علامة تبويب جديدة.",
       "emptyDescription": "أنت لا تنتمي إلى أي مستأجر نشط. اطلب من المسؤول إضافتك إلى مستأجره، أو سجّل حسابًا جديدًا لإنشاء مستأجر خاص بك.",
       "emptyAction": "الذهاب إلى ملفك الشخصي",
       "current": "الحالية",
-      "noAddresses": "لم يتم إعداد عناوين مساحات العمل في هذا التثبيت."
+      "noAddresses": "لم يتم إعداد عناوين المستأجرين في هذا التثبيت."
     },
     "editions": {
       "title": "الإصدارات",

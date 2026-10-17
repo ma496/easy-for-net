@@ -2,29 +2,31 @@
 import { LocalizedLink, Dropdown, type DropdownRef, Loader } from '@/components/ui'
 import { useAppSelector } from '@/store/hooks'
 import { leaveSignedOut } from '@/store/tenant-cache'
-import { useLocalizedRouter } from '@/hooks'
+import { useLocalizedRouter, useOpenTenant } from '@/hooks'
 import { useTranslation } from '@/i18n'
-import { User, LogOut, Lock, Building2, ShieldCheck } from 'lucide-react'
+import { User, LogOut, Lock, Building2, ShieldCheck, ArrowUpRight } from 'lucide-react'
 import { useRef } from 'react'
 import { ImagePreview } from './image-preview'
-import { WorkspaceLink } from './workspace-link'
+import { TenantLink } from './tenant-link'
 import { useSignoutMutation } from '@/store/api/identity'
 import { apiErrorAlert } from '@/lib/utils'
 
-/** How many workspace rows the menu lists before it adds a link to the full list. */
-const maxMenuWorkspaces = 6
+/** How many tenant rows the menu lists before it adds a link to the full list. */
+const maxMenuTenants = 6
 
-/** One row of the menu's "Other workspaces" section: a workspace at its own address. */
-interface WorkspaceRow {
+/** One row of the menu's "Other tenants" section: a tenant (by id) or the platform, at its own address. */
+interface TenantRow {
   key: string
   name: string
   url: string
-  isPlatform: boolean
+  /** The tenant's id, which a sign-in ticket is issued for; absent on the platform's row. */
+  tenantId?: string
 }
 
 /**
- * Header dropdown that shows the signed-in user avatar, links to the account's other workspaces (each
- * opening at its own address in a new tab, since every host keeps its own session), profile/change-password
+ * Header dropdown that shows the signed-in user avatar, the account's other tenants (each opening at its
+ * own address in a new tab, signed in there through a single-use ticket, since every host keeps its own
+ * session; the platform's row is a plain link), profile/change-password
  * links, and a sign-out action that hits the logout API and then loads the sign-in page afresh,
  * discarding the tenant-scoped data cached in the browser.
  */
@@ -42,17 +44,23 @@ export const NavUser = () => {
 
   // The tenants this account may act in other than the one this host gives it, each only when it has an
   // address; a platform account acting in a tenant also gets the platform's own address back.
-  const workspaces: WorkspaceRow[] = [
+  const tenantRows: TenantRow[] = [
     ...tenants
       .filter((tenant) => tenant.url && tenant.id !== activeTenant?.id)
-      .map((tenant) => ({ key: tenant.id, name: tenant.name, url: tenant.url as string, isPlatform: false })),
+      .map((tenant) => ({ key: tenant.id, name: tenant.name, url: tenant.url as string, tenantId: tenant.id })),
     ...(user?.isPlatform && activeTenant && user.platformUrl
-      ? [{ key: 'platform', name: t('navigation.platformAdministration') || 'Platform administration', url: user.platformUrl, isPlatform: true }]
+      ? [{ key: 'platform', name: t('navigation.platformAdministration') || 'Platform administration', url: user.platformUrl }]
       : []),
   ]
-  const hasMoreWorkspaces = workspaces.length > maxMenuWorkspaces
+  const hasMoreTenants = tenantRows.length > maxMenuTenants
 
   const [signoutApi, { isLoading: isSigningOut }] = useSignoutMutation()
+  const { openTenant, isOpening } = useOpenTenant()
+
+  const signInToTenant = (tenantId: string) => {
+    handleLinkClick()
+    void openTenant(tenantId)
+  }
 
   const signoutAction = async () => {
     if (isSigningOut) {
@@ -108,23 +116,32 @@ export const NavUser = () => {
               </div>
             </div>
           </li>
-          {workspaces.length > 0 && (
+          {tenantRows.length > 0 && (
             <li className="mb-1 border-b border-border pb-1">
-              <div className="px-2.5 pt-1.5 pb-1 text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase rtl:tracking-normal">{t('navigation.otherWorkspaces') || 'Other workspaces'}</div>
+              <div className="px-2.5 pt-1.5 pb-1 text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase rtl:tracking-normal">{t('navigation.otherTenants') || 'Other tenants'}</div>
               <ul className="max-h-64 overflow-y-auto">
-                {(hasMoreWorkspaces ? workspaces.slice(0, maxMenuWorkspaces) : workspaces).map((workspace) => (
-                  <li key={workspace.key}>
-                    <WorkspaceLink href={workspace.url} onClick={handleLinkClick} title={workspace.name}>
-                      {workspace.isPlatform ? <ShieldCheck size={16} className="shrink-0 text-muted-foreground" /> : <Building2 size={16} className="shrink-0 text-muted-foreground" />}
-                      <span className="min-w-0 flex-1 truncate">{workspace.name}</span>
-                    </WorkspaceLink>
+                {(hasMoreTenants ? tenantRows.slice(0, maxMenuTenants) : tenantRows).map((row) => (
+                  <li key={row.key}>
+                    {row.tenantId ? (
+                      <button type="button" onClick={() => signInToTenant(row.tenantId as string)} disabled={isOpening} title={row.name}>
+                        <Building2 size={16} className="shrink-0 text-muted-foreground" />
+                        <span className="min-w-0 flex-1 truncate text-start">{row.name}</span>
+                        <ArrowUpRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground rtl:-scale-x-100" />
+                        <span className="sr-only">{t('common.opensInNewTab') || '(opens in a new tab)'}</span>
+                      </button>
+                    ) : (
+                      <TenantLink href={row.url} onClick={handleLinkClick} title={row.name}>
+                        <ShieldCheck size={16} className="shrink-0 text-muted-foreground" />
+                        <span className="min-w-0 flex-1 truncate">{row.name}</span>
+                      </TenantLink>
+                    )}
                   </li>
                 ))}
-                {hasMoreWorkspaces && (
+                {hasMoreTenants && (
                   <li>
                     <LocalizedLink href="/select-tenant" onClick={handleLinkClick}>
                       <Building2 size={16} className="shrink-0 text-muted-foreground" />
-                      <span className="min-w-0 flex-1 truncate">{t('navigation.allWorkspaces') || 'All workspaces'}</span>
+                      <span className="min-w-0 flex-1 truncate">{t('navigation.allTenants') || 'All tenants'}</span>
                     </LocalizedLink>
                   </li>
                 )}

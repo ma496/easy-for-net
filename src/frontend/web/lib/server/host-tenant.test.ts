@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { resolveHostWorkspace, type HostFetcher } from './host-workspace'
+import { resolveHostTenant, type HostFetcher } from './host-tenant'
 
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
 
@@ -7,11 +7,11 @@ const tenantHost = { kind: 'tenant', name: 'Acme', identifier: 'acme', status: '
 const platformHost = { kind: 'platform', platformUrl: 'http://app.localhost:3000', tenantUrlTemplate: 'http://{tenant}.localhost:3000' }
 const notFound = { statusCode: 404, errors: [{ name: 'generalErrors', reason: 'Tenant not found', code: 'tenantNotFound' }] }
 
-describe('resolveHostWorkspace', () => {
+describe('resolveHostTenant', () => {
   it("answers with what the visitor's host names, asking only once", async () => {
     const fetchHost = vi.fn<HostFetcher>(async () => json(200, tenantHost))
 
-    expect(await resolveHostWorkspace(fetchHost, 'acme.localhost:3000')).toEqual({ kind: 'found', host: tenantHost, visitorHost: 'acme.localhost:3000' })
+    expect(await resolveHostTenant(fetchHost, 'acme.localhost:3000')).toEqual({ kind: 'found', host: tenantHost, visitorHost: 'acme.localhost:3000' })
     expect(fetchHost).toHaveBeenCalledTimes(1)
     expect(fetchHost).toHaveBeenCalledWith({ forwardHost: true })
   })
@@ -19,7 +19,7 @@ describe('resolveHostWorkspace', () => {
   it('takes the platform address for an unknown host from a second call that forwards no host', async () => {
     const fetchHost = vi.fn<HostFetcher>(async ({ forwardHost }) => (forwardHost ? json(404, notFound) : json(200, platformHost)))
 
-    expect(await resolveHostWorkspace(fetchHost, 'nobody.localhost:3000')).toEqual({ kind: 'notFound', platformUrl: 'http://app.localhost:3000', visitorHost: 'nobody.localhost:3000' })
+    expect(await resolveHostTenant(fetchHost, 'nobody.localhost:3000')).toEqual({ kind: 'notFound', platformUrl: 'http://app.localhost:3000', visitorHost: 'nobody.localhost:3000' })
     expect(fetchHost).toHaveBeenLastCalledWith({ forwardHost: false })
   })
 
@@ -29,7 +29,7 @@ describe('resolveHostWorkspace', () => {
       throw new Error('down')
     })
 
-    expect(await resolveHostWorkspace(failing, 'x.localhost:3000')).toEqual({ kind: 'notFound', platformUrl: null, visitorHost: 'x.localhost:3000' })
+    expect(await resolveHostTenant(failing, 'x.localhost:3000')).toEqual({ kind: 'notFound', platformUrl: null, visitorHost: 'x.localhost:3000' })
   })
 
   it.each([
@@ -37,6 +37,6 @@ describe('resolveHostWorkspace', () => {
     ['a server error', async () => json(500, {})],
     ['a body that is not a host answer', async () => json(200, { hello: 'world' })],
   ])('degrades to unavailable on %s, so the page keeps its platform copy', async (_label, fetcher) => {
-    expect(await resolveHostWorkspace(fetcher as HostFetcher, null)).toEqual({ kind: 'unavailable', visitorHost: null })
+    expect(await resolveHostTenant(fetcher as HostFetcher, null)).toEqual({ kind: 'unavailable', visitorHost: null })
   })
 })

@@ -2,7 +2,7 @@ import { SigninForm } from './_components/signin-form'
 import { AuthShell } from '../_components/auth-shell'
 import { Metadata } from 'next'
 import { getServerTranslation } from '@/i18n'
-import { getHostWorkspace } from '@/lib/server/host-workspace'
+import { getHostTenant } from '@/lib/server/host-tenant'
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params
@@ -13,17 +13,17 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
 
 /**
  * Server-rendered sign-in route under the auth route group.
- * Asks the API what the visitor's host names before rendering, so the form's own heading - the workspace's name on a tenant's
- * address, the platform copy otherwise, or a "workspace not found" block - is right on the first paint, and frames the form in
+ * Asks the API what the visitor's host names before rendering, so the form's own heading - the tenant's name on a tenant's
+ * address, the platform copy otherwise, or a "tenant not found" block - is right on the first paint, and frames the form in
  * the split auth layout.
  */
 const BoxedSignIn = async ({ params }: { params: Promise<{ lang: string }> }) => {
   await params
-  const hostWorkspace = await getHostWorkspace()
+  const hostTenant = await getHostTenant()
 
   return (
     <AuthShell>
-      <SigninForm hostWorkspace={hostWorkspace} />
+      <SigninForm hostTenant={hostTenant} />
     </AuthShell>
   )
 }

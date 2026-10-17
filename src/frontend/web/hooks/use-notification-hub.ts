@@ -29,7 +29,7 @@ const HubMethods = {
  *
  * **Who connects.** Notifications are read in the tenant being acted in, or in platform scope by a
  * platform account acting in none. An ordinary account left with no tenant (its tenant suspended or
- * left, and dropped when the session was renewed) is sent to its workspaces list, so nothing connects
+ * left, and dropped when the session was renewed) is sent to the tenant picker (`/select-tenant`), so nothing connects
  * or polls until it acts in one.
  *
  * **Lifecycle.** One connection to `/hubs/notifications` on the API host (outside the API route

@@ -82,7 +82,7 @@
     "tenantsCreate": "Create",
     "tenantsUpdate": "Update",
     "tenantsMembers": "Members",
-    "selectTenant": "Your workspaces",
+    "selectTenant": "Your tenants",
     "tenantsDetail": "Detail",
     "editions": "Editions",
     "editionsList": "List",
@@ -92,9 +92,9 @@
     "tenantsFeatures": "Features",
     "localization": "Localization",
     "settings": "Settings",
-    "otherWorkspaces": "Other workspaces",
+    "otherTenants": "Other tenants",
     "platformAdministration": "Platform administration",
-    "allWorkspaces": "All workspaces"
+    "allTenants": "All tenants"
   },
   "search": {
     "dashboard": "Dashboard",
@@ -248,6 +248,8 @@
       "tenantRequired": "Please provide a tenant to sign in.",
       "tenantHostMismatch": "This sign-in belongs to a different address. Sign in again on this one.",
       "tenantHostRequired": "Sign in at your organization's own address.",
+      "tenantAddressNotConfigured": "Tenant addresses are not configured on this installation.",
+      "signInTicketInvalid": "This sign-in link has expired or was already used. Sign in with your password.",
       "tenantIdentifierReserved": "This identifier is reserved. Choose another one.",
       "tenantIdentifierAlreadyExists": "Tenant identifier already exists",
       "duplicateTenantMembership": "This user is already a member of this tenant",
@@ -505,12 +507,12 @@
         "noAccount": "Don't have an account?",
         "backToSignin": "Back to Sign In",
         "titleTenant": "Sign in to ${name}",
-        "suspendedTitle": "This workspace is suspended",
+        "suspendedTitle": "This tenant is suspended",
         "suspendedMessage": "Signing in is unavailable until an administrator reactivates it.",
-        "hostRequiredTitle": "Sign in at your workspace's address",
-        "hostRequiredMessage": "Your account belongs to a workspace. Open its address to sign in. If you don't know it, check your invitation email.",
-        "ownWorkspace": "Want your own workspace?",
-        "createWorkspace": "Create one"
+        "hostRequiredTitle": "Sign in at your tenant's address",
+        "hostRequiredMessage": "Your account belongs to a tenant. Open its address to sign in. If you don't know it, check your invitation email.",
+        "ownTenant": "Want your own tenant?",
+        "createTenant": "Create one"
       },
       "signup": {
         "title": "Sign Up",
@@ -521,18 +523,18 @@
         "successTitle": "Success!",
         "successVerifyEmail": "Registration successful! Please check your email to verify your account.",
         "successMessage": "Registration successful! Go to sign in page.",
-        "tenantSectionTitle": "Your workspace",
+        "tenantSectionTitle": "Your tenant",
         "tenantHostTitle": "Sign-up happens on the main site",
-        "tenantHostMessage": "You're on ${name}'s workspace. To create a workspace of your own, sign up on the main site.",
-        "mainSiteMessage": "To create a workspace of your own, sign up on the main site.",
+        "tenantHostMessage": "You're on ${name}. To create a tenant of your own, sign up on the main site.",
+        "mainSiteMessage": "To create a tenant of your own, sign up on the main site.",
         "tenantHostAction": "Go to sign-up",
-        "workspaceName": "Workspace name",
-        "workspaceAddress": "Workspace address",
-        "addressPreview": "Your workspace address:",
+        "tenantName": "Tenant name",
+        "tenantAddress": "Tenant address",
+        "addressPreview": "Your tenant address:",
         "addressPlaceholder": "your-name",
         "identifierHint": "Lower-case letters, digits and hyphens.",
-        "readyTitle": "Your workspace is ready",
-        "goToWorkspace": "Go to your workspace"
+        "readyTitle": "Your tenant is ready",
+        "goToTenant": "Go to your tenant"
       },
       "forgotPassword": {
         "title": "Forget Password",
@@ -552,12 +554,17 @@
       "unauthorized": {
         "title": "Unauthorized"
       },
-      "workspaceNotFound": {
-        "title": "Workspace not found",
-        "message": "There is no workspace at ${host}. Check the address, or go to the main site.",
-        "messageNoHost": "There is no workspace at this address. Check the address, or go to the main site.",
+      "tenantNotFound": {
+        "title": "Tenant not found",
+        "message": "There is no tenant at ${host}. Check the address, or go to the main site.",
+        "messageNoHost": "There is no tenant at this address. Check the address, or go to the main site.",
         "homeAction": "Go to home page",
         "action": "Go to the main site"
+      },
+      "ticketSignin": {
+        "title": "Signing you in…",
+        "failedTitle": "We couldn't sign you in automatically",
+        "action": "Sign in with your password"
       }
     },
     "changePassword": {
@@ -647,15 +654,15 @@
         "suspend": "Suspend",
         "reactivate": "Reactivate"
       },
-      "openWorkspace": "Open workspace"
+      "signIn": "Sign in"
     },
     "selectTenant": {
-      "title": "Your workspaces",
-      "description": "Each workspace opens at its own address, in a new tab.",
+      "title": "Your tenants",
+      "description": "Each tenant opens at its own address, in a new tab.",
       "emptyDescription": "You do not belong to an active tenant. Ask an administrator to add you to theirs, or sign up to create your own.",
       "emptyAction": "Go to your profile",
       "current": "Current",
-      "noAddresses": "Workspace addresses are not configured on this installation."
+      "noAddresses": "Tenant addresses are not configured on this installation."
     },
     "editions": {
       "title": "Editions",

@@ -135,7 +135,7 @@ Run these from the new project's root.
    It serves `http://localhost:3000` (the origin `Web:Domains` allows for CORS). `.env.development`
    points `API_INTERNAL_URL` (the Next.js server's own fetches) at `http://localhost:5000/api`; the
    browser calls the API as the relative `/api`, which the dev proxy `npm run dev` starts routes to it. The host
-   is the workspace, so the sign-in page has no tenant field: sign in as `tenantadmin` at
+   is the tenant, so the sign-in page has no tenant field: sign in as `tenantadmin` at
    `http://default.localhost:3000` (the Default tenant), and as `admin` at `http://app.localhost:3000`
    (the platform). Sign up for a new tenant on `http://app.localhost:3000`.
 7. **Tests and the gate.** `dotnet test src/backend/Tests` needs PostgreSQL reachable with the

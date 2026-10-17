@@ -7,16 +7,16 @@ import { serverApiFetch } from './api-fetch'
  *
  * - `found` - the API answered `GET /tenants/host`: the platform host (or any host while host
  *   resolution is off) or an existing tenant's;
- * - `notFound` - the host names no workspace (a 404 `tenantNotFound`: an unknown or deleted tenant).
+ * - `notFound` - the host names no tenant (a 404 `tenantNotFound`: an unknown or deleted tenant).
  *   The 404 carries no `platformUrl`, so it comes from a second call that forwards no host, which the
  *   API answers for the platform; it is null when that call fails too;
  * - `unavailable` - the API could not be asked, so the page falls back to its platform copy and keeps
  *   working.
  *
  * `visitorHost` is the host the browser asked for, to name it in copy ("Sign in to ..." under the
- * tenant's name, "There is no workspace at ...").
+ * tenant's name, "There is no tenant at ...").
  */
-export type HostWorkspace =
+export type HostTenant =
   | { kind: 'found'; host: TenantHostGetResponse; visitorHost: string | null }
   | { kind: 'notFound'; platformUrl: string | null; visitorHost: string | null }
   | { kind: 'unavailable'; visitorHost: string | null }
@@ -35,10 +35,10 @@ const readHost = async (response: Response): Promise<TenantHostGetResponse | nul
 }
 
 /**
- * Decides the {@link HostWorkspace} from the API's answers, through `fetchHost` so the decision is
+ * Decides the {@link HostTenant} from the API's answers, through `fetchHost` so the decision is
  * testable without a request. Never throws: anything unexpected is `unavailable`.
  */
-export async function resolveHostWorkspace(fetchHost: HostFetcher, visitorHost: string | null): Promise<HostWorkspace> {
+export async function resolveHostTenant(fetchHost: HostFetcher, visitorHost: string | null): Promise<HostTenant> {
   try {
     const response = await fetchHost({ forwardHost: true })
     if (response.ok) {
@@ -62,12 +62,12 @@ export async function resolveHostWorkspace(fetchHost: HostFetcher, visitorHost: 
 }
 
 /**
- * The visitor's {@link HostWorkspace}, fetched on the server once per request (`cache()`), so a page
+ * The visitor's {@link HostTenant}, fetched on the server once per request (`cache()`), so a page
  * hands it to its client component as a prop and renders the right heading with no layout shift.
  */
-export const getHostWorkspace = cache(async (): Promise<HostWorkspace> => {
+export const getHostTenant = cache(async (): Promise<HostTenant> => {
   const { headers } = await import('next/headers')
   const visitorHost = (await headers()).get('host')
 
-  return resolveHostWorkspace(({ forwardHost }) => serverApiFetch('/tenants/host', { forwardHost, cache: 'no-store' }), visitorHost)
+  return resolveHostTenant(({ forwardHost }) => serverApiFetch('/tenants/host', { forwardHost, cache: 'no-store' }), visitorHost)
 })

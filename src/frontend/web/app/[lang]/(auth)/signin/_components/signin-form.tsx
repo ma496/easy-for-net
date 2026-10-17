@@ -15,11 +15,11 @@ import { NODE_MARK, withNode } from '@/components/custom'
 import { useLocalizedRouter } from '@/hooks'
 import { apiErrorAlert, getErrorCode, pathOnOrigin, resolvePlatformLanding, successToast } from '@/lib/utils'
 import { isValidRedirectPath } from '@/lib/utils/redirect'
-import type { HostWorkspace } from '@/lib/server/host-workspace'
+import type { HostTenant } from '@/lib/server/host-tenant'
 
 /** Props for SigninForm: what the visitor's host names, fetched on the server by the page. */
 interface SigninFormProps {
-  hostWorkspace: HostWorkspace
+  hostTenant: HostTenant
 }
 
 /** Props for the centred block that replaces the form when there is nothing to sign in to here. */
@@ -43,14 +43,14 @@ const SigninNotice = ({ title, message, action }: SigninNoticeProps) => (
 
 /**
  * Interactive client-side form that authenticates a user with username/password and routes them to the appropriate landing page.
- * The host decides the tenant: on a tenant's own address the heading names that workspace and a sign-in starts a session in it,
- * on the platform's address a platform account signs in with no tenant, and an ordinary account is told to use its workspace's
- * address instead. A host that names no workspace shows that, with a link to the main site, rather than a form that cannot succeed;
- * a suspended workspace keeps the form but cannot be signed in to. When the host could not be asked, the platform copy shows and
+ * The host decides the tenant: on a tenant's own address the heading names that tenant and a sign-in starts a session in it,
+ * on the platform's address a platform account signs in with no tenant, and an ordinary account is told to use its tenant's
+ * address instead. A host that names no tenant shows that, with a link to the main site, rather than a form that cannot succeed;
+ * a suspended tenant keeps the form but cannot be signed in to. When the host could not be asked, the platform copy shows and
  * the form works as usual. Manages a verification-message sub-state with a resend-email countdown for accounts whose email is not
  * yet verified.
  */
-export const SigninForm = ({ hostWorkspace }: SigninFormProps) => {
+export const SigninForm = ({ hostTenant }: SigninFormProps) => {
   const router = useLocalizedRouter()
   const { t } = useTranslation()
   const searchParams = useSearchParams()
@@ -91,11 +91,11 @@ export const SigninForm = ({ hostWorkspace }: SigninFormProps) => {
     }
   }, [countdown])
 
-  const host = hostWorkspace.kind === 'found' ? hostWorkspace.host : null
+  const host = hostTenant.kind === 'found' ? hostTenant.host : null
   const tenantHost = host?.kind === 'tenant' ? host : null
   const isSuspended = tenantHost?.status === TenantStatus.Suspended
-  const platformUrl = hostWorkspace.kind === 'found' ? hostWorkspace.host.platformUrl : hostWorkspace.kind === 'notFound' ? hostWorkspace.platformUrl : null
-  const visitorHost = hostWorkspace.visitorHost ?? ''
+  const platformUrl = hostTenant.kind === 'found' ? hostTenant.host.platformUrl : hostTenant.kind === 'notFound' ? hostTenant.platformUrl : null
+  const visitorHost = hostTenant.visitorHost ?? ''
 
   const submitForm = async (values: SigninFormValues) => {
     if (isSuspended) return
@@ -109,7 +109,7 @@ export const SigninForm = ({ hostWorkspace }: SigninFormProps) => {
         return
       }
       if (code === 'tenantHostRequired') {
-        // An ordinary account on the platform's address: its sign-in belongs on its workspace's own.
+        // An ordinary account on the platform's address: its sign-in belongs on its tenant's own.
         setIsHostRequired(true)
         return
       }
@@ -169,7 +169,7 @@ export const SigninForm = ({ hostWorkspace }: SigninFormProps) => {
     setCountdown(15)
   }
 
-  if (hostWorkspace.kind === 'notFound') {
+  if (hostTenant.kind === 'notFound') {
     const hostNode = (
       <bdi dir="ltr" className="font-mono text-xs break-all text-foreground">
         {visitorHost}
@@ -178,21 +178,21 @@ export const SigninForm = ({ hostWorkspace }: SigninFormProps) => {
 
     return (
       <SigninNotice
-        title={t('page.auth.workspaceNotFound.title') || 'Workspace not found'}
+        title={t('page.auth.tenantNotFound.title') || 'Tenant not found'}
         message={
           visitorHost
-            ? withNode(t('page.auth.workspaceNotFound.message', { host: NODE_MARK }) || `There is no workspace at ${NODE_MARK}. Check the address, or go to the main site.`, hostNode)
-            : t('page.auth.workspaceNotFound.messageNoHost') || 'There is no workspace at this address. Check the address, or go to the main site.'
+            ? withNode(t('page.auth.tenantNotFound.message', { host: NODE_MARK }) || `There is no tenant at ${NODE_MARK}. Check the address, or go to the main site.`, hostNode)
+            : t('page.auth.tenantNotFound.messageNoHost') || 'There is no tenant at this address. Check the address, or go to the main site.'
         }
         action={
           platformUrl ? (
             <a className="btn btn-primary mt-6 w-full" href={platformUrl}>
-              {t('page.auth.workspaceNotFound.action') || 'Go to the main site'}
+              {t('page.auth.tenantNotFound.action') || 'Go to the main site'}
             </a>
           ) : (
             // Without the platform's address there is no main site to point at; this origin's own home page still answers.
             <LocalizedLink href="/" className="btn btn-primary mt-6 w-full">
-              {t('page.auth.workspaceNotFound.homeAction') || 'Go to home page'}
+              {t('page.auth.tenantNotFound.homeAction') || 'Go to home page'}
             </LocalizedLink>
           )
         }
@@ -203,8 +203,8 @@ export const SigninForm = ({ hostWorkspace }: SigninFormProps) => {
   if (isHostRequired) {
     return (
       <SigninNotice
-        title={t('page.auth.signin.hostRequiredTitle') || "Sign in at your workspace's address"}
-        message={t('page.auth.signin.hostRequiredMessage') || "Your account belongs to a workspace. Open its address to sign in. If you don't know it, check your invitation email."}
+        title={t('page.auth.signin.hostRequiredTitle') || "Sign in at your tenant's address"}
+        message={t('page.auth.signin.hostRequiredMessage') || "Your account belongs to a tenant. Open its address to sign in. If you don't know it, check your invitation email."}
         action={
           <Button type="button" size="lg" className="mt-6 w-full" onClick={() => setIsHostRequired(false)}>
             {t('page.auth.signin.backToSignin') || 'Back to Sign In'}
@@ -243,7 +243,7 @@ export const SigninForm = ({ hostWorkspace }: SigninFormProps) => {
               <div role="alert" className="flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/10 p-4 text-sm">
                 <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" />
                 <div className="min-w-0 flex-1 space-y-1">
-                  <p className="font-semibold text-foreground">{t('page.auth.signin.suspendedTitle') || 'This workspace is suspended'}</p>
+                  <p className="font-semibold text-foreground">{t('page.auth.signin.suspendedTitle') || 'This tenant is suspended'}</p>
                   <p className="text-foreground/80">{t('page.auth.signin.suspendedMessage') || 'Signing in is unavailable until an administrator reactivates it.'}</p>
                 </div>
               </div>
@@ -291,11 +291,11 @@ export const SigninForm = ({ hostWorkspace }: SigninFormProps) => {
             </Button>
 
             {tenantHost ? (
-              // Sign-up creates a workspace, which happens on the main site alone.
+              // Sign-up creates a tenant, which happens on the main site alone.
               <p className="text-center text-sm text-muted-foreground">
-                {t('page.auth.signin.ownWorkspace') || 'Want your own workspace?'}{' '}
+                {t('page.auth.signin.ownTenant') || 'Want your own tenant?'}{' '}
                 <a href={pathOnOrigin(tenantHost.platformUrl, router.localize('/signup'))} className="font-medium text-primary hover:underline">
-                  {t('page.auth.signin.createWorkspace') || 'Create one'}
+                  {t('page.auth.signin.createTenant') || 'Create one'}
                 </a>
               </p>
             ) : (

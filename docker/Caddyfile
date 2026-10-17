@@ -1,7 +1,7 @@
 # The platform at app.{$DOMAIN} and every tenant at <tenant>.{$DOMAIN}, each one origin for the web
 # app and the API. Caddy redirects HTTP to HTTPS, keeps the browser's Host and sets X-Forwarded-For,
 # -Proto and -Host (the API trusts them under ForwardedHeaders:TrustAllProxies, and reads the
-# workspace from the host), and proxies WebSockets (the notification hub).
+# tenant from the host), and proxies WebSockets (the notification hub).
 #
 # Certificates are HTTP-01, one per host, so no DNS credentials are needed: app.{$DOMAIN}'s is
 # obtained at startup, and a tenant's on its first visit, once the API confirms the host is the

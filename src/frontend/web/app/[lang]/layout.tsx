@@ -1,6 +1,8 @@
 import { ProviderComponent, TranslationProvider, LocaleGuard, ThemeScript } from '@/components/layouts'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { getDictionary, i18nConfig, type Locale, getServerTranslation } from '@/i18n'
+import { getHostTenant } from '@/lib/server/host-tenant'
+import { TenantNotFound } from './_components/tenant-not-found'
 
 import 'react-perfect-scrollbar/dist/css/styles.css'
 import '../../styles/tailwind.css'
@@ -28,6 +30,7 @@ export async function generateStaticParams() {
 /**
  * Server-rendered root layout for every locale-prefixed route.
  * Loads the locale dictionary, applies the Geist fonts and the saved theme, and wraps the tree in the translation and Redux provider components.
+ * On a host that names no tenant (an unknown or deleted one) every route renders the tenant-not-found view instead of its page.
  */
 export default async function RootLayout({
   children,
@@ -37,7 +40,7 @@ export default async function RootLayout({
   params: Promise<{ lang: string }>
 }) {
   const { lang } = await params
-  const dictionary = await getDictionary(lang as Locale)
+  const [dictionary, hostTenant] = await Promise.all([getDictionary(lang as Locale), getHostTenant()])
 
   return (
     <html lang={lang} data-scroll-behavior="smooth" suppressHydrationWarning={true}>
@@ -47,7 +50,9 @@ export default async function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning={true}>
         <TranslationProvider dictionary={dictionary}>
           <LocaleGuard urlLocale={lang} servedCulture={dictionary.culture} defaultCulture={dictionary.defaultCulture} languages={dictionary.languages} />
-          <ProviderComponent>{children}</ProviderComponent>
+          <ProviderComponent>
+            {hostTenant.kind === 'notFound' ? <TenantNotFound platformUrl={hostTenant.platformUrl} visitorHost={hostTenant.visitorHost} /> : children}
+          </ProviderComponent>
         </TranslationProvider>
       </body>
     </html>

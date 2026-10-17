@@ -120,7 +120,7 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
         [typeof(MyFeaturesEndpoint)] = [],
 
         // Anonymous, and deliberately so: they answer what a host names before anybody has signed in -
-        // the web app asking which workspace it is on, the proxy asking whether a host deserves a
+        // the web app asking which tenant it is on, the proxy asking whether a host deserves a
         // certificate - and disclose nothing beyond a tenant's name and status.
         [typeof(TenantHostGetEndpoint)] = [],
         [typeof(TenantTlsAllowedEndpoint)] = []

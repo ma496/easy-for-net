@@ -55,7 +55,7 @@ function App({ children }: PropsWithChildren) {
     const go = (target: string) => router.replace(localized(target) as any)
 
     // A platform administrator acting in no tenant needs none: users, roles and notifications answer about the platform's own, and the tenants screens and the dashboard read no tenant data, so the
-    // lack of a selection never sends them to the workspaces list. Only a screen that genuinely needs a tenant - one not listed in tenant-routing - lands them on the dashboard instead. A tenant
+    // lack of a selection never sends them to the tenant picker (`/select-tenant`). Only a screen that genuinely needs a tenant - one not listed in tenant-routing - lands them on the dashboard instead. A tenant
     // of theirs is another address, which the user menu links to.
     const platformLanding = resolvePlatformLanding(authState.user)
     if (platformLanding && !isPathAvailable(authState.user, pathToCheck)) {
@@ -64,7 +64,7 @@ function App({ children }: PropsWithChildren) {
     }
 
     // Opening a screen that only means anything inside a tenant while the session names none - because the tenant it was working in was suspended, deleted or left, and the last renewal dropped it -
-    // lands on the workspaces list, which links to the tenants still theirs at their own addresses, instead of a tenant-scoped screen with no tenant behind it. The renewal re-reads the account
+    // lands on the tenant picker (`/select-tenant`), which links to the tenants still theirs at their own addresses, instead of a tenant-scoped screen with no tenant behind it. The renewal re-reads the account
     // info, which is how the state below comes to be seen at all. Account self-service, the platform tenancy screens, /unauthorized and the public routes are not tenant-scoped, so they stay
     // reachable throughout.
     if (isTenantScopedPath(pathToCheck) && !platformLanding && isWithoutUsableTenant(authState.user)) {

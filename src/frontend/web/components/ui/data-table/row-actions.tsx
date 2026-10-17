@@ -32,7 +32,7 @@ export interface DataTableRowAction {
   label: string
   icon?: ReactNode
   href?: string
-  /** `href` is an absolute address on another origin (another workspace), opened in a new tab rather than as an app route. */
+  /** `href` is an absolute address on another origin (another tenant), opened in a new tab rather than as an app route. */
   external?: boolean
   onClick?: () => void
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger'

@@ -4,7 +4,7 @@
 # holds ports 80 and 443 and obtains the certificate for the domain:
 #   - the proxy publishes no ports; Coolify routes app.<domain> and *.<domain> to its port 80
 #   - Caddy serves plain HTTP there, for whatever host it is asked (docker/Caddyfile.coolify, built
-#     into the image), keeping the Host Traefik forwarded, which tells the API the workspace
+#     into the image), keeping the Host Traefik forwarded, which tells the API the tenant
 # Coolify supplies the ${...} values as the application's environment variables; deploy-vps.mjs fills
 # them in. Keep the services and variables in step with docker-compose.prod.yml
 # (scripts/tests/deploy-vps.test.mjs fails when they drift apart).

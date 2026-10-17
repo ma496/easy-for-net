@@ -82,7 +82,7 @@
     "tenantsCreate": "创建",
     "tenantsUpdate": "更新",
     "tenantsMembers": "成员",
-    "selectTenant": "你的工作区",
+    "selectTenant": "你的租户",
     "tenantsDetail": "详情",
     "editions": "版本",
     "editionsList": "列表",
@@ -92,9 +92,9 @@
     "tenantsFeatures": "功能",
     "localization": "本地化",
     "settings": "设置",
-    "otherWorkspaces": "其他工作区",
+    "otherTenants": "其他租户",
     "platformAdministration": "平台管理",
-    "allWorkspaces": "所有工作区"
+    "allTenants": "所有租户"
   },
   "search": {
     "dashboard": "仪表板",
@@ -248,6 +248,8 @@
       "tenantRequired": "请提供租户以登录。",
       "tenantHostMismatch": "此登录属于其他地址。请在当前地址重新登录。",
       "tenantHostRequired": "请在您组织自己的地址登录。",
+      "tenantAddressNotConfigured": "此安装未配置租户地址。",
+      "signInTicketInvalid": "此登录链接已过期或已被使用。请使用密码登录。",
       "tenantIdentifierReserved": "此标识符已被保留。请选择其他标识符。",
       "tenantIdentifierAlreadyExists": "租户标识符已存在",
       "duplicateTenantMembership": "此用户已是该租户的成员",
@@ -505,12 +507,12 @@
         "noAccount": "没有账户？",
         "backToSignin": "返回登录",
         "titleTenant": "登录到 ${name}",
-        "suspendedTitle": "此工作区已暂停",
+        "suspendedTitle": "此租户已暂停",
         "suspendedMessage": "在管理员重新激活之前无法登录。",
-        "hostRequiredTitle": "请在你的工作区地址登录",
-        "hostRequiredMessage": "你的账户属于某个工作区。请打开它的地址登录。如果你不知道地址，请查看邀请邮件。",
-        "ownWorkspace": "想要自己的工作区？",
-        "createWorkspace": "创建一个"
+        "hostRequiredTitle": "请在你的租户地址登录",
+        "hostRequiredMessage": "你的账户属于某个租户。请打开它的地址登录。如果你不知道地址，请查看邀请邮件。",
+        "ownTenant": "想要自己的租户？",
+        "createTenant": "创建一个"
       },
       "signup": {
         "title": "注册",
@@ -521,18 +523,18 @@
         "successTitle": "成功！",
         "successVerifyEmail": "注册成功！请检查您的电子邮件以验证您的账户。",
         "successMessage": "注册成功！前往登录页面。",
-        "tenantSectionTitle": "你的工作区",
+        "tenantSectionTitle": "你的租户",
         "tenantHostTitle": "注册需在主站点进行",
-        "tenantHostMessage": "你正在 ${name} 的工作区。要创建自己的工作区，请在主站点注册。",
-        "mainSiteMessage": "要创建自己的工作区，请在主站点注册。",
+        "tenantHostMessage": "你正在 ${name}。要创建自己的租户，请在主站点注册。",
+        "mainSiteMessage": "要创建自己的租户，请在主站点注册。",
         "tenantHostAction": "前往注册",
-        "workspaceName": "工作区名称",
-        "workspaceAddress": "工作区地址",
-        "addressPreview": "你的工作区地址：",
+        "tenantName": "租户名称",
+        "tenantAddress": "租户地址",
+        "addressPreview": "你的租户地址：",
         "addressPlaceholder": "your-name",
         "identifierHint": "小写字母、数字和连字符。",
-        "readyTitle": "你的工作区已就绪",
-        "goToWorkspace": "前往你的工作区"
+        "readyTitle": "你的租户已就绪",
+        "goToTenant": "前往你的租户"
       },
       "forgotPassword": {
         "title": "忘记密码",
@@ -552,12 +554,17 @@
       "unauthorized": {
         "title": "未授权"
       },
-      "workspaceNotFound": {
-        "title": "未找到工作区",
-        "message": "${host} 上没有工作区。请检查地址，或前往主站点。",
-        "messageNoHost": "此地址上没有工作区。请检查地址，或前往主站点。",
+      "tenantNotFound": {
+        "title": "未找到租户",
+        "message": "${host} 上没有租户。请检查地址，或前往主站点。",
+        "messageNoHost": "此地址上没有租户。请检查地址，或前往主站点。",
         "homeAction": "前往首页",
         "action": "前往主站点"
+      },
+      "ticketSignin": {
+        "title": "正在为你登录…",
+        "failedTitle": "无法自动为你登录",
+        "action": "使用密码登录"
       }
     },
     "changePassword": {
@@ -647,15 +654,15 @@
         "suspend": "暂停",
         "reactivate": "重新激活"
       },
-      "openWorkspace": "打开工作区"
+      "signIn": "登录"
     },
     "selectTenant": {
-      "title": "你的工作区",
-      "description": "每个工作区都在其自己的地址、新标签页中打开。",
+      "title": "你的租户",
+      "description": "每个租户都在其自己的地址、新标签页中打开。",
       "emptyDescription": "您不属于任何活跃租户。请让管理员将您加入其租户，或注册以创建您自己的租户。",
       "emptyAction": "前往个人资料",
       "current": "当前",
-      "noAddresses": "此安装未配置工作区地址。"
+      "noAddresses": "此安装未配置租户地址。"
     },
     "editions": {
       "title": "版本",

@@ -42,6 +42,8 @@ const tenantErrorCodes = [
   'tenantHostMismatch',
   'tenantHostRequired',
   'tenantIdentifierReserved',
+  'tenantAddressNotConfigured',
+  'signInTicketInvalid',
 ]
 
 /** The keys the tenant screens render from, one per string a person reads on them. */
@@ -71,10 +73,10 @@ const tenantScreenKeys = [
   'page.tenants.members.removeTitle',
   'page.tenants.status.active',
   'page.tenants.status.suspended',
-  'page.tenants.openWorkspace',
-  'navigation.otherWorkspaces',
+  'page.tenants.signIn',
+  'navigation.otherTenants',
   'navigation.platformAdministration',
-  'navigation.allWorkspaces',
+  'navigation.allTenants',
   'common.opensInNewTab',
   'page.selectTenant.title',
   'page.selectTenant.description',
@@ -87,23 +89,26 @@ const tenantScreenKeys = [
   'page.auth.signin.suspendedMessage',
   'page.auth.signin.hostRequiredTitle',
   'page.auth.signin.hostRequiredMessage',
-  'page.auth.signin.ownWorkspace',
-  'page.auth.signin.createWorkspace',
-  'page.auth.workspaceNotFound.title',
-  'page.auth.workspaceNotFound.message',
-  'page.auth.workspaceNotFound.action',
+  'page.auth.signin.ownTenant',
+  'page.auth.signin.createTenant',
+  'page.auth.tenantNotFound.title',
+  'page.auth.tenantNotFound.message',
+  'page.auth.tenantNotFound.action',
   'page.auth.signup.tenantSectionTitle',
   'page.auth.signup.tenantHostTitle',
   'page.auth.signup.tenantHostMessage',
   'page.auth.signup.mainSiteMessage',
   'page.auth.signup.tenantHostAction',
-  'page.auth.signup.workspaceName',
-  'page.auth.signup.workspaceAddress',
+  'page.auth.signup.tenantName',
+  'page.auth.signup.tenantAddress',
   'page.auth.signup.addressPreview',
   'page.auth.signup.addressPlaceholder',
   'page.auth.signup.identifierHint',
   'page.auth.signup.readyTitle',
-  'page.auth.signup.goToWorkspace',
+  'page.auth.signup.goToTenant',
+  'page.auth.ticketSignin.title',
+  'page.auth.ticketSignin.failedTitle',
+  'page.auth.ticketSignin.action',
 ]
 
 describe('tenant screen copy', () => {
@@ -130,8 +135,8 @@ describe('tenant screen copy', () => {
   it.each([
     ['page.auth.signin.titleTenant', '${name}'],
     ['page.auth.signup.tenantHostMessage', '${name}'],
-    ['page.auth.workspaceNotFound.message', '${host}'],
-  ])('keeps the workspace in %s, which names it', (key, placeholder) => {
+    ['page.auth.tenantNotFound.message', '${host}'],
+  ])('keeps the tenant in %s, which names it', (key, placeholder) => {
     for (const [locale, translated] of messages) {
       expect(translated.get(key), `${locale} dropped the placeholder`).toContain(placeholder)
     }
@@ -159,7 +164,7 @@ const rtlScreenDirectories = ['app/[lang]/admin/(tenancy)', 'app/[lang]/(auth)/s
 
 /** Shared pieces outside those trees that are part of the tenant experience. */
 const rtlScreenFiles = [
-  'components/custom/workspace-link.tsx',
+  'components/custom/tenant-link.tsx',
   'components/custom/nav-user.tsx',
   'app/[lang]/(auth)/signin/_components/signin-form.tsx',
   'app/[lang]/(auth)/signup/_components/signup-form.tsx',

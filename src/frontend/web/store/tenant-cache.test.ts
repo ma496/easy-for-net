@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import * as tenantCache from './tenant-cache'
 
 /**
- * Each host keeps its own session, so the acting tenant is never changed in place: another workspace
+ * Each host keeps its own session, so the acting tenant is never changed in place: another tenant
  * is another address, and the API refuses `/tenants/switch` and `/tenants/exit` on a resolved host.
  * What is asserted here is that the web app has no path left that would call them - and it has to be
  * read from the source, because there is no browser here to render a screen in. A screen that quietly
@@ -46,37 +46,63 @@ describe('changing the acting tenant', () => {
     expect(offenders).toEqual([])
   })
 
+  it('calls a tenant a tenant: no source file says workspace', () => {
+    expect(sources.filter(({ text }) => /workspace/i.test(text)).map(({ file }) => file)).toEqual([])
+  })
+
   it('leaves the session store with nothing but signing out', () => {
     expect(Object.keys(tenantCache)).toEqual(['leaveSignedOut'])
   })
 })
 
-/** The screens that link to the account's other workspaces. */
-const workspaceLinkSites = [
+/** The screens that link to the account's other tenants. */
+const tenantLinkSites = [
   'components/custom/nav-user.tsx',
   'app/[lang]/(auth)/select-tenant/_components/select-tenant-view.tsx',
   'app/[lang]/admin/(tenancy)/tenants/_components/tenant-table.tsx',
 ]
 
-describe('links to another workspace', () => {
-  it.each(workspaceLinkSites)("%s links to the address the account info reports, never one of its own", (file) => {
+describe('links to another tenant', () => {
+  it.each(tenantLinkSites)("%s links to the address the account info reports, never one of its own", (file) => {
     const source = readFileSync(join(webDirectory, file), 'utf8')
 
-    // `tenant.url` (and `platformUrl`) are the only source of a workspace's address: a composed or
+    // `tenant.url` (and `platformUrl`) are the only source of a tenant's address: a composed or
     // baked-in one would point at the wrong host the moment the deployment's domain differs.
     expect(source).toMatch(/\.url\b/)
     expect(source).not.toMatch(/https?:\/\//)
     expect(source).not.toContain('localhost')
   })
 
-  it.each(workspaceLinkSites)('%s opens it as another site rather than an app route', (file) => {
+  it.each(tenantLinkSites)('%s opens it as another site rather than an app route', (file) => {
     const source = readFileSync(join(webDirectory, file), 'utf8')
 
-    expect(source.includes('WorkspaceLink') || source.includes('external: true')).toBe(true)
+    expect(source.includes('TenantLink') || source.includes('external: true') || source.includes('useOpenTenant')).toBe(true)
   })
 
-  it('opens a workspace in a new tab, with nothing of this page handed to it', () => {
-    const source = readFileSync(join(webDirectory, 'components/custom/workspace-link.tsx'), 'utf8')
+  it('opens a tenant signed in through the address the API issues the ticket for, handing the ticket to that tab alone', () => {
+    const source = readFileSync(join(webDirectory, 'hooks/use-open-tenant.ts'), 'utf8')
+
+    expect(source).toContain('response.data')
+    expect(source).toContain("window.open('', '_blank')")
+    // The ticket goes to the tab this page opened, on the tenant's origin, and never into an address.
+    expect(source).toContain('event.source !== tab')
+    expect(source).toContain('event.origin !== tenantOrigin')
+    expect(source).toContain('tab.postMessage({ type: TICKET_MESSAGE.ticket, ticket }, tenantOrigin)')
+    expect(source).not.toContain('#ticket')
+    expect(source).not.toMatch(/https?:\/\//)
+  })
+
+  it("takes the ticket only from the page that opened the tab, on one of the deployment's own origins", () => {
+    const source = readFileSync(join(webDirectory, 'app/[lang]/(auth)/ticket-signin/_components/ticket-signin-view.tsx'), 'utf8')
+
+    expect(source).toContain('event.source !== opener || !isTrustedSender(event.origin)')
+    expect(source).toContain('isDeploymentOrigin(origin, { platformUrl, tenantUrlTemplate })')
+    expect(source).toContain('await isServedOrigin(received.origin)')
+    expect(source).not.toContain('location.hash')
+  })
+
+  it('opens a tenant in a new tab, with nothing of this page handed to it', () => {
+    const source = readFileSync(join(webDirectory, 'components/custom/tenant-link.tsx'), 'utf8')
 
     expect(source).toContain('target="_blank"')
     expect(source).toContain('rel="noopener noreferrer"')

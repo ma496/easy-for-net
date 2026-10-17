@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { ArrowLeft, type LucideIcon } from 'lucide-react'
 import { useLocalizedRouter } from '@/hooks'
 import { useTranslation } from '@/i18n'
@@ -15,14 +16,16 @@ interface StatusScreenProps {
   code: number
   icon: LucideIcon
   title: string
-  message: string
+  message: ReactNode
+  /** Replaces the back button with another way on, such as a link to another site. */
+  action?: ReactNode
 }
 
 /**
  * Full-page status view (not found, forbidden) with the site's top bar, an icon tile, the status code,
- * a title and message, and a back button that returns one step in the browser history.
+ * a title and message, and a back button that returns one step in the browser history - or the screen's own action in its place.
  */
-export const StatusScreen = ({ code, icon: Icon, title, message }: StatusScreenProps) => {
+export const StatusScreen = ({ code, icon: Icon, title, message, action }: StatusScreenProps) => {
   const router = useLocalizedRouter()
   const { t } = useTranslation()
 
@@ -43,9 +46,11 @@ export const StatusScreen = ({ code, icon: Icon, title, message }: StatusScreenP
           <span className="badge badge-danger mb-3 tabular-nums">{code}</span>
           <h1 className="text-2xl font-semibold tracking-tight wrap-break-word sm:text-3xl">{title}</h1>
           <p className="mt-3 text-sm leading-relaxed wrap-break-word text-muted-foreground sm:text-base">{message}</p>
-          <Button type="button" variant="outline" size="lg" className="mt-8" icon={<ArrowLeft className="size-4 rtl:-scale-x-100" />} onClick={() => router.back()}>
-            {t('common.back') || 'Back'}
-          </Button>
+          {action ?? (
+            <Button type="button" variant="outline" size="lg" className="mt-8" icon={<ArrowLeft className="size-4 rtl:-scale-x-100" />} onClick={() => router.back()}>
+              {t('common.back') || 'Back'}
+            </Button>
+          )}
         </div>
       </main>
     </div>
