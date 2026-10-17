@@ -1,6 +1,23 @@
-# One origin for the web app and the API. Caddy obtains and renews the certificate for DOMAIN,
-# redirects HTTP to HTTPS, sets X-Forwarded-For/Proto, and proxies WebSockets (the notification hub).
-{$DOMAIN} {
+# The platform at app.{$DOMAIN} and every tenant at <tenant>.{$DOMAIN}, each one origin for the web
+# app and the API. Caddy redirects HTTP to HTTPS, keeps the browser's Host and sets X-Forwarded-For,
+# -Proto and -Host (the API trusts them under ForwardedHeaders:TrustAllProxies, and reads the
+# workspace from the host), and proxies WebSockets (the notification hub).
+#
+# Certificates are HTTP-01, one per host, so no DNS credentials are needed: app.{$DOMAIN}'s is
+# obtained at startup, and a tenant's on its first visit, once the API confirms the host is the
+# platform's or an existing tenant's (on_demand_tls below): made-up subdomains get none. Let's
+# Encrypt issues at most 50 certificates per registered domain per week, and with open sign-up
+# anyone can create tenants. An installation expecting more new tenants than that, or exposed to
+# sign-ups made only to use that allowance up, should obtain a DNS-01 wildcard certificate for
+# *.{$DOMAIN} instead (a Caddy build with its DNS provider's module, and
+# `tls { dns <provider> <token> }` on the tenant site).
+{
+	on_demand_tls {
+		ask http://api:8080/api/tenants/tls-allowed
+	}
+}
+
+(app_routes) {
 	encode zstd gzip
 
 	@api path /api/* /hubs/* /hangfire /hangfire/* /health
@@ -11,4 +28,15 @@
 	handle {
 		reverse_proxy web:3000
 	}
+}
+
+app.{$DOMAIN} {
+	import app_routes
+}
+
+*.{$DOMAIN} {
+	tls {
+		on_demand
+	}
+	import app_routes
 }

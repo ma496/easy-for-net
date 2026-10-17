@@ -150,8 +150,9 @@ Run these from the new project's root.
    origins, `Database:ApplyMigrationsOnStartup` defaults to false there (run
    `dotnet ef database update` explicitly), and the seeded accounts' passwords should be changed in the
    app. For the Docker stack, the generated root `.env` already holds every secret
-   `docker-compose.prod.yml` needs (`SEED_ADMIN_PASSWORD` for the administrators); set `DOMAIN`,
-   `PUBLIC_URL` and the SMTP values, then
+   `docker-compose.prod.yml` needs (`SEED_ADMIN_PASSWORD` for the administrators); point DNS A records for
+   `app.<DOMAIN>` and `*.<DOMAIN>` at the server, set `DOMAIN`, `PUBLIC_URL` (`https://app.<DOMAIN>`),
+   `TENANT_URL_TEMPLATE` (`https://{tenant}.<DOMAIN>`) and the SMTP values, then
    `docker compose -f docker-compose.prod.yml --env-file .env up -d --build`. To put it on a VPS
    behind Coolify instead, push the project and run
    `npm run deploy:vps -- --host <ip> --domain <domain> --email <email>` (see the README's **Deploy to a VPS** section).

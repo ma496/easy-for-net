@@ -1,4 +1,37 @@
-Serve the platform and every tenant subdomain in production with on-demand TLS
+# Serve the platform and every tenant subdomain in production with on-demand TLS
+
+| | |
+|---|---|
+| **Task** | `tenant-subdomains/05-subdomain-deployment` |
+| **Landed** | 2026-10-17 |
+| **Commit** | the one whose message carries `Task: tenant-subdomains/05-subdomain-deployment` |
+| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+
+## What changed
+
+| File | + | − |
+|------|---|---|
+| `.claude/skills/new-project/SKILL.md` | 3 | 2 |
+| `.claude/skills/template-maintenance/SKILL.md` | 2 | 1 |
+| `.env.docker.example` | 9 | 3 |
+| `CLAUDE.md` | 1 | 1 |
+| `README.md` | 31 | 11 |
+| `docker-compose.coolify.yml` | 5 | 2 |
+| `docker-compose.prod.yml` | 7 | 2 |
+| `docker/Caddyfile` | 31 | 3 |
+| `scripts/deploy-vps.mjs` | 113 | 36 |
+| `scripts/deploy/vps/remote.sh` | 176 | 10 |
+| `scripts/lib/deploy-vps.mjs` | 75 | 1 |
+| `scripts/tests/deploy-vps.test.mjs` | 133 | 0 |
+| `tool/EasyForNetTool.Tests/Generator/WriteDockerEnvTests.cs` | 2 | 1 |
+| `tool/EasyForNetTool/Generator/CreateProjectGenerator.cs` | 5 | 3 |
+| `tool/EasyForNetTool/README.md` | 31 | 11 |
+| `tool/EasyForNetTool/new-project-claude.md` | 1 | 1 |
+| `tool/EasyForNetTool/new-project-readme.md` | 34 | 12 |
+| `.claude/memory/lessons/test-the-vps-deploy-script-through-its-pure-helpers-never-by.md` | 9 | 0 |
+
+## The brief this was built from
+
 Depends-on: 01-same-origin-api-and-dev-proxy, 03-tenant-host-endpoints-and-links
 
 The API resolves `app.<domain>` and `<tenant>.<domain>` once `Web:TenantOriginTemplate` is set, and answers Caddy's on-demand TLS question at `GET /api/tenants/tls-allowed`. Both deployment paths still serve a single host. This task makes them serve the platform host and every tenant subdomain: the environment names the domain and the tenant template, the API receives the template, Caddy issues a certificate per host on demand (HTTP-01, no DNS credentials), and the Coolify path attaches the wildcard and can obtain a DNS-01 wildcard certificate through Traefik.

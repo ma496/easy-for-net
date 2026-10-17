@@ -41,7 +41,8 @@ would want.
 - `appsettings.json` duplicated into `appsettings.Development.json` / `appsettings.Testing.json`
 - `src/frontend/web/.env.example` copied to `.env.development`
 - the root `.env` written from `.env.docker.example` by `WriteDockerEnvAsync`: the project's Compose
-  project, database and Redis key prefix, `DOMAIN=localhost` / `PUBLIC_URL=https://localhost`, and
+  project, database and Redis key prefix, `DOMAIN=localhost` / `PUBLIC_URL=https://app.localhost` /
+  `TENANT_URL_TEMPLATE=https://{tenant}.localhost`, and
   fresh random database, Redis and administrator passwords and JWT key, and `DEV_POSTGRES_PORT` /
   `DEV_REDIS_PORT` (a key added to the example ships as it is unless it is named there)
 - the development ports: `DevPorts.Find(DevPorts.IsFree)` keeps 5432 and 6379 when nothing on the
