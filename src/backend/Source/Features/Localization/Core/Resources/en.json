@@ -561,6 +561,18 @@
         "homeAction": "Go to home page",
         "action": "Go to the main site"
       },
+      "unknownHost": {
+        "title": "Where would you like to go?",
+        "message": "${host} is not the address of the platform or of a tenant. Choose where to go.",
+        "messageNoHost": "This is not the address of the platform or of a tenant. Choose where to go.",
+        "platformTitle": "Platform",
+        "platformDescription": "Platform administrators sign in here, and new tenants are created here.",
+        "platformAction": "Go to the platform",
+        "tenantTitle": "Tenant",
+        "tenantDescription": "Enter your tenant's identifier to go to its address.",
+        "tenantAction": "Go to tenant",
+        "tenantInvalid": "Use lower-case letters, digits and hyphens."
+      },
       "ticketSignin": {
         "title": "Signing you in…",
         "failedTitle": "We couldn't sign you in automatically",

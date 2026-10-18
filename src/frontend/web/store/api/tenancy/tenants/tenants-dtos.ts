@@ -168,8 +168,8 @@ export interface TenantUpdateResponse extends BaseDto<string>, SystemCreatedDto 
   status: TenantStatus
 }
 
-/** What the request's host names, as `GET /tenants/host` answers it: `platform` for the platform host (or any host while host resolution is off), `tenant` for a tenant's own host. */
-export type TenantHostKind = 'platform' | 'tenant'
+/** What the request's host names, as `GET /tenants/host` answers it: `platform` for the platform host (or any host while host resolution is off), `tenant` for a tenant's own host, `unknown` for a host that names nothing while host resolution is on. */
+export type TenantHostKind = 'platform' | 'tenant' | 'unknown'
 
 /** Response from the anonymous host endpoint: which tenant the visitor's host belongs to, and the addresses every tenant link is built from. */
 export interface TenantHostGetResponse {

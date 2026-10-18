@@ -561,6 +561,18 @@
         "homeAction": "前往首页",
         "action": "前往主站点"
       },
+      "unknownHost": {
+        "title": "您想去哪里？",
+        "message": "${host} 既不是平台的地址，也不是租户的地址。请选择要前往的位置。",
+        "messageNoHost": "这既不是平台的地址，也不是租户的地址。请选择要前往的位置。",
+        "platformTitle": "平台",
+        "platformDescription": "平台管理员在此登录，新租户也在此创建。",
+        "platformAction": "前往平台",
+        "tenantTitle": "租户",
+        "tenantDescription": "输入租户标识符以前往其地址。",
+        "tenantAction": "前往租户",
+        "tenantInvalid": "请使用小写字母、数字和连字符。"
+      },
       "ticketSignin": {
         "title": "正在为你登录…",
         "failedTitle": "无法自动为你登录",

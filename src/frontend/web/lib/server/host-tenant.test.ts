@@ -5,6 +5,7 @@ const json = (status: number, body: unknown) => new Response(JSON.stringify(body
 
 const tenantHost = { kind: 'tenant', name: 'Acme', identifier: 'acme', status: 'Active', platformUrl: 'http://app.localhost:3000', tenantUrlTemplate: 'http://{tenant}.localhost:3000' }
 const platformHost = { kind: 'platform', platformUrl: 'http://app.localhost:3000', tenantUrlTemplate: 'http://{tenant}.localhost:3000' }
+const unknownHost = { kind: 'unknown', platformUrl: 'http://app.localhost:3000', tenantUrlTemplate: 'http://{tenant}.localhost:3000' }
 const notFound = { statusCode: 404, errors: [{ name: 'generalErrors', reason: 'Tenant not found', code: 'tenantNotFound' }] }
 
 describe('resolveHostTenant', () => {
@@ -21,6 +22,24 @@ describe('resolveHostTenant', () => {
 
     expect(await resolveHostTenant(fetchHost, 'nobody.localhost:3000')).toEqual({ kind: 'notFound', platformUrl: 'http://app.localhost:3000', visitorHost: 'nobody.localhost:3000' })
     expect(fetchHost).toHaveBeenLastCalledWith({ forwardHost: false })
+  })
+
+  it("reports a host that is not the platform's nor a tenant's as unknown, with both addresses to offer, asking only once", async () => {
+    const fetchHost = vi.fn<HostFetcher>(async () => json(200, unknownHost))
+
+    expect(await resolveHostTenant(fetchHost, 'localhost:3000')).toEqual({
+      kind: 'unknownHost',
+      platformUrl: 'http://app.localhost:3000',
+      tenantUrlTemplate: 'http://{tenant}.localhost:3000',
+      visitorHost: 'localhost:3000',
+    })
+    expect(fetchHost).toHaveBeenCalledTimes(1)
+  })
+
+  it('reads the platform address from an unknown answer to the second call, which reaches the API on its own address', async () => {
+    const fetchHost = vi.fn<HostFetcher>(async ({ forwardHost }) => (forwardHost ? json(404, notFound) : json(200, unknownHost)))
+
+    expect(await resolveHostTenant(fetchHost, 'nobody.localhost:3000')).toEqual({ kind: 'notFound', platformUrl: 'http://app.localhost:3000', visitorHost: 'nobody.localhost:3000' })
   })
 
   it('still reports the unknown host when the platform address cannot be read', async () => {

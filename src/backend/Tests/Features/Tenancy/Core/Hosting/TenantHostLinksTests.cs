@@ -35,9 +35,12 @@ public class TenantHostLinksTests(App app) : TenancyTestsBase(app)
 
     private RecordingEmailTransport Transport => App.Services.GetRequiredService<RecordingEmailTransport>();
 
-    /// <summary>The platform host, and a host naming nothing, both answer <c>platform</c> with the platform origin.</summary>
+    /// <summary>
+    /// The platform host answers <c>platform</c>; a host naming nothing answers <c>unknown</c> while
+    /// resolution is on and <c>platform</c> while it is off - each with the platform origin.
+    /// </summary>
     [Fact]
-    public async Task Host_Is_Platform_On_The_Platform_Host_And_Where_Hosts_Name_Nothing()
+    public async Task Host_Is_Platform_On_The_Platform_Host_And_Unknown_Where_Hosts_Name_Nothing()
     {
         using var platform = HostClient(TenantHostingOverride.PlatformHost);
         var (platformResponse, onPlatform) = await platform.GETAsync<TenantHostGetEndpoint, TenantHostGetResponse>();
@@ -53,7 +56,9 @@ public class TenantHostLinksTests(App app) : TenancyTestsBase(app)
         using var unrelated = HostClient(UnrelatedHost);
         var (unrelatedResponse, onUnrelated) = await unrelated.GETAsync<TenantHostGetEndpoint, TenantHostGetResponse>();
         unrelatedResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        onUnrelated.Kind.Should().Be("platform");
+        onUnrelated.Kind.Should().Be("unknown", "an address that is not the platform's must not be served as the platform");
+        onUnrelated.PlatformUrl.Should().Be(TenantHostingOverride.PlatformOrigin);
+        onUnrelated.Name.Should().BeNull();
         onUnrelated.TenantUrlTemplate.Should().Be($"http://{{tenant}}.{TenantHostingOverride.Suffix}",
             "a host naming nothing still answers while resolution is on");
 
