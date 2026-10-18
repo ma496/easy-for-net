@@ -101,6 +101,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
         {
             ["PROD_PROJECT_NAME"] = kebabCaseProjectName,
             ["DOMAIN"] = "localhost",
+            ["PLATFORM_SUBDOMAIN"] = "app",
             ["PUBLIC_URL"] = "https://app.localhost",
             ["TENANT_URL_TEMPLATE"] = "https://{tenant}.localhost",
             ["POSTGRES_DB"] = snakeCaseProjectName,

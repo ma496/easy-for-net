@@ -89,7 +89,8 @@ npm run gate -- --fast                 # the same without the production web bui
 ## Production (Docker)
 
 `docker-compose.prod.yml` runs the API, the web app, PostgreSQL, Redis and Caddy (HTTPS), one origin
-per host: the platform at `app.<DOMAIN>` and every tenant at `<identifier>.<DOMAIN>`. Its values come
+per host: the platform at `app.<DOMAIN>` (or `<PLATFORM_SUBDOMAIN>.<DOMAIN>`) and every tenant at
+`<identifier>.<DOMAIN>`. Its values come
 from the root `.env`, which was generated with random passwords, a JWT signing key and `DOMAIN=localhost`
 (the platform at `https://app.localhost`). It is git-ignored; `.env.docker.example` documents every value.
 
@@ -105,8 +106,10 @@ docker compose -f docker-compose.prod.yml --env-file .env up -d --build
 
 Before deploying for real:
 
-- point two DNS A records at the server, `app.<DOMAIN>` and `*.<DOMAIN>`;
-- set `DOMAIN` to the domain the application lives under, `PUBLIC_URL` to `https://app.<DOMAIN>` and
+- point two DNS A records at the server, the platform's host (`app.<DOMAIN>` by default) and `*.<DOMAIN>`;
+- set `DOMAIN` to the domain the application lives under, `PLATFORM_SUBDOMAIN` to the platform's own
+  subdomain (`app` unless it should live elsewhere, such as `demo`), `PUBLIC_URL` to
+  `https://<PLATFORM_SUBDOMAIN>.<DOMAIN>` and
   `TENANT_URL_TEMPLATE` to `https://{tenant}.<DOMAIN>`;
 - fill in the SMTP values;
 - keep `.env` out of version control and back it up.
@@ -120,21 +123,24 @@ startup there too, so add the initial migration first (see **Development**).
 Windows, macOS or Linux. It needs Node and the OpenSSH client here (both ship with Windows 10+ and
 macOS), and on the server only SSH access as root (or a sudo user) and two DNS A records pointing at
 it: `app.<domain>` (the platform) and `*.<domain>` (every tenant). `--domain` is the domain the
-application lives under, not the platform's host.
+application lives under, not the platform's host. The platform is served at `app.<domain>` unless
+`--platform-subdomain` names another label: `--domain easyfornet.com --platform-subdomain demo` serves
+it at `demo.easyfornet.com` (so that DNS record is `demo.<domain>`), and `demo` is then never a tenant's.
 
 ```sh
 npm run deploy:vps -- --host 203.0.113.10 --domain example.com --email you@example.com
 npm run deploy:vps -- --domain example.com              # later deploys: the other answers are remembered
 EFN_DNS_TOKEN=<token> npm run deploy:vps -- --domain example.com --dns-provider cloudflare   # a *.example.com wildcard certificate
+npm run deploy:vps -- --domain easyfornet.com --platform-subdomain demo   # the platform at demo.easyfornet.com
 npm run deploy:vps -- --host 203.0.113.10 --check       # only report the server's prerequisites
-npm run deploy:vps -- --help                            # every option (--user, --port, --identity, --repo, --branch, --name, --dns-provider, --dns-token, --yes)
+npm run deploy:vps -- --help                            # every option (--user, --port, --identity, --platform-subdomain, --repo, --branch, --name, --dns-provider, --dns-token, --yes)
 ```
 
 Over SSH it checks the server first (distribution, CPU, memory, disk, ports 80/443/8000, an existing
 Docker) and stops if anything would fail; it also stops when `*.<domain>` has no DNS record (it resolves
 a random label to tell). It then installs only what is missing: the tools it needs, a
 swap file on a small server, firewall rules, Coolify itself and an API token. After that it creates
-a Coolify project and application named after the domain, attaches `https://app.<domain>` and
+a Coolify project and application named after the domain, attaches the platform's host (`https://app.<domain>` by default) and
 `https://*.<domain>`, fills in the environment variables, and deploys. Ubuntu, Debian, RHEL-family,
 SUSE, Arch and Alpine servers are supported. Running it again redeploys and changes nothing else:
 passwords and the JWT key are generated once, on the server, and are never overwritten.
