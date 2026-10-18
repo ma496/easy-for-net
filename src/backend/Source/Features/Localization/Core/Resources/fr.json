@@ -561,6 +561,18 @@
         "homeAction": "Aller à la page d'accueil",
         "action": "Aller sur le site principal"
       },
+      "unknownHost": {
+        "title": "Où souhaitez-vous aller ?",
+        "message": "${host} n'est ni l'adresse de la plateforme ni celle d'un locataire. Choisissez où aller.",
+        "messageNoHost": "Ce n'est ni l'adresse de la plateforme ni celle d'un locataire. Choisissez où aller.",
+        "platformTitle": "Plateforme",
+        "platformDescription": "Les administrateurs de la plateforme se connectent ici, et les nouveaux locataires y sont créés.",
+        "platformAction": "Aller à la plateforme",
+        "tenantTitle": "Locataire",
+        "tenantDescription": "Saisissez l'identifiant de votre locataire pour accéder à son adresse.",
+        "tenantAction": "Aller au locataire",
+        "tenantInvalid": "Utilisez des lettres minuscules, des chiffres et des tirets."
+      },
       "ticketSignin": {
         "title": "Connexion en cours…",
         "failedTitle": "Nous n'avons pas pu vous connecter automatiquement",

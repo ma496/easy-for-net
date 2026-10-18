@@ -9,8 +9,10 @@ namespace Backend.Features.Tenancy.Endpoints.Tenants;
 /// </summary>
 /// <remarks>
 /// Anonymous, and read from the request's host alone - never from a session, so a signed-in caller is
-/// answered exactly as a visitor is. The platform host and a host naming nothing (host resolution off,
-/// or a host that is not one of ours) both answer <c>platform</c>. A tenant host answers its tenant while
+/// answered exactly as a visitor is. The platform host answers <c>platform</c>, and so does every host
+/// while host resolution is off. While it is on, a host that is not one of ours answers <c>unknown</c>,
+/// so the web app shows it as naming no tenant rather than serving the platform from an address that is
+/// not the platform's; it still carries the platform origin to link to. A tenant host answers its tenant while
 /// the tenant exists and is not deleted - a suspended one included, with its status, so the web app can
 /// say so - and 404 <c>tenantNotFound</c> otherwise. It reveals no more than the sign-in page on that host
 /// already would: the name a tenant chose to be addressed by.
@@ -35,7 +37,9 @@ sealed class TenantHostGetEndpoint(ITenantHostResolver tenantHostResolver, ITena
         {
             await Send.ResponseAsync(new TenantHostGetResponse
             {
-                Kind = TenantHostGetResponse.PlatformKind,
+                Kind = host.Kind == TenantHostKind.None && tenantUrlTemplate is not null
+                    ? TenantHostGetResponse.UnknownKind
+                    : TenantHostGetResponse.PlatformKind,
                 PlatformUrl = platformUrl,
                 TenantUrlTemplate = tenantUrlTemplate
             }, cancellation: cancellationToken);
@@ -61,19 +65,22 @@ sealed class TenantHostGetEndpoint(ITenantHostResolver tenantHostResolver, ITena
 }
 
 /// <summary>
-/// What the request's host names: <c>platform</c>, or <c>tenant</c> with the tenant's name, identifier and
-/// status. <see cref="PlatformUrl"/> is always present, and <see cref="TenantUrlTemplate"/> whenever host
-/// resolution is on; the tenant fields are null for <c>platform</c>.
+/// What the request's host names: <c>platform</c>, <c>tenant</c> with the tenant's name, identifier and
+/// status, or <c>unknown</c>. <see cref="PlatformUrl"/> is always present, and <see cref="TenantUrlTemplate"/>
+/// whenever host resolution is on; the tenant fields are null for <c>platform</c> and <c>unknown</c>.
 /// </summary>
 sealed class TenantHostGetResponse
 {
-    /// <summary>The <see cref="Kind"/> of the platform host, and of a host that names nothing.</summary>
+    /// <summary>The <see cref="Kind"/> of the platform host, and of every host while host resolution is off.</summary>
     public const string PlatformKind = "platform";
 
     /// <summary>The <see cref="Kind"/> of a tenant host.</summary>
     public const string TenantKind = "tenant";
 
-    /// <summary>Gets or sets <see cref="PlatformKind"/> or <see cref="TenantKind"/>.</summary>
+    /// <summary>The <see cref="Kind"/> of a host that names nothing while host resolution is on.</summary>
+    public const string UnknownKind = "unknown";
+
+    /// <summary>Gets or sets <see cref="PlatformKind"/>, <see cref="TenantKind"/> or <see cref="UnknownKind"/>.</summary>
     public string Kind { get; set; } = null!;
 
     /// <summary>Gets or sets the tenant's display name, for <see cref="TenantKind"/>.</summary>

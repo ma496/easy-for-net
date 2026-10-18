@@ -561,6 +561,18 @@
         "homeAction": "Ir a la página de inicio",
         "action": "Ir al sitio principal"
       },
+      "unknownHost": {
+        "title": "¿Adónde quiere ir?",
+        "message": "${host} no es la dirección de la plataforma ni la de un inquilino. Elija adónde ir.",
+        "messageNoHost": "Esta no es la dirección de la plataforma ni la de un inquilino. Elija adónde ir.",
+        "platformTitle": "Plataforma",
+        "platformDescription": "Los administradores de la plataforma inician sesión aquí, y aquí se crean los nuevos inquilinos.",
+        "platformAction": "Ir a la plataforma",
+        "tenantTitle": "Inquilino",
+        "tenantDescription": "Introduzca el identificador de su inquilino para ir a su dirección.",
+        "tenantAction": "Ir al inquilino",
+        "tenantInvalid": "Use letras minúsculas, dígitos y guiones."
+      },
       "ticketSignin": {
         "title": "Iniciando sesión…",
         "failedTitle": "No pudimos iniciar tu sesión automáticamente",
