@@ -6,7 +6,7 @@
 import { parseRemote } from "./remote.mjs";
 
 /** Options that take a value, and the flags that do not. */
-const VALUE_OPTIONS = ["host", "user", "port", "identity", "domain", "repo", "branch", "name", "email", "dns-provider", "dns-token"];
+const VALUE_OPTIONS = ["host", "user", "port", "identity", "domain", "repo", "branch", "name", "email", "platform-subdomain", "dns-provider", "dns-token"];
 const FLAGS = ["check", "yes", "help"];
 
 /**
@@ -56,9 +56,20 @@ export function appNameFor(domain) {
   return String(domain).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 }
 
-/** The host the platform is served on; every other subdomain of the domain is a tenant's. */
-export function platformHost(domain) {
-  return `app.${String(domain).toLowerCase()}`;
+/** The platform's subdomain when none is given: the platform at app.<domain>. */
+export const DEFAULT_PLATFORM_SUBDOMAIN = "app";
+
+/** Whether a string is one DNS label, which is all the platform's subdomain may be. */
+export function isValidLabel(label) {
+  return /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(String(label ?? ""));
+}
+
+/**
+ * The host the platform is served on, `<subdomain>.<domain>` (app.<domain> by default); every other
+ * subdomain of the domain is a tenant's.
+ */
+export function platformHost(domain, subdomain = DEFAULT_PLATFORM_SUBDOMAIN) {
+  return `${String(subdomain).toLowerCase()}.${String(domain).toLowerCase()}`;
 }
 
 /**
@@ -106,14 +117,15 @@ export function randomLabel(random = Math.random) {
 }
 
 /**
- * What DNS says about a deployment's two records: `app.<domain>`, and `*.<domain>` probed through a
- * random label. `resolve(name)` gives a name's addresses (or throws when it has none). Returns
+ * What DNS says about a deployment's two records: the platform's host (`app.<domain>` unless
+ * `subdomain` names another), and `*.<domain>` probed through a random label. `resolve(name)` gives a name's addresses (or throws when it has none). Returns
  * `{ missing, elsewhere }`, each a list of `{ record, name, addresses? }` in that order: `missing`
  * stops a deploy, `elsewhere` (resolving, but not to the server) is a warning.
  */
-export async function checkDomainDns({ domain, serverAddresses, resolve, label = randomLabel() }) {
+export async function checkDomainDns({ domain, subdomain, serverAddresses, resolve, label = randomLabel() }) {
+  const platform = platformHost(domain, subdomain);
   const records = [
-    { record: platformHost(domain), name: platformHost(domain) },
+    { record: platform, name: platform },
     { record: `*.${domain}`, name: `${label}.${domain}` },
   ];
   const answers = await Promise.all(records.map((r) => Promise.resolve().then(() => resolve(r.name)).catch(() => [])));

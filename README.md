@@ -161,8 +161,9 @@ npm run gate -- --fast              # the same without the production web build
 ## Docker (Production)
 
 `docker-compose.prod.yml` builds and runs the whole application — API, web app, PostgreSQL, Redis, and
-Caddy serving both apps from one HTTPS origin per host: the platform at `app.<DOMAIN>` and every tenant at
-`<identifier>.<DOMAIN>`. The domain's DNS needs two A records pointing at the server, `app.<DOMAIN>` and
+Caddy serving both apps from one HTTPS origin per host: the platform at `app.<DOMAIN>` (or
+`<PLATFORM_SUBDOMAIN>.<DOMAIN>`, see `.env.docker.example`) and every tenant at `<identifier>.<DOMAIN>`.
+The domain's DNS needs two A records pointing at the server, the platform's host and
 `*.<DOMAIN>`. Caddy obtains an HTTP-01 certificate per host — the platform's at startup, a tenant's on its
 first visit, once the API confirms the host belongs to an existing tenant (`GET /api/tenants/tls-allowed`) —
 so no DNS credentials are needed. Let's Encrypt issues at most 50 certificates per registered domain per
@@ -175,8 +176,9 @@ docker compose -f docker-compose.prod.yml --env-file .env up -d --build
 
 A generated project already has the root `.env` (git-ignored): random database, Redis and administrator
 (`SEED_ADMIN_PASSWORD`) passwords, a JWT key, and `DOMAIN=localhost` (the platform at `https://app.localhost`),
-so the stack starts as generated. Before deploying for real, set `DOMAIN`, `PUBLIC_URL`
-(`https://app.<DOMAIN>`), `TENANT_URL_TEMPLATE` (`https://{tenant}.<DOMAIN>`) and the SMTP values. `.env.docker.example`
+so the stack starts as generated. Before deploying for real, set `DOMAIN`, `PLATFORM_SUBDOMAIN` (`app`
+unless the platform should live at another subdomain, such as `demo`), `PUBLIC_URL`
+(`https://<PLATFORM_SUBDOMAIN>.<DOMAIN>`), `TENANT_URL_TEMPLATE` (`https://{tenant}.<DOMAIN>`) and the SMTP values. `.env.docker.example`
 documents every value; copy it to `.env` and fill it in if the file is missing.
 
 The API applies migrations on startup, so add the initial migration first (see **Run the Project**).
@@ -191,21 +193,24 @@ volumes; back up those and the database volume.
 Windows, macOS or Linux. It needs Node and the OpenSSH client here (both ship with Windows 10+ and
 macOS), and on the server only SSH access as root (or a sudo user) and two DNS A records pointing at
 it: `app.<domain>` (the platform) and `*.<domain>` (every tenant). `--domain` is the domain the
-application lives under, not the platform's host.
+application lives under, not the platform's host. The platform is served at `app.<domain>` unless
+`--platform-subdomain` names another label: `--domain easyfornet.com --platform-subdomain demo` serves
+it at `demo.easyfornet.com` (so that DNS record is `demo.<domain>`), and `demo` is then never a tenant's.
 
 ```sh
 npm run deploy:vps -- --host 203.0.113.10 --domain example.com --email you@example.com
 npm run deploy:vps -- --domain example.com              # later deploys: the other answers are remembered
 EFN_DNS_TOKEN=<token> npm run deploy:vps -- --domain example.com --dns-provider cloudflare   # a *.example.com wildcard certificate
+npm run deploy:vps -- --domain easyfornet.com --platform-subdomain demo   # the platform at demo.easyfornet.com
 npm run deploy:vps -- --host 203.0.113.10 --check       # only report the server's prerequisites
-npm run deploy:vps -- --help                            # every option (--user, --port, --identity, --repo, --branch, --name, --dns-provider, --dns-token, --yes)
+npm run deploy:vps -- --help                            # every option (--user, --port, --identity, --platform-subdomain, --repo, --branch, --name, --dns-provider, --dns-token, --yes)
 ```
 
 Over SSH it checks the server first (distribution, CPU, memory, disk, ports 80/443/8000, an existing
 Docker) and stops if anything would fail; it also stops when `*.<domain>` has no DNS record (it resolves
 a random label to tell). It then installs only what is missing: the tools it needs, a
 swap file on a small server, firewall rules, Coolify itself and an API token. After that it creates
-a Coolify project and application named after the domain, attaches `https://app.<domain>` and
+a Coolify project and application named after the domain, attaches the platform's host (`https://app.<domain>` by default) and
 `https://*.<domain>`, fills in the environment variables, and deploys. Ubuntu, Debian, RHEL-family,
 SUSE, Arch and Alpine servers are supported. Running it again redeploys and changes nothing else:
 passwords and the JWT key are generated once, on the server, and are never overwritten.

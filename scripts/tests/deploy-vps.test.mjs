@@ -8,6 +8,7 @@ import {
   composeShape,
   dnsChallenge,
   isValidDomain,
+  isValidLabel,
   parseDeployArgs,
   parseResults,
   platformHost,
@@ -106,8 +107,8 @@ test("the Coolify stack runs the same services and reads the same values as the 
   const prod = read("docker-compose.prod.yml");
   const coolify = read("docker-compose.coolify.yml");
   assert.deepEqual(coolify.services, prod.services);
-  // Coolify names the stack itself, and its proxy serves whatever domain Traefik routes to it.
-  const prodOnly = new Set(["PROD_PROJECT_NAME", "DOMAIN"]);
+  // Coolify names the stack itself, and its proxy serves whatever host Traefik routes to it.
+  const prodOnly = new Set(["PROD_PROJECT_NAME", "DOMAIN", "PLATFORM_SUBDOMAIN"]);
   assert.deepEqual(coolify.variables, prod.variables.filter((v) => !prodOnly.has(v)));
 });
 
@@ -130,7 +131,8 @@ test(".env.docker.example fills every value the production stack requires", () =
   const prod = readFileSync(join(REPO_ROOT, "docker-compose.prod.yml"), "utf8");
   for (const [, name] of prod.matchAll(/\$\{([A-Z_][A-Z0-9_]*):\?/g)) assert.ok(name in values, `${name} is missing`);
   assert.equal(values.DOMAIN, "example.com");
-  assert.equal(values.PUBLIC_URL, `https://${platformHost(values.DOMAIN)}`);
+  assert.equal(values.PLATFORM_SUBDOMAIN, "app");
+  assert.equal(values.PUBLIC_URL, `https://${platformHost(values.DOMAIN, values.PLATFORM_SUBDOMAIN)}`);
   assert.equal(values.TENANT_URL_TEMPLATE, `https://{tenant}.${values.DOMAIN}`);
 });
 
@@ -138,14 +140,17 @@ test(".env.docker.example fills every value the production stack requires", () =
 
 test("Caddy serves the platform and every tenant subdomain with the same routes", () => {
   const caddyfile = readFileSync(join(REPO_ROOT, "docker", "Caddyfile"), "utf8").replace(/\r\n/g, "\n");
-  // Top-level blocks: a name (none for the global options) at column 0 and `{`, up to `}` at column 0.
-  const blocks = Object.fromEntries([...caddyfile.matchAll(/^([^\s{#][^\n]*?)?\s*\{\n([\s\S]*?)^\}/gm)].map((m) => [m[1] ?? "", m[2]]));
+  // Top-level blocks: a name (none for the global options; one may open with a `{$VAR}` placeholder)
+  // at column 0 and `{`, up to `}` at column 0.
+  const blocks = Object.fromEntries([...caddyfile.matchAll(/^((?:\{\$|[^\s{#])[^\n]*?)?\s*\{\n([\s\S]*?)^\}/gm)].map((m) => [m[1] ?? "", m[2]]));
+  // The platform's site is named by PLATFORM_SUBDOMAIN, app when the environment leaves it unset.
+  assert.ok(blocks["{$PLATFORM_SUBDOMAIN:app}.{$DOMAIN}"], "the platform's site block");
   assert.match(blocks[""] ?? "", /on_demand_tls \{\s*ask http:\/\/api:8080\/api\/tenants\/tls-allowed\s*\}/);
   const routes = blocks["(app_routes)"];
   assert.match(routes, /@api path \/api\/\* \/hubs\/\* \/hangfire \/hangfire\/\* \/health\n\s*handle @api \{\s*reverse_proxy api:8080\s*\}/);
   assert.match(routes, /handle \{\s*reverse_proxy web:3000\s*\}/);
-  assert.match(blocks["app.{$DOMAIN}"], /import app_routes/);
-  assert.doesNotMatch(blocks["app.{$DOMAIN}"], /on_demand/);
+  assert.match(blocks["{$PLATFORM_SUBDOMAIN:app}.{$DOMAIN}"], /import app_routes/);
+  assert.doesNotMatch(blocks["{$PLATFORM_SUBDOMAIN:app}.{$DOMAIN}"], /on_demand/);
   assert.match(blocks["*.{$DOMAIN}"], /tls \{\s*on_demand\s*\}/);
   assert.match(blocks["*.{$DOMAIN}"], /import app_routes/);
 });
@@ -157,7 +162,10 @@ test("the Coolify Caddyfile answers whatever host Traefik forwards", () => {
 
 test("the server script attaches the platform host and the wildcard, and sets the tenant template", () => {
   const script = readFileSync(join(REPO_ROOT, "scripts", "deploy", "vps", "remote.sh"), "utf8").replace(/\r\n/g, "\n");
-  assert.match(script, /url="https:\/\/app\.\$domain"/);
+  assert.match(script, /platform_subdomain=\$\{platform_subdomain:-app\}/);
+  assert.match(script, /platform_host="\$platform_subdomain\.\$domain"\n\s*url="https:\/\/\$platform_host"/);
+  assert.match(script, /--resolve "\$platform_host:443:127\.0\.0\.1"/);
+  assert.doesNotMatch(script, /app\.\$domain/);
   assert.match(script, /\$url:80,https:\/\/\*\.\$domain:80/);
   assert.match(script, /set_env TENANT_URL_TEMPLATE "\$tenant_template"/);
   assert.match(script, /tenant_template="https:\/\/\{tenant\}\.\$domain"/);
@@ -182,8 +190,19 @@ test("the DNS flags take values and are known options", () => {
   assert.deepEqual(parseDeployArgs(["--dns-token"]).errors, ["--dns-token needs a value"]);
 });
 
-test("the platform is app.<domain>", () => {
+test("the platform is app.<domain> unless another subdomain is named", () => {
   assert.equal(platformHost("Example.com"), "app.example.com");
+  assert.equal(platformHost("easyfornet.com", "Demo"), "demo.easyfornet.com");
+  assert.equal(platformHost("example.com", undefined), "app.example.com");
+});
+
+test("--platform-subdomain takes a value and must be one DNS label", () => {
+  const { options, errors } = parseDeployArgs(["--domain", "easyfornet.com", "--platform-subdomain=demo"]);
+  assert.deepEqual(options, { domain: "easyfornet.com", "platform-subdomain": "demo" });
+  assert.deepEqual(errors, []);
+  assert.deepEqual(parseDeployArgs(["--platform-subdomain"]).errors, ["--platform-subdomain needs a value"]);
+  for (const label of ["app", "demo", "Demo", "my-app", "a", "x1"]) assert.ok(isValidLabel(label), label);
+  for (const label of ["", "a.b", "-app", "app-", "my_app", "*", "a".repeat(64), undefined]) assert.ok(!isValidLabel(label), String(label));
 });
 
 test("no DNS flags means HTTP-01 only, and one without the other is an error", () => {
@@ -225,6 +244,17 @@ test("the DNS check probes app.<domain> and the wildcard through a random label"
   const result = await checkDomainDns({ domain: "example.com", serverAddresses: ["203.0.113.10"], resolve, label: "efn-check-abc" });
   assert.deepEqual(result, { missing: [], elsewhere: [] });
   assert.deepEqual(asked.sort(), ["app.example.com", "efn-check-abc.example.com"]);
+});
+
+test("the DNS check probes the platform subdomain it is given", async () => {
+  const asked = [];
+  const resolve = async (name) => {
+    asked.push(name);
+    return ["203.0.113.10"];
+  };
+  const result = await checkDomainDns({ domain: "easyfornet.com", subdomain: "demo", serverAddresses: ["203.0.113.10"], resolve, label: "efn-check-abc" });
+  assert.deepEqual(result, { missing: [], elsewhere: [] });
+  assert.deepEqual(asked.sort(), ["demo.easyfornet.com", "efn-check-abc.easyfornet.com"]);
 });
 
 test("a missing wildcard record is reported as missing, so the deploy refuses", async () => {

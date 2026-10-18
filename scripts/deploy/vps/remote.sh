@@ -5,7 +5,7 @@
 #   sh remote.sh check   [KEY=value ...]   # report the prerequisites, change nothing
 #   sh remote.sh prepare [KEY=value ...]   # prerequisites, swap, firewall, Coolify, API token,
 #                                          # and a deploy key when the repository is private
-#   sh remote.sh deploy  [KEY=value ...]   # project, application, domains (app.<domain> and
+#   sh remote.sh deploy  [KEY=value ...]   # project, application, domains (the platform host and
 #                                          # *.<domain>), env vars, DNS-01, deployment
 #
 # POSIX sh on purpose: it runs on whatever the VPS ships (dash, bash, busybox ash). Every
@@ -548,6 +548,11 @@ deploy() {
   fi
   app=$(arg APP_NAME)
   domain=$(arg DOMAIN)
+  platform_subdomain=$(arg PLATFORM_SUBDOMAIN)
+  platform_subdomain=${platform_subdomain:-app}
+  case $platform_subdomain in
+    *[!a-z0-9-]* | -* | *-) die "PLATFORM_SUBDOMAIN '$platform_subdomain' is not one lower-case DNS label" ;;
+  esac
   repo=$(arg REPO)
   branch=$(arg BRANCH)
   key_uuid=$(arg KEY_UUID)
@@ -557,8 +562,10 @@ deploy() {
   if [ -n "$dns_provider" ] && { [ -z "$dns_env" ] || [ -z "$dns_token" ]; }; then
     die "DNS_PROVIDER needs DNS_ENV and the uploaded token file"
   fi
-  # The platform at app.<domain>, every tenant at <identifier>.<domain>.
-  url="https://app.$domain"
+  # The platform at <platform subdomain>.<domain> (app.<domain> by default), every tenant at
+  # <identifier>.<domain>.
+  platform_host="$platform_subdomain.$domain"
+  url="https://$platform_host"
   tenant_template="https://{tenant}.$domain"
   load_token
 
@@ -718,11 +725,11 @@ deploy() {
   step "Waiting for $url"
   # Through this server's own proxy, so a DNS record that has not spread yet does not matter.
   i=0
-  until curl -fsS --max-time 10 --resolve "app.$domain:443:127.0.0.1" "$url/health" >/dev/null 2>&1; do
+  until curl -fsS --max-time 10 --resolve "$platform_host:443:127.0.0.1" "$url/health" >/dev/null 2>&1; do
     i=$((i + 1))
     if [ "$i" -gt 30 ]; then
-      if curl -fsSk --max-time 10 --resolve "app.$domain:443:127.0.0.1" "$url/health" >/dev/null 2>&1; then
-        warn "the app answers, but its certificate is not valid yet: check that app.$domain points at this server"
+      if curl -fsSk --max-time 10 --resolve "$platform_host:443:127.0.0.1" "$url/health" >/dev/null 2>&1; then
+        warn "the app answers, but its certificate is not valid yet: check that $platform_host points at this server"
         break
       fi
       die "$url/health does not answer; check the application's logs in the dashboard"
