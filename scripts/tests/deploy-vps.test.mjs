@@ -109,7 +109,22 @@ test("the Coolify stack runs the same services and reads the same values as the 
   assert.deepEqual(coolify.services, prod.services);
   // Coolify names the stack itself, and its proxy serves whatever host Traefik routes to it.
   const prodOnly = new Set(["PROD_PROJECT_NAME", "DOMAIN", "PLATFORM_SUBDOMAIN"]);
-  assert.deepEqual(coolify.variables, prod.variables.filter((v) => !prodOnly.has(v)));
+  // The Traefik service the tenants' router sends tenant hosts to (Caddy routes them in production).
+  const coolifyOnly = new Set(["TENANTS_SERVICE"]);
+  assert.deepEqual(coolify.variables.filter((v) => !coolifyOnly.has(v)), prod.variables.filter((v) => !prodOnly.has(v)));
+});
+
+test("the tenants' router reaches the proxy through the service its label defines, never a container name", () => {
+  const compose = readFileSync(join(REPO_ROOT, "docker-compose.coolify.yml"), "utf8");
+  assert.match(compose, /^ {6}- traefik\.http\.services\.\$\{TENANTS_SERVICE:\?set TENANTS_SERVICE\}\.loadbalancer\.server\.port=80$/m);
+  const script = readFileSync(join(REPO_ROOT, "scripts", "deploy", "vps", "remote.sh"), "utf8").replace(/\r\n/g, "\n");
+  assert.match(script, /tenants_service\(\) \{ printf 'efn-%s-tenants' "\$1"; \}/);
+  assert.match(script, /set_env TENANTS_SERVICE "\$\(tenants_service "\$app"\)"/);
+  assert.match(script, /service="\$\(tenants_service "\$1"\)@docker"/);
+  // Coolify escapes $ in labels unless told not to, which would leave the variable unfilled.
+  assert.match(script, /'\{"is_container_label_escape_enabled": false\}'/);
+  // Coolify suffixes the container name with each deployment's timestamp.
+  assert.doesNotMatch(script, /http:\/\/proxy-/);
 });
 
 test("the compose shape skips escaped dollars and nested keys", () => {

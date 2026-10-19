@@ -412,8 +412,14 @@ probe_source() {
 
 PROXY_DIR=/data/coolify/proxy
 
-# tenant_router APP APP_UUID DOMAIN [DNS_PROVIDER]: a router in Traefik's file provider sending every
-# <label>.<domain> to the application's proxy container, at the lowest priority, so the platform
+# tenants_service APP: the Traefik service the application's proxy container defines by a label
+# (docker-compose.coolify.yml, from the TENANTS_SERVICE variable). Coolify names the container anew
+# on each deployment (proxy-<uuid>-<timestamp>), and every application's proxy answers to the alias
+# 'proxy', so the router reaches it through the Docker provider rather than by a host name.
+tenants_service() { printf 'efn-%s-tenants' "$1"; }
+
+# tenant_router APP DOMAIN [DNS_PROVIDER]: a router in Traefik's file provider sending every
+# <label>.<domain> to the application's proxy service, at the lowest priority, so the platform
 # host's own router and every other application's hosts win. It serves the tenants whatever Coolify
 # makes of a wildcard domain. With a DNS provider it also asks for the *.<domain> wildcard
 # certificate (DNS-01); without one Traefik has no certificate for a tenant host it was not told
@@ -427,25 +433,26 @@ tenant_router() {
     "" | *[!a-z0-9-]*) die "APP_NAME '$1' may hold only lower-case letters, digits and hyphens" ;;
   esac
   name="efn-$1"
+  service="$(tenants_service "$1")@docker"
   bt='`'
-  escaped=$(printf '%s' "$3" | sed 's/\./\\./g')
+  escaped=$(printf '%s' "$2" | sed 's/\./\\./g')
   # Traefik v3 takes a regular expression, v2 a {name:regexp} template.
   image=$(docker inspect -f '{{.Config.Image}}' coolify-proxy 2>/dev/null || true)
   case $image in
-    *:v2* | *:2.*) rule="HostRegexp(${bt}{tenant:[a-z0-9-]+}.$3${bt})" ;;
+    *:v2* | *:2.*) rule="HostRegexp(${bt}{tenant:[a-z0-9-]+}.$2${bt})" ;;
     *) rule="HostRegexp(${bt}^[a-z0-9-]+\\.${escaped}\$${bt})" ;;
   esac
-  if [ -n "${4:-}" ]; then
+  if [ -n "${3:-}" ]; then
     tls="      tls:
         certResolver: letsencrypt
         domains:
-          - main: '*.$3'"
+          - main: '*.$2'"
   else
     tls="      tls: {}"
   fi
   file="$PROXY_DIR/dynamic/$name.yaml"
   cat >"$file.tmp" <<EOF_ROUTER
-# Written by the deploy-vps script: every tenant subdomain of $3 to $1's proxy service.
+# Written by the deploy-vps script: every tenant subdomain of $2 to $1's proxy service.
 http:
   routers:
     $name-tenants-http:
@@ -453,26 +460,21 @@ http:
       entryPoints: [http]
       priority: 1
       middlewares: [$name-https]
-      service: $name-tenants
+      service: $service
     $name-tenants:
       rule: '$rule'
       entryPoints: [https]
       priority: 1
-      service: $name-tenants
+      service: $service
 $tls
   middlewares:
     $name-https:
       redirectScheme:
         scheme: https
-  services:
-    $name-tenants:
-      loadBalancer:
-        servers:
-          - url: 'http://proxy-$2:80'
 EOF_ROUTER
   chmod 644 "$file.tmp"
   mv "$file.tmp" "$file"
-  ok "tenant subdomains *.$3 -> proxy:80 ($file)"
+  ok "tenant subdomains *.$2 -> $service ($file)"
 }
 
 # dns_challenge PROVIDER ENV_NAME TOKEN DOMAIN: let Coolify's Traefik answer DNS-01 challenges through
@@ -634,6 +636,10 @@ deploy() {
   # Only the branch: Coolify splits the repository URL into a source and a path when the
   # application is created, and a full URL sent again would be stored inside that path.
   api_must PATCH "/applications/$app_uuid" "$(jq -cn --arg b "$branch" '{git_branch: $b}')"
+  # Coolify escapes every $ in a compose file's labels by default, which would keep Compose from
+  # filling in the tenants' service name (docker-compose.coolify.yml).
+  api PATCH "/applications/$app_uuid" '{"is_container_label_escape_enabled": false}'
+  api_ok || die "could not turn off label escaping ($API_STATUS: $API_BODY). In the dashboard, open the application and untick 'Escape special characters in labels', then run again"
   # The domain is set when the application is created. Coolify accepts a change to it only once
   # it has read the compose file, at the first deployment; until then the creation's value stands.
   api PATCH "/applications/$app_uuid" "$(jq -cn --argjson d "$all_domains" '{docker_compose_domains: $d}')"
@@ -659,7 +665,7 @@ deploy() {
   # The challenge first: a router asking for the wildcard is written only once it can be answered.
   if [ -n "$dns_provider" ]; then dns_challenge "$dns_provider" "$dns_env" "$dns_token" "$domain"; fi
   dns_token=""
-  tenant_router "$app" "$app_uuid" "$domain" "$wildcard_via"
+  tenant_router "$app" "$domain" "$wildcard_via"
 
   step "Environment variables"
   api_must GET "/applications/$app_uuid/envs"
@@ -670,6 +676,7 @@ deploy() {
   # Replaced every run: what the domain decides.
   set_env PUBLIC_URL "$url"
   set_env TENANT_URL_TEMPLATE "$tenant_template"
+  set_env TENANTS_SERVICE "$(tenants_service "$app")"
   # Filled once and never overwritten: changing a password here would lock the app out of its own
   # database, and a new JWT key would sign every user out.
   [ -n "$(env_value POSTGRES_DB)" ] || set_env POSTGRES_DB app
@@ -717,11 +724,6 @@ deploy() {
     sleep 10
   done
 
-  # The tenants' router reaches the proxy service by the container name Coolify gives it.
-  if [ -f "$PROXY_DIR/dynamic/efn-$app.yaml" ] && ! docker inspect "proxy-$app_uuid" >/dev/null 2>&1; then
-    warn "no container proxy-$app_uuid: the tenants' router in $PROXY_DIR/dynamic/efn-$app.yaml must name the proxy service's container (docker ps)"
-  fi
-
   step "Waiting for $url"
   # Through this server's own proxy, so a DNS record that has not spread yet does not matter.
   i=0
@@ -736,6 +738,22 @@ deploy() {
     fi
     sleep 10
   done
+
+  # A host no tenant holds still reaches the app through the tenants' router; -k because without a
+  # DNS provider Traefik serves its default certificate there.
+  if [ -f "$PROXY_DIR/dynamic/efn-$app.yaml" ]; then
+    probe="efn-check-$(rand_alnum 8 | tr 'A-Z' 'a-z').$domain"
+    i=0
+    until curl -fsSk --max-time 10 --resolve "$probe:443:127.0.0.1" "https://$probe/health" >/dev/null 2>&1; do
+      i=$((i + 1))
+      if [ "$i" -gt 6 ]; then
+        warn "tenant subdomains do not reach the app: https://$probe/health does not answer through Traefik (docker logs coolify-proxy)"
+        break
+      fi
+      sleep 5
+    done
+    [ "$i" -gt 6 ] || ok "tenant subdomains reach the app"
+  fi
 
   say ""
   say "Deployed: $url"
