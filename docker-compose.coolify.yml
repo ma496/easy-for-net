@@ -6,6 +6,9 @@
 #     *.<domain> to its port 80
 #   - Caddy serves plain HTTP there, for whatever host it is asked (docker/Caddyfile.coolify, built
 #     into the image), keeping the Host Traefik forwarded, which tells the API the tenant
+#   - the proxy carries a label defining a Traefik service named for the application, which the
+#     tenants' router (written by scripts/deploy/vps/remote.sh) sends every tenant host to: Coolify
+#     names the container anew on each deployment, so a router cannot name the container itself
 # Coolify supplies the ${...} values as the application's environment variables; deploy-vps.mjs fills
 # them in. Keep the services and variables in step with docker-compose.prod.yml
 # (scripts/tests/deploy-vps.test.mjs fails when they drift apart).
@@ -101,6 +104,10 @@ services:
     depends_on:
       - api
       - web
+    labels:
+      # Read by Coolify's Traefik as <TENANTS_SERVICE>@docker. Interpolated by Compose, so the
+      # application's label escaping is turned off (remote.sh does it)
+      - traefik.http.services.${TENANTS_SERVICE:?set TENANTS_SERVICE}.loadbalancer.server.port=80
     volumes:
       - caddy-data:/data
       - caddy-config:/config
