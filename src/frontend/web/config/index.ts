@@ -1,1 +1,1 @@
-export { environment } from './environment'
+export { environment, MissingServerApiUrlError } from './environment'

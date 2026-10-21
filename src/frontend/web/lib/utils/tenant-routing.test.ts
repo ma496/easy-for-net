@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { TenantStatus } from '@/store/api/tenancy/enums'
 import type { GetUserInfoResponse, GetUserInfoTenant } from '@/store/api/identity'
 import {
   isActiveTenantStale,
@@ -6,11 +7,11 @@ import {
   isPlatformAccessiblePath,
   isTenantScopedPath,
   resolvePlatformLanding,
-  resolveTenantLanding,
+  isWithoutUsableTenant,
 } from './tenant-routing'
 
 /** A tenant the caller holds an active membership in, as the account info endpoint reports it. */
-const tenant = (id: string): GetUserInfoTenant => ({ id, name: `Tenant ${id}`, identifier: `t-${id}` })
+const tenant = (id: string): GetUserInfoTenant => ({ id, name: `Tenant ${id}`, identifier: `t-${id}`, status: TenantStatus.Active, url: `http://t-${id}.example.com` })
 
 /** The account info the endpoint answers with, over the part a landing decision is made from. */
 const userInfo = (overrides: Partial<GetUserInfoResponse> = {}): GetUserInfoResponse => ({
@@ -18,6 +19,7 @@ const userInfo = (overrides: Partial<GetUserInfoResponse> = {}): GetUserInfoResp
   username: 'someone',
   email: 'someone@example.com',
   isPlatform: false,
+  platformUrl: 'http://app.example.com',
   tenants: [],
   roles: [],
   ...overrides,
@@ -227,63 +229,41 @@ describe('resolvePlatformLanding', () => {
   })
 })
 
-describe('resolveTenantLanding', () => {
+describe('isWithoutUsableTenant', () => {
   it('leaves a caller the server knows nothing about alone', () => {
-    expect(resolveTenantLanding(undefined)).toBeNull()
+    expect(isWithoutUsableTenant(undefined)).toBe(false)
   })
 
-  it('sends a caller who belongs to no tenant to the chooser, which says so and offers the way out', () => {
-    expect(resolveTenantLanding(userInfo({ tenants: [] }))).toBe('/select-tenant')
+  it('holds for an ordinary caller who belongs to no tenant, so the guard can send them to the tenant picker', () => {
+    expect(isWithoutUsableTenant(userInfo({ tenants: [] }))).toBe(true)
   })
 
-  it('sends a caller with tenants to choose among but none chosen to the chooser', () => {
-    const user = userInfo({ tenants: [tenant('a'), tenant('b')] })
-
-    expect(resolveTenantLanding(user)).toBe('/select-tenant')
+  it('holds for an ordinary caller whose session names no tenant, though they have some elsewhere', () => {
+    expect(isWithoutUsableTenant(userInfo({ tenants: [tenant('a'), tenant('b')] }))).toBe(true)
   })
 
-  it('sends a caller whose selection has gone stale to choose again rather than on their way', () => {
-    const suspended = userInfo({
-      tenants: [tenant('b')],
-      activeTenantId: 'a',
-      activeTenant: tenant('a'),
-    })
+  it('holds for an ordinary caller whose selection has gone stale', () => {
+    const suspended = userInfo({ tenants: [tenant('b')], activeTenantId: 'a', activeTenant: tenant('a') })
     const revoked = userInfo({ tenants: [], activeTenantId: 'a', activeTenant: tenant('a') })
     const deleted = userInfo({ tenants: [tenant('b')], activeTenant: tenant('a') })
 
-    expect(resolveTenantLanding(suspended)).toBe('/select-tenant')
-    expect(resolveTenantLanding(deleted)).toBe('/select-tenant')
-    expect(resolveTenantLanding(revoked)).toBe('/select-tenant')
+    expect(isWithoutUsableTenant(suspended)).toBe(true)
+    expect(isWithoutUsableTenant(deleted)).toBe(true)
+    expect(isWithoutUsableTenant(revoked)).toBe(true)
   })
 
-  it('lets a caller whose selection still stands go wherever they were headed', () => {
-    const user = userInfo({
-      tenants: [tenant('a'), tenant('b')],
-      activeTenantId: 'a',
-      activeTenant: tenant('a'),
-    })
+  it('does not hold for a caller acting in the tenant the host gave them', () => {
+    const user = userInfo({ tenants: [tenant('a'), tenant('b')], activeTenantId: 'a', activeTenant: tenant('a') })
 
-    expect(resolveTenantLanding(user)).toBeNull()
+    expect(isWithoutUsableTenant(user)).toBe(false)
   })
 
-  it('lands a platform administrator nowhere, with a tenant entered or without one', () => {
-    // Their own authority lives in platform scope, so there is never a tenant they must choose before
-    // going on - with memberships to choose from or without any.
+  it('never holds for a platform administrator, with a tenant or without one', () => {
+    // Their own authority lives in platform scope, so there is never a tenant they lack.
     const outside = userInfo({ isPlatform: true, tenants: [tenant('a'), tenant('b')] })
-    const inside = userInfo({
-      isPlatform: true,
-      tenants: [tenant('a')],
-      activeTenantId: 'a',
-      activeTenant: tenant('a'),
-    })
+    const inside = userInfo({ isPlatform: true, tenants: [tenant('a')], activeTenantId: 'a', activeTenant: tenant('a') })
 
-    expect(resolveTenantLanding(outside)).toBeNull()
-    expect(resolveTenantLanding(inside)).toBeNull()
-  })
-
-  it('still sends an ordinary caller in the same shape to the chooser', () => {
-    const member = userInfo({ tenants: [tenant('b')], activeTenantId: 'a', activeTenant: tenant('a') })
-
-    expect(resolveTenantLanding(member)).toBe('/select-tenant')
+    expect(isWithoutUsableTenant(outside)).toBe(false)
+    expect(isWithoutUsableTenant(inside)).toBe(false)
   })
 })

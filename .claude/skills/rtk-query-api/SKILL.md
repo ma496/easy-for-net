@@ -1,6 +1,6 @@
 ---
 name: rtk-query-api
-description: Add or change an RTK Query API slice and its DTOs under src/frontend/web/store/api — injectEndpoints on the shared appApi, DTO files mirroring the backend (including the tenant and system-created markers), feature barrels, and the rules for cache tags (providesTags/invalidatesTags, tags shared across slices, and the full cache reset when the tenant changes).
+description: Add or change an RTK Query API slice and its DTOs under src/frontend/web/store/api — injectEndpoints on the shared appApi, DTO files mirroring the backend (including the tenant and system-created markers), feature barrels, and the rules for cache tags (providesTags/invalidatesTags, tags shared across slices, and why changing tenant is a new address rather than a cache reset).
 ---
 
 # RTK Query APIs
@@ -125,10 +125,9 @@ Do **not** add tags when there is nothing to invalidate:
   and the reauth flow, not in the cache.
 - `permissions-api.ts` — the permission catalogue is static for the life of a deployment.
 - `files-api.ts` — uploads/downloads/deletes are addressed by file name, and nothing lists them.
-- `tenantSwitch` / `tenantExit` — changing the acting tenant changes what **every** cached query would
-  answer, so the caller discards the whole store with a full page load instead (`useTenantSwitch` /
-  `leaveForTenantChange` in `store/tenant-cache.ts`). Invalidating or resetting in place would refetch
-  the mounted page's queries mid-switch. See the `multi-tenancy` skill.
+- `tenantHostGet` (`GET /tenants/host`) — what the host names, for client use; the sign-in and sign-up pages read it on the server instead, through `lib/server/host-tenant.ts`. There is no endpoint to change the acting tenant: each host keeps its own session,
+  so another tenant is another address and another document, and its cache starts empty. See the
+  `multi-tenancy` skill.
 
 Those slices use plain `appApi.injectEndpoints({ overrideExisting: false, endpoints })`.
 

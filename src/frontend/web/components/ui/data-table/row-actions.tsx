@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
-import { MoreHorizontal } from 'lucide-react'
+import { ArrowUpRight, MoreHorizontal } from 'lucide-react'
 import { cva } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/i18n'
@@ -27,11 +27,13 @@ const rowActionItemVariants = cva(
   },
 )
 
-/** One entry in a row's action menu: a locale-aware link when `href` is set, a button running `onClick` otherwise. */
+/** One entry in a row's action menu: a locale-aware link when `href` is set (a plain new-tab anchor when `external`), a button running `onClick` otherwise. */
 export interface DataTableRowAction {
   label: string
   icon?: ReactNode
   href?: string
+  /** `href` is an absolute address on another origin (another tenant), opened in a new tab rather than as an app route. */
+  external?: boolean
   onClick?: () => void
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger'
   disabled?: boolean
@@ -82,7 +84,13 @@ export function DataTableRowActions({ actions, className }: DataTableRowActionsP
 
           return (
             <MenuItem key={action.label} disabled={action.disabled}>
-              {action.href ? (
+              {action.href && action.external ? (
+                <a href={action.href} target="_blank" rel="noopener noreferrer" className={itemClassName}>
+                  {content}
+                  <ArrowUpRight aria-hidden="true" className="ms-auto rtl:-scale-x-100" />
+                  <span className="sr-only">{t('common.opensInNewTab') || '(opens in a new tab)'}</span>
+                </a>
+              ) : action.href ? (
                 <LocalizedLink href={action.href} className={itemClassName}>
                   {content}
                 </LocalizedLink>

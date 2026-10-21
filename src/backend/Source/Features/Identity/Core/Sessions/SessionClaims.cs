@@ -17,6 +17,7 @@ public static class SessionClaims
         ClaimTypes.Email,
         ClaimConstants.Permission,
         ClaimConstants.TenantId,
+        ClaimConstants.TenantIdentifier,
         ClaimConstants.IsPlatform,
     ];
 
@@ -81,6 +82,11 @@ public static class SessionClaims
         if (session.TenantId is { } tenantId)
         {
             identity.AddClaim(new Claim(ClaimConstants.TenantId, tenantId.ToString()));
+
+            if (!string.IsNullOrEmpty(session.TenantIdentifier))
+            {
+                identity.AddClaim(new Claim(ClaimConstants.TenantIdentifier, session.TenantIdentifier));
+            }
         }
 
         identity.AddClaims(session.Roles.Select(role => new Claim(ClaimTypes.Role, role)));

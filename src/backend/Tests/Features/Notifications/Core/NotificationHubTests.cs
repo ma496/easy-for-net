@@ -2,9 +2,6 @@ using Backend.Features.Notifications.Core;
 using Backend.Features.Notifications.Core.Push;
 using Backend.Features.Notifications.Endpoints.Notifications;
 using Backend.Settings;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.WebSockets;
 using Backend.Tests.Fakes;
 using Backend.Tests.Features.Notifications.Endpoints.Notifications;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -504,31 +501,48 @@ public class NotificationHubTests(App app) : NotificationsTestsBase(app)
     }
 
     /// <summary>
-    /// The WebSocket middleware SignalR runs in front of the hub, given the host's own options, refuses with
-    /// 403 an upgrade whose <c>Origin</c> is not one of the web app's domains - so a page on another host
-    /// cannot open the hub with its visitor's cookie - and passes one from an allowed origin, and one with no
-    /// <c>Origin</c> at all (a non-browser bearer client), on to the hub.
+    /// The hub's own <c>Origin</c> check refuses with 403 an upgrade from a foreign origin - so a page on
+    /// another host cannot open the hub with its visitor's cookie - and admits one from the request's own
+    /// origin (the test server's <c>http://localhost</c>), and one with no <c>Origin</c> at all (a non-browser
+    /// bearer client). A look-alike of the request's own origin is foreign.
     /// </summary>
-    /// <remarks>
-    /// The middleware is driven directly rather than through <see cref="HubProbe"/>: the test server's
-    /// WebSocket client supplies its own WebSocket feature, and the middleware checks the origin only when it
-    /// is the one supplying it, so over the test server every origin would be let through.
-    /// </remarks>
     [Theory]
-    [InlineData("https://sibling.example.invalid", StatusCodes.Status403Forbidden, false)]
-    [InlineData(null, StatusCodes.Status200OK, true)]
-    public async Task Upgrade_Origin_Is_Checked_Against_The_Web_Domains(string? origin, int expectedStatus, bool expectedToReachHub)
-        => await AssertUpgradeAsync(origin, expectedStatus, expectedToReachHub);
+    [InlineData("https://sibling.example.invalid", false)]
+    [InlineData("http://localhost.example.invalid", false)]
+    [InlineData("https://localhost", false)]
+    [InlineData(null, true)]
+    [InlineData("http://localhost", true)]
+    [InlineData("HTTP://LOCALHOST/", true)]
+    public async Task Upgrade_Origin_Must_Be_The_Requests_Own_Or_A_Web_Domain(string? origin, bool admitted)
+    {
+        var tenant = await CreateTenantAsync();
+        var account = await CreateTenantUserAsync(tenant.Id);
+        var token = await TokenForAsync(account.Username, tenant.Id);
+
+        if (admitted)
+        {
+            await using var probe = await HubProbe.ConnectAsync(App.Server, token, account.Id, tenant.Id, origin);
+            return;
+        }
+
+        await using var refused = HubProbe.Create(App.Server, token, account.Id, tenant.Id, origin);
+        var start = () => refused.Connection.StartAsync(TestContext.Current.CancellationToken);
+        (await start.Should().ThrowAsync<Exception>()).Which.Message.Should().Contain("403");
+    }
 
     /// <summary>
-    /// Every one of the web app's own domains is an allowed WebSocket origin.
+    /// Every one of the web app's configured domains is an allowed origin, whatever host the upgrade was made to.
     /// </summary>
     [Fact]
     public async Task Upgrade_From_Each_Web_Domain_Reaches_The_Hub()
     {
+        var tenant = await CreateTenantAsync();
+        var account = await CreateTenantUserAsync(tenant.Id);
+        var token = await TokenForAsync(account.Username, tenant.Id);
+
         foreach (var domain in Service<IOptions<WebSetting>>().Value.AllowedDomains())
         {
-            await AssertUpgradeAsync(domain, StatusCodes.Status200OK, expectedToReachHub: true);
+            await using var probe = await HubProbe.ConnectAsync(App.Server, token, account.Id, tenant.Id, domain);
         }
     }
 
@@ -583,49 +597,6 @@ public class NotificationHubTests(App app) : NotificationsTestsBase(app)
 
             await Task.Delay(20, TestContext.Current.CancellationToken);
         }
-    }
-
-    /// <summary>
-    /// Runs one WebSocket upgrade request through <see cref="WebSocketMiddleware"/> with the host's options and
-    /// asserts whether it was refused or passed on.
-    /// </summary>
-    private async Task AssertUpgradeAsync(string? origin, int expectedStatus, bool expectedToReachHub)
-    {
-        var reachedHub = false;
-        var middleware = new WebSocketMiddleware(
-            _ =>
-            {
-                reachedHub = true;
-                return Task.CompletedTask;
-            },
-            Service<IOptions<Microsoft.AspNetCore.Builder.WebSocketOptions>>(),
-            NullLoggerFactory.Instance);
-
-        var context = new DefaultHttpContext();
-        context.Features.Set<IHttpUpgradeFeature>(new UpgradableRequest());
-        context.Request.Method = HttpMethods.Get;
-        context.Request.Path = NotificationHub.Path;
-        context.Request.Headers.Connection = "Upgrade";
-        context.Request.Headers.Upgrade = "websocket";
-        context.Request.Headers.SecWebSocketVersion = "13";
-        context.Request.Headers.SecWebSocketKey = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
-        if (origin is not null)
-        {
-            context.Request.Headers.Origin = origin;
-        }
-
-        await middleware.Invoke(context);
-
-        context.Response.StatusCode.Should().Be(expectedStatus, $"an upgrade from origin '{origin ?? "(none)"}'");
-        reachedHub.Should().Be(expectedToReachHub);
-    }
-
-    /// <summary>An upgrade feature that reports the request as upgradable, as Kestrel's does.</summary>
-    private sealed class UpgradableRequest : IHttpUpgradeFeature
-    {
-        public bool IsUpgradableRequest => true;
-
-        public Task<Stream> UpgradeAsync() => throw new InvalidOperationException("The test never accepts the upgrade.");
     }
 
     /// <summary>A hub sender that always fails, standing in for a backplane that is down.</summary>

@@ -2,6 +2,7 @@ import { SignupForm } from './_components/signup-form'
 import { AuthShell } from '../_components/auth-shell'
 import { Metadata } from 'next'
 import { getServerTranslation } from '@/i18n'
+import { getHostTenant } from '@/lib/server/host-tenant'
 
 export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }): Promise<Metadata> {
   const { lang } = await params
@@ -12,18 +13,17 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
 
 /**
  * Server-rendered sign-up route under the auth route group.
- * Loads the localized title/description, frames the sign-up form in the split auth layout, and renders the interactive form.
+ * Asks the API what the visitor's host names before rendering, and frames the form in the split auth layout untitled: the form
+ * titles each of its own states - the form, the success view, and the link to the main site that replaces the form on a tenant's
+ * address (or one naming no tenant) - so each has exactly one main heading.
  */
 const BoxedSignup = async ({ params }: { params: Promise<{ lang: string }> }) => {
-  const { lang } = await params
-  const [title, description] = await Promise.all([
-    getServerTranslation(lang, 'page.auth.signup.title').then((text) => text || 'Sign Up'),
-    getServerTranslation(lang, 'page.auth.signup.description').then((text) => text || 'Enter your email and password to register'),
-  ])
+  await params
+  const hostTenant = await getHostTenant()
 
   return (
-    <AuthShell title={title} description={description}>
-      <SignupForm />
+    <AuthShell>
+      <SignupForm hostTenant={hostTenant} />
     </AuthShell>
   )
 }

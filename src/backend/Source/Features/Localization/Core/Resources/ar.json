@@ -46,7 +46,8 @@
     "selectPlaceholder": "اختر…",
     "noOptions": "لا توجد خيارات",
     "scrollToTop": "العودة إلى الأعلى",
-    "collapseSidebar": "طي الشريط الجانبي"
+    "collapseSidebar": "طي الشريط الجانبي",
+    "opensInNewTab": "(يفتح في علامة تبويب جديدة)"
   },
   "navigation": {
     "home": "الرئيسية",
@@ -81,7 +82,7 @@
     "tenantsCreate": "إنشاء",
     "tenantsUpdate": "تحديث",
     "tenantsMembers": "الأعضاء",
-    "selectTenant": "اختيار المستأجر",
+    "selectTenant": "المستأجرون الخاصون بك",
     "tenantsDetail": "التفاصيل",
     "editions": "الإصدارات",
     "editionsList": "قائمة",
@@ -90,7 +91,10 @@
     "editionsFeatures": "الميزات",
     "tenantsFeatures": "الميزات",
     "localization": "التوطين",
-    "settings": "الإعدادات"
+    "settings": "الإعدادات",
+    "otherTenants": "المستأجرون الآخرون",
+    "platformAdministration": "إدارة المنصة",
+    "allTenants": "كل المستأجرين"
   },
   "search": {
     "dashboard": "لوحة القيادة",
@@ -134,7 +138,6 @@
       "tenantName": "اسم المستأجر",
       "tenantIdentifier": "المعرّف",
       "user": "المستخدم",
-      "tenant": "المستأجر",
       "editionName": "الاسم",
       "editionDescription": "الوصف",
       "editionDisplayOrder": "ترتيب العرض",
@@ -155,7 +158,6 @@
       "tenantName": "أدخل اسم المستأجر",
       "tenantIdentifier": "أدخل المعرّف (مثال acme)",
       "user": "اختر المستخدم",
-      "tenant": "معرف المستأجر",
       "editionName": "أدخل اسم الإصدار",
       "editionDescription": "أدخل وصف الإصدار",
       "edition": "اختر إصدارًا"
@@ -244,6 +246,11 @@
       "notTenantMember": "أنت لست عضوًا في هذا المستأجر",
       "noActiveTenant": "لم يتم اختيار مستأجر نشط",
       "tenantRequired": "يرجى تحديد المستأجر لتسجيل الدخول.",
+      "tenantHostMismatch": "تسجيل الدخول هذا يخص عنوانًا آخر. سجّل الدخول مرة أخرى على هذا العنوان.",
+      "tenantHostRequired": "سجّل الدخول من العنوان الخاص بمؤسستك.",
+      "tenantAddressNotConfigured": "لم يتم إعداد عناوين المستأجرين في هذا التثبيت.",
+      "signInTicketInvalid": "انتهت صلاحية رابط تسجيل الدخول هذا أو سبق استخدامه. سجّل الدخول بكلمة المرور.",
+      "tenantIdentifierReserved": "هذا المعرّف محجوز. اختر معرّفًا آخر.",
       "tenantIdentifierAlreadyExists": "معرّف المستأجر موجود بالفعل",
       "duplicateTenantMembership": "هذا المستخدم عضو بالفعل في هذا المستأجر",
       "lastTenantAdministrator": "لا يمكن إزالة آخر مسؤول للمستأجر",
@@ -498,7 +505,14 @@
         "forgotPassword": "هل نسيت كلمة المرور؟",
         "signupLink": "اشتراك",
         "noAccount": "ليس لديك حساب؟",
-        "backToSignin": "العودة لتسجيل الدخول"
+        "backToSignin": "العودة لتسجيل الدخول",
+        "titleTenant": "تسجيل الدخول إلى ${name}",
+        "suspendedTitle": "هذا المستأجر معلّق",
+        "suspendedMessage": "تسجيل الدخول غير متاح حتى يعيد أحد المسؤولين تفعيلها.",
+        "hostRequiredTitle": "سجّل الدخول من عنوان المستأجر الخاص بك",
+        "hostRequiredMessage": "حسابك تابع لمستأجر. افتح عنوانه لتسجيل الدخول. إن لم تكن تعرفه، فراجع رسالة الدعوة في بريدك.",
+        "ownTenant": "هل تريد مستأجرًا خاصًا بك؟",
+        "createTenant": "أنشئ واحدة"
       },
       "signup": {
         "title": "اشتراك",
@@ -509,7 +523,18 @@
         "successTitle": "نجاح!",
         "successVerifyEmail": "تم التسجيل بنجاح! يرجى التحقق من بريدك الإلكتروني لتفعيل حسابك.",
         "successMessage": "تم التسجيل بنجاح! اذهب لصفحة تسجيل الدخول.",
-        "tenantSectionTitle": "المستأجر الخاص بك"
+        "tenantSectionTitle": "المستأجر الخاص بك",
+        "tenantHostTitle": "يتم التسجيل عبر الموقع الرئيسي",
+        "tenantHostMessage": "أنت في ${name}. لإنشاء مستأجر خاص بك، سجّل عبر الموقع الرئيسي.",
+        "mainSiteMessage": "لإنشاء مستأجر خاص بك، سجّل عبر الموقع الرئيسي.",
+        "tenantHostAction": "الانتقال إلى التسجيل",
+        "tenantName": "اسم المستأجر",
+        "tenantAddress": "عنوان المستأجر",
+        "addressPreview": "عنوان المستأجر الخاص بك:",
+        "addressPlaceholder": "your-name",
+        "identifierHint": "أحرف لاتينية صغيرة وأرقام وشرطات.",
+        "readyTitle": "المستأجر الخاص بك جاهز",
+        "goToTenant": "الانتقال إلى المستأجر الخاص بك"
       },
       "forgotPassword": {
         "title": "نسيت كلمة المرور",
@@ -528,6 +553,30 @@
       "signout": "تسجيل الخروج",
       "unauthorized": {
         "title": "غير مصرح"
+      },
+      "tenantNotFound": {
+        "title": "المستأجر غير موجود",
+        "message": "لا يوجد مستأجر على ${host}. تحقق من العنوان، أو انتقل إلى الموقع الرئيسي.",
+        "messageNoHost": "لا يوجد مستأجر على هذا العنوان. تحقق من العنوان، أو انتقل إلى الموقع الرئيسي.",
+        "homeAction": "الانتقال إلى الصفحة الرئيسية",
+        "action": "الانتقال إلى الموقع الرئيسي"
+      },
+      "unknownHost": {
+        "title": "إلى أين تريد الذهاب؟",
+        "message": "${host} ليس عنوان المنصة ولا عنوان مستأجر. اختر وجهتك.",
+        "messageNoHost": "هذا ليس عنوان المنصة ولا عنوان مستأجر. اختر وجهتك.",
+        "platformTitle": "المنصة",
+        "platformDescription": "يسجّل مسؤولو المنصة الدخول هنا، ويتم إنشاء المستأجرين الجدد هنا.",
+        "platformAction": "الذهاب إلى المنصة",
+        "tenantTitle": "المستأجر",
+        "tenantDescription": "أدخل معرّف المستأجر للانتقال إلى عنوانه.",
+        "tenantAction": "الذهاب إلى المستأجر",
+        "tenantInvalid": "استخدم أحرفًا إنجليزية صغيرة وأرقامًا وشرطات."
+      },
+      "ticketSignin": {
+        "title": "جارٍ تسجيل دخولك…",
+        "failedTitle": "تعذّر تسجيل دخولك تلقائيًا",
+        "action": "سجّل الدخول بكلمة المرور"
       }
     },
     "changePassword": {
@@ -605,35 +654,27 @@
         "removeConfirm": "هل أنت متأكد أنك تريد إزالة هذا العضو من المستأجر؟",
         "removeSuccess": "تمت إزالة العضو بنجاح"
       },
-      "switcher": {
-        "label": "المستأجر",
-        "switchTo": "تبديل المستأجر",
-        "switchSuccess": "أنت تعمل الآن في ${tenant}",
-        "noTenant": "لم يتم اختيار مستأجر",
-        "viewDetail": "عرض تفاصيل المستأجر",
-        "exitTenant": "الخروج من المستأجر",
-        "exitSuccess": "أنت تعمل الآن كمستخدم للمنصة مرة أخرى"
-      },
       "detail": {
         "title": "تفاصيل المستأجر",
         "information": "معلومات المستأجر",
         "membersTitle": "الأعضاء",
         "seats": "المقاعد"
       },
-      "enterButton": "دخول",
-      "enterCurrent": "الحالي",
       "actions": {
         "detail": "التفاصيل",
         "members": "الأعضاء",
         "suspend": "تعليق",
         "reactivate": "إعادة التفعيل"
-      }
+      },
+      "signIn": "تسجيل الدخول"
     },
     "selectTenant": {
-      "title": "اختيار المستأجر",
-      "description": "اختر المستأجر الذي تريد العمل فيه.",
+      "title": "المستأجرون الخاصون بك",
+      "description": "يُفتح كل مستأجر على عنوانه الخاص، في علامة تبويب جديدة.",
       "emptyDescription": "أنت لا تنتمي إلى أي مستأجر نشط. اطلب من المسؤول إضافتك إلى مستأجره، أو سجّل حسابًا جديدًا لإنشاء مستأجر خاص بك.",
-      "emptyAction": "الذهاب إلى ملفك الشخصي"
+      "emptyAction": "الذهاب إلى ملفك الشخصي",
+      "current": "الحالية",
+      "noAddresses": "لم يتم إعداد عناوين المستأجرين في هذا التثبيت."
     },
     "editions": {
       "title": "الإصدارات",

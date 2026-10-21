@@ -6,10 +6,9 @@ export { constants } from './constants'
 export { type ApiError, type ValidationError, getApiErrorMessages, getErrorCode } from './api-error-helpers'
 export { apiErrorAlert } from './api-error-alert'
 export {
-  type TenantLandingRoute,
   isTenantScopedPath,
   isActiveTenantStale,
-  resolveTenantLanding,
+  isWithoutUsableTenant,
   isPlatformAccessiblePath,
   isPlatformWithoutTenant,
   isPathAvailable,
@@ -18,3 +17,4 @@ export {
 export { planMegabytesToBytes, effectiveMaxUploadBytes, formatMegabytes } from './upload-limit'
 export { notificationVariables } from './notification-variables'
 export { formatRelativeTime } from './relative-time'
+export { tenantUrlFromTemplate, pathOnOrigin, tenantSigninUrl, isDeploymentOrigin } from './tenant-url'

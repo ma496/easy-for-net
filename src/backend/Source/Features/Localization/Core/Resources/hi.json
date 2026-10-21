@@ -46,7 +46,8 @@
     "selectPlaceholder": "चुनें…",
     "noOptions": "कोई विकल्प नहीं",
     "scrollToTop": "ऊपर जाएँ",
-    "collapseSidebar": "साइडबार छोटा करें"
+    "collapseSidebar": "साइडबार छोटा करें",
+    "opensInNewTab": "(नए टैब में खुलता है)"
   },
   "navigation": {
     "home": "होम",
@@ -81,7 +82,7 @@
     "tenantsCreate": "बनाएं",
     "tenantsUpdate": "अपडेट करें",
     "tenantsMembers": "सदस्य",
-    "selectTenant": "टेनेंट चुनें",
+    "selectTenant": "आपके टेनेंट",
     "tenantsDetail": "विवरण",
     "editions": "संस्करण",
     "editionsList": "सूची",
@@ -90,7 +91,10 @@
     "editionsFeatures": "सुविधाएँ",
     "tenantsFeatures": "सुविधाएँ",
     "localization": "स्थानीयकरण",
-    "settings": "सेटिंग्स"
+    "settings": "सेटिंग्स",
+    "otherTenants": "अन्य टेनेंट",
+    "platformAdministration": "प्लेटफ़ॉर्म प्रशासन",
+    "allTenants": "सभी टेनेंट"
   },
   "search": {
     "dashboard": "डैशबोर्ड",
@@ -134,7 +138,6 @@
       "tenantName": "टेनेंट नाम",
       "tenantIdentifier": "पहचानकर्ता",
       "user": "उपयोगकर्ता",
-      "tenant": "टेनेंट",
       "editionName": "नाम",
       "editionDescription": "विवरण",
       "editionDisplayOrder": "प्रदर्शन क्रम",
@@ -155,7 +158,6 @@
       "tenantName": "टेनेंट नाम दर्ज करें",
       "tenantIdentifier": "पहचानकर्ता दर्ज करें (उदाहरण के लिए acme)",
       "user": "उपयोगकर्ता चुनें",
-      "tenant": "टेनेंट पहचानकर्ता",
       "editionName": "संस्करण का नाम दर्ज करें",
       "editionDescription": "संस्करण का विवरण दर्ज करें",
       "edition": "एक संस्करण चुनें"
@@ -244,6 +246,11 @@
       "notTenantMember": "आप इस टेनेंट के सदस्य नहीं हैं",
       "noActiveTenant": "कोई सक्रिय टेनेंट चयनित नहीं है",
       "tenantRequired": "साइन इन करने के लिए कृपया टेनेंट बताएं।",
+      "tenantHostMismatch": "यह साइन-इन किसी दूसरे पते का है। इस पते पर फिर से साइन इन करें।",
+      "tenantHostRequired": "अपने संगठन के अपने पते पर साइन इन करें।",
+      "tenantAddressNotConfigured": "इस इंस्टॉलेशन पर टेनेंट के पते कॉन्फ़िगर नहीं हैं।",
+      "signInTicketInvalid": "यह साइन-इन लिंक समाप्त हो गया है या पहले ही उपयोग हो चुका है। अपने पासवर्ड से साइन इन करें।",
+      "tenantIdentifierReserved": "यह पहचानकर्ता आरक्षित है। कोई दूसरा चुनें।",
       "tenantIdentifierAlreadyExists": "टेनेंट पहचानकर्ता पहले से मौजूद है",
       "duplicateTenantMembership": "यह उपयोगकर्ता पहले से ही इस टेनेंट का सदस्य है",
       "lastTenantAdministrator": "अंतिम टेनेंट प्रशासक को नहीं हटाया जा सकता",
@@ -498,7 +505,14 @@
         "forgotPassword": "पासवर्ड भूल गए?",
         "signupLink": "साइन अप",
         "noAccount": "खाता नहीं है?",
-        "backToSignin": "साइन इन पर वापस जाएं"
+        "backToSignin": "साइन इन पर वापस जाएं",
+        "titleTenant": "${name} में साइन इन करें",
+        "suspendedTitle": "यह टेनेंट निलंबित है",
+        "suspendedMessage": "जब तक कोई व्यवस्थापक इसे फिर से सक्रिय नहीं करता, साइन इन उपलब्ध नहीं है।",
+        "hostRequiredTitle": "अपने टेनेंट के पते पर साइन इन करें",
+        "hostRequiredMessage": "आपका खाता एक टेनेंट से जुड़ा है। साइन इन करने के लिए उसका पता खोलें। अगर आपको पता नहीं मालूम, तो अपना आमंत्रण ईमेल देखें।",
+        "ownTenant": "अपना टेनेंट चाहते हैं?",
+        "createTenant": "एक बनाएँ"
       },
       "signup": {
         "title": "साइन अप",
@@ -509,7 +523,18 @@
         "successTitle": "सफलता!",
         "successVerifyEmail": "पंजीकरण सफल! कृपया अपने खाते को सत्यापित करने के लिए अपना ईमेल देखें।",
         "successMessage": "पंजीकरण सफल! साइन इन पेज पर जाएं।",
-        "tenantSectionTitle": "आपका टेनेंट"
+        "tenantSectionTitle": "आपका टेनेंट",
+        "tenantHostTitle": "साइन अप मुख्य साइट पर होता है",
+        "tenantHostMessage": "आप ${name} पर हैं। अपना टेनेंट बनाने के लिए मुख्य साइट पर साइन अप करें।",
+        "mainSiteMessage": "अपना टेनेंट बनाने के लिए मुख्य साइट पर साइन अप करें।",
+        "tenantHostAction": "साइन अप पर जाएँ",
+        "tenantName": "टेनेंट का नाम",
+        "tenantAddress": "टेनेंट का पता",
+        "addressPreview": "आपके टेनेंट का पता:",
+        "addressPlaceholder": "your-name",
+        "identifierHint": "छोटे अक्षर, अंक और हाइफ़न।",
+        "readyTitle": "आपका टेनेंट तैयार है",
+        "goToTenant": "अपने टेनेंट पर जाएँ"
       },
       "forgotPassword": {
         "title": "पासवर्ड भूल गए",
@@ -528,6 +553,30 @@
       "signout": "साइन आउट",
       "unauthorized": {
         "title": "अनधिकृत"
+      },
+      "tenantNotFound": {
+        "title": "टेनेंट नहीं मिला",
+        "message": "${host} पर कोई टेनेंट नहीं है। पता जाँचें, या मुख्य साइट पर जाएँ।",
+        "messageNoHost": "इस पते पर कोई टेनेंट नहीं है। पता जाँचें, या मुख्य साइट पर जाएँ।",
+        "homeAction": "होम पेज पर जाएँ",
+        "action": "मुख्य साइट पर जाएँ"
+      },
+      "unknownHost": {
+        "title": "आप कहाँ जाना चाहेंगे?",
+        "message": "${host} न तो प्लेटफ़ॉर्म का पता है और न ही किसी टेनेंट का। चुनें कि कहाँ जाना है।",
+        "messageNoHost": "यह न तो प्लेटफ़ॉर्म का पता है और न ही किसी टेनेंट का। चुनें कि कहाँ जाना है।",
+        "platformTitle": "प्लेटफ़ॉर्म",
+        "platformDescription": "प्लेटफ़ॉर्म व्यवस्थापक यहाँ साइन इन करते हैं, और नए टेनेंट यहीं बनाए जाते हैं।",
+        "platformAction": "प्लेटफ़ॉर्म पर जाएँ",
+        "tenantTitle": "टेनेंट",
+        "tenantDescription": "अपने टेनेंट के पते पर जाने के लिए उसका पहचानकर्ता दर्ज करें।",
+        "tenantAction": "टेनेंट पर जाएँ",
+        "tenantInvalid": "छोटे अंग्रेज़ी अक्षर, अंक और हाइफ़न का उपयोग करें।"
+      },
+      "ticketSignin": {
+        "title": "आपको साइन इन किया जा रहा है…",
+        "failedTitle": "हम आपको अपने-आप साइन इन नहीं कर सके",
+        "action": "अपने पासवर्ड से साइन इन करें"
       }
     },
     "changePassword": {
@@ -605,35 +654,27 @@
         "removeConfirm": "क्या आप वाकई इस सदस्य को टेनेंट से हटाना चाहते हैं?",
         "removeSuccess": "सदस्य सफलतापूर्वक हटाया गया"
       },
-      "switcher": {
-        "label": "टेनेंट",
-        "switchTo": "टेनेंट बदलें",
-        "switchSuccess": "अब आप ${tenant} में कार्य कर रहे हैं",
-        "noTenant": "कोई टेनेंट चयनित नहीं",
-        "viewDetail": "टेनेंट विवरण देखें",
-        "exitTenant": "टेनेंट से बाहर निकलें",
-        "exitSuccess": "आप फिर से प्लेटफ़ॉर्म उपयोगकर्ता के रूप में कार्य कर रहे हैं"
-      },
       "detail": {
         "title": "टेनेंट विवरण",
         "information": "टेनेंट जानकारी",
         "membersTitle": "सदस्य",
         "seats": "सीटें"
       },
-      "enterButton": "प्रवेश करें",
-      "enterCurrent": "वर्तमान",
       "actions": {
         "detail": "विवरण",
         "members": "सदस्य",
         "suspend": "निलंबित करें",
         "reactivate": "पुनः सक्रिय करें"
-      }
+      },
+      "signIn": "साइन इन"
     },
     "selectTenant": {
-      "title": "टेनेंट चुनें",
-      "description": "वह टेनेंट चुनें जिसमें आप कार्य करना चाहते हैं।",
+      "title": "आपके टेनेंट",
+      "description": "हर टेनेंट अपने पते पर, नए टैब में खुलता है।",
       "emptyDescription": "आप किसी सक्रिय टेनेंट से नहीं जुड़े हैं। किसी व्यवस्थापक से अपने टेनेंट में जोड़ने के लिए कहें, या अपना टेनेंट बनाने के लिए साइन अप करें।",
-      "emptyAction": "अपनी प्रोफ़ाइल पर जाएं"
+      "emptyAction": "अपनी प्रोफ़ाइल पर जाएं",
+      "current": "वर्तमान",
+      "noAddresses": "इस इंस्टॉलेशन पर टेनेंट के पते कॉन्फ़िगर नहीं हैं।"
     },
     "editions": {
       "title": "संस्करण",

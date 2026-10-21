@@ -2,48 +2,78 @@
 /**
  * Deploy this application to a Linux server through Coolify, from Windows, macOS or Linux.
  *
- *   npm run deploy:vps -- --host 203.0.113.10 --domain app.example.com --email you@example.com
- *   npm run deploy:vps -- --domain app.example.com        # again: the other answers are remembered
+ *   npm run deploy:vps -- --host 203.0.113.10 --domain example.com --email you@example.com
+ *   npm run deploy:vps -- --domain example.com            # again: the other answers are remembered
  *   npm run deploy:vps -- --host 203.0.113.10 --check     # only report the server's prerequisites
+ *   EFN_DNS_TOKEN=<token> npm run deploy:vps -- --domain example.com --dns-provider cloudflare
+ *
+ * --domain is the domain the application lives under: the platform is served at app.<domain> and
+ * every tenant at <identifier>.<domain>. --platform-subdomain serves the platform at another
+ * subdomain instead (--domain easyfornet.com --platform-subdomain demo: the platform at
+ * demo.easyfornet.com); that label is then never a tenant's. Its DNS needs two A records pointing
+ * at the server, the platform's host and *.<domain>; the deploy checks both (the wildcard through
+ * a random label) and stops when either is missing.
  *
  * Options: --host (server IP or name), --user (SSH user, default root; any other needs sudo),
- * --port (SSH port, default 22), --identity (SSH private key file), --domain (where the app is
- * served), --email (Coolify's administrator account), --repo (default: the origin remote),
- * --branch (default: the base branch), --name (Coolify project/application, default: from the
- * domain), --yes (no confirmations).
+ * --port (SSH port, default 22), --identity (SSH private key file), --domain (see above),
+ * --platform-subdomain (default app, see above), --email (Coolify's administrator account),
+ * --repo (default: the origin remote), --branch (default: the base branch), --name (Coolify
+ * project/application, default: from the domain), --dns-provider and --dns-token (optional, see
+ * below), --yes (no confirmations).
+ *
+ * Certificates: Coolify's Traefik obtains the platform host's over HTTP-01. A certificate for the
+ * tenants' subdomains needs DNS-01, which needs the DNS provider's API: --dns-provider names it as
+ * Traefik's ACME client (lego) does (cloudflare, digitalocean, duckdns, gandiv5, godaddy, linode,
+ * vultr, or any other lego provider with the token given as VARIABLE=token, several joined by
+ * commas), and the token is an API token allowed to edit the domain's records (godaddy: its API key
+ * and secret as KEY:SECRET), best given as the EFN_DNS_TOKEN environment variable: as
+ * --dns-token it stays in the shell's history and npm's debug log. Traefik then holds one
+ * *.<domain> wildcard certificate. This script never prints, logs or saves the token; it reaches the
+ * server over SSH's input, and is kept there in a root-only file Traefik reads.
+ * Without them only HTTP-01 per-host certificates apply, which Traefik cannot obtain for a host it
+ * has not been told about in advance: tenant subdomains are served with Traefik's default
+ * certificate. Pass the DNS flags, or deploy with docker-compose.prod.yml, whose Caddy obtains an
+ * HTTP-01 certificate per tenant on demand.
  *
  * What it needs here: Node and the OpenSSH client (`ssh`), which Windows 10+, macOS and Linux
- * all ship. On the server: SSH access as root or a sudo user, and the domain's DNS A record
- * pointing at it. Everything else is checked and installed by scripts/deploy/vps/remote.sh, which
- * this uploads and runs in phases:
+ * all ship. On the server: SSH access as root or a sudo user, and the DNS records above.
+ * Everything else is checked and installed by scripts/deploy/vps/remote.sh, which this uploads
+ * and runs in phases:
  *
  *   check    the prerequisites, read-only (what --check runs)
  *   prepare  the missing tools, swap, firewall ports, Coolify itself, an API token, and a
  *            deploy key when the repository is private
- *   deploy   the Coolify project and application, the domain, the environment variables
- *            (secrets generated once, on the server, never overwritten), and the deployment
+ *   deploy   the Coolify project and application, the domains, the environment variables
+ *            (secrets generated once, on the server, never overwritten), the wildcard certificate
+ *            when a DNS provider is given, and the deployment
  *
  * Coolify builds from the Git repository, so it deploys what is pushed to --branch, using
  * docker-compose.coolify.yml. Each domain is its own Coolify project and application, so other
  * apps on the same server are never touched.
  *
- * The answers (never a secret) are saved in .deploy/vps/<domain>.json, which git ignores. Exits 0
- * when the app is deployed (or the check passed), 1 otherwise.
+ * The answers (never a secret: not the DNS token) are saved in .deploy/vps/<domain>.json, which
+ * git ignores. Exits 0 when the app is deployed (or the check passed), 1 otherwise.
  */
 import { spawn, spawnSync } from "node:child_process";
 import { lookup, resolveMx } from "node:dns/promises";
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { isIP } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createInterface } from "node:readline/promises";
 import {
   appNameFor,
+  checkDomainDns,
+  DEFAULT_PLATFORM_SUBDOMAIN,
+  dnsChallenge,
   isValidDomain,
+  isValidLabel,
   parseDeployArgs,
   parseResults,
+  platformHost,
   remoteCommand,
   repoUrls,
+  REMOTE_DNS_TOKEN,
   REMOTE_SCRIPT,
 } from "./lib/deploy-vps.mjs";
 import { hasExecutable, IS_WINDOWS } from "./lib/proc.mjs";
@@ -52,7 +82,7 @@ import { sshHostName } from "./lib/remote.mjs";
 
 const COMPOSE_FILE = "docker-compose.coolify.yml";
 const SAVED_DIR = join(REPO_ROOT, ".deploy", "vps");
-const SAVED_KEYS = ["host", "user", "port", "identity", "domain", "repo", "branch", "name", "email"];
+const SAVED_KEYS = ["host", "user", "port", "identity", "domain", "platform-subdomain", "repo", "branch", "name", "email"];
 
 const log = (message = "") => console.log(message);
 const fail = (message) => {
@@ -68,6 +98,15 @@ if (flags.help) {
   process.exit(0);
 }
 if (errors.length) fail(`${errors.join("; ")} (npm run deploy:vps -- --help)`);
+// Read once, never saved and never printed: only the uploaded token file carries it to the server.
+// The token is best given as EFN_DNS_TOKEN: a command-line argument stays in the shell's history,
+// the process list and npm's debug log.
+if (given["dns-token"]) {
+  console.error("warning: --dns-token is kept in your shell history and npm's debug log; prefer EFN_DNS_TOKEN=<token>");
+}
+const dns = dnsChallenge(given["dns-provider"], given["dns-token"] ?? (given["dns-provider"] ? process.env.EFN_DNS_TOKEN : undefined));
+delete given["dns-token"];
+if (dns.error) fail(`${dns.error} (npm run deploy:vps -- --help)`);
 
 const rl = process.stdin.isTTY ? createInterface({ input: process.stdin, output: process.stdout }) : null;
 async function ask(question, fallback = "") {
@@ -89,15 +128,16 @@ const git = (...args) => {
 /** The answers saved for a domain, or for the only domain saved when none is given. */
 function loadSaved(domain) {
   if (!existsSync(SAVED_DIR)) return {};
+  // A deploy from before tenant subdomains was saved under the host it served, app.<domain>.
   const file = domain
-    ? join(SAVED_DIR, `${domain}.json`)
+    ? [join(SAVED_DIR, `${domain}.json`), join(SAVED_DIR, `app.${domain}.json`)].find((f) => existsSync(f))
     : (() => {
         const files = readdirSync(SAVED_DIR).filter((f) => f.endsWith(".json"));
         return files.length === 1 ? join(SAVED_DIR, files[0]) : null;
       })();
   if (!file || !existsSync(file)) return {};
   try {
-    return JSON.parse(readFileSync(file, "utf8"));
+    return { ...JSON.parse(readFileSync(file, "utf8")), savedIn: file };
   } catch {
     return {};
   }
@@ -118,12 +158,24 @@ opts.port ||= "22";
 if (!/^\d+$/.test(String(opts.port))) fail(`--port must be a number, not '${opts.port}'`);
 
 if (!flags.check) {
-  opts.domain ||= await ask("Domain to serve the app on (e.g. app.example.com)");
-  if (!isValidDomain(opts.domain)) fail(`'${opts.domain ?? ""}' is not a domain name (--domain app.example.com)`);
+  opts.domain ||= await ask("Domain the app lives under (e.g. example.com: the platform at app.example.com)");
+  if (!isValidDomain(opts.domain)) fail(`'${opts.domain ?? ""}' is not a domain name (--domain example.com)`);
   opts.domain = opts.domain.toLowerCase();
+  opts["platform-subdomain"] ||= DEFAULT_PLATFORM_SUBDOMAIN;
+  if (!isValidLabel(opts["platform-subdomain"])) {
+    fail(`--platform-subdomain '${opts["platform-subdomain"]}' must be one DNS label: letters, digits and inner hyphens (e.g. app)`);
+  }
+  opts["platform-subdomain"] = opts["platform-subdomain"].toLowerCase();
+  const sub = opts["platform-subdomain"];
+  if (opts.domain.startsWith(`${sub}.`)
+    && !(await confirm(`--domain is the domain tenants live under: this serves the platform at ${platformHost(opts.domain, sub)}. Meant --domain ${opts.domain.slice(sub.length + 1)}? Continue with ${opts.domain} anyway?`))) {
+    fail(`stopped: pass --domain ${opts.domain.slice(sub.length + 1)} to serve the platform at ${opts.domain}`);
+  }
   opts.email ||= await ask("Email for Coolify's administrator account", git("config", "user.email"));
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(opts.email ?? "")) fail("--email is required (Coolify's administrator account)");
   opts.name ||= appNameFor(opts.domain);
+  // It names files and Traefik routers on the server.
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(opts.name)) fail(`--name '${opts.name}' may hold only lower-case letters, digits and hyphens`);
   opts.branch ||= BASE_BRANCH;
   opts.repo ||= git("remote", "get-url", "origin");
   if (!opts.repo) fail("no origin remote: push the project to a Git host and pass --repo <url>");
@@ -143,13 +195,26 @@ if (!hasExecutable("ssh")) {
 if (opts.domain) {
   mkdirSync(SAVED_DIR, { recursive: true });
   const record = Object.fromEntries(SAVED_KEYS.filter((k) => opts[k]).map((k) => [k, opts[k]]));
-  writeFileSync(join(SAVED_DIR, `${opts.domain}.json`), `${JSON.stringify(record, null, 2)}\n`);
+  const savedFile = join(SAVED_DIR, `${opts.domain}.json`);
+  writeFileSync(savedFile, `${JSON.stringify(record, null, 2)}\n`);
+  // Answers taken over from a file saved under the platform's host move to the domain's, so that a
+  // later run with no --domain still finds exactly one.
+  if (saved.savedIn && saved.savedIn !== savedFile) rmSync(saved.savedIn, { force: true });
 }
 
 // --- checks on this side -------------------------------------------------------------------
 
 if (!flags.check) {
-  log(`Deploying ${repo.https} (${opts.branch}) to https://${opts.domain} on ${opts.user}@${opts.host}`);
+  log(`Deploying ${repo.https} (${opts.branch}) to https://${platformHost(opts.domain, opts["platform-subdomain"])} and https://*.${opts.domain} on ${opts.user}@${opts.host}`);
+  if (dns.provider) {
+    log(`Tenant subdomains: a *.${opts.domain} wildcard certificate through ${dns.provider}'s DNS (DNS-01).`);
+  } else {
+    log(`Tenant subdomains: no --dns-provider, so only HTTP-01 per-host certificates apply. Traefik obtains`);
+    log(`  ${platformHost(opts.domain, opts["platform-subdomain"])}'s, but cannot obtain one for each tenant's host as it is first visited:`);
+    log(`  tenants are served with its default certificate until you pass --dns-provider and --dns-token`);
+    log("  (a *.domain wildcard through DNS-01), or deploy with docker-compose.prod.yml, whose Caddy issues them on demand.");
+    log("  A DNS provider an earlier deploy configured on this server stays in force.");
+  }
 
   // Coolify clones the branch from the remote, so the compose file has to be pushed there.
   if (git("rev-parse", "--verify", "--quiet", `refs/remotes/origin/${opts.branch}`)
@@ -169,18 +234,28 @@ if (!flags.check) {
     fail("stopped: use a real email address (--email)");
   }
 
-  // Let's Encrypt only issues the certificate once the domain resolves to this server.
+  // Let's Encrypt only issues a certificate once its host resolves to this server. A random label
+  // resolves only through the *.<domain> record, without which no tenant is reachable at all, so
+  // that one stops the deploy; a platform record still spreading may be waited out.
   const addresses = async (name) => (isIP(name) ? [name] : (await lookup(name, { all: true })).map((a) => a.address));
-  try {
-    const [domainIps, hostIps] = await Promise.all([addresses(opts.domain), addresses(serverAddress)]);
-    if (!domainIps.some((ip) => hostIps.includes(ip))) {
-      log(`warning: ${opts.domain} resolves to ${domainIps.join(", ")}, not to ${hostIps.join(", ")}.`);
-      log("  Point its DNS A record at the server, or the HTTPS certificate cannot be issued.");
-      if (!(await confirm("Continue anyway?"))) fail("stopped: fix the DNS record and run again");
-    }
-  } catch {
-    log(`warning: ${opts.domain} does not resolve yet. Add a DNS A record pointing at ${serverAddress}.`);
+  const hostIps = await addresses(serverAddress).catch(() => []);
+  const target = hostIps.join(", ") || serverAddress;
+  const { missing, elsewhere } = await checkDomainDns({ domain: opts.domain, subdomain: opts["platform-subdomain"], serverAddresses: hostIps, resolve: addresses });
+  const wildcard = `*.${opts.domain}`;
+  if (missing.some((m) => m.record === wildcard)) {
+    fail(`${wildcard} has no DNS record (a random label, which resolves only through it, does not resolve). ` +
+      `Add a DNS A record for ${wildcard} pointing at ${target}, then run again; every tenant is served on a subdomain`);
+  }
+  if (missing.length) {
+    log(`warning: ${platformHost(opts.domain, opts["platform-subdomain"])} does not resolve yet. Add a DNS A record pointing at ${target}.`);
     if (!(await confirm("Continue anyway?"))) fail("stopped: add the DNS record and run again");
+  }
+  if (elsewhere.length) {
+    for (const { record, addresses: ips } of elsewhere) {
+      log(`warning: ${record} resolves to ${ips.join(", ")}, not to ${hostIps.join(", ") || serverAddress}.`);
+    }
+    log("  Point the DNS A records at the server, or the HTTPS certificates cannot be issued.");
+    if (!(await confirm("Continue anyway?"))) fail("stopped: fix the DNS records and run again");
   }
 }
 
@@ -202,11 +277,15 @@ const sshArgs = [
   ...(IS_WINDOWS ? [] : ["-o", "ControlMaster=auto", "-o", "ControlPath=~/.ssh/efn-deploy-%C", "-o", "ControlPersist=120"]),
 ];
 
-function upload() {
+/**
+ * Write a file into the SSH user's home directory, readable only by that user: the server script,
+ * or the DNS token. The content goes over stdin, never on a command line the process list shows.
+ */
+function upload(file = REMOTE_SCRIPT, content = null) {
   // LF only: a Windows checkout may have turned the script's line endings into CRLF.
-  const script = readFileSync(join(REPO_ROOT, "scripts", "deploy", "vps", "remote.sh"), "utf8").replace(/\r\n/g, "\n");
-  const res = spawnSync("ssh", [...sshArgs, target, `umask 077 && cat > ${REMOTE_SCRIPT}`], {
-    input: script,
+  const text = content ?? readFileSync(join(REPO_ROOT, "scripts", "deploy", "vps", "remote.sh"), "utf8").replace(/\r\n/g, "\n");
+  const res = spawnSync("ssh", [...sshArgs, target, `umask 077 && cat > ${file}`], {
+    input: text,
     stdio: ["pipe", "inherit", "inherit"],
     windowsHide: true,
   });
@@ -276,20 +355,31 @@ if (prepared.code !== 0 || !source) fail("preparing the server failed (see above
 
 if (source.visibility === "private") await addDeployKey(source);
 
+// The DNS token reaches the server as a file the deploy phase reads and deletes straight away.
+if (dns.provider) upload(REMOTE_DNS_TOKEN, `${dns.env}\n`);
+
 const deployed = await runPhase("deploy", {
   APP_NAME: opts.name,
   DOMAIN: opts.domain,
+  PLATFORM_SUBDOMAIN: opts["platform-subdomain"],
   REPO: source.visibility === "private" ? repo.ssh : repo.https,
   BRANCH: opts.branch,
   KEY_UUID: source.keyUuid,
   COMPOSE: `/${COMPOSE_FILE}`,
+  DNS_PROVIDER: dns.provider,
+  DNS_ENV: dns.envNames?.join(","),
+  DNS_TOKEN_FILE: dns.provider ? REMOTE_DNS_TOKEN : undefined,
   CLEANUP: 1,
 });
 rl?.close();
-if (deployed.code !== 0) fail("the deployment failed (see above)");
+if (deployed.code !== 0) {
+  // The deploy phase deletes the token file first thing; if it never got that far, delete it here.
+  if (dns.provider) spawnSync("ssh", [...sshArgs, target, `rm -f ${REMOTE_DNS_TOKEN}`], { stdio: "ignore", windowsHide: true });
+  fail("the deployment failed (see above)");
+}
 
 // The same check from out here proves DNS and the certificate as a visitor sees them.
-const url = `https://${opts.domain}`;
+const url = `https://${platformHost(opts.domain, opts["platform-subdomain"])}`;
 try {
   const res = await fetch(`${url}/health`, { signal: AbortSignal.timeout(15_000) });
   log(res.ok ? `\n${url} is live.` : `\nwarning: ${url}/health answered ${res.status} from here.`);

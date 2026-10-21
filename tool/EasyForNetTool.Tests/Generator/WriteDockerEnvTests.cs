@@ -28,7 +28,9 @@ public class WriteDockerEnvTests
             var values = Parse(lines);
             Assert.Equal("demo-shop", values["PROD_PROJECT_NAME"]);
             Assert.Equal("localhost", values["DOMAIN"]);
-            Assert.Equal("https://localhost", values["PUBLIC_URL"]);
+            Assert.Equal("app", values["PLATFORM_SUBDOMAIN"]);
+            Assert.Equal("https://app.localhost", values["PUBLIC_URL"]);
+            Assert.Equal("https://{tenant}.localhost", values["TENANT_URL_TEMPLATE"]);
             Assert.Equal("demo_shop", values["POSTGRES_DB"]);
             Assert.Equal("demo_shop", values["POSTGRES_USER"]);
             Assert.Equal("demo_shop:", values["REDIS_INSTANCE_NAME"]);

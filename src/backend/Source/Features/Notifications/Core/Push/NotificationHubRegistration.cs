@@ -1,6 +1,5 @@
 using System.Text.Json.Serialization;
 using Backend.Features.Identity.Core.Sessions;
-using Backend.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.Net.Http.Headers;
@@ -74,21 +73,9 @@ public static class NotificationHubRegistration
             });
         }
 
-        // A WebSocket upgrade is not a CORS request, so the CORS policy does not stop a page on another origin
-        // - a sibling host on the same site, whose requests carry the auth cookie - from opening the hub as
-        // its visitor. The WebSocket middleware SignalR runs for the hub refuses, with 403, an upgrade whose
-        // Origin is not one of the web app's domains: the same list the CORS policy allows. An upgrade with
-        // no Origin at all (a non-browser bearer client) is not a browser's, carries no ambient cookie, and
-        // is let through.
-        services.AddOptions<Microsoft.AspNetCore.Builder.WebSocketOptions>()
-            .Configure<IOptions<WebSetting>>((webSocketOptions, webSetting) =>
-            {
-                foreach (var domain in webSetting.Value.AllowedDomains())
-                {
-                    webSocketOptions.AllowedOrigins.Add(domain);
-                }
-            });
-
+        // The Origin check that keeps a page on another origin from opening the hub with its visitor's
+        // cookie is NotificationHubOriginMiddleware (UseNotificationHubOriginCheck), not
+        // WebSocketOptions.AllowedOrigins: a fixed list cannot admit each tenant's own host.
         services.PostConfigure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
         {
             options.Events ??= new JwtBearerEvents();
@@ -127,6 +114,16 @@ public static class NotificationHubRegistration
 
         return app;
     }
+
+    /// <summary>
+    /// Adds the hub's <c>Origin</c> check (<see cref="NotificationHubOriginMiddleware"/>). Placed after
+    /// <c>UseAuthorization()</c>, so an unauthenticated upgrade is still answered 401 first, and ahead of
+    /// the endpoints, so a foreign origin is refused before the WebSocket is accepted.
+    /// </summary>
+    /// <param name="app">The application builder.</param>
+    /// <returns>The same builder.</returns>
+    public static IApplicationBuilder UseNotificationHubOriginCheck(this IApplicationBuilder app)
+        => app.UseMiddleware<NotificationHubOriginMiddleware>();
 
     /// <summary>
     /// Whether a request is one whose bearer token travels in the query string: a request to the hub's path

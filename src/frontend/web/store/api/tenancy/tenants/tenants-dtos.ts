@@ -144,40 +144,12 @@ export interface TenantReactivateResponse extends BaseDto<string> {
   status: TenantStatus
 }
 
-/** Session material returned when a tenant is switched to, so a token client can carry on without re-entering credentials. */
-export interface TenantSessionDto {
-  userId: string
-  accessToken: string
-  accessTokenExpiry: string
-  refreshToken: string
-  refreshTokenExpiry: string
-}
-
-/** Response from the exit-tenant endpoint, carrying the session material for a session that now acts in no tenant. */
-export interface TenantExitResponse {
-  session: TenantSessionDto
-}
-
 /** Request parameters for suspending an active tenant by id. */
 export interface TenantSuspendRequest extends BaseDto<string>, RequestBase {}
 
 /** Response from the suspend-tenant endpoint, reporting the tenant's lifecycle status after the change. */
 export interface TenantSuspendResponse extends BaseDto<string> {
   status: TenantStatus
-}
-
-/** Request body selecting the tenant that subsequent requests act in. */
-export interface TenantSwitchRequest extends RequestBase {
-  tenantId: string
-}
-
-/** Response from the switch-tenant endpoint, describing the tenant now active and the session that carries it. */
-export interface TenantSwitchResponse {
-  tenantId: string
-  name: string
-  identifier: string
-  status: TenantStatus
-  session: TenantSessionDto
 }
 
 /** Request body for renaming a tenant or changing its identifier. */
@@ -194,4 +166,22 @@ export interface TenantUpdateResponse extends BaseDto<string>, SystemCreatedDto 
   identifier: string
   identifierNormalized: string
   status: TenantStatus
+}
+
+/** What the request's host names, as `GET /tenants/host` answers it: `platform` for the platform host (or any host while host resolution is off), `tenant` for a tenant's own host, `unknown` for a host that names nothing while host resolution is on. */
+export type TenantHostKind = 'platform' | 'tenant' | 'unknown'
+
+/** Response from the anonymous host endpoint: which tenant the visitor's host belongs to, and the addresses every tenant link is built from. */
+export interface TenantHostGetResponse {
+  kind: TenantHostKind
+  /** The tenant's display name, on a tenant host only. */
+  name?: string | null
+  /** The tenant's url-safe identifier, on a tenant host only. */
+  identifier?: string | null
+  /** The tenant's lifecycle status, on a tenant host only. */
+  status?: TenantStatus | null
+  /** The platform origin. */
+  platformUrl: string
+  /** The tenant origin template whose first host label is `{tenant}`; null when host resolution is off. */
+  tenantUrlTemplate?: string | null
 }

@@ -2,10 +2,16 @@
 /**
  * Run the whole app for development with one command: services, API and web app.
  *
- *   npm run dev                      # PostgreSQL + Redis, the API on :5000, the web app on :3000
+ *   npm run dev                      # PostgreSQL + Redis, the API on :5000, next dev on :3001, the proxy on :3000
  *   npm run dev -- --no-docker       # use the PostgreSQL and Redis you already run
- *   npm run dev -- --api-only        # services + API, no web app
- *   npm run dev -- --web-only        # the web app alone, against an API started elsewhere
+ *   npm run dev -- --api-only        # services + API, no web app and no proxy
+ *   npm run dev -- --web-only        # the web app and the proxy, against an API started elsewhere on :5000
+ *
+ * The browser opens the proxy (dev-proxy.mjs), never next dev directly: it is the one origin that
+ * serves both the pages and the API's /api, /hubs, /hangfire and /health, as docker/Caddyfile does in
+ * production, so the web app calls the API as the relative `/api` on whatever host it was opened on
+ * (`app.localhost`, `default.localhost`, …), each host with its own cookies. That is also why
+ * --web-only starts the proxy: without it the pages would have no API to reach.
  *
  * 1. Probes PostgreSQL and Redis (pg-ready.mjs, redis-ready.mjs). When either is down it runs
  *    `docker compose up -d --wait` on docker-compose.yml and waits for both to answer. A port
@@ -14,9 +20,11 @@
  *    project's container (a PostgreSQL installed on the machine) is warned about, not used silently.
  * 2. Stops an API already running from this checkout, which would hold the port and lock bin/.
  * 3. Installs the web app's packages when node_modules is missing.
- * 4. Starts the API (serve-api.mjs, Development), waits for its /health to answer, then starts
- *    `next dev`, with each line prefixed by where it came from. Ctrl+C, or either process
- *    exiting, stops both. The containers are left running; `docker compose down` stops them.
+ * 4. Starts the API (serve-api.mjs, Development) and the proxy, waits for the API's /health to
+ *    answer, then starts `next dev` on :3001 — told to call the API as `/api` from the browser and
+ *    as API_INTERNAL_URL (the API on loopback) from its own server — with each line prefixed by
+ *    where it came from. Ctrl+C, or any one process exiting, stops them all. The containers are
+ *    left running; `docker compose down` stops them.
  */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -29,6 +37,9 @@ const API_ONLY = args.includes("--api-only");
 const WEB_ONLY = args.includes("--web-only");
 const WEB = join(REPO_ROOT, "src", "frontend", "web");
 const API_PORT = process.env.PORT || "5000";
+/** The proxy is the address the browser opens; next dev sits behind it. Production's Caddy serves the same shape. */
+const PROXY_PORT = "3000";
+const WEB_PORT = "3001";
 /** How long the web app waits for the API to answer before starting regardless. */
 const API_WAIT_SECONDS = 600;
 /**
@@ -71,17 +82,43 @@ if (!WEB_ONLY) {
   children.push(
     start("api", "node", [join(REPO_ROOT, "scripts", "serve-api.mjs")], { cwd: REPO_ROOT, env: { PORT: API_PORT } }),
   );
-  // The web app renders its pages from the API (translations, session), so a page opened while the
-  // API is still building answers "service unavailable". Start it only once the API answers.
-  if (!API_ONLY) await waitForApi();
 }
-if (!API_ONLY) children.push(start("web", "npm", ["run", "dev"], { cwd: WEB }));
+if (!API_ONLY) {
+  // The proxy needs neither upstream to be up: until one answers, its paths answer 502.
+  children.push(
+    start(
+      "proxy",
+      "node",
+      [join(REPO_ROOT, "scripts", "dev-proxy.mjs"), "--port", PROXY_PORT, "--api", API_PORT, "--web", WEB_PORT],
+      { cwd: REPO_ROOT },
+    ),
+  );
+}
+// The web app renders its pages from the API (translations, session), so a page opened while the
+// API is still building answers "service unavailable". Start it only once the API answers.
+if (!WEB_ONLY && !API_ONLY) await waitForApi();
+if (!API_ONLY) {
+  children.push(
+    start("web", "npm", ["run", "dev"], {
+      cwd: WEB,
+      // Set here rather than left to .env.development, so a copy written before the proxy existed
+      // (an absolute NEXT_PUBLIC_API_URL) cannot send the browser around it; a value already in the
+      // environment still wins.
+      env: {
+        PORT: WEB_PORT,
+        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "/api",
+        API_INTERNAL_URL: process.env.API_INTERNAL_URL || `http://localhost:${API_PORT}/api`,
+      },
+    }),
+  );
+}
 
 console.log(
   [
     !WEB_ONLY && `dev: API  http://localhost:${API_PORT}  (Swagger at /swagger)`,
-    !API_ONLY && "dev: web  http://localhost:3000",
-    "dev: Ctrl+C stops both.",
+    !API_ONLY && `dev: web  http://app.localhost:${PROXY_PORT}  http://default.localhost:${PROXY_PORT}`,
+    !API_ONLY && `dev:      (the proxy on :${PROXY_PORT}; next dev itself is on :${WEB_PORT})`,
+    "dev: Ctrl+C stops everything.",
   ]
     .filter(Boolean)
     .join("\n"),

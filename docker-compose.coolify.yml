@@ -2,8 +2,13 @@
 #
 # It is docker-compose.prod.yml with two changes, because Coolify's own Traefik proxy already
 # holds ports 80 and 443 and obtains the certificate for the domain:
-#   - the proxy publishes no ports; Coolify routes the domain to its port 80
-#   - Caddy serves plain HTTP there (docker/Caddyfile.coolify, built into the image)
+#   - the proxy publishes no ports; Coolify routes the platform host (app.<domain> by default) and
+#     *.<domain> to its port 80
+#   - Caddy serves plain HTTP there, for whatever host it is asked (docker/Caddyfile.coolify, built
+#     into the image), keeping the Host Traefik forwarded, which tells the API the tenant
+#   - the proxy carries a label defining a Traefik service named for the application, which the
+#     tenants' router (written by scripts/deploy/vps/remote.sh) sends every tenant host to: Coolify
+#     names the container anew on each deployment, so a router cannot name the container itself
 # Coolify supplies the ${...} values as the application's environment variables; deploy-vps.mjs fills
 # them in. Keep the services and variables in step with docker-compose.prod.yml
 # (scripts/tests/deploy-vps.test.mjs fails when they drift apart).
@@ -56,7 +61,9 @@ services:
       # Passwords of the seeded administrators, applied only when the accounts are first created
       Seed__PlatformAdminPassword: ${SEED_ADMIN_PASSWORD:?set SEED_ADMIN_PASSWORD}
       Seed__TenantAdminPassword: ${SEED_ADMIN_PASSWORD}
+      # The platform origin (<platform subdomain>.<domain>), and every tenant's, {tenant} standing for its identifier
       Web__DefaultDomain: ${PUBLIC_URL:?set PUBLIC_URL}
+      Web__TenantOriginTemplate: ${TENANT_URL_TEMPLATE:?set TENANT_URL_TEMPLATE}
       Web__Domains__0: ${PUBLIC_URL}
       Database__ApplyMigrationsOnStartup: "true"
       # The API port is reachable only through Caddy, so its forwarded headers can be trusted
@@ -78,8 +85,9 @@ services:
     build:
       context: ./src/frontend/web
       args:
-        # Inlined into the browser bundle at build time: change it and redeploy
-        NEXT_PUBLIC_API_URL: ${PUBLIC_URL}/api
+        # Inlined into the browser bundle at build time. Relative, so the browser reaches the API
+        # through the proxy on whatever host it is on
+        NEXT_PUBLIC_API_URL: /api
         NEXT_PUBLIC_APP_ENV: production
     restart: unless-stopped
     depends_on:
@@ -96,6 +104,10 @@ services:
     depends_on:
       - api
       - web
+    labels:
+      # Read by Coolify's Traefik as <TENANTS_SERVICE>@docker. Interpolated by Compose, so the
+      # application's label escaping is turned off (remote.sh does it)
+      - traefik.http.services.${TENANTS_SERVICE:?set TENANTS_SERVICE}.loadbalancer.server.port=80
     volumes:
       - caddy-data:/data
       - caddy-config:/config

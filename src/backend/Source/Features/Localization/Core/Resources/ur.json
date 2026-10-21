@@ -46,7 +46,8 @@
     "selectPlaceholder": "منتخب کریں…",
     "noOptions": "کوئی اختیار نہیں",
     "scrollToTop": "اوپر جائیں",
-    "collapseSidebar": "سائیڈبار سمیٹیں"
+    "collapseSidebar": "سائیڈبار سمیٹیں",
+    "opensInNewTab": "(نئے ٹیب میں کھلتا ہے)"
   },
   "navigation": {
     "home": "ہوم",
@@ -81,7 +82,7 @@
     "tenantsCreate": "بنائیں",
     "tenantsUpdate": "اپ ڈیٹ",
     "tenantsMembers": "اراکین",
-    "selectTenant": "ٹیننٹ منتخب کریں",
+    "selectTenant": "آپ کے ٹیننٹس",
     "tenantsDetail": "تفصیل",
     "editions": "ایڈیشنز",
     "editionsList": "فہرست",
@@ -90,7 +91,10 @@
     "editionsFeatures": "خصوصیات",
     "tenantsFeatures": "خصوصیات",
     "localization": "لوکلائزیشن",
-    "settings": "ترتیبات"
+    "settings": "ترتیبات",
+    "otherTenants": "دیگر ٹیننٹس",
+    "platformAdministration": "پلیٹ فارم انتظامیہ",
+    "allTenants": "تمام ٹیننٹس"
   },
   "search": {
     "dashboard": "ڈیش بورڈ",
@@ -134,7 +138,6 @@
       "tenantName": "ٹیننٹ کا نام",
       "tenantIdentifier": "شناخت کنندہ",
       "user": "صارف",
-      "tenant": "ٹیننٹ",
       "editionName": "نام",
       "editionDescription": "تفصیل",
       "editionDisplayOrder": "ترتیبِ نمائش",
@@ -155,7 +158,6 @@
       "tenantName": "ٹیننٹ کا نام درج کریں",
       "tenantIdentifier": "شناخت کنندہ درج کریں (مثال کے طور پر acme)",
       "user": "صارف منتخب کریں",
-      "tenant": "ٹیننٹ شناخت کنندہ",
       "editionName": "ایڈیشن کا نام درج کریں",
       "editionDescription": "ایڈیشن کی تفصیل درج کریں",
       "edition": "ایک ایڈیشن منتخب کریں"
@@ -244,6 +246,11 @@
       "notTenantMember": "آپ اس ٹیننٹ کے رکن نہیں ہیں",
       "noActiveTenant": "کوئی فعال ٹیننٹ منتخب نہیں ہے",
       "tenantRequired": "سائن ان کرنے کے لیے براہ کرم ٹیننٹ بتائیں۔",
+      "tenantHostMismatch": "یہ سائن ان کسی دوسرے پتے کا ہے۔ اس پتے پر دوبارہ سائن ان کریں۔",
+      "tenantHostRequired": "اپنی تنظیم کے اپنے پتے پر سائن ان کریں۔",
+      "tenantAddressNotConfigured": "اس انسٹالیشن پر ٹیننٹس کے پتے ترتیب نہیں دیے گئے۔",
+      "signInTicketInvalid": "سائن اِن کا یہ لنک ختم ہو چکا ہے یا پہلے ہی استعمال ہو چکا ہے۔ اپنے پاس ورڈ سے سائن اِن کریں۔",
+      "tenantIdentifierReserved": "یہ شناخت کنندہ مخصوص ہے۔ کوئی دوسرا منتخب کریں۔",
       "tenantIdentifierAlreadyExists": "ٹیننٹ کا شناخت کنندہ پہلے سے موجود ہے",
       "duplicateTenantMembership": "یہ صارف پہلے ہی اس ٹیننٹ کا رکن ہے",
       "lastTenantAdministrator": "آخری ٹیننٹ منتظم کو نہیں ہٹایا جا سکتا",
@@ -498,7 +505,14 @@
         "forgotPassword": "پاس ورڈ بھول گئے؟",
         "signupLink": "سائن اپ",
         "noAccount": "اکاؤنٹ نہیں ہے؟",
-        "backToSignin": "سائن ان پر واپس جائیں"
+        "backToSignin": "سائن ان پر واپس جائیں",
+        "titleTenant": "${name} میں سائن اِن کریں",
+        "suspendedTitle": "یہ ٹیننٹ معطل ہے",
+        "suspendedMessage": "جب تک کوئی منتظم اسے دوبارہ فعال نہ کرے، سائن اِن دستیاب نہیں ہے۔",
+        "hostRequiredTitle": "اپنے ٹیننٹ کے پتے پر سائن اِن کریں",
+        "hostRequiredMessage": "آپ کا اکاؤنٹ ایک ٹیننٹ سے تعلق رکھتا ہے۔ سائن اِن کرنے کے لیے اس کا پتہ کھولیں۔ اگر آپ کو معلوم نہیں تو اپنی دعوتی ای میل دیکھیں۔",
+        "ownTenant": "اپنا ٹیننٹ چاہتے ہیں؟",
+        "createTenant": "ایک بنائیں"
       },
       "signup": {
         "title": "سائن اپ",
@@ -509,7 +523,18 @@
         "successTitle": "کامیابی!",
         "successVerifyEmail": "رجسٹریشن کامیاب! براہ کرم اپنے اکاؤنٹ کی تصدیق کے لیے اپنا ای میل چیک کریں۔",
         "successMessage": "رجسٹریشن کامیاب! سائن ان صفحہ پر جائیں۔",
-        "tenantSectionTitle": "آپ کا ٹیننٹ"
+        "tenantSectionTitle": "آپ کا ٹیننٹ",
+        "tenantHostTitle": "سائن اپ مرکزی سائٹ پر ہوتا ہے",
+        "tenantHostMessage": "آپ ${name} پر ہیں۔ اپنا ٹیننٹ بنانے کے لیے مرکزی سائٹ پر سائن اپ کریں۔",
+        "mainSiteMessage": "اپنا ٹیننٹ بنانے کے لیے مرکزی سائٹ پر سائن اپ کریں۔",
+        "tenantHostAction": "سائن اپ پر جائیں",
+        "tenantName": "ٹیننٹ کا نام",
+        "tenantAddress": "ٹیننٹ کا پتہ",
+        "addressPreview": "آپ کے ٹیننٹ کا پتہ:",
+        "addressPlaceholder": "your-name",
+        "identifierHint": "چھوٹے انگریزی حروف، ہندسے اور ہائفن۔",
+        "readyTitle": "آپ کا ٹیننٹ تیار ہے",
+        "goToTenant": "اپنے ٹیننٹ پر جائیں"
       },
       "forgotPassword": {
         "title": "پاس ورڈ بھول گئے",
@@ -528,6 +553,30 @@
       "signout": "سائن آؤٹ",
       "unauthorized": {
         "title": "غیر مجاز"
+      },
+      "tenantNotFound": {
+        "title": "ٹیننٹ نہیں ملا",
+        "message": "${host} پر کوئی ٹیننٹ نہیں ہے۔ پتہ چیک کریں، یا مرکزی سائٹ پر جائیں۔",
+        "messageNoHost": "اس پتے پر کوئی ٹیننٹ نہیں ہے۔ پتہ چیک کریں، یا مرکزی سائٹ پر جائیں۔",
+        "homeAction": "ہوم پیج پر جائیں",
+        "action": "مرکزی سائٹ پر جائیں"
+      },
+      "unknownHost": {
+        "title": "آپ کہاں جانا چاہیں گے؟",
+        "message": "${host} نہ پلیٹ فارم کا پتہ ہے اور نہ کسی ٹیننٹ کا۔ منتخب کریں کہ کہاں جانا ہے۔",
+        "messageNoHost": "یہ نہ پلیٹ فارم کا پتہ ہے اور نہ کسی ٹیننٹ کا۔ منتخب کریں کہ کہاں جانا ہے۔",
+        "platformTitle": "پلیٹ فارم",
+        "platformDescription": "پلیٹ فارم کے منتظمین یہاں سائن ان کرتے ہیں، اور نئے ٹیننٹ یہیں بنائے جاتے ہیں۔",
+        "platformAction": "پلیٹ فارم پر جائیں",
+        "tenantTitle": "ٹیننٹ",
+        "tenantDescription": "اپنے ٹیننٹ کے پتے پر جانے کے لیے اس کا شناخت کنندہ درج کریں۔",
+        "tenantAction": "ٹیننٹ پر جائیں",
+        "tenantInvalid": "چھوٹے انگریزی حروف، ہندسے اور ہائفن استعمال کریں۔"
+      },
+      "ticketSignin": {
+        "title": "آپ کو سائن اِن کیا جا رہا ہے…",
+        "failedTitle": "ہم آپ کو خودکار طور پر سائن اِن نہیں کر سکے",
+        "action": "اپنے پاس ورڈ سے سائن اِن کریں"
       }
     },
     "changePassword": {
@@ -605,35 +654,27 @@
         "removeConfirm": "کیا آپ واقعی اس رکن کو ٹیننٹ سے ہٹانا چاہتے ہیں؟",
         "removeSuccess": "رکن کامیابی سے ہٹا دیا گیا"
       },
-      "switcher": {
-        "label": "ٹیننٹ",
-        "switchTo": "ٹیننٹ تبدیل کریں",
-        "switchSuccess": "اب آپ ${tenant} میں کام کر رہے ہیں",
-        "noTenant": "کوئی ٹیننٹ منتخب نہیں",
-        "viewDetail": "ٹیننٹ کی تفصیل دیکھیں",
-        "exitTenant": "ٹیننٹ سے باہر نکلیں",
-        "exitSuccess": "آپ دوبارہ پلیٹ فارم صارف کے طور پر کام کر رہے ہیں"
-      },
       "detail": {
         "title": "ٹیننٹ کی تفصیل",
         "information": "ٹیننٹ کی معلومات",
         "membersTitle": "اراکین",
         "seats": "نشستیں"
       },
-      "enterButton": "داخل ہوں",
-      "enterCurrent": "موجودہ",
       "actions": {
         "detail": "تفصیل",
         "members": "اراکین",
         "suspend": "معطل کریں",
         "reactivate": "دوبارہ فعال کریں"
-      }
+      },
+      "signIn": "سائن ان"
     },
     "selectTenant": {
-      "title": "ٹیننٹ منتخب کریں",
-      "description": "وہ ٹیننٹ منتخب کریں جس میں آپ کام کرنا چاہتے ہیں۔",
+      "title": "آپ کے ٹیننٹس",
+      "description": "ہر ٹیننٹ اپنے پتے پر، نئے ٹیب میں کھلتا ہے۔",
       "emptyDescription": "آپ کسی فعال ٹیننٹ سے وابستہ نہیں ہیں۔ کسی منتظم سے اپنے ٹیننٹ میں شامل کرنے کو کہیں، یا اپنا ٹیننٹ بنانے کے لیے سائن اپ کریں۔",
-      "emptyAction": "اپنے پروفائل پر جائیں"
+      "emptyAction": "اپنے پروفائل پر جائیں",
+      "current": "موجودہ",
+      "noAddresses": "اس انسٹالیشن پر ٹیننٹس کے پتے ترتیب نہیں دیے گئے۔"
     },
     "editions": {
       "title": "ایڈیشنز",

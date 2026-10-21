@@ -228,8 +228,7 @@ with the platform-wide broadcasts alone; that is harmless, and the web app sends
   authenticated by the auth cookie - no token in the URL, so the web origin must be one of the `Web`
   domains and the cookie must reach the API host. It connects only while the caller has an active tenant
   or is a platform account acting in none (anyone else is on `/select-tenant`), and stops on sign-out,
-  when that stops holding, and on unmount; a tenant switch or exit stops it and opens a new one, since
-  groups are joined on connect.
+  when that stops holding, and on unmount. Each host is one tenant with its own session, so a connection only ever serves one tenant; another tenant is another tab with its own connection.
 - Messages: `notificationReceived` dispatches `notificationsSlice.notificationReceived` (one more unread)
   and invalidates `NOTIFICATIONS_LIST_TAG`; `unreadCountChanged` dispatches `setUnreadCount(count)`. The
   unread count is fetched once after every connect and reconnect, since pushes sent while it was down

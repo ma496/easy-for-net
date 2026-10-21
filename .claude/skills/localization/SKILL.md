@@ -25,8 +25,11 @@ wins:
 
 Which languages a scope offers resolves per row, not per key: the tenant's own `LanguageSetting`
 row → the platform's → every shipped culture enabled, no default. The culture served is the one
-requested if enabled, else the scope's default, else `en`, else the first enabled one. An anonymous
-caller, and a session acting in no tenant, sees platform overrides only.
+requested if enabled, else the scope's default, else `en`, else the first enabled one. A session acting
+in no tenant sees platform overrides only. An anonymous caller on a tenant host sees that tenant's texts
+and language settings — the endpoint names the tenant to `ILocalizationService` explicitly and opens no
+tenant scope — and anywhere else (the platform host, an unknown tenant's host, no host resolution) the
+platform's only.
 
 On the web, `getDictionary(locale)` in `i18n/server.ts` is a `cache()`d server fetch of that endpoint
 that forwards the request's cookies — one fetch per request, shared by the root layout and every
@@ -79,7 +82,7 @@ Interpolation is `${name}` in the JSON value:
 
 ```tsx
 t('validation.minLength', { min: 3 }) || 'Field must be at least 3 characters'
-t('page.tenants.switcher.switchSuccess', { tenant: name }) || `You are now working in ${name}`
+t('page.auth.signin.titleTenant', { name }) || `Sign in to ${name}`
 ```
 
 ## Adding keys
@@ -93,8 +96,8 @@ every other file mirrors — then to **every other resource file in that directo
 - a value is empty, or is the key itself.
 
 On the web, `i18n/tenant-screens.test.ts` (run by `npm run test`) reads the same resource files and
-fails when a tenancy error code or tenancy screen key it lists is undefined in any culture, or the
-tenant-switch message drops its `${tenant}` placeholder. Placeholders are not checked in general, so
+fails when a tenancy error code or tenancy screen key it lists is undefined in any culture, or a
+message that names a tenant drops its `${name}` or `${host}` placeholder. Placeholders are not checked in general, so
 keep every `${…}` of the English value in each translation yourself.
 
 Follow the established namespaces:

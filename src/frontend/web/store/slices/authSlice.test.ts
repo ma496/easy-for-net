@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
+import { TenantStatus } from '@/store/api/tenancy/enums'
 import type { GetUserInfoResponse, GetUserInfoTenant } from '@/store/api/identity'
 import { authSlice, setUserInfo, signout } from './authSlice'
 
 /** A tenant the caller holds an active membership in, as the account info endpoint reports it. */
-const tenant = (id: string): GetUserInfoTenant => ({ id, name: `Tenant ${id}`, identifier: `t-${id}` })
+const tenant = (id: string): GetUserInfoTenant => ({ id, name: `Tenant ${id}`, identifier: `t-${id}`, status: TenantStatus.Active, url: `http://t-${id}.example.com` })
 
 /** The account info the endpoint answers with, over the part the auth state is derived from. */
 const userInfo = (overrides: Partial<GetUserInfoResponse> = {}): GetUserInfoResponse => ({
@@ -11,6 +12,7 @@ const userInfo = (overrides: Partial<GetUserInfoResponse> = {}): GetUserInfoResp
   username: 'someone',
   email: 'someone@example.com',
   isPlatform: false,
+  platformUrl: 'http://app.example.com',
   tenants: [],
   roles: [],
   ...overrides,

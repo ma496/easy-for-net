@@ -49,11 +49,13 @@ public interface IAuthTokenService
     Task<RefreshTokenConsumption> ConsumeRefreshTokenAsync(TokenRequest req, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Deletes every stored token pair of one user, ending all of their sessions.
+    /// Deletes the stored pairs of one session, ending it and no other: the account's sessions on other
+    /// hosts and devices carry on. This is what signing out of one host does.
     /// </summary>
-    /// <param name="userId">The user whose tokens are revoked.</param>
+    /// <param name="userId">The account the session belongs to.</param>
+    /// <param name="sessionId">The session whose pairs are revoked.</param>
     /// <param name="cancellationToken">Token used to cancel the delete.</param>
-    Task RevokeAllAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task RevokeSessionAsync(Guid userId, string sessionId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes the one stored pair a refresh token belongs to, ending that session and no other. This
@@ -142,8 +144,8 @@ public sealed class RefreshTokenConsumption
 /// <para>
 /// Every read relaxes tenant restriction by name. Consuming a refresh token happens on an anonymous
 /// request, which establishes no scope at all, and revoking an account's sessions has to reach the
-/// ones it holds in other tenants - signing out ends every session, not the sessions of whichever
-/// tenant the request happened to arrive in. The soft-delete filter stays in force throughout.
+/// ones it holds in other tenants, not only the sessions of whichever tenant the request happened to
+/// arrive in. The soft-delete filter stays in force throughout.
 /// </para>
 /// <para>
 /// The one write opens the scope of the tenant the session is for, so the row is attributed exactly
@@ -219,11 +221,11 @@ public class AuthTokenService(AppDbContext dbContext, ITenantContext tenantConte
             : RefreshTokenConsumption.Rejected;
     }
 
-    public async Task RevokeAllAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task RevokeSessionAsync(Guid userId, string sessionId, CancellationToken cancellationToken = default)
     {
         await dbContext.AuthTokens
             .AcrossAllTenants()
-            .Where(token => token.UserId == userId)
+            .Where(token => token.UserId == userId && token.SessionId == sessionId)
             .ExecuteDeleteAsync(cancellationToken);
     }
 
@@ -267,6 +269,7 @@ public class AuthTokenService(AppDbContext dbContext, ITenantContext tenantConte
             Email = session.Email,
             IsPlatform = session.IsPlatform,
             TenantId = session.TenantId,
+            TenantIdentifier = session.TenantIdentifier,
             Roles = session.Roles,
             Permissions = session.Permissions,
             SecurityStamp = securityStamp,

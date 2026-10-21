@@ -8,6 +8,7 @@ using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Localization.Core;
 using Backend.Features.Notifications.Core;
 using Backend.Features.Notifications.Core.Push;
+using Backend.Features.Tenancy.Core.Hosting;
 using Backend.Middleware;
 using Backend.Settings;
 using Hangfire;
@@ -44,6 +45,11 @@ if (!bld.Environment.IsEnvironment("Testing") &&
 if (bld.Environment.IsEnvironment("Testing"))
 {
     bld.Logging.SetMinimumLevel(LogLevel.Warning);
+
+    // The test host reaches the API on hosts that name nothing, and its bearer clients run on whatever
+    // host the test server gives them, so tenant host resolution is off under Testing whatever the
+    // appsettings files say. Tests that exercise resolution turn it on per request through a test double.
+    bld.Configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["Web:TenantOriginTemplate"] = string.Empty });
 }
 // A bearer client connecting to the notification hub passes its access token in the query string, and
 // the hosting layer's "Request starting" line - the only log written with the query string in it, and
@@ -175,7 +181,9 @@ bld.Services.AddProblemDetails();
 bld.Services.AddHealthChecks();
 bld.Services.Configure<ForwardedHeadersOptions>(options =>
 {
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    // X-Forwarded-Host too: the host a request arrived on names the tenant (or the platform) it is for,
+    // and behind a proxy that is the host the browser asked for, not the proxy's upstream address.
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
     // Only loopback proxies are trusted by default. Behind a reverse proxy in another container (the
     // production compose file) the proxy's address is not loopback, so its X-Forwarded-Proto would be
     // ignored and every request would look like plain HTTP. `ForwardedHeaders:TrustAllProxies` is for a
@@ -242,6 +250,8 @@ bld.Services.AddOptions<WebSetting>()
     .Bind(bld.Configuration.GetRequiredSection("Web"))
     .Validate(setting => setting.AllowedDomains().Length > 0 && setting.AllowedDomains().All(domain => Uri.TryCreate(domain, UriKind.Absolute, out _)),
         "Web domains must be valid absolute URLs.")
+    .Validate(setting => TenantHostMap.IsValidTemplate(setting.TenantOriginTemplate),
+        "Web:TenantOriginTemplate must be empty, or an absolute http(s) origin whose entire first host label is the single placeholder {tenant}.")
     .ValidateOnStart();
 // the seeded administrators must be able to sign in, so their passwords meet the sign-in validator's bounds
 bld.Services.AddOptions<SeedSetting>()
@@ -325,8 +335,14 @@ if (!app.Environment.IsDevelopment() && !app.Environment.IsEnvironment("Testing"
 app.UseCors()
    .UseAuthentication()
    .UseMiddleware<SessionStoreUnavailableMiddleware>()
+   // Straight after the store-outage check (which short-circuits first), ahead of every endpoint and the
+   // notification hub: a session is honoured only on the host it belongs on.
+   .UseMiddleware<TenantHostSessionMiddleware>()
    .UseRateLimiter()
-   .UseAuthorization();
+   .UseAuthorization()
+   // After authorization, so an unauthenticated hub upgrade still answers 401 first; before the hub's
+   // endpoint, so a foreign Origin is refused before the WebSocket is accepted.
+   .UseNotificationHubOriginCheck();
 
 if (app.Environment.IsDevelopment())
     app.UseMiddleware<DevelopmentEndpointLoggingMiddleware>();

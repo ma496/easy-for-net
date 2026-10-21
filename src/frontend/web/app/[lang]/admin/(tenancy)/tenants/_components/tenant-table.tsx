@@ -10,7 +10,7 @@ import {
   TenantStatus,
 } from '@/store/api/tenancy'
 import { SortDirection } from '@/store/api'
-import { Trash2, Plus, Pencil, PauseCircle, PlayCircle, Users, Eye, LogIn, SlidersHorizontal } from 'lucide-react'
+import { Trash2, Plus, Pencil, PauseCircle, PlayCircle, Users, Eye, Building2, SlidersHorizontal } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { ExportFormat, successToast, exportData, isAllowed, apiErrorAlert, confirmDeleteAlert, confirmAlert, errorAlert } from '@/lib/utils'
 import { ApiErrorMessages, Badge } from '@/components/ui'
@@ -19,7 +19,7 @@ import { Allow } from '@/allow'
 import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
 import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableFilterButton, DataTableToolbarButton, DataTableExportButton } from '@/components/ui/data-table'
 import { TenantFilterPanel, TenantFilters } from './tenant-filter-panel'
-import { useTableUrlState, useTenantSwitch } from '@/hooks'
+import { useOpenTenant, useTableUrlState } from '@/hooks'
 import { parseAsStringEnum } from 'nuqs'
 
 /**
@@ -84,15 +84,15 @@ export const TenantTable = () => {
   const canViewMembers = isAllowed(authState, [Allow.TenantMember_View])
   const canViewDetail = isAllowed(authState, [Allow.Tenant_Detail])
   const canViewFeatures = isAllowed(authState, [Allow.FeatureValue_View])
-  // A platform account enters a tenant from here only when it is a member of that tenant - the API
-  // refuses the switch otherwise - so the action is offered on exactly the rows among its memberships.
-  // It is membership rather than a permission, so it is read off the tenants the account belongs to
-  // rather than through isAllowed.
-  const memberTenantIds = new Set(authState.tenants.map((tenant) => tenant.id))
-  const canEnter = (tenantId: string) => !!authState.user?.isPlatform && memberTenantIds.has(tenantId)
-  const activeTenantId = authState.activeTenant?.id
-
-  const { enterTenant, isBusy: isSwitchingTenant } = useTenantSwitch()
+  // The account signs in to a tenant from here only when it is a member of that tenant - the tenant's
+  // host refuses its sign-in otherwise - so the action is offered on exactly the rows among its
+  // memberships that have an address. Each host keeps its own session, so signing in asks the API for a
+  // single-use sign-in ticket and opens the tenant's address in a new tab, signed in there, never
+  // switching in place. It is membership rather than a permission, so it is read off the tenants the
+  // account belongs to rather than through isAllowed.
+  const memberTenantUrls = new Map(authState.tenants.map((tenant) => [tenant.id, tenant.url]))
+  const canOpenTenant = (tenantId: string): boolean => Boolean(memberTenantUrls.get(tenantId))
+  const { openTenant, isOpening } = useOpenTenant()
 
   const handleSearch = () => {
     url.filters.setMany({
@@ -255,7 +255,6 @@ export const TenantTable = () => {
         const canChangeLifecycle = !tenant.systemCreated
 
         const isActive = tenant.status === TenantStatus.Active
-        const isCurrent = tenant.id === activeTenantId
 
         return (
           <div className="flex items-center gap-2">
@@ -286,12 +285,12 @@ export const TenantTable = () => {
                   hidden: !canViewFeatures,
                 },
                 {
-                  label: t('page.tenants.enterButton') || 'Enter',
-                  icon: <LogIn className="h-4 w-4" />,
+                  label: t('page.tenants.signIn') || 'Sign in',
+                  icon: <Building2 className="h-4 w-4" />,
                   variant: 'primary',
-                  onClick: () => enterTenant(tenant.id, tenant.name),
-                  disabled: isSwitchingTenant,
-                  hidden: !(canEnter(tenant.id) && isActive) || isCurrent,
+                  onClick: () => openTenant(tenant.id),
+                  disabled: isOpening,
+                  hidden: !(canOpenTenant(tenant.id) && isActive),
                 },
                 {
                   label: t('page.tenants.actions.suspend') || 'Suspend',
@@ -319,8 +318,6 @@ export const TenantTable = () => {
                 },
               ]}
             />
-            {/* The tenant the session is acting in is a status rather than an action, so it stays beside the menu. */}
-            {canEnter(tenant.id) && isActive && isCurrent && <Badge variant="info">{t('page.tenants.enterCurrent') || 'Current'}</Badge>}
           </div>
         )
       },

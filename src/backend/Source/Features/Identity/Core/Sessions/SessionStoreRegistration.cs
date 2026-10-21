@@ -10,7 +10,7 @@ namespace Backend.Features.Identity.Core.Sessions;
 public static class SessionStoreRegistration
 {
     /// <summary>
-    /// Registers the session store as a singleton, and the Redis settings it reads, together with how the
+    /// Registers the session store and the <see cref="ISignInTicketStore"/> beside it as singletons, and the Redis settings they read, together with how the
     /// sessions it deletes are announced to every <see cref="ISessionEndedHandler"/>: the store is wrapped in
     /// <see cref="PublishingSessionStore"/>, which announces in process under <c>Testing</c> and over Redis
     /// pub/sub - to every API instance - everywhere else.
@@ -34,6 +34,7 @@ public static class SessionStoreRegistration
                 ActivatorUtilities.CreateInstance<InMemorySessionStore>(provider),
                 provider.GetRequiredService<ISessionEndedPublisher>(),
                 provider.GetRequiredService<ILogger<PublishingSessionStore>>()));
+            services.AddSingleton<ISignInTicketStore, InMemorySignInTicketStore>();
             return services;
         }
 
@@ -54,6 +55,7 @@ public static class SessionStoreRegistration
             ActivatorUtilities.CreateInstance<RedisSessionStore>(provider),
             provider.GetRequiredService<ISessionEndedPublisher>(),
             provider.GetRequiredService<ILogger<PublishingSessionStore>>()));
+        services.AddSingleton<ISignInTicketStore, RedisSignInTicketStore>();
 
         // Every instance hears the sessions the others end. It subscribes in the background and keeps
         // retrying while Redis is down, so the host starts regardless.

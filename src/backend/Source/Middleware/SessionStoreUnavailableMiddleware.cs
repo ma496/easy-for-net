@@ -54,26 +54,6 @@ public sealed class SessionStoreUnavailableMiddleware(RequestDelegate next)
     /// <param name="context">The request being answered.</param>
     /// <param name="localizer">Localizes the refusal into the request's culture.</param>
     /// <param name="cancellationToken">Token used to cancel the write.</param>
-    public static async Task WriteAsync(HttpContext context, IErrorMessageLocalizer localizer, CancellationToken cancellationToken)
-    {
-        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-        context.Response.ContentType = "application/json";
-
-        var reason = await localizer.LocalizeErrorAsync(
-            context,
-            ErrorCodes.SessionStoreUnavailable.Value,
-            string.Empty,
-            context.ResolveEnglishFallback(ErrorCodes.SessionStoreUnavailable),
-            cancellationToken);
-
-        await context.Response.WriteAsJsonAsync(new
-        {
-            type = "https://www.rfc-editor.org/rfc/rfc7231#section-6.6.4",
-            title = "Service Unavailable",
-            status = 503,
-            instance = context.Request.Path.Value,
-            traceId = context.TraceIdentifier,
-            errors = new[] { new { reason, code = ErrorCodes.SessionStoreUnavailable.Value } }
-        }, cancellationToken: cancellationToken);
-    }
+    public static Task WriteAsync(HttpContext context, IErrorMessageLocalizer localizer, CancellationToken cancellationToken)
+        => CodedErrorResponse.WriteAsync(context, localizer, StatusCodes.Status503ServiceUnavailable, ErrorCodes.SessionStoreUnavailable, cancellationToken);
 }
