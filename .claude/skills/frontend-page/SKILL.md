@@ -7,28 +7,29 @@ description: Add a route to the Next.js app under src/frontend/web/app/[lang] �
 
 ## Route layout
 
-Every route is locale-prefixed: `app/[lang]/…`. Route groups:
+Every route is locale-prefixed: `app/[lang]/…`. There are no public pages — the dashboard is the
+home page (`/`). Route groups:
 
-- `(public)` — marketing/landing, no auth
 - `(auth)` — signin, signup, profile, password flows, `select-tenant`, `unauthorized`
-- `admin/` — the authenticated app shell (sidebar, header, settings); nested route groups such as
-  `admin/(identity)` and `admin/(tenancy)` group a feature's screens without adding a URL segment
+- `(app)` — the signed-in app shell (sidebar, header) around the dashboard (`(app)/page.tsx`) and
+  every other screen, adding no URL segment (`(app)/settings` is `/settings`); nested route groups
+  such as `(app)/(identity)` and `(app)/(tenancy)` group a feature's screens the same way
 
 A screen is a folder with `page.tsx` plus a sibling `_components/` folder holding the interactive
 client parts. Dynamic segments are folders, and a screen about one record puts the id first:
-`[id]/update/page.tsx`, `[id]/detail/page.tsx` (`/admin/tenants/{id}/detail`). A client
+`[id]/update/page.tsx`, `[id]/detail/page.tsx` (`/tenants/{id}/detail`). A client
 component shared by several screens of one group sits in the group's own `_components/`
-(`admin/(tenancy)/_components/feature-value-editor.tsx`).
+(`(app)/(tenancy)/_components/feature-value-editor.tsx`).
 
 ## The page component (server)
 
 `page.tsx` is a **server** component. It awaits `params`, resolves the title with
-`getServerTranslation`, and renders the client component inside `AdminPageContent`:
+`getServerTranslation`, and renders the client component inside `PageContent`:
 
 ```tsx
 import { getServerTranslation } from '@/i18n'
 import { TenantDetailView } from './_components/tenant-detail-view'
-import { AdminPageContent } from '@/components/layouts'
+import { PageContent } from '@/components/layouts'
 
 /** Props for the tenant detail page, providing the route lang segment and the id of the tenant being shown. */
 interface TenantDetailPageProps {
@@ -44,9 +45,9 @@ const TenantDetail = async ({ params }: TenantDetailPageProps) => {
   const title = (await getServerTranslation(lang, 'page.tenants.detail.title')) || 'Tenant Detail'
 
   return (
-    <AdminPageContent title={title} plain>
+    <PageContent title={title} plain>
       <TenantDetailView tenantId={id} />
-    </AdminPageContent>
+    </PageContent>
   )
 }
 
@@ -55,7 +56,7 @@ export default TenantDetail
 
 A route without a dynamic segment types `params: Promise<{ lang: string }>` and passes nothing down.
 
-`AdminPageContent` is the page frame: a header with `title`, an optional `description` line and
+`PageContent` is the page frame: a header with `title`, an optional `description` line and
 `actions` (end-aligned controls such as a primary "create" button), then the body on one card.
 `innerClassName` styles that card — constrain form width with it (`max-w-3xl` for most
 create/update forms); list and detail screens leave it full width. `plain` drops the card, for a
@@ -87,7 +88,7 @@ each state centred in a `flex items-center justify-center` wrapper (on its own `
 is `plain`).
 
 **Navigation must stay locale-aware** — use `useLocalizedRouter()` instead of `next/navigation`'s
-router, and `<LocalizedLink href="/admin/users">` instead of `next/link`. Pass unprefixed
+router, and `<LocalizedLink href="/users">` instead of `next/link`. Pass unprefixed
 paths; the helpers add the locale segment (`router.localize(href)` gives the prefixed path for a
 full page load).
 
@@ -96,14 +97,15 @@ full page load).
 Three layers decide whether a screen opens; register the route with each that applies.
 
 1. **`proxy.ts`** (Next 16's renamed middleware) negotiates the locale and checks only that a
-   session cookie exists: anything under `/admin/`, or listed in `auth-urls.ts`, redirects to
-   `/signin?redirect=…` without one. It does not check permissions.
+   session cookie exists: every page but the anonymous screens `anonymousUrls` in `auth-urls.ts`
+   names redirects to `/signin?redirect=…` without one, so a new screen is guarded with no
+   registration at all. A new screen that must open signed out joins `anonymousUrls`. It does not check permissions.
 2. **`auth-urls.ts`** names the permissions a route needs. `App.tsx` (the client root guard) matches
    the locale-stripped path with `getMatchedAuthUrl` and sends a caller lacking them to
    `/unauthorized`; the sidebar and global search hide the same entries.
 
    ```ts
-   { url: '/admin/tenants/{id}/detail', permissions: [Allow.Tenant_Detail] },
+   { url: '/tenants/{id}/detail', permissions: [Allow.Tenant_Detail] },
    ```
 
    `{id}` in a url acts as a wildcard segment. Two entries must not match the same pathname — the
@@ -111,13 +113,14 @@ Three layers decide whether a screen opens; register the route with each that ap
    nothing extra here: the API gates its permission with `RequireFeatures`, so the permission is
    simply absent from a session whose plan withholds it — see `permissions` and `feature-management`.
 3. **Tenant scope** — `lib/utils/tenant-routing.ts` decides which scope a path belongs to, and
-   `isPathAvailable(user, path)` is what `App.tsx`, the sidebar and search consult. Every `/admin`
-   screen is **tenant-only by default**: a platform account acting in no tenant is sent to `/admin`
+   `isPathAvailable(user, path)` is what `App.tsx`, the sidebar and search consult. Every screen but
+   account self-service, the tenant picker and the anonymous screens is **tenant-only by default**:
+   a platform account acting in no tenant is sent to the dashboard (`/`)
    and never sees it in the menu. Add the path prefix to `platformAccessiblePathPrefixes` if the
    screen also answers in platform scope, or to `platformOnlyPathPrefixes` if it belongs to the
    platform alone (a caller acting inside a tenant is then kept out) — or to
    `platformOnlyPathPatterns` for a platform-only screen about one record, whose id comes before
-   the screen so no prefix can name it (`/admin/tenants/{id}/features`). See the `multi-tenancy` skill.
+   the screen so no prefix can name it (`/tenants/{id}/features`). See the `multi-tenancy` skill.
 
 In-page, gate actions with `isAllowed(authState, [Allow.X])` — see the `permissions` skill. Reach for
 `useFeature(FeatureNames.X)` (`@/hooks`, `@/feature-names`) only where there is no permission to gate
@@ -146,7 +149,7 @@ translator, overrides and adding a language.
   without appearing in the menu. There is no permission field: the sidebar drops an item whose `url`
   exactly matches an `auth-urls.ts` entry the caller fails or that `isPathAvailable` rejects, and a
   parent whose children are all dropped.
-- `searchable-items.ts` — global search entry (`{ title: 'search.users', url: '/admin/users' }`),
+- `searchable-items.ts` — global search entry (`{ title: 'search.users', url: '/users' }`),
   filtered the same way. Routes with an `{id}` segment are not listed.
 
 ## Checklist

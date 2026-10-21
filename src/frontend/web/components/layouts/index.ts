@@ -1,4 +1,4 @@
-export { AdminPageContent } from './admin-page-content'
+export { PageContent } from './page-content'
 export { AppLoading } from './app-loading'
 export { BarProgressProvider } from './bar-progress-provider'
 export { ContentAnimation } from './content-animation'

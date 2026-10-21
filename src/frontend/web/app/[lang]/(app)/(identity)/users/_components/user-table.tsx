@@ -1,0 +1,310 @@
+'use client'
+import { useEffect, useState } from 'react'
+import { useUserListQuery, useLazyUserListQuery, useUserDeleteMutation, useUserSeatsQuery, UserListDto, UserRoleDto } from '@/store/api/identity'
+import { SortDirection } from '@/store/api'
+import { Trash2, Plus, Pencil } from 'lucide-react'
+import { useTranslation } from '@/i18n'
+import { ExportFormat, successToast, exportData, isAllowed, apiErrorAlert, confirmDeleteAlert, errorAlert } from '@/lib/utils'
+import { ApiErrorMessages, Badge } from '@/components/ui'
+import { useAppSelector } from '@/store/hooks'
+import { Allow } from '@/allow'
+import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
+import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableFilterButton, DataTableToolbarButton, DataTableExportButton } from '@/components/ui/data-table'
+import { UserFilterPanel, UserFilters } from './user-filter-panel'
+import { useTableUrlState } from '@/hooks'
+import { parseAsString, parseAsStringEnum } from 'nuqs'
+
+/**
+ * Interactive client-side data table that lists users with sorting, pagination, search, role/active filters synced to the URL, and permission-gated create/update/delete actions.
+ * Also supports exporting the current page or full filtered set to Excel or CSV.
+ */
+export const UserTable = () => {
+  const url = useTableUrlState({
+    filters: {
+      isActive: parseAsStringEnum(['true', 'false'] as const).withOptions({
+        clearOnDefault: true,
+        history: 'push',
+      }),
+      roleId: parseAsString.withOptions({
+        clearOnDefault: true,
+        history: 'push',
+      }),
+    },
+  })
+
+  const [isExporting, setIsExporting] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [pendingFilters, setPendingFilters] = useState<UserFilters>({
+    isActive: url.filters.isActive ?? '',
+    roleId: url.filters.roleId ?? '',
+  })
+  const { t } = useTranslation()
+
+  const getIsActiveValue = (value: string): boolean | undefined => {
+    if (value === 'true') return true
+    if (value === 'false') return false
+    return undefined
+  }
+
+  // When the filter panel opens, sync the draft values from the URL so the
+  // user sees the currently-applied filters.
+  useEffect(() => {
+    if (filtersOpen) {
+      setPendingFilters({
+        isActive: url.filters.isActive ?? '',
+        roleId: url.filters.roleId ?? '',
+      })
+    }
+  }, [filtersOpen, url.filters.isActive, url.filters.roleId])
+
+  // Derived "applied" filters for the active-count badge.
+  const appliedFilters: UserFilters = {
+    isActive: url.filters.isActive ?? '',
+    roleId: url.filters.roleId ?? '',
+  }
+  const activeFiltersCount = [appliedFilters.isActive, appliedFilters.roleId].filter(Boolean).length
+
+  const {
+    data: userListResponse,
+    isFetching: isGettingUsers,
+    error: getUsersApiError,
+  } = useUserListQuery({
+    page: url.page,
+    pageSize: url.pageSize,
+    sortField: url.sortField ?? undefined,
+    sortDirection: url.sortDirection === 'desc' ? SortDirection.Desc : SortDirection.Asc,
+    search: url.search || undefined,
+    isActive: getIsActiveValue(appliedFilters.isActive),
+    roleId: appliedFilters.roleId || undefined,
+  })
+
+  const [fetchUsers] = useLazyUserListQuery()
+  const [deleteUser, { isLoading: isDeletingUser }] = useUserDeleteMutation()
+
+  const authState = useAppSelector((state) => state.auth)
+  const canCreate = isAllowed(authState, [Allow.User_Create])
+  const canUpdate = isAllowed(authState, [Allow.User_Update])
+  const canDelete = isAllowed(authState, [Allow.User_Delete])
+
+  // The plan's seat limit, counted exactly as the API enforces it. Once every seat is taken the
+  // create action stays visible but disabled, so the limit is explained rather than hidden.
+  const { data: seats } = useUserSeatsQuery()
+  const seatsExhausted = seats?.limit != null && seats.used >= seats.limit
+
+  const handleSearch = () => {
+    url.filters.setMany({
+      isActive: pendingFilters.isActive === '' ? null : (pendingFilters.isActive as 'true' | 'false'),
+      roleId: pendingFilters.roleId === '' ? null : pendingFilters.roleId,
+    })
+    url.resetPage()
+  }
+
+  const handleClear = () => {
+    const clearedFilters = { isActive: '', roleId: '' }
+    setPendingFilters(clearedFilters)
+    url.filters.clearFilters()
+    url.resetPage()
+  }
+
+  const handleFilterChange = (newFilters: UserFilters) => {
+    setPendingFilters(newFilters)
+  }
+
+  const handleExport = async (format: ExportFormat, all: boolean) => {
+    setIsExporting(true)
+    try {
+      let dataToExport: UserListDto[] = []
+      if (all) {
+        const response = await fetchUsers({
+          page: url.page,
+          pageSize: url.pageSize,
+          sortField: url.sortField ?? undefined,
+          sortDirection: url.sortDirection === 'desc' ? SortDirection.Desc : SortDirection.Asc,
+          search: url.search || undefined,
+          all: true,
+          isActive: getIsActiveValue(appliedFilters.isActive),
+          roleId: appliedFilters.roleId || undefined,
+        })
+        if (response.data) {
+          dataToExport = response.data?.items
+        }
+      } else {
+        dataToExport = userListResponse?.items || []
+      }
+
+      if (dataToExport.length === 0) return
+
+      const rows = dataToExport.map((user) => ({
+        Username: user.username,
+        Email: user.email,
+        'First Name': user.firstName,
+        'Last Name': user.lastName,
+        Roles: user.roles.map((role) => role.name).join(', '),
+      }))
+      exportData(format, rows, 'Users', 'users')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const handleDelete = async (userId: string) => {
+    const result = await confirmDeleteAlert({
+      title: t('page.users.deleteTitle') || 'Delete User',
+      text: t('page.users.deleteConfirm') || 'Are you sure you want to delete this user?',
+    })
+
+    if (result.isConfirmed) {
+      const response = await deleteUser({ id: userId })
+      if (response.error) {
+        apiErrorAlert(response.error)
+        return
+      }
+      if (response.data?.success) {
+        successToast.fire({
+          text: t('page.users.deleteSuccess') || 'User deleted successfully',
+        })
+      } else if (response.data?.message) {
+        await errorAlert({
+          text: response.data?.message,
+        })
+      }
+    }
+  }
+
+  const columnHelper = createColumnHelper<UserListDto>()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const columns: ColumnDef<UserListDto, any>[] = [
+    columnHelper.accessor('username', {
+      meta: { card: 'title' },
+      header: t('table.columns.userName') || 'User Name',
+      // The initial tile and the name, here and as the card's heading. The email keeps its own
+      // sortable column, so it is not repeated under the name.
+      cell: (info) => (
+        <div className="flex min-w-0 items-center gap-3">
+          <span aria-hidden="true" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary uppercase">
+            {info.getValue()?.charAt(0)}
+          </span>
+          <span className="truncate font-medium text-foreground">{info.getValue()}</span>
+        </div>
+      ),
+    }),
+    columnHelper.accessor('email', {
+      meta: { card: 'subtitle' },
+      header: t('table.columns.email') || 'Email',
+      cell: (info) => <span className="text-muted-foreground">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor('firstName', {
+      header: t('table.columns.firstName') || 'First Name',
+      cell: (info) => info.getValue(),
+    }),
+    columnHelper.accessor('lastName', {
+      header: t('table.columns.lastName') || 'Last Name',
+      cell: (info) => info.getValue(),
+    }),
+    columnHelper.accessor('roles', {
+      header: t('table.columns.roles') || 'Roles',
+      cell: (info) => (
+        <div className="flex flex-wrap gap-1">
+          {info.getValue().map((role: UserRoleDto) => (
+            <Badge key={role.id} variant="secondary">
+              {role.name}
+            </Badge>
+          ))}
+        </div>
+      ),
+      enableSorting: false,
+    }),
+    columnHelper.accessor('isActive', {
+      meta: { card: 'badge' },
+      header: t('table.columns.isActive') || 'Active',
+      cell: (info) =>
+        info.getValue() ? (
+          <Badge variant="success">
+            {t('table.filter.active') || 'Active'}
+          </Badge>
+        ) : (
+          <Badge variant="danger">
+            {t('table.filter.inactive') || 'Inactive'}
+          </Badge>
+        ),
+    }),
+    columnHelper.display({
+      id: 'actions',
+      header: t('table.actions') || 'Actions',
+      cell: (info) => (
+        <DataTableRowActions
+          actions={[
+            {
+              label: t('common.edit') || 'Edit',
+              icon: <Pencil className="h-4 w-4" />,
+              href: `/users/${info.row.original.id}/update`,
+              hidden: !canUpdate,
+            },
+            {
+              label: t('common.delete') || 'Delete',
+              icon: <Trash2 className="h-4 w-4" />,
+              variant: 'danger',
+              onClick: () => handleDelete(info.row.original.id),
+              disabled: isDeletingUser,
+              hidden: !canDelete,
+            },
+          ]}
+        />
+      ),
+    }),
+  ]
+
+  if (getUsersApiError) {
+    return (
+      <div className="py-6">
+        <ApiErrorMessages error={getUsersApiError} />
+      </div>
+    )
+  }
+
+  return (
+    <DataTableProvider
+      data={userListResponse?.items || []}
+      rowCount={userListResponse?.total || 0}
+      columns={columns}
+      enableRowSelection={false}
+      sorting={url.sorting}
+      setSorting={url.setSorting}
+      pagination={url.pagination}
+      setPagination={url.setPagination}
+      globalFilter={url.searchInput}
+      setGlobalFilter={url.setGlobalFilter}
+      isFetching={isGettingUsers}
+    >
+      <DataTableToolbar>
+        {/* Filter Button in toolbar */}
+        <DataTableFilterButton
+          isOpen={filtersOpen}
+          onToggle={() => setFiltersOpen(!filtersOpen)}
+          activeFiltersCount={activeFiltersCount}
+        />
+
+        {canCreate &&
+          (seatsExhausted ? (
+            <DataTableToolbarButton primary label={t('page.users.seatLimitReached') || "Your plan's user limit has been reached"} icon={<Plus size={16} />} disabled />
+          ) : (
+            <DataTableToolbarButton primary label={t('table.createLink') || 'Create'} icon={<Plus size={16} />} href="/users/create" />
+          ))}
+        <DataTableExportButton onExport={handleExport} isExporting={isExporting} disabled={isGettingUsers || !userListResponse?.total} />
+      </DataTableToolbar>
+
+      {/* Filter Panel - positioned between toolbar and table */}
+      {filtersOpen && (
+        <UserFilterPanel
+          filters={pendingFilters}
+          onChange={handleFilterChange}
+          onSearch={handleSearch}
+          onClear={handleClear}
+        />
+      )}
+      <DataTable cardsBelow="lg" />
+
+      <DataTablePagination siblingCount={1} />
+    </DataTableProvider>
+  )
+}

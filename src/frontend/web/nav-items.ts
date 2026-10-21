@@ -22,16 +22,16 @@ export interface NavItem {
   children?: NavItem[]
 }
 
-/** Static navigation menu used by the admin shell, mixing standalone nav items and grouped sections with i18n-keyed titles. */
+/** Static navigation menu used by the app shell, mixing standalone nav items and grouped sections with i18n-keyed titles. */
 export const navItems: (NavItem | NavItemGroup)[] = [
   {
     title: 'navigation.dashboard',
-    url: '/admin',
+    url: '/',
     icon: Home,
     children: [
       {
         title: 'navigation.dashboardSales',
-        url: '/admin',
+        url: '/',
       },
     ],
   },
@@ -40,22 +40,22 @@ export const navItems: (NavItem | NavItemGroup)[] = [
     items: [
       {
         title: 'navigation.users',
-        url: '/admin/users',
+        url: '/users',
         icon: Users,
         children: [
           {
             title: 'navigation.usersList',
-            url: '/admin/users',
+            url: '/users',
 
           },
           {
             title: 'navigation.usersCreate',
-            url: '/admin/users/create',
+            url: '/users/create',
 
           },
           {
             title: 'navigation.usersUpdate',
-            url: '/admin/users/{id}/update',
+            url: '/users/{id}/update',
 
             show: false,
           },
@@ -63,28 +63,28 @@ export const navItems: (NavItem | NavItemGroup)[] = [
       },
       {
         title: 'navigation.roles',
-        url: '/admin/roles',
+        url: '/roles',
         icon: Shield,
         children: [
           {
             title: 'navigation.rolesList',
-            url: '/admin/roles',
+            url: '/roles',
 
           },
           {
             title: 'navigation.rolesCreate',
-            url: '/admin/roles/create',
+            url: '/roles/create',
 
           },
           {
             title: 'navigation.rolesUpdate',
-            url: '/admin/roles/{id}/update',
+            url: '/roles/{id}/update',
 
             show: false,
           },
           {
             title: 'navigation.rolesChangePermissions',
-            url: '/admin/roles/{id}/change-permissions',
+            url: '/roles/{id}/change-permissions',
 
             show: false,
           },
@@ -92,82 +92,82 @@ export const navItems: (NavItem | NavItemGroup)[] = [
       },
       {
         title: 'navigation.tenants',
-        url: '/admin/tenants',
+        url: '/tenants',
         icon: Building2,
         children: [
           {
             title: 'navigation.tenantsList',
-            url: '/admin/tenants',
+            url: '/tenants',
           },
           {
             title: 'navigation.tenantsCreate',
-            url: '/admin/tenants/create',
+            url: '/tenants/create',
           },
           {
             title: 'navigation.tenantsUpdate',
-            url: '/admin/tenants/{id}/update',
+            url: '/tenants/{id}/update',
             show: false,
           },
           {
             title: 'navigation.tenantsMembers',
-            url: '/admin/tenants/{id}/members',
+            url: '/tenants/{id}/members',
             show: false,
           },
           {
             title: 'navigation.tenantsDetail',
-            url: '/admin/tenants/{id}/detail',
+            url: '/tenants/{id}/detail',
             show: false,
           },
           {
             title: 'navigation.tenantsFeatures',
-            url: '/admin/tenants/{id}/features',
+            url: '/tenants/{id}/features',
             show: false,
           },
         ],
       },
       {
         title: 'navigation.editions',
-        url: '/admin/editions',
+        url: '/editions',
         icon: Layers,
         children: [
           {
             title: 'navigation.editionsList',
-            url: '/admin/editions',
+            url: '/editions',
           },
           {
             title: 'navigation.editionsCreate',
-            url: '/admin/editions/create',
+            url: '/editions/create',
           },
           {
             title: 'navigation.editionsUpdate',
-            url: '/admin/editions/{id}/update',
+            url: '/editions/{id}/update',
             show: false,
           },
           {
             title: 'navigation.editionsFeatures',
-            url: '/admin/editions/{id}/features',
+            url: '/editions/{id}/features',
             show: false,
           },
         ],
       },
       {
         title: 'navigation.localization',
-        url: '/admin/localization',
+        url: '/localization',
         icon: Languages,
       },
       {
         title: 'navigation.settings',
-        url: '/admin/settings',
+        url: '/settings',
         icon: Settings,
       },
       {
         title: 'navigation.notifications',
-        url: '/admin/notifications',
+        url: '/notifications',
         icon: Bell,
         children: [
           {
             title: 'navigation.notificationsDetail',
-            url: '/admin/notifications/{id}',
+            url: '/notifications/{id}',
             show: false,
           },
         ],
@@ -180,42 +180,42 @@ export const navItems: (NavItem | NavItemGroup)[] = [
     items: [
       {
         title: 'navigation.uiFormElements',
-        url: '/admin/ui/form-elements',
+        url: '/ui/form-elements',
         icon: FormInput,
       },
       {
         title: 'navigation.uiButtons',
-        url: '/admin/ui/buttons',
+        url: '/ui/buttons',
         icon: Zap,
       },
       {
         title: 'navigation.uiCards',
-        url: '/admin/ui/cards',
+        url: '/ui/cards',
         icon: Palette,
       },
       {
         title: 'navigation.uiDatePicker',
-        url: '/admin/ui/date-picker',
+        url: '/ui/date-picker',
         icon: Calendar,
       },
       {
         title: 'navigation.uiDateView',
-        url: '/admin/ui/date-view',
+        url: '/ui/date-view',
         icon: Clock,
       },
       {
         title: 'navigation.uiTreeview',
-        url: '/admin/ui/treeview',
+        url: '/ui/treeview',
         icon: TreePine,
       },
       {
         title: 'navigation.uiFileUpload',
-        url: '/admin/ui/file-upload',
+        url: '/ui/file-upload',
         icon: Upload,
       },
       {
         title: 'navigation.uiTooltips',
-        url: '/admin/ui/tooltips',
+        url: '/ui/tooltips',
         icon: Palette,
       },
     ],

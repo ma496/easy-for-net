@@ -29,11 +29,13 @@ function negotiateLocale(request: NextRequest): string | undefined {
 /**
  * Next.js middleware that handles two concerns: locale prefixing
  * (rewriting/redirecting to the right localized path) and authentication
- * gating (redirecting unauthenticated requests to the signin page when
- * the route is registered in auth-urls.ts).
+ * gating (redirecting unauthenticated requests to the signin page for
+ * every page but the anonymous ones auth-urls.ts names).
  */
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+  // Framework and API requests that reach this function are neither localized nor gated - only pages are.
+  const isPagePath = !pathname.startsWith('/api') && !pathname.startsWith('/_next') && !pathname.startsWith('/assets') && !pathname.includes('favicon.ico')
 
   // 1. Localization Logic
   const pathnameIsMissingLocale = i18nConfig.locales.every((locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`)
@@ -56,7 +58,7 @@ export async function proxy(request: NextRequest) {
   const currentLocale = routing.locale
 
   if (routing.kind === 'rewrite') {
-    if (!pathname.startsWith('/api') && !pathname.startsWith('/_next') && !pathname.startsWith('/assets') && !pathname.includes('favicon.ico')) {
+    if (isPagePath) {
       // Internal rewrite for default locale
       response = NextResponse.rewrite(new URL(routing.path, request.url))
     }
@@ -65,33 +67,17 @@ export async function proxy(request: NextRequest) {
   }
 
   // 2. Auth Logic
-  // Normalize path by stripping locale to check against auth rules
-  // If we are rewriting (response exists), the effective path is `/${locale}${pathname}` (which has locale).
-  // But we want to check logic against the "logical" path (admin pages defined as /admin/...).
-
-  // Actually isAuthRequired checks for /admin/.
-  // If path is `/en/admin/...`, `pathname` (original) is what we have?
-  // If we have `response` (rewrite), the *original* `request.nextUrl.pathname` is `/admin/...` (missing locale).
-  // If we *don't* have `response` (path has locale), `request.nextUrl.pathname` is `/en/admin/...`.
-
+  // The auth rules are written against the logical, locale-free path, which is also what the sign-in
+  // page is sent back to: a rewritten default-locale request already has no locale segment
+  // (`/users`), a prefixed one has it removed (`/fr/users` -> `/users`, `/fr` -> `/`).
   let pathToCheck = pathname
   if (!pathnameIsMissingLocale) {
-    // Remove locale prefix for auth check
-    // e.g. /en/admin/dashboard -> /admin/dashboard
-    // e.g. /en -> /
     pathToCheck = pathname.replace(`/${currentLocale}`, '') || '/'
   }
 
-  // NOTE: isAuthRequired checks `url.includes('/admin/')`.
-  // `/admin/dashboard` includes `/admin/`.
-  // `/en/admin/dashboard` includes `/admin/`.
-  // So strict normalization might not be strictly required for *inclusion* check,
-  // but `getMatchedAuthUrl` does strict matching on `url`.
-  // So we SHOULD normalize.
-
   const isAuthenticated = await hasAuthCookie()
 
-  if (isAuthRequired(pathToCheck) && !isAuthenticated) {
+  if (isPagePath && isAuthRequired(pathToCheck) && !isAuthenticated) {
     let signinPath = '/signin'
     if (currentLocale !== i18nConfig.defaultLocale) {
       signinPath = `/${currentLocale}/signin`

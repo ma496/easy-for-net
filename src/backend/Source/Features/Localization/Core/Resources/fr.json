@@ -357,62 +357,24 @@
         "badge": "Modèle multi-locataire open source .NET et Next.js",
         "titleFocus": "Concentrez-vous sur",
         "titleHighlight": "la Logique Métier",
-        "description": "Oubliez la plomberie. Une base prête pour la production avec locataires, rôles et permissions, fonctionnalités par offre, localisation et notifications en temps réel, déjà construits et testés.",
-        "dashboardDetail": "Tableau de bord",
-        "signin": "Se connecter",
-        "viewSource": "Voir la source"
+        "description": "Oubliez la plomberie. Une base prête pour la production avec locataires, rôles et permissions, fonctionnalités par offre, localisation et notifications en temps réel, déjà construits et testés."
       },
       "features": {
-        "titleBadge": "Fonctionnalités",
-        "title": "Tout ce dont un produit multi-locataire a besoin",
-        "description": "Multi-location, contrôle d'accès, offres, paramètres et le reste de la plomberie sont construits, testés et reliés, pour que votre premier commit soit une fonctionnalité.",
         "items": {
           "tenancy": {
-            "title": "Multi-location",
-            "description": "Locataires isolés avec adhésions, limites de sièges et inscription en libre-service. Les administrateurs de la plateforme gèrent tous les locataires ; les membres passent de l'un à l'autre."
+            "title": "Multi-location"
           },
           "permissions": {
-            "title": "Rôles et permissions",
-            "description": "Permissions hiérarchiques à l'échelle de la plateforme ou d'un locataire, accordées par des rôles et appliquées à chaque endpoint et écran."
+            "title": "Rôles et permissions"
           },
           "plans": {
-            "title": "Offres et feature flags",
-            "description": "Les éditions décident des fonctionnalités de chaque locataire et de ses limites, comme les sièges et la taille des fichiers, avec des surcharges par locataire."
-          },
-          "sessions": {
-            "title": "Sessions sécurisées",
-            "description": "Sessions côté serveur dans Redis derrière une connexion JWT ou cookie. Modifier les accès d'un utilisateur met fin à ses sessions immédiatement."
-          },
-          "settings": {
-            "title": "Paramètres à l'exécution",
-            "description": "Paramètres typés que la plateforme et chaque locataire peuvent surcharger sans redéploiement, avec des secrets stockés chiffrés."
-          },
-          "localization": {
-            "title": "Localisation et RTL",
-            "description": "Huit langues incluses, mises en page de droite à gauche et traductions modifiables par chaque locataire depuis l'administration."
+            "title": "Offres et feature flags"
           },
           "notifications": {
-            "title": "Notifications en temps réel",
-            "description": "Notifications dans l'application envoyées via SignalR à un utilisateur, un locataire ou toute la plateforme, avec mise à l'échelle par Redis."
-          },
-          "files": {
-            "title": "Gestion des fichiers",
-            "description": "Envois, aperçus et stockage, avec des limites de taille fixées par l'offre de chaque locataire."
-          },
-          "jobs": {
-            "title": "Tâches de fond et e-mail",
-            "description": "Hangfire pour les tâches en file et récurrentes, et l'e-mail SMTP pour la vérification, la réinitialisation du mot de passe et plus."
+            "title": "Notifications en temps réel"
           }
         }
-      },
-      "cta": {
-        "title": "Open Source & Dirigé par la Communauté",
-        "description": "Forkez-le, ou générez un nouveau projet avec la CLI dotnet efn. Docker, un déploiement VPS en une commande et un workflow IA piloté par les spécifications sont inclus.",
-        "button": "Étoile sur GitHub",
-        "opensource": "Open Source",
-        "license": "Licence MIT. Gratuit pour les projets personnels et commerciaux."
-      },
-      "title": "Accueil"
+      }
     },
     "dashboard": {
       "title": "Tableau de bord",

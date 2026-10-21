@@ -144,13 +144,7 @@ export const SigninForm = ({ hostTenant }: SigninFormProps) => {
         return
       }
 
-      if (validRedirect) {
-        router.push(validRedirect, { scroll: false })
-      } else if (userInfoRes.data.roles.find((role) => role.name === 'Admin')) {
-        router.push(`/admin`, { scroll: false })
-      } else {
-        router.push(`/`, { scroll: false })
-      }
+      router.push(validRedirect ?? '/', { scroll: false })
       router.refresh()
     }
   }

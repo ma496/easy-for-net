@@ -30,7 +30,7 @@ dotnet efn createproject --name my-shop --output projects
 | `-n`, `--name` (required) | Letters, `-` and `_` only, at least two characters, starting and ending with a letter. Parts split on `-`/`_` are joined in PascalCase (`my-shop` → `MyShop`) for namespaces, project files and the solution; the kebab-case form (`my-shop`) names the folder and the npm packages. |
 | `-o`, `--output` | Parent directory (relative to the current directory, or absolute). The project is created in `<output>/<kebab-name>`, which must not exist yet. Defaults to the current directory. |
 | `-m`, `--multilanguage` | `true` keeps all eight locales; `false` (the default) ships English only. Any other value is refused. |
-| `-e`, `--examples` | `true` keeps the UI component example pages under `/admin/ui`; `false` (the default) leaves them out, with their sidebar group, search entries and translation keys. Any other value is refused. |
+| `-e`, `--examples` | `true` keeps the UI component example pages under `/ui`; `false` (the default) leaves them out, with their sidebar group, search entries and translation keys. Any other value is refused. |
 
 The tool clones `https://github.com/ma496/EasyForNet.git` into
 `%LOCALAPPDATA%/EasyForNet/Templates/<tool version>` and checks out the tag `v<tool version>`, so the
