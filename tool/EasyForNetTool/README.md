@@ -217,8 +217,9 @@ passwords and the JWT key are generated once, on the server, and are never overw
 
 Coolify's Traefik obtains the platform's certificate over HTTP-01, but cannot obtain one per tenant
 host as it is first visited. `--dns-provider` (a [lego](https://go-acme.github.io/lego/dns/) provider
-name: `cloudflare`, `digitalocean`, `duckdns`, `gandiv5`, `linode`, `vultr`, or any other with
-the token given as `VARIABLE=token`) and an API token allowed to edit the domain's records let it hold
+name: `cloudflare`, `digitalocean`, `duckdns`, `gandiv5`, `godaddy`, `linode`, `vultr`, or any other
+with the token given as `VARIABLE=token`, several joined by commas) and an API token allowed to edit
+the domain's records (for `godaddy`, its API key and secret as `KEY:SECRET`) let it hold
 one `*.<domain>` wildcard certificate through DNS-01. Give the token as the `EFN_DNS_TOKEN` environment
 variable: `--dns-token` works too, but stays in the shell's history and npm's debug log. The script never
 prints, logs or saves it; on the server it lives in a root-only file Traefik reads. Without them only

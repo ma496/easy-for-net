@@ -73,23 +73,37 @@ export function platformHost(domain, subdomain = DEFAULT_PLATFORM_SUBDOMAIN) {
 }
 
 /**
- * The environment variable each common DNS provider's API token goes in, as Traefik's ACME client
- * (lego) names it. Any other lego provider works too, with the token given as `NAME=value`.
+ * The environment variables each common DNS provider's credentials go in, as Traefik's ACME client
+ * (lego) names them. A provider reading several takes their values joined by `:` in that order
+ * (godaddy: `KEY:SECRET`). Any other lego provider works too, with the token given as `NAME=value`,
+ * several joined by commas.
  */
 export const DNS_PROVIDERS = {
-  cloudflare: "CF_DNS_API_TOKEN",
-  digitalocean: "DO_AUTH_TOKEN",
-  duckdns: "DUCKDNS_TOKEN",
-  gandiv5: "GANDIV5_PERSONAL_ACCESS_TOKEN",
-  linode: "LINODE_TOKEN",
-  vultr: "VULTR_API_KEY",
+  cloudflare: ["CF_DNS_API_TOKEN"],
+  digitalocean: ["DO_AUTH_TOKEN"],
+  duckdns: ["DUCKDNS_TOKEN"],
+  gandiv5: ["GANDIV5_PERSONAL_ACCESS_TOKEN"],
+  godaddy: ["GODADDY_API_KEY", "GODADDY_API_SECRET"],
+  linode: ["LINODE_TOKEN"],
+  vultr: ["VULTR_API_KEY"],
 };
 
 /**
- * `--dns-provider` and `--dns-token` into what Traefik's DNS-01 challenge needs: the provider and
- * the one environment variable that holds the token. `{}` when neither is given (HTTP-01 only),
- * `{ error }` when only one is, or when the provider's variable is not known and the token does not
- * name it. An error never quotes the token.
+ * Settings a provider needs beyond lego's defaults, written beside its credentials unless the token
+ * names them. GoDaddy's nameservers publish a record slowly and tell resolvers to remember its
+ * absence for ten minutes (the SOA minimum), past lego's two-minute default wait, so the first check
+ * caches "no TXT record" and the certificate is never issued.
+ */
+export const DNS_PROVIDER_SETTINGS = {
+  godaddy: { GODADDY_PROPAGATION_TIMEOUT: "1200", GODADDY_POLLING_INTERVAL: "30" },
+};
+
+/**
+ * `--dns-provider` and `--dns-token` into what Traefik's DNS-01 challenge needs: the provider, the
+ * names of the environment variables that hold its credentials, and `env`, the env file's lines
+ * that set them. `{}` when neither is given (HTTP-01 only), `{ error }` when only one is, or when the
+ * provider's variables are not known and the token does not name them. An error never quotes the
+ * token.
  */
 export function dnsChallenge(provider, token) {
   if (!provider && !token) return {};
@@ -97,18 +111,31 @@ export function dnsChallenge(provider, token) {
   if (!token) return { error: "--dns-provider needs a token: EFN_DNS_TOKEN=<token> (or --dns-token)" };
   const name = String(provider).toLowerCase();
   if (!/^[a-z0-9]+$/.test(name)) return { error: `--dns-provider '${provider}' is not a lego provider name (e.g. cloudflare)` };
-  const named = /^([A-Z][A-Z0-9_]*)=(.+)$/s.exec(token);
-  const envName = named ? named[1] : DNS_PROVIDERS[name];
-  const value = named ? named[2] : token;
-  if (!envName) {
+  let pairs;
+  if (/^[A-Z][A-Z0-9_]*=/.test(token)) {
+    // NAME=value[,NAME=value...]: a comma starts a new pair only where a variable name follows it.
+    pairs = token.split(/,(?=[A-Z][A-Z0-9_]*=)/).map((pair) => [pair.slice(0, pair.indexOf("=")), pair.slice(pair.indexOf("=") + 1)]);
+  } else if (DNS_PROVIDERS[name]) {
+    const names = DNS_PROVIDERS[name];
+    const values = names.length === 1 ? [token] : token.split(":");
+    if (values.length !== names.length) {
+      return { error: `DNS provider '${name}' takes ${names.length} values, ${names.join(", ")}, as EFN_DNS_TOKEN=${names.map((n) => `<${n}>`).join(":")}` };
+    }
+    pairs = names.map((n, i) => [n, values[i]]);
+  } else {
     return {
       error: `the token variable of DNS provider '${name}' is not known: give the token as VARIABLE=token, naming ` +
-        `the variable lego's ${name} provider reads (known: ${Object.keys(DNS_PROVIDERS).join(", ")})`,
+        `the variable lego's ${name} provider reads, several joined by commas (known: ${Object.keys(DNS_PROVIDERS).join(", ")})`,
     };
   }
-  // The token is written into an env file on the server: nothing a real token holds needs quoting.
-  if (/[\s'"`\\$]/.test(value)) return { error: "--dns-token holds a space, a quote, a backslash or a $, which no DNS provider token does" };
-  return { provider: name, envName, value };
+  // The values are written into an env file on the server: nothing a real token holds needs quoting.
+  if (pairs.some(([, value]) => !value || /[\s'"`\\$]/.test(value))) {
+    return { error: "--dns-token holds an empty value, a space, a quote, a backslash or a $, which no DNS provider token does" };
+  }
+  for (const [setting, value] of Object.entries(DNS_PROVIDER_SETTINGS[name] ?? {})) {
+    if (!pairs.some(([n]) => n === setting)) pairs.push([setting, value]);
+  }
+  return { provider: name, envNames: pairs.map(([n]) => n), env: pairs.map(([n, v]) => `${n}=${v}`).join("\n") };
 }
 
 /** A label nobody creates a record for, so that it resolves only through a wildcard record. */

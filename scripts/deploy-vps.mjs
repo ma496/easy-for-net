@@ -23,9 +23,10 @@
  *
  * Certificates: Coolify's Traefik obtains the platform host's over HTTP-01. A certificate for the
  * tenants' subdomains needs DNS-01, which needs the DNS provider's API: --dns-provider names it as
- * Traefik's ACME client (lego) does (cloudflare, digitalocean, duckdns, gandiv5, linode, vultr, or
- * any other lego provider with the token given as VARIABLE=token), and the token is an API token
- * allowed to edit the domain's records, best given as the EFN_DNS_TOKEN environment variable: as
+ * Traefik's ACME client (lego) does (cloudflare, digitalocean, duckdns, gandiv5, godaddy, linode,
+ * vultr, or any other lego provider with the token given as VARIABLE=token, several joined by
+ * commas), and the token is an API token allowed to edit the domain's records (godaddy: its API key
+ * and secret as KEY:SECRET), best given as the EFN_DNS_TOKEN environment variable: as
  * --dns-token it stays in the shell's history and npm's debug log. Traefik then holds one
  * *.<domain> wildcard certificate. This script never prints, logs or saves the token; it reaches the
  * server over SSH's input, and is kept there in a root-only file Traefik reads.
@@ -355,7 +356,7 @@ if (prepared.code !== 0 || !source) fail("preparing the server failed (see above
 if (source.visibility === "private") await addDeployKey(source);
 
 // The DNS token reaches the server as a file the deploy phase reads and deletes straight away.
-if (dns.provider) upload(REMOTE_DNS_TOKEN, dns.value);
+if (dns.provider) upload(REMOTE_DNS_TOKEN, `${dns.env}\n`);
 
 const deployed = await runPhase("deploy", {
   APP_NAME: opts.name,
@@ -366,7 +367,7 @@ const deployed = await runPhase("deploy", {
   KEY_UUID: source.keyUuid,
   COMPOSE: `/${COMPOSE_FILE}`,
   DNS_PROVIDER: dns.provider,
-  DNS_ENV: dns.envName,
+  DNS_ENV: dns.envNames?.join(","),
   DNS_TOKEN_FILE: dns.provider ? REMOTE_DNS_TOKEN : undefined,
   CLEANUP: 1,
 });

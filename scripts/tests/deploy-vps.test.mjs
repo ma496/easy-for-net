@@ -193,7 +193,7 @@ test("the server script attaches the platform host and the wildcard, and sets th
   // Inside dns_challenge the token ($3) is only written into the root-only env file.
   const start = script.indexOf("dns_challenge() {");
   const challenge = script.slice(start, script.indexOf("\n}\n", start));
-  assert.deepEqual(challenge.split("\n").filter((l) => l.includes('"$3"')), [String.raw`  printf '%s=%s\n' "$2" "$3" >"$env_file"`]);
+  assert.deepEqual(challenge.split("\n").filter((l) => l.includes('"$3"')), [String.raw`  printf '%s\n' "$3" >"$env_file"`]);
 });
 
 // --- tenant subdomains and DNS -------------------------------------------------------------
@@ -227,12 +227,34 @@ test("no DNS flags means HTTP-01 only, and one without the other is an error", (
 });
 
 test("a known provider puts the token in its lego variable", () => {
-  assert.deepEqual(dnsChallenge("Cloudflare", "abc123"), { provider: "cloudflare", envName: "CF_DNS_API_TOKEN", value: "abc123" });
-  assert.deepEqual(dnsChallenge("digitalocean", "dop_v1_x"), { provider: "digitalocean", envName: "DO_AUTH_TOKEN", value: "dop_v1_x" });
+  assert.deepEqual(dnsChallenge("Cloudflare", "abc123"), { provider: "cloudflare", envNames: ["CF_DNS_API_TOKEN"], env: "CF_DNS_API_TOKEN=abc123" });
+  assert.deepEqual(dnsChallenge("digitalocean", "dop_v1_x"), { provider: "digitalocean", envNames: ["DO_AUTH_TOKEN"], env: "DO_AUTH_TOKEN=dop_v1_x" });
 });
 
-test("any other provider names its variable in the token, and an error never quotes the token", () => {
-  assert.deepEqual(dnsChallenge("ovh", "OVH_APPLICATION_KEY=k=1"), { provider: "ovh", envName: "OVH_APPLICATION_KEY", value: "k=1" });
+test("a provider reading several variables takes their values joined by colons, in order", () => {
+  assert.deepEqual(dnsChallenge("godaddy", "key_1:secret_2"), {
+    provider: "godaddy",
+    envNames: ["GODADDY_API_KEY", "GODADDY_API_SECRET", "GODADDY_PROPAGATION_TIMEOUT", "GODADDY_POLLING_INTERVAL"],
+    env: "GODADDY_API_KEY=key_1\nGODADDY_API_SECRET=secret_2\nGODADDY_PROPAGATION_TIMEOUT=1200\nGODADDY_POLLING_INTERVAL=30",
+  });
+  // A setting the token names wins over the provider's default.
+  assert.equal(
+    dnsChallenge("godaddy", "GODADDY_API_KEY=k,GODADDY_API_SECRET=s,GODADDY_PROPAGATION_TIMEOUT=600").env,
+    "GODADDY_API_KEY=k\nGODADDY_API_SECRET=s\nGODADDY_PROPAGATION_TIMEOUT=600\nGODADDY_POLLING_INTERVAL=30",
+  );
+  const short = dnsChallenge("godaddy", "only-the-key");
+  assert.match(short.error, /GODADDY_API_KEY, GODADDY_API_SECRET/);
+  assert.doesNotMatch(short.error, /only-the-key/);
+  assert.match(dnsChallenge("godaddy", "key:").error, /empty value/);
+});
+
+test("any other provider names its variables in the token, and an error never quotes the token", () => {
+  assert.deepEqual(dnsChallenge("ovh", "OVH_APPLICATION_KEY=k=1"), { provider: "ovh", envNames: ["OVH_APPLICATION_KEY"], env: "OVH_APPLICATION_KEY=k=1" });
+  assert.deepEqual(dnsChallenge("ovh", "OVH_APPLICATION_KEY=a,b,OVH_APPLICATION_SECRET=c"), {
+    provider: "ovh",
+    envNames: ["OVH_APPLICATION_KEY", "OVH_APPLICATION_SECRET"],
+    env: "OVH_APPLICATION_KEY=a,b\nOVH_APPLICATION_SECRET=c",
+  });
   const unknown = dnsChallenge("route53", "super-secret-value");
   assert.match(unknown.error, /VARIABLE=token/);
   assert.doesNotMatch(unknown.error, /super-secret-value/);
