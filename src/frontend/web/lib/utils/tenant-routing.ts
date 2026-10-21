@@ -1,7 +1,17 @@
 import { GetUserInfoResponse } from '@/store/api/identity'
+import { anonymousUrls } from '@/auth-urls'
 
-/** Paths outside `/admin` are never tenant-scoped, and these ones under it are the platform-tier tenancy screens, which a platform account works with while acting in no tenant at all. */
-const platformScopedPathPrefix = '/admin/tenants'
+/** The platform-tier tenancy screens, which a platform account works with while acting in no tenant at all. */
+const platformScopedPathPrefix = '/tenants'
+
+/**
+ * The screens that are not tenant-scoped: the account's own profile and password, the tenant picker,
+ * the anonymous screens (which have no session to take a tenant from) and the platform tenancy screens.
+ */
+const tenantFreePathPrefixes = ['/profile', '/change-password', '/select-tenant', ...anonymousUrls, platformScopedPathPrefix]
+
+/** Whether the path is the prefix itself or a path beneath it. */
+const matchesPrefix = (path: string, prefix: string) => path === prefix || path.startsWith(`${prefix}/`)
 
 /** Strips the query string, the fragment and a trailing slash so a path can be compared as a plain prefix. The locale prefix is expected to be gone already: callers read it off `usePathname` and remove it before asking. */
 const normalizePath = (pathname: string): string => {
@@ -12,15 +22,14 @@ const normalizePath = (pathname: string): string => {
 /**
  * Returns true when the (locale-stripped) path names a screen that can only be
  * rendered while a tenant is active, so a caller without one must not be left on
- * it. Everything under `/admin` qualifies except the platform tenancy screens,
- * which are gated by platform permissions and stay reachable with no active
- * tenant. Account self-service (`/profile`, `/change-password`), the two landing
- * screens, `/unauthorized` and the public routes are therefore all tenant-free.
+ * it. Every screen qualifies, the dashboard included, except account
+ * self-service (`/profile`, `/change-password`), the tenant picker, the
+ * anonymous screens and the platform tenancy screens, which are gated by
+ * platform permissions and stay reachable with no active tenant.
  */
 export const isTenantScopedPath = (pathname: string): boolean => {
   const path = normalizePath(pathname)
-  if (path !== '/admin' && !path.startsWith('/admin/')) return false
-  return path !== platformScopedPathPrefix && !path.startsWith(`${platformScopedPathPrefix}/`)
+  return !tenantFreePathPrefixes.some((prefix) => matchesPrefix(path, prefix))
 }
 
 /**
@@ -74,7 +83,7 @@ export const isWithoutUsableTenant = (user: GetUserInfoResponse | undefined): bo
 }
 
 /**
- * The screens under `/admin` a platform administrator acting in no tenant can use, besides the
+ * The screens a platform administrator acting in no tenant can use, besides the
  * dashboard itself: users, roles and notifications answer there about the platform's own - platform
  * users, platform roles, notifications belonging to no tenant - the tenancy screens read no tenant
  * data, and localization answers about the platform's own texts and languages
@@ -83,15 +92,15 @@ export const isWithoutUsableTenant = (user: GetUserInfoResponse | undefined): bo
  * tenant-only until it is listed here.
  */
 const platformAccessiblePathPrefixes = [
-  '/admin/users',
-  '/admin/roles',
-  '/admin/notifications',
+  '/users',
+  '/roles',
+  '/notifications',
   // efn:examples:start
-  '/admin/ui',
+  '/ui',
   // efn:examples:end
-  '/admin/editions',
-  '/admin/localization',
-  '/admin/settings',
+  '/editions',
+  '/localization',
+  '/settings',
   platformScopedPathPrefix,
 ]
 
@@ -101,8 +110,8 @@ const platformAccessiblePathPrefixes = [
  */
 export const isPlatformAccessiblePath = (pathname: string): boolean => {
   const path = normalizePath(pathname)
-  if (path === '/admin') return true
-  return platformAccessiblePathPrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
+  if (path === '/') return true
+  return platformAccessiblePathPrefixes.some((prefix) => matchesPrefix(path, prefix))
 }
 
 /**
@@ -114,26 +123,26 @@ export const isPlatformWithoutTenant = (user: GetUserInfoResponse | undefined): 
   !!user?.isPlatform && !user.activeTenant
 
 /**
- * The screens under `/admin` that answer about every tenant there is, so they belong to platform
+ * The screens that answer about every tenant there is, so they belong to platform
  * scope alone: listing the tenants and creating one. Reading a single tenant and administering its
  * members are not here, because those are exercisable in either scope - a tenant administrator opens
  * its own tenant's detail and members from inside it.
  */
-const platformOnlyPathPrefixes = ['/admin/tenants/create', '/admin/editions']
+const platformOnlyPathPrefixes = ['/tenants/create', '/editions']
 
 /**
  * The platform's own screens that sit at the root of a section whose deeper screens are not all
- * platform-only, so they match exactly rather than as a prefix: the tenants list is `/admin/tenants`,
+ * platform-only, so they match exactly rather than as a prefix: the tenants list is `/tenants`,
  * while a tenant's detail and members beneath it stay open inside that tenant.
  */
-const platformOnlyPaths = ['/admin/tenants']
+const platformOnlyPaths = ['/tenants']
 
 /**
  * The platform's own screens about one record, which a prefix cannot name because the record's id
  * comes before the screen: editing a tenant's entitlements is a platform act, not something a tenant
  * does to itself. `{id}` stands for exactly one path segment, as it does in `auth-urls.ts`.
  */
-const platformOnlyPathPatterns = ['/admin/tenants/{id}/features'].map(
+const platformOnlyPathPatterns = ['/tenants/{id}/features'].map(
   (pattern) => new RegExp(`^${pattern.replace(/\{[^}]+\}/g, '[^/]+')}(/|$)`),
 )
 
@@ -145,7 +154,7 @@ export const isPlatformOnlyPath = (pathname: string): boolean => {
   const path = normalizePath(pathname)
   return (
     platformOnlyPaths.includes(path) ||
-    platformOnlyPathPrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`)) ||
+    platformOnlyPathPrefixes.some((prefix) => matchesPrefix(path, prefix)) ||
     platformOnlyPathPatterns.some((pattern) => pattern.test(path))
   )
 }
@@ -184,5 +193,5 @@ export const resolvePlatformLanding = (
 ): string | null => {
   if (!isPlatformWithoutTenant(user)) return null
   if (redirectTo && isPathAvailable(user, redirectTo)) return redirectTo
-  return '/admin'
+  return '/'
 }

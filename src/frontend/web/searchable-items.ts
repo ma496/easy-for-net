@@ -8,45 +8,45 @@ export interface SearchableItem {
 export const searchableItems: SearchableItem[] = [
   {
     title: 'search.dashboard',
-    url: '/admin',
+    url: '/',
   },
   {
     title: 'search.users',
-    url: '/admin/users',
+    url: '/users',
 
   },
   {
     title: 'search.usersCreate',
-    url: '/admin/users/create',
+    url: '/users/create',
 
   },
   {
     title: 'search.editions',
-    url: '/admin/editions',
+    url: '/editions',
 
   },
   {
     title: 'search.editionsCreate',
-    url: '/admin/editions/create',
+    url: '/editions/create',
 
   },
   {
     title: 'search.roles',
-    url: '/admin/roles',
+    url: '/roles',
 
   },
   {
     title: 'search.rolesCreate',
-    url: '/admin/roles/create',
+    url: '/roles/create',
 
   },
   {
     title: 'search.tenants',
-    url: '/admin/tenants',
+    url: '/tenants',
   },
   {
     title: 'search.tenantsCreate',
-    url: '/admin/tenants/create',
+    url: '/tenants/create',
   },
   {
     title: 'search.profile',
@@ -58,48 +58,48 @@ export const searchableItems: SearchableItem[] = [
   },
   {
     title: 'search.localization',
-    url: '/admin/localization',
+    url: '/localization',
   },
   {
     title: 'search.settings',
-    url: '/admin/settings',
+    url: '/settings',
   },
   {
     title: 'search.notifications',
-    url: '/admin/notifications',
+    url: '/notifications',
   },
   // efn:examples:start
   {
     title: 'search.uiFormElements',
-    url: '/admin/ui/form-elements',
+    url: '/ui/form-elements',
   },
   {
     title: 'search.uiButtons',
-    url: '/admin/ui/buttons',
+    url: '/ui/buttons',
   },
   {
     title: 'search.uiCards',
-    url: '/admin/ui/cards',
+    url: '/ui/cards',
   },
   {
     title: 'search.uiDatePicker',
-    url: '/admin/ui/date-picker',
+    url: '/ui/date-picker',
   },
   {
     title: 'search.uiDateView',
-    url: '/admin/ui/date-view',
+    url: '/ui/date-view',
   },
   {
     title: 'search.uiTreeview',
-    url: '/admin/ui/treeview',
+    url: '/ui/treeview',
   },
   {
     title: 'search.uiFileUpload',
-    url: '/admin/ui/file-upload',
+    url: '/ui/file-upload',
   },
   {
     title: 'search.uiTooltips',
-    url: '/admin/ui/tooltips',
+    url: '/ui/tooltips',
   },
   // efn:examples:end
 ]

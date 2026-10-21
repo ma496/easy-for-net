@@ -9,8 +9,8 @@ The users feature is the reference implementation (roles, tenants and editions f
 shape); copy its structure:
 
 ```
-app/[lang]/admin/(<group>)/<entity>/
-  page.tsx                                  (the list, at /admin/<entity>)
+app/[lang]/(app)/(<group>)/<entity>/
+  page.tsx                                  (the list, at /<entity>)
   _components/<entity>-table.tsx
   _components/<entity>-filter-panel.tsx
   create/page.tsx
@@ -19,8 +19,8 @@ app/[lang]/admin/(<group>)/<entity>/
   [id]/update/_components/<entity>-update-form.tsx
 ```
 
-A screen about one record puts the id before the screen: `/admin/<entity>/{id}/<action>`
-(`/admin/users/{id}/update`), so the id names the record and the last segment the screen. The
+A screen about one record puts the id before the screen: `/<entity>/{id}/<action>`
+(`/users/{id}/update`), so the id names the record and the last segment the screen. The
 filter panel is optional (roles and editions have none); further row screens such as
 `[id]/detail` or `[id]/members` are added the same way and linked from the row actions.
 
@@ -96,7 +96,7 @@ for a mutation; `variant` is `default | primary | success | warning | danger`:
 cell: (info) => (
   <DataTableRowActions
     actions={[
-      { label: t('common.edit') || 'Edit', icon: <Pencil className="h-4 w-4" />, href: `/admin/users/${info.row.original.id}/update`, hidden: !canUpdate },
+      { label: t('common.edit') || 'Edit', icon: <Pencil className="h-4 w-4" />, href: `/users/${info.row.original.id}/update`, hidden: !canUpdate },
       { label: t('common.delete') || 'Delete', icon: <Trash2 className="h-4 w-4" />, variant: 'danger', onClick: () => handleDelete(info.row.original.id), disabled: isDeletingUser, hidden: !canDelete },
     ]}
   />
@@ -140,7 +140,7 @@ screen's main action (create) to fill it with the accent colour. Export is
 `DataTableExportButton` (`onExport(format, all)`), filters `DataTableFilterButton`:
 
 ```tsx
-{canCreate && <DataTableToolbarButton primary label={t('table.createLink') || 'Create'} icon={<Plus size={16} />} href="/admin/users/create" />}
+{canCreate && <DataTableToolbarButton primary label={t('table.createLink') || 'Create'} icon={<Plus size={16} />} href="/users/create" />}
 <DataTableExportButton onExport={handleExport} isExporting={isExporting} disabled={isFetching || !data?.total} />
 ```
 
@@ -155,7 +155,7 @@ const seatsExhausted = seats?.limit != null && seats.used >= seats.limit
   (seatsExhausted ? (
     <DataTableToolbarButton primary label={t('page.users.seatLimitReached') || "Your plan's user limit has been reached"} icon={<Plus size={16} />} disabled />
   ) : (
-    <DataTableToolbarButton primary label={t('table.createLink') || 'Create'} icon={<Plus size={16} />} href="/admin/users/create" />
+    <DataTableToolbarButton primary label={t('table.createLink') || 'Create'} icon={<Plus size={16} />} href="/users/create" />
   ))}
 ```
 
@@ -239,7 +239,7 @@ before the round trip. Then:
       />
       <FormCheckbox name="isActive" label={t('form.label.isActive') || 'Active'} />
       <div className="flex justify-end gap-4 sm:col-span-2">
-        <Button type="button" variant="outline" onClick={() => router.push('/admin/users')} disabled={isSaving}>
+        <Button type="button" variant="outline" onClick={() => router.push('/users')} disabled={isSaving}>
           {t('common.cancel') || 'Cancel'}
         </Button>
         <Button type="submit" isLoading={isSaving}>{t('common.submit') || 'Submit'}</Button>
@@ -267,7 +267,7 @@ Submit handler:
 const result = await createUser(payload)
 if (result.error) { apiErrorAlert(result.error); return }
 successToast.fire({ text: t('page.users.createSuccess') || 'User created successfully' })
-router.push('/admin/users')          // useLocalizedRouter, unprefixed path
+router.push('/users')          // useLocalizedRouter, unprefixed path
 ```
 
 The **update** form additionally loads the row and guards the render order:

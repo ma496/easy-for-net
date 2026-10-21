@@ -12,15 +12,16 @@ describe('signinRedirectAfterFailedRefresh', () => {
   afterEach(() => resetLeavingSignedOutForTests())
 
   it('sends a guarded page to sign-in, returning to it afterwards', () => {
-    const url = new URL(signinRedirectAfterFailedRefresh('/en/admin/users', origin)!)
+    const url = new URL(signinRedirectAfterFailedRefresh('/en/users', origin)!)
 
     expect(url.origin).toBe(origin)
     expect(url.pathname).toBe('/signin')
-    expect(url.searchParams.get('redirect')).toBe('/en/admin/users')
+    expect(url.searchParams.get('redirect')).toBe('/en/users')
   })
 
-  it('leaves a public page where it is', () => {
-    expect(signinRedirectAfterFailedRefresh('/en', origin)).toBeNull()
+  it('leaves an anonymous page where it is', () => {
+    expect(signinRedirectAfterFailedRefresh('/en/signin', origin)).toBeNull()
+    expect(signinRedirectAfterFailedRefresh('/reset-password', origin)).toBeNull()
     expect(signinRedirectAfterFailedRefresh(undefined, origin)).toBeNull()
   })
 
@@ -31,6 +32,6 @@ describe('signinRedirectAfterFailedRefresh', () => {
     markLeavingSignedOut()
 
     expect(isLeavingSignedOut()).toBe(true)
-    expect(signinRedirectAfterFailedRefresh('/en/admin/users', origin)).toBeNull()
+    expect(signinRedirectAfterFailedRefresh('/en/users', origin)).toBeNull()
   })
 })

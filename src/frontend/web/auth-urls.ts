@@ -1,4 +1,6 @@
 import { Allow } from './allow'
+// The helper module rather than the `@/i18n` barrel, whose client half reaches `components/layouts` - which imports this file.
+import { withoutLocale } from './i18n/locale-path'
 
 /** Pairing of a route pattern with the permissions required to access it (used by route guards and the proxy). */
 export interface AuthUrl {
@@ -15,34 +17,34 @@ export const authUrls: AuthUrl[] = [
     url: '/profile',
   },
   {
-    url: '/admin',
+    url: '/',
   },
   {
-    url: '/admin/users',
+    url: '/users',
     permissions: [Allow.User_View],
   },
   {
-    url: '/admin/users/create',
+    url: '/users/create',
     permissions: [Allow.User_Create],
   },
   {
-    url: '/admin/users/{id}/update',
+    url: '/users/{id}/update',
     permissions: [Allow.User_Update],
   },
   {
-    url: '/admin/roles',
+    url: '/roles',
     permissions: [Allow.Role_View],
   },
   {
-    url: '/admin/roles/create',
+    url: '/roles/create',
     permissions: [Allow.Role_Create],
   },
   {
-    url: '/admin/roles/{id}/update',
+    url: '/roles/{id}/update',
     permissions: [Allow.Role_Update],
   },
   {
-    url: '/admin/roles/{id}/change-permissions',
+    url: '/roles/{id}/change-permissions',
     permissions: [Allow.Role_ChangePermissions],
   },
   {
@@ -50,58 +52,58 @@ export const authUrls: AuthUrl[] = [
     // is gated on Tenant.View, which the API declares platform-scoped: a session carries it only
     // while acting in no tenant, so a tenant administrator never holds it however their roles are
     // granted. They reach their own tenant through the detail screen below instead.
-    url: '/admin/tenants',
+    url: '/tenants',
     permissions: [Allow.Tenant_View],
   },
   {
-    url: '/admin/tenants/create',
+    url: '/tenants/create',
     permissions: [Allow.Tenant_Create],
   },
   {
     // Editing a tenant's entitlements is a platform act, not something a tenant does to itself, so
     // every screen below is gated on a permission the API declares platform-scoped.
-    url: '/admin/tenants/{id}/features',
+    url: '/tenants/{id}/features',
     permissions: [Allow.FeatureValue_View],
   },
   {
-    url: '/admin/editions',
+    url: '/editions',
     permissions: [Allow.Edition_View],
   },
   {
-    url: '/admin/editions/create',
+    url: '/editions/create',
     permissions: [Allow.Edition_Create],
   },
   {
-    url: '/admin/editions/{id}/update',
+    url: '/editions/{id}/update',
     permissions: [Allow.Edition_Update],
   },
   {
-    url: '/admin/editions/{id}/features',
+    url: '/editions/{id}/features',
     permissions: [Allow.FeatureValue_View],
   },
   {
-    url: '/admin/tenants/{id}/update',
+    url: '/tenants/{id}/update',
     permissions: [Allow.Tenant_Update],
   },
   {
-    url: '/admin/tenants/{id}/members',
+    url: '/tenants/{id}/members',
     permissions: [Allow.TenantMember_View],
   },
   {
-    url: '/admin/tenants/{id}/detail',
+    url: '/tenants/{id}/detail',
     permissions: [Allow.Tenant_Detail],
   },
   {
     url: '/select-tenant',
   },
   {
-    url: '/admin/localization',
+    url: '/localization',
     permissions: [Allow.Localization_View],
   },
   {
     // Both-scoped like localization: the platform edits the values every tenant inherits, a tenant
     // administrator its own tenant's overrides, on the same route and permission.
-    url: '/admin/settings',
+    url: '/settings',
     permissions: [Allow.Settings_View],
   },
 ]
@@ -141,7 +143,23 @@ export const getMatchedAuthUrl = (url: string): AuthUrl | undefined => {
   return matches[0]
 }
 
-/** Returns true if the given URL targets the /admin area or matches any entry in the authUrls registry. */
+/**
+ * The screens a visitor with no session may open: signing in or up, recovering a password, verifying
+ * an email, redeeming a sign-in ticket, and the refusal screen. Each names its whole subtree.
+ */
+export const anonymousUrls = ['/signin', '/signup', '/forget-password', '/reset-password', '/verify-email', '/ticket-signin', '/unauthorized']
+
+/** Returns true if the given URL, with or without its locale segment, names one of the anonymous screens or a path beneath one. */
+export const isAnonymousUrl = (url: string) => {
+  const pathname = withoutLocale(url.split('?')[0].split('#')[0])
+  return anonymousUrls.some((anonymousUrl) => pathname === anonymousUrl || pathname.startsWith(`${anonymousUrl}/`))
+}
+
+/**
+ * Returns true if the given URL needs a signed-in caller. The app has no public
+ * pages, so everything does except the anonymous screens - a new route is guarded by default rather
+ * than only once someone remembers to register it.
+ */
 export const isAuthRequired = (url: string) => {
-  return url.includes('/admin/') || !!getMatchedAuthUrl(url)
+  return !isAnonymousUrl(url)
 }

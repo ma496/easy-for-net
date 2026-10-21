@@ -362,14 +362,14 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             await ReplaceInFiles(claudeSkillsPath, $@"{Regex.Escape(backendProjectRootNamespace)}\.", $@"{pascalCaseProjectName}.", ".md");
             await ReplaceInFiles(claudeSkillsPath, @"EasyForNet\.slnx", $@"{pascalCaseProjectName}.slnx", ".md");
 
-            // The component example pages (admin/ui) ship only on request; the code that exists for
+            // The component example pages ((app)/ui) ship only on request; the code that exists for
             // them elsewhere - their nav and search entries, their platform route prefix - sits between
             // efn:examples markers, and their translation keys follow a naming convention.
             await StripExampleRegionsAsync(webTargetPath, argument.IncludeExamples);
             if (!argument.IncludeExamples)
             {
                 Console.WriteLine("Removing component example pages...");
-                var examplePagesPath = Path.Combine(webTargetPath, "app", "[lang]", "admin", "ui");
+                var examplePagesPath = Path.Combine(webTargetPath, "app", "[lang]", "(app)", "ui");
                 if (Directory.Exists(examplePagesPath))
                     Directory.Delete(examplePagesPath, true);
                 await RemoveExampleResourceKeysAsync(Path.Combine(backendProjectTargetPath, "Features", "Localization", "Core", "Resources"));

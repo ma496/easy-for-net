@@ -29,7 +29,7 @@ and you should say so rather than inventing it.
   Run the three as separate commands rather than one long chain, so a slow one is visible.
 - **Every route lives under `app/[lang]/`.** A page is a server component that resolves
   `params`, takes its title from `getServerTranslation`, and renders a client component from
-  a sibling `_components/` folder inside `AdminPageContent`.
+  a sibling `_components/` folder inside `PageContent`.
 - **Server data goes through RTK Query.** Inject endpoints into the one `appApi` with
   `enhanceEndpoints(...).injectEndpoints(...)`; DTO types mirror the backend's request and
   response classes by name.

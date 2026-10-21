@@ -45,7 +45,7 @@ export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
       </Scrollbar>
 
       <div className="border-t border-border bg-surface-2/50 p-1.5 text-center">
-        <LocalizedLink href="/admin/notifications" className="block rounded-md py-1.5 text-[13px] font-medium text-primary transition-colors hover:bg-surface-2" onClick={onClose}>
+        <LocalizedLink href="/notifications" className="block rounded-md py-1.5 text-[13px] font-medium text-primary transition-colors hover:bg-surface-2" onClick={onClose}>
           {t('common.viewAll') || 'View all'}
         </LocalizedLink>
       </div>

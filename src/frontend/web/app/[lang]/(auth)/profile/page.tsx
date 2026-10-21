@@ -22,7 +22,7 @@ const Profile = async ({ params }: { params: Promise<{ lang: string }> }) => {
   ])
 
   return (
-    <AccountShell title={title} description={description} backHref="/admin">
+    <AccountShell title={title} description={description} backHref="/">
       <UpdateProfile />
     </AccountShell>
   )

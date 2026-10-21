@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { useState, useEffect, useMemo } from 'react'
 import { PanelLeftClose, X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
-import { useTranslation } from '@/i18n'
+import { useTranslation, withoutLocale } from '@/i18n'
 import { navItems, NavItem, NavItemGroup } from '@/nav-items'
 import { authUrls } from '@/auth-urls'
 import { SidebarNavGroup } from './nav-group'
@@ -107,7 +107,7 @@ export const Sidebar = () => {
 
   useEffect(() => {
     // Find and set active parent menu based on current path
-    const path = pathname.replace(/^\/[a-z]{2}(\/|$)/, '/')
+    const path = withoutLocale(pathname)
     filteredNavItems.forEach((group) => {
       const items = isNavItemGroup(group) ? group.items : [group]
       items.forEach((item) => {
@@ -143,7 +143,7 @@ export const Sidebar = () => {
         )}
       >
         <div className={cn('flex h-14 shrink-0 items-center justify-between gap-2 px-4', compact && 'lg:justify-center lg:px-0')}>
-          <Link href="/admin" className="flex min-w-0 items-center gap-2.5">
+          <Link href="/" className="flex min-w-0 items-center gap-2.5">
             <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
               <Image className="size-5" src="/assets/images/icon.png" alt="logo" width={20} height={20} unoptimized priority />
             </span>

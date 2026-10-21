@@ -123,7 +123,7 @@ through `ISettingProvider` like any other (see the `settings` skill): `SmtpServe
 `SmtpUsername`, `SmtpPassword` (a `[SecretSetting]`, stored encrypted and never inherited apart from
 the server, port and user name), `SenderEmail`, `SenderName`. The `EmailSettings` configuration section
 is only the **default**, bound once at startup; the platform overrides it for everyone and each tenant
-for itself on `/admin/settings`, property by property.
+for itself on `/settings`, property by property.
 
 **Endpoints should enqueue rather than send**, so a slow or unreachable SMTP server cannot stall or fail
 a request. The tenant whose settings apply is **captured when the email is enqueued** and travels as a
@@ -159,7 +159,7 @@ DI registration, or a tenant scope that was never established.
 
 Configure SMTP before expecting mail to arrive — as the `EmailSettings` section in
 `appsettings.Development.json` (the default every scope inherits), or as the platform's override on
-`/admin/settings`. The `EmailSettings` section in `appsettings.json` holds only placeholder credentials.
+`/settings`. The `EmailSettings` section in `appsettings.json` holds only placeholder credentials.
 
 ## Checklist
 

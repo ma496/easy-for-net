@@ -203,7 +203,7 @@ validator's failures, each named `values.<camelCaseProperty>`.
 
 ## 8. The admin screen
 
-`/admin/settings` (`app/[lang]/admin/settings`) edits the acting scope's overrides through the RTK Query
+`/settings` (`app/[lang]/(app)/settings`) edits the acting scope's overrides through the RTK Query
 slice in `store/api/settings`. It renders **one card per setting it knows**, in a fixed order, and
 ignores a setting the API declares that it does not — so a new setting is reachable over the API at
 once but appears on the screen only when it is given a card:
@@ -245,5 +245,5 @@ A test that only reads a setting, or writes a tenant row for its own tenant, nee
 - [ ] `Core/<X>SettingsProvider.cs` registers it under a stable name, `.FromConfiguration(...)` if a deployment sets the baseline
 - [ ] Every secret is a `string` marked `[SecretSetting]`, bound to the properties that decide where it goes
 - [ ] Read through `ISettingProvider`; `GetAsync<T>(tenantId)` outside a request, `GetAsync<T>(null)` for account-level decisions
-- [ ] A card on `/admin/settings` if an administrator should edit it there, with translations in every locale
+- [ ] A card on `/settings` if an administrator should edit it there, with translations in every locale
 - [ ] Tests that write a platform row derive from `SettingsTestsBase` (the `Settings` collection)
