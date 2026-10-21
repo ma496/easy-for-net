@@ -7,8 +7,20 @@ import { signinRedirectAfterFailedRefresh } from '../signed-out-navigation'
 // Imported straight from the DTO file rather than through the feature barrel, and as a type alone,
 // so this module gains no runtime edge back to the feature APIs that are injected into it.
 import type { GetUserInfoResponse } from './identity/account/account-dtos'
+import { getErrorCode } from '@/lib/utils/api-error-helpers'
 
 const mutex = new Mutex()
+
+/** Signs the app out and, on a page that requires a session, sends the browser to sign in. */
+const leaveSignedOut = (dispatch: (action: ReturnType<typeof signout>) => unknown) => {
+  dispatch(signout())
+  const signinUrl = typeof window !== 'undefined'
+    ? signinRedirectAfterFailedRefresh(window.location.pathname, window.location.origin)
+    : null
+  if (signinUrl) {
+    window.location.href = signinUrl
+  }
+}
 
 const baseQuery = fetchBaseQuery({
   baseUrl: environment.apiUrl,
@@ -40,6 +52,14 @@ const baseQueryWithReauth: BaseQueryFn<
   // wait until the mutex is available without locking it
   await mutex.waitForUnlock()
   let result = await baseQuery(args, api, extraOptions)
+
+  // The session the browser holds belongs on another host - one issued before sessions recorded their
+  // tenant, say. The API has already deleted its cookies with this refusal, and no refresh can make it
+  // belong here, so the only way on is to sign in again on this host.
+  if (result.error?.status === 403 && getErrorCode(result.error) === 'tenantHostMismatch') {
+    leaveSignedOut(api.dispatch)
+    return result
+  }
 
   if (result.error && (result.error.status === 401 || result.error.status === 404)) {
     const isUserInfoEndpoint = (
@@ -88,13 +108,7 @@ const baseQueryWithReauth: BaseQueryFn<
             api.dispatch(setUserInfo(userInfo.data as GetUserInfoResponse))
           }
         } else {
-          api.dispatch(signout())
-          const signinUrl = typeof window !== 'undefined'
-            ? signinRedirectAfterFailedRefresh(window.location.pathname, window.location.origin)
-            : null
-          if (signinUrl) {
-            window.location.href = signinUrl
-          }
+          leaveSignedOut(api.dispatch)
         }
       } finally {
         release()

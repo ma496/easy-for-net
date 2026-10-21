@@ -192,6 +192,41 @@ public class TenantHostingTests(App app) : SessionRevocationTestsBase(app)
     }
 
     /// <summary>
+    /// A session that does not belong on a host never locks the browser out of it: an endpoint that admits
+    /// anonymous callers - sign-in here - is reached as an anonymous caller, and refusing any other endpoint
+    /// deletes the auth and refresh-token cookies the browser keeps sending, so its next request is anonymous.
+    /// </summary>
+    [Fact]
+    public async Task A_Mismatched_Session_Can_Still_Sign_In_And_Has_Its_Cookies_Cleared()
+    {
+        var tenant = await CreateTenantAsync();
+        var otherTenant = await CreateTenantAsync();
+        var member = await CreateDualTenantMemberAsync(tenant.Id, otherTenant.Id);
+        var otherHost = TenantHostingOverride.TenantHost(otherTenant.Identifier);
+
+        using var signInClient = HostClient(TenantHostingOverride.TenantHost(tenant.Identifier));
+        var (signInResponse, signedIn) = await SignInAsync(signInClient, member.Username);
+        var cookies = signInResponse.Headers.GetValues("Set-Cookie").Select(header => header.Split(';')[0]).ToList();
+        var authCookie = cookies.Single(cookie => !cookie.StartsWith($"{TokenService.RefreshTokenCookieName}="));
+
+        // The bearer token belongs on the first tenant's host; on the second, sign-in still answers.
+        using var bearerElsewhere = HostClient(otherHost);
+        TestsHelper.SetAuthToken(bearerElsewhere, signedIn.AccessToken);
+        var (replaced, replacement) = await SignInAsync(bearerElsewhere, member.Username);
+        replaced.StatusCode.Should().Be(HttpStatusCode.OK, "an anonymous endpoint ignores a session that does not belong on the host");
+        (await SessionOfAsync(replacement.AccessToken))!.TenantId.Should().Be(otherTenant.Id);
+
+        // The cookie is refused on a protected endpoint, and the refusal deletes it and the refresh cookie.
+        using var cookieElsewhere = HostClient(otherHost);
+        cookieElsewhere.DefaultRequestHeaders.Add("Cookie", string.Join("; ", cookies));
+        var refused = await cookieElsewhere.GetAsync("api/account/get-info", TestContext.Current.CancellationToken);
+        refused.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        var cleared = refused.Headers.GetValues("Set-Cookie").Select(header => header.Split(';')[0]).ToList();
+        cleared.Should().Contain($"{authCookie.Split('=')[0]}=", "the auth cookie is deleted so the browser's next request is anonymous");
+        cleared.Should().Contain($"{TokenService.RefreshTokenCookieName}=");
+    }
+
+    /// <summary>
     /// The host check refuses only authenticated requests, and a store outage is still answered 503 ahead of it.
     /// </summary>
     [Fact]
