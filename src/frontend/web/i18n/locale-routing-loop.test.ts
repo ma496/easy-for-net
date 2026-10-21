@@ -119,7 +119,7 @@ describe.skipIf(!hasEnoughLocales)('the proxy/guard locale negotiation loop', ()
   ]
 
   /** Every starting URL shape the matrix exercises: prefixless, and prefixed with each routable locale. */
-  const startPaths: string[] = ['/admin/users', `/${defaultLocale}/admin/users`, `/${localeA}/admin/users`, `/${localeB}/admin/users`]
+  const startPaths: string[] = ['/users', `/${defaultLocale}/users`, `/${localeA}/users`, `/${localeB}/users`]
 
   const cases = languageSettings.flatMap(([settingLabel, setting]) =>
     preferredCookies.flatMap(([preferredLabel, preferred]) =>
@@ -159,9 +159,9 @@ describe.skipIf(!hasEnoughLocales)('the proxy/guard locale negotiation loop', ()
       scopeLanguages: routableLocales.join(','),
     }
 
-    const { hops, settledPath } = settle(`/${localeA}/admin/users`, startCookies, undefined, setting)
+    const { hops, settledPath } = settle(`/${localeA}/users`, startCookies, undefined, setting)
 
     expect(hops).toBeLessThanOrEqual(2)
-    expect(settledPath).toBe(`/${localeB}/admin/users`)
+    expect(settledPath).toBe(`/${localeB}/users`)
   })
 })

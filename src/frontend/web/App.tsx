@@ -76,7 +76,7 @@ function App({ children }: PropsWithChildren) {
     // platform-scoped and a tenant session never carries them, so a caller acting in a tenant is not short of a grant anybody could give them; a link that opened the other scope's
     // screen is answered with the dashboard of the scope this host gives.
     if (!platformLanding && !isPathAvailable(authState.user, pathToCheck)) {
-      go('/admin')
+      go('/')
       return
     }
 

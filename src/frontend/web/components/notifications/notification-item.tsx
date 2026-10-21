@@ -29,7 +29,7 @@ export const NotificationItem = ({ notification }: NotificationItemProps) => {
 
   return (
     <LocalizedLink
-      href={`/admin/notifications/${notification.id}`}
+      href={`/notifications/${notification.id}`}
       className={cn('flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-surface-2', !notification.isRead && 'bg-primary/5')}
     >
       <span className={cn('mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg', style.tile)}>

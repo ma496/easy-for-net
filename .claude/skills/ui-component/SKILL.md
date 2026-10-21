@@ -12,7 +12,7 @@ description: Build or extend a shared React component in src/frontend/web/compon
 | `components/ui/` | Generic, app-agnostic primitives | `Button`, `IconButton`, `Badge`, `Card`, `Modal`, `Dropdown`, `Loader`, `Tabs`, `Tooltip`, `TreeView`, `Truncated`, `DateView`, `PriceView`, `Breadcrumbs`, `LocalizedLink`, `ApiErrorMessages` |
 | `components/ui/form/` | Inputs — a bare one and, for most, a Formik-bound `Form*` twin | `Input`/`FormInput`, `Select`/`FormSelect`, `MultiSelect`/`FormMultiSelect`, `Checkbox`/`FormCheckbox`, `DatePicker`/`FormDatePicker`, `FormLazySelect`, `FormLazyMultiSelect`, `FileUpload`, `MultiFileUpload` |
 | `components/ui/data-table/` | The table system | `DataTableProvider`, `DataTable`, `DataTableToolbar`, `DataTableToolbarButton`, `DataTableFilterButton`, `DataTableExportButton`, `DataTableRowActions`, `DataTablePagination`, `DataTableSortIcon`, `DataTableCheckboxCell` |
-| `components/layouts/` | App shell and page chrome | `AdminPageContent`, `Sidebar`, `Header`, `Footer`, `MainContainer`, `SearchComponent`, `ServiceUnavailableView`, `ProviderComponent`, `TranslationProvider` |
+| `components/layouts/` | App shell and page chrome | `PageContent`, `Sidebar`, `Header`, `Footer`, `MainContainer`, `SearchComponent`, `ServiceUnavailableView`, `ProviderComponent`, `TranslationProvider` |
 | `components/custom/` | App-specific composites tied to domain concepts | `NavUser`, `TenantLink`, `LanguageDropdown`, `ThemeChanger`, `ImagePreview`, `BackLink`, `CookieConsentDialog` |
 | `components/notifications/` | The notification bell/panel/item trio | `NotificationBell`, `NotificationPanel`, `NotificationItem` |
 
@@ -73,7 +73,7 @@ Rules that fall out of this:
   `iconButtonVariants`) so other components can reuse the classes.
 - **`forwardRef` + `displayName`** for anything that wraps a DOM element (`Button`, `IconButton`,
   `Card`, `DataTableToolbarButton` — which must forward so it can serve as a Headless UI
-  `MenuButton` via `as`). Simple presentational components (`Badge`, `AdminPageContent`) skip it.
+  `MenuButton` via `as`). Simple presentational components (`Badge`, `PageContent`) skip it.
 - Cross-cutting combinations belong in `compoundVariants` (see `Badge`'s solid/outline matrix)
   rather than in conditional logic inside the component.
 - Compound components expose subcomponents from the same file: `Card`/`CardHeader`/`CardTitle`/
@@ -173,7 +173,7 @@ results"), never for caller-supplied text.
 
 Add `'use client'` as the first line whenever the component uses hooks, context, browser APIs or
 event handlers — that covers most of `components/ui`. Pure wrappers such as `Button`, `IconButton`,
-`Card` and `AdminPageContent` stay server-compatible; do not add the directive unnecessarily.
+`Card` and `PageContent` stay server-compatible; do not add the directive unnecessarily.
 
 ## Checklist
 

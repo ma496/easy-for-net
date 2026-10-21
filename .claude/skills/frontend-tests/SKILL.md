@@ -51,7 +51,7 @@ import { isValidRedirectPath } from './redirect'
 
 describe('isValidRedirectPath', () => {
   it('accepts local application paths', () => {
-    expect(isValidRedirectPath('/admin/users')).toBe(true)
+    expect(isValidRedirectPath('/users')).toBe(true)
   })
 
   it.each(['https://example.com', '//example.com', '/signin'])('rejects unsafe redirect %s', (path) => {
@@ -89,7 +89,7 @@ browser:
 - **Security- and routing-shaped helpers**: redirect validation, `isAllowed`, `getMatchedAuthUrl`
   (including the "two entries match the same path" error), the tenant-scope rules in
   `tenant-routing.ts` (`isPathAvailable`, `isWithoutUsableTenant`, …) for a platform account in no
-  tenant, one inside a tenant, and an ordinary member. A new `/admin` route that is not tenant-only
+  tenant, one inside a tenant, and an ordinary member. A new route that is not tenant-only
   gets its case there.
 - **Data shaping**: `getApiErrorMessages`, upload-limit arithmetic, export row mapping, `shortName`.
 - **Reducers** — call `slice.reducer(state, action)` and assert on the state it returns.

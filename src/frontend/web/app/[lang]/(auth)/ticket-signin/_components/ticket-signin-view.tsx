@@ -120,7 +120,7 @@ export const TicketSigninView = ({ platformUrl, tenantUrlTemplate }: TicketSigni
       if (userInfo.error || !userInfo.data) return null
 
       dispatch(setUserInfo(userInfo.data))
-      return userInfo.data.roles.find((role) => role.name === 'Admin') ? '/admin' : '/'
+      return '/'
     })().finally(() => {
       inFlight = null
     })

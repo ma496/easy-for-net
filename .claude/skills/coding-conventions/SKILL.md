@@ -111,7 +111,7 @@ trailing newline to C# files.
 **File names are kebab-case**: `user-create-form.tsx`, `use-table-url-state.ts`, `users-api.ts`,
 `users-dtos.ts`. Route folders are kebab-case too (`change-permissions`), private folders are
 prefixed with `_` (`_components`), and admin screens sit in a route group per backend feature
-(`admin/(identity)/users`, `admin/(tenancy)/editions`).
+(`(app)/(identity)/users`, `(app)/(tenancy)/editions`).
 
 **Exports.** Named exports for components, hooks and APIs (`export const UserTable = () => …`);
 `export default` only for Next.js `page.tsx` / `layout.tsx`. Barrel files (`components/ui/index.ts`,

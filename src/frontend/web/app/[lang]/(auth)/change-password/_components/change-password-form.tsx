@@ -81,7 +81,7 @@ export const ChangePasswordForm = () => {
             </div>
           </div>
           <div className="flex flex-col-reverse gap-2 rounded-b-xl border-t border-border bg-surface-2/50 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
-            <LocalizedLink href="/admin" className="btn btn-secondary">
+            <LocalizedLink href="/" className="btn btn-secondary">
               {t('common.cancel') || 'Cancel'}
             </LocalizedLink>
             <Button type="submit" isLoading={isChangingPassword}>

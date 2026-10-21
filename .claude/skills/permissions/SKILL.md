@@ -91,7 +91,7 @@ you add one of those.
 ## 5. Gate the UI
 
 - Route guard: add an entry to `src/frontend/web/auth-urls.ts`
-  (`{ url: '/admin/invoices', permissions: [Allow.Invoice_View] }`; `{id}` matches one segment).
+  (`{ url: '/invoices', permissions: [Allow.Invoice_View] }`; `{id}` matches one segment).
   `App.tsx` sends a signed-in caller lacking the permissions to `/unauthorized`; `proxy.ts` only uses
   `isAuthRequired` from the same file to force sign-in. The sidebar, global search and breadcrumbs also
   hide entries whose `authUrls` permissions the caller lacks.
@@ -100,11 +100,11 @@ you add one of those.
   button/link in `{canDelete && …}`. `isAllowed` requires **all** listed permissions.
 - Menu/search entries in `nav-items.ts` and `searchable-items.ts` when the permission unlocks a
   new destination.
-- Scope routing in `lib/utils/tenant-routing.ts`: a screen under `/admin` is tenant-only by default.
+- Scope routing in `lib/utils/tenant-routing.ts`: every screen but account self-service, the tenant picker and the anonymous screens is tenant-only by default.
   If its permission is `Both` and the screen should work for a platform account acting in no tenant,
   add its prefix to `platformAccessiblePathPrefixes`; if it is `Platform`-only, add it to
   `platformOnlyPathPrefixes` as well (or, for a screen about one record such as
-  `/admin/tenants/{id}/features`, to `platformOnlyPathPatterns`) so a caller inside a tenant is not
+  `/tenants/{id}/features`, to `platformOnlyPathPatterns`) so a caller inside a tenant is not
   offered it. `isPathAvailable`
   drives the sidebar, search, breadcrumbs and the `App.tsx` redirect.
 
