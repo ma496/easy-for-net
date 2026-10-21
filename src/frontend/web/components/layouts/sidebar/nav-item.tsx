@@ -5,7 +5,7 @@ import { NavItem } from '@/nav-items'
 import AnimateHeight from 'react-animate-height'
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { humanizeKey } from '@/i18n'
+import { humanizeKey, withoutLocale } from '@/i18n'
 import { RailFlyout } from './rail-flyout'
 
 /**
@@ -35,7 +35,7 @@ const labelClass = 'rounded-md bg-foreground px-2.5 py-1.5 text-xs font-medium w
  */
 export const SidebarNavItem = ({ item, currentMenu, pathname, t, onToggleMenu, compact = false }: NavItemProps) => {
   const submenu = item.children?.filter((child) => child.show !== false) ?? []
-  const path = pathname.replace(/^\/[a-z]{2}(\/|$)/, '/')
+  const path = withoutLocale(pathname)
 
   if (submenu.length > 0) {
     const isOpen = currentMenu === item.title

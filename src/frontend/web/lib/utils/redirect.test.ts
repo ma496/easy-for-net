@@ -3,7 +3,7 @@ import { isValidRedirectPath } from './redirect'
 
 describe('isValidRedirectPath', () => {
   it('accepts local application paths', () => {
-    expect(isValidRedirectPath('/admin/users')).toBe(true)
+    expect(isValidRedirectPath('/users')).toBe(true)
   })
 
   it.each(['https://example.com', '//example.com', '/signin'])('rejects unsafe redirect %s', (path) => {

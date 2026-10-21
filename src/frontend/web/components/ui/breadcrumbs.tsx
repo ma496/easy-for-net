@@ -4,7 +4,7 @@ import { NavItem, NavItemGroup, navItems } from '@/nav-items'
 import { authUrls } from '@/auth-urls'
 import { LocalizedLink as Link } from './localized-link'
 import { usePathname } from 'next/navigation'
-import { humanizeKey, useTranslation } from '@/i18n'
+import { humanizeKey, useTranslation, withoutLocale } from '@/i18n'
 import { useAppSelector } from '@/store/hooks'
 import { AuthState, cn, isAllowed, isPathAvailable } from '@/lib/utils'
 import { ChevronRight } from 'lucide-react'
@@ -62,14 +62,14 @@ interface BreadcrumbsProps {
 }
 
 /**
- * Breadcrumbs renders the navigation trail for the current path, using a localized link to "/admin" as the home entry and translating each segment's title from the nav-items configuration.
+ * Breadcrumbs renders the navigation trail for the current path, using a localized link to "/" as the home entry and translating each segment's title from the nav-items configuration.
  * An ancestor the user may not open is rendered as plain text, the same way the current page is, rather than as a link.
  * It is a client component that reads the current pathname with usePathname.
  */
 export function Breadcrumbs({ className }: BreadcrumbsProps) {
   const pathname = usePathname()
-  // get the path items based on pathname, support dynamic route like /admin/items/{id}
-  const normalizedPathname = pathname.replace(/^\/[a-z]{2}(\/|$)/, '/')
+  // get the path items based on pathname, support dynamic route like /items/{id}
+  const normalizedPathname = withoutLocale(pathname)
   const activePathItems = findActivePathItems(navItems, normalizedPathname)
   const { t } = useTranslation()
   const authState = useAppSelector((state) => state.auth)
@@ -77,7 +77,7 @@ export function Breadcrumbs({ className }: BreadcrumbsProps) {
   return (
     <ol className={cn('flex min-w-0 items-center gap-1.5 text-[13px] text-muted-foreground', className)}>
       <li className="shrink-0">
-        <Link href="/admin" className="truncate transition-colors hover:text-foreground">
+        <Link href="/" className="truncate transition-colors hover:text-foreground">
           {t('navigation.home') || 'Home'}
         </Link>
       </li>

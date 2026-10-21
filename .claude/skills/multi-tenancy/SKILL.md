@@ -238,10 +238,10 @@ neither: each host keeps its own session, so another tenant is a plain link, ope
 never an address built from a domain written in the web app (sign-up alone builds one, from the
 `tenantUrlTemplate` `GET /tenants/host` answers). Sign-in names the tenant its host is and takes no
 tenant. `store/tenant-cache.test.ts` fails if anything in the web app calls `/tenants/switch` or
-`/tenants/exit` again. `lib/utils/tenant-routing.ts` decides which `/admin` screens work
+`/tenants/exit` again. `lib/utils/tenant-routing.ts` decides which screens work
 without a tenant (`platformAccessiblePathPrefixes`), which are platform-only
 (`platformOnlyPathPrefixes`, and `platformOnlyPathPatterns` for one record's screens such as
-`/admin/tenants/{id}/features`), and where a caller with a stale or missing tenant lands
+`/tenants/{id}/features`), and where a caller with a stale or missing tenant lands
 (`isWithoutUsableTenant` → `/select-tenant`, which lists the caller's tenants as links); a new screen is tenant-only until listed there.
 
 ## 8. Testing isolation

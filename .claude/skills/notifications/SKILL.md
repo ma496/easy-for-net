@@ -251,7 +251,7 @@ with the platform-wide broadcasts alone; that is harmless, and the web app sends
 - `components/notifications/` holds `NotificationBell` (the badge, whose text is
   `formatUnreadBadge(count)`: no badge at zero or below, `99+` above 99), `NotificationPanel` (dropdown
   list) and `NotificationItem` (single row, renders `t(titleKey, notificationVariables(metadata))` and the
-  same for `messageKey`), with full pages under `app/[lang]/admin/notifications/` (the list at its
+  same for `messageKey`), with full pages under `app/[lang]/(app)/notifications/` (the list at its
   root, one notification under `[id]`).
 
 ## Testing

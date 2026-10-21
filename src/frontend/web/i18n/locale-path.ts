@@ -14,6 +14,17 @@ export const localeFromPathname = (pathname: string): string => {
 }
 
 /**
+ * Removes the locale segment from a pathname when its first segment names a routable locale, leaving
+ * any other path untouched - so a two-letter route such as `/ui` is never mistaken for a locale.
+ * The root of a locale (`/fr`) comes back as `/`.
+ */
+export const withoutLocale = (pathname: string): string => {
+  const segment = pathname.split('/')[1]
+  if (!(i18nConfig.locales as readonly string[]).includes(segment)) return pathname
+  return pathname.slice(segment.length + 1) || '/'
+}
+
+/**
  * Swaps the locale segment of a (locale-prefixed or unprefixed) pathname for another locale,
  * adding or removing the segment as the "default locale carries no prefix" convention requires.
  * Shared by every place that navigates to a different locale: the client `changeLanguage` calls,

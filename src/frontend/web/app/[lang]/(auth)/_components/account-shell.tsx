@@ -18,7 +18,7 @@ interface AccountShellProps {
 }
 
 /**
- * Single-column frame for the signed-in account screens that live outside the admin shell (profile,
+ * Single-column frame for the signed-in account screens that live outside the app shell (profile,
  * change password, tenant selection): a translucent top bar with the brand and the language and theme
  * switchers, then a `max-w-2xl` column with an optional back link, the title, and the page body.
  */

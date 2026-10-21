@@ -119,7 +119,7 @@ English default after each `t('…') ||`.
 
 ## Overrides and language settings
 
-Administrators change copy without a deploy on `app/[lang]/admin/localization` (permissions
+Administrators change copy without a deploy on `app/[lang]/(app)/localization` (permissions
 `Localization.View` / `Localization.Update`, `PermissionScope.Both`, no feature gate). Each edit
 writes to the acting scope only — a platform account in no tenant edits the platform rows every tenant
 inherits, a tenant administrator edits that tenant's:
@@ -140,7 +140,7 @@ switch or exit).
 
 Routable locales are `i18nConfig.locales` in `i18n/config.ts` (`defaultLocale: 'en'`). The default
 locale's URLs carry no prefix — `proxy.ts` rewrites internally for it and redirects for the others,
-so `/admin/users` and `/ar/admin/users` are both valid while `/en/admin/users`
+so `/users` and `/ar/users` are both valid while `/en/users`
 redirects to the unprefixed form. For a URL with no locale, `i18n/resolve-locale.ts` picks, first
 answer wins: the `preferred-language` cookie (written by `LanguageDropdown`) → the `scope-language`
 cookie → `Accept-Language` → the default, counting only cultures in the `scope-languages` cookie

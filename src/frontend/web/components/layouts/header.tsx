@@ -12,7 +12,7 @@ import { useNotificationHub } from '@/hooks'
 import { isPlatformWithoutTenant } from '@/lib/utils'
 
 /**
- * Header is the sticky, translucent top bar of the admin shell: the sidebar toggle (drawer below lg, rail from lg up) and the breadcrumb trail on the start side; search, notifications, theme, language and the user menu on the end side. It also subscribes to the notification hub.
+ * Header is the sticky, translucent top bar of the app shell: the sidebar toggle (drawer below lg, rail from lg up) and the breadcrumb trail on the start side; search, notifications, theme, language and the user menu on the end side. It also subscribes to the notification hub.
  */
 export const Header = () => {
   const dispatch = useAppDispatch()
@@ -34,7 +34,7 @@ export const Header = () => {
         >
           <PanelLeft size={18} />
         </button>
-        <LocalizedLink href="/admin" className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20 lg:hidden" aria-label={t('brand.name') || 'Easy For Net'}>
+        <LocalizedLink href="/" className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20 lg:hidden" aria-label={t('brand.name') || 'Easy For Net'}>
           <Image className="size-5" src="/assets/images/icon.png" alt="" width={20} height={20} unoptimized />
         </LocalizedLink>
         <div className="hidden h-5 w-px bg-border sm:block" />

@@ -130,14 +130,14 @@ through its `PropertyName`, since the PascalCase of the option name would not ma
 
 ## Component examples
 
-The pages under `src/frontend/web/app/[lang]/admin/ui/` demonstrate the component kit and ship only
+The pages under `src/frontend/web/app/[lang]/(app)/ui/` demonstrate the component kit and ship only
 with `-e true`. `-e false`, the default, deletes that directory. Everything else that exists only for
 those pages is found in two ways:
 
 - **Code** sits between marker lines: `// efn:examples:start` / `// efn:examples:end` in `.ts`/`.tsx`,
   and `/* efn:examples:start */` / `/* efn:examples:end */` in `.css`. Each marker sits alone on its
   line. Today they mark the nav group and its icon import (`nav-items.ts`), the search entries
-  (`searchable-items.ts`), and the `/admin/ui` platform prefix and its test case
+  (`searchable-items.ts`), and the `/ui` platform prefix and its test case
   (`lib/utils/tenant-routing{,.test}.ts`).
 - **Translation keys** follow a naming rule: `page.ui.*`, `navigation.components`, and every
   `navigation.ui<Name>` and `search.ui<Name>` key. `RemoveExampleResourceKeysAsync` removes them from
@@ -146,7 +146,7 @@ those pages is found in two ways:
 `StripExampleRegionsAsync` removes the marked regions, or with `-e true` only the marker lines, so
 no marker reaches a generated project either way. An unbalanced or nested marker fails generation.
 
-A new example page goes under `admin/ui/`, names its keys by that rule, and marks anything it needs
+A new example page goes under `(app)/ui/`, names its keys by that rule, and marks anything it needs
 outside the directory. A component the examples merely use (`CodeShowcase`, `DatePicker`, `TreeView`,
 …) is part of the kit and is never marked.
 

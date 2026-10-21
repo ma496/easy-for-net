@@ -59,7 +59,7 @@ describe('changing the acting tenant', () => {
 const tenantLinkSites = [
   'components/custom/nav-user.tsx',
   'app/[lang]/(auth)/select-tenant/_components/select-tenant-view.tsx',
-  'app/[lang]/admin/(tenancy)/tenants/_components/tenant-table.tsx',
+  'app/[lang]/(app)/(tenancy)/tenants/_components/tenant-table.tsx',
 ]
 
 describe('links to another tenant', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { i18nConfig } from './config'
-import { localeFromPathname, withLocale } from './locale-path'
+import { localeFromPathname, withLocale, withoutLocale } from './locale-path'
 
 // Two of this deployment's actual non-default locales, so the test exercises `withLocale` against the
 // same `i18nConfig` it reads internally rather than codes that may not be routable at all (a `-m false`
@@ -15,19 +15,19 @@ describe('withLocale', () => {
   })
 
   it('leaves an unprefixed path unprefixed when switching to the default locale', () => {
-    expect(withLocale('/admin/users', defaultLocale)).toBe('/admin/users')
+    expect(withLocale('/users', defaultLocale)).toBe('/users')
   })
 
   it.skipIf(!localeA)('adds the locale segment to an unprefixed path', () => {
-    expect(withLocale('/admin/users', localeA)).toBe(`/${localeA}/admin/users`)
+    expect(withLocale('/users', localeA)).toBe(`/${localeA}/users`)
   })
 
   it.skipIf(!(localeA && localeB))('swaps an existing locale segment for another one', () => {
-    expect(withLocale(`/${localeA}/admin/users`, localeB)).toBe(`/${localeB}/admin/users`)
+    expect(withLocale(`/${localeA}/users`, localeB)).toBe(`/${localeB}/users`)
   })
 
   it.skipIf(!localeA)('drops the locale segment when switching to the default locale', () => {
-    expect(withLocale(`/${localeA}/admin/users`, defaultLocale)).toBe('/admin/users')
+    expect(withLocale(`/${localeA}/users`, defaultLocale)).toBe('/users')
   })
 
   it.skipIf(!localeA)('adds the locale segment to the root path for a non-default locale', () => {
@@ -43,9 +43,29 @@ describe('withLocale', () => {
   })
 })
 
+describe('withoutLocale', () => {
+  it('leaves an unprefixed path as it is', () => {
+    expect(withoutLocale('/users')).toBe('/users')
+    expect(withoutLocale('/')).toBe('/')
+  })
+
+  it('never mistakes a two-letter route for a locale', () => {
+    expect(withoutLocale('/ui/buttons')).toBe('/ui/buttons')
+  })
+
+  it('removes the default locale segment', () => {
+    expect(withoutLocale(`/${defaultLocale}/users`)).toBe('/users')
+  })
+
+  it.skipIf(!localeA)('removes a non-default locale segment, leaving the root of a locale as /', () => {
+    expect(withoutLocale(`/${localeA}/users`)).toBe('/users')
+    expect(withoutLocale(`/${localeA}`)).toBe('/')
+  })
+})
+
 describe('localeFromPathname', () => {
   it('falls back to the default locale for an unprefixed path', () => {
-    expect(localeFromPathname('/admin/users')).toBe(defaultLocale)
+    expect(localeFromPathname('/users')).toBe(defaultLocale)
   })
 
   it('falls back to the default locale for the root path', () => {
@@ -53,10 +73,10 @@ describe('localeFromPathname', () => {
   })
 
   it.skipIf(!localeA)('reads the locale segment off a prefixed path', () => {
-    expect(localeFromPathname(`/${localeA}/admin/users`)).toBe(localeA)
+    expect(localeFromPathname(`/${localeA}/users`)).toBe(localeA)
   })
 
   it('falls back to the default locale when the first segment names no routable locale', () => {
-    expect(localeFromPathname('/not-a-locale/admin/users')).toBe(defaultLocale)
+    expect(localeFromPathname('/not-a-locale/users')).toBe(defaultLocale)
   })
 })
