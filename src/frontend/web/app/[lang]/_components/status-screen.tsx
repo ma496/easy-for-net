@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { ArrowLeft, type LucideIcon } from 'lucide-react'
 import { useLocalizedRouter } from '@/hooks'
 import { useTranslation } from '@/i18n'
@@ -11,18 +12,22 @@ import { SiteControls } from './site-controls'
  * Props for the {@link StatusScreen} component.
  */
 interface StatusScreenProps {
-  /** The HTTP-style status shown as a badge above the title, e.g. 404. */
-  code: number
+  /** The HTTP-style status shown as a badge above the title, e.g. 404; no badge when omitted. */
+  code?: number
   icon: LucideIcon
+  /** The icon's colour: `danger` (the default) for an error, `primary` for a screen that offers a choice. */
+  tone?: 'danger' | 'primary'
   title: string
-  message: string
+  message: ReactNode
+  /** Replaces the back button with another way on, such as a link to another site. */
+  action?: ReactNode
 }
 
 /**
  * Full-page status view (not found, forbidden) with the site's top bar, an icon tile, the status code,
- * a title and message, and a back button that returns one step in the browser history.
+ * a title and message, and a back button that returns one step in the browser history - or the screen's own action in its place.
  */
-export const StatusScreen = ({ code, icon: Icon, title, message }: StatusScreenProps) => {
+export const StatusScreen = ({ code, icon: Icon, tone = 'danger', title, message, action }: StatusScreenProps) => {
   const router = useLocalizedRouter()
   const { t } = useTranslation()
 
@@ -38,14 +43,16 @@ export const StatusScreen = ({ code, icon: Icon, title, message }: StatusScreenP
       <main className="relative flex flex-1 items-center justify-center px-6 pb-24">
         <div className="w-full max-w-md animate-fade-up text-center">
           <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-2xl border border-border bg-surface shadow-xs">
-            <Icon className="size-8 text-danger" strokeWidth={1.6} />
+            <Icon className={tone === 'primary' ? 'size-8 text-primary' : 'size-8 text-danger'} strokeWidth={1.6} />
           </div>
-          <span className="badge badge-danger mb-3 tabular-nums">{code}</span>
+          {code !== undefined && <span className="badge badge-danger mb-3 tabular-nums">{code}</span>}
           <h1 className="text-2xl font-semibold tracking-tight wrap-break-word sm:text-3xl">{title}</h1>
           <p className="mt-3 text-sm leading-relaxed wrap-break-word text-muted-foreground sm:text-base">{message}</p>
-          <Button type="button" variant="outline" size="lg" className="mt-8" icon={<ArrowLeft className="size-4 rtl:-scale-x-100" />} onClick={() => router.back()}>
-            {t('common.back') || 'Back'}
-          </Button>
+          {action ?? (
+            <Button type="button" variant="outline" size="lg" className="mt-8" icon={<ArrowLeft className="size-4 rtl:-scale-x-100" />} onClick={() => router.back()}>
+              {t('common.back') || 'Back'}
+            </Button>
+          )}
         </div>
       </main>
     </div>

@@ -8,7 +8,7 @@ RUN npm ci
 FROM node:24-alpine AS build
 WORKDIR /app
 # NEXT_PUBLIC_* values are inlined into the bundle at build time, so they are build arguments
-ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_API_URL=/api
 ARG NEXT_PUBLIC_APP_ENV=production
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
     NEXT_PUBLIC_APP_ENV=$NEXT_PUBLIC_APP_ENV \

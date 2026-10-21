@@ -31,7 +31,7 @@ export const CardsExample = () => {
   const actionsCardCode = `<Card className="w-full max-w-md">
   <CardHeader className="flex-row items-start justify-between gap-4">
     <div className="min-w-0">
-      <CardTitle>Workspace name</CardTitle>
+      <CardTitle>Tenant name</CardTitle>
       <p className="text-sm text-muted-foreground">Shown in the sidebar and in emails.</p>
     </div>
     <IconButton icon={<MoreHorizontalIcon />} variant="ghost" size="sm" aria-label="More" />
@@ -154,13 +154,13 @@ export const CardsExample = () => {
               <Card className="w-full max-w-md">
                 <CardHeader className="flex-row items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <CardTitle>Workspace name</CardTitle>
+                    <CardTitle>Tenant name</CardTitle>
                     <p className="text-sm text-muted-foreground">Shown in the sidebar and in emails.</p>
                   </div>
                   <IconButton icon={<MoreHorizontalIcon />} variant="ghost" size="sm" aria-label="More" />
                 </CardHeader>
                 <CardContent>
-                  <input className="form-input" defaultValue="Acme Inc." aria-label="Workspace name" />
+                  <input className="form-input" defaultValue="Acme Inc." aria-label="Tenant name" />
                 </CardContent>
                 <CardFooter className="justify-end border-t border-border pt-5 sm:pt-5">
                   <Button variant="outline">Cancel</Button>

@@ -39,7 +39,12 @@ public static class ErrorCodes
     public static readonly ErrorCode NotTenantMember = new("notTenantMember");
     public static readonly ErrorCode NoActiveTenant = new("noActiveTenant");
     public static readonly ErrorCode TenantRequired = new("tenantRequired");
+    public static readonly ErrorCode TenantHostMismatch = new("tenantHostMismatch");
+    public static readonly ErrorCode TenantHostRequired = new("tenantHostRequired");
+    public static readonly ErrorCode TenantAddressNotConfigured = new("tenantAddressNotConfigured");
+    public static readonly ErrorCode SignInTicketInvalid = new("signInTicketInvalid");
     public static readonly ErrorCode TenantIdentifierAlreadyExists = new("tenantIdentifierAlreadyExists");
+    public static readonly ErrorCode TenantIdentifierReserved = new("tenantIdentifierReserved");
     public static readonly ErrorCode DuplicateTenantMembership = new("duplicateTenantMembership");
     public static readonly ErrorCode LastTenantAdministrator = new("lastTenantAdministrator");
     public static readonly ErrorCode SystemCreatedTenantCannotBeModified = new("systemCreatedTenantCannotBeModified");

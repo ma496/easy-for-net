@@ -5,7 +5,8 @@
 #   sh remote.sh check   [KEY=value ...]   # report the prerequisites, change nothing
 #   sh remote.sh prepare [KEY=value ...]   # prerequisites, swap, firewall, Coolify, API token,
 #                                          # and a deploy key when the repository is private
-#   sh remote.sh deploy  [KEY=value ...]   # project, application, domain, env vars, deployment
+#   sh remote.sh deploy  [KEY=value ...]   # project, application, domains (the platform host and
+#                                          # *.<domain>), env vars, DNS-01, deployment
 #
 # POSIX sh on purpose: it runs on whatever the VPS ships (dash, bash, busybox ash). Every
 # step looks before it acts, so running a phase again changes only what is missing.
@@ -407,18 +408,168 @@ probe_source() {
   result "$(jq -cn --arg k "$(cat "$key_file.pub")" --arg u "$key_uuid" --arg n "$key_name" '{visibility: "private", publicKey: $k, keyUuid: $u, keyName: $n}')"
 }
 
+# --- tenant subdomains ---------------------------------------------------------------------
+
+PROXY_DIR=/data/coolify/proxy
+
+# tenants_service APP: the Traefik service the application's proxy container defines by a label
+# (docker-compose.coolify.yml, from the TENANTS_SERVICE variable). Coolify names the container anew
+# on each deployment (proxy-<uuid>-<timestamp>), and every application's proxy answers to the alias
+# 'proxy', so the router reaches it through the Docker provider rather than by a host name.
+tenants_service() { printf 'efn-%s-tenants' "$1"; }
+
+# tenant_router APP DOMAIN [DNS_PROVIDER]: a router in Traefik's file provider sending every
+# <label>.<domain> to the application's proxy service, at the lowest priority, so the platform
+# host's own router and every other application's hosts win. It serves the tenants whatever Coolify
+# makes of a wildcard domain. With a DNS provider it also asks for the *.<domain> wildcard
+# certificate (DNS-01); without one Traefik has no certificate for a tenant host it was not told
+# about in advance, and serves its default one there.
+tenant_router() {
+  if [ ! -d "$PROXY_DIR/dynamic" ]; then
+    warn "$PROXY_DIR/dynamic not found (is Coolify's proxy Traefik?): tenant subdomains are not routed"
+    return 0
+  fi
+  case $1 in
+    "" | *[!a-z0-9-]*) die "APP_NAME '$1' may hold only lower-case letters, digits and hyphens" ;;
+  esac
+  name="efn-$1"
+  service="$(tenants_service "$1")@docker"
+  bt='`'
+  escaped=$(printf '%s' "$2" | sed 's/\./\\./g')
+  # Traefik v3 takes a regular expression, v2 a {name:regexp} template.
+  image=$(docker inspect -f '{{.Config.Image}}' coolify-proxy 2>/dev/null || true)
+  case $image in
+    *:v2* | *:2.*) rule="HostRegexp(${bt}{tenant:[a-z0-9-]+}.$2${bt})" ;;
+    *) rule="HostRegexp(${bt}^[a-z0-9-]+\\.${escaped}\$${bt})" ;;
+  esac
+  if [ -n "${3:-}" ]; then
+    tls="      tls:
+        certResolver: letsencrypt
+        domains:
+          - main: '*.$2'"
+  else
+    tls="      tls: {}"
+  fi
+  file="$PROXY_DIR/dynamic/$name.yaml"
+  cat >"$file.tmp" <<EOF_ROUTER
+# Written by the deploy-vps script: every tenant subdomain of $2 to $1's proxy service.
+http:
+  routers:
+    $name-tenants-http:
+      rule: '$rule'
+      entryPoints: [http]
+      priority: 1
+      middlewares: [$name-https]
+      service: $service
+    $name-tenants:
+      rule: '$rule'
+      entryPoints: [https]
+      priority: 1
+      service: $service
+$tls
+  middlewares:
+    $name-https:
+      redirectScheme:
+        scheme: https
+EOF_ROUTER
+  chmod 644 "$file.tmp"
+  mv "$file.tmp" "$file"
+  ok "tenant subdomains *.$2 -> $service ($file)"
+}
+
+# dns_challenge PROVIDER ENV_NAMES ENV_LINES DOMAIN: let Coolify's Traefik answer DNS-01 challenges through
+# the DNS provider's API, so that it can hold the *.<domain> wildcard certificate. The token goes
+# into a root-only env file the proxy service reads; the proxy's compose file gains only that file's
+# name and the provider's, on lines marked "# efn-dns" so that a later run replaces them. The HTTP-01
+# challenge stays configured beside it, for the certificates this server already obtains that way;
+# a wildcard can only be validated over DNS-01. One DNS provider serves the whole server: the last
+# deploy given one sets it.
+dns_challenge() {
+  step "DNS-01 challenge through $1"
+  compose_file="$PROXY_DIR/docker-compose.yml"
+  [ -f "$compose_file" ] || die "$compose_file not found: Coolify's proxy is not the Traefik this script configures"
+  grep -q 'acme\.storage' "$compose_file" || die "$compose_file has no letsencrypt resolver (acme.storage) to add the DNS challenge to"
+  if grep -v '# efn-dns' "$compose_file" | grep -q '^ *env_file:'; then
+    die "$compose_file already has an env_file: add $2 to it, and '--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=$1' to the proxy's command, by hand"
+  fi
+  env_file="$PROXY_DIR/efn-dns.env"
+  # $3 is the env file's lines, NAME=value for each of the variables $2 names.
+  printf '%s\n' "$3" >"$env_file"
+  chmod 600 "$env_file"
+  grep -v '# efn-dns' "$compose_file" | awk -v p="$1" -v f="$env_file" -v q="'" '
+    # The env file, as a key of the service that has the command, just before its "command:".
+    !env_done && match($0, /^ +command:/) {
+      indent = substr($0, 1, RLENGTH - 8)
+      print indent "env_file: # efn-dns"
+      print indent "  - " f " # efn-dns"
+      env_done = 1
+    }
+    { print }
+    # The provider, as two more items of the command list, after the resolver storage item.
+    !cmd_done && /acme\.storage/ && match($0, /^ +- /) {
+      item = substr($0, 1, RLENGTH)
+      print item q "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=" p q " # efn-dns"
+      print item q "--certificatesresolvers.letsencrypt.acme.dnschallenge.resolvers=1.1.1.1:53,8.8.8.8:53" q " # efn-dns"
+      cmd_done = 1
+    }
+  ' >"$WORK/proxy-compose.yml"
+  if [ "$(grep -c '# efn-dns' "$WORK/proxy-compose.yml")" -ne 4 ]; then
+    die "could not add the DNS challenge to $compose_file (left unchanged); see https://coolify.io/docs/core/networking/proxy/traefik/dns-challenge"
+  fi
+  cp "$compose_file" "$WORK/proxy-compose.before"
+  if ! cmp -s "$WORK/proxy-compose.yml" "$compose_file"; then
+    cp "$compose_file" "$compose_file.efn-backup"
+    cat "$WORK/proxy-compose.yml" >"$compose_file"
+  fi
+  # Recreated only when its configuration or the env file changed, a no-op otherwise. Every
+  # application on this server goes through this proxy, so a change interrupts them for seconds.
+  # Coolify connects the proxy to each application's own network, which its compose file does not
+  # list: a recreated container is connected to them again, or the other applications answer 502.
+  networks=$(docker inspect -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' coolify-proxy 2>/dev/null || true)
+  reconnect() { for net in $networks; do docker network connect "$net" coolify-proxy >/dev/null 2>&1 || true; done; }
+  if ! (cd "$PROXY_DIR" && docker compose up -d --remove-orphans >/dev/null 2>&1); then
+    cat "$WORK/proxy-compose.before" >"$compose_file"
+    (cd "$PROXY_DIR" && docker compose up -d --remove-orphans >/dev/null 2>&1) || true
+    reconnect
+    die "Coolify's proxy did not start with the DNS challenge, so its previous configuration is back (docker logs coolify-proxy)"
+  fi
+  reconnect
+  ok "Traefik answers DNS-01 through $1 (token in $env_file); the *.$4 certificate follows within minutes"
+}
+
 # --- deploy --------------------------------------------------------------------------------
 
 deploy() {
+  # The DNS token is read and its file deleted before anything can fail.
+  dns_provider=$(arg DNS_PROVIDER)
+  dns_env=$(arg DNS_ENV)
+  dns_token=""
+  token_file=$(arg DNS_TOKEN_FILE)
+  if [ -n "$token_file" ]; then
+    dns_token=$(cat "$token_file" 2>/dev/null || true)
+    rm -f "$token_file"
+  fi
   app=$(arg APP_NAME)
   domain=$(arg DOMAIN)
+  platform_subdomain=$(arg PLATFORM_SUBDOMAIN)
+  platform_subdomain=${platform_subdomain:-app}
+  case $platform_subdomain in
+    *[!a-z0-9-]* | -* | *-) die "PLATFORM_SUBDOMAIN '$platform_subdomain' is not one lower-case DNS label" ;;
+  esac
   repo=$(arg REPO)
   branch=$(arg BRANCH)
   key_uuid=$(arg KEY_UUID)
   compose=$(arg COMPOSE)
   compose=${compose:-/docker-compose.coolify.yml}
   [ -n "$app" ] && [ -n "$domain" ] && [ -n "$repo" ] && [ -n "$branch" ] || die "APP_NAME, DOMAIN, REPO and BRANCH are required"
-  url="https://$domain"
+  if [ -n "$dns_provider" ] && { [ -z "$dns_env" ] || [ -z "$dns_token" ]; }; then
+    die "DNS_PROVIDER needs DNS_ENV and the uploaded token file"
+  fi
+  # The platform at <platform subdomain>.<domain> (app.<domain> by default), every tenant at
+  # <identifier>.<domain>.
+  platform_host="$platform_subdomain.$domain"
+  url="https://$platform_host"
+  tenant_template="https://{tenant}.$domain"
   load_token
 
   step "Coolify project and application '$app'"
@@ -454,8 +605,11 @@ deploy() {
     ok "project $app exists"
   fi
 
-  # Coolify routes the domain to the proxy service's port 80; its Traefik holds the certificate.
+  # Coolify routes the platform host and the tenants' wildcard to the proxy service's port 80; its
+  # Traefik terminates TLS. The application is created with the platform host alone, which every
+  # Coolify accepts; the wildcard is added below, once it exists.
   domains=$(jq -cn --arg d "$url:80" '[{name: "proxy", domain: $d}]')
+  all_domains=$(jq -cn --arg d "$url:80,https://*.$domain:80" '[{name: "proxy", domain: $d}]')
 
   api_must GET /applications
   app_uuid=$(printf '%s' "$API_BODY" | jq -r --arg n "$app" '[.[] | select(.name == $n)][0].uuid // empty')
@@ -483,16 +637,36 @@ deploy() {
   # Only the branch: Coolify splits the repository URL into a source and a path when the
   # application is created, and a full URL sent again would be stored inside that path.
   api_must PATCH "/applications/$app_uuid" "$(jq -cn --arg b "$branch" '{git_branch: $b}')"
+  # Coolify escapes every $ in a compose file's labels by default, which would keep Compose from
+  # filling in the tenants' service name (docker-compose.coolify.yml).
+  api PATCH "/applications/$app_uuid" '{"is_container_label_escape_enabled": false}'
+  api_ok || die "could not turn off label escaping ($API_STATUS: $API_BODY). In the dashboard, open the application and untick 'Escape special characters in labels', then run again"
   # The domain is set when the application is created. Coolify accepts a change to it only once
   # it has read the compose file, at the first deployment; until then the creation's value stands.
-  api PATCH "/applications/$app_uuid" "$(jq -cn --argjson d "$domains" '{docker_compose_domains: $d}')"
+  api PATCH "/applications/$app_uuid" "$(jq -cn --argjson d "$all_domains" '{docker_compose_domains: $d}')"
   if api_ok; then
-    ok "domain $url -> proxy:80"
+    ok "domains $url and https://*.$domain -> proxy:80"
   elif printf '%s' "$API_BODY" | grep -q docker_compose_raw; then
-    ok "domain $url -> proxy:80 (set when the application was created)"
+    ok "domain $url -> proxy:80 (set when the application was created; *.$domain is added on the next deploy)"
   else
-    die "could not attach $domain ($API_STATUS: $API_BODY). In the dashboard, open the application and set the 'proxy' service's domain to $url:80"
+    # A Coolify that refuses a wildcard domain still serves the tenants, through tenant_router.
+    api PATCH "/applications/$app_uuid" "$(jq -cn --argjson d "$domains" '{docker_compose_domains: $d}')"
+    if api_ok; then
+      ok "domain $url -> proxy:80 (Coolify refused https://*.$domain; the tenants' router serves it)"
+    else
+      die "could not attach $url ($API_STATUS: $API_BODY). In the dashboard, open the application and set the 'proxy' service's domains to $url:80,https://*.$domain:80"
+    fi
   fi
+
+  # A DNS challenge an earlier deploy configured stays in force when this one names no provider.
+  wildcard_via=$dns_provider
+  if [ -z "$wildcard_via" ] && grep -q 'dnschallenge.provider=.*# efn-dns' "$PROXY_DIR/docker-compose.yml" 2>/dev/null; then
+    wildcard_via=configured
+  fi
+  # The challenge first: a router asking for the wildcard is written only once it can be answered.
+  if [ -n "$dns_provider" ]; then dns_challenge "$dns_provider" "$dns_env" "$dns_token" "$domain"; fi
+  dns_token=""
+  tenant_router "$app" "$domain" "$wildcard_via"
 
   step "Environment variables"
   api_must GET "/applications/$app_uuid/envs"
@@ -502,6 +676,8 @@ deploy() {
   set_env() { changes=$(printf '%s' "$changes" | jq -c --arg k "$1" --arg v "$2" '. + [{key: $k, value: $v, is_preview: false}]'); }
   # Replaced every run: what the domain decides.
   set_env PUBLIC_URL "$url"
+  set_env TENANT_URL_TEMPLATE "$tenant_template"
+  set_env TENANTS_SERVICE "$(tenants_service "$app")"
   # Filled once and never overwritten: changing a password here would lock the app out of its own
   # database, and a new JWT key would sign every user out.
   [ -n "$(env_value POSTGRES_DB)" ] || set_env POSTGRES_DB app
@@ -552,17 +728,33 @@ deploy() {
   step "Waiting for $url"
   # Through this server's own proxy, so a DNS record that has not spread yet does not matter.
   i=0
-  until curl -fsS --max-time 10 --resolve "$domain:443:127.0.0.1" "$url/health" >/dev/null 2>&1; do
+  until curl -fsS --max-time 10 --resolve "$platform_host:443:127.0.0.1" "$url/health" >/dev/null 2>&1; do
     i=$((i + 1))
     if [ "$i" -gt 30 ]; then
-      if curl -fsSk --max-time 10 --resolve "$domain:443:127.0.0.1" "$url/health" >/dev/null 2>&1; then
-        warn "the app answers, but its certificate is not valid yet: check that $domain points at this server"
+      if curl -fsSk --max-time 10 --resolve "$platform_host:443:127.0.0.1" "$url/health" >/dev/null 2>&1; then
+        warn "the app answers, but its certificate is not valid yet: check that $platform_host points at this server"
         break
       fi
       die "$url/health does not answer; check the application's logs in the dashboard"
     fi
     sleep 10
   done
+
+  # A host no tenant holds still reaches the app through the tenants' router; -k because without a
+  # DNS provider Traefik serves its default certificate there.
+  if [ -f "$PROXY_DIR/dynamic/efn-$app.yaml" ]; then
+    probe="efn-check-$(rand_alnum 8 | tr 'A-Z' 'a-z').$domain"
+    i=0
+    until curl -fsSk --max-time 10 --resolve "$probe:443:127.0.0.1" "https://$probe/health" >/dev/null 2>&1; do
+      i=$((i + 1))
+      if [ "$i" -gt 6 ]; then
+        warn "tenant subdomains do not reach the app: https://$probe/health does not answer through Traefik (docker logs coolify-proxy)"
+        break
+      fi
+      sleep 5
+    done
+    [ "$i" -gt 6 ] || ok "tenant subdomains reach the app"
+  fi
 
   say ""
   say "Deployed: $url"

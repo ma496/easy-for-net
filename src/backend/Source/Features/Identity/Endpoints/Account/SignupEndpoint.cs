@@ -4,6 +4,7 @@ using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Settings.Core;
 using Backend.Features.Tenancy.Core;
+using Backend.Features.Tenancy.Core.Hosting;
 using Backend.Settings;
 using Microsoft.Extensions.Options;
 
@@ -24,12 +25,17 @@ namespace Backend.Features.Identity.Endpoints.Account;
 /// The account created is an ordinary one, never a platform account: that tier belongs to the
 /// platform's own administrators and no self-service surface can claim it.
 /// </para>
+/// <para>
+/// Sign-up is answered on the platform host or on a host naming nothing, and refused on a tenant host
+/// with 400 <c>tenantHostMismatch</c>. The verification email links to the new tenant's origin
+/// (<c>Web:DefaultDomain</c> when host resolution is off).
+/// </para>
 /// </remarks>
 sealed class SignupEndpoint(IUserService userService,
                             ITokenService tokenService,
                             ITenantService tenantService,
                             IEmailBackgroundJobs emailBackgroundJobs,
-                            IOptions<WebSetting> webSetting,
+                            ITenantHostResolver tenantHostResolver,
                             ISettingProvider settingProvider,
                             ITenantContext tenantContext,
                             AppDbContext dbContext)
@@ -44,6 +50,14 @@ sealed class SignupEndpoint(IUserService userService,
 
     public override async Task HandleAsync(SignupRequest request, CancellationToken cancellationToken)
     {
+        // Signing up creates a tenant, which is platform business: on a tenant's host it is refused, as
+        // sign-in refuses a tenant that is not the host's. The platform host and a host naming nothing
+        // (resolution off, or a bearer client on an unknown host) both allow it.
+        if (tenantHostResolver.Resolve(HttpContext).Kind == TenantHostKind.Tenant)
+        {
+            this.ThrowError(ErrorCodes.TenantHostMismatch);
+        }
+
         // The platform's value: the tenant this sign-up creates has no override of its own yet.
         var signinSettings = await settingProvider.GetAsync<SigninSettings>((Guid?)null, cancellationToken);
 
@@ -102,7 +116,7 @@ sealed class SignupEndpoint(IUserService userService,
             // administrator role, gives this account an active membership, and grants it that role - so a
             // tenant created here is administrable from the moment it exists. It joins the transaction
             // opened above rather than opening one of its own.
-            await tenantService.CreateAsync(
+            var tenant = await tenantService.CreateAsync(
                 new() { Name = request.TenantName, Identifier = request.TenantIdentifier },
                 user.Id,
                 cancellationToken);
@@ -118,11 +132,14 @@ sealed class SignupEndpoint(IUserService userService,
             // naming a token row that a rollback had just discarded.
             if (verificationToken is not null)
             {
+                // The link opens the new tenant's own origin, where the account will sign in; with host
+                // resolution off there is no such origin and it opens the platform's.
+                var origin = tenantHostResolver.TenantUrl(tenant.Identifier) ?? tenantHostResolver.PlatformUrl();
                 emailBackgroundJobs.EnqueueForPlatform(user.Email, "Verify Email",
                     @$"
             <div>
                 <p>Click the link below to verify your email:</p>
-                <a href=""{webSetting.Value.DefaultDomain}/verify-email?token={verificationToken.Value}"">Verify Email</a>
+                <a href=""{origin}/verify-email?token={verificationToken.Value}"">Verify Email</a>
             </div>", true);
             }
 
@@ -193,7 +210,7 @@ sealed class SignupValidator : Validator<SignupRequest>
 
         RuleFor(x => x.TenantIdentifier)
             .NotEmpty()
-            .TenantIdentifier();
+            .TenantIdentifier(Resolve<IOptions<WebSetting>>().Value);
     }
 }
 

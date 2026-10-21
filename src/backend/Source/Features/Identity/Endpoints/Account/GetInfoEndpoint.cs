@@ -1,4 +1,5 @@
 using Backend.Features.Tenancy.Core;
+using Backend.Features.Tenancy.Core.Hosting;
 using Backend.Features.Identity.Core;
 
 namespace Backend.Features.Identity.Endpoints.Account;
@@ -18,7 +19,8 @@ namespace Backend.Features.Identity.Endpoints.Account;
 /// </remarks>
 sealed class GetInfoEndpoint(AppDbContext dbContext,
                              ICurrentUserService currentUserService,
-                             ITenantContext tenantContext)
+                             ITenantContext tenantContext,
+                             ITenantHostResolver tenantHostResolver)
     : EndpointWithoutRequest<UserGetInfoResponse>
 {
     public override void Configure()
@@ -82,6 +84,15 @@ sealed class GetInfoEndpoint(AppDbContext dbContext,
         // not been renewed. Only the display detail (identifiers, display names, which role grants what)
         // is looked up.
         user.Roles = await RolesOfSessionAsync(scopedTenantId, cancellationToken);
+
+        // Where each tenant is served, so the web app moves between tenants by navigating to their hosts;
+        // null throughout when host resolution is off. The platform origin is always known.
+        foreach (var tenant in user.ActiveTenant is { } active && !user.Tenants.Contains(active) ? [.. user.Tenants, active] : user.Tenants)
+        {
+            tenant.Url = tenantHostResolver.TenantUrl(tenant.Identifier);
+        }
+
+        user.PlatformUrl = tenantHostResolver.PlatformUrl();
 
         await Send.ResponseAsync(user, cancellation: cancellationToken);
     }
@@ -273,6 +284,12 @@ sealed class UserGetInfoResponse
     public List<RoleDto> Roles { get; set; } = [];
 
     /// <summary>
+    /// Gets or sets the platform origin (<c>Web:DefaultDomain</c>) - where a platform account works in no
+    /// tenant. Always present, whether or not host resolution is on.
+    /// </summary>
+    public string PlatformUrl { get; set; } = null!;
+
+    /// <summary>
     /// A tenant the caller may work in, identified well enough for the application chrome to name it
     /// and for a switch to address it.
     /// </summary>
@@ -281,6 +298,13 @@ sealed class UserGetInfoResponse
         public string Name { get; set; } = null!;
         public string Identifier { get; set; } = null!;
         public TenantStatus Status { get; set; }
+
+        /// <summary>
+        /// Gets or sets the origin the tenant is served on (<c>Web:TenantOriginTemplate</c> with its
+        /// identifier filled in), or <see langword="null"/> when host resolution is off - the property is
+        /// then present with a null value, and the web app stays on the host it is on.
+        /// </summary>
+        public string? Url { get; set; }
     }
 
     /// <summary>

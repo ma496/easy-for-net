@@ -7,9 +7,9 @@ import {
   TenantCreateResponse,
   TenantDeleteRequest,
   TenantDeleteResponse,
-  TenantExitResponse,
   TenantGetRequest,
   TenantGetResponse,
+  TenantHostGetResponse,
   TenantListRequest,
   TenantListResponse,
   TenantMemberAddRequest,
@@ -26,15 +26,13 @@ import {
   TenantReactivateResponse,
   TenantSuspendRequest,
   TenantSuspendResponse,
-  TenantSwitchRequest,
-  TenantSwitchResponse,
   TenantUpdateRequest,
   TenantUpdateResponse
 } from './tenants-dtos'
 
 /**
  * Re-reads the account info once a membership mutation has succeeded for the signed-in account itself,
- * so the tenants the header offers - which come from that info, not from a cached query - pick up a
+ * so the other tenants the user menu links to - which come from that info, not from a cached query - pick up a
  * tenant the account was just added to or drop one it was just removed from. A mutation that touched
  * somebody else leaves the session state alone. A failed read keeps the previous info standing.
  */
@@ -67,12 +65,12 @@ const refreshOwnTenants = async (
 /**
  * RTK Query API for tenancy: the tenant lifecycle (list, get, create, update, suspend,
  * reactivate, delete), tenant membership (list, add, replace roles, remove), self-service
- * onboarding and tenant switching. Uses the 'Tenants' and 'TenantMembers' tag types, and
- * re-declares 'Users' so member mutations can refresh the tenant-scoped user surfaces. Adding or
- * removing a member also invalidates that tenant's 'Tenants' tags, because the list and detail screens
- * show how many accounts belong to it, and re-reads the account info when the member is the caller.
- * `tenantSwitch` and `tenantExit` deliberately carry no tags: the caller drops the whole cache with
- * `appApi.util.resetApiState()` instead, so nothing from the previous tenant is refetched.
+ * onboarding, and what the request's host names (`tenantHostGet`). Uses the 'Tenants' and
+ * 'TenantMembers' tag types, and re-declares 'Users' so member mutations can refresh the tenant-scoped
+ * user surfaces. Adding or removing a member also invalidates that tenant's 'Tenants' tags, because the
+ * list and detail screens show how many accounts belong to it, and re-reads the account info when the
+ * member is the caller. The acting tenant is never changed from here: each host keeps its own session,
+ * so another tenant is another address, opened as a plain link.
  */
 export const tenantsApi = appApi
   .enhanceEndpoints({
@@ -209,22 +207,12 @@ export const tenantsApi = appApi
         ],
         onQueryStarted: (arg, api) => refreshOwnTenants(arg.userId, api),
       }),
-      // No tags: switching tenants must drop the whole cache rather than refresh parts of it,
-      // so the caller dispatches appApi.util.resetApiState() on success. Invalidating here
-      // would refetch the previous tenant's queries during the switch.
-      tenantSwitch: builder.mutation<TenantSwitchResponse, TenantSwitchRequest>({
-        query: (input) => ({
-          url: '/tenants/switch',
-          method: 'POST',
-          body: input,
-        }),
-      }),
-      // Untagged for the same reason as tenantSwitch: leaving a tenant changes what every cached
-      // query would answer, so the caller drops the whole cache rather than refreshing parts of it.
-      tenantExit: builder.mutation<TenantExitResponse, void>({
+      // Anonymous and untagged: what the page's host names is fixed for the life of the document, and
+      // nothing in this app changes it. A 404 `tenantNotFound` means the host names no tenant.
+      tenantHostGet: builder.query<TenantHostGetResponse, void>({
         query: () => ({
-          url: '/tenants/exit',
-          method: 'POST',
+          url: '/tenants/host',
+          method: 'GET',
         }),
       }),
     }),
@@ -246,6 +234,6 @@ export const {
   useTenantMemberAddMutation,
   useTenantMemberUpdateRolesMutation,
   useTenantMemberRemoveMutation,
-  useTenantSwitchMutation,
-  useTenantExitMutation
+  useTenantHostGetQuery,
+  useLazyTenantHostGetQuery,
 } = tenantsApi

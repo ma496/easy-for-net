@@ -67,6 +67,22 @@ public interface ITenantService
     Task<bool> IdentifierExistsAsync(string identifier, Guid? excludedTenantId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// The tenant holding an identifier, whoever is asking, or <see langword="null"/> when no tenant
+    /// that is not deleted holds it. Compared against the stored normalized lower-case form, so it is
+    /// found however it was typed.
+    /// </summary>
+    /// <param name="identifier">The identifier, as typed or as a host label carries it.</param>
+    /// <param name="cancellationToken">Token used to cancel the read.</param>
+    /// <returns>The tenant's id, name, identifier (as entered and normalized) and status, or <see langword="null"/>.</returns>
+    /// <remarks>
+    /// Unlike <see cref="Tenants"/> this is not narrowed to the caller's standing: it serves sign-in,
+    /// which runs before there is a caller to narrow to and settles standing itself from the membership
+    /// rows. Tenant restriction is relaxed by name because no tenant is established yet; the soft-delete
+    /// filter stays in force, so a deleted tenant reads as absent. Nothing is cached.
+    /// </remarks>
+    Task<TenantLookupDto?> FindByIdentifierAsync(string identifier, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Creates a tenant in the active state, with its display name and identifier trimmed as entered
     /// and the normalized identifier maintained beside it, and provisions it with its system-created
     /// administrator role - the role holding every tenant-tier permission - so that a tenant is never
@@ -162,6 +178,26 @@ public class TenantService(AppDbContext dbContext,
         }
 
         return query.AnyAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public Task<TenantLookupDto?> FindByIdentifierAsync(string identifier, CancellationToken cancellationToken = default)
+    {
+        var normalizedIdentifier = identifier.Trim().ToLowerInvariant();
+
+        return dbContext.Tenants
+            .AsNoTracking()
+            .AcrossAllTenants()
+            .Where(tenant => tenant.IdentifierNormalized == normalizedIdentifier)
+            .Select(tenant => new TenantLookupDto
+            {
+                Id = tenant.Id,
+                Name = tenant.Name,
+                Identifier = tenant.Identifier,
+                IdentifierNormalized = tenant.IdentifierNormalized,
+                Status = tenant.Status
+            })
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     /// <inheritdoc />

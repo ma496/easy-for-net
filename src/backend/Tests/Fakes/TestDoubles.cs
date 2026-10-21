@@ -2,6 +2,7 @@ using Backend.External.Email;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Settings.Core;
+using Backend.Features.Tenancy.Core.Hosting;
 
 namespace Backend.Tests.Fakes;
 
@@ -29,6 +30,23 @@ public static class TestDoubles
         services.AddSingleton<ISessionEndedHandler, FaultingSessionEndedHandler>();
         services.AddSingleton<ISettingDefinitionProvider, ProbeSettingsProvider>();
         services.AddPlatformSettingOverlays();
+        services.AddTenantHostingOverride();
+        return services;
+    }
+
+    /// <summary>
+    /// Decorates the tenant host resolver with one that resolves against a fixed test configuration for the
+    /// requests that ask for it - see <see cref="TenantHostingOverride"/>.
+    /// </summary>
+    private static IServiceCollection AddTenantHostingOverride(this IServiceCollection services)
+    {
+        var registered = services.Last(descriptor => descriptor.ServiceType == typeof(ITenantHostResolver));
+        services.Remove(registered);
+
+        services.AddSingleton<ITenantHostResolver>(provider => new TenantHostingOverride(
+            (ITenantHostResolver)ActivatorUtilities.CreateInstance(provider, registered.ImplementationType!),
+            provider.GetRequiredService<Microsoft.AspNetCore.Http.IHttpContextAccessor>()));
+
         return services;
     }
 
@@ -44,7 +62,8 @@ public static class TestDoubles
         services.AddSingleton<PlatformSettingOverlays>();
         services.AddScoped<ISettingValueStore>(provider => new OverlayingSettingValueStore(
             (ISettingValueStore)ActivatorUtilities.CreateInstance(provider, registered.ImplementationType!),
-            provider.GetRequiredService<PlatformSettingOverlays>()));
+            provider.GetRequiredService<PlatformSettingOverlays>(),
+            provider.GetRequiredService<Microsoft.AspNetCore.Http.IHttpContextAccessor>()));
 
         return services;
     }

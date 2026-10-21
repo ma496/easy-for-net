@@ -14,7 +14,7 @@ namespace Backend.Tests.Features.Identity.Endpoints.Account;
 /// <para>
 /// The selection is proved to live on the session rather than in the browser by reading it off the
 /// refresh-token row: that row is written when the session is established or switched, it is the only
-/// thing a later refresh has to go on, and signing out removes every row the account holds. A client
+/// thing a later refresh has to go on, and signing out removes the session's own row. A client
 /// that kept the tenant in a cookie, a tab or local storage would have nothing here to remove, and
 /// this case would fail.
 /// </para>
@@ -22,8 +22,8 @@ namespace Backend.Tests.Features.Identity.Endpoints.Account;
 /// The account belongs to two tenants, which is what makes the last assertion mean something: after
 /// signing out, the next sign-in resolves no tenant by itself, so a session that had inherited the
 /// previous selection would report one. The account is built by the test rather than taken from the
-/// seed, because signing out revokes every refresh token the account holds, and a seeded account's
-/// tokens are shared with whatever else in the suite is signed in as it.
+/// seed, because the test reads every refresh-token row the account holds, and a seeded account's
+/// rows are shared with whatever else in the suite is signed in as it.
 /// </para>
 /// </remarks>
 public class SignoutTests(App app) : TenancyTestsBase(app)
@@ -92,6 +92,31 @@ public class SignoutTests(App app) : TenancyTestsBase(app)
         after.ActiveTenantId.Should().Be(other.Id, "the tenant named on the fresh sign-in is the one being acted in");
         after.Tenants.Select(tenant => tenant.Id).Should().BeEquivalentTo([acted.Id, other.Id],
             "the memberships are untouched, so the caller is offered the choice again rather than left without one");
+    }
+
+    /// <summary>
+    /// Verifies that signing out ends the session signed out of and no other: a second session of the
+    /// same account - a tenant opened signed in on its own host, say - can still be renewed afterwards.
+    /// </summary>
+    [Fact]
+    public async Task Signout_Leaves_The_Accounts_Other_Sessions_Renewable()
+    {
+        var tenant = await CreateTenantAsync();
+        var account = await CreateTenantUserAsync(
+            tenant.Id, await CreateTenantRoleAsync(tenant.Id, Allow.User_View));
+
+        var departing = await SessionForAsync(account.Username, tenant.Id);
+        var staying = await SessionForAsync(account.Username, tenant.Id);
+
+        var (signoutResponse, _) = await departing.Client.POSTAsync<SignoutEndpoint, EmptyResponse>();
+        signoutResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var (departedResponse, _) = await departing.Client.GETAsync<GetInfoEndpoint, ProblemDetails>();
+        departedResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized, "the session signed out of ends at once");
+
+        await staying.RenewAsync();
+        var (stayingResponse, _) = await staying.Client.GETAsync<GetInfoEndpoint, UserGetInfoResponse>();
+        stayingResponse.StatusCode.Should().Be(HttpStatusCode.OK, "signing out of one session leaves the account's others alone");
     }
 
     /// <summary>

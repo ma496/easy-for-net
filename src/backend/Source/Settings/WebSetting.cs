@@ -6,10 +6,22 @@ namespace Backend.Settings;
 /// </summary>
 public class WebSetting
 {
-    /// <summary>The default domain always included in the allowed list.</summary>
+    /// <summary>
+    /// The platform origin - the web app's own address when it acts in no tenant - always included in
+    /// the allowed list. When <see cref="TenantOriginTemplate"/> is set, a request on this host is a
+    /// platform-host request.
+    /// </summary>
     public string DefaultDomain { get; set; } = null!;
     /// <summary>Additional domains allowed to access the API.</summary>
     public string[] Domains { get; set; } = [];
+
+    /// <summary>
+    /// The origin every tenant is served on, with the tenant's identifier standing in for
+    /// <c>{tenant}</c> as the entire first host label (<c>https://{tenant}.example.com</c>). Empty turns
+    /// host resolution off: every host then resolves to no tenant and sign-in, switching and sessions
+    /// behave as though hosts named nothing.
+    /// </summary>
+    public string TenantOriginTemplate { get; set; } = string.Empty;
 
     /// <summary>
     /// Combines <see cref="DefaultDomain"/> and <see cref="Domains"/> into a

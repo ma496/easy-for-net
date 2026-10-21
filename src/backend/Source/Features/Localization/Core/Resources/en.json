@@ -46,7 +46,8 @@
     "selectPlaceholder": "Select…",
     "noOptions": "No options",
     "scrollToTop": "Scroll to top",
-    "collapseSidebar": "Collapse sidebar"
+    "collapseSidebar": "Collapse sidebar",
+    "opensInNewTab": "(opens in a new tab)"
   },
   "navigation": {
     "home": "Home",
@@ -81,7 +82,7 @@
     "tenantsCreate": "Create",
     "tenantsUpdate": "Update",
     "tenantsMembers": "Members",
-    "selectTenant": "Select Tenant",
+    "selectTenant": "Your tenants",
     "tenantsDetail": "Detail",
     "editions": "Editions",
     "editionsList": "List",
@@ -90,7 +91,10 @@
     "editionsFeatures": "Features",
     "tenantsFeatures": "Features",
     "localization": "Localization",
-    "settings": "Settings"
+    "settings": "Settings",
+    "otherTenants": "Other tenants",
+    "platformAdministration": "Platform administration",
+    "allTenants": "All tenants"
   },
   "search": {
     "dashboard": "Dashboard",
@@ -134,7 +138,6 @@
       "tenantName": "Tenant Name",
       "tenantIdentifier": "Identifier",
       "user": "User",
-      "tenant": "Tenant",
       "editionName": "Name",
       "editionDescription": "Description",
       "editionDisplayOrder": "Display Order",
@@ -155,7 +158,6 @@
       "tenantName": "Enter tenant name",
       "tenantIdentifier": "Enter identifier (for example acme)",
       "user": "Select user",
-      "tenant": "Tenant identifier",
       "editionName": "Enter edition name",
       "editionDescription": "Enter edition description",
       "edition": "Select an edition"
@@ -244,6 +246,11 @@
       "notTenantMember": "You are not a member of this tenant",
       "noActiveTenant": "No active tenant is selected",
       "tenantRequired": "Please provide a tenant to sign in.",
+      "tenantHostMismatch": "This sign-in belongs to a different address. Sign in again on this one.",
+      "tenantHostRequired": "Sign in at your organization's own address.",
+      "tenantAddressNotConfigured": "Tenant addresses are not configured on this installation.",
+      "signInTicketInvalid": "This sign-in link has expired or was already used. Sign in with your password.",
+      "tenantIdentifierReserved": "This identifier is reserved. Choose another one.",
       "tenantIdentifierAlreadyExists": "Tenant identifier already exists",
       "duplicateTenantMembership": "This user is already a member of this tenant",
       "lastTenantAdministrator": "The last tenant administrator cannot be removed",
@@ -498,7 +505,14 @@
         "forgotPassword": "Forgot Password?",
         "signupLink": "Sign Up",
         "noAccount": "Don't have an account?",
-        "backToSignin": "Back to Sign In"
+        "backToSignin": "Back to Sign In",
+        "titleTenant": "Sign in to ${name}",
+        "suspendedTitle": "This tenant is suspended",
+        "suspendedMessage": "Signing in is unavailable until an administrator reactivates it.",
+        "hostRequiredTitle": "Sign in at your tenant's address",
+        "hostRequiredMessage": "Your account belongs to a tenant. Open its address to sign in. If you don't know it, check your invitation email.",
+        "ownTenant": "Want your own tenant?",
+        "createTenant": "Create one"
       },
       "signup": {
         "title": "Sign Up",
@@ -509,7 +523,18 @@
         "successTitle": "Success!",
         "successVerifyEmail": "Registration successful! Please check your email to verify your account.",
         "successMessage": "Registration successful! Go to sign in page.",
-        "tenantSectionTitle": "Your tenant"
+        "tenantSectionTitle": "Your tenant",
+        "tenantHostTitle": "Sign-up happens on the main site",
+        "tenantHostMessage": "You're on ${name}. To create a tenant of your own, sign up on the main site.",
+        "mainSiteMessage": "To create a tenant of your own, sign up on the main site.",
+        "tenantHostAction": "Go to sign-up",
+        "tenantName": "Tenant name",
+        "tenantAddress": "Tenant address",
+        "addressPreview": "Your tenant address:",
+        "addressPlaceholder": "your-name",
+        "identifierHint": "Lower-case letters, digits and hyphens.",
+        "readyTitle": "Your tenant is ready",
+        "goToTenant": "Go to your tenant"
       },
       "forgotPassword": {
         "title": "Forget Password",
@@ -528,6 +553,30 @@
       "signout": "Sign Out",
       "unauthorized": {
         "title": "Unauthorized"
+      },
+      "tenantNotFound": {
+        "title": "Tenant not found",
+        "message": "There is no tenant at ${host}. Check the address, or go to the main site.",
+        "messageNoHost": "There is no tenant at this address. Check the address, or go to the main site.",
+        "homeAction": "Go to home page",
+        "action": "Go to the main site"
+      },
+      "unknownHost": {
+        "title": "Where would you like to go?",
+        "message": "${host} is not the address of the platform or of a tenant. Choose where to go.",
+        "messageNoHost": "This is not the address of the platform or of a tenant. Choose where to go.",
+        "platformTitle": "Platform",
+        "platformDescription": "Platform administrators sign in here, and new tenants are created here.",
+        "platformAction": "Go to the platform",
+        "tenantTitle": "Tenant",
+        "tenantDescription": "Enter your tenant's identifier to go to its address.",
+        "tenantAction": "Go to tenant",
+        "tenantInvalid": "Use lower-case letters, digits and hyphens."
+      },
+      "ticketSignin": {
+        "title": "Signing you in…",
+        "failedTitle": "We couldn't sign you in automatically",
+        "action": "Sign in with your password"
       }
     },
     "changePassword": {
@@ -605,35 +654,27 @@
         "removeConfirm": "Are you sure you want to remove this member from the tenant?",
         "removeSuccess": "Member removed successfully"
       },
-      "switcher": {
-        "label": "Tenant",
-        "switchTo": "Switch tenant",
-        "switchSuccess": "You are now working in ${tenant}",
-        "noTenant": "No tenant selected",
-        "viewDetail": "View tenant detail",
-        "exitTenant": "Exit tenant",
-        "exitSuccess": "You are working as a platform user again"
-      },
       "detail": {
         "title": "Tenant Detail",
         "information": "Tenant Information",
         "membersTitle": "Members",
         "seats": "Seats"
       },
-      "enterButton": "Enter",
-      "enterCurrent": "Current",
       "actions": {
         "detail": "Detail",
         "members": "Members",
         "suspend": "Suspend",
         "reactivate": "Reactivate"
-      }
+      },
+      "signIn": "Sign in"
     },
     "selectTenant": {
-      "title": "Select Tenant",
-      "description": "Choose the tenant you want to work in.",
+      "title": "Your tenants",
+      "description": "Each tenant opens at its own address, in a new tab.",
       "emptyDescription": "You do not belong to an active tenant. Ask an administrator to add you to theirs, or sign up to create your own.",
-      "emptyAction": "Go to your profile"
+      "emptyAction": "Go to your profile",
+      "current": "Current",
+      "noAddresses": "Tenant addresses are not configured on this installation."
     },
     "editions": {
       "title": "Editions",

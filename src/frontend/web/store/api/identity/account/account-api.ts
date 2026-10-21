@@ -14,7 +14,10 @@ import {
   SignupRequest,
   VerifyEmailRequest,
   SignupResponse,
-  ResendVerifyEmailRequest
+  ResendVerifyEmailRequest,
+  SignInTicketRequest,
+  SignInTicketResponse,
+  SignInTicketRedeemRequest,
 } from './account-dtos'
 
 /**
@@ -28,6 +31,21 @@ export const accountApi = appApi.injectEndpoints({
     token: builder.mutation<TokenResponse, TokenRequest>({
       query: (input) => ({
         url: '/account/token',
+        method: 'POST',
+        body: input,
+      }),
+    }),
+    // Issued here, redeemed on the tenant's own address: each host keeps its own session.
+    signInTicket: builder.mutation<SignInTicketResponse, SignInTicketRequest>({
+      query: (input) => ({
+        url: '/account/sign-in-ticket',
+        method: 'POST',
+        body: input,
+      }),
+    }),
+    redeemSignInTicket: builder.mutation<TokenResponse, SignInTicketRedeemRequest>({
+      query: (input) => ({
+        url: '/account/sign-in-ticket/redeem',
         method: 'POST',
         body: input,
       }),
@@ -111,6 +129,8 @@ export const accountApi = appApi.injectEndpoints({
 
 export const {
   useTokenMutation,
+  useSignInTicketMutation,
+  useRedeemSignInTicketMutation,
   useSignupMutation,
   useVerifyEmailMutation,
   useResendVerifyEmailMutation,

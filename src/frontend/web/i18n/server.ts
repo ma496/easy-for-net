@@ -1,18 +1,19 @@
 import { cache } from 'react'
-import { environment } from '@/config'
+import { MissingServerApiUrlError } from '@/config'
+import { serverApiFetch } from '@/lib/server/api-fetch'
 import { i18nConfig, type Locale } from './config'
 import { translate } from './translate'
 import { emptyLocalizationResources, type LocalizationResourcesResponse } from './types'
 
 /**
  * Request-memoized fetch of the merged localization resources for one culture from the API,
- * forwarding the incoming `cookie` header so the caller's own tenant/platform overrides resolve
- * exactly as they would for any other request of theirs. `cache()` means every server component
+ * forwarding the incoming `cookie` header and host (through `serverApiFetch`) so the caller's own
+ * tenant/platform overrides resolve exactly as they would for any other request of theirs. `cache()` means every server component
  * and `getServerTranslation` call within one request shares the single fetch. Falls back to an empty
  * dictionary (see `emptyLocalizationResources`) when the API cannot be reached, so every call site's
  * own English default renders rather than crashing.
  *
- * `next/headers` is loaded dynamically rather than imported at the top of the file: this module is
+ * `next/headers` is loaded dynamically (inside `serverApiFetch`) rather than imported at the top of a file: this module is
  * re-exported from the shared `@/i18n` barrel that client components also import (for
  * `useTranslation`), and a static `import { headers } from 'next/headers'` here would put a
  * server-only API in the module graph Next resolves for those client bundles too, which it refuses
@@ -29,11 +30,9 @@ export const getDictionary = cache(async (locale: Locale): Promise<LocalizationR
   const requestedLocale = i18nConfig.locales.includes(locale) ? locale : i18nConfig.defaultLocale
 
   try {
-    const { headers } = await import('next/headers')
-    const headerList = await headers()
-    const cookie = headerList.get('cookie')
-    const response = await fetch(`${environment.serverApiUrl}/localization/resources/${encodeURIComponent(requestedLocale)}`, {
-      headers: { 'Accept-Language': requestedLocale, ...(cookie ? { cookie } : {}) },
+    const response = await serverApiFetch(`/localization/resources/${encodeURIComponent(requestedLocale)}`, {
+      headers: { 'Accept-Language': requestedLocale },
+      forwardCookies: true,
       cache: 'no-store',
     })
 
@@ -47,6 +46,11 @@ export const getDictionary = cache(async (locale: Locale): Promise<LocalizationR
     // generation attempt reaches here and must let that error carry on so the route is correctly
     // marked dynamic, rather than being logged as a fetch failure it never was.
     if (error && typeof error === 'object' && 'digest' in error && error.digest === 'DYNAMIC_SERVER_USAGE') {
+      throw error
+    }
+
+    // A deployment that never told the server where the API is has nothing to fall back from - fail loudly.
+    if (error instanceof MissingServerApiUrlError) {
       throw error
     }
 

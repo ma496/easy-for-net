@@ -31,6 +31,14 @@ public sealed class SessionRecord
     /// <summary>Gets the tenant the session acts in, or <see langword="null"/> when it acts in none.</summary>
     public Guid? TenantId { get; init; }
 
+    /// <summary>
+    /// Gets the normalized identifier of the tenant the session acts in, or <see langword="null"/> when it
+    /// acts in none. A tenant host is checked against it, so it is recorded when the session is minted
+    /// rather than read on every request. Records stored before the property existed read as
+    /// <see langword="null"/>.
+    /// </summary>
+    public string? TenantIdentifier { get; init; }
+
     /// <summary>Gets the names of the roles the account holds in the scope being acted in.</summary>
     public List<string> Roles { get; init; } = [];
 

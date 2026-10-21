@@ -85,8 +85,9 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
     /// Writes the project's root <c>.env</c> - the values <c>docker-compose.prod.yml</c> reads - from
     /// the template's <c>.env.docker.example</c>, keeping its comments: the project's own Compose
     /// project, database and Redis key prefix, fresh random database, Redis and administrator
-    /// passwords and JWT signing key, and <c>localhost</c> as the domain so the stack starts as
-    /// generated, and the host ports the development <c>docker-compose.yml</c> publishes PostgreSQL
+    /// passwords and JWT signing key, <c>localhost</c> as the domain - the platform at
+    /// <c>https://app.localhost</c> and each tenant at <c>https://{tenant}.localhost</c> - so the
+    /// stack starts as generated, and the host ports the development <c>docker-compose.yml</c> publishes PostgreSQL
     /// and Redis on. Values the example leaves for the developer (SMTP) are copied as they are.
     /// </summary>
     /// <param name="examplePath">The template's <c>.env.docker.example</c>.</param>
@@ -100,7 +101,9 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
         {
             ["PROD_PROJECT_NAME"] = kebabCaseProjectName,
             ["DOMAIN"] = "localhost",
-            ["PUBLIC_URL"] = "https://localhost",
+            ["PLATFORM_SUBDOMAIN"] = "app",
+            ["PUBLIC_URL"] = "https://app.localhost",
+            ["TENANT_URL_TEMPLATE"] = "https://{tenant}.localhost",
             ["POSTGRES_DB"] = snakeCaseProjectName,
             ["POSTGRES_USER"] = snakeCaseProjectName,
             ["POSTGRES_PASSWORD"] = Secrets.Alphanumeric(32),

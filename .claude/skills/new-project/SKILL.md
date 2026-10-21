@@ -133,9 +133,11 @@ Run these from the new project's root.
    ```
 
    It serves `http://localhost:3000` (the origin `Web:Domains` allows for CORS). `.env.development`
-   points `NEXT_PUBLIC_API_URL` at `http://localhost:5000/api`. On the sign-in page the tenant field
-   is optional: `tenantadmin` lands in `default` through its only membership, and `admin` signs in
-   with no tenant.
+   points `API_INTERNAL_URL` (the Next.js server's own fetches) at `http://localhost:5000/api`; the
+   browser calls the API as the relative `/api`, which the dev proxy `npm run dev` starts routes to it. The host
+   is the tenant, so the sign-in page has no tenant field: sign in as `tenantadmin` at
+   `http://default.localhost:3000` (the Default tenant), and as `admin` at `http://app.localhost:3000`
+   (the platform). Sign up for a new tenant on `http://app.localhost:3000`.
 7. **Tests and the gate.** `dotnet test src/backend/Tests` needs PostgreSQL reachable with the
    `appsettings.Testing.json` connection string and the `Initial` migration in place; the run
    migrates and seeds `<name>_test` and deletes it at the end; it needs no Redis. From the root, `npm run gate`
@@ -148,8 +150,9 @@ Run these from the new project's root.
    origins, `Database:ApplyMigrationsOnStartup` defaults to false there (run
    `dotnet ef database update` explicitly), and the seeded accounts' passwords should be changed in the
    app. For the Docker stack, the generated root `.env` already holds every secret
-   `docker-compose.prod.yml` needs (`SEED_ADMIN_PASSWORD` for the administrators); set `DOMAIN`,
-   `PUBLIC_URL` and the SMTP values, then
+   `docker-compose.prod.yml` needs (`SEED_ADMIN_PASSWORD` for the administrators); point DNS A records for
+   `app.<DOMAIN>` and `*.<DOMAIN>` at the server, set `DOMAIN`, `PUBLIC_URL` (`https://app.<DOMAIN>`),
+   `TENANT_URL_TEMPLATE` (`https://{tenant}.<DOMAIN>`) and the SMTP values, then
    `docker compose -f docker-compose.prod.yml --env-file .env up -d --build`. To put it on a VPS
    behind Coolify instead, push the project and run
    `npm run deploy:vps -- --host <ip> --domain <domain> --email <email>` (see the README's **Deploy to a VPS** section).

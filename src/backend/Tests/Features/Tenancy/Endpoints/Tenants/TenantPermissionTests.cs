@@ -117,7 +117,13 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
 
         // No permission, and deliberately so: asking what your own plan includes is not administering
         // it, and the web app needs the answer to decide what is worth showing.
-        [typeof(MyFeaturesEndpoint)] = []
+        [typeof(MyFeaturesEndpoint)] = [],
+
+        // Anonymous, and deliberately so: they answer what a host names before anybody has signed in -
+        // the web app asking which tenant it is on, the proxy asking whether a host deserves a
+        // certificate - and disclose nothing beyond a tenant's name and status.
+        [typeof(TenantHostGetEndpoint)] = [],
+        [typeof(TenantTlsAllowedEndpoint)] = []
     };
 
     /// <summary>

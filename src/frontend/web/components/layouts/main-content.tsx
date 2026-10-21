@@ -4,7 +4,6 @@ import { ContentAnimation } from './content-animation'
 import { Header } from './header'
 import { Portals } from '@/components'
 import { Footer } from './footer'
-import { TenantChangeNotice } from './tenant-change-notice'
 import { useAppSelector } from '@/store/hooks'
 import { cn } from '@/lib/utils'
 
@@ -22,7 +21,6 @@ export const MainContent = ({ children }: { children: React.ReactNode }) => {
       </main>
       <Footer />
       <Portals />
-      <TenantChangeNotice />
     </div>
   )
 }

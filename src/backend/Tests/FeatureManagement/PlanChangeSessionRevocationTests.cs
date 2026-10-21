@@ -67,7 +67,7 @@ public class PlanChangeSessionRevocationTests(App app) : SessionRevocationTestsB
     }
 
     /// <summary>
-    /// Verifies that an update leaving the tenant on the edition it was on - a rename - ends no session.
+    /// Verifies that an update leaving the tenant on the edition and identifier it had - a rename - ends no session.
     /// </summary>
     [Fact]
     public async Task Renaming_A_Tenant_On_The_Same_Edition_Ends_No_Session()
@@ -79,7 +79,7 @@ public class PlanChangeSessionRevocationTests(App app) : SessionRevocationTestsB
         await SetPlatformAdminAuthTokenAsync();
         var (response, _) = await Client
             .PUTAsync<TenantUpdateEndpoint, TenantUpdateRequest, TenantUpdateResponse>(
-                new() { Id = tenant.Id, Name = $"Renamed {Guid.NewGuid():N}", Identifier = NewTenantIdentifier(), EditionId = edition.Id });
+                new() { Id = tenant.Id, Name = $"Renamed {Guid.NewGuid():N}", Identifier = tenant.Identifier, EditionId = edition.Id });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 

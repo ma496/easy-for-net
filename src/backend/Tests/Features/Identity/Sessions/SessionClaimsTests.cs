@@ -25,6 +25,7 @@ public class SessionClaimsTests
             new Claim(ClaimTypes.Role, "Smuggled"),
             new Claim(ClaimConstants.Permission, "smuggled.permission"),
             new Claim(ClaimConstants.TenantId, Guid.NewGuid().ToString()),
+            new Claim(ClaimConstants.TenantIdentifier, "smuggled-tenant"),
             new Claim(ClaimConstants.IsPlatform, bool.TrueString),
             new Claim(ClaimTypes.Name, "smuggled"),
             new Claim(ClaimTypes.Email, "smuggled@example.com"),
@@ -47,8 +48,33 @@ public class SessionClaimsTests
         identity.FindAll(ClaimTypes.Name).Select(c => c.Value).Should().Equal("real");
         identity.FindAll(ClaimTypes.Email).Select(c => c.Value).Should().Equal("real@example.com");
         identity.FindAll(ClaimConstants.TenantId).Should().BeEmpty("the session acts in no tenant, whatever the credential said");
+        identity.FindAll(ClaimConstants.TenantIdentifier).Should().BeEmpty("nor does it carry a tenant identifier");
         identity.FindAll(ClaimConstants.IsPlatform).Should().BeEmpty("the session is not a platform one, whatever the credential said");
         identity.FindFirst(ClaimTypes.NameIdentifier)!.Value.Should().Be(userId.ToString());
         identity.FindFirst(ClaimConstants.SessionId)!.Value.Should().Be("abc");
+    }
+
+    /// <summary>
+    /// Verifies a session acting in a tenant projects that tenant's id and its identifier, which is what a tenant
+    /// host is compared against.
+    /// </summary>
+    [Fact]
+    public void Project_Writes_The_Tenant_Identifier_With_The_Tenant()
+    {
+        var tenantId = Guid.NewGuid();
+        var identity = new ClaimsIdentity([new Claim(ClaimConstants.TenantIdentifier, "smuggled-tenant")], "test");
+
+        SessionClaims.Project(identity, new SessionRecord
+        {
+            SessionId = "abc",
+            UserId = Guid.NewGuid(),
+            Username = "real",
+            Email = "real@example.com",
+            TenantId = tenantId,
+            TenantIdentifier = "acme",
+        });
+
+        identity.FindAll(ClaimConstants.TenantId).Select(c => c.Value).Should().Equal(tenantId.ToString());
+        identity.FindAll(ClaimConstants.TenantIdentifier).Select(c => c.Value).Should().Equal("acme");
     }
 }

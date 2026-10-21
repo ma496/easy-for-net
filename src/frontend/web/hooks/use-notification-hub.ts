@@ -29,14 +29,14 @@ const HubMethods = {
  *
  * **Who connects.** Notifications are read in the tenant being acted in, or in platform scope by a
  * platform account acting in none. An ordinary account left with no tenant (its tenant suspended or
- * left, and dropped when the session was renewed) is sent to choose one, so nothing connects or polls
- * until it has.
+ * left, and dropped when the session was renewed) is sent to the tenant picker (`/select-tenant`), so nothing connects
+ * or polls until it acts in one.
  *
  * **Lifecycle.** One connection to `/hubs/notifications` on the API host (outside the API route
  * prefix), WebSockets only with negotiation skipped, authenticated by the same auth cookie every API
  * request carries - no access token in the URL. It is opened while that rule holds and stopped when it
  * stops holding, on sign-out (which clears the user), and on unmount. The account and the acting tenant
- * are part of the connection's identity: a tenant switch or exit stops it and opens a new one, because
+ * are part of the connection's identity: a session that changes either stops it and opens a new one, because
  * the hub puts a connection into its scope's groups only when it connects.
  *
  * **Messages.** `notificationReceived` counts one more unread and invalidates the notification lists

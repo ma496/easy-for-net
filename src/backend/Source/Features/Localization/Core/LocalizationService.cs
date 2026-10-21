@@ -32,6 +32,18 @@ internal interface ILocalizationService
     Task<ResolvedResources> ResolveResourcesAsync(string requestedCulture, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Resolves the resources exactly as <see cref="ResolveResourcesAsync(string, CancellationToken)"/> does,
+    /// but for an explicitly named scope rather than the acting one: <paramref name="tenantId"/>'s overrides
+    /// and language settings over the platform's, or the platform's alone for <see langword="null"/>. For an
+    /// anonymous request on a tenant's host, which has no scope of its own and is never given one; it reads
+    /// and writes nothing else on the tenant's account.
+    /// </summary>
+    /// <param name="requestedCulture">The culture the caller asked for.</param>
+    /// <param name="tenantId">The tenant whose overrides apply, or <see langword="null"/> for the platform.</param>
+    /// <param name="cancellationToken">Cancels the resolution.</param>
+    Task<ResolvedResources> ResolveResourcesForAsync(string requestedCulture, Guid? tenantId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Resolves the localized message for a business error carrying <paramref name="errorCode"/>, or
     /// <see langword="null"/> when the served culture (the same resolution <see cref="ResolveResourcesAsync"/>
     /// documents - the acting tenant's override, then the platform's, then the shipped culture, then
@@ -106,6 +118,10 @@ internal class LocalizationService(AppDbContext dbContext, ITenantContext tenant
     /// <inheritdoc />
     public Task<ResolvedResources> ResolveResourcesAsync(string requestedCulture, CancellationToken cancellationToken = default)
         => ResolveResourcesAsync(requestedCulture, EffectiveTenantId, cancellationToken);
+
+    /// <inheritdoc />
+    public Task<ResolvedResources> ResolveResourcesForAsync(string requestedCulture, Guid? tenantId, CancellationToken cancellationToken = default)
+        => ResolveResourcesAsync(requestedCulture, tenantId, cancellationToken);
 
     /// <summary>
     /// Does the work <see cref="ResolveResourcesAsync(string, CancellationToken)"/> publishes, against

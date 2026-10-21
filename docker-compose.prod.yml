@@ -3,8 +3,10 @@
 #   cp .env.docker.example .env        then fill in every value
 #   docker compose -f docker-compose.prod.yml --env-file .env up -d --build
 #
-# Caddy serves the web app and the API from one origin over HTTPS (certificates are obtained
-# automatically for DOMAIN), which the API's SameSite=Strict, Secure auth cookies require.
+# Caddy serves the platform at PLATFORM_SUBDOMAIN.DOMAIN (app.DOMAIN unless set) and every tenant at
+# <tenant>.DOMAIN, each host one origin for the web app and the API over HTTPS (certificates are obtained per host, on demand: see
+# docker/Caddyfile), which the API's SameSite=Strict, Secure auth cookies require. DNS needs an
+# A record for the platform host and one for *.DOMAIN, both pointing at this server.
 # Only Caddy publishes ports; the API, the database and Redis are reachable only inside the network.
 # Not COMPOSE_PROJECT_NAME: Compose would apply that to the development docker-compose.yml as well,
 # putting both stacks in one project
@@ -58,7 +60,9 @@ services:
       # Passwords of the seeded administrators, applied only when the accounts are first created
       Seed__PlatformAdminPassword: ${SEED_ADMIN_PASSWORD:?set SEED_ADMIN_PASSWORD}
       Seed__TenantAdminPassword: ${SEED_ADMIN_PASSWORD}
+      # The platform origin (<platform subdomain>.<domain>), and every tenant's, {tenant} standing for its identifier
       Web__DefaultDomain: ${PUBLIC_URL:?set PUBLIC_URL}
+      Web__TenantOriginTemplate: ${TENANT_URL_TEMPLATE:?set TENANT_URL_TEMPLATE}
       Web__Domains__0: ${PUBLIC_URL}
       Database__ApplyMigrationsOnStartup: "true"
       # The API port is reachable only through Caddy, so its forwarded headers can be trusted
@@ -80,8 +84,9 @@ services:
     build:
       context: ./src/frontend/web
       args:
-        # Inlined into the browser bundle at build time: change it and rebuild
-        NEXT_PUBLIC_API_URL: ${PUBLIC_URL}/api
+        # Inlined into the browser bundle at build time. Relative, so the browser reaches the API
+        # through the proxy on whatever host it is on
+        NEXT_PUBLIC_API_URL: /api
         NEXT_PUBLIC_APP_ENV: production
     restart: unless-stopped
     depends_on:
@@ -97,7 +102,9 @@ services:
       - api
       - web
     environment:
+      # The registered domain: Caddy serves PLATFORM_SUBDOMAIN.DOMAIN (app.DOMAIN by default) and *.DOMAIN
       DOMAIN: ${DOMAIN:?set DOMAIN}
+      PLATFORM_SUBDOMAIN: ${PLATFORM_SUBDOMAIN:-app}
     ports:
       - "80:80"
       - "443:443"

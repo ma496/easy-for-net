@@ -27,15 +27,29 @@ sealed class SignoutEndpoint(ICurrentUserService currentUserService, IAuthTokenS
 
     public override async Task HandleAsync(CancellationToken c)
     {
+        // Only the session being signed out of ends. Each host keeps a session of its own - a tenant opened
+        // signed in from another holds a second one - so revoking every refresh token of the account would
+        // sign it out of those too the moment their access token next expired.
         var userId = currentUserService.GetCurrentUserId();
-        if (userId.HasValue)
+        var sessionId = SessionClaims.ReadSessionId(User);
+        if (userId.HasValue && sessionId is not null)
         {
-            await authTokenService.RevokeAllAsync(userId.Value, c);
+            await authTokenService.RevokeSessionAsync(userId.Value, sessionId, c);
         }
 
-        // The session the caller is signing out of is deleted too, not only the refresh tokens: the access
+        // A pair stored before rows named their session is reached through the refresh token the browser
+        // presents instead.
+        if (userId.HasValue
+            && HttpContext.Request.Cookies.TryGetValue(TokenService.RefreshTokenCookieName, out var cookieValue)
+            && !string.IsNullOrWhiteSpace(cookieValue))
+        {
+            var separatorIndex = cookieValue.IndexOf(':');
+            await authTokenService.RevokeRefreshTokenAsync(userId.Value, cookieValue[(separatorIndex + 1)..], c);
+        }
+
+        // The session the caller is signing out of is deleted too, not only its refresh tokens: the access
         // token it signs out with must stop working now, not when it would have expired.
-        if (SessionClaims.ReadSessionId(User) is { } sessionId)
+        if (sessionId is not null)
         {
             await sessionStore.DeleteAsync(sessionId, c);
         }

@@ -12,12 +12,14 @@ interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   className?: string
   icon?: React.ReactNode
   required?: boolean
+  /** Help shown under the input, in the slot the validation error takes whenever there is one. */
+  hint?: React.ReactNode
 }
 
 /**
  * FormInput is a client component that uses Formik's useField and useFormikContext to bind a styled text input to a form field, supporting an optional leading icon and showing validation errors after the field is dirty or the form has been submitted.
  */
-export const FormInput = ({ label, name, id, showValidation = true, className, icon, autoComplete = 'off', required = false, ...props }: FormInputProps) => {
+export const FormInput = ({ label, name, id, showValidation = true, className, icon, autoComplete = 'off', required = false, hint, ...props }: FormInputProps) => {
   const [field, meta] = useField(name)
   const { submitCount } = useFormikContext()
   const isDirty = meta.initialValue !== meta.value
@@ -37,7 +39,11 @@ export const FormInput = ({ label, name, id, showValidation = true, className, i
         <input {...field} {...props} id={inputId} name={name} autoComplete={autoComplete} className={cn('form-input', icon && 'ps-10')} />
         {icon && <span className="pointer-events-none absolute inset-s-3 top-1/2 -translate-y-1/2">{icon}</span>}
       </div>
-      {showValidation && (isDirty || submitCount > 0) && hasError && <div className="mt-1.5 text-xs font-medium text-danger">{meta.error}</div>}
+      {showValidation && (isDirty || submitCount > 0) && hasError ? (
+        <div className="mt-1.5 text-xs font-medium text-danger">{meta.error}</div>
+      ) : (
+        hint && <div className="mt-1.5 text-xs text-muted-foreground">{hint}</div>
+      )}
     </div>
   )
 }

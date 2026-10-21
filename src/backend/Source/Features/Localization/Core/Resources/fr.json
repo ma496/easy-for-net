@@ -46,7 +46,8 @@
     "selectPlaceholder": "Sélectionner…",
     "noOptions": "Aucune option",
     "scrollToTop": "Revenir en haut",
-    "collapseSidebar": "Réduire la barre latérale"
+    "collapseSidebar": "Réduire la barre latérale",
+    "opensInNewTab": "(s'ouvre dans un nouvel onglet)"
   },
   "navigation": {
     "home": "Accueil",
@@ -81,7 +82,7 @@
     "tenantsCreate": "Créer",
     "tenantsUpdate": "Mettre à jour",
     "tenantsMembers": "Membres",
-    "selectTenant": "Sélectionner un locataire",
+    "selectTenant": "Vos locataires",
     "tenantsDetail": "Détail",
     "editions": "Éditions",
     "editionsList": "Liste",
@@ -90,7 +91,10 @@
     "editionsFeatures": "Fonctionnalités",
     "tenantsFeatures": "Fonctionnalités",
     "localization": "Localisation",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "otherTenants": "Autres locataires",
+    "platformAdministration": "Administration de la plateforme",
+    "allTenants": "Tous les locataires"
   },
   "search": {
     "dashboard": "Tableau de bord",
@@ -134,7 +138,6 @@
       "tenantName": "Nom du locataire",
       "tenantIdentifier": "Identifiant",
       "user": "Utilisateur",
-      "tenant": "Locataire",
       "editionName": "Nom",
       "editionDescription": "Description",
       "editionDisplayOrder": "Ordre d’affichage",
@@ -155,7 +158,6 @@
       "tenantName": "Entrez le nom du locataire",
       "tenantIdentifier": "Entrez l'identifiant (par exemple acme)",
       "user": "Sélectionnez un utilisateur",
-      "tenant": "Identifiant du locataire",
       "editionName": "Saisissez le nom de l’édition",
       "editionDescription": "Saisissez la description de l’édition",
       "edition": "Sélectionnez une édition"
@@ -244,6 +246,11 @@
       "notTenantMember": "Vous n'êtes pas membre de ce locataire",
       "noActiveTenant": "Aucun locataire actif n'est sélectionné",
       "tenantRequired": "Veuillez indiquer un locataire pour vous connecter.",
+      "tenantHostMismatch": "Cette connexion appartient à une autre adresse. Reconnectez-vous sur celle-ci.",
+      "tenantHostRequired": "Connectez-vous à l'adresse propre à votre organisation.",
+      "tenantAddressNotConfigured": "Les adresses des locataires ne sont pas configurées sur cette installation.",
+      "signInTicketInvalid": "Ce lien de connexion a expiré ou a déjà été utilisé. Connectez-vous avec votre mot de passe.",
+      "tenantIdentifierReserved": "Cet identifiant est réservé. Choisissez-en un autre.",
       "tenantIdentifierAlreadyExists": "L'identifiant du locataire existe déjà",
       "duplicateTenantMembership": "Cet utilisateur est déjà membre de ce locataire",
       "lastTenantAdministrator": "Le dernier administrateur du locataire ne peut pas être retiré",
@@ -498,7 +505,14 @@
         "forgotPassword": "Mot de passe oublié ?",
         "signupLink": "S'inscrire",
         "noAccount": "Pas de compte ?",
-        "backToSignin": "Retour à la connexion"
+        "backToSignin": "Retour à la connexion",
+        "titleTenant": "Se connecter à ${name}",
+        "suspendedTitle": "Ce locataire est suspendu",
+        "suspendedMessage": "La connexion est indisponible jusqu'à ce qu'un administrateur le réactive.",
+        "hostRequiredTitle": "Connectez-vous à l'adresse de votre locataire",
+        "hostRequiredMessage": "Votre compte appartient à un locataire. Ouvrez son adresse pour vous connecter. Si vous ne la connaissez pas, consultez votre e-mail d'invitation.",
+        "ownTenant": "Vous voulez votre propre locataire ?",
+        "createTenant": "Créez-en un"
       },
       "signup": {
         "title": "S'inscrire",
@@ -509,7 +523,18 @@
         "successTitle": "Succès !",
         "successVerifyEmail": "Inscription réussie ! Veuillez vérifier votre email.",
         "successMessage": "Inscription réussie ! Allez à la page de connexion.",
-        "tenantSectionTitle": "Votre locataire"
+        "tenantSectionTitle": "Votre locataire",
+        "tenantHostTitle": "L'inscription se fait sur le site principal",
+        "tenantHostMessage": "Vous êtes sur ${name}. Pour créer votre propre locataire, inscrivez-vous sur le site principal.",
+        "mainSiteMessage": "Pour créer votre propre locataire, inscrivez-vous sur le site principal.",
+        "tenantHostAction": "Aller à l'inscription",
+        "tenantName": "Nom du locataire",
+        "tenantAddress": "Adresse du locataire",
+        "addressPreview": "Adresse de votre locataire :",
+        "addressPlaceholder": "votre-nom",
+        "identifierHint": "Lettres minuscules, chiffres et traits d'union.",
+        "readyTitle": "Votre locataire est prêt",
+        "goToTenant": "Aller à votre locataire"
       },
       "forgotPassword": {
         "title": "Mot de passe oublié",
@@ -528,6 +553,30 @@
       "signout": "Se déconnecter",
       "unauthorized": {
         "title": "Non autorisé"
+      },
+      "tenantNotFound": {
+        "title": "Locataire introuvable",
+        "message": "Il n'y a aucun locataire à l'adresse ${host}. Vérifiez l'adresse ou allez sur le site principal.",
+        "messageNoHost": "Il n'y a aucun locataire à cette adresse. Vérifiez l'adresse ou allez sur le site principal.",
+        "homeAction": "Aller à la page d'accueil",
+        "action": "Aller sur le site principal"
+      },
+      "unknownHost": {
+        "title": "Où souhaitez-vous aller ?",
+        "message": "${host} n'est ni l'adresse de la plateforme ni celle d'un locataire. Choisissez où aller.",
+        "messageNoHost": "Ce n'est ni l'adresse de la plateforme ni celle d'un locataire. Choisissez où aller.",
+        "platformTitle": "Plateforme",
+        "platformDescription": "Les administrateurs de la plateforme se connectent ici, et les nouveaux locataires y sont créés.",
+        "platformAction": "Aller à la plateforme",
+        "tenantTitle": "Locataire",
+        "tenantDescription": "Saisissez l'identifiant de votre locataire pour accéder à son adresse.",
+        "tenantAction": "Aller au locataire",
+        "tenantInvalid": "Utilisez des lettres minuscules, des chiffres et des tirets."
+      },
+      "ticketSignin": {
+        "title": "Connexion en cours…",
+        "failedTitle": "Nous n'avons pas pu vous connecter automatiquement",
+        "action": "Se connecter avec votre mot de passe"
       }
     },
     "changePassword": {
@@ -605,35 +654,27 @@
         "removeConfirm": "Êtes-vous sûr de vouloir retirer ce membre du locataire ?",
         "removeSuccess": "Membre retiré avec succès"
       },
-      "switcher": {
-        "label": "Locataire",
-        "switchTo": "Changer de locataire",
-        "switchSuccess": "Vous travaillez maintenant dans ${tenant}",
-        "noTenant": "Aucun locataire sélectionné",
-        "viewDetail": "Voir le détail du locataire",
-        "exitTenant": "Quitter le locataire",
-        "exitSuccess": "Vous travaillez de nouveau en tant qu’utilisateur de la plateforme"
-      },
       "detail": {
         "title": "Détail du locataire",
         "information": "Informations du locataire",
         "membersTitle": "Membres",
         "seats": "Places"
       },
-      "enterButton": "Entrer",
-      "enterCurrent": "Actuel",
       "actions": {
         "detail": "Détail",
         "members": "Membres",
         "suspend": "Suspendre",
         "reactivate": "Réactiver"
-      }
+      },
+      "signIn": "Se connecter"
     },
     "selectTenant": {
-      "title": "Sélectionner un locataire",
-      "description": "Choisissez le locataire dans lequel vous souhaitez travailler.",
+      "title": "Vos locataires",
+      "description": "Chaque locataire s'ouvre à sa propre adresse, dans un nouvel onglet.",
       "emptyDescription": "Vous n'appartenez à aucun locataire actif. Demandez à un administrateur de vous ajouter au sien, ou inscrivez-vous pour créer le vôtre.",
-      "emptyAction": "Aller à votre profil"
+      "emptyAction": "Aller à votre profil",
+      "current": "Actuel",
+      "noAddresses": "Les adresses des locataires ne sont pas configurées sur cette installation."
     },
     "editions": {
       "title": "Éditions",
