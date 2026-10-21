@@ -477,7 +477,7 @@ EOF_ROUTER
   ok "tenant subdomains *.$2 -> $service ($file)"
 }
 
-# dns_challenge PROVIDER ENV_NAME TOKEN DOMAIN: let Coolify's Traefik answer DNS-01 challenges through
+# dns_challenge PROVIDER ENV_NAMES ENV_LINES DOMAIN: let Coolify's Traefik answer DNS-01 challenges through
 # the DNS provider's API, so that it can hold the *.<domain> wildcard certificate. The token goes
 # into a root-only env file the proxy service reads; the proxy's compose file gains only that file's
 # name and the provider's, on lines marked "# efn-dns" so that a later run replaces them. The HTTP-01
@@ -493,7 +493,8 @@ dns_challenge() {
     die "$compose_file already has an env_file: add $2 to it, and '--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=$1' to the proxy's command, by hand"
   fi
   env_file="$PROXY_DIR/efn-dns.env"
-  printf '%s=%s\n' "$2" "$3" >"$env_file"
+  # $3 is the env file's lines, NAME=value for each of the variables $2 names.
+  printf '%s\n' "$3" >"$env_file"
   chmod 600 "$env_file"
   grep -v '# efn-dns' "$compose_file" | awk -v p="$1" -v f="$env_file" -v q="'" '
     # The env file, as a key of the service that has the command, just before its "command:".
