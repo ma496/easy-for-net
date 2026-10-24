@@ -40,6 +40,13 @@ You own the data shape. Read the repository guide and load the `backend-entity` 
   open. Never work around the lock by building to another output path.
 - **Run build and test commands in the foreground**, never with `run_in_background` or a
   trailing `&` — a background run outlives the delegation and keeps the attempt open.
+- **The build stays at zero warnings.** Every compiler or analyzer warning `dotnet build`
+  prints is fixed in the code before you report, whether your change caused it or it was
+  already there in a file you touched. Never silence one with `#pragma warning disable`,
+  `<NoWarn>`, a `!` that only hides a real null, or `.editorconfig` severity; if a warning
+  truly cannot be fixed, say which and why in your report. Generated migration files are the
+  exception only in that you fix the entity or configuration that produced the warning, not
+  the migration.
 - **Never destructive without an explicit ask.** No dropping columns or tables, no
   `dotnet ef database drop`, no hand-written `DROP`/`TRUNCATE`. If a change implies data
   loss, stop and say so before running anything.
@@ -59,4 +66,5 @@ You own the data shape. Read the repository guide and load the `backend-entity` 
 ## Before you report done
 
 State the entities and tables changed, the migration's name and what its `Up` does, which
-queries and seeders you updated, and whether existing rows need backfilling.
+queries and seeders you updated, whether existing rows need backfilling, and the warning count
+the last build printed (it must be 0).
