@@ -54,15 +54,18 @@ export const Sidebar = () => {
         return undefined
       }
 
-      // Check permissions from authUrls
-      const authUrl = authUrls.find((u) => u.url === item.url)
-      if (authUrl?.permissions && !isAllowed(authState, authUrl.permissions)) {
-        return undefined
-      }
+      // An item with no url is a heading for its children alone: they decide whether it shows
+      if (item.url !== undefined) {
+        // Check permissions from authUrls
+        const authUrl = authUrls.find((u) => u.url === item.url)
+        if (authUrl?.permissions && !isAllowed(authState, authUrl.permissions)) {
+          return undefined
+        }
 
-      // A platform administrator acting in no tenant is not offered screens that need one
-      if (!isPathAvailable(authState.user, item.url)) {
-        return undefined
+        // A platform administrator acting in no tenant is not offered screens that need one
+        if (!isPathAvailable(authState.user, item.url)) {
+          return undefined
+        }
       }
 
       // If item has a submenu, recursively filter it. Hidden children (`show: false`) are kept as they are:
@@ -81,7 +84,8 @@ export const Sidebar = () => {
         }
       }
 
-      return item
+      // With no submenu entries, an item with no url has nothing to link to
+      return item.url !== undefined ? item : undefined
     }
 
     return navItems.reduce<(NavItem | NavItemGroup)[]>((filtered, item) => {

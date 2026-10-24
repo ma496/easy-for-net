@@ -10,10 +10,10 @@ export interface NavItemGroup {
   items: NavItem[]
 }
 
-/** Describes a single navigation entry, including its i18n title, target url, optional icon, badge, group, visibility, active state, and nested children. An item whose children are all `show: false` renders in the sidebar as a single link that stays active on them; the breadcrumbs still trail through them. */
+/** Describes a single navigation entry, including its i18n title, optional target url, icon, badge, group, visibility, active state, and nested children. An item whose children are all `show: false` renders in the sidebar as a single link that stays active on them; the breadcrumbs still trail through them. An item with no url is a heading for its children only: it is never a link, and it is dropped from the sidebar when none of its children remain to show. */
 export interface NavItem {
   title: string
-  url: string
+  url?: string
   icon?: ElementType
   badge?: number
   group?: string

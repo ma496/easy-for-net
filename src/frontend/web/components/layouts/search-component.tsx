@@ -16,7 +16,7 @@ const iconByUrl = (() => {
   const visit = (items: NavItem[], inherited?: NavItem['icon']) =>
     items.forEach((item) => {
       const icon = item.icon ?? inherited
-      if (icon && !icons.has(item.url)) icons.set(item.url, icon)
+      if (icon && item.url && !icons.has(item.url)) icons.set(item.url, icon)
       if (item.children) visit(item.children, icon)
     })
   visit(navItems.flatMap((entry) => ('items' in entry ? entry.items : [entry])))
@@ -148,7 +148,7 @@ export const SearchComponent = () => {
 
       {open &&
         createPortal(
-          <div className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-[12vh]" role="dialog" aria-modal="true" aria-label={t('common.search') || 'Search...'} onKeyDown={handleDialogKeyDown}>
+          <div className="fixed inset-0 z-100 flex items-start justify-center px-4 pt-[12vh]" role="dialog" aria-modal="true" aria-label={t('common.search') || 'Search...'} onKeyDown={handleDialogKeyDown}>
             <div className="absolute inset-0 animate-fade-in bg-overlay backdrop-blur-sm" onClick={close} />
             <div className="relative w-full max-w-xl animate-scale-in overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
               <div className="flex items-center gap-3 border-b border-border px-4">

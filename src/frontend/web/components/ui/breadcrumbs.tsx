@@ -17,7 +17,7 @@ const findActivePathItems = (items: (NavItem | NavItemGroup)[], pathname: string
 
   const findInItems = (items: NavItem[], currentPath: string) => {
     for (const item of items) {
-      if (item.url === currentPath || (item.url.includes('{id}') && new RegExp(`^${item.url.replace('{id}', '[^/]+')}$`).test(currentPath))) {
+      if (item.url !== undefined && (item.url === currentPath || (item.url.includes('{id}') && new RegExp(`^${item.url.replace('{id}', '[^/]+')}$`).test(currentPath)))) {
         result.push(item)
         return true
       }
@@ -46,9 +46,12 @@ const findActivePathItems = (items: (NavItem | NavItemGroup)[], pathname: string
  * Returns true when the user may actually open the screen a breadcrumb entry points at: the permissions the route is
  * guarded with in `auth-urls` are granted, and the screen is one they can use with the tenant they are acting in.
  * This is the same pair of checks the sidebar filters its entries with, so a trail never offers a link that would only
- * land on /unauthorized or bounce the user somewhere else.
+ * land on /unauthorized or bounce the user somewhere else. An item with no url is no screen, so it is never opened.
  */
-const canOpen = (item: NavItem, authState: AuthState): boolean => {
+const canOpen = (item: NavItem, authState: AuthState): item is NavItem & { url: string } => {
+  if (item.url === undefined) {
+    return false
+  }
   const authUrl = authUrls.find((url) => url.url === item.url)
   if (authUrl?.permissions && !isAllowed(authState, authUrl.permissions)) {
     return false
@@ -82,7 +85,7 @@ export function Breadcrumbs({ className }: BreadcrumbsProps) {
         </Link>
       </li>
       {activePathItems.map((item, index) => (
-        <li key={item.url} className="flex min-w-0 items-center gap-1.5">
+        <li key={item.url ?? item.title} className="flex min-w-0 items-center gap-1.5">
           <ChevronRight size={14} className="shrink-0 text-subtle-foreground rtl:rotate-180" />
           {index === activePathItems.length - 1 || !canOpen(item, authState) ? (
             <span className={cn('truncate', index === activePathItems.length - 1 && 'font-medium text-foreground')}>{t(item.title) || humanizeKey(item.title)}</span>
