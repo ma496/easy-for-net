@@ -50,6 +50,8 @@ export const SidebarNavItem = ({ item, currentMenu, pathname, t, onToggleMenu, c
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               href={child.url as any}
               onClick={onNavigate}
+              aria-current={isActive ? 'page' : undefined}
+              data-sidebar-active={isActive && !flyout ? '' : undefined}
               className={cn(
                 'relative flex h-8 items-center gap-2 rounded-md px-2.5 text-[13px] transition-colors',
                 isActive && flyout && 'bg-primary/10 font-medium text-primary',
@@ -81,6 +83,7 @@ export const SidebarNavItem = ({ item, currentMenu, pathname, t, onToggleMenu, c
             <button
               type="button"
               aria-label={compact ? t(item.title) || humanizeKey(item.title) : undefined}
+              data-sidebar-active={hasActiveChild ? '' : undefined}
               className={cn(
                 rowClass,
                 hasActiveChild ? 'text-foreground hover:bg-surface-2' : idleClass,
@@ -117,6 +120,8 @@ export const SidebarNavItem = ({ item, currentMenu, pathname, t, onToggleMenu, c
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           href={item.url as any}
           aria-label={compact ? t(item.title) || humanizeKey(item.title) : undefined}
+          aria-current={isActive ? 'page' : undefined}
+          data-sidebar-active={isActive ? '' : undefined}
           className={cn(rowClass, isActive ? activeClass : idleClass, compact && 'lg:justify-center lg:px-0')}
         >
           {item.icon && <item.icon size={18} className={cn('shrink-0', isActive ? 'text-primary' : 'text-subtle-foreground group-hover:text-foreground')} />}

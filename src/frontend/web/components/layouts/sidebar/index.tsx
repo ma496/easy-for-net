@@ -3,7 +3,7 @@
 import { LocalizedLink as Link } from '@/components/ui'
 import { setSidebar, toggleSidebar } from '@/store/slices'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { PanelLeftClose, X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useTranslation, withoutLocale } from '@/i18n'
@@ -33,6 +33,7 @@ export const Sidebar = () => {
   const { t } = useTranslation()
   const pathname = usePathname()
   const [currentMenu, setCurrentMenu] = useState<string>('')
+  const scrollRef = useRef<HTMLDivElement>(null)
   const sidebarFlag = useAppSelector((state) => state.theme.sidebar)
   const authState = useAppSelector((state) => state.auth)
   const isDesktop = useMediaQuery('(min-width: 1024px)')
@@ -119,6 +120,30 @@ export const Sidebar = () => {
   }, [pathname, filteredNavItems])
 
   useEffect(() => {
+    // Bring the active entry into view - after a reload it may sit below the fold. The wait lets the
+    // active parent's submenu finish expanding (AnimateHeight, 200ms) so its child link has a position.
+    const timer = window.setTimeout(() => {
+      const container = scrollRef.current
+      if (!container) return
+      // The deepest visible marker wins: the child link when its submenu is open, else its parent row.
+      const active = Array.from(container.querySelectorAll<HTMLElement>('[data-sidebar-active]'))
+        .filter((element) => element.offsetHeight > 0)
+        .pop()
+      if (!active) return
+
+      const containerRect = container.getBoundingClientRect()
+      const activeRect = active.getBoundingClientRect()
+      if (activeRect.top >= containerRect.top && activeRect.bottom <= containerRect.bottom) return
+
+      container.scrollTo({
+        top: container.scrollTop + activeRect.top - containerRect.top - (container.clientHeight - activeRect.height) / 2,
+        behavior: 'smooth',
+      })
+    }, 250)
+    return () => window.clearTimeout(timer)
+  }, [pathname, filteredNavItems, compact])
+
+  useEffect(() => {
     // The drawer closes on every navigation below lg; the desktop rail keeps its state.
     if (window.innerWidth < 1024) {
       dispatch(setSidebar(false))
@@ -171,7 +196,7 @@ export const Sidebar = () => {
           )}
         </div>
 
-        <div className="relative flex-1 overflow-x-hidden overflow-y-auto px-3 pb-4">
+        <div ref={scrollRef} className="relative flex-1 overflow-x-hidden overflow-y-auto px-3 pb-4">
           {filteredNavItems.map((group, index) => (
             <SidebarNavGroup key={`nav-group-${index}`} group={group} currentMenu={currentMenu} pathname={pathname} t={t} onToggleMenu={toggleMenu} compact={compact} />
           ))}
