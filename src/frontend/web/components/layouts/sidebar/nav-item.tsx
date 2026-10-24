@@ -21,8 +21,8 @@ interface NavItemProps {
   compact?: boolean
 }
 
-/** Whether a nav url - which may hold a dynamic `{id}` segment - names the given locale-free pathname. */
-const matchesUrl = (url: string, path: string) => url === path || (url.includes('{id}') && new RegExp(`^${url.replace('{id}', '[^/]+')}$`).test(path))
+/** Whether a nav url - which may hold a dynamic `{id}` segment - names the given locale-free pathname. An item with no url names none. */
+const matchesUrl = (url: string | undefined, path: string) => url !== undefined && (url === path || (url.includes('{id}') && new RegExp(`^${url.replace('{id}', '[^/]+')}$`).test(path)))
 
 const rowClass = 'group flex h-9 w-full items-center gap-3 rounded-md px-2.5 text-[13.5px] font-medium transition-colors duration-150'
 const idleClass = 'text-muted-foreground hover:bg-surface-2 hover:text-foreground'
@@ -108,6 +108,11 @@ export const SidebarNavItem = ({ item, currentMenu, pathname, t, onToggleMenu, c
         </AnimateHeight>
       </div>
     )
+  }
+
+  // An item with no url is only a heading for its submenu, and with nothing in it there is nothing to render.
+  if (!item.url) {
+    return null
   }
 
   // A single link stays active on the pages its hidden children name (create, update, detail).
