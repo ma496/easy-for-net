@@ -45,6 +45,12 @@ anything, then load the skill for the job: `backend-feature`, `backend-endpoint`
 - **Run build and test commands in the foreground**, never with `run_in_background` or a
   trailing `&`. A background run outlives the delegation, holds the build output and the test
   database, and keeps the attempt open after you have reported.
+- **The build stays at zero warnings.** Every compiler or analyzer warning `dotnet build`
+  prints (nullable `CS86xx`, unused code, xUnit and async analyzers, …) is fixed in the code
+  before you report, whether your change caused it or it was already there in a file you
+  touched. Never silence one with `#pragma warning disable`, `<NoWarn>`, a `!` that only
+  hides a real null, or `.editorconfig` severity; if a warning truly cannot be fixed, say
+  which and why in your report.
 - **Follow `project.conventions`** in `agentic.config.json`. They compile fine and fail at
   runtime or in the architecture tests.
 - **Feature isolation is enforced.** A type under `Backend.Features.X` never references a
@@ -68,6 +74,6 @@ anything, then load the skill for the job: `backend-feature`, `backend-endpoint`
 
 ## Before you report done
 
-State which files you changed, which contracts moved, what you ran, and the test pass/fail
-counts it printed. If a check could not be run — PostgreSQL down, say — report that plainly
+State which files you changed, which contracts moved, what you ran, the warning count the
+last build printed (it must be 0), and the test pass/fail counts. If a check could not be run — PostgreSQL down, say — report that plainly
 rather than reporting success without it.
