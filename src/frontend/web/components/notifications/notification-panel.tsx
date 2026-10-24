@@ -40,7 +40,7 @@ export const NotificationPanel = ({ onClose }: NotificationPanelProps) => {
             {t('notifications.noNotifications') || 'No notifications'}
           </div>
         ) : (
-          notifications?.items.map((notification) => <NotificationItem key={notification.id} notification={notification} />)
+          notifications?.items.map((notification) => <NotificationItem key={notification.id} notification={notification} onClick={onClose} />)
         )}
       </Scrollbar>
 

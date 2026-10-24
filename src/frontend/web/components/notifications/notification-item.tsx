@@ -6,10 +6,12 @@ import { LocalizedLink } from '@/components/ui'
 import { cn, notificationVariables, formatRelativeTime } from '@/lib/utils'
 
 /**
- * Props for the {@link NotificationItem} component, receiving the {@link NotificationDto} to display.
+ * Props for the {@link NotificationItem} component, receiving the {@link NotificationDto} to display and an optional click callback.
  */
 interface NotificationItemProps {
   notification: NotificationDto
+  /** Called when the row is clicked, e.g. to close the dropdown it sits in. */
+  onClick?: () => void
 }
 
 /** The icon and its tinted tile for each notification type. */
@@ -23,13 +25,14 @@ const typeStyles: Record<string, { icon: typeof Info; tile: string }> = {
 /**
  * Renders a single notification row (type icon tile, translated title/message, relative timestamp) as a link to the notification details, with a dot and a tinted background while unread.
  */
-export const NotificationItem = ({ notification }: NotificationItemProps) => {
+export const NotificationItem = ({ notification, onClick }: NotificationItemProps) => {
   const { t, i18n } = useTranslation()
   const style = typeStyles[notification.type as string] ?? typeStyles[NotificationType.Info]
 
   return (
     <LocalizedLink
       href={`/notifications/${notification.id}`}
+      onClick={onClick}
       className={cn('flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-surface-2', !notification.isRead && 'bg-primary/5')}
     >
       <span className={cn('mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg', style.tile)}>
