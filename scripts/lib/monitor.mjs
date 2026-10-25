@@ -140,11 +140,26 @@ export function agentsOf(state) {
     .map((a) => ({ ...a }));
 }
 
+/** The lead session's own figures, the counterpart of an agent's, as plain data. */
+export function leadOf(state) {
+  const lead = state?.lead;
+  if (!lead) return null;
+  const span = Date.parse(lead.lastAt) - Date.parse(lead.startedAt);
+  return {
+    ...lead,
+    turns: state.turns ?? 0,
+    // The session's own figure once it has ended; until then, its first line to its newest.
+    durationMs: lead.durationMs ?? (Number.isFinite(span) && span >= 0 ? span : null),
+  };
+}
+
 /**
  * Describe one stream line as rows for the live feed. `state` is carried across calls: it
  * holds the root session, every agent the stream has started (`agentsOf(state)` reads them),
  * the calls already shown, the turns counted so far (`state.turns`, `state.subagentTurns`)
- * and the sequence number the next row gets.
+ * and the sequence number the next row gets. `state.lead` (`leadOf(state)` reads it) is the
+ * lead's own tally: its status, tool calls, delegations and skills, when it started and last
+ * wrote, and the session's cost and duration once its result arrives.
  *
  * Row: `{ seq, agent, who, sub, kind, text, at?, detail?, ok?, costUsd?, turns? }` — `agent` is
  * the id of the `Agent` call whose log the row belongs to (null for the lead), `who` its label,
@@ -170,6 +185,7 @@ export function describeEvent(line, state) {
   state.subMessages ??= new Set();
   state.lastText ??= {};
   state.seq ??= 0;
+  state.lead ??= { status: "waiting", toolUses: 0, delegations: 0, skills: 0, startedAt: null, lastAt: null, durationMs: null, costUsd: null, current: "" };
   const rows = [];
   const push = (row) => {
     state.seq += 1;
@@ -249,7 +265,12 @@ export function describeEvent(line, state) {
   if (event.at) state.firstAt ??= event.at;
 
   if (event.kind === "result") {
-    const { costUsd, numTurns, isError, subtype } = event.result;
+    const { costUsd, numTurns, isError, subtype, durationMs } = event.result;
+    // A session can report more than one result: the last one is how it ended, its cost is the
+    // whole session's, and each one's duration covers only its own stretch, so those add up.
+    const lead = state.lead;
+    if (durationMs != null) lead.durationMs = (lead.durationMs ?? 0) + durationMs;
+    Object.assign(lead, { status: isError ? "failed" : "done", costUsd, current: "" });
     // An older CLI reports no task events, so the session ending is the only sign its agents
     // ended. A newer one can answer before an async agent finishes; that agent's own
     // notification ends it.
@@ -279,6 +300,14 @@ export function describeEvent(line, state) {
   state.turns = state.leadMessages.size;
   state.subagentTurns = state.subMessages.size;
   const mine = { agent: agent?.id ?? null, who: agent?.label ?? (sub ? "subagent" : "lead"), sub, ...(event.at ? { at: event.at } : {}) };
+  const lead = sub ? null : state.lead;
+  if (lead) {
+    if (lead.status === "waiting") lead.status = "running";
+    if (event.at) {
+      lead.startedAt ??= event.at;
+      lead.lastAt = event.at;
+    }
+  }
 
   for (const text of event.texts) {
     const one = clipProse(text, 4000);
@@ -294,6 +323,12 @@ export function describeEvent(line, state) {
       state.seen.add(use.id);
     }
     if (agent) agent.streamed += 1;
+    if (lead) {
+      if (DELEGATION_TOOLS.has(use.name)) lead.delegations += 1;
+      else if (use.name === SKILL_TOOL) lead.skills += 1;
+      else lead.toolUses += 1;
+      lead.current = use.name;
+    }
     if (DELEGATION_TOOLS.has(use.name)) {
       const spawned = newAgent(state, use, mine.agent, event.at);
       push({ ...mine, kind: "delegate", text: spawned.label, detail: spawned.description, spawns: spawned.id });
@@ -333,7 +368,7 @@ function runSummary(entry) {
  * planned spec names; `runs` the journal; `lock` the parsed drain lock and `lockHeld` whether
  * `isHeld` judged it live; `live` the newest stream file `{ name, mtimeMs }`, `liveAgents`
  * what `agentsOf` says that stream has started, and `liveState` the rest `describeEvent`
- * gathered from it (`phase`, `lastLine`, `firstAt`).
+ * gathered from it (`phase`, `lastLine`, `firstAt`, and the lead's tally `leadOf` reads).
  */
 export function boardSnapshot({ lanes = {}, specs = [], runs = [], lock = null, lockHeld = false, live = null, liveAgents = [], liveState = {}, now = Date.now() } = {}) {
   const tasks = new Map();
@@ -412,6 +447,7 @@ export function boardSnapshot({ lanes = {}, specs = [], runs = [], lock = null, 
           finished: Boolean(liveEntry),
           stem: liveEntry?.taskSlug ?? (doing.length === 1 ? doing[0].stem : null),
           agents: liveAgents,
+          lead: leadOf(liveState),
           runStartedAt: runStartOf(liveRunId),
           attempt: attemptOfStream(live.name),
           attemptStartedAt: liveState.firstAt ?? null,

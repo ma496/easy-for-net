@@ -389,10 +389,26 @@ function renderTaskHead() {
   box.append(timeLine, el("div", "muted", stats));
 }
 
-/** The live run's subagents; each opens its own log. */
-function agentList(agents) {
+/** The lead's figures as short phrases: what it ran, for how long, and what it cost. */
+function leadStats(lead) {
+  return [lead.toolUses ? `${lead.toolUses} tool calls` : "",
+    lead.delegations ? `${lead.delegations} subagent call${lead.delegations > 1 ? "s" : ""}` : "",
+    lead.skills ? `${lead.skills} skill${lead.skills > 1 ? "s" : ""}` : "",
+    lead.turns ? `${lead.turns} turns` : "", dur(lead.durationMs),
+    lead.costUsd != null ? usd(lead.costUsd) : ""].filter(Boolean);
+}
+
+/** The live run's lead and subagents; each opens its own log. */
+function agentList(agents, lead) {
   const box = el("div", "agents-mini");
   const running = agents.filter((a) => a.status === "running").length;
+  if (lead) {
+    const b = el("button", "agent-line");
+    b.title = "Open the lead's log";
+    b.append(dot(lead.status), el("span", "an", "lead"), el("span", "ad", leadStats(lead).join(" · ")));
+    b.onclick = (e) => { e.stopPropagation(); $("detail").open && $("detail").close(); showAgent("lead"); };
+    box.append(el("div", "lbl", "Lead"), b);
+  }
   box.append(el("div", "lbl", `Subagents · ${running} running · ${agents.length} total`));
   for (const a of agents) {
     const b = el("button", "agent-line");
@@ -451,7 +467,7 @@ function renderDetail() {
     b.style.marginTop = "8px";
     b.onclick = () => { $("detail").close(); showAgent("all"); };
     body.append(b);
-    if (board.live.agents.length) body.append(agentList(board.live.agents));
+    if (board.live.agents.length || board.live.lead) body.append(agentList(board.live.agents, board.live.lead));
   }
   if (!t.runs.length) body.append(el("p", "empty", "No finished attempts in the journal yet."));
   for (const r of [...t.runs].reverse()) {
@@ -489,7 +505,7 @@ const KINDS = [
 ];
 const feed = {
   source: null, file: null, following: true,
-  rows: [], agents: [], view: "all",
+  rows: [], agents: [], lead: null, view: "all",
   // Progress repeats what an agent's own streamed tool calls already show; it is off unless a
   // log has nothing else (an agent whose own events the stream does not carry).
   on: new Set(["phase", "text", "tool", "agents", "task", "result"]),
@@ -517,6 +533,7 @@ function follow(file, view = "all") {
   feed.file = null;
   feed.rows = [];
   feed.agents = [];
+  feed.lead = null;
   feed.view = view;
   $("feed").replaceChildren(el("div", "muted", feed.following ? "Waiting for a stream…" : "Loading…"));
   $("feedTitle").textContent = feed.following ? "Live" : "Attempt log";
@@ -554,6 +571,7 @@ function showAgent(view) {
 
 function updateCounts(d) {
   feed.agents = d.agents ?? feed.agents;
+  feed.lead = d.lead ?? feed.lead;
   $("feedMeta").textContent = `${feed.file ?? ""} · ${d.turns} lead turns · ${d.subagentTurns} subagent turns`;
   renderTaskHead();
   renderAgentBar();
@@ -596,7 +614,9 @@ function renderAgentBar() {
   };
   bar.replaceChildren(
     chip("all", "All"),
-    chip("lead", "Lead"),
+    chip("lead", "Lead", feed.lead
+      ? { status: feed.lead.status, note: [feed.lead.toolUses ? `${feed.lead.toolUses} tools` : "", dur(feed.lead.durationMs)].filter(Boolean).join(" · ") }
+      : undefined),
     ...feed.agents.map((a) => {
       const note = [a.toolUses ? `${a.toolUses} tools` : "", dur(a.durationMs)].filter(Boolean).join(" · ");
       const b = chip(a.id, a.label, { status: a.status, note });
@@ -609,6 +629,7 @@ function renderAgentBar() {
 
 function renderAgentInfo() {
   const box = $("agentinfo");
+  if (feed.view === "lead" && feed.lead) return renderLeadInfo(box, feed.lead);
   const a = selectedAgent();
   if (!a) { box.hidden = true; return; }
   box.hidden = false;
@@ -622,6 +643,19 @@ function renderAgentInfo() {
   box.replaceChildren(line1, el("div", "muted", stats));
   if (a.status === "running" && a.current) box.append(el("div", null, `now: ${a.current}`));
   if (a.streamed === 0) box.append(el("div", "muted", "The stream carries only this agent's progress and final report, not its own messages."));
+}
+
+/** The lead's own line under the agent bar, in the shape a subagent's has. */
+function renderLeadInfo(box, lead) {
+  box.hidden = false;
+  const line1 = el("div");
+  line1.append(dot(lead.status), document.createTextNode(" "), el("b", null, "lead"),
+    document.createTextNode(" — the session that runs the task and delegates to the subagents"));
+  const stats = [lead.status, ...leadStats(lead),
+    lead.startedAt ? `started at ${clock(lead.startedAt)}` : "",
+    lead.status === "running" && lead.lastAt ? `last wrote ${ago(lead.lastAt)}` : ""].filter(Boolean).join(" · ");
+  box.replaceChildren(line1, el("div", "muted", stats));
+  if (lead.status === "running" && lead.current) box.append(el("div", null, `last call: ${lead.current}`));
 }
 
 function renderFilters() {

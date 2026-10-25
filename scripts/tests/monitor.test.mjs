@@ -10,6 +10,7 @@ import {
   dependencyNames,
   describeEvent,
   isStreamFileName,
+  leadOf,
   newestStream,
   runIdOfStream,
   runStartOf,
@@ -239,6 +240,32 @@ test("a row carries the time its line was written, and only then", () => {
   assert.equal(rows[0].at, at);
   assert.equal(agentsOf(state)[0].startedAt, at);
   assert.equal("at" in rows[1], false, "a task event says nothing about when, so its row has no time");
+});
+
+test("the lead keeps its own tally: calls, delegations, skills, time, and how its session ended", () => {
+  const timed = (id, at, content, parent = null) =>
+    JSON.stringify({ type: "assistant", session_id: "s", parent_tool_use_id: parent, timestamp: at, message: { id, content } });
+  const state = {};
+  assert.equal(leadOf(state), null, "nothing read, nothing to show");
+  for (const line of [
+    timed("m1", "2026-10-15T10:00:00.000Z", [{ type: "tool_use", id: "t1", name: "Read", input: { file_path: "a.cs" } }]),
+    timed("m2", "2026-10-15T10:00:30.000Z", [{ type: "tool_use", id: "t2", name: "Skill", input: { skill: "backend-endpoint" } }]),
+    timed("m3", "2026-10-15T10:01:00.000Z", [{ type: "tool_use", id: "A1", name: "Agent", input: { subagent_type: "qa-engineer", description: "check" } }]),
+    // A subagent's own call is not the lead's.
+    timed("s1", "2026-10-15T10:05:00.000Z", [{ type: "tool_use", id: "t3", name: "Grep", input: { pattern: "x" } }], "A1"),
+    timed("m4", "2026-10-15T10:02:00.000Z", [{ type: "tool_use", id: "t4", name: "Bash", input: { command: "npm run verify" } }]),
+  ]) describeEvent(line, state);
+  assert.deepEqual(leadOf(state), {
+    status: "running", toolUses: 2, delegations: 1, skills: 1, turns: 4, current: "Bash",
+    startedAt: "2026-10-15T10:00:00.000Z", lastAt: "2026-10-15T10:02:00.000Z", durationMs: 120000, costUsd: null,
+  });
+  describeEvent(JSON.stringify({ type: "result", subtype: "success", is_error: false, total_cost_usd: 3.5, num_turns: 4, duration_ms: 150000, result: "" }), state);
+  const ended = leadOf(state);
+  assert.deepEqual({ status: ended.status, costUsd: ended.costUsd, durationMs: ended.durationMs, current: ended.current },
+    { status: "done", costUsd: 3.5, durationMs: 150000, current: "" }, "the session's own figures win once it reports");
+  describeEvent(JSON.stringify({ type: "result", subtype: "error_max_turns", is_error: true, total_cost_usd: 4, num_turns: 9, duration_ms: 30000, result: "" }), state);
+  assert.deepEqual({ status: leadOf(state).status, durationMs: leadOf(state).durationMs }, { status: "failed", durationMs: 180000 },
+    "the last result is how it ended, and each result's duration is only its own stretch");
 });
 
 // --- names ----------------------------------------------------------------------------------
