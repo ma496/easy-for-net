@@ -17,7 +17,7 @@ import { closeSync, existsSync, openSync, readFileSync, readSync, readdirSync, s
 import { createServer } from "node:http";
 import { hostname } from "node:os";
 import { join, resolve } from "node:path";
-import { LANES, agentsOf, boardSnapshot, describeEvent, isStreamFileName, newestStream } from "./lib/monitor.mjs";
+import { LANES, agentsOf, boardSnapshot, describeEvent, isStreamFileName, leadOf, newestStream } from "./lib/monitor.mjs";
 import { isAlive } from "./lib/proc.mjs";
 import { REPO_ROOT } from "./lib/project-config.mjs";
 import { isHeld, parseLock } from "./lib/queue-lock.mjs";
@@ -162,7 +162,7 @@ function trackerFor(name) {
   return t;
 }
 
-const trackerCounts = (t) => ({ turns: t.state.turns ?? 0, subagentTurns: t.state.subagentTurns ?? 0, agents: agentsOf(t.state) });
+const trackerCounts = (t) => ({ turns: t.state.turns ?? 0, subagentTurns: t.state.subagentTurns ?? 0, agents: agentsOf(t.state), lead: leadOf(t.state) });
 
 function advance(t) {
   const read = readFrom(join(RUNS_DIR, t.name), t.offset);

@@ -94,6 +94,7 @@ export function normalizeEvent(raw) {
       isError: Boolean(raw.is_error),
       subtype: event.subtype,
       numTurns: typeof raw.num_turns === "number" ? raw.num_turns : null,
+      durationMs: typeof raw.duration_ms === "number" && Number.isFinite(raw.duration_ms) ? raw.duration_ms : null,
       text: typeof raw.result === "string" ? raw.result : "",
       apiErrorStatus: raw.api_error_status ?? null,
       terminalReason: typeof raw.terminal_reason === "string" ? raw.terminal_reason : null,
