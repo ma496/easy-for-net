@@ -105,17 +105,17 @@ const steps = [
     // fails with MSB3027 for a reason that has nothing to do with the change.
     before: () => runSync("node", ["scripts/stop-api.mjs"], { cwd: REPO_ROOT, stdio: "inherit" }),
   },
-  { area: "api", name: "backend tests", cmd: "dotnet", args: ["test", relative(REPO_ROOT, API_TESTS), "--no-build", "-nologo"], watches: DOTNET_TESTS },
+  { area: "api", name: "backend tests", cmd: "dotnet", args: ["test", "--project", relative(REPO_ROOT, API_TESTS), "--no-build"], watches: DOTNET_TESTS },
   {
     area: "api",
     name: "backend resource tests",
     cmd: "dotnet",
-    args: ["test", relative(REPO_ROOT, API_TESTS), "--no-build", "-nologo", "--filter", "FullyQualifiedName~LocalizationResourceStoreTests"],
+    args: ["test", "--project", relative(REPO_ROOT, API_TESTS), "--no-build", "--filter-class", "*LocalizationResourceStoreTests"],
     watches: [RESOURCES],
     // Covered already when the whole suite runs.
     supersededBy: "backend tests",
   },
-  ...toolTestDirs.map((dir) => ({ area: "api", name: `tests: ${dir}`, cmd: "dotnet", args: ["test", dir, "-nologo"], watches: TOOL_PATHS })),
+  ...toolTestDirs.map((dir) => ({ area: "api", name: `tests: ${dir}`, cmd: "dotnet", args: ["test", "--project", dir], watches: TOOL_PATHS })),
   {
     area: "web",
     name: "npm ci",

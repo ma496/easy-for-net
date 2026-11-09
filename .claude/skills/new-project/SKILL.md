@@ -138,7 +138,7 @@ Run these from the new project's root.
    is the tenant, so the sign-in page has no tenant field: sign in as `tenantadmin` at
    `http://default.localhost:3000` (the Default tenant), and as `admin` at `http://app.localhost:3000`
    (the platform). Sign up for a new tenant on `http://app.localhost:3000`.
-7. **Tests and the gate.** `dotnet test src/backend/Tests` needs PostgreSQL reachable with the
+7. **Tests and the gate.** `dotnet test --project src/backend/Tests` needs PostgreSQL reachable with the
    `appsettings.Testing.json` connection string and the `Initial` migration in place; the run
    migrates and seeds `<name>_test` and deletes it at the end; it needs no Redis. From the root, `npm run gate`
    (`-- --fast` skips the production web build) runs the build, backend tests, web

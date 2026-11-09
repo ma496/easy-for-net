@@ -182,7 +182,7 @@ change to it ships with the next package, not the next tag alone.
 ## Commands
 
 ```sh
-dotnet test tool/EasyForNetTool.Tests/EasyForNetTool.Tests.csproj
+dotnet test --project tool/EasyForNetTool.Tests/EasyForNetTool.Tests.csproj
 dotnet build EasyForNet.slnx
 npm run gate                         # also runs every tool/*.Tests project it finds
 ./publish-package.sh                 # interactive: version prompt + NuGet publish confirmation

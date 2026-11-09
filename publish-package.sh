@@ -28,7 +28,7 @@ VERSION=${VERSION_OVERRIDE:-$VERSION}
 
 # Build and pack with version
 echo "Running tests..."
-dotnet test tool/EasyForNetTool.Tests/EasyForNetTool.Tests.csproj -c Release
+dotnet test --project tool/EasyForNetTool.Tests/EasyForNetTool.Tests.csproj -c Release
 
 echo "Building and packing version $VERSION..."
 dotnet pack tool/EasyForNetTool/EasyForNetTool.csproj -c Release -p:Version=$VERSION -p:PackageVersion=$VERSION

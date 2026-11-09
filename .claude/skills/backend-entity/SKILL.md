@@ -214,5 +214,5 @@ inside the tenant or platform scope they belong to — not in a migration.
 
 ## Verify
 
-`npm run stop:api`, `dotnet build EasyForNet.slnx`, then `dotnet test src/backend/Tests/Backend.Tests.csproj` —
+`npm run stop:api`, `dotnet build EasyForNet.slnx`, then `dotnet test --project src/backend/Tests/Backend.Tests.csproj` —
 `TenantScopingTests` and `FeatureDependencyTests` run there.

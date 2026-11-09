@@ -22,7 +22,7 @@ namespace Backend.Extensions;
 /// besides. The <c>ValidationFailure.Message</c> these overloads set is filled in from
 /// <see cref="ErrorLocalization.ResolveEnglishFallback"/> - the shipped English text for the code, with
 /// no database involved - so it reads sensibly even for the one caller that never reaches the
-/// localization pass FastEndpoints' <c>GlobalResponseModifierAsync</c> runs afterwards: a unit test
+/// localization pass FastEndpoints' response serializer (<c>LocalizingResponseSerializer</c>) runs afterwards: a unit test
 /// talking to a service directly, or a response built ahead of that pass.
 /// </para>
 /// </remarks>

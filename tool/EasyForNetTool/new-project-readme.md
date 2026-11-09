@@ -81,7 +81,7 @@ account is first created, so change it in the app after that.
 ## Tests
 
 ```sh
-dotnet test src/backend/Tests          # needs PostgreSQL (not Redis); creates and deletes the `<database>_test` database
+dotnet test --project src/backend/Tests # needs PostgreSQL (not Redis); creates and deletes the `<database>_test` database
 npm run gate                           # everything: build, backend tests, web lint/typecheck/tests, next build
 npm run gate -- --fast                 # the same without the production web build
 ```

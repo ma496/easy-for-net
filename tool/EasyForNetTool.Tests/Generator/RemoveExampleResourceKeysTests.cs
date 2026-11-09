@@ -41,13 +41,13 @@ public class RemoveExampleResourceKeysTests : IDisposable
     public async Task Should_Remove_Example_Keys_From_Every_Culture()
     {
         foreach (var culture in new[] { "en", "ar" })
-            await File.WriteAllTextAsync(Path.Combine(_resourcesPath, $"{culture}.json"), Resources);
+            await File.WriteAllTextAsync(Path.Combine(_resourcesPath, $"{culture}.json"), Resources, TestContext.Current.CancellationToken);
 
         await CreateProjectGenerator.RemoveExampleResourceKeysAsync(_resourcesPath);
 
         foreach (var culture in new[] { "en", "ar" })
         {
-            var text = await File.ReadAllTextAsync(Path.Combine(_resourcesPath, $"{culture}.json"));
+            var text = await File.ReadAllTextAsync(Path.Combine(_resourcesPath, $"{culture}.json"), TestContext.Current.CancellationToken);
             var resources = JsonNode.Parse(text)!.AsObject();
             Assert.Equal(["profile", "ui"], resources["navigation"]!.AsObject().Select(entry => entry.Key));
             Assert.Equal(["tenants"], resources["search"]!.AsObject().Select(entry => entry.Key));

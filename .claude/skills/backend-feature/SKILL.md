@@ -204,5 +204,5 @@ are not real features, so do not model new code on them or "fix" their intention
 - [ ] Settings provider + setting class + validator, if administrators change its behaviour at run time
 - [ ] Endpoints with a group, permissions and validators
 - [ ] Tests under `src/backend/Tests/Features/<Feature>/…`
-- [ ] `dotnet build EasyForNet.slnx` and `dotnet test src/backend/Tests/Backend.Tests.csproj` pass
+- [ ] `dotnet build EasyForNet.slnx` and `dotnet test --project src/backend/Tests/Backend.Tests.csproj` pass
       (the architecture tests — feature dependency, no-direct-use, tenant scoping — are part of that run)

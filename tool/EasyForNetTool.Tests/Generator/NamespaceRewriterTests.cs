@@ -36,8 +36,8 @@ public class MyClass
 ";
 
         var rewriter = new NamespaceRewriter(oldNs, newNs);
-        var tree = CSharpSyntaxTree.ParseText(sourceCode);
-        var root = tree.GetRoot();
+        var tree = CSharpSyntaxTree.ParseText(sourceCode, cancellationToken: TestContext.Current.CancellationToken);
+        var root = tree.GetRoot(TestContext.Current.CancellationToken);
 
         // Act
         var result = rewriter.Visit(root);
@@ -83,7 +83,7 @@ public class MyClass
 ";
 
         var rewriter = new NamespaceRewriter("Backend", "Acme");
-        var root = CSharpSyntaxTree.ParseText(sourceCode).GetRoot();
+        var root = CSharpSyntaxTree.ParseText(sourceCode, cancellationToken: TestContext.Current.CancellationToken).GetRoot(TestContext.Current.CancellationToken);
 
         // Act
         var resultCode = rewriter.Visit(root).ToFullString();

@@ -19,13 +19,13 @@ public class JsonPropertyUpdaterTests
         try
         {
             var path = Path.Combine(dir, "package.json");
-            await File.WriteAllTextAsync(path, "{\n  \"name\": \"x\",\n  \"engines\": { \"node\": \">=24 <25\" },\n  \"note\": \"a & b's — c+d\"\n}\n");
+            await File.WriteAllTextAsync(path, "{\n  \"name\": \"x\",\n  \"engines\": { \"node\": \">=24 <25\" },\n  \"note\": \"a & b's — c+d\"\n}\n", TestContext.Current.CancellationToken);
 
             // Act
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(path, "name", "demo-app");
 
             // Assert
-            var text = await File.ReadAllTextAsync(path);
+            var text = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
             Assert.Contains("\">=24 <25\"", text);
             Assert.Contains("\"a & b's — c+d\"", text);
             Assert.DoesNotContain("\\u", text);
@@ -49,13 +49,13 @@ public class JsonPropertyUpdaterTests
         try
         {
             var path = Path.Combine(dir, "package.json");
-            await File.WriteAllTextAsync(path, "{\n  \"name\": \"x\",\n  \"private\": true\n}\n");
+            await File.WriteAllTextAsync(path, "{\n  \"name\": \"x\",\n  \"private\": true\n}\n", TestContext.Current.CancellationToken);
 
             // Act
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(path, "name", "demo-app");
 
             // Assert
-            var text = await File.ReadAllTextAsync(path);
+            var text = await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken);
             Assert.DoesNotContain("\r\n", text);
             Assert.EndsWith("}\n", text);
         }
@@ -84,13 +84,13 @@ public class JsonPropertyUpdaterTests
         {
             var path = Path.Combine(dir, Path.GetFileName(source));
             File.Copy(source, path);
-            var escapesBefore = CountEscapes(await File.ReadAllTextAsync(path));
+            var escapesBefore = CountEscapes(await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken));
 
             // Act
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(path, property, "demo-app");
 
             // Assert
-            Assert.Equal(escapesBefore, CountEscapes(await File.ReadAllTextAsync(path)));
+            Assert.Equal(escapesBefore, CountEscapes(await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken)));
         }
         finally
         {

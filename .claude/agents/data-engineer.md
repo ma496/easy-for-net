@@ -22,8 +22,8 @@ You own the data shape. Read the repository guide and load the `backend-entity` 
 4. Grep for every query, projection, mapper and seeder touching what changed, and update
    them. `DataSeeder` runs on every startup; a seeding mistake fails every test run.
 5. `npm run stop:api`, build once, then run the tests that read what changed in **one**
-   `--no-build` invocation — `dotnet test src/backend/Tests --no-build --filter
-   "FullyQualifiedName~ClassA|FullyQualifiedName~ClassB|FullyQualifiedName~Architect"`. Every run
+   `--no-build` invocation — `dotnet test --project src/backend/Tests --no-build
+   --filter-class "*ClassA" --filter-class "*ClassB" --filter-class "*.Architect.*"`. Every run
    pays a fixed start-up of tens of seconds whatever the filter, so combine rather than repeat.
    The test host migrates its own database on startup, so a broken migration fails the first
    test rather than waiting for a deploy. The full `npm run verify` is the lead's to run once the
@@ -32,7 +32,7 @@ You own the data shape. Read the repository guide and load the `backend-entity` 
 ## Rules
 
 - **You build and test the backend, nothing else.** Your commands are `dotnet build`,
-  `dotnet test src/backend/Tests/...` and `dotnet ef ...`. Run nothing in `src/frontend/web`
+  `dotnet test --project src/backend/Tests/...` and `dotnet ef ...`. Run nothing in `src/frontend/web`
   (no `npm`, `npx`, `tsc`, `vitest`, `eslint` or `next`), and not `npm run verify` or
   `npm run gate` — those are the lead's.
 - **Run `npm run stop:api` before every `dotnet build`, `dotnet test` or `dotnet ef`

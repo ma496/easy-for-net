@@ -20,11 +20,11 @@ to create databases from a template still runs the suite.
 
 ```sh
 npm run stop:api    # a running API locks the build output the test run rebuilds
-dotnet test src/backend/Tests/Backend.Tests.csproj
-dotnet test src/backend/Tests/Backend.Tests.csproj --filter "FullyQualifiedName~UserCreateTests"
-dotnet test src/backend/Tests/Backend.Tests.csproj --filter "FullyQualifiedName~UserCreateTests.Valid_Input"
+dotnet test --project src/backend/Tests/Backend.Tests.csproj
+dotnet test --project src/backend/Tests/Backend.Tests.csproj --filter-class "*UserCreateTests"
+dotnet test --project src/backend/Tests/Backend.Tests.csproj --filter-method "*UserCreateTests.Valid_Input"
 # several classes in one run, without rebuilding — the cheap way to check a change
-dotnet test src/backend/Tests/Backend.Tests.csproj --no-build --filter "FullyQualifiedName~UserCreateTests|FullyQualifiedName~Architect"
+dotnet test --project src/backend/Tests/Backend.Tests.csproj --no-build --filter-class "*UserCreateTests" --filter-class "*.Architect.*"
 ```
 
 Every invocation pays a fixed start-up — host boot, the test database, the seed — of tens of
@@ -215,8 +215,8 @@ Worth knowing before changing the fixtures, because each of these is load-bearin
   Both defaults are in code rather than in `appsettings.Testing.json`, because that file is not in
   source control.
 
-To run the suite without the `dotnet test` host, execute the built runner directly — it also takes
-`-parallel`, `-maxThreads` and `-filter "/*/*/ClassName/*"`:
+`dotnet test` runs on Microsoft.Testing.Platform (opted in by `test.runner` in `global.json`, required by xunit.v3 4.x): the project goes after `--project`, and filters are `--filter-class`, `--filter-method` and `--filter-namespace` (wildcards allowed; repeating one is OR, mixing kinds is AND), not `--filter`. To run the suite without the `dotnet test` host, execute the built runner directly — it also takes
+`-parallelMode`, `-maxThreads` and `-class "<fully qualified name>"`:
 
 ```sh
 ./src/backend/Tests/bin/Debug/net10.0/Backend.Tests.exe

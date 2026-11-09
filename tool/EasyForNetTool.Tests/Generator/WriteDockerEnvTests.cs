@@ -24,7 +24,7 @@ public class WriteDockerEnvTests
             await CreateProjectGenerator.WriteDockerEnvAsync(example, envPath, "demo-shop", DevPorts.Default);
 
             // Assert
-            var lines = await File.ReadAllLinesAsync(envPath);
+            var lines = await File.ReadAllLinesAsync(envPath, TestContext.Current.CancellationToken);
             var values = Parse(lines);
             Assert.Equal("demo-shop", values["PROD_PROJECT_NAME"]);
             Assert.Equal("localhost", values["DOMAIN"]);
@@ -38,7 +38,7 @@ public class WriteDockerEnvTests
             Assert.Equal(32, values["REDIS_PASSWORD"].Length);
             Assert.True(values["JWT_KEY"].Length >= 32);
             Assert.InRange(values["SEED_ADMIN_PASSWORD"].Length, 8, 50);
-            Assert.Equal(Parse(await File.ReadAllLinesAsync(example)).Keys.Order(), values.Keys.Order());
+            Assert.Equal(Parse(await File.ReadAllLinesAsync(example, TestContext.Current.CancellationToken)).Keys.Order(), values.Keys.Order());
             Assert.Equal(File.ReadAllLines(example).Count(line => line.StartsWith('#')), lines.Count(line => line.StartsWith('#')));
         }
         finally
@@ -62,7 +62,7 @@ public class WriteDockerEnvTests
             await CreateProjectGenerator.WriteDockerEnvAsync(example, envPath, "demo", new DevPorts(5433, 6380));
 
             // Assert
-            var values = Parse(await File.ReadAllLinesAsync(envPath));
+            var values = Parse(await File.ReadAllLinesAsync(envPath, TestContext.Current.CancellationToken));
             Assert.Equal("5433", values["DEV_POSTGRES_PORT"]);
             Assert.Equal("6380", values["DEV_REDIS_PORT"]);
         }
@@ -89,8 +89,8 @@ public class WriteDockerEnvTests
             await CreateProjectGenerator.WriteDockerEnvAsync(example, second, "demo", DevPorts.Default);
 
             // Assert
-            var a = Parse(await File.ReadAllLinesAsync(first));
-            var b = Parse(await File.ReadAllLinesAsync(second));
+            var a = Parse(await File.ReadAllLinesAsync(first, TestContext.Current.CancellationToken));
+            var b = Parse(await File.ReadAllLinesAsync(second, TestContext.Current.CancellationToken));
             foreach (var key in new[] { "POSTGRES_PASSWORD", "REDIS_PASSWORD", "JWT_KEY", "SEED_ADMIN_PASSWORD" })
                 Assert.NotEqual(a[key], b[key]);
         }

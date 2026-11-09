@@ -23,11 +23,11 @@ anything, then load the skill for the job: `backend-feature`, `backend-endpoint`
 4. Run `npm run stop:api` first — a running API locks its build output and the build fails
    with MSB3027 — then `dotnet build EasyForNet.slnx` once, and run the tests for what you changed
    **in one invocation**, with `--no-build`:
-   `dotnet test src/backend/Tests --no-build --filter "FullyQualifiedName~ClassA|FullyQualifiedName~ClassB"`,
-   adding `|FullyQualifiedName~Architect` when you added types. Every `dotnet test` pays a fixed
+   `dotnet test --project src/backend/Tests --no-build --filter-class "*ClassA" --filter-class "*ClassB"`,
+   adding `--filter-class "*.Architect.*"` when you added types. Every `dotnet test` pays a fixed
    start-up (host boot, database, seed) of tens of seconds whatever the filter, so one run of
    three classes is far cheaper than three runs of one. When one fails, rerun only it
-   (`~ClassA.Method_Name`), then the combined filter once more before you report. Build again only
+   (`--filter-method "*ClassA.Method_Name"`), then the combined filter once more before you report. Build again only
    after editing source. Backend tests need PostgreSQL running. The full `npm run verify` is the
    lead's to run once the writers are done; running it here repeats minutes of work for every
    delegation.
@@ -35,7 +35,7 @@ anything, then load the skill for the job: `backend-feature`, `backend-endpoint`
 ## Rules
 
 - **You build and test the backend, nothing else.** Your commands are `dotnet build`,
-  `dotnet test src/backend/Tests/...` and `dotnet ef ...`. Run nothing in `src/frontend/web`
+  `dotnet test --project src/backend/Tests/...` and `dotnet ef ...`. Run nothing in `src/frontend/web`
   (no `npm`, `npx`, `tsc`, `vitest`, `eslint` or `next`), and not `npm run verify` or
   `npm run gate` — those are the lead's. Web follow-up a change needs (a DTO mirror,
   `allow.ts`, `feature-names.ts`) goes in your report.

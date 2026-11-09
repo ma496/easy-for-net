@@ -45,7 +45,7 @@ public class StripExampleRegionsTests : IDisposable
               { title: 'navigation.dashboard', icon: Home },
             ]
 
-            """, await File.ReadAllTextAsync(path));
+            """, await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken));
     }
 
     /// <summary>
@@ -67,7 +67,7 @@ public class StripExampleRegionsTests : IDisposable
               { title: 'navigation.uiCards', icon: Palette },
             ]
 
-            """, await File.ReadAllTextAsync(path));
+            """, await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken));
     }
 
     /// <summary>
@@ -81,7 +81,7 @@ public class StripExampleRegionsTests : IDisposable
 
         await CreateProjectGenerator.StripExampleRegionsAsync(_webPath, keepExamples: false);
 
-        Assert.Equal(".a {}\r\n.b {}\r\n", await File.ReadAllTextAsync(path));
+        Assert.Equal(".a {}\r\n.b {}\r\n", await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken));
     }
 
     /// <summary>
@@ -96,8 +96,8 @@ public class StripExampleRegionsTests : IDisposable
 
         await CreateProjectGenerator.StripExampleRegionsAsync(_webPath, keepExamples: false);
 
-        Assert.Equal(plain, await File.ReadAllTextAsync(unmarked));
-        Assert.Equal(NavItems, await File.ReadAllTextAsync(dependency));
+        Assert.Equal(plain, await File.ReadAllTextAsync(unmarked, TestContext.Current.CancellationToken));
+        Assert.Equal(NavItems, await File.ReadAllTextAsync(dependency, TestContext.Current.CancellationToken));
     }
 
     /// <summary>
@@ -118,7 +118,7 @@ public class StripExampleRegionsTests : IDisposable
     {
         var path = Path.Combine(_webPath, relativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        await File.WriteAllTextAsync(path, content);
+        await File.WriteAllTextAsync(path, content, TestContext.Current.CancellationToken);
         return path;
     }
 }

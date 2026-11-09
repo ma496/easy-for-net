@@ -76,7 +76,7 @@ var defaultConnection = bld.Configuration.GetConnectionString("DefaultConnection
 var hangfireConnection = bld.Configuration["Hangfire:Storage:ConnectionString"] ?? defaultConnection;
 
 bld.Services
-   .AddFastEndpoints(o => o.SourceGeneratorDiscoveredTypes = DiscoveredTypes.All)
+   .AddFastEndpoints(DiscoveredTypes.All!)
    .SwaggerDocument();
 
 bld.Services.AddCors(options =>
@@ -381,40 +381,17 @@ app.UseFastEndpoints(
                };
            });
            // The one place a ThrowError call or a validator rule's .WithErrorCode(ErrorCodes.X.Value)
-           // is put into the request's culture: it runs right before the built-in ProblemDetails content
-           // is written, on the same list of failures that content was just built from, so this is the
-           // last chance to change what the caller sees. Every other response shape reaches this too
-           // (a plain 200, a stream, ...), so only a ProblemDetails is touched - everything else passes
-           // through unmodified. A plain FluentValidation rule with no ErrorCodes constant behind it
-           // (NotEmptyValidator, ...) has no error.server.<code> key and is left exactly as written.
-           // FastEndpoints' own SendErrorsAsync runs this too, which is what lets the permission refusal
-           // AuthorizationRefusalResultHandler answers with - built inside UseAuthorization, ahead of
-           // every FastEndpoints pre-processor including TenantContextProcessor - reach it; ErrorLocalization
+           // is put into the request's culture: the response serializer sees the ProblemDetails about to
+           // be written, on the same list of failures it was just built from, so this is the last chance
+           // to change what the caller sees (see LocalizingResponseSerializer). A plain FluentValidation
+           // rule with no ErrorCodes constant behind it (NotEmptyValidator, ...) has no
+           // error.server.<code> key and is left exactly as written. FastEndpoints' own SendErrorsAsync
+           // writes through it too, which is what lets the permission refusal
+           // AuthorizationRefusalResultHandler answers with - built inside UseAuthorization, ahead of every
+           // FastEndpoints pre-processor including TenantContextProcessor - reach it; ErrorLocalization
            // covers that case by falling back to the session's own tenant_id claim when no scope was
            // established at all.
-           c.Endpoints.GlobalResponseModifierAsync = async (httpContext, response) =>
-           {
-               if (response is not ProblemDetails problemDetails)
-               {
-                   return;
-               }
-
-               var localizationService = httpContext.RequestServices.GetRequiredService<IErrorMessageLocalizer>();
-               foreach (var error in problemDetails.Errors)
-               {
-                   error.Reason = await localizationService.LocalizeErrorAsync(
-                       httpContext, error.Code, error.Name, error.Reason, httpContext.RequestAborted);
-               }
-
-               // Detail was computed once at construction, from the error the framework built before
-               // this ran - recomputed here so a single-error response's `detail` carries the same
-               // localized text `errors` now does, exactly as FastEndpoints' own default would if the
-               // reason had been correct from the start.
-               if (problemDetails.Errors.Count() == 1)
-               {
-                   problemDetails.Detail = problemDetails.Errors.First().Reason;
-               }
-           };
+           c.Serializer.ResponseSerializer = LocalizingResponseSerializer.Create(c.Serializer.Options);
        });
 
 if (app.Environment.IsDevelopment())

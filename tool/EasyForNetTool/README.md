@@ -153,7 +153,7 @@ PostgreSQL or Redis already installed on the machine; the connection strings mus
 From the project root (the backend tests need PostgreSQL, not Redis):
 
 ```sh
-dotnet test src/backend/Tests       # backend tests
+dotnet test --project src/backend/Tests # backend tests
 npm run gate                        # everything: build, backend tests, web lint/typecheck/tests, next build
 npm run gate -- --fast              # the same without the production web build
 ```

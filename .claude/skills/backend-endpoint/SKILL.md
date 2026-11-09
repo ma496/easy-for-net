@@ -257,4 +257,4 @@ throws (`RowLimitingOperationWithoutOrderByWarning`), so the tests catch one.
    `Tests/Features/<Feature>/Endpoints/<Area>/<Entity><Action>Tests.cs`.
 2. Add the matching RTK Query endpoint and DTOs — see the `rtk-query-api` skill.
 3. If the entity/schema changed, add a migration — see the `backend-entity` skill.
-4. `dotnet build EasyForNet.slnx` and `dotnet test src/backend/Tests/Backend.Tests.csproj` pass.
+4. `dotnet build EasyForNet.slnx` and `dotnet test --project src/backend/Tests/Backend.Tests.csproj` pass.

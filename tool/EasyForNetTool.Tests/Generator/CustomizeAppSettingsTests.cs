@@ -31,7 +31,7 @@ public class CustomizeAppSettingsTests
         try
         {
             foreach (var name in new[] { "appsettings.json", "appsettings.Development.json", "appsettings.Testing.json" })
-                await File.WriteAllTextAsync(Path.Combine(dir, name), Template);
+                await File.WriteAllTextAsync(Path.Combine(dir, name), Template, TestContext.Current.CancellationToken);
 
             // Act
             await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "demo", DevPorts.Default);
@@ -182,7 +182,7 @@ public class CustomizeAppSettingsTests
 
     private static async Task<string> ReadAsync(string dir, string file, params string[] path)
     {
-        using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(dir, file)));
+        using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(dir, file), TestContext.Current.CancellationToken));
         var element = doc.RootElement;
         foreach (var key in path)
             element = element.GetProperty(key);
