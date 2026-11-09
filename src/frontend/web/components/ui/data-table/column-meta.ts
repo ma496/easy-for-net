@@ -1,5 +1,3 @@
-import type { RowData } from '@tanstack/react-table'
-
 /**
  * Where a column's cell goes in the card list that small screens get instead of the table.
  * - `title`: the card's heading (defaults to the first data column when no column claims it).
@@ -11,9 +9,7 @@ import type { RowData } from '@tanstack/react-table'
  */
 export type DataTableCardPlacement = 'title' | 'subtitle' | 'badge' | 'wide' | 'hidden'
 
-declare module '@tanstack/react-table' {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  interface ColumnMeta<TData extends RowData, TValue> {
-    card?: DataTableCardPlacement
-  }
+/** What a data-table column may declare under `meta`, registered on the table's features as its column-meta slot. */
+export interface DataTableColumnMeta {
+  card?: DataTableCardPlacement
 }

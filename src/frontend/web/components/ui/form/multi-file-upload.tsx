@@ -1,5 +1,5 @@
 'use client'
-import React, { useId, useState, useCallback, useEffect } from 'react'
+import React, { useId, useState, useEffect } from 'react'
 import { Plus, Trash2, Loader2, Pencil } from 'lucide-react'
 import { apiErrorAlert, cn, confirmDeleteAlert, effectiveMaxUploadBytes, errorAlert, formatMegabytes } from '@/lib/utils'
 import { usePlanMaxUploadBytes } from '@/hooks'
@@ -44,10 +44,16 @@ export const MultiFileUpload = ({
   const replaceInputRef = React.useRef<HTMLInputElement>(null)
   const replaceInputId = useId()
 
-  const loadFileUrls = useCallback(
-    async (names: string[]) => {
+  const fileUrlsRef = React.useRef(fileUrls)
+  useEffect(() => {
+    fileUrlsRef.current = fileUrls
+  }, [fileUrls])
+
+  // Fetches each listed file the component has no address for yet, and records the addresses once they arrive.
+  useEffect(() => {
+    const loadFileUrls = async () => {
       const urls: { [key: string]: string } = {}
-      for (const fileName of names) {
+      for (const fileName of fileNames) {
         if (!fileUrlsRef.current[fileName]) {
           const result = await lazyFileGet({ fileName })
           if (result.error) {
@@ -64,18 +70,9 @@ export const MultiFileUpload = ({
       if (Object.keys(urls).length > 0) {
         setFileUrls((prev: { [key: string]: string }) => ({ ...prev, ...urls }))
       }
-    },
-    [lazyFileGet],
-  )
-
-  useEffect(() => {
-    loadFileUrls(fileNames)
-  }, [fileNames, loadFileUrls])
-
-  const fileUrlsRef = React.useRef(fileUrls)
-  useEffect(() => {
-    fileUrlsRef.current = fileUrls
-  }, [fileUrls])
+    }
+    void loadFileUrls()
+  }, [fileNames, lazyFileGet])
 
   useEffect(() => {
     return () => {

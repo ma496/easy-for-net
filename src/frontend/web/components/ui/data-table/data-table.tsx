@@ -1,4 +1,4 @@
-import { flexRender } from '@tanstack/react-table'
+import { flexRender, type RowData } from '@tanstack/react-table'
 import { useDataTable } from './context'
 import { DataTableSortIcon } from './sort-icon'
 import { Loader } from '..'
@@ -34,7 +34,7 @@ interface DataTableProps {
  * DataTable is the body component of the data-table system that renders the table's headers (with click-to-sort affordance), rows, and either a loading indicator, a localized "no records" message (or a caller-supplied `emptyMessage`), or the data rows themselves from the shared DataTable context.
  * Below `cardsBelow` it renders the same rows as a card list with a sort control instead, so a phone never scrolls a record sideways.
  */
-export function DataTable<TData>({ cardsBelow = 'md', emptyMessage, ...gridProps }: DataTableProps) {
+export function DataTable<TData extends RowData>({ cardsBelow = 'md', emptyMessage, ...gridProps }: DataTableProps) {
   if (!cardsBelow) {
     return <DataTableGrid<TData> emptyMessage={emptyMessage} {...gridProps} />
   }
@@ -54,7 +54,7 @@ export function DataTable<TData>({ cardsBelow = 'md', emptyMessage, ...gridProps
 }
 
 /** The table rendering of DataTable: at every width when cards are off, above `cardsBelow` otherwise. */
-function DataTableGrid<TData>({ className = '', suppressScrollX = false, suppressScrollY = true, emptyMessage }: Omit<DataTableProps, 'cardsBelow'>) {
+function DataTableGrid<TData extends RowData>({ className = '', suppressScrollX = false, suppressScrollY = true, emptyMessage }: Omit<DataTableProps, 'cardsBelow'>) {
   const { columns, table, isFetching } = useDataTable<TData>()
   const { t } = useTranslation()
   const scrollBarRef = useRef<ScrollBar>(null)

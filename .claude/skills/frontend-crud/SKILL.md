@@ -85,7 +85,7 @@ return (
 )
 ```
 
-Columns are built with `createColumnHelper<UserListDto>()`; the actions column is
+Columns are built with `createDataTableColumnHelper<UserListDto>()` from `@/components/ui/data-table`, wrapped in `columnHelper.columns([...])`; the actions column is
 `columnHelper.display({ id: 'actions', header: t('table.actions') || 'Actions', ... })` and renders
 `DataTableRowActions` — a three-dot trigger opening a portaled menu of labelled actions, which
 renders nothing when every entry is hidden. Gate each entry with `hidden` rather than leaving it out

@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import type { RowData } from '@tanstack/react-table'
 import { ArrowDownWideNarrow, ArrowUpNarrowWide } from 'lucide-react'
 import { useDataTable } from './context'
 import { useTranslation } from '@/i18n'
@@ -9,7 +10,7 @@ import { Select } from '../form/select'
  * themed select of the sortable columns (a native one opens an OS-drawn list on phones) and a button flipping the direction, both bound to the table's
  * sorting state. It renders nothing when no column can be sorted.
  */
-export function DataTableCardSort<TData>() {
+export function DataTableCardSort<TData extends RowData>() {
   const { table } = useDataTable<TData>()
   const { t } = useTranslation()
   const selectId = useId()
@@ -17,7 +18,7 @@ export function DataTableCardSort<TData>() {
   const sortable = table.getVisibleLeafColumns().filter((column) => column.getCanSort())
   if (sortable.length === 0) return null
 
-  const current = table.getState().sorting[0]
+  const current = table.state.sorting[0]
   const descending = current?.desc ?? false
 
   return (

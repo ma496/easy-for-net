@@ -1,14 +1,15 @@
-import { Row } from '@tanstack/react-table'
+import type { Row, RowData } from '@tanstack/react-table'
+import type { DataTableFeatures } from './features'
 
 /** Props for the DataTableCheckboxCell, a tanstack-table row-selection checkbox bound to a single table row. */
-interface DataTableCheckboxCellProps<TData> {
-  row: Row<TData>
+interface DataTableCheckboxCellProps<TData extends RowData> {
+  row: Row<DataTableFeatures, TData>
 }
 
 /**
  * DataTableCheckboxCell renders a single row's selection checkbox in a data table by wiring it to the row's `getToggleSelectedHandler` from tanstack-react-table.
  */
-export function DataTableCheckboxCell<TData>({ row }: DataTableCheckboxCellProps<TData>) {
+export function DataTableCheckboxCell<TData extends RowData>({ row }: DataTableCheckboxCellProps<TData>) {
   return (
     <div className="flex items-center">
       <input

@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   useTenantListQuery,
   useLazyTenantListQuery,
@@ -16,8 +16,7 @@ import { ExportFormat, successToast, exportData, isAllowed, apiErrorAlert, confi
 import { ApiErrorMessages, Badge } from '@/components/ui'
 import { useAppSelector } from '@/store/hooks'
 import { Allow } from '@/allow'
-import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
-import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableFilterButton, DataTableToolbarButton, DataTableExportButton } from '@/components/ui/data-table'
+import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableFilterButton, DataTableToolbarButton, DataTableExportButton, createDataTableColumnHelper } from '@/components/ui/data-table'
 import { TenantFilterPanel, TenantFilters } from './tenant-filter-panel'
 import { useOpenTenant, useTableUrlState } from '@/hooks'
 import { parseAsStringEnum } from 'nuqs'
@@ -45,13 +44,16 @@ export const TenantTable = () => {
   })
   const { t } = useTranslation()
 
-  // When the filter panel opens, sync the draft values from the URL so the
-  // user sees the currently-applied filters.
-  useEffect(() => {
-    if (filtersOpen) {
+  // While the filter panel is open, the draft follows the URL each time the applied filter changes
+  // (opening the panel included), so the user sees the currently-applied filter.
+  const appliedFiltersKey = filtersOpen ? (url.filters.status ?? '') : null
+  const [syncedFiltersKey, setSyncedFiltersKey] = useState<string | null>(null)
+  if (appliedFiltersKey !== syncedFiltersKey) {
+    setSyncedFiltersKey(appliedFiltersKey)
+    if (appliedFiltersKey !== null) {
       setPendingFilters({ status: url.filters.status ?? '' })
     }
-  }, [filtersOpen, url.filters.status])
+  }
 
   // Derived "applied" filters for the query and the active-count badge.
   const appliedFilters: TenantFilters = { status: url.filters.status ?? '' }
@@ -203,9 +205,8 @@ export const TenantTable = () => {
 
   const isLifecycleBusy = isSuspendingTenant || isReactivatingTenant || isDeletingTenant
 
-  const columnHelper = createColumnHelper<TenantListDto>()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const columns: ColumnDef<TenantListDto, any>[] = [
+  const columnHelper = createDataTableColumnHelper<TenantListDto>()
+  const columns = columnHelper.columns([
     columnHelper.accessor('name', {
       header: t('table.columns.name') || 'Name',
       cell: (info) => <span className="font-medium text-foreground">{info.getValue()}</span>,
@@ -322,7 +323,7 @@ export const TenantTable = () => {
         )
       },
     }),
-  ]
+  ])
 
   if (getTenantsApiError) {
     return (

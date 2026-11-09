@@ -1,3 +1,4 @@
+import type { RowData } from '@tanstack/react-table'
 import { useDataTable } from './context'
 import { useTranslation } from '@/i18n'
 import { cn } from '@/lib/utils'
@@ -13,12 +14,12 @@ interface DataTablePaginationProps {
 /**
  * DataTablePagination is the footer component for a data table that renders a "showing entries" summary, a page-size selector, and a numbered pagination control (with first/prev/next/last and ellipsis truncation) wired to the shared DataTable context.
  */
-export function DataTablePagination<TData>({ className = '', siblingCount = 1 }: DataTablePaginationProps) {
+export function DataTablePagination<TData extends RowData>({ className = '', siblingCount = 1 }: DataTablePaginationProps) {
   const { pageSizeOptions, rowCount, table } = useDataTable<TData>()
   const { t } = useTranslation()
 
   const pageNumbers = () => {
-    const currentPage = table.getState().pagination.pageIndex
+    const currentPage = table.state.pagination.pageIndex
     const items = []
 
     // Number of page buttons to show (not including first/last)
@@ -129,8 +130,8 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
   }
 
   // Calculate displayed entry range using the total from context
-  const from = rowCount === 0 ? 0 : table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1
-  const to = rowCount === 0 ? 0 : Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, rowCount || 0)
+  const from = rowCount === 0 ? 0 : table.state.pagination.pageIndex * table.state.pagination.pageSize + 1
+  const to = rowCount === 0 ? 0 : Math.min((table.state.pagination.pageIndex + 1) * table.state.pagination.pageSize, rowCount || 0)
 
   return (
     <div className={cn('mt-4 flex flex-col items-center justify-center gap-3 border-t border-border pt-4 md:flex-row md:justify-between', className)}>
@@ -142,7 +143,7 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
           <select
             id={useId()}
             className="form-select h-8 w-auto min-w-16 py-0 ps-2.5 text-[13px]"
-            value={table.getState().pagination.pageSize}
+            value={table.state.pagination.pageSize}
             onChange={(e) => table.setPageSize(Number(e.target.value))}
           >
             {pageSizeOptions.map((pageSize) => (
@@ -162,8 +163,8 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
             className={cn(
               'flex size-8 cursor-pointer items-center justify-center rounded-md border border-border bg-surface text-muted-foreground shadow-xs transition-colors duration-150',
               {
-                'cursor-not-allowed opacity-50': table.getState().pagination.pageIndex === 0,
-                'hover:bg-surface-2 hover:text-foreground': table.getState().pagination.pageIndex !== 0,
+                'cursor-not-allowed opacity-50': table.state.pagination.pageIndex === 0,
+                'hover:bg-surface-2 hover:text-foreground': table.state.pagination.pageIndex !== 0,
               },
             )}
             title="First Page"
@@ -180,8 +181,8 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
             className={cn(
               'flex size-8 cursor-pointer items-center justify-center rounded-md border border-border bg-surface text-muted-foreground shadow-xs transition-colors duration-150',
               {
-                'cursor-not-allowed opacity-50': table.getState().pagination.pageIndex === 0,
-                'hover:bg-surface-2 hover:text-foreground': table.getState().pagination.pageIndex !== 0,
+                'cursor-not-allowed opacity-50': table.state.pagination.pageIndex === 0,
+                'hover:bg-surface-2 hover:text-foreground': table.state.pagination.pageIndex !== 0,
               },
             )}
             title="Previous Page"
@@ -191,7 +192,7 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
 
           {/* A phone has no room for the numbered pages, so it reads its position instead. */}
           <span className="min-w-16 px-1 text-center text-[13px] font-medium tabular-nums whitespace-nowrap text-muted-foreground sm:hidden" aria-live="polite">
-            {table.getState().pagination.pageIndex + 1} / {Math.max(table.getPageCount(), 1)}
+            {table.state.pagination.pageIndex + 1} / {Math.max(table.getPageCount(), 1)}
           </span>
           <div className="hidden items-center gap-1 sm:flex">{pageNumbers()}</div>
 
@@ -201,8 +202,8 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
             className={cn(
               'flex size-8 cursor-pointer items-center justify-center rounded-md border border-border bg-surface text-muted-foreground shadow-xs transition-colors duration-150',
               {
-                'cursor-not-allowed opacity-50': table.getState().pagination.pageIndex >= table.getPageCount() - 1,
-                'hover:bg-surface-2 hover:text-foreground': table.getState().pagination.pageIndex < table.getPageCount() - 1,
+                'cursor-not-allowed opacity-50': table.state.pagination.pageIndex >= table.getPageCount() - 1,
+                'hover:bg-surface-2 hover:text-foreground': table.state.pagination.pageIndex < table.getPageCount() - 1,
               },
             )}
             title="Next Page"
@@ -216,8 +217,8 @@ export function DataTablePagination<TData>({ className = '', siblingCount = 1 }:
             className={cn(
               'flex size-8 cursor-pointer items-center justify-center rounded-md border border-border bg-surface text-muted-foreground shadow-xs transition-colors duration-150',
               {
-                'cursor-not-allowed opacity-50': table.getState().pagination.pageIndex >= table.getPageCount() - 1,
-                'hover:bg-surface-2 hover:text-foreground': table.getState().pagination.pageIndex < table.getPageCount() - 1,
+                'cursor-not-allowed opacity-50': table.state.pagination.pageIndex >= table.getPageCount() - 1,
+                'hover:bg-surface-2 hover:text-foreground': table.state.pagination.pageIndex < table.getPageCount() - 1,
               },
             )}
             title="Last Page"

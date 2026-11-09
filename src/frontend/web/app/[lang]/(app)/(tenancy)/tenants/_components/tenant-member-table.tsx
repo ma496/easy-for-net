@@ -14,9 +14,8 @@ import { successToast, isAllowed, apiErrorAlert, confirmDeleteAlert } from '@/li
 import { ApiErrorMessages, Badge } from '@/components/ui'
 import { useAppSelector } from '@/store/hooks'
 import { Allow } from '@/allow'
-import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
 import { format } from 'date-fns'
-import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableToolbarButton } from '@/components/ui/data-table'
+import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableToolbarButton, createDataTableColumnHelper } from '@/components/ui/data-table'
 import { useTableUrlState } from '@/hooks'
 import { TenantMemberAddModal } from './tenant-member-add-modal'
 import { TenantMemberRolesModal } from './tenant-member-roles-modal'
@@ -81,9 +80,8 @@ export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
     }
   }
 
-  const columnHelper = createColumnHelper<TenantMemberListDto>()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const columns: ColumnDef<TenantMemberListDto, any>[] = [
+  const columnHelper = createDataTableColumnHelper<TenantMemberListDto>()
+  const columns = columnHelper.columns([
     columnHelper.accessor('username', {
       meta: { card: 'title' },
       header: t('table.columns.userName') || 'User Name',
@@ -154,7 +152,7 @@ export const TenantMemberTable = ({ tenantId }: TenantMemberTableProps) => {
         />
       ),
     }),
-  ]
+  ])
 
   if (getMembersApiError) {
     return (

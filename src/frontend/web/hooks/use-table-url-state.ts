@@ -82,7 +82,6 @@ export function useTableUrlState<
   // mirrors it for snappy typing UX.
   useEffect(() => {
     if (search !== lastPushedSearchRef.current) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSearchInputState(search)
       lastPushedSearchRef.current = search
     }

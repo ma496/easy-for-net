@@ -2,6 +2,7 @@ import { ReactNode, useId } from 'react'
 import { Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/i18n'
+import type { RowData } from '@tanstack/react-table'
 import { useDataTable } from './context'
 
 /** Props for the DataTableToolbar, the area above a data table that optionally shows a title, a global search input bound to the table's globalFilter, and additional action buttons. */
@@ -14,9 +15,9 @@ interface DataTableToolbarProps {
 /**
  * DataTableToolbar is the area above a data table that renders an optional title, a search input wired to the table's global filter, and an actions slot for buttons (e.g., "Add new").
  */
-export function DataTableToolbar<TData>({ title, children }: DataTableToolbarProps) {
+export function DataTableToolbar<TData extends RowData>({ title, children }: DataTableToolbarProps) {
   const { t } = useTranslation()
-  const { table } = useDataTable<TData>()
+  const { globalFilter, setGlobalFilter } = useDataTable<TData>()
 
   return (
     <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -35,8 +36,8 @@ export function DataTableToolbar<TData>({ title, children }: DataTableToolbarPro
             id={useId()}
             className="form-input w-full ps-9 sm:w-72"
             placeholder={t('table.searchPlaceholder') || 'Search...'}
-            value={table.getState().globalFilter}
-            onChange={(e) => table.setGlobalFilter(String(e.target.value))}
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(String(e.target.value))}
           />
         </div>
 

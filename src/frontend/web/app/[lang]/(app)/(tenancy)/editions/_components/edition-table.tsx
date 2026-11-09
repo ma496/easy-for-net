@@ -8,8 +8,7 @@ import { ExportFormat, successToast, exportData, isAllowed, apiErrorAlert, confi
 import { ApiErrorMessages, Badge } from '@/components/ui'
 import { useAppSelector } from '@/store/hooks'
 import { Allow } from '@/allow'
-import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
-import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableToolbarButton, DataTableExportButton } from '@/components/ui/data-table'
+import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableToolbarButton, DataTableExportButton, createDataTableColumnHelper } from '@/components/ui/data-table'
 import { useTableUrlState } from '@/hooks'
 
 /**
@@ -95,9 +94,8 @@ export const EditionTable = () => {
     }
   }
 
-  const columnHelper = createColumnHelper<EditionListDto>()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const columns: ColumnDef<EditionListDto, any>[] = [
+  const columnHelper = createDataTableColumnHelper<EditionListDto>()
+  const columns = columnHelper.columns([
     columnHelper.accessor('name', {
       header: t('table.columns.name') || 'Name',
       cell: (info) => <span className="font-medium text-foreground">{info.getValue()}</span>,
@@ -155,7 +153,7 @@ export const EditionTable = () => {
         )
       },
     }),
-  ]
+  ])
 
   if (getEditionsApiError) {
     return (

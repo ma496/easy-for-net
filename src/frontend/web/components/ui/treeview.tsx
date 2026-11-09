@@ -70,8 +70,8 @@ const TreeViewItem = ({
   expandAll,
   show = true,
 }: TreeViewItemProps) => {
-  const [isOpen, setIsOpen] = React.useState(defaultExpanded)
-  const [height, setHeight] = React.useState<'auto' | number>(defaultExpanded ? 'auto' : 0)
+  const [isOpen, setIsOpen] = React.useState(defaultExpanded || !!expandAll)
+  const [height, setHeight] = React.useState<'auto' | number>(defaultExpanded || expandAll ? 'auto' : 0)
 
   const hasChildren = children && children.length > 0
   const isSelected = selectedState[id] || false
@@ -94,12 +94,15 @@ const TreeViewItem = ({
     e.stopPropagation()
   }
 
-  React.useEffect(() => {
+  // Turning on `expandAll` or `defaultExpanded` opens the item, whatever the user had collapsed.
+  const [expandProps, setExpandProps] = React.useState({ expandAll, defaultExpanded })
+  if (expandProps.expandAll !== expandAll || expandProps.defaultExpanded !== defaultExpanded) {
+    setExpandProps({ expandAll, defaultExpanded })
     if (expandAll || defaultExpanded) {
       setIsOpen(true)
       setHeight('auto')
     }
-  }, [expandAll, defaultExpanded])
+  }
 
   if (!show) return null
 
@@ -202,15 +205,16 @@ export const TreeView = ({
   expandAll = false,
 }: TreeViewProps) => {
   const [selectedState, setSelectedState] = React.useState<SelectionState>(() => buildSelectionState(data, defaultSelectedIds))
-  const [intermediateState, setIntermediateState] = React.useState<Set<string>>(new Set())
 
   // Re-derive the selection when the selected ids change, and also when the nodes change: a parent's
   // checked state depends on the children in `data`, so a new set of nodes (e.g. another permission
   // group) must be recalculated or its parents render unchecked with every child checked.
-  React.useEffect(() => {
+  const selectedIdsKey = JSON.stringify(defaultSelectedIds)
+  const [selectionSource, setSelectionSource] = React.useState({ data, selectedIdsKey })
+  if (selectionSource.data !== data || selectionSource.selectedIdsKey !== selectedIdsKey) {
+    setSelectionSource({ data, selectedIdsKey })
     setSelectedState(buildSelectionState(data, defaultSelectedIds))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(defaultSelectedIds), data])
+  }
 
   // Simplified node mapping
   const nodeMap = React.useMemo(() => {
@@ -316,8 +320,8 @@ export const TreeView = ({
     [nodeMap, getDescendantIds, getAncestorIds],
   )
 
-  // Calculate intermediate states separately (without causing infinite loops)
-  React.useEffect(() => {
+  // The parents with some but not all of their leaves selected, shown indeterminate.
+  const intermediateState = React.useMemo(() => {
     const newIntermediateState = new Set<string>()
 
     const processNode = (node: TreeNode): { checked: number; total: number } => {
@@ -342,7 +346,7 @@ export const TreeView = ({
     }
 
     data.forEach(processNode)
-    setIntermediateState(newIntermediateState)
+    return newIntermediateState
   }, [data, selectedState])
 
   // Use a ref to store the latest onSelectionChange to avoid dependency issues

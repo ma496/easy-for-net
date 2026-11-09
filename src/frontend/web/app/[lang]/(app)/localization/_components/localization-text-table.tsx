@@ -1,6 +1,5 @@
 'use client'
 
-import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
 import { Pencil, RotateCcw } from 'lucide-react'
 import { parseAsString, parseAsStringEnum } from 'nuqs'
 import { useContext, useState } from 'react'
@@ -11,7 +10,7 @@ import { useAppSelector } from '@/store/hooks'
 import { apiErrorAlert, confirmDeleteAlert, successToast } from '@/lib/utils'
 import { ApiErrorMessages, Badge } from '@/components/ui'
 import { Checkbox, Select } from '@/components/ui/form'
-import { DataTable, DataTablePagination, DataTableProvider, DataTableRowActions, DataTableToolbar } from '@/components/ui/data-table'
+import { DataTable, DataTablePagination, DataTableProvider, DataTableRowActions, DataTableToolbar, createDataTableColumnHelper } from '@/components/ui/data-table'
 import { TextListItemDto, useLocalizationLanguagesGetQuery, useLocalizationTextDeleteMutation, useLocalizationTextListQuery } from '@/store/api/localization'
 import { LocalizationTextEditModal } from './localization-text-edit-modal'
 
@@ -87,11 +86,10 @@ export const LocalizationTextTable = ({ canUpdate }: LocalizationTextTableProps)
     router.refresh()
   }
 
-  const columnHelper = createColumnHelper<TextListItemDto>()
+  const columnHelper = createDataTableColumnHelper<TextListItemDto>()
   const dir = activeCultureIsRtl ? 'rtl' : 'ltr'
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const columns: ColumnDef<TextListItemDto, any>[] = [
+  const columns = columnHelper.columns([
     columnHelper.accessor('key', {
       meta: { card: 'title' },
       header: t('table.columns.key') || 'Key',
@@ -170,7 +168,7 @@ export const LocalizationTextTable = ({ canUpdate }: LocalizationTextTableProps)
           }),
         ]
       : []),
-  ]
+  ])
 
   if (error) {
     return (

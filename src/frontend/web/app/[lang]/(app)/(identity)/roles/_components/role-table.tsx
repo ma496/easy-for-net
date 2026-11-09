@@ -1,6 +1,5 @@
 'use client'
-import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
-import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableToolbarButton, DataTableExportButton } from '@/components/ui/data-table'
+import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableToolbarButton, DataTableExportButton, createDataTableColumnHelper } from '@/components/ui/data-table'
 import { useState } from 'react'
 import { useRoleListQuery, useLazyRoleListQuery, useRoleDeleteMutation, RoleListDto } from '@/store/api/identity'
 import { SortDirection } from '@/store/api'
@@ -100,9 +99,8 @@ export const RoleTable = () => {
     }
   }
 
-  const columnHelper = createColumnHelper<RoleListDto>()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const columns: ColumnDef<RoleListDto, any>[] = [
+  const columnHelper = createDataTableColumnHelper<RoleListDto>()
+  const columns = columnHelper.columns([
     columnHelper.accessor('name', {
       header: t('table.columns.name') || 'Name',
       cell: (info) => <span className="font-medium text-foreground">{info.getValue()}</span>,
@@ -148,7 +146,7 @@ export const RoleTable = () => {
         />
       ),
     }),
-  ]
+  ])
 
   if (roleListError) {
     return (

@@ -157,11 +157,14 @@ export const FormLazyMultiSelect = <TItem, TRequest>({
     }
   }, [selectedData, selectedItemIds])
 
-  useEffect(() => {
+  // A new search starts the list over from its first page.
+  const [searchedFor, setSearchedFor] = useState(debouncedSearch)
+  if (debouncedSearch !== searchedFor) {
+    setSearchedFor(debouncedSearch)
     setPage(1)
     setHasMore(true)
     setFetchedOptions([])
-  }, [debouncedSearch])
+  }
 
   useEffect(() => {
     if (hasMore) {
@@ -209,11 +212,14 @@ export const FormLazyMultiSelect = <TItem, TRequest>({
     }
   }, [data, page, pageSize])
 
-  useEffect(() => {
+  // A page asked for by scrolling has arrived once a fetch finishes.
+  const [wasFetching, setWasFetching] = useState(isFetching)
+  if (isFetching !== wasFetching) {
+    setWasFetching(isFetching)
     if (!isFetching) {
       setIsLoadingMore(false)
     }
-  }, [isFetching])
+  }
 
   useEffect(() => {
     if (!open) return

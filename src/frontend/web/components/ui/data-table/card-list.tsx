@@ -1,11 +1,11 @@
-import { Cell, flexRender, Header } from '@tanstack/react-table'
+import { flexRender, type Cell, type Header, type RowData } from '@tanstack/react-table'
 import { useDataTable } from './context'
 import { resolveCardLayout } from './card-layout'
 import { DataTableEmpty } from './empty-state'
 import { Loader } from '..'
 import { useTranslation } from '@/i18n'
 import { cn } from '@/lib/utils'
-import './column-meta'
+import type { DataTableFeatures } from './features'
 
 /** Props for DataTableCardList, the small-screen rendering of a data table's rows. */
 interface DataTableCardListProps {
@@ -19,13 +19,13 @@ interface DataTableCardListProps {
  * renderers their columns declare; `meta.card` decides where each one sits (see `resolveCardLayout`),
  * and the column header becomes the field's label.
  */
-export function DataTableCardList<TData>({ className = '', emptyMessage }: DataTableCardListProps) {
+export function DataTableCardList<TData extends RowData>({ className = '', emptyMessage }: DataTableCardListProps) {
   const { table, isFetching } = useDataTable<TData>()
   const { t } = useTranslation()
 
   const columns = table.getVisibleLeafColumns()
   const layout = resolveCardLayout(columns.map((column) => ({ id: column.id, placement: column.columnDef.meta?.card })))
-  const headers = new Map<string, Header<TData, unknown>>(table.getFlatHeaders().map((header) => [header.column.id, header]))
+  const headers = new Map<string, Header<DataTableFeatures, TData, unknown>>(table.getFlatHeaders().map((header) => [header.column.id, header]))
 
   const label = (columnId: string) => {
     const header = headers.get(columnId)
@@ -49,7 +49,7 @@ export function DataTableCardList<TData>({ className = '', emptyMessage }: DataT
   return (
     <ul className={cn('space-y-3 transition-opacity duration-150', isFetching && 'pointer-events-none opacity-60', className)} aria-busy={isFetching}>
       {rows.map((row) => {
-        const cells = new Map<string, Cell<TData, unknown>>(row.getVisibleCells().map((cell) => [cell.column.id, cell]))
+        const cells = new Map<string, Cell<DataTableFeatures, TData, unknown>>(row.getVisibleCells().map((cell) => [cell.column.id, cell]))
         const render = (columnId?: string) => {
           const cell = columnId ? cells.get(columnId) : undefined
           return cell ? flexRender(cell.column.columnDef.cell, cell.getContext()) : null

@@ -1,8 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useTranslation, humanizeKey } from '@/i18n'
-import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
-import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableFilterButton, DataTableToolbarButton } from '@/components/ui/data-table'
+import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableFilterButton, DataTableToolbarButton, createDataTableColumnHelper } from '@/components/ui/data-table'
 import { ApiErrorMessages, Badge, LocalizedLink, Truncated } from '@/components/ui'
 import { apiErrorAlert, cn, confirmAlert, confirmDeleteAlert, notificationVariables, successToast, formatRelativeTime } from '@/lib/utils'
 import {
@@ -198,9 +197,8 @@ export const NotificationTable = () => {
 
   const isRowActionPending = isMarkingAsRead || isMarkingAsUnread || isMarkingAllAsRead || isDeletingNotification
 
-  const columnHelper = createColumnHelper<NotificationDto>()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const columns: ColumnDef<NotificationDto, any>[] = [
+  const columnHelper = createDataTableColumnHelper<NotificationDto>()
+  const columns = columnHelper.columns([
     columnHelper.accessor('type', {
       header: t('table.columns.type') || 'Type',
       cell: (info) => getTypeBadge(info.getValue()),
@@ -283,7 +281,7 @@ export const NotificationTable = () => {
         />
       ),
     }),
-  ]
+  ])
 
   if (getNotificationsError) {
     return (

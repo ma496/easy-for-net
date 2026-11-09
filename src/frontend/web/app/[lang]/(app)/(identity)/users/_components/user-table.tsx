@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useUserListQuery, useLazyUserListQuery, useUserDeleteMutation, useUserSeatsQuery, UserListDto, UserRoleDto } from '@/store/api/identity'
 import { SortDirection } from '@/store/api'
 import { Trash2, Plus, Pencil } from 'lucide-react'
@@ -8,8 +8,7 @@ import { ExportFormat, successToast, exportData, isAllowed, apiErrorAlert, confi
 import { ApiErrorMessages, Badge } from '@/components/ui'
 import { useAppSelector } from '@/store/hooks'
 import { Allow } from '@/allow'
-import { createColumnHelper, ColumnDef } from '@tanstack/react-table'
-import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableFilterButton, DataTableToolbarButton, DataTableExportButton } from '@/components/ui/data-table'
+import { DataTableProvider, DataTableToolbar, DataTablePagination, DataTable, DataTableRowActions, DataTableFilterButton, DataTableToolbarButton, DataTableExportButton, createDataTableColumnHelper } from '@/components/ui/data-table'
 import { UserFilterPanel, UserFilters } from './user-filter-panel'
 import { useTableUrlState } from '@/hooks'
 import { parseAsString, parseAsStringEnum } from 'nuqs'
@@ -46,16 +45,19 @@ export const UserTable = () => {
     return undefined
   }
 
-  // When the filter panel opens, sync the draft values from the URL so the
-  // user sees the currently-applied filters.
-  useEffect(() => {
-    if (filtersOpen) {
+  // While the filter panel is open, the draft follows the URL each time the applied filters change
+  // (opening the panel included), so the user sees the currently-applied filters.
+  const appliedFiltersKey = filtersOpen ? JSON.stringify([url.filters.isActive, url.filters.roleId]) : null
+  const [syncedFiltersKey, setSyncedFiltersKey] = useState<string | null>(null)
+  if (appliedFiltersKey !== syncedFiltersKey) {
+    setSyncedFiltersKey(appliedFiltersKey)
+    if (appliedFiltersKey !== null) {
       setPendingFilters({
         isActive: url.filters.isActive ?? '',
         roleId: url.filters.roleId ?? '',
       })
     }
-  }, [filtersOpen, url.filters.isActive, url.filters.roleId])
+  }
 
   // Derived "applied" filters for the active-count badge.
   const appliedFilters: UserFilters = {
@@ -171,9 +173,8 @@ export const UserTable = () => {
     }
   }
 
-  const columnHelper = createColumnHelper<UserListDto>()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const columns: ColumnDef<UserListDto, any>[] = [
+  const columnHelper = createDataTableColumnHelper<UserListDto>()
+  const columns = columnHelper.columns([
     columnHelper.accessor('username', {
       meta: { card: 'title' },
       header: t('table.columns.userName') || 'User Name',
@@ -252,7 +253,7 @@ export const UserTable = () => {
         />
       ),
     }),
-  ]
+  ])
 
   if (getUsersApiError) {
     return (

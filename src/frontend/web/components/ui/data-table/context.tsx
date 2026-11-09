@@ -1,34 +1,35 @@
 import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react'
-import { ColumnDef, SortingState, PaginationState, VisibilityState, RowSelectionState, Table, getPaginationRowModel, getCoreRowModel, useReactTable, getSortedRowModel } from '@tanstack/react-table'
+import { useTable, type ColumnVisibilityState, type PaginationState, type ReactTable, type RowData, type RowSelectionState, type SortingState } from '@tanstack/react-table'
+import { dataTableFeatures, type DataTableColumnDef, type DataTableFeatures } from './features'
 
 /** Shape of the data-table context shared by DataTableProvider, exposing the data, columns, sort/pagination/filter/selection state, and the underlying tanstack-react-table instance. */
-interface DataTableContextProps<TData> {
+interface DataTableContextProps<TData extends RowData> {
   data: TData[]
   rowCount?: number
-  columns: ColumnDef<TData, unknown>[]
+  columns: DataTableColumnDef<TData>[]
   sorting: SortingState
   setSorting: React.Dispatch<React.SetStateAction<SortingState>>
   pagination: PaginationState
   setPagination: React.Dispatch<React.SetStateAction<PaginationState>>
   globalFilter: string
   setGlobalFilter: React.Dispatch<React.SetStateAction<string>>
-  columnVisibility: VisibilityState
-  setColumnVisibility: React.Dispatch<React.SetStateAction<VisibilityState>>
+  columnVisibility: ColumnVisibilityState
+  setColumnVisibility: React.Dispatch<React.SetStateAction<ColumnVisibilityState>>
   pageSizeOptions: number[]
   rowSelection: RowSelectionState
   setRowSelection: React.Dispatch<React.SetStateAction<RowSelectionState>>
   enableRowSelection: boolean
-  table: Table<TData>
+  table: ReactTable<DataTableFeatures, TData>
   isFetching?: boolean
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const DataTableContext = createContext<DataTableContextProps<any> | undefined>(undefined)
+// The provider is generic over the row type and a context cannot be, so the value is held untyped and useDataTable names the row type back.
+const DataTableContext = createContext<unknown>(undefined)
 
 /**
  * useDataTable is the context hook for accessing the shared DataTable state and the underlying tanstack-react-table instance, throwing if used outside a DataTableProvider.
  */
-export function useDataTable<TData>() {
+export function useDataTable<TData extends RowData>() {
   const context = useContext(DataTableContext)
   if (context === undefined) {
     throw new Error('useDataTable must be used within a DataTableProvider')
@@ -37,11 +38,11 @@ export function useDataTable<TData>() {
 }
 
 /** Props for the DataTableProvider, which owns the parent-controlled state (sorting, pagination, global filter) and wires it into a tanstack-react-table instance configured for manual (server-side) operations. */
-interface DataTableProviderProps<TData> {
+interface DataTableProviderProps<TData extends RowData> {
   children: ReactNode
   data: TData[]
   rowCount?: number
-  columns: ColumnDef<TData, unknown>[]
+  columns: DataTableColumnDef<TData>[]
   pageSizeOptions?: number[]
   enableRowSelection?: boolean
   sorting: SortingState
@@ -54,9 +55,10 @@ interface DataTableProviderProps<TData> {
 }
 
 /**
- * DataTableProvider is a context provider that holds a tanstack-react-table instance configured for manual (server-side) sorting, pagination, and filtering, plus column visibility and row selection state, exposing them to descendant data-table subcomponents.
+ * DataTableProvider is a context provider that holds a tanstack-react-table instance configured for manual (server-side) sorting and pagination, plus column visibility and row selection state, exposing them to descendant data-table subcomponents.
+ * The search text is the caller's (`globalFilter`), filtered by the server, so the table registers no filtering feature and the toolbar reads and writes it through this context.
  */
-export function DataTableProvider<TData>({
+export function DataTableProvider<TData extends RowData>({
   children,
   data,
   rowCount,
@@ -71,10 +73,10 @@ export function DataTableProvider<TData>({
   setGlobalFilter,
   isFetching,
 }: DataTableProviderProps<TData>) {
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibilityState>({})
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const table = useReactTable({
+  const table = useTable({
+    features: dataTableFeatures,
     data,
     columns,
     rowCount,
@@ -83,20 +85,14 @@ export function DataTableProvider<TData>({
       pagination,
       columnVisibility,
       rowSelection,
-      globalFilter,
     },
     enableRowSelection,
     onSortingChange: setSorting,
     onPaginationChange: setPagination,
-    onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     manualSorting: true,
     manualPagination: true,
-    manualFiltering: true,
   })
 
   const value = useMemo(
