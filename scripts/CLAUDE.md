@@ -65,6 +65,9 @@ works on one machine and silently fails on the next.
   will report the wrong thing to a person who is not watching.
 - **A required check that could not run is a failure.** Never a pass with a footnote.
 - **The scripts never read `.env`.** Ceilings and flags come from the environment the caller
-  already has; the timer gets them from the command it was installed with.
+  already has; the timer gets them from the command it was installed with. The one exception is
+  `deploy-vps.mjs`, which takes `GODADDY_API_KEY` and `GODADDY_API_SECRET` from the root `.env`
+  when neither the flag nor the environment gives them (`readDotenvValues`: only those two
+  variables, nothing else in the file); it is owner-run only.
 - **Pure helpers get unit tests** under the test roots, so `lib/` stays honest. A helper with
   branching logic and no test will be wrong within a month.

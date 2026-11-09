@@ -7,15 +7,19 @@ import {
   checkDomainDns,
   composeShape,
   dnsChallenge,
+  godaddyCredentials,
   isValidDomain,
   isValidLabel,
   parseDeployArgs,
   parseResults,
   platformHost,
   randomLabel,
+  readDotenvValues,
   remoteCommand,
   repoUrls,
   shellQuote,
+  wildcardRecordName,
+  zoneCandidates,
 } from "../lib/deploy-vps.mjs";
 import { REPO_ROOT } from "../lib/project-config.mjs";
 
@@ -246,6 +250,53 @@ test("a provider reading several variables takes their values joined by colons, 
   assert.match(short.error, /GODADDY_API_KEY, GODADDY_API_SECRET/);
   assert.doesNotMatch(short.error, /only-the-key/);
   assert.match(dnsChallenge("godaddy", "key:").error, /empty value/);
+});
+
+test("readDotenvValues returns only the named variables, unquoted and without comments", () => {
+  const text = [
+    "UNRELATED=nope",
+    "export GODADDY_API_KEY=key_1\r",
+    'GODADDY_API_SECRET="se cret#1" # trailing',
+    "",
+  ].join("\n");
+  assert.deepEqual(readDotenvValues(text, ["GODADDY_API_KEY", "GODADDY_API_SECRET"]), {
+    GODADDY_API_KEY: "key_1",
+    GODADDY_API_SECRET: "se cret#1",
+  });
+  assert.deepEqual(readDotenvValues("GODADDY_API_KEY='k'", ["GODADDY_API_KEY"]), { GODADDY_API_KEY: "k" });
+  assert.deepEqual(readDotenvValues("GODADDY_API_KEY=k # note", ["GODADDY_API_KEY"]), { GODADDY_API_KEY: "k" });
+  assert.deepEqual(readDotenvValues("", ["GODADDY_API_KEY"]), {});
+});
+
+test("the zone of a domain is looked up longest first, and the wildcard is named inside it", () => {
+  assert.deepEqual(zoneCandidates("example.com"), ["example.com"]);
+  assert.deepEqual(zoneCandidates("biz.Example.co.uk"), ["biz.example.co.uk", "example.co.uk", "co.uk"]);
+  assert.equal(wildcardRecordName("example.com", "example.com"), "*");
+  assert.equal(wildcardRecordName("biz.example.com", "example.com"), "*.biz");
+  assert.equal(wildcardRecordName("a.biz.example.com", "example.com"), "*.a.biz");
+  assert.throws(() => wildcardRecordName("example.org", "example.com"));
+  assert.throws(() => wildcardRecordName("notexample.com", "example.com"));
+});
+
+test("GoDaddy credentials come from the flags, then the environment, then .env, and are one pair", () => {
+  const given = { "godaddy-key": "fk", "godaddy-secret": "fs" };
+  const env = { GODADDY_API_KEY: "ek", GODADDY_API_SECRET: "es" };
+  const dotenv = { GODADDY_API_KEY: "dk", GODADDY_API_SECRET: "ds" };
+  assert.deepEqual(godaddyCredentials({ given, env, dotenv }), { key: "fk", secret: "fs" });
+  assert.deepEqual(godaddyCredentials({ env, dotenv }), { key: "ek", secret: "es" });
+  assert.deepEqual(godaddyCredentials({ dotenv }), { key: "dk", secret: "ds" });
+  assert.deepEqual(godaddyCredentials({}), {});
+  assert.match(godaddyCredentials({ given: { "godaddy-key": "k" } }).error, /both --godaddy-key and --godaddy-secret/);
+  // A KEY:SECRET token for the godaddy provider is the last source; another provider's is not.
+  assert.deepEqual(godaddyCredentials({ dnsProvider: "GoDaddy", dnsToken: "k:s" }), { key: "k", secret: "s" });
+  assert.deepEqual(godaddyCredentials({ dnsProvider: "cloudflare", dnsToken: "k:s" }), {});
+});
+
+test("the GoDaddy flags are known options that take values", () => {
+  const { options, errors } = parseDeployArgs(["--godaddy-key", "k", "--godaddy-secret=s"]);
+  assert.deepEqual(options, { "godaddy-key": "k", "godaddy-secret": "s" });
+  assert.deepEqual(errors, []);
+  assert.deepEqual(parseDeployArgs(["--godaddy-key"]).errors, ["--godaddy-key needs a value"]);
 });
 
 test("any other provider names its variables in the token, and an error never quotes the token", () => {

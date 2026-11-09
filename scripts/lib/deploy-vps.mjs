@@ -6,7 +6,7 @@
 import { parseRemote } from "./remote.mjs";
 
 /** Options that take a value, and the flags that do not. */
-const VALUE_OPTIONS = ["host", "user", "port", "identity", "domain", "repo", "branch", "name", "email", "platform-subdomain", "dns-provider", "dns-token"];
+const VALUE_OPTIONS = ["host", "user", "port", "identity", "domain", "repo", "branch", "name", "email", "platform-subdomain", "dns-provider", "dns-token", "godaddy-key", "godaddy-secret"];
 const FLAGS = ["check", "yes", "help"];
 
 /**
@@ -136,6 +136,67 @@ export function dnsChallenge(provider, token) {
     if (!pairs.some(([n]) => n === setting)) pairs.push([setting, value]);
   }
   return { provider: name, envNames: pairs.map(([n]) => n), env: pairs.map(([n, v]) => `${n}=${v}`).join("\n") };
+}
+
+/**
+ * The values of just the named variables in a dotenv file's text (`NAME=value`, `export NAME=value`,
+ * optional single or double quotes, `#` comments). Every other line is ignored and never returned,
+ * so the deploy reads the two GoDaddy credentials from `.env` and nothing else in it.
+ */
+export function readDotenvValues(text, names) {
+  const wanted = new Set(names);
+  const values = {};
+  for (const raw of String(text).split(/\r?\n/)) {
+    const match = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*?)\s*$/.exec(raw);
+    if (!match || !wanted.has(match[1])) continue;
+    let value = match[2];
+    const quote = value[0];
+    if ((quote === '"' || quote === "'") && value.lastIndexOf(quote) > 0) value = value.slice(1, value.lastIndexOf(quote));
+    else value = value.replace(/\s+#.*$/, "");
+    values[match[1]] = value;
+  }
+  return values;
+}
+
+/**
+ * The DNS zones a domain could be registered as, longest first: `biz.example.co.uk` gives
+ * `biz.example.co.uk`, `example.co.uk`, `co.uk`. GoDaddy is asked about each in turn; the first one
+ * the account owns is the zone its records are written in. A bare top-level label is never a
+ * candidate.
+ */
+export function zoneCandidates(domain) {
+  const labels = String(domain).toLowerCase().split(".");
+  const zones = [];
+  for (let i = 0; i < labels.length - 1; i++) zones.push(labels.slice(i).join("."));
+  return zones;
+}
+
+/**
+ * The name of the wildcard record inside its zone: `*` for the zone itself (`example.com` in
+ * `example.com`), `*.biz` for a domain below it (`biz.example.com`). The domain's own record is
+ * never written: the bare domain is left for whatever else is served there.
+ */
+export function wildcardRecordName(domain, zone) {
+  const d = String(domain).toLowerCase();
+  const z = String(zone).toLowerCase();
+  if (d === z) return "*";
+  if (!d.endsWith(`.${z}`)) throw new Error(`${d} is not inside the zone ${z}`);
+  return `*.${d.slice(0, -(z.length + 1))}`;
+}
+
+/**
+ * The GoDaddy API credentials from, in order, the flags, the environment and the values read from
+ * `.env`; the key and secret are one pair, so a lone half is an `error`. `{}` when none is given.
+ * When `dnsProvider` is godaddy and `dnsToken` is `KEY:SECRET`, that token is the last source.
+ */
+export function godaddyCredentials({ given = {}, env = {}, dotenv = {}, dnsProvider, dnsToken } = {}) {
+  let key = given["godaddy-key"] || env.GODADDY_API_KEY || dotenv.GODADDY_API_KEY || "";
+  let secret = given["godaddy-secret"] || env.GODADDY_API_SECRET || dotenv.GODADDY_API_SECRET || "";
+  if (!key && !secret && String(dnsProvider ?? "").toLowerCase() === "godaddy" && /^[^:=,\s]+:[^:\s]+$/.test(dnsToken ?? "")) {
+    [key, secret] = dnsToken.split(":");
+  }
+  if (Boolean(key) !== Boolean(secret)) return { error: "pass both --godaddy-key and --godaddy-secret, or neither" };
+  return key ? { key, secret } : {};
 }
 
 /** A label nobody creates a record for, so that it resolves only through a wildcard record. */

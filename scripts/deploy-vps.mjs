@@ -19,7 +19,14 @@
  * --platform-subdomain (default app, see above), --email (Coolify's administrator account),
  * --repo (default: the origin remote), --branch (default: the base branch), --name (Coolify
  * project/application, default: from the domain), --dns-provider and --dns-token (optional, see
- * below), --yes (no confirmations).
+ * below), --godaddy-key and --godaddy-secret (optional, see below), --yes (no confirmations).
+ *
+ * GoDaddy: with its API key and secret (--godaddy-key and --godaddy-secret, else GODADDY_API_KEY and
+ * GODADDY_API_SECRET in the environment, else those two variables in the root .env; nothing else
+ * in .env is read) the deploy creates the *.<domain> A record in the account's zone, and gets the
+ * wildcard certificate through GoDaddy's DNS (it implies --dns-provider godaddy). The credentials
+ * are never printed or saved. GoDaddy opens its DNS API only to some accounts; without a key,
+ * add the *.<domain> record yourself.
  *
  * Certificates: Coolify's Traefik obtains the platform host's over HTTP-01. A certificate for the
  * tenants' subdomains needs DNS-01, which needs the DNS provider's API: --dns-provider names it as
@@ -66,15 +73,19 @@ import {
   checkDomainDns,
   DEFAULT_PLATFORM_SUBDOMAIN,
   dnsChallenge,
+  godaddyCredentials,
   isValidDomain,
   isValidLabel,
   parseDeployArgs,
   parseResults,
   platformHost,
+  readDotenvValues,
   remoteCommand,
   repoUrls,
   REMOTE_DNS_TOKEN,
   REMOTE_SCRIPT,
+  wildcardRecordName,
+  zoneCandidates,
 } from "./lib/deploy-vps.mjs";
 import { hasExecutable, IS_WINDOWS } from "./lib/proc.mjs";
 import { BASE_BRANCH, REPO_ROOT } from "./lib/project-config.mjs";
@@ -104,8 +115,27 @@ if (errors.length) fail(`${errors.join("; ")} (npm run deploy:vps -- --help)`);
 if (given["dns-token"]) {
   console.error("warning: --dns-token is kept in your shell history and npm's debug log; prefer EFN_DNS_TOKEN=<token>");
 }
-const dns = dnsChallenge(given["dns-provider"], given["dns-token"] ?? (given["dns-provider"] ? process.env.EFN_DNS_TOKEN : undefined));
+let dnsProvider = given["dns-provider"];
+let dnsToken = given["dns-token"] ?? (dnsProvider ? process.env.EFN_DNS_TOKEN : undefined);
 delete given["dns-token"];
+
+// The GoDaddy credentials: the flags, else the environment, else the root .env. Only those two
+// variables are taken from that file; nothing else in it is read into the process. They also stand
+// in for --dns-provider godaddy and its token, and let the deploy create the wildcard record.
+const envFile = join(REPO_ROOT, ".env");
+const fromEnvFile = existsSync(envFile) ? readDotenvValues(readFileSync(envFile, "utf8"), ["GODADDY_API_KEY", "GODADDY_API_SECRET"]) : {};
+const found = godaddyCredentials({ given, env: process.env, dotenv: fromEnvFile, dnsProvider, dnsToken });
+delete given["godaddy-key"];
+delete given["godaddy-secret"];
+if (found.error) fail(found.error);
+// Another DNS provider's deploy never touches GoDaddy, whatever .env holds.
+const godaddy = found.key && (!dnsProvider || dnsProvider.toLowerCase() === "godaddy") ? found : {};
+if (godaddy.key && !dnsToken) {
+  dnsProvider = "godaddy";
+  dnsToken = `${godaddy.key}:${godaddy.secret}`;
+}
+
+const dns = dnsChallenge(dnsProvider, dnsToken);
 if (dns.error) fail(`${dns.error} (npm run deploy:vps -- --help)`);
 
 const rl = process.stdin.isTTY ? createInterface({ input: process.stdin, output: process.stdout }) : null;
@@ -234,6 +264,15 @@ if (!flags.check) {
     fail("stopped: use a real email address (--email)");
   }
 
+  // The wildcard record, through GoDaddy's API when its credentials are known. Only *.<domain>: the
+  // bare domain's own record belongs to whatever else is served there. Without them the records are
+  // yours to add, and the check below says whether they are there.
+  if (godaddy.key) {
+    const serverIp = (await lookup(serverAddress, { family: 4 }).catch(() => null))?.address;
+    if (!serverIp) fail(`cannot resolve ${serverAddress} to an IPv4 address for the DNS record`);
+    await pointWildcard(opts.domain, serverIp);
+  }
+
   // Let's Encrypt only issues a certificate once its host resolves to this server. A random label
   // resolves only through the *.<domain> record, without which no tenant is reachable at all, so
   // that one stops the deploy; a platform record still spreading may be waited out.
@@ -257,6 +296,33 @@ if (!flags.check) {
     log("  Point the DNS A records at the server, or the HTTPS certificates cannot be issued.");
     if (!(await confirm("Continue anyway?"))) fail("stopped: fix the DNS records and run again");
   }
+}
+
+/** Point `*.<domain>` at the server through GoDaddy's API, in whichever zone of the account holds it. */
+async function pointWildcard(domain, ip) {
+  const headers = { Authorization: `sso-key ${godaddy.key}:${godaddy.secret}`, "Content-Type": "application/json" };
+  const call = (method, path, body) =>
+    fetch(`https://api.godaddy.com${path}`, { method, headers, body: body && JSON.stringify(body), signal: AbortSignal.timeout(20_000) });
+  let zone = null;
+  for (const candidate of zoneCandidates(domain)) {
+    const res = await call("GET", `/v1/domains/${candidate}`).catch((err) => fail(`cannot reach GoDaddy's API (${err.message})`));
+    if (res.status === 401 || res.status === 403) {
+      fail(
+        `GoDaddy refused the API key (${res.status}). GoDaddy opens its DNS API only to some accounts; ` +
+          `check the key is a Production one, or add the *.${domain} A record by hand.`,
+      );
+    }
+    if (res.ok) {
+      zone = candidate;
+      break;
+    }
+  }
+  if (!zone) fail(`no domain of this GoDaddy account holds ${domain}`);
+  const name = wildcardRecordName(domain, zone);
+  const res = await call("PUT", `/v1/domains/${zone}/records/A/${encodeURIComponent(name)}`, [{ data: ip, ttl: 600 }])
+    .catch((err) => fail(`cannot reach GoDaddy's API (${err.message})`));
+  if (!res.ok) fail(`GoDaddy did not save the ${name} record in ${zone} (${res.status}: ${await res.text()})`);
+  log(`DNS: ${name} in ${zone} -> ${ip} (GoDaddy)`);
 }
 
 // --- the server ----------------------------------------------------------------------------

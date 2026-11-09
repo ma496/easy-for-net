@@ -156,6 +156,13 @@ prints, logs or saves it; on the server it lives in a root-only file Traefik rea
 HTTP-01 per-host certificates apply and tenant hosts are served with Traefik's default certificate —
 pass the DNS flags, or deploy with `docker-compose.prod.yml`, whose Caddy issues them on demand.
 
+For a domain on GoDaddy, `--godaddy-key` and `--godaddy-secret` (or `GODADDY_API_KEY` and
+`GODADDY_API_SECRET` in the environment, or those two variables in the root `.env`; nothing else in
+`.env` is read) do both jobs: the deploy creates the `*.<domain>` A record in the account's zone,
+pointing at the server, and obtains the wildcard certificate (they imply `--dns-provider godaddy`).
+GoDaddy opens its DNS API only to some accounts, and the key must be a Production one; otherwise add
+the `*.<domain>` record yourself. The credentials are never printed or saved.
+
 Coolify builds from the Git repository with `docker-compose.coolify.yml`, so it deploys what is
 **pushed** to the branch (the repository's base branch by default). A private repository gets a
 read-only deploy key: the script adds it with `gh` when that is installed, or prints it for you to
