@@ -91,4 +91,15 @@ describe('entering the app after signing in', () => {
 
     expect(source).not.toMatch(/router\.(push|replace|refresh)\(/)
   })
+
+  // The sign-in screens read the account info through the same cache entry as the root's first read.
+  // Gating the root loader on that entry's `isLoading` swaps the sign-in page for the loader as soon as
+  // the screen asks (its entry held only the anonymous 401), unmounting the form mid-submit and showing
+  // it again before the browser leaves.
+  it("keeps the root loader to the document's own first read of the account info", () => {
+    const source = readFileSync(join(webDirectory, 'App.tsx'), 'utf8')
+
+    expect(source).not.toMatch(/\{\s*isLoading:\s*isLoadingUserInfo\s*\}\s*\]\s*=\s*useLazyGetUserInfoQuery/)
+    expect(source).toContain('!isUserInfoSettled ? <AppLoading />')
+  })
 })

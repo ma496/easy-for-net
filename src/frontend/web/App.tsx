@@ -25,7 +25,12 @@ function App({ children }: PropsWithChildren) {
   const isServiceUnavailable = useAppSelector((state) => state.serviceAvailability.isUnavailable)
   const dictionary = useContext(TranslationContext)
   const [isLoading, setIsLoading] = useState(true)
-  const [getUserInfo, { isLoading: isLoadingUserInfo }] = useLazyGetUserInfoQuery()
+  // Whether this document's own first read of the account info has answered. Not the query's `isLoading`:
+  // the entry is shared with every other `getUserInfo()` call, and one made after a sign-in on an
+  // anonymous page (whose entry holds only the 401, no data) reports it loading again - which would
+  // swap the sign-in page for the loader, unmount the form mid-submit and remount it before it leaves.
+  const [isUserInfoSettled, setIsUserInfoSettled] = useState(false)
+  const [getUserInfo] = useLazyGetUserInfoQuery()
   const { showDialog: showConsentDialog, isLoading: consentLoading, accept, decline } = useCookieConsent()
 
   useEffect(() => {
@@ -34,13 +39,14 @@ function App({ children }: PropsWithChildren) {
       if (result.data) {
         dispatch(setUserInfo(result.data))
       }
+      setIsUserInfoSettled(true)
     }
     fetchUserInfo()
   }, [getUserInfo, dispatch])
 
   useEffect(() => {
     if (isServiceUnavailable) return
-    if (isLoadingUserInfo) return
+    if (!isUserInfoSettled) return
 
     if (!authState.isAuthenticated || !authState.user) return
 
@@ -84,7 +90,7 @@ function App({ children }: PropsWithChildren) {
     if (matchedUrl?.permissions && matchedUrl.permissions.length > 0 && !isAllowed(authState, matchedUrl.permissions)) {
       go('/unauthorized')
     }
-  }, [pathname, authState, isLoadingUserInfo, isServiceUnavailable, router, dispatch])
+  }, [pathname, authState, isUserInfoSettled, isServiceUnavailable, router, dispatch])
 
   useEffect(() => {
     dispatch(toggleTheme(localStorage.getItem('theme') || defaultThemeConfig.theme))
@@ -123,7 +129,7 @@ function App({ children }: PropsWithChildren) {
 
   return (
     <div className="relative min-h-screen bg-background font-sans text-sm text-foreground antialiased">
-      {isServiceUnavailable ? <ServiceUnavailableView /> : isLoading || isLoadingUserInfo ? <AppLoading /> : children}
+      {isServiceUnavailable ? <ServiceUnavailableView /> : isLoading || !isUserInfoSettled ? <AppLoading /> : children}
       {!isServiceUnavailable && showConsentDialog && !consentLoading && <CookieConsentDialog isOpen={true} onAccept={accept} onDecline={decline} />}
     </div>
   )
