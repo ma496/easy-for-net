@@ -4,11 +4,10 @@ import { useEffect, useRef, useState } from 'react'
 import { AlertCircle, Loader2 } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { useRedeemSignInTicketMutation, useLazyGetUserInfoQuery } from '@/store/api/identity'
-import { useAppDispatch } from '@/store/hooks'
-import { setUserInfo } from '@/store/slices'
 import { LocalizedLink } from '@/components/ui'
 import { TICKET_MESSAGE, useLocalizedRouter } from '@/hooks'
 import { getApiErrorMessages, isDeploymentOrigin } from '@/lib/utils'
+import { enterSignedIn } from '@/lib/utils/redirect'
 import { environment } from '@/config'
 
 /** How long this page waits for its opener to hand the ticket over. */
@@ -96,7 +95,6 @@ interface TicketSigninViewProps {
 export const TicketSigninView = ({ platformUrl, tenantUrlTemplate }: TicketSigninViewProps) => {
   const { t } = useTranslation()
   const router = useLocalizedRouter()
-  const dispatch = useAppDispatch()
   const [redeem] = useRedeemSignInTicketMutation()
   const [getUserInfo] = useLazyGetUserInfoQuery()
   const [error, setError] = useState<string | null>(null)
@@ -116,10 +114,10 @@ export const TicketSigninView = ({ platformUrl, tenantUrlTemplate }: TicketSigni
       const response = await redeem({ ticket: received.ticket })
       if (response.error) throw new Error(getApiErrorMessages(response.error, t)?.messages[0] || fallback)
 
+      // Read only to confirm the redeemed session answers; the document entered below reads its own.
       const userInfo = await getUserInfo()
       if (userInfo.error || !userInfo.data) return null
 
-      dispatch(setUserInfo(userInfo.data))
       return '/'
     })().finally(() => {
       inFlight = null
@@ -131,14 +129,14 @@ export const TicketSigninView = ({ platformUrl, tenantUrlTemplate }: TicketSigni
           setError(fallback)
           return
         }
-        // A refresh after the navigation makes the root layout re-fetch the texts and languages for the
-        // tenant this session now acts in, as a password sign-in does.
-        router.replace(landing)
-        router.refresh()
+        // A full page load, as a password sign-in does (see `enterSignedIn`): this document's router was
+        // built with no session, and the new one re-fetches the root layout's texts and languages for
+        // the tenant this session now acts in.
+        enterSignedIn(router.localize(landing))
       },
       (reason: unknown) => setError(reason instanceof Error ? reason.message : fallback),
     )
-  }, [dispatch, getUserInfo, platformUrl, redeem, router, t, tenantUrlTemplate])
+  }, [getUserInfo, platformUrl, redeem, router, t, tenantUrlTemplate])
 
   if (error) {
     return (

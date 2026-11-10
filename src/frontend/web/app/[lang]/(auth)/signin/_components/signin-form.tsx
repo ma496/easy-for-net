@@ -8,13 +8,11 @@ import { useState, useEffect, ReactNode } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useTokenMutation, useLazyGetUserInfoQuery, useResendVerifyEmailMutation } from '@/store/api/identity'
 import { TenantStatus } from '@/store/api/tenancy'
-import { useAppDispatch } from '@/store/hooks'
-import { setUserInfo } from '@/store/slices'
 import { Button, LocalizedLink } from '@/components/ui'
 import { NODE_MARK, withNode } from '@/components/custom'
 import { useLocalizedRouter } from '@/hooks'
 import { apiErrorAlert, getErrorCode, pathOnOrigin, resolvePlatformLanding, successToast } from '@/lib/utils'
-import { isValidRedirectPath } from '@/lib/utils/redirect'
+import { enterSignedIn, isValidRedirectPath } from '@/lib/utils/redirect'
 import type { HostTenant } from '@/lib/server/host-tenant'
 
 /** Props for SigninForm: what the visitor's host names, fetched on the server by the page. */
@@ -72,12 +70,12 @@ export const SigninForm = ({ hostTenant }: SigninFormProps) => {
   const [tokenApi, { isLoading: isTokenLoading }] = useTokenMutation()
   const [getUserInfo, { isLoading: isLoadingUserInfo }] = useLazyGetUserInfoQuery()
   const [resendVerifyEmailApi, { isLoading: isResending }] = useResendVerifyEmailMutation()
-  const dispatch = useAppDispatch()
 
   const [showResendLink, setShowResendLink] = useState(false)
   const [registeredEmail, setRegisteredEmail] = useState('')
   const [countdown, setCountdown] = useState(0)
   const [isHostRequired, setIsHostRequired] = useState(false)
+  const [isEntering, setIsEntering] = useState(false)
 
   useEffect(() => {
     let timer: NodeJS.Timeout
@@ -123,29 +121,17 @@ export const SigninForm = ({ hostTenant }: SigninFormProps) => {
       return
     }
     if (userInfoRes.data) {
-      dispatch(setUserInfo(userInfoRes.data))
-
-      // The root layout persists across the client-side navigation below, so left alone it would
-      // keep showing the texts and languages fetched for the anonymous visitor rather than the ones
-      // this session's tenant (or platform) scope resolves to. A refresh makes it re-fetch them - but
-      // only after the push below, on whichever branch actually lands: `router.push` schedules a
-      // navigation and `router.refresh()` schedules a re-fetch of the current one, and Next drops a
-      // refresh that was still pending when a navigation arrives, so calling it first is calling it on
-      // the page just left rather than the one arrived at.
-
       // The host named the tenant, so an ordinary account arrives here already acting in it (or was
       // refused above). A platform account signing in on the platform's address acts in no tenant, and
       // its landing honours a `redirect` only when that screen answers in platform scope.
       const validRedirect = redirectTo && isValidRedirectPath(redirectTo) ? redirectTo : null
-      const platformLanding = resolvePlatformLanding(userInfoRes.data, validRedirect)
-      if (platformLanding) {
-        router.push(platformLanding, { scroll: false })
-        router.refresh()
-        return
-      }
+      const landing = resolvePlatformLanding(userInfoRes.data, validRedirect) ?? validRedirect ?? '/'
 
-      router.push(validRedirect ?? '/', { scroll: false })
-      router.refresh()
+      // A full page load, never `router.push`: see `enterSignedIn`. The new document also re-fetches
+      // the root layout's texts and languages for the scope this session acts in, and reads the account
+      // info for its own store. The form stays busy until the browser leaves, so it cannot be sent twice.
+      setIsEntering(true)
+      enterSignedIn(router.localize(landing))
     }
   }
 
@@ -280,7 +266,7 @@ export const SigninForm = ({ hostTenant }: SigninFormProps) => {
               </LocalizedLink>
             </div>
 
-            <Button type="submit" size="lg" className="w-full" isLoading={isTokenLoading || isLoadingUserInfo} disabled={isSuspended}>
+            <Button type="submit" size="lg" className="w-full" isLoading={isTokenLoading || isLoadingUserInfo || isEntering} disabled={isSuspended || isEntering}>
               {t('page.auth.signin.button') || 'Sign In'}
             </Button>
 
