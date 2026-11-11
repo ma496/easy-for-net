@@ -10,6 +10,13 @@ namespace Backend.Settings;
 /// </remarks>
 public class SeedSetting
 {
+    /// <summary>
+    /// The password the administrators are seeded with in Development and Testing. It is documented
+    /// in <c>CLAUDE.md</c> so a browser test can sign in, which is why startup refuses it everywhere else.
+    /// </summary>
+    public const string LocalPassword = "Admin#123";
+
+
     /// <summary>The password of the platform administrator account (<c>admin</c>).</summary>
     public string PlatformAdminPassword { get; set; } = null!;
     /// <summary>The password of the bootstrap tenant's administrator account (<c>tenantadmin</c>).</summary>

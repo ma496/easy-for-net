@@ -20,25 +20,6 @@ internal static class Secrets
     public static string Alphanumeric(int length) => RandomNumberGenerator.GetString(Alphanumerics, length);
 
     /// <summary>
-    /// A random account password that always holds an upper-case letter, a lower-case letter, a digit
-    /// and a symbol, so it passes a password policy requiring each of them.
-    /// </summary>
-    /// <param name="length">The number of characters, at least 4.</param>
-    public static string Password(int length)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(length, 4);
-
-        var characters = (RandomNumberGenerator.GetString(Upper, 1)
-                + RandomNumberGenerator.GetString(Lower, 1)
-                + RandomNumberGenerator.GetString(Digits, 1)
-                + "#"
-                + Alphanumeric(length - 4))
-            .ToCharArray();
-        RandomNumberGenerator.Shuffle(characters.AsSpan());
-        return new string(characters);
-    }
-
-    /// <summary>
     /// <paramref name="byteCount"/> random bytes, base64-encoded - the form a signing key takes.
     /// </summary>
     /// <param name="byteCount">The number of random bytes.</param>

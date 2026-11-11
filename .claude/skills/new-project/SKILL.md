@@ -121,9 +121,13 @@ Run these from the new project's root.
      (tenants, editions, platform roles, Hangfire);
    - `tenantadmin` — administrator of the Default tenant, with sample notifications.
 
-   Both take the password the generator printed: the `Seed` section (`PlatformAdminPassword`,
-   `TenantAdminPassword`) of `appsettings.json` and the Development/Testing files, random per project
-   and applied only when an account is created.
+   Locally both use the password `Admin#123`: the `Seed` section (`PlatformAdminPassword`,
+   `TenantAdminPassword`) of `appsettings.json` and the Development/Testing files, the same in every
+   project and applied only when an account is created. Sign in as `admin` at
+   `http://app.localhost:3000` and as `tenantadmin` at `http://default.localhost:3000`; the project's
+   `CLAUDE.md` names both for browser testing. Production seeds them with the random
+   `SEED_ADMIN_PASSWORD` from the root `.env`, and the API refuses `Admin#123` outside
+   Development/Testing.
 6. **Run the web app.**
 
    ```sh

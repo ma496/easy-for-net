@@ -31,6 +31,15 @@ if (!bld.Environment.IsDevelopment() &&
 {
     throw new InvalidOperationException("Auth:Jwt:Key must be supplied through secure configuration outside development and testing.");
 }
+// The local administrators' password is published in CLAUDE.md, so a deployment must seed with its own
+// (the production stacks pass SEED_ADMIN_PASSWORD as Seed__PlatformAdminPassword / Seed__TenantAdminPassword).
+if (!bld.Environment.IsDevelopment() &&
+    !bld.Environment.IsEnvironment("Testing") &&
+    (bld.Configuration["Seed:PlatformAdminPassword"] == SeedSetting.LocalPassword ||
+     bld.Configuration["Seed:TenantAdminPassword"] == SeedSetting.LocalPassword))
+{
+    throw new InvalidOperationException("Seed:PlatformAdminPassword and Seed:TenantAdminPassword must be supplied through secure configuration outside development and testing.");
+}
 // Sessions live in Redis everywhere but the test host, so a deployment without a connection string has
 // nowhere to keep them. Refused here, at startup, rather than as a 503 on the first sign-in.
 if (!bld.Environment.IsEnvironment("Testing") &&

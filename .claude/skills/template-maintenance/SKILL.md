@@ -95,8 +95,10 @@ name no shipped directory uses) or put it outside `.claude`.
   `Hangfire.Storage.ConnectionString`) to `Database=<name>` (`<name>_test` for Testing, `<name>` being the snake_case project name) — with a
   literal `{password}` in `appsettings.json` and `postgres` (the `docker-compose.yml` default) in
   Development/Testing — sets `Redis.InstanceName` to `<name>:` (`<name>_test:` for Testing), gives
-  Development/Testing a GUID `Auth.Jwt.Key`, and writes one random password into
-  `Seed.PlatformAdminPassword` / `Seed.TenantAdminPassword` of all three files. These are JSON-path
+  Development/Testing a GUID `Auth.Jwt.Key`, and writes the fixed local password `Admin#123`
+  (`CreateProjectGenerator.LocalAdminPassword`) into `Seed.PlatformAdminPassword` /
+  `Seed.TenantAdminPassword` of all three files. Only the root `.env`'s `SEED_ADMIN_PASSWORD`, which the
+  production stacks seed with, is random. These are JSON-path
   updates, so renaming or moving those keys in `appsettings.json` must be mirrored in the generator.
 - `name` in the web `package.json` / `package-lock.json`, the root `package.json`, and
   `project.name` in `agentic.config.json` become the kebab-case name.
@@ -162,10 +164,12 @@ own `Initial`. Data a migration inserts (rather than the seeder) never reaches a
 `ShareData/DataSeeder` runs on every start in every environment and seeds, when absent: the
 **Default** tenant (identifier `default`), the platform account `admin` (no
 membership) and the Default tenant's administrator `tenantadmin`, with the passwords in the `Seed`
-section of `appsettings.json` (`Admin#123` here; `CustomizeAppSettingsAsync` writes one random
-password into all three appsettings files of a generated project). Tests sign in with
-these through `TestUsers.AdminPassword` / `PlatformAdminPassword`, and `new-project`, `CLAUDE.md` and `new-project-claude.md` document them — change them in
-all places together.
+section of `appsettings.json` (`Admin#123`, here and in every generated project:
+`CustomizeAppSettingsAsync` writes `CreateProjectGenerator.LocalAdminPassword` into all three
+appsettings files, and `SeedSetting.LocalPassword` is the value startup refuses outside
+Development/Testing). Tests sign in with these through `TestUsers.AdminPassword` /
+`PlatformAdminPassword`, and `new-project`, `CLAUDE.md`, `new-project-claude.md` and the READMEs
+document them, with the sign-in hosts, for browser testing. Change them in all places together.
 
 ## Documentation that ships
 

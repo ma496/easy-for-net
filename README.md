@@ -37,7 +37,7 @@ You need the **.NET 10 SDK**, **Node.js 24+**, **Git** and **Docker**.
 # 1. Install the CLI
 dotnet tool install --global EasyForNetTool
 
-# 2. Generate a project (save the seeded password it prints)
+# 2. Generate a project
 dotnet efn cp -n my-shop
 cd my-shop
 
@@ -51,7 +51,7 @@ npm run dev
 ```
 
 Open **http://app.localhost:3000** and sign in as `admin` (the platform), or
-**http://default.localhost:3000** as `tenantadmin` (the Default tenant), with the password from step 2.
+**http://default.localhost:3000** as `tenantadmin` (the Default tenant). Both use the password `Admin#123` locally; production seeds them with a random one.
 
 👉 Options, troubleshooting and next steps: <a href="https://easyfornet.com/docs/getting-started/quick-start" target="_blank" rel="noopener noreferrer">easyfornet.com/docs/getting-started/quick-start</a>
 

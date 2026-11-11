@@ -82,12 +82,13 @@ public class CustomizeAppSettingsTests
     }
 
     /// <summary>
-    /// Tests that a project gets its own random administrator password - the same in all three files, so
-    /// the tests sign in with what Development seeds - and that Development and Testing connect with the
-    /// docker-compose.yml password while the tracked appsettings.json keeps its placeholder.
+    /// Tests that every project seeds its administrators with the fixed local password the generated
+    /// CLAUDE.md names - the same in all three files, so the tests sign in with what Development seeds -
+    /// and that Development and Testing connect with the docker-compose.yml password while the tracked
+    /// appsettings.json keeps its placeholder.
     /// </summary>
     [Fact]
-    public async Task Should_Set_Seed_Password_And_Development_Database_Password()
+    public async Task Should_Set_Local_Seed_Password_And_Development_Database_Password()
     {
         // Arrange
         var templateSettings = FindTemplateAppSettings();
@@ -99,11 +100,11 @@ public class CustomizeAppSettingsTests
                 File.Copy(templateSettings, Path.Combine(dir, name));
 
             // Act
-            var password = await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "demo", DevPorts.Default);
+            await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "demo", DevPorts.Default);
 
             // Assert
-            Assert.NotEqual("Admin#123", password);
-            Assert.InRange(password.Length, 8, 50);
+            const string password = "Admin#123";
+            Assert.Equal(password, CreateProjectGenerator.LocalAdminPassword);
             foreach (var name in new[] { "appsettings.json", "appsettings.Development.json", "appsettings.Testing.json" })
             {
                 Assert.Equal(password, await ReadAsync(dir, name, "Seed", "PlatformAdminPassword"));
@@ -115,7 +116,6 @@ public class CustomizeAppSettingsTests
                 Assert.EndsWith($"Password={CreateProjectGenerator.DevelopmentDatabasePassword}", await ReadAsync(dir, name, "ConnectionStrings", "DefaultConnection"));
                 Assert.EndsWith($"Password={CreateProjectGenerator.DevelopmentDatabasePassword}", await ReadAsync(dir, name, "Hangfire", "Storage", "ConnectionString"));
             }
-            Assert.NotEqual(password, await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "demo", DevPorts.Default));
         }
         finally
         {

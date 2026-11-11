@@ -74,9 +74,12 @@ Every start creates, when absent:
 - `admin`: the platform administrator. It manages tenants and editions, and belongs to no tenant.
 - `tenantadmin`: the administrator of the Default tenant.
 
-Their password was generated for this project. It is in the `Seed` section of
-`src/backend/Source/appsettings.json` and the Development and Testing files. It is applied only when an
-account is first created, so change it in the app after that.
+Locally both use the password `Admin#123`: sign in as `admin` at `http://app.localhost:3000` and as
+`tenantadmin` at `http://default.localhost:3000`. It is in the `Seed` section of
+`src/backend/Source/appsettings.json` and the Development and Testing files, and it is applied only when
+an account is first created, so change it in the app after that. The API refuses to start on
+`Admin#123` outside Development and Testing; production uses `SEED_ADMIN_PASSWORD` from the root `.env`
+(see below), which is random for this project.
 
 ## Tests
 

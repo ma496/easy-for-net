@@ -30,23 +30,32 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
     internal const string DevelopmentRedisPassword = "redis";
 
     /// <summary>
+    /// The seeded administrators' password in Development and Testing - fixed, and named in the
+    /// generated <c>CLAUDE.md</c> and <c>README.md</c>, so an agent testing in a browser can sign in.
+    /// The API refuses it outside Development and Testing (<c>SeedSetting.LocalPassword</c>).
+    /// </summary>
+    internal const string LocalAdminPassword = "Admin#123";
+
+    /// <summary>
     /// Rewrites the copied <c>appsettings.json</c>, <c>appsettings.Development.json</c> and
     /// <c>appsettings.Testing.json</c> for a new project: its databases and the PostgreSQL and Redis
     /// ports its development containers are published on, fresh JWT keys for
     /// Development and Testing, its own Redis key prefix so several applications can share one
-    /// Redis server (<c>&lt;name&gt;:</c>, and <c>&lt;name&gt;_test:</c> for Testing), and a random
-    /// password for the seeded administrators in all three files.
+    /// Redis server (<c>&lt;name&gt;:</c>, and <c>&lt;name&gt;_test:</c> for Testing), and the fixed
+    /// <see cref="LocalAdminPassword"/> for the seeded administrators in all three files.
     /// </summary>
     /// <remarks>
     /// Development and Testing connect with the <c>docker-compose.yml</c> default password, so the
     /// project runs against <c>docker compose up -d</c> as generated; the tracked
-    /// <c>appsettings.json</c> keeps its <c>{password}</c> placeholder.
+    /// <c>appsettings.json</c> keeps its <c>{password}</c> placeholder. The administrators' password is
+    /// the same in every project so the generated <c>CLAUDE.md</c> can name it for browser testing; the
+    /// API refuses to start on it outside Development and Testing, and the production stacks seed with
+    /// the random <c>SEED_ADMIN_PASSWORD</c> from the root <c>.env</c> instead.
     /// </remarks>
     /// <param name="backendProjectTargetPath">The generated backend project directory holding the appsettings files.</param>
     /// <param name="snakeCaseProjectName">The snake_case project name - lowercase, so the database never needs quoting in SQL.</param>
     /// <param name="ports">The host ports the root <c>.env</c> publishes the development containers on.</param>
-    /// <returns>The seeded administrators' password.</returns>
-    internal static async Task<string> CustomizeAppSettingsAsync(string backendProjectTargetPath, string snakeCaseProjectName, DevPorts ports)
+    internal static async Task CustomizeAppSettingsAsync(string backendProjectTargetPath, string snakeCaseProjectName, DevPorts ports)
     {
         var appSettings = Path.Combine(backendProjectTargetPath, "appsettings.json");
         var developmentSettings = Path.Combine(backendProjectTargetPath, "appsettings.Development.json");
@@ -55,7 +64,6 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
         var developmentConnectionString = $"Host=localhost;Port={ports.Postgres};Database={snakeCaseProjectName};Username=postgres;Password={DevelopmentDatabasePassword}";
         var testConnectionString = $"Host=localhost;Port={ports.Postgres};Database={snakeCaseProjectName}_test;Username=postgres;Password={DevelopmentDatabasePassword}";
         var redisConnectionString = $"localhost:{ports.Redis},password={DevelopmentRedisPassword}";
-        var adminPassword = Secrets.Password(16);
 
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(appSettings, "ConnectionStrings.DefaultConnection", connectionString);
         await JsonPropertyUpdater.UpdateJsonPropertyAsync(appSettings, "Hangfire.Storage.ConnectionString", connectionString);
@@ -74,11 +82,9 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
         foreach (var settings in new[] { appSettings, developmentSettings, testingSettings })
         {
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(settings, "ConnectionStrings.Redis", redisConnectionString);
-            await JsonPropertyUpdater.UpdateJsonPropertyAsync(settings, "Seed.PlatformAdminPassword", adminPassword);
-            await JsonPropertyUpdater.UpdateJsonPropertyAsync(settings, "Seed.TenantAdminPassword", adminPassword);
+            await JsonPropertyUpdater.UpdateJsonPropertyAsync(settings, "Seed.PlatformAdminPassword", LocalAdminPassword);
+            await JsonPropertyUpdater.UpdateJsonPropertyAsync(settings, "Seed.TenantAdminPassword", LocalAdminPassword);
         }
-
-        return adminPassword;
     }
 
     /// <summary>
@@ -324,7 +330,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
                 throw new UserFriendlyException($"Failed to get root namespace from project '{backendTestProjectTargetPath}'. csproj file is not found.");
             }
             // update connection strings, the JWT keys, the Redis key prefixes and the seeded administrators' password
-            var adminPassword = await CustomizeAppSettingsAsync(backendProjectTargetPath, kebabCaseProjectName.Replace('-', '_'), devPorts);
+            await CustomizeAppSettingsAsync(backendProjectTargetPath, kebabCaseProjectName.Replace('-', '_'), devPorts);
             // update Meta.cs
             await ReplaceInFile(Path.Combine(backendProjectTargetPath, "Meta.cs"), $@"InternalsVisibleTo\s*\(\s*""{Regex.Escape(backendTestProjectName)}""\s*\)", $@"InternalsVisibleTo(""{pascalCaseProjectName}.Tests"")");
             // update Program.cs
@@ -419,8 +425,8 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
 
             Console.WriteLine("Project creation completed successfully!");
             Console.WriteLine();
-            Console.WriteLine($"  Seeded accounts: admin and tenantadmin, password {adminPassword}");
-            Console.WriteLine("  (the Seed section of the appsettings files; .env holds the production stack's own secrets)");
+            Console.WriteLine($"  Seeded accounts: admin and tenantadmin, password {LocalAdminPassword} in development");
+            Console.WriteLine("  (production seeds them with the random SEED_ADMIN_PASSWORD in .env)");
             Console.WriteLine($"  Development PostgreSQL on localhost:{devPorts.Postgres}, Redis on localhost:{devPorts.Redis}");
             if (devPorts != DevPorts.Default)
                 Console.WriteLine("  (a default port was already in use; DEV_POSTGRES_PORT / DEV_REDIS_PORT in .env match the connection strings)");
