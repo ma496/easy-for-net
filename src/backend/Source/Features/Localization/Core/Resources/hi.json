@@ -745,9 +745,9 @@
       "resetConfirmButton": "हाँ, रीसेट करें",
       "resetSuccess": "${setting} सेटिंग्स विरासत में मिले मानों पर रीसेट की गईं",
       "saveSuccess": "${setting} सेटिंग्स सहेजी गईं",
-      "signin": {
-        "title": "साइन-इन",
-        "description": "लोगों के साइन इन करते समय लागू होने वाले नियम।",
+      "general": {
+        "title": "सामान्य",
+        "description": "पूरे एप्लिकेशन पर लागू होने वाले विकल्प।",
         "isEmailVerificationRequired": "साइन इन के लिए सत्यापित ईमेल पता आवश्यक करें",
         "isEmailVerificationRequiredHelp": "चालू होने पर, किसी खाते को साइन इन करने से पहले अपने ईमेल पते की पुष्टि करनी होगी।"
       },

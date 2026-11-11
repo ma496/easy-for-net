@@ -38,8 +38,8 @@ sealed class ResendVerifyEmailEndpoint(IUserService userService,
     public override async Task HandleAsync(ResendVerifyEmailRequest request, CancellationToken cancellationToken)
     {
         // The platform's value: the flow runs before, and independently of, any tenant.
-        var signinSettings = await settingProvider.GetAsync<SigninSettings>((Guid?)null, cancellationToken);
-        if (!signinSettings.IsEmailVerificationRequired)
+        var generalSettings = await settingProvider.GetAsync<GeneralSettings>((Guid?)null, cancellationToken);
+        if (!generalSettings.IsEmailVerificationRequired)
         {
             await Send.OkAsync(cancellationToken);
             return;

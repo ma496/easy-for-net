@@ -6,7 +6,7 @@ import {
   SettingName,
   SettingPropertyDto,
   SettingValueWithSource,
-  SigninSettingsDto,
+  GeneralSettingsDto,
 } from './settings-dtos'
 
 /** The setting of that name in a list response, or `undefined` when the API does not declare it. */
@@ -30,8 +30,8 @@ const readSecret = (dto: SettingDto, name: string): SecretSettingState | null =>
   return property ? { isSet: property.isSet === true, source: property.source } : null
 }
 
-/** The `Signin` setting as a typed view model, or `null` when the response lacks one of its properties. */
-export const toSigninSettings = (dto: SettingDto): SigninSettingsDto | null => {
+/** The `General` setting as a typed view model, or `null` when the response lacks one of its properties. */
+export const toGeneralSettings = (dto: SettingDto): GeneralSettingsDto | null => {
   const isEmailVerificationRequired = read(dto, 'isEmailVerificationRequired', asBoolean)
   return isEmailVerificationRequired ? { isEmailVerificationRequired } : null
 }

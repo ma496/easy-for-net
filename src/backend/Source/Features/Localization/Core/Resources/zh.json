@@ -745,9 +745,9 @@
       "resetConfirmButton": "是，重置",
       "resetSuccess": "${setting} 设置已重置为继承值",
       "saveSuccess": "${setting} 设置已保存",
-      "signin": {
-        "title": "登录",
-        "description": "用户登录时适用的规则。",
+      "general": {
+        "title": "常规",
+        "description": "适用于整个应用程序的选项。",
         "isEmailVerificationRequired": "登录需要已验证的电子邮件地址",
         "isEmailVerificationRequiredHelp": "开启后，账户必须先确认其电子邮件地址才能登录。"
       },

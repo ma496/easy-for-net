@@ -2,6 +2,7 @@ using System.Text.Json.Nodes;
 using Backend.External.Email;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Endpoints.Account;
+using Backend.Features.Settings.Core;
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Tenancy.Endpoints.Tenants;
 using Backend.Settings;
@@ -20,7 +21,7 @@ namespace Backend.Tests.Features.Tenancy.Core.Hosting;
 /// <remarks>
 /// Resolution is turned on per request by <see cref="TenantHostingOverride.GateHeader"/>, so nothing here
 /// reaches another class; a request without it runs as the shared host does, with resolution off. The
-/// account emails that need <c>Signin.IsEmailVerificationRequired</c> see it on through a request-keyed
+/// account emails that need <c>General.IsEmailVerificationRequired</c> see it on through a request-keyed
 /// <see cref="PlatformSettingOverlays"/> overlay rather than a platform row, which would refuse sign-ins
 /// all over the suite. Every tenant and account is created here.
 /// </remarks>
@@ -301,7 +302,7 @@ public class TenantHostLinksTests(App app) : TenancyTestsBase(app)
     private void RequireVerification(HttpClient client)
     {
         var token = Guid.NewGuid().ToString("N");
-        Service<PlatformSettingOverlays>().ApplyForRequests(token, IdentitySettingsProvider.SigninSettingName, _verificationRequired);
+        Service<PlatformSettingOverlays>().ApplyForRequests(token, GeneralSettingsProvider.GeneralSettingName, _verificationRequired);
         client.DefaultRequestHeaders.Add(PlatformSettingOverlays.RequestHeader, token);
     }
 

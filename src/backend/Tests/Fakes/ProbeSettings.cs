@@ -6,7 +6,7 @@ namespace Backend.Tests.Fakes;
 /// A setting that exists only in the test host and that nothing in the application reads, so the
 /// settings suite can write its platform row without changing how any other test's requests behave.
 /// It has several properties, of several types, and a validator with rules - what proving property-level
-/// inheritance and write validation needs, and what <c>SigninSettings</c> (one unconstrained flag)
+/// inheritance and write validation needs, and what <c>GeneralSettings</c> (one unconstrained flag)
 /// cannot show.
 /// </summary>
 public sealed class ProbeSettings

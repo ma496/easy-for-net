@@ -272,8 +272,8 @@ public class TokenService : RefreshTokenService<FastEndpoints.Security.TokenRequ
         // Held to the sign-in setting of the tenant the renewed session will act in - or the platform's
         // when it acts in none, the tenant having been dropped above - read as it stands now, so a change
         // to the setting reaches a live session at its next renewal without revoking it.
-        var signinSettings = await _settingProvider.GetAsync<SigninSettings>(actingTenantId);
-        if (signinSettings.IsEmailVerificationRequired && !user.IsEmailVerified)
+        var generalSettings = await _settingProvider.GetAsync<GeneralSettings>(actingTenantId);
+        if (generalSettings.IsEmailVerificationRequired && !user.IsEmailVerified)
             this.ThrowError(r => r.UserId, ErrorCodes.EmailNotVerified);
 
         // Only the claims lose the tenant; the row keeps it, because the recorded tenant is left as it was

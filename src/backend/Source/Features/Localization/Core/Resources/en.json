@@ -745,9 +745,9 @@
       "resetConfirmButton": "Yes, reset",
       "resetSuccess": "${setting} settings reset to inherited values",
       "saveSuccess": "${setting} settings saved",
-      "signin": {
-        "title": "Sign-in",
-        "description": "Rules applied when people sign in.",
+      "general": {
+        "title": "General",
+        "description": "Options that apply across the application.",
         "isEmailVerificationRequired": "Require a verified email address to sign in",
         "isEmailVerificationRequiredHelp": "When on, an account must confirm its email address before it can sign in."
       },

@@ -5,52 +5,52 @@ import { Form, Formik, FormikHelpers } from 'formik'
 import { useTranslation } from '@/i18n'
 import { FormCheckbox } from '@/components/ui/form'
 import { successToast } from '@/lib/utils'
-import { SettingName, SettingSource, SigninSettingsDto, toSigninSettings, useSettingUpdateMutation } from '@/store/api/settings'
+import { SettingName, SettingSource, GeneralSettingsDto, toGeneralSettings, useSettingUpdateMutation } from '@/store/api/settings'
 import { Badge } from '@/components/ui'
 import { SettingsCard, SourceBadge } from './settings-card-parts'
-import { buildSigninUpdateValues, hasOwnOverride, markerOf, signinFormValues, signinSources, SigninFormValues } from './settings-form'
+import { buildGeneralUpdateValues, hasOwnOverride, markerOf, generalFormValues, generalSources, GeneralFormValues } from './settings-form'
 import { useSettingReset } from './use-setting-reset'
 
-/** Props for the Sign-in card: the resolved setting, the layer being edited, and whether it may be. */
-interface SigninSettingsCardProps {
-  settings: SigninSettingsDto
+/** Props for the General card: the resolved setting, the layer being edited, and whether it may be. */
+interface GeneralSettingsCardProps {
+  settings: GeneralSettingsDto
   ownSource: SettingSource
   canUpdate: boolean
   onReset: () => Promise<void>
 }
 
-/** The `Signin` setting: whether an account must verify its email address before it may sign in. */
-export const SigninSettingsCard = ({ settings: initialSettings, ownSource, canUpdate, onReset }: SigninSettingsCardProps) => {
+/** The `General` setting: whether an account must verify its email address before it may sign in. */
+export const GeneralSettingsCard = ({ settings: initialSettings, ownSource, canUpdate, onReset }: GeneralSettingsCardProps) => {
   const { t } = useTranslation()
-  const title = t('page.settings.signin.title') || 'Sign-in'
+  const title = t('page.settings.general.title') || 'General'
   // What the card shows as resolved: the load it mounted with, then each save's answer.
   const [settings, setSettings] = useState(initialSettings)
   const [updateSetting, { isLoading: isSaving, error: saveError, reset: clearSaveError }] = useSettingUpdateMutation()
-  const { reset, isResetting } = useSettingReset(SettingName.Signin, title, ownSource, onReset)
+  const { reset, isResetting } = useSettingReset(SettingName.General, title, ownSource, onReset)
 
-  const onSubmit = async (values: SigninFormValues, { resetForm }: FormikHelpers<SigninFormValues>) => {
+  const onSubmit = async (values: GeneralFormValues, { resetForm }: FormikHelpers<GeneralFormValues>) => {
     const result = await updateSetting({
-      name: SettingName.Signin,
-      values: buildSigninUpdateValues(settings, signinFormValues(settings), values, ownSource),
+      name: SettingName.General,
+      values: buildGeneralUpdateValues(settings, generalFormValues(settings), values, ownSource),
     })
     if (result.error) return
 
-    const next = toSigninSettings(result.data) ?? settings
+    const next = toGeneralSettings(result.data) ?? settings
     setSettings(next)
-    resetForm({ values: signinFormValues(next) })
+    resetForm({ values: generalFormValues(next) })
     successToast.fire({ text: t('page.settings.saveSuccess', { setting: title }) || `${title} settings saved` })
   }
 
-  const fieldId = 'setting-signin-isEmailVerificationRequired'
+  const fieldId = 'setting-general-isEmailVerificationRequired'
 
   return (
-    <Formik<SigninFormValues> initialValues={signinFormValues(initialSettings)} onSubmit={onSubmit}>
+    <Formik<GeneralFormValues> initialValues={generalFormValues(initialSettings)} onSubmit={onSubmit}>
       {({ values, initialValues, dirty, resetForm }) => (
         <Form noValidate>
           <SettingsCard
             title={title}
-            description={t('page.settings.signin.description') || 'Rules applied when people sign in.'}
-            isCustomized={hasOwnOverride(signinSources(settings), ownSource)}
+            description={t('page.settings.general.description') || 'Options that apply across the application.'}
+            isCustomized={hasOwnOverride(generalSources(settings), ownSource)}
             canUpdate={canUpdate}
             dirty={dirty}
             isSaving={isSaving}
@@ -64,7 +64,7 @@ export const SigninSettingsCard = ({ settings: initialSettings, ownSource, canUp
           >
             <div>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <FormCheckbox id={fieldId} name="isEmailVerificationRequired" label={t('page.settings.signin.isEmailVerificationRequired') || 'Require a verified email address to sign in'} disabled={!canUpdate} />
+                <FormCheckbox id={fieldId} name="isEmailVerificationRequired" label={t('page.settings.general.isEmailVerificationRequired') || 'Require a verified email address to sign in'} disabled={!canUpdate} />
                 <div className="flex flex-wrap items-center gap-1">
                   <SourceBadge marker={markerOf(settings.isEmailVerificationRequired.source, ownSource)} />
                   {values.isEmailVerificationRequired !== initialValues.isEmailVerificationRequired && (
@@ -74,7 +74,7 @@ export const SigninSettingsCard = ({ settings: initialSettings, ownSource, canUp
                   )}
                 </div>
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">{t('page.settings.signin.isEmailVerificationRequiredHelp') || 'When on, an account must confirm its email address before it can sign in.'}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t('page.settings.general.isEmailVerificationRequiredHelp') || 'When on, an account must confirm its email address before it can sign in.'}</p>
             </div>
           </SettingsCard>
         </Form>

@@ -745,9 +745,9 @@
       "resetConfirmButton": "نعم، أعد التعيين",
       "resetSuccess": "تمت إعادة تعيين إعدادات ${setting} إلى القيم الموروثة",
       "saveSuccess": "تم حفظ إعدادات ${setting}",
-      "signin": {
-        "title": "تسجيل الدخول",
-        "description": "القواعد المطبقة عند تسجيل دخول المستخدمين.",
+      "general": {
+        "title": "عام",
+        "description": "خيارات تنطبق على التطبيق بأكمله.",
         "isEmailVerificationRequired": "اشتراط بريد إلكتروني مُتحقق منه لتسجيل الدخول",
         "isEmailVerificationRequiredHelp": "عند التفعيل، يجب على الحساب تأكيد بريده الإلكتروني قبل أن يتمكن من تسجيل الدخول."
       },

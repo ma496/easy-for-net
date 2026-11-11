@@ -6,7 +6,7 @@ namespace Backend.Features.Settings.Core;
 /// </summary>
 /// <remarks>
 /// A setting is a C# class whose properties are its values, registered under a stable name with the
-/// FluentValidation validator its values are held to: <c>context.Add&lt;SigninSettings&gt;("Signin", new SigninSettingsValidator())</c>.
+/// FluentValidation validator its values are held to: <c>context.Add&lt;GeneralSettings&gt;("General", new GeneralSettingsValidator())</c>.
 /// Its code default is what its property initializers give (<c>new T()</c>); a setting that chains
 /// <c>.FromConfiguration("Section")</c> takes that section, bound onto <c>new T()</c>, as its default
 /// instead whenever the deployment supplies it. Whichever default stands is validated when the

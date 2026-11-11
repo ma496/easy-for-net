@@ -1,4 +1,4 @@
-import type { EmailSettingsDto, SettingSource, SigninSettingsDto } from '@/store/api/settings'
+import type { EmailSettingsDto, SettingSource, GeneralSettingsDto } from '@/store/api/settings'
 
 /**
  * How a property's value reads to the administrator on this screen: set by the scope being edited,
@@ -22,8 +22,8 @@ export const markerOf = (source: SettingSource, ownSource: SettingSource): Sourc
 /** Whether any of the given sources is the scope's own - what decides "Customized here" and the Reset button. */
 export const hasOwnOverride = (sources: SettingSource[], ownSource: SettingSource): boolean => sources.includes(ownSource)
 
-/** The sources of every property of the `Signin` setting. */
-export const signinSources = (settings: SigninSettingsDto): SettingSource[] => [settings.isEmailVerificationRequired.source]
+/** The sources of every property of the `General` setting. */
+export const generalSources = (settings: GeneralSettingsDto): SettingSource[] => [settings.isEmailVerificationRequired.source]
 
 /** The sources of every property of the `Email` setting, the password included. */
 export const emailSources = (settings: EmailSettingsDto): SettingSource[] => [
@@ -35,8 +35,8 @@ export const emailSources = (settings: EmailSettingsDto): SettingSource[] => [
   settings.senderName.source,
 ]
 
-/** The Sign-in card's form values. */
-export interface SigninFormValues {
+/** The General card's form values. */
+export interface GeneralFormValues {
   isEmailVerificationRequired: boolean
 }
 
@@ -56,8 +56,8 @@ export interface EmailFormValues {
   senderName: string
 }
 
-/** The Sign-in form seeded from the resolved setting. */
-export const signinFormValues = (settings: SigninSettingsDto): SigninFormValues => ({
+/** The General form seeded from the resolved setting. */
+export const generalFormValues = (settings: GeneralSettingsDto): GeneralFormValues => ({
   isEmailVerificationRequired: settings.isEmailVerificationRequired.value,
 })
 
@@ -83,8 +83,8 @@ export const isValidPort = (value: string | number | null | undefined): boolean 
   return port >= 1 && port <= 65535
 }
 
-/** The `PUT /settings/Signin` values: what this scope overrides. */
-export type SigninUpdateValues = { isEmailVerificationRequired?: boolean }
+/** The `PUT /settings/General` values: what this scope overrides. */
+export type GeneralUpdateValues = { isEmailVerificationRequired?: boolean }
 
 /** The `PUT /settings/Email` values: what this scope overrides, the password by its own rules. */
 export type EmailUpdateValues = {
@@ -102,14 +102,14 @@ export type EmailUpdateValues = {
  */
 const inOverrideSet = (source: SettingSource, ownSource: SettingSource, changed: boolean): boolean => source === ownSource || changed
 
-/** The `PUT` body for the Sign-in card. */
-export const buildSigninUpdateValues = (
-  settings: SigninSettingsDto,
-  initial: SigninFormValues,
-  current: SigninFormValues,
+/** The `PUT` body for the General card. */
+export const buildGeneralUpdateValues = (
+  settings: GeneralSettingsDto,
+  initial: GeneralFormValues,
+  current: GeneralFormValues,
   ownSource: SettingSource,
-): SigninUpdateValues => {
-  const values: SigninUpdateValues = {}
+): GeneralUpdateValues => {
+  const values: GeneralUpdateValues = {}
   const changed = current.isEmailVerificationRequired !== initial.isEmailVerificationRequired
   if (inOverrideSet(settings.isEmailVerificationRequired.source, ownSource, changed)) {
     values.isEmailVerificationRequired = current.isEmailVerificationRequired

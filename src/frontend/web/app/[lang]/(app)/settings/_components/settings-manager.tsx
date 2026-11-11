@@ -1,22 +1,30 @@
 'use client'
 
-import { useState } from 'react'
-import { Settings2 } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
+import { useQueryState, parseAsStringEnum } from 'nuqs'
+import { Mail, Settings2, SlidersHorizontal } from 'lucide-react'
 import { useTranslation } from '@/i18n'
 import { useAppSelector } from '@/store/hooks'
 import { isAllowed } from '@/lib/utils'
-import { ApiErrorMessages, Loader } from '@/components/ui'
+import { ApiErrorMessages, Loader, Tabs, type TabItem } from '@/components/ui'
 import { Allow } from '@/allow'
-import { findSetting, SettingName, toEmailSettings, toSigninSettings, useSettingListQuery } from '@/store/api/settings'
+import { findSetting, SettingName, toEmailSettings, toGeneralSettings, useSettingListQuery } from '@/store/api/settings'
 import { ownSourceOf } from './settings-form'
-import { SigninSettingsCard } from './signin-settings-card'
+import { GeneralSettingsCard } from './general-settings-card'
 import { EmailSettingsCard } from './email-settings-card'
+
+/** The tab of each setting, in the order the strip shows them, kept in the URL so a reload or a shared link lands on the same one. */
+const SETTINGS_TABS = ['general', 'email'] as const
+type SettingsTab = (typeof SETTINGS_TABS)[number]
+const TAB_ICONS: Record<SettingsTab, ReactNode> = { general: <SlidersHorizontal />, email: <Mail /> }
+const TAB_DEFAULT_LABELS: Record<SettingsTab, string> = { general: 'General', email: 'Email' }
 
 /**
  * Client-side shell for `/settings`: the scope notice (which tenant, or the platform, is being
- * edited, and whether the caller may change it) and one card per known setting in a fixed order -
- * Sign-in, then Email. A setting the API does not declare is not shown; one it declares that this
- * screen does not know is ignored. Each card is its own form and is remounted, keyed by a counter,
+ * edited, and whether the caller may change it) and a tab per known setting in a fixed order -
+ * General, then Email. A setting the API does not declare has no tab; one
+ * it declares that this screen does not know is ignored, and a `tab` in the URL naming a setting not
+ * shown falls back to the first one. Every card is its own form and is remounted, keyed by a counter,
  * after its overrides are reset, so it re-seeds from the freshly fetched values.
  */
 export const SettingsManager = () => {
@@ -25,6 +33,13 @@ export const SettingsManager = () => {
   const canUpdate = isAllowed(authState, [Allow.Settings_Update])
   const activeTenant = authState.activeTenant
   const ownSource = ownSourceOf(!!activeTenant)
+
+  const [tab, setTab] = useQueryState(
+    'tab',
+    parseAsStringEnum<SettingsTab>([...SETTINGS_TABS])
+      .withDefault('general')
+      .withOptions({ history: 'replace', clearOnDefault: true }),
+  )
 
   const { data, isLoading, error, refetch } = useSettingListQuery()
   const [resetKeys, setResetKeys] = useState<{ [name in SettingName]?: number }>({})
@@ -63,12 +78,12 @@ export const SettingsManager = () => {
       )
     }
 
-    const signinDto = findSetting(data.items, SettingName.Signin)
-    const signin = signinDto ? toSigninSettings(signinDto) : null
+    const generalDto = findSetting(data.items, SettingName.General)
+    const general = generalDto ? toGeneralSettings(generalDto) : null
     const emailDto = findSetting(data.items, SettingName.Email)
     const email = emailDto ? toEmailSettings(emailDto) : null
 
-    if (!signin && !email) {
+    if (!general && !email) {
       return (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-border bg-surface px-6 py-14 text-center shadow-xs">
           <span className="grid size-12 place-content-center rounded-xl bg-surface-2 text-muted-foreground">
@@ -79,20 +94,39 @@ export const SettingsManager = () => {
       )
     }
 
+    const panels: { [name in SettingsTab]?: ReactNode } = {
+      // General holds the small settings that need no tab of their own; add further cards here.
+      general: general && (
+        <div className="flex flex-col gap-6">
+          <GeneralSettingsCard key={`${SettingName.General}:${resetKeys.General ?? 0}`} settings={general} ownSource={ownSource} canUpdate={canUpdate} onReset={remountAfterReset(SettingName.General)} />
+        </div>
+      ),
+      email: email && (
+        <EmailSettingsCard key={`${SettingName.Email}:${resetKeys.Email ?? 0}`} settings={email} ownSource={ownSource} canUpdate={canUpdate} onReset={remountAfterReset(SettingName.Email)} />
+      ),
+    }
+    const shown = SETTINGS_TABS.filter((candidate) => panels[candidate])
+    const activeTab = shown.includes(tab) ? tab : shown[0]
+    const items: TabItem<SettingsTab>[] = shown.map((candidate) => ({
+      value: candidate,
+      label: t(`page.settings.${candidate}.title`) || TAB_DEFAULT_LABELS[candidate],
+      icon: TAB_ICONS[candidate],
+    }))
+
+    // Only the active card is visible, but every card stays mounted so a half-edited form keeps its edits.
     return (
-      <div className="flex flex-col gap-8 [&>*+*]:border-t [&>*+*]:border-border [&>*+*]:pt-8">
-        {signin && (
-          <SigninSettingsCard key={`${SettingName.Signin}:${resetKeys.Signin ?? 0}`} settings={signin} ownSource={ownSource} canUpdate={canUpdate} onReset={remountAfterReset(SettingName.Signin)} />
-        )}
-        {email && (
-          <EmailSettingsCard key={`${SettingName.Email}:${resetKeys.Email ?? 0}`} settings={email} ownSource={ownSource} canUpdate={canUpdate} onReset={remountAfterReset(SettingName.Email)} />
-        )}
-      </div>
+      <Tabs items={items} value={activeTab} onValueChange={setTab} panelClassName="min-w-0">
+        {shown.map((candidate) => (
+          <div key={candidate} hidden={candidate !== activeTab}>
+            {panels[candidate]}
+          </div>
+        ))}
+      </Tabs>
     )
   }
 
   return (
-    <div className="flex max-w-6xl flex-col gap-8">
+    <div className="flex max-w-6xl flex-col gap-6">
       {banner}
       {content()}
     </div>

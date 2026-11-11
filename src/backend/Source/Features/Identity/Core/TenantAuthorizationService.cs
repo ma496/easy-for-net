@@ -203,7 +203,7 @@ public interface ITenantAuthorizationService
     /// request arrived with is revoked as the new one is issued, so the refresh token the caller held a
     /// moment ago cannot afterwards be redeemed for a session back in the previous tenant; the
     /// account's sessions on other devices are untouched. Entering a scope is held to that scope's
-    /// <see cref="SigninSettings"/> exactly as signing in to it is: an account whose email is unverified is
+    /// <see cref="GeneralSettings"/> exactly as signing in to it is: an account whose email is unverified is
     /// refused with <c>emailNotVerified</c> when the scope requires verification, and nothing is replaced.
     /// </summary>
     /// <param name="userId">The account whose session is re-established.</param>
@@ -621,8 +621,8 @@ public class TenantAuthorizationService(AppDbContext dbContext,
         // or the platform's when leaving for no tenant - exactly as signing in to it is, so an unverified
         // account cannot sign in where verification is not required and then switch to where it is. Asked
         // before anything is issued or replaced, so a refusal leaves the caller's session as it was.
-        var signinSettings = await settingProvider.GetAsync<SigninSettings>(tenantId, cancellationToken);
-        if (signinSettings.IsEmailVerificationRequired && !account.IsEmailVerified)
+        var generalSettings = await settingProvider.GetAsync<GeneralSettings>(tenantId, cancellationToken);
+        if (generalSettings.IsEmailVerificationRequired && !account.IsEmailVerified)
         {
             var code = ErrorCodes.EmailNotVerified;
             ValidationContext.Instance.ThrowError(httpContextAccessor.HttpContext?.ResolveEnglishFallback(code) ?? code.Value, code.Value);

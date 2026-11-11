@@ -59,7 +59,7 @@ sealed class SignupEndpoint(IUserService userService,
         }
 
         // The platform's value: the tenant this sign-up creates has no override of its own yet.
-        var signinSettings = await settingProvider.GetAsync<SigninSettings>((Guid?)null, cancellationToken);
+        var generalSettings = await settingProvider.GetAsync<GeneralSettings>((Guid?)null, cancellationToken);
 
         var usernameExists = await dbContext.Users
             .AsNoTracking()
@@ -121,7 +121,7 @@ sealed class SignupEndpoint(IUserService userService,
                 user.Id,
                 cancellationToken);
 
-            var verificationToken = signinSettings.IsEmailVerificationRequired
+            var verificationToken = generalSettings.IsEmailVerificationRequired
                 ? await tokenService.GenerateTokenAsync(user.Id, TokenPurpose.EmailVerification)
                 : null;
 

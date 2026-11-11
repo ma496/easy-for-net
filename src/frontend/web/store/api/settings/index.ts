@@ -10,7 +10,7 @@ export type {
   SettingDeleteRequest,
   SettingValueWithSource,
   SecretSettingState,
-  SigninSettingsDto,
+  GeneralSettingsDto,
   EmailSettingsDto,
 } from './settings/settings-dtos'
-export { findSetting, toSigninSettings, toEmailSettings } from './settings/settings-mappers'
+export { findSetting, toGeneralSettings, toEmailSettings } from './settings/settings-mappers'

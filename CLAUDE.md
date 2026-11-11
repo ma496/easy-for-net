@@ -280,8 +280,8 @@ must use, and an anonymous endpoint too, which names the platform for account-le
 being entered once its membership is checked, never the caller's ambient scope. `GET /settings`, `PUT /settings/{name}`
 and `DELETE /settings/{name}` list every declared setting with each property's source and replace or
 remove the acting scope's own overrides, under `Settings.View` / `Settings.Update` (`PermissionScope.Both`,
-gated on no feature); `app/[lang]/(app)/settings` edits them, one card per setting it knows. A settings
-change revokes no session: what sign-in or refresh decides from one (as `SigninSettings` does) reaches a
+gated on no feature); `app/[lang]/(app)/settings` edits them, one tab per setting it knows (small cross-cutting options share the `General` setting, `GeneralSettings`). A settings
+change revokes no session: what sign-in or refresh decides from one (as `GeneralSettings` does) reaches a
 session when it is next replaced. Test classes that write a platform row share the `Settings` collection
 through `SettingsTestsBase`, which removes every platform row after each test.
 

@@ -73,8 +73,8 @@ sealed class TokenEndpoint(IUserService userService,
         // Whether the email must be verified is the setting of the tenant being entered - its own override,
         // else the platform's, else the default - so it is asked only once that tenant is known. A platform
         // account entering no tenant is held to the platform's value.
-        var signinSettings = await settingProvider.GetAsync<SigninSettings>(tenantId, c);
-        if (signinSettings.IsEmailVerificationRequired && !user.IsEmailVerified)
+        var generalSettings = await settingProvider.GetAsync<GeneralSettings>(tenantId, c);
+        if (generalSettings.IsEmailVerificationRequired && !user.IsEmailVerified)
             this.ThrowError(ErrorCodes.EmailNotVerified);
 
         // Recorded before the token pair is asked for, because the refresh-token row written for this

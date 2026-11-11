@@ -12,7 +12,7 @@ namespace Backend.Features.Settings.Core;
 /// <see cref="SecretSettingAttribute"/> property is returned decrypted. Values are read from the
 /// database on the first read of a setting in a request (or job) and reused for the rest of it; a read
 /// in the next request sees whatever was saved in between. Changing a setting revokes no session: a
-/// caller that decides something at sign-in or refresh (as <c>SigninSettings</c> does) reads the value
+/// caller that decides something at sign-in or refresh (as <c>GeneralSettings</c> does) reads the value
 /// standing at that moment.
 /// </remarks>
 [AllowOutside]

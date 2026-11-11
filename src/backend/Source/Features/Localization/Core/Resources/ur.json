@@ -745,9 +745,9 @@
       "resetConfirmButton": "ہاں، ری سیٹ کریں",
       "resetSuccess": "${setting} کی ترتیبات وراثتی اقدار پر ری سیٹ کر دی گئیں",
       "saveSuccess": "${setting} کی ترتیبات محفوظ ہو گئیں",
-      "signin": {
-        "title": "سائن ان",
-        "description": "لوگوں کے سائن ان کرتے وقت لاگو ہونے والے قواعد۔",
+      "general": {
+        "title": "عمومی",
+        "description": "وہ اختیارات جو پوری ایپلیکیشن پر لاگو ہوتے ہیں۔",
         "isEmailVerificationRequired": "سائن ان کے لیے تصدیق شدہ ای میل پتہ لازمی کریں",
         "isEmailVerificationRequiredHelp": "فعال ہونے پر، کسی اکاؤنٹ کو سائن ان کرنے سے پہلے اپنے ای میل پتے کی تصدیق کرنی ہوگی۔"
       },

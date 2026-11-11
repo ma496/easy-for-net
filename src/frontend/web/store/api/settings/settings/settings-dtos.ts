@@ -15,7 +15,7 @@ export type SettingSource = (typeof SettingSource)[keyof typeof SettingSource]
 
 /** The names settings are registered, stored and addressed under on the API. */
 export const SettingName = {
-  Signin: 'Signin',
+  General: 'General',
   Email: 'Email',
 } as const
 
@@ -76,8 +76,8 @@ export interface SecretSettingState {
   source: SettingSource
 }
 
-/** The `Signin` setting, typed. */
-export interface SigninSettingsDto {
+/** The `General` setting, typed. */
+export interface GeneralSettingsDto {
   isEmailVerificationRequired: SettingValueWithSource<boolean>
 }
 

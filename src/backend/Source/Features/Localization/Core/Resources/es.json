@@ -745,9 +745,9 @@
       "resetConfirmButton": "Sí, restablecer",
       "resetSuccess": "Configuración de ${setting} restablecida a los valores heredados",
       "saveSuccess": "Configuración de ${setting} guardada",
-      "signin": {
-        "title": "Inicio de sesión",
-        "description": "Reglas que se aplican cuando las personas inician sesión.",
+      "general": {
+        "title": "General",
+        "description": "Opciones que se aplican en toda la aplicación.",
         "isEmailVerificationRequired": "Exigir un correo electrónico verificado para iniciar sesión",
         "isEmailVerificationRequiredHelp": "Si está activado, una cuenta debe confirmar su correo electrónico antes de poder iniciar sesión."
       },

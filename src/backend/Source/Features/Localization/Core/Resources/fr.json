@@ -745,9 +745,9 @@
       "resetConfirmButton": "Oui, réinitialiser",
       "resetSuccess": "Paramètres ${setting} rétablis aux valeurs héritées",
       "saveSuccess": "Paramètres ${setting} enregistrés",
-      "signin": {
-        "title": "Connexion",
-        "description": "Règles appliquées lorsque les utilisateurs se connectent.",
+      "general": {
+        "title": "Général",
+        "description": "Options qui s'appliquent à l'ensemble de l'application.",
         "isEmailVerificationRequired": "Exiger une adresse e-mail vérifiée pour se connecter",
         "isEmailVerificationRequiredHelp": "Lorsque cette option est activée, un compte doit confirmer son adresse e-mail avant de pouvoir se connecter."
       },

@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import type { EmailSettingsDto, SettingSource, SigninSettingsDto } from '@/store/api/settings'
+import type { EmailSettingsDto, SettingSource, GeneralSettingsDto } from '@/store/api/settings'
 import {
   buildEmailUpdateValues,
-  buildSigninUpdateValues,
+  buildGeneralUpdateValues,
   emailFormValues,
   emailSources,
   hasOwnOverride,
   isValidPort,
   markerOf,
   ownSourceOf,
-  signinFormValues,
+  generalFormValues,
 } from './settings-form'
 
 const emailSettings = (sources: Partial<Record<keyof EmailSettingsDto, SettingSource>> = {}, isPasswordSet = true): EmailSettingsDto => ({
@@ -21,7 +21,7 @@ const emailSettings = (sources: Partial<Record<keyof EmailSettingsDto, SettingSo
   senderName: { value: 'Example', source: sources.senderName ?? 'default' },
 })
 
-const signinSettings = (source: SettingSource, value = false): SigninSettingsDto => ({ isEmailVerificationRequired: { value, source } })
+const generalSettings = (source: SettingSource, value = false): GeneralSettingsDto => ({ isEmailVerificationRequired: { value, source } })
 
 describe('ownSourceOf', () => {
   it('writes to the tenant inside a tenant and to the platform in none', () => {
@@ -60,26 +60,26 @@ describe('isValidPort', () => {
   })
 })
 
-describe('buildSigninUpdateValues', () => {
+describe('buildGeneralUpdateValues', () => {
   it('sends nothing when the flag is inherited and untouched', () => {
-    const settings = signinSettings('platform')
-    const values = signinFormValues(settings)
+    const settings = generalSettings('platform')
+    const values = generalFormValues(settings)
 
-    expect(buildSigninUpdateValues(settings, values, values, 'tenant')).toEqual({})
+    expect(buildGeneralUpdateValues(settings, values, values, 'tenant')).toEqual({})
   })
 
   it('keeps an own override even when untouched, so saving does not drop it', () => {
-    const settings = signinSettings('tenant', true)
-    const values = signinFormValues(settings)
+    const settings = generalSettings('tenant', true)
+    const values = generalFormValues(settings)
 
-    expect(buildSigninUpdateValues(settings, values, values, 'tenant')).toEqual({ isEmailVerificationRequired: true })
+    expect(buildGeneralUpdateValues(settings, values, values, 'tenant')).toEqual({ isEmailVerificationRequired: true })
   })
 
   it('sends a changed inherited flag', () => {
-    const settings = signinSettings('default')
-    const initial = signinFormValues(settings)
+    const settings = generalSettings('default')
+    const initial = generalFormValues(settings)
 
-    expect(buildSigninUpdateValues(settings, initial, { isEmailVerificationRequired: true }, 'platform')).toEqual({ isEmailVerificationRequired: true })
+    expect(buildGeneralUpdateValues(settings, initial, { isEmailVerificationRequired: true }, 'platform')).toEqual({ isEmailVerificationRequired: true })
   })
 })
 

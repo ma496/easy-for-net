@@ -19,7 +19,7 @@ public class SettingListTests(App app) : SettingsTestsBase(app)
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var verification = PropertyOf(list, "Signin", "isEmailVerificationRequired");
+        var verification = PropertyOf(list, "General", "isEmailVerificationRequired");
         verification.Value!.GetValue<bool>().Should().BeFalse();
         verification.Source.Should().Be("default");
 

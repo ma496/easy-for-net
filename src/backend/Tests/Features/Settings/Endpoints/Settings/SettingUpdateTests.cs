@@ -194,7 +194,7 @@ public class SettingUpdateTests(App app) : SettingsTestsBase(app)
         var platform = await PlatformClientAsync();
 
         (await tenantClient.PUTAsync<SettingUpdateEndpoint, SettingUpdateRequest, SettingDto>(
-            new() { Name = "Signin", Values = new JsonObject { ["isEmailVerificationRequired"] = false } }))
+            new() { Name = "General", Values = new JsonObject { ["isEmailVerificationRequired"] = false } }))
             .Response.StatusCode.Should().Be(HttpStatusCode.OK);
         (await platform.PUTAsync<SettingUpdateEndpoint, SettingUpdateRequest, SettingDto>(
             new() { Name = Probe, Values = new JsonObject { ["limit"] = 3 } }))

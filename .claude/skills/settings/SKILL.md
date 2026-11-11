@@ -16,6 +16,13 @@ with `[AllowOutside]`: `ISettingDefinitionProvider`, `SettingDefinitionContext`,
 `SettingDefinitionBuilder<T>`, `SecretSettingAttribute` and `ISettingProvider`, all in
 `Backend.Features.Settings.Core`. Everything that resolves or stores a value stays private to the slice.
 
+**Small cross-cutting options go on `GeneralSettings`** (`Backend.Features.Settings.Core`, registered
+as `General` by `GeneralSettingsProvider`, `[AllowOutside]`), which already holds the sign-in option
+`IsEmailVerificationRequired`: add a property there, its label under `page.settings.general` (or a
+card of its own in the General tab), rather than a new setting and a new tab. A setting one slice
+owns outright — a group of options about that slice's own behaviour — gets its own class and provider
+in that slice, as below.
+
 ## 1. The setting class
 
 A plain class whose public read-write properties are its values — any type System.Text.Json can
@@ -204,15 +211,20 @@ validator's failures, each named `values.<camelCaseProperty>`.
 ## 8. The admin screen
 
 `/settings` (`app/[lang]/(app)/settings`) edits the acting scope's overrides through the RTK Query
-slice in `store/api/settings`. It renders **one card per setting it knows**, in a fixed order, and
-ignores a setting the API declares that it does not — so a new setting is reachable over the API at
-once but appears on the screen only when it is given a card:
+slice in `store/api/settings`. It renders **one tab per setting it knows**, in a fixed order
+(`SETTINGS_TABS` in `settings-manager.tsx`, kept in the URL as `?tab=`, General first and the default),
+and ignores a setting the API declares that it does not — so a new setting is reachable over the API
+at once but appears on the screen only when it is given a card. A tab whose setting the API does not
+declare is not shown, and a `?tab=` naming one falls back to the first tab. Every panel stays mounted
+(the inactive ones `hidden`), so a half-edited form keeps its edits across a tab change:
 
 1. the name in `SettingName` and a typed view model in `settings-dtos.ts`, and a `to<Name>Settings`
    mapper in `settings-mappers.ts` that returns `null` when a property is missing;
 2. the form values, sources and submit shape in `_components/settings-form.ts`, with tests beside it;
-3. a `<name>-settings-card.tsx` built from `settings-card-parts.tsx`, rendered by `settings-manager.tsx`;
-4. labels and help text under `page.settings.<name>` in every resource file (see `localization`).
+3. a `<name>-settings-card.tsx` built from `settings-card-parts.tsx`, rendered by `settings-manager.tsx`
+   — its tab added to `SETTINGS_TABS`, `TAB_ICONS`, `TAB_DEFAULT_LABELS` and the `panels` map;
+4. labels and help text under `page.settings.<name>`, and the tab label as `page.settings.<name>.title`,
+   in every resource file (see `localization`).
 
 Each card shows where every value comes from (set here, inherited from the platform, or the default),
 offers a reset that removes this scope's overrides, and never pre-fills a secret. See `frontend-page`

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { SettingDto, SettingPropertyDto } from './settings-dtos'
-import { findSetting, toEmailSettings, toSigninSettings } from './settings-mappers'
+import { findSetting, toEmailSettings, toGeneralSettings } from './settings-mappers'
 
 const property = (overrides: Partial<SettingPropertyDto> & Pick<SettingPropertyDto, 'name'>): SettingPropertyDto => ({
   value: null,
@@ -24,23 +24,23 @@ const emailSetting = (overrides: Partial<Record<string, Partial<SettingPropertyD
 
 describe('findSetting', () => {
   it('finds a setting by its registered name and answers undefined for one the API does not declare', () => {
-    const items = [emailSetting(), { name: 'Signin', properties: [] }]
+    const items = [emailSetting(), { name: 'General', properties: [] }]
 
     expect(findSetting(items, 'Email')?.name).toBe('Email')
-    expect(findSetting([emailSetting()], 'Signin')).toBeUndefined()
-    expect(findSetting(undefined, 'Signin')).toBeUndefined()
+    expect(findSetting([emailSetting()], 'General')).toBeUndefined()
+    expect(findSetting(undefined, 'General')).toBeUndefined()
   })
 })
 
-describe('toSigninSettings', () => {
+describe('toGeneralSettings', () => {
   it('reads the flag and where it came from', () => {
-    const dto: SettingDto = { name: 'Signin', properties: [property({ name: 'isEmailVerificationRequired', value: true, source: 'platform' })] }
+    const dto: SettingDto = { name: 'General', properties: [property({ name: 'isEmailVerificationRequired', value: true, source: 'platform' })] }
 
-    expect(toSigninSettings(dto)).toEqual({ isEmailVerificationRequired: { value: true, source: 'platform' } })
+    expect(toGeneralSettings(dto)).toEqual({ isEmailVerificationRequired: { value: true, source: 'platform' } })
   })
 
   it('answers null when the property is missing, so the card is dropped rather than guessed', () => {
-    expect(toSigninSettings({ name: 'Signin', properties: [] })).toBeNull()
+    expect(toGeneralSettings({ name: 'General', properties: [] })).toBeNull()
   })
 })
 

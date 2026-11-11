@@ -14,15 +14,15 @@ public class SettingProviderTests(App app) : SettingsTestsBase(app)
     private ISettingProvider SettingProvider => Service<ISettingProvider>();
 
     [Fact]
-    public async Task No_Overrides_Signin_Resolves_To_Its_Code_Default()
+    public async Task No_Overrides_General_Resolves_To_Its_Code_Default()
     {
         var tenant = await CreateTenantAsync();
 
-        var forTenant = await SettingProvider.GetAsync<SigninSettings>(tenant.Id, TestContext.Current.CancellationToken);
-        var forPlatform = await SettingProvider.GetAsync<SigninSettings>((Guid?)null, TestContext.Current.CancellationToken);
+        var forTenant = await SettingProvider.GetAsync<GeneralSettings>(tenant.Id, TestContext.Current.CancellationToken);
+        var forPlatform = await SettingProvider.GetAsync<GeneralSettings>((Guid?)null, TestContext.Current.CancellationToken);
 
-        forTenant.Should().BeEquivalentTo(new SigninSettings());
-        forPlatform.Should().BeEquivalentTo(new SigninSettings());
+        forTenant.Should().BeEquivalentTo(new GeneralSettings());
+        forPlatform.Should().BeEquivalentTo(new GeneralSettings());
     }
 
     [Fact]

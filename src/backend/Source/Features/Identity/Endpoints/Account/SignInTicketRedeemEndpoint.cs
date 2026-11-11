@@ -76,8 +76,8 @@ sealed class SignInTicketRedeemEndpoint(IUserService userService,
         if (tenant.Status == TenantStatus.Suspended)
             this.ThrowError(ErrorCodes.TenantSuspended);
 
-        var signinSettings = await settingProvider.GetAsync<SigninSettings>(tenant.Id, c);
-        if (signinSettings.IsEmailVerificationRequired && !user.IsEmailVerified)
+        var generalSettings = await settingProvider.GetAsync<GeneralSettings>(tenant.Id, c);
+        if (generalSettings.IsEmailVerificationRequired && !user.IsEmailVerified)
             this.ThrowError(ErrorCodes.EmailNotVerified);
 
         TokenService.RecordSessionTenant(HttpContext, tenant.Id);

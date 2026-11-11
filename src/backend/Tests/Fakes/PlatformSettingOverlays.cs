@@ -12,7 +12,7 @@ namespace Backend.Tests.Fakes;
 /// </summary>
 /// <remarks>
 /// The platform row of a setting is read by every tenant and every sign-in, so writing one would reach
-/// every test class running beside the one that wrote it. <c>Signin.IsEmailVerificationRequired</c>
+/// every test class running beside the one that wrote it. <c>General.IsEmailVerificationRequired</c>
 /// makes that concrete: accounts the suite creates are unverified, so a platform row turning it on would
 /// refuse sign-ins all over the suite for as long as it stood. A test names only tenants it created, so
 /// an overlay applied for one is invisible to every other test. It stands in for the platform row, and
