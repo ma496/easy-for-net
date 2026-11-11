@@ -1,4 +1,5 @@
 using Backend.External.Email;
+using Backend.Features.FileManagement.Core;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Sessions;
 using Backend.Features.Settings.Core;
@@ -31,6 +32,27 @@ public static class TestDoubles
         services.AddSingleton<ISettingDefinitionProvider, ProbeSettingsProvider>();
         services.AddPlatformSettingOverlays();
         services.AddTenantHostingOverride();
+        services.AddStorageRecording();
+        return services;
+    }
+
+    /// <summary>
+    /// Decorates the storage provider the host registered with one that records every file it saves -
+    /// see <see cref="RecordingStorageProvider"/> - so the run can remove whatever its tests left behind.
+    /// </summary>
+    private static IServiceCollection AddStorageRecording(this IServiceCollection services)
+    {
+        var registered = services.Last(descriptor => descriptor.ServiceType == typeof(IStorageProvider));
+        services.Remove(registered);
+
+        services.AddSingleton<UploadedFilesRecorder>();
+        services.Add(ServiceDescriptor.Describe(
+            typeof(IStorageProvider),
+            provider => new RecordingStorageProvider(
+                (IStorageProvider)ActivatorUtilities.CreateInstance(provider, registered.ImplementationType!),
+                provider.GetRequiredService<UploadedFilesRecorder>()),
+            registered.Lifetime));
+
         return services;
     }
 

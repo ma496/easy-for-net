@@ -1,3 +1,4 @@
+using Backend.Features.FileManagement.Core;
 using Backend.Tests.Architect;
 using Backend.Tests.Fakes;
 using Microsoft.AspNetCore.Hosting;
@@ -77,6 +78,8 @@ public class App : AppFixture<Program>
     /// </summary>
     protected override async ValueTask TearDownAsync()
     {
+        await DeleteLeftoverUploadsAsync();
+
         try
         {
             await using var scope = Services.CreateAsyncScope();
@@ -88,6 +91,37 @@ public class App : AppFixture<Program>
             // inherit everything this one wrote, and the symptom of that is a suite that grows
             // slower and starts failing on rows it did not create.
             Console.WriteLine($"The test database could not be dropped: {exception.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Removes every file the run stored that is still in storage. Each test deletes its own uploads
+    /// (<see cref="AppTestsBase.DeleteAfterTest"/>), so anything found here was missed by its test, and
+    /// the count is reported so the missing call can be added.
+    /// </summary>
+    private async Task DeleteLeftoverUploadsAsync()
+    {
+        try
+        {
+            await using var scope = Services.CreateAsyncScope();
+            var storageProvider = scope.ServiceProvider.GetRequiredService<IStorageProvider>();
+            var leftovers = Services.GetRequiredService<UploadedFilesRecorder>().FileNames
+                .Where(storageProvider.Exists)
+                .ToList();
+
+            foreach (var fileName in leftovers)
+            {
+                await storageProvider.DeleteAsync(fileName);
+            }
+
+            if (leftovers.Count > 0)
+            {
+                Console.WriteLine($"{leftovers.Count} uploaded files were left by their test and removed at teardown.");
+            }
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine($"The uploaded files could not be removed: {exception.Message}");
         }
     }
 

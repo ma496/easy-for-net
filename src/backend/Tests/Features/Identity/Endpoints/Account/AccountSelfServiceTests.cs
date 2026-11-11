@@ -270,6 +270,7 @@ public class AccountSelfServiceTests(App app) : TenancyTestsBase(app)
 
         var (uploadResponse, uploaded) = await client
             .POSTAsync<FileUploadEndpoint, FileUploadRequest, FileUploadResponse>(upload, sendAsFormData: true);
+        DeleteAfterTest(uploaded);
 
         uploaded.FileName.Should().NotBeNullOrWhiteSpace();
 

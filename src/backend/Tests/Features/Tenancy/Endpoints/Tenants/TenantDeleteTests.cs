@@ -119,6 +119,7 @@ public class TenantDeleteTests(App app) : TenancyTestsBase(app)
 
         var (uploadResponse, uploaded) = await memberClient
             .POSTAsync<FileUploadEndpoint, FileUploadRequest, FileUploadResponse>(upload, sendAsFormData: true);
+        DeleteAfterTest(uploaded);
 
         uploadResponse.StatusCode.Should().Be(HttpStatusCode.OK, "the upload acts in the tenant the member's session names");
 

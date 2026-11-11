@@ -97,15 +97,17 @@ public abstract class FileTestsBase(App app) : TenancyTestsBase(app)
     /// <param name="fileName">The original filename to submit.</param>
     /// <param name="accountOwned">Whether the upload is to belong to the calling account rather than to a tenant.</param>
     /// <returns>The stored name of the uploaded file.</returns>
-    protected static async Task<string> UploadAsync(HttpClient client,
-                                                    string content,
-                                                    string fileName = NotesFileName,
-                                                    bool accountOwned = false)
+    /// <remarks>The file is removed from storage when the test tears down (<see cref="AppTestsBase.DeleteAfterTest"/>).</remarks>
+    protected async Task<string> UploadAsync(HttpClient client,
+                                             string content,
+                                             string fileName = NotesFileName,
+                                             bool accountOwned = false)
     {
         var (response, uploaded) = await client
             .POSTAsync<FileUploadEndpoint, FileUploadRequest, FileUploadResponse>(
                 UploadRequest(content, fileName, accountOwned: accountOwned),
                 sendAsFormData: true);
+        DeleteAfterTest(uploaded);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK, "a test that cannot upload cannot arrange what it asserts on");
 

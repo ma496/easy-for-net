@@ -165,6 +165,7 @@ public class TenantSuspensionTests(App app) : SessionRevocationTestsBase(app)
 
         var (uploadResponse, uploaded) = await memberClient
             .POSTAsync<FileUploadEndpoint, FileUploadRequest, FileUploadResponse>(upload, sendAsFormData: true);
+        DeleteAfterTest(uploaded);
 
         uploadResponse.StatusCode.Should().Be(HttpStatusCode.OK, "the upload acts in the tenant the member's session names");
         uploaded.FileName.Should().NotBeNullOrWhiteSpace();

@@ -35,6 +35,7 @@ public class FileUploadTests(App app) : FileTestsBase(app)
 
         var (response, uploaded) = await client
             .POSTAsync<FileUploadEndpoint, FileUploadRequest, FileUploadResponse>(UploadRequest(content), sendAsFormData: true);
+        DeleteAfterTest(uploaded);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK, "a member acting in a tenant may store a file for it");
         uploaded.FileName.Should().NotBeNullOrWhiteSpace("the upload answers with the name the file was stored under");
@@ -105,8 +106,9 @@ public class FileUploadTests(App app) : FileTestsBase(app)
     {
         ClearAuthToken();
 
-        var (response, _) = await Client
+        var (response, uploaded) = await Client
             .POSTAsync<FileUploadEndpoint, FileUploadRequest, FileUploadResponse>(UploadRequest("anonymous upload"), sendAsFormData: true);
+        DeleteAfterTest(uploaded);
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized,
             "an anonymous caller has no tenant and no account, so there would be nothing to attribute the file to");

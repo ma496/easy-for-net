@@ -20,8 +20,9 @@ public class FileUploadFeatureTests(App app) : FileTestsBase(app)
     {
         var client = await MemberClientAsync(maxFileSizeMb: "1");
 
-        var (response, _) = await client
+        var (response, uploaded) = await client
             .POSTAsync<FileUploadEndpoint, FileUploadRequest, FileUploadResponse>(UploadRequest("small"), sendAsFormData: true);
+        DeleteAfterTest(uploaded);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
@@ -67,10 +68,11 @@ public class FileUploadFeatureTests(App app) : FileTestsBase(app)
     {
         await SetPlatformAdminAuthTokenAsync();
 
-        var (response, _) = await Client
+        var (response, uploaded) = await Client
             .POSTAsync<FileUploadEndpoint, FileUploadRequest, FileUploadResponse>(
                 UploadRequest(new string('x', OneMegabyte + 1), accountOwned: true),
                 sendAsFormData: true);
+        DeleteAfterTest(uploaded);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }

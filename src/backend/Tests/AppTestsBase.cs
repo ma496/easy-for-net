@@ -1,4 +1,6 @@
 using System.Text.Json.Nodes;
+using Backend.Features.FileManagement.Core;
+using Backend.Features.FileManagement.Endpoints.Files;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Core.Sessions;
@@ -25,6 +27,7 @@ public abstract class AppTestsBase(App app) : TestBase
     private AsyncServiceScope _scope;
     private bool _scopeCreated;
     private HttpClient? _client;
+    private readonly List<string> _uploadedFiles = [];
 
     /// <summary>
     /// The service scope this test acts in - one unit of work, like the one a request would open.
@@ -94,12 +97,64 @@ public abstract class AppTestsBase(App app) : TestBase
     {
         _client?.Dispose();
 
+        await DeleteUploadedFilesAsync();
+
         if (_scopeCreated)
         {
             await _scope.DisposeAsync();
         }
 
         await base.TearDownAsync();
+    }
+
+    /// <summary>
+    /// Records a file this test uploaded so that its content is removed from storage when the test
+    /// tears down. Call it straight after the upload, before any assertion, so a failing test cleans
+    /// up too; a response that carries no stored name (a refused upload) is ignored.
+    /// </summary>
+    /// <param name="uploaded">What the upload answered with.</param>
+    /// <remarks>
+    /// Storage is one directory under the host's content root, shared by every test and every run, so
+    /// an upload that is not removed outlives the run. Only the content is removed: its
+    /// <c>StoredFile</c> row goes with the database when the run ends. A file the test already deleted
+    /// is fine, since <see cref="IStorageProvider.DeleteAsync"/> does nothing for a missing name.
+    /// </remarks>
+    protected void DeleteAfterTest(FileUploadResponse? uploaded)
+    {
+        if (!string.IsNullOrWhiteSpace(uploaded?.FileName))
+        {
+            _uploadedFiles.Add(uploaded.FileName);
+        }
+    }
+
+    /// <summary>
+    /// Removes the content of every file this test recorded with <see cref="DeleteAfterTest"/>.
+    /// </summary>
+    /// <remarks>
+    /// A failure is reported rather than thrown: cleanup must not fail a test that passed, and whatever
+    /// is left is removed by <see cref="App"/> when the run ends.
+    /// </remarks>
+    private async Task DeleteUploadedFilesAsync()
+    {
+        if (_uploadedFiles.Count == 0)
+        {
+            return;
+        }
+
+        var storageProvider = Service<IStorageProvider>();
+        foreach (var fileName in _uploadedFiles)
+        {
+            try
+            {
+                await storageProvider.DeleteAsync(fileName);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine($"The uploaded file {fileName} could not be deleted: {exception.Message}");
+            }
+        }
+
+        _uploadedFiles.Clear();
     }
 
     /// <summary>

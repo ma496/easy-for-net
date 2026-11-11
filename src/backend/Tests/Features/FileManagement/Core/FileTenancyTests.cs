@@ -52,6 +52,7 @@ public class FileTenancyTests(App app) : FileTestsBase(app)
             .POSTAsync<FileUploadEndpoint, FileUploadRequest, FileUploadResponse>(
                 UploadRequest(content, "avatar.png", "image/png", accountOwned: true),
                 sendAsFormData: true);
+        DeleteAfterTest(uploaded);
 
         uploadResponse.StatusCode.Should().Be(HttpStatusCode.OK, "an account-owned upload is answered while the caller acts in a tenant");
         uploaded.FileName.Should().NotBeNullOrWhiteSpace();

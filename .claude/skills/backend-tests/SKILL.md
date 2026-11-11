@@ -197,6 +197,12 @@ says otherwise. This is what keeps the suite fast, so it is worth writing for:
   row), `FeatureManagement` (feature-value pruning spans the whole table), `Localization` (a platform
   text or language row changes what every tenant resolves to) and `Settings` (a platform settings row
   changes what every tenant resolves to).
+- A test that uploads a file deletes it: pass the `FileUploadResponse` to `DeleteAfterTest(uploaded)`
+  straight after the `POSTAsync` and before any assertion, so a failing test cleans up too, and the
+  file's content is removed when the test tears down (`FileTestsBase.UploadAsync` already does this).
+  Uploads land in `<ContentRoot>/uploads` under `Source/`, which nothing else clears. As a safety net,
+  `RecordingStorageProvider` records every file the host saves and `App` removes whatever is left when
+  the run ends, but a missed `DeleteAfterTest` is still a bug.
 
 ## Why the suite is fast
 
@@ -207,7 +213,7 @@ Worth knowing before changing the fixtures, because each of these is load-bearin
   sends nothing but records each message with the settings it was sent with — wraps the session
   store in `FaultInjectingSessionStore` (a test can make the store unreachable for sessions or
   accounts it created itself) beside a `FaultingSessionEndedHandler`, and adds the test-only probe
-  setting and `PlatformSettingOverlays`. The real hasher is deliberately slow and the suite
+  setting, `PlatformSettingOverlays` and `RecordingStorageProvider` around the storage provider. The real hasher is deliberately slow and the suite
   signs in hundreds of times; `PasswordHasherTests` still pins the production parameters.
 - No Hangfire worker runs under `Testing`, so enqueued jobs are stored but never executed — assert
   on what the endpoint wrote, not on a job's effect.
