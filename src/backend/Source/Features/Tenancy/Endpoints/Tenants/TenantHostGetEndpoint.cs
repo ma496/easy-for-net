@@ -1,3 +1,4 @@
+using Backend.Features.Settings.Core;
 using Backend.Features.Tenancy.Core;
 using Backend.Features.Tenancy.Core.Hosting;
 
@@ -16,8 +17,13 @@ namespace Backend.Features.Tenancy.Endpoints.Tenants;
 /// the tenant exists and is not deleted - a suspended one included, with its status, so the web app can
 /// say so - and 404 <c>tenantNotFound</c> otherwise. It reveals no more than the sign-in page on that host
 /// already would: the name a tenant chose to be addressed by.
+/// <para>
+/// Every answer also says whether sign-up is open (<c>isSignupEnabled</c>), read from the platform's
+/// <c>General</c> setting by name - never the caller's ambient scope - since sign-up is the platform's
+/// decision whichever host asks.
+/// </para>
 /// </remarks>
-sealed class TenantHostGetEndpoint(ITenantHostResolver tenantHostResolver, ITenantService tenantService)
+sealed class TenantHostGetEndpoint(ITenantHostResolver tenantHostResolver, ITenantService tenantService, ISettingProvider settingProvider)
     : EndpointWithoutRequest<TenantHostGetResponse>
 {
     public override void Configure()
@@ -32,6 +38,7 @@ sealed class TenantHostGetEndpoint(ITenantHostResolver tenantHostResolver, ITena
         var host = tenantHostResolver.Resolve(HttpContext);
         var platformUrl = tenantHostResolver.PlatformUrl();
         var tenantUrlTemplate = tenantHostResolver.TenantUrlTemplate();
+        var isSignupEnabled = (await settingProvider.GetAsync<GeneralSettings>((Guid?)null, cancellationToken)).IsSignupEnabled;
 
         if (host is not { Kind: TenantHostKind.Tenant, Identifier: { } identifier })
         {
@@ -41,7 +48,8 @@ sealed class TenantHostGetEndpoint(ITenantHostResolver tenantHostResolver, ITena
                     ? TenantHostGetResponse.UnknownKind
                     : TenantHostGetResponse.PlatformKind,
                 PlatformUrl = platformUrl,
-                TenantUrlTemplate = tenantUrlTemplate
+                TenantUrlTemplate = tenantUrlTemplate,
+                IsSignupEnabled = isSignupEnabled
             }, cancellation: cancellationToken);
             return;
         }
@@ -59,7 +67,8 @@ sealed class TenantHostGetEndpoint(ITenantHostResolver tenantHostResolver, ITena
             Identifier = tenant.Identifier,
             Status = tenant.Status,
             PlatformUrl = platformUrl,
-            TenantUrlTemplate = tenantUrlTemplate
+            TenantUrlTemplate = tenantUrlTemplate,
+            IsSignupEnabled = isSignupEnabled
         }, cancellation: cancellationToken);
     }
 }
@@ -101,4 +110,10 @@ sealed class TenantHostGetResponse
     /// can show the origin a tenant not yet created will be served on - or null when host resolution is off.
     /// </summary>
     public string? TenantUrlTemplate { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether sign-up is open - the platform's <c>General.IsSignupEnabled</c> - so the web app
+    /// offers the sign-up form only when <c>POST /account/signup</c> would accept it.
+    /// </summary>
+    public bool IsSignupEnabled { get; set; }
 }

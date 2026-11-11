@@ -19,7 +19,10 @@ interface GeneralSettingsCardProps {
   onReset: () => Promise<void>
 }
 
-/** The `General` setting: whether an account must verify its email address before it may sign in. */
+/**
+ * The `General` setting: whether an account must verify its email address before it may sign in, and -
+ * in platform scope alone, since a tenant can neither see nor override it - whether anyone may sign up.
+ */
 export const GeneralSettingsCard = ({ settings: initialSettings, ownSource, canUpdate, onReset }: GeneralSettingsCardProps) => {
   const { t } = useTranslation()
   const title = t('page.settings.general.title') || 'General'
@@ -42,6 +45,8 @@ export const GeneralSettingsCard = ({ settings: initialSettings, ownSource, canU
   }
 
   const fieldId = 'setting-general-isEmailVerificationRequired'
+  const signupFieldId = 'setting-general-isSignupEnabled'
+  const isPlatformScope = ownSource === 'platform'
 
   return (
     <Formik<GeneralFormValues> initialValues={generalFormValues(initialSettings)} onSubmit={onSubmit}>
@@ -50,7 +55,7 @@ export const GeneralSettingsCard = ({ settings: initialSettings, ownSource, canU
           <SettingsCard
             title={title}
             description={t('page.settings.general.description') || 'Options that apply across the application.'}
-            isCustomized={hasOwnOverride(generalSources(settings), ownSource)}
+            isCustomized={hasOwnOverride(generalSources(settings, ownSource), ownSource)}
             canUpdate={canUpdate}
             dirty={dirty}
             isSaving={isSaving}
@@ -76,6 +81,24 @@ export const GeneralSettingsCard = ({ settings: initialSettings, ownSource, canU
               </div>
               <p className="mt-1 text-xs text-muted-foreground">{t('page.settings.general.isEmailVerificationRequiredHelp') || 'When on, an account must confirm its email address before it can sign in.'}</p>
             </div>
+            {isPlatformScope && (
+              <div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <FormCheckbox id={signupFieldId} name="isSignupEnabled" label={t('page.settings.general.isSignupEnabled') || 'Allow sign-up'} disabled={!canUpdate} />
+                  <div className="flex flex-wrap items-center gap-1">
+                    <SourceBadge marker={markerOf(settings.isSignupEnabled.source, ownSource)} />
+                    {values.isSignupEnabled !== initialValues.isSignupEnabled && (
+                      <Badge variant="warning" type="outline">
+                        {t('page.settings.changed') || 'Changed'}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t('page.settings.general.isSignupEnabledHelp') || 'Let anyone create an account and a tenant of their own from the sign-up page. Applies to the whole platform.'}
+                </p>
+              </div>
+            )}
           </SettingsCard>
         </Form>
       )}

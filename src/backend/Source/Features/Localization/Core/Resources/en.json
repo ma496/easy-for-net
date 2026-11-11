@@ -274,6 +274,8 @@
       "settingPropertyUnknown": "This setting has no such property.",
       "settingPropertyInvalid": "The value is not valid for this setting property.",
       "settingValueInvalid": "The setting's values are not valid.",
+      "settingPropertyPlatformOnly": "This property can only be set by the platform.",
+      "signupDisabled": "Sign-up is turned off. Ask the platform administrator for an account.",
       "emailSmtpServerRequired": "An SMTP server is required.",
       "emailSmtpPortInvalid": "The SMTP port must be between 1 and 65535.",
       "emailSenderEmailInvalid": "The sender email must be a valid email address."
@@ -496,7 +498,10 @@
         "addressPlaceholder": "your-name",
         "identifierHint": "Lower-case letters, digits and hyphens.",
         "readyTitle": "Your tenant is ready",
-        "goToTenant": "Go to your tenant"
+        "goToTenant": "Go to your tenant",
+        "disabledTitle": "Sign-up is closed",
+        "disabledMessage": "New accounts are created by the platform administrator. If you already have an account, sign in.",
+        "disabledAction": "Go to sign in"
       },
       "forgotPassword": {
         "title": "Forget Password",
@@ -749,7 +754,9 @@
         "title": "General",
         "description": "Options that apply across the application.",
         "isEmailVerificationRequired": "Require a verified email address to sign in",
-        "isEmailVerificationRequiredHelp": "When on, an account must confirm its email address before it can sign in."
+        "isEmailVerificationRequiredHelp": "When on, an account must confirm its email address before it can sign in.",
+        "isSignupEnabled": "Allow sign-up",
+        "isSignupEnabledHelp": "Let anyone create an account and a tenant of their own from the sign-up page. Applies to the whole platform."
       },
       "email": {
         "title": "Email",

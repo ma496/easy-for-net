@@ -23,7 +23,8 @@ namespace Backend.Tests.Features.Tenancy.Core.Hosting;
 /// reaches another class; a request without it runs as the shared host does, with resolution off. The
 /// account emails that need <c>General.IsEmailVerificationRequired</c> see it on through a request-keyed
 /// <see cref="PlatformSettingOverlays"/> overlay rather than a platform row, which would refuse sign-ins
-/// all over the suite. Every tenant and account is created here.
+/// all over the suite; a sign-up sees <c>General.IsSignupEnabled</c> on the same way (<c>AllowSignup</c>),
+/// merged into the one overlay its client carries. Every tenant and account is created here.
 /// </remarks>
 [Collection("TenantHosting")]
 public class TenantHostLinksTests(App app) : TenancyTestsBase(app)
@@ -70,6 +71,36 @@ public class TenantHostLinksTests(App app) : TenancyTestsBase(app)
         withResolutionOff.Kind.Should().Be("platform");
         withResolutionOff.PlatformUrl.Should().Be(DefaultDomain);
         withResolutionOff.TenantUrlTemplate.Should().BeNull("there is no tenant address to preview while resolution is off");
+    }
+
+    /// <summary>
+    /// Every answer reports whether sign-up is open - the platform's <c>General.IsSignupEnabled</c>, off by
+    /// default - on the platform host, a tenant host, a host naming nothing and with resolution off alike.
+    /// </summary>
+    [Fact]
+    public async Task Host_Reports_Whether_Signup_Is_Enabled()
+    {
+        var tenant = await CreateTenantAsync();
+        var hosts = new Func<HttpClient>[]
+        {
+            () => HostClient(TenantHostingOverride.PlatformHost),
+            () => HostClient(TenantHostingOverride.TenantHost(tenant.Identifier)),
+            () => HostClient(UnrelatedHost),
+            () => App.CreateClient(new ClientOptions { HandleCookies = false })
+        };
+
+        foreach (var host in hosts)
+        {
+            using var closed = host();
+            var (closedResponse, whenClosed) = await closed.GETAsync<TenantHostGetEndpoint, TenantHostGetResponse>();
+            closedResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            whenClosed.IsSignupEnabled.Should().BeFalse("sign-up is off until the platform turns it on");
+
+            using var open = AllowSignup(host());
+            var (openResponse, whenOpen) = await open.GETAsync<TenantHostGetEndpoint, TenantHostGetResponse>();
+            openResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+            whenOpen.IsSignupEnabled.Should().BeTrue("the platform's value is reported whichever host asks");
+        }
     }
 
     /// <summary>A tenant host answers its tenant - a suspended one with its status - and an unknown or deleted one 404.</summary>
@@ -167,6 +198,8 @@ public class TenantHostLinksTests(App app) : TenancyTestsBase(app)
     {
         var tenant = await CreateTenantAsync();
         using var client = HostClient(TenantHostingOverride.TenantHost(tenant.Identifier));
+        // Open, so the refusal below is the host's and not the closed sign-up's.
+        AllowSignup(client);
         var request = NewSignup();
 
         var (response, refusal) = await client.POSTAsync<SignupEndpoint, SignupRequest, ProblemDetails>(request);
@@ -185,7 +218,7 @@ public class TenantHostLinksTests(App app) : TenancyTestsBase(app)
     public async Task Sign_Up_Verification_Links_To_The_New_Tenants_Origin()
     {
         using var platform = HostClient(TenantHostingOverride.PlatformHost);
-        RequireVerification(platform);
+        AllowSignup(platform, _verificationRequired);
         var onPlatform = NewSignup();
 
         var platformResponse = await platform.POSTAsync<SignupEndpoint, SignupRequest, SignupResponse>(onPlatform);
@@ -195,7 +228,7 @@ public class TenantHostLinksTests(App app) : TenancyTestsBase(app)
         (await LinkMailedToAsync(onPlatform.Email)).Should().StartWith($"{TenantHostingOverride.TenantOrigin(onPlatform.TenantIdentifier)}/verify-email?token=");
 
         using var off = App.CreateClient(new ClientOptions { HandleCookies = false });
-        RequireVerification(off);
+        AllowSignup(off, _verificationRequired);
         var withResolutionOff = NewSignup();
         (await off.POSTAsync<SignupEndpoint, SignupRequest, SignupResponse>(withResolutionOff)).Response.StatusCode.Should().Be(HttpStatusCode.OK);
         (await LinkMailedToAsync(withResolutionOff.Email)).Should().StartWith($"{DefaultDomain}/verify-email?token=");

@@ -184,4 +184,6 @@ export interface TenantHostGetResponse {
   platformUrl: string
   /** The tenant origin template whose first host label is `{tenant}`; null when host resolution is off. */
   tenantUrlTemplate?: string | null
+  /** Whether the platform lets anyone sign up - the platform's own value, whatever the host names. */
+  isSignupEnabled: boolean
 }

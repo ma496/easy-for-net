@@ -22,8 +22,15 @@ export const markerOf = (source: SettingSource, ownSource: SettingSource): Sourc
 /** Whether any of the given sources is the scope's own - what decides "Customized here" and the Reset button. */
 export const hasOwnOverride = (sources: SettingSource[], ownSource: SettingSource): boolean => sources.includes(ownSource)
 
-/** The sources of every property of the `General` setting. */
-export const generalSources = (settings: GeneralSettingsDto): SettingSource[] => [settings.isEmailVerificationRequired.source]
+/**
+ * The sources of the `General` properties the scope being edited can set. The platform-only sign-up
+ * flag counts only in platform scope: a tenant never overrides it, so it neither marks the card
+ * "Customized here" nor offers a reset there.
+ */
+export const generalSources = (settings: GeneralSettingsDto, ownSource: SettingSource): SettingSource[] => [
+  settings.isEmailVerificationRequired.source,
+  ...(ownSource === 'platform' ? [settings.isSignupEnabled.source] : []),
+]
 
 /** The sources of every property of the `Email` setting, the password included. */
 export const emailSources = (settings: EmailSettingsDto): SettingSource[] => [
@@ -38,6 +45,8 @@ export const emailSources = (settings: EmailSettingsDto): SettingSource[] => [
 /** The General card's form values. */
 export interface GeneralFormValues {
   isEmailVerificationRequired: boolean
+  /** Platform-only; edited, and sent, only in platform scope. */
+  isSignupEnabled: boolean
 }
 
 /**
@@ -59,6 +68,7 @@ export interface EmailFormValues {
 /** The General form seeded from the resolved setting. */
 export const generalFormValues = (settings: GeneralSettingsDto): GeneralFormValues => ({
   isEmailVerificationRequired: settings.isEmailVerificationRequired.value,
+  isSignupEnabled: settings.isSignupEnabled.value,
 })
 
 /** The Email form seeded from the resolved setting. */
@@ -84,7 +94,7 @@ export const isValidPort = (value: string | number | null | undefined): boolean 
 }
 
 /** The `PUT /settings/General` values: what this scope overrides. */
-export type GeneralUpdateValues = { isEmailVerificationRequired?: boolean }
+export type GeneralUpdateValues = { isEmailVerificationRequired?: boolean; isSignupEnabled?: boolean }
 
 /** The `PUT /settings/Email` values: what this scope overrides, the password by its own rules. */
 export type EmailUpdateValues = {
@@ -102,7 +112,10 @@ export type EmailUpdateValues = {
  */
 const inOverrideSet = (source: SettingSource, ownSource: SettingSource, changed: boolean): boolean => source === ownSource || changed
 
-/** The `PUT` body for the General card. */
+/**
+ * The `PUT` body for the General card. The platform-only sign-up flag is sent in platform scope alone:
+ * the API refuses a tenant naming it (`settingPropertyPlatformOnly`).
+ */
 export const buildGeneralUpdateValues = (
   settings: GeneralSettingsDto,
   initial: GeneralFormValues,
@@ -113,6 +126,9 @@ export const buildGeneralUpdateValues = (
   const changed = current.isEmailVerificationRequired !== initial.isEmailVerificationRequired
   if (inOverrideSet(settings.isEmailVerificationRequired.source, ownSource, changed)) {
     values.isEmailVerificationRequired = current.isEmailVerificationRequired
+  }
+  if (ownSource === 'platform' && inOverrideSet(settings.isSignupEnabled.source, ownSource, current.isSignupEnabled !== initial.isSignupEnabled)) {
+    values.isSignupEnabled = current.isSignupEnabled
   }
   return values
 }

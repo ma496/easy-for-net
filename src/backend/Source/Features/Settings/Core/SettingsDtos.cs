@@ -32,6 +32,7 @@ public sealed class SettingDto
                     Value = property.IsSecret ? null : value?.DeepClone(),
                     Source = resolved.Sources[property.Name],
                     IsSecret = property.IsSecret,
+                    IsPlatformOnly = property.IsPlatformOnly,
                     IsSet = property.IsSecret ? IsNonEmptyString(value) : null
                 };
             })
@@ -60,6 +61,12 @@ public sealed class SettingPropertyDto
 
     /// <summary>Whether the property is a secret, whose value the API never returns.</summary>
     public bool IsSecret { get; set; }
+
+    /// <summary>
+    /// Whether the property is platform-only: no tenant overrides it, so inside a tenant it is read-only
+    /// and its source is never <c>tenant</c>.
+    /// </summary>
+    public bool IsPlatformOnly { get; set; }
 
     /// <summary>
     /// For a secret, whether its effective value is a non-empty string; <see langword="null"/> for any

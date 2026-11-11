@@ -18,8 +18,10 @@ namespace Backend.Tests.Features.Settings;
 /// and which nothing in the application reads, and of <c>Email</c>, which only a sending email job reads -
 /// and no Hangfire worker runs under Testing, so the only jobs that ever send are the ones this suite runs
 /// itself. Neither can change what another class's requests do.
-/// No test writes the platform <c>General</c> row: the accounts the suite creates are unverified, and a
-/// platform row requiring verification would refuse sign-ins across the whole suite while it stood. What
+/// No test writes a platform <c>General</c> row that changes behaviour - one holding only default values
+/// at most: the accounts the suite creates are unverified, so a platform row requiring verification would
+/// refuse sign-ins across the whole suite while it stood, and one opening sign-up would let through the
+/// sign-ups other classes expect to be refused. What
 /// a platform <c>General</c> override does to a tenant is shown through <see cref="PlatformSettingOverlays"/>
 /// instead, which applies to tenants the test created and nowhere else.
 /// </remarks>

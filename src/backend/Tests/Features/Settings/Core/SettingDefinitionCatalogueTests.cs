@@ -132,6 +132,23 @@ public class SettingDefinitionCatalogueTests
     }
 
     [Fact]
+    public void Platform_Only_Property_Is_Marked()
+    {
+        var eta = Build(new PlatformOnlyProvider()).Get(typeof(EtaSettings));
+
+        eta.FindProperty("isOpen")!.IsPlatformOnly.Should().BeTrue();
+        eta.FindProperty("label")!.IsPlatformOnly.Should().BeFalse();
+    }
+
+    [Fact]
+    public void Secret_That_Is_Also_Platform_Only_Throws()
+    {
+        var act = () => Build(new PlatformOnlySecretProvider());
+
+        act.Should().Throw<InvalidOperationException>().WithMessage("*'token'*'Theta'*[SecretSetting]*[PlatformSetting]*");
+    }
+
+    [Fact]
     public void Overlong_Name_Is_Refused_At_Registration()
     {
         var act = () => new SettingDefinitionContext().Add(new string('n', SettingDefinitionContext.NameMaxLength + 1), new AlphaValidator());
@@ -185,6 +202,31 @@ public class SettingDefinitionCatalogueTests
     {
         [SecretSetting]
         public int Pin { get; set; }
+    }
+
+    public sealed class EtaSettings
+    {
+        [PlatformSetting]
+        public bool IsOpen { get; set; }
+
+        public string Label { get; set; } = "eta";
+    }
+
+    public sealed class ThetaSettings
+    {
+        [SecretSetting]
+        [PlatformSetting]
+        public string Token { get; set; } = string.Empty;
+    }
+
+    private sealed class PlatformOnlyProvider : ISettingDefinitionProvider
+    {
+        public void Define(SettingDefinitionContext context) => context.Add("Eta", new InlineValidator<EtaSettings>());
+    }
+
+    private sealed class PlatformOnlySecretProvider : ISettingDefinitionProvider
+    {
+        public void Define(SettingDefinitionContext context) => context.Add("Theta", new InlineValidator<ThetaSettings>());
     }
 
     private sealed class DeltaValidator : AbstractValidator<DeltaSettings>

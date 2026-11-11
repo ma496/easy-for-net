@@ -6,6 +6,7 @@ const property = (overrides: Partial<SettingPropertyDto> & Pick<SettingPropertyD
   value: null,
   source: 'default',
   isSecret: false,
+  isPlatformOnly: false,
   isSet: null,
   ...overrides,
 })
@@ -34,9 +35,24 @@ describe('findSetting', () => {
 
 describe('toGeneralSettings', () => {
   it('reads the flag and where it came from', () => {
-    const dto: SettingDto = { name: 'General', properties: [property({ name: 'isEmailVerificationRequired', value: true, source: 'platform' })] }
+    const dto: SettingDto = {
+      name: 'General',
+      properties: [
+        property({ name: 'isEmailVerificationRequired', value: true, source: 'platform' }),
+        property({ name: 'isSignupEnabled', value: false, isPlatformOnly: true }),
+      ],
+    }
 
-    expect(toGeneralSettings(dto)).toEqual({ isEmailVerificationRequired: { value: true, source: 'platform' } })
+    expect(toGeneralSettings(dto)).toEqual({
+      isEmailVerificationRequired: { value: true, source: 'platform' },
+      isSignupEnabled: { value: false, source: 'default' },
+    })
+  })
+
+  it('answers null when the platform-only sign-up flag is missing', () => {
+    const dto: SettingDto = { name: 'General', properties: [property({ name: 'isEmailVerificationRequired', value: true })] }
+
+    expect(toGeneralSettings(dto)).toBeNull()
   })
 
   it('answers null when the property is missing, so the card is dropped rather than guessed', () => {

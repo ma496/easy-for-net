@@ -15,7 +15,9 @@ namespace Backend.Features.Settings.Endpoints.Settings;
 /// stop being overridden here and follow the layer below again. An empty <c>values</c> object removes
 /// this scope's overrides altogether, as <c>DELETE</c> does. Each property must be one the setting
 /// declares (<c>settingPropertyUnknown</c>) and its value must deserialize to that property's type
-/// (<c>settingPropertyInvalid</c>); property names are matched case-insensitively and stored camelCase.
+/// (<c>settingPropertyInvalid</c>), and a platform-only property (<see cref="PlatformSettingAttribute"/>)
+/// is refused while acting in a tenant (<c>settingPropertyPlatformOnly</c>); property names are matched
+/// case-insensitively and stored camelCase.
 /// The setting's validator is then run against the value the scope would resolve to - its default (code or configured),
 /// the platform's overrides when acting in a tenant, and the submitted ones - and a failure refuses the
 /// write with a request-level <c>settingValueInvalid</c> followed by the validator's own failures, each
@@ -49,6 +51,7 @@ sealed class SettingUpdateEndpoint(ISettingDefinitionCatalogue catalogue, ISetti
             this.ThrowError(ErrorCodes.SettingNotFound, StatusCodes.Status404NotFound);
         }
 
+        var tenantId = tenantContext.CurrentTenantId;
         var ownOverrides = new JsonObject();
         var clearedSecrets = new HashSet<string>(StringComparer.Ordinal);
         foreach (var (name, value) in request.Values)
@@ -57,6 +60,12 @@ sealed class SettingUpdateEndpoint(ISettingDefinitionCatalogue catalogue, ISetti
             if (property is null)
             {
                 this.ThrowError($"{ValuesField}.{name}", ErrorCodes.SettingPropertyUnknown);
+            }
+
+            // A tenant never overrides a platform-only property; only platform scope may set it.
+            if (property.IsPlatformOnly && tenantId is not null)
+            {
+                this.ThrowError($"{ValuesField}.{property.Name}", ErrorCodes.SettingPropertyPlatformOnly);
             }
 
             // A secret sent as null is one the client left untouched: its stored value is kept below.
@@ -81,7 +90,6 @@ sealed class SettingUpdateEndpoint(ISettingDefinitionCatalogue catalogue, ISetti
             ownOverrides[property.Name] = normalized;
         }
 
-        var tenantId = tenantContext.CurrentTenantId;
         await KeepUntouchedSecretsAsync(definition, tenantId, ownOverrides, clearedSecrets, cancellationToken);
 
         var preview = await settingValueService.PreviewAsync(definition, tenantId, ownOverrides, cancellationToken);

@@ -92,6 +92,9 @@ export const SigninForm = ({ hostTenant }: SigninFormProps) => {
   const host = hostTenant.kind === 'found' ? hostTenant.host : null
   const tenantHost = host?.kind === 'tenant' ? host : null
   const isSuspended = tenantHost?.status === TenantStatus.Suspended
+  // The platform's sign-up switch: while it is off, no sign-up link is offered - here or to the main site.
+  // Unknown (the host could not be read) keeps the link, as the API is the one that refuses.
+  const signupEnabled = host?.isSignupEnabled !== false
   const platformUrl = hostTenant.kind === 'found' ? hostTenant.host.platformUrl : hostTenant.kind === 'notFound' ? hostTenant.platformUrl : null
   const visitorHost = hostTenant.visitorHost ?? ''
 
@@ -270,22 +273,23 @@ export const SigninForm = ({ hostTenant }: SigninFormProps) => {
               {t('page.auth.signin.button') || 'Sign In'}
             </Button>
 
-            {tenantHost ? (
-              // Sign-up creates a tenant, which happens on the main site alone.
-              <p className="text-center text-sm text-muted-foreground">
-                {t('page.auth.signin.ownTenant') || 'Want your own tenant?'}{' '}
-                <a href={pathOnOrigin(tenantHost.platformUrl, router.localize('/signup'))} className="font-medium text-primary hover:underline">
-                  {t('page.auth.signin.createTenant') || 'Create one'}
-                </a>
-              </p>
-            ) : (
-              <p className="text-center text-sm text-muted-foreground">
-                {t('page.auth.signin.noAccount') || "Don't have an account?"}{' '}
-                <LocalizedLink href="/signup" className="font-medium text-primary hover:underline">
-                  {t('page.auth.signin.signupLink') || 'Sign Up'}
-                </LocalizedLink>
-              </p>
-            )}
+            {signupEnabled &&
+              (tenantHost ? (
+                // Sign-up creates a tenant, which happens on the main site alone.
+                <p className="text-center text-sm text-muted-foreground">
+                  {t('page.auth.signin.ownTenant') || 'Want your own tenant?'}{' '}
+                  <a href={pathOnOrigin(tenantHost.platformUrl, router.localize('/signup'))} className="font-medium text-primary hover:underline">
+                    {t('page.auth.signin.createTenant') || 'Create one'}
+                  </a>
+                </p>
+              ) : (
+                <p className="text-center text-sm text-muted-foreground">
+                  {t('page.auth.signin.noAccount') || "Don't have an account?"}{' '}
+                  <LocalizedLink href="/signup" className="font-medium text-primary hover:underline">
+                    {t('page.auth.signin.signupLink') || 'Sign Up'}
+                  </LocalizedLink>
+                </p>
+              ))}
           </Form>
         )}
       </Formik>

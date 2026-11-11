@@ -32,6 +32,8 @@ export interface SettingPropertyDto {
   value: SettingJsonValue
   source: SettingSource
   isSecret: boolean
+  /** Whether only the platform may set this property; a tenant inherits it and cannot override it. */
+  isPlatformOnly: boolean
   /** For a secret, whether its effective value is non-empty; `null` for any other property. */
   isSet: boolean | null
 }
@@ -79,6 +81,8 @@ export interface SecretSettingState {
 /** The `General` setting, typed. */
 export interface GeneralSettingsDto {
   isEmailVerificationRequired: SettingValueWithSource<boolean>
+  /** Platform-only: whether anyone may sign up. A tenant reads the platform's value and never sends it. */
+  isSignupEnabled: SettingValueWithSource<boolean>
 }
 
 /** The `Email` setting, typed. The password is a secret and carries no value. */

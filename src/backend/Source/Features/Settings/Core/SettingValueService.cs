@@ -17,7 +17,8 @@ namespace Backend.Features.Settings.Core;
 /// setting class's property initializers. Resolving for no tenant is the platform's answer:
 /// default with the platform's overrides laid over it. A stored property the class no longer has, or
 /// one whose stored value no longer deserializes to the property's type, contributes nothing and the
-/// property follows the layer below.
+/// property follows the layer below. A <see cref="PlatformSettingAttribute"/> property skips the
+/// tenant layer altogether, so a tenant row holding it has no effect.
 /// <para>
 /// A <see cref="SecretSettingAttribute"/> property is stored encrypted with ASP.NET Data Protection and
 /// decrypted as its row is read, so everything this service answers holds the plaintext - which is why
@@ -278,7 +279,10 @@ class SettingValueService(ISettingValueStore store, IDataProtectionProvider data
 
             foreach (var (name, value) in layer)
             {
-                if (definition.FindProperty(name) is { } property && property.Accepts(value))
+                // A platform-only property is never answered by a tenant, whatever its row holds.
+                if (definition.FindProperty(name) is { } property
+                    && !(property.IsPlatformOnly && source == SettingValueSource.Tenant)
+                    && property.Accepts(value))
                 {
                     values[property.Name] = value?.DeepClone();
                     sources[property.Name] = source;

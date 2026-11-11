@@ -77,7 +77,7 @@ public class SignupTests(App app) : TenancyTestsBase(app)
 
         // A client of its own, presenting no bearer token and no cookie: nothing about this request
         // establishes a tenant, since establishing one is the very thing a visitor cannot yet do.
-        var visitor = App.CreateClient(new ClientOptions { HandleCookies = false });
+        var visitor = SignupVisitorClient();
 
         var (response, _) = await visitor
             .POSTAsync<SignupEndpoint, SignupRequest, SignupResponse>(new()
@@ -143,6 +143,46 @@ public class SignupTests(App app) : TenancyTestsBase(app)
     }
 
     /// <summary>
+    /// Verifies that sign-up is closed by default: with the platform's <c>General.IsSignupEnabled</c> at its
+    /// default, a valid sign-up is refused with 403 <c>signupDisabled</c> and creates neither the account
+    /// nor the tenant.
+    /// </summary>
+    [Fact]
+    public async Task Is_Refused_While_Signup_Is_Disabled()
+    {
+        var username = $"signup-{Guid.NewGuid():N}";
+        var tenantIdentifier = NewTenantIdentifier();
+
+        // No overlay: the request sees the platform's own value, which no test may turn on.
+        using var visitor = App.CreateClient(new ClientOptions { HandleCookies = false });
+
+        var (response, problem) = await visitor
+            .POSTAsync<SignupEndpoint, SignupRequest, ProblemDetails>(new()
+            {
+                Username = username,
+                Email = $"{username}@example.com",
+                Password = SignupPassword,
+                ConfirmPassword = SignupPassword,
+                TenantName = $"Tenant {Guid.NewGuid():N}",
+                TenantIdentifier = tenantIdentifier
+            });
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        problem.Errors.Should().ContainSingle()
+            .Which.Code.Should().Be(ErrorCodes.SignupDisabled.Value);
+
+        (await DbContext.Users
+                .AsNoTracking()
+                .AnyAsync(user => user.UsernameNormalized == username, TestContext.Current.CancellationToken))
+            .Should().BeFalse("a closed sign-up creates no account");
+        (await DbContext.Tenants
+                .AsNoTracking()
+                .AcrossAllTenants()
+                .AnyAsync(tenant => tenant.IdentifierNormalized == tenantIdentifier, TestContext.Current.CancellationToken))
+            .Should().BeFalse("a closed sign-up creates no tenant");
+    }
+
+    /// <summary>
     /// Verifies that a tenant identifier already in use is refused against the field that carries it,
     /// rather than surfacing as a database error from the unique index behind it.
     /// </summary>
@@ -152,7 +192,7 @@ public class SignupTests(App app) : TenancyTestsBase(app)
         var taken = await SignUpAsync();
 
         var username = $"signup-{Guid.NewGuid():N}";
-        var visitor = App.CreateClient(new ClientOptions { HandleCookies = false });
+        var visitor = SignupVisitorClient();
 
         var (response, problem) = await visitor
             .POSTAsync<SignupEndpoint, SignupRequest, ProblemDetails>(new()
@@ -193,7 +233,7 @@ public class SignupTests(App app) : TenancyTestsBase(app)
 
         var username = $"signup-{Guid.NewGuid():N}";
         var email = $"{username}@example.com";
-        var visitor = App.CreateClient(new ClientOptions { HandleCookies = false });
+        var visitor = SignupVisitorClient();
 
         await visitor.POSTAsync<SignupEndpoint, SignupRequest, ProblemDetails>(new()
         {
@@ -239,7 +279,7 @@ public class SignupTests(App app) : TenancyTestsBase(app)
         var username = $"signup-{Guid.NewGuid():N}";
         var tenantName = $"Tenant {Guid.NewGuid():N}";
         var tenantIdentifier = NewTenantIdentifier();
-        var visitor = App.CreateClient(new ClientOptions { HandleCookies = false });
+        var visitor = SignupVisitorClient();
 
         var (response, _) = await visitor
             .POSTAsync<SignupEndpoint, SignupRequest, SignupResponse>(new()

@@ -33,7 +33,7 @@ public class TenantIdentifierReservedTests(App app) : TenancyTestsBase(app)
         foreach (var identifier in new[] { "admin", "hangfire", platformLabel }.OfType<string>())
         {
             var username = $"signup-{Guid.NewGuid():N}";
-            using var visitor = App.CreateClient(new ClientOptions { HandleCookies = false });
+            using var visitor = SignupVisitorClient();
 
             var (response, refusal) = await visitor.POSTAsync<SignupEndpoint, SignupRequest, ProblemDetails>(new()
             {

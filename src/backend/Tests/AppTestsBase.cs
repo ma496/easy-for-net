@@ -1,7 +1,10 @@
+using System.Text.Json.Nodes;
 using Backend.Features.Identity.Core;
 using Backend.Features.Identity.Core.Entities;
 using Backend.Features.Identity.Core.Sessions;
+using Backend.Features.Settings.Core;
 using Backend.Features.Tenancy.Core;
+using Backend.Tests.Fakes;
 
 namespace Backend.Tests;
 
@@ -172,6 +175,36 @@ public abstract class AppTestsBase(App app) : TestBase
             .GetFlattenedPermissions()
             .Where(permission => permission.Scope == PermissionScope.Platform)
             .Select(permission => permission.Name)];
+
+    /// <summary>
+    /// Opens sign-up for every request <paramref name="client"/> sends, by overlaying the platform's
+    /// <c>General</c> setting with <c>isSignupEnabled</c> on for that client's requests alone - never by
+    /// writing the platform row, which every test running beside this one would see.
+    /// </summary>
+    /// <remarks>
+    /// A client carries one overlay token, so a test that needs other platform <c>General</c> values for
+    /// the same requests passes them in <paramref name="generalValues"/> and they are merged into it.
+    /// </remarks>
+    /// <param name="client">The client whose requests should see sign-up open.</param>
+    /// <param name="generalValues">Further platform <c>General</c> overrides for the same requests.</param>
+    /// <returns>The same client, for chaining.</returns>
+    protected HttpClient AllowSignup(HttpClient client, JsonObject? generalValues = null)
+    {
+        var values = generalValues is null ? [] : (JsonObject)generalValues.DeepClone();
+        values["isSignupEnabled"] = true;
+
+        var token = Guid.NewGuid().ToString("N");
+        Service<PlatformSettingOverlays>().ApplyForRequests(token, GeneralSettingsProvider.GeneralSettingName, values);
+        client.DefaultRequestHeaders.Remove(PlatformSettingOverlays.RequestHeader);
+        client.DefaultRequestHeaders.Add(PlatformSettingOverlays.RequestHeader, token);
+        return client;
+    }
+
+    /// <summary>
+    /// A visitor's client - no token, no cookie - whose requests see sign-up open (<see cref="AllowSignup"/>).
+    /// </summary>
+    protected HttpClient SignupVisitorClient()
+        => AllowSignup(App.CreateClient(new ClientOptions { HandleCookies = false }));
 
     /// <summary>
     /// Clears the current authentication token from the HTTP client.

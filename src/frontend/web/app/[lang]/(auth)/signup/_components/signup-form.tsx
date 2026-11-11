@@ -12,6 +12,7 @@ import { useState, useEffect, ReactNode, ChangeEvent } from 'react'
 import { Mail, Lock, CheckCircle, Building2, Globe } from 'lucide-react'
 import { apiErrorAlert, getErrorCode, pathOnOrigin, successToast, tenantUrlFromTemplate, tenantSigninUrl } from '@/lib/utils'
 import type { HostTenant } from '@/lib/server/host-tenant'
+import { isSignupClosed } from './signup-availability'
 
 /** The shape the API accepts for a tenant identifier, which is also its address's first host label. */
 const tenantIdentifierPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -31,19 +32,19 @@ interface SignupResult {
   identifier: string
 }
 
-/** Props for the centred block that replaces the form when sign-up does not happen on this address. */
+/** Props for the centred block that replaces the form when sign-up does not happen on this address, or is closed. */
 interface SignupNoticeProps {
   title: string
   message: ReactNode
+  /** The tile's icon; a building (sign-up lives on another address) unless given. */
+  icon?: ReactNode
   children?: ReactNode
 }
 
 /** A centred icon tile, heading and message in place of the form, with the ways on beneath it. */
-const SignupNotice = ({ title, message, children }: SignupNoticeProps) => (
+const SignupNotice = ({ title, message, icon = <Building2 className="size-6" />, children }: SignupNoticeProps) => (
   <div className="flex flex-col items-center text-center">
-    <div className="mb-5 flex size-12 items-center justify-center rounded-xl bg-surface-2 text-muted-foreground">
-      <Building2 className="size-6" />
-    </div>
+    <div className="mb-5 flex size-12 items-center justify-center rounded-xl bg-surface-2 text-muted-foreground">{icon}</div>
     <h1 className="text-2xl font-semibold tracking-tight wrap-break-word text-foreground">{title}</h1>
     <p className="mt-2 text-sm wrap-break-word text-muted-foreground">{message}</p>
     <div className="mt-6 flex w-full flex-col gap-2">{children}</div>
@@ -95,7 +96,8 @@ const AddressPreview = ({ template, identifier }: AddressPreviewProps) => {
 /**
  * Interactive client-side form that registers a new user together with the tenant they will work in. Sign-up creates
  * a tenant, so it happens on the main site alone: on a tenant's own address the form gives way to a link to the main site's
- * sign-up. The identifier field previews the address it gives the new tenant, and a reserved name is refused on the field
+ * sign-up. While the platform has sign-up switched off, every address shows that it is closed and links to its own
+ * sign-in instead (a host that could not be read keeps the form, and the API refuses). The identifier field previews the address it gives the new tenant, and a reserved name is refused on the field
  * itself. The success view links to the new tenant's own sign-in page, and offers a resend-verification-email countdown when
  * email verification is required.
  */
@@ -125,6 +127,7 @@ export const SignupForm = ({ hostTenant }: SignupFormProps) => {
   const tenantHost = host?.kind === 'tenant' ? host : null
   const template = host?.tenantUrlTemplate ?? null
   const platformUrl = host?.platformUrl ?? (hostTenant.kind === 'notFound' ? hostTenant.platformUrl : null)
+  const signupClosed = isSignupClosed(hostTenant)
 
   const validationSchema = Yup.object().shape({
     username: Yup.string()
@@ -204,6 +207,23 @@ export const SignupForm = ({ hostTenant }: SignupFormProps) => {
     } catch {
       // Error is handled by api middleware/toast
     }
+  }
+
+  if (signupClosed) {
+    // The platform has switched sign-up off: the API would refuse the form with 403 signupDisabled. Checked
+    // before the tenant-host notice, which would otherwise send the visitor to a main-site sign-up that is closed
+    // too; the sign-in link stays on this host, so a tenant's visitor signs in to that tenant.
+    return (
+      <SignupNotice
+        title={t('page.auth.signup.disabledTitle') || 'Sign-up is closed'}
+        message={t('page.auth.signup.disabledMessage') || 'New accounts are created by the platform administrator. If you already have an account, sign in.'}
+        icon={<Lock className="size-6" />}
+      >
+        <LocalizedLink href="/signin" className="btn btn-primary w-full">
+          {t('page.auth.signup.disabledAction') || 'Go to sign in'}
+        </LocalizedLink>
+      </SignupNotice>
+    )
   }
 
   if (tenantHost || hostTenant.kind === 'notFound') {

@@ -274,6 +274,8 @@
       "settingPropertyUnknown": "Ce paramètre ne possède pas cette propriété.",
       "settingPropertyInvalid": "La valeur n'est pas valide pour cette propriété du paramètre.",
       "settingValueInvalid": "Les valeurs du paramètre ne sont pas valides.",
+      "settingPropertyPlatformOnly": "Seule la plateforme peut définir cette propriété.",
+      "signupDisabled": "L'inscription est désactivée. Demandez un compte à l'administrateur de la plateforme.",
       "emailSmtpServerRequired": "Un serveur SMTP est requis.",
       "emailSmtpPortInvalid": "Le port SMTP doit être compris entre 1 et 65535.",
       "emailSenderEmailInvalid": "L'adresse de l'expéditeur doit être une adresse e-mail valide."
@@ -496,7 +498,10 @@
         "addressPlaceholder": "votre-nom",
         "identifierHint": "Lettres minuscules, chiffres et traits d'union.",
         "readyTitle": "Votre locataire est prêt",
-        "goToTenant": "Aller à votre locataire"
+        "goToTenant": "Aller à votre locataire",
+        "disabledTitle": "Les inscriptions sont fermées",
+        "disabledMessage": "Les nouveaux comptes sont créés par l'administrateur de la plateforme. Si vous avez déjà un compte, connectez-vous.",
+        "disabledAction": "Aller à la connexion"
       },
       "forgotPassword": {
         "title": "Mot de passe oublié",
@@ -749,7 +754,9 @@
         "title": "Général",
         "description": "Options qui s'appliquent à l'ensemble de l'application.",
         "isEmailVerificationRequired": "Exiger une adresse e-mail vérifiée pour se connecter",
-        "isEmailVerificationRequiredHelp": "Lorsque cette option est activée, un compte doit confirmer son adresse e-mail avant de pouvoir se connecter."
+        "isEmailVerificationRequiredHelp": "Lorsque cette option est activée, un compte doit confirmer son adresse e-mail avant de pouvoir se connecter.",
+        "isSignupEnabled": "Autoriser l'inscription",
+        "isSignupEnabledHelp": "Permet à quiconque de créer un compte et son propre locataire depuis la page d'inscription. S'applique à toute la plateforme."
       },
       "email": {
         "title": "E-mail",

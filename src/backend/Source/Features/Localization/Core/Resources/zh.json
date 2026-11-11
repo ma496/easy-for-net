@@ -274,6 +274,8 @@
       "settingPropertyUnknown": "此设置没有该属性。",
       "settingPropertyInvalid": "该值对此设置属性无效。",
       "settingValueInvalid": "设置的值无效。",
+      "settingPropertyPlatformOnly": "此属性只能由平台设置。",
+      "signupDisabled": "注册已关闭。请向平台管理员申请账户。",
       "emailSmtpServerRequired": "必须提供 SMTP 服务器。",
       "emailSmtpPortInvalid": "SMTP 端口必须介于 1 到 65535 之间。",
       "emailSenderEmailInvalid": "发件人邮箱必须是有效的电子邮件地址。"
@@ -496,7 +498,10 @@
         "addressPlaceholder": "your-name",
         "identifierHint": "小写字母、数字和连字符。",
         "readyTitle": "你的租户已就绪",
-        "goToTenant": "前往你的租户"
+        "goToTenant": "前往你的租户",
+        "disabledTitle": "注册已关闭",
+        "disabledMessage": "新账户由平台管理员创建。如果你已有账户，请登录。",
+        "disabledAction": "前往登录"
       },
       "forgotPassword": {
         "title": "忘记密码",
@@ -749,7 +754,9 @@
         "title": "常规",
         "description": "适用于整个应用程序的选项。",
         "isEmailVerificationRequired": "登录需要已验证的电子邮件地址",
-        "isEmailVerificationRequiredHelp": "开启后，账户必须先确认其电子邮件地址才能登录。"
+        "isEmailVerificationRequiredHelp": "开启后，账户必须先确认其电子邮件地址才能登录。",
+        "isSignupEnabled": "允许注册",
+        "isSignupEnabledHelp": "允许任何人在注册页面创建账户和自己的租户。适用于整个平台。"
       },
       "email": {
         "title": "电子邮件",

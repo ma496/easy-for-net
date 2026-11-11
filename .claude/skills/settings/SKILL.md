@@ -13,12 +13,12 @@ differ per tenant, or be changed without a deployment.
 
 The system lives in the `Settings` slice (`Features/Settings`). What other slices use is published
 with `[AllowOutside]`: `ISettingDefinitionProvider`, `SettingDefinitionContext`,
-`SettingDefinitionBuilder<T>`, `SecretSettingAttribute` and `ISettingProvider`, all in
+`SettingDefinitionBuilder<T>`, `SecretSettingAttribute`, `PlatformSettingAttribute` and `ISettingProvider`, all in
 `Backend.Features.Settings.Core`. Everything that resolves or stores a value stays private to the slice.
 
 **Small cross-cutting options go on `GeneralSettings`** (`Backend.Features.Settings.Core`, registered
 as `General` by `GeneralSettingsProvider`, `[AllowOutside]`), which already holds the sign-in option
-`IsEmailVerificationRequired`: add a property there, its label under `page.settings.general` (or a
+`IsEmailVerificationRequired` and the platform-only `IsSignupEnabled`: add a property there, its label under `page.settings.general` (or a
 card of its own in the General tab), rather than a new setting and a new tab. A setting one slice
 owns outright — a group of options about that slice's own behaviour — gets its own class and provider
 in that slice, as below.
@@ -162,6 +162,29 @@ unbound one is inherited like any other property.
   validator must refuse loopback, private, link-local and cloud-metadata addresses (or check an
   allow-list), and the code that connects must check the resolved address again before connecting.
 
+## 5a. Platform-only: `[PlatformSetting]`
+
+Mark a property `[PlatformSetting]` when it decides something about the whole platform rather than about
+one tenant — `General.IsSignupEnabled` is the model: sign-up happens before any tenant exists, so only
+the platform's value can matter.
+
+```csharp
+[PlatformSetting]
+public bool IsSignupEnabled { get; set; } = false;
+```
+
+- Resolution skips the tenant layer for it, so it resolves from the platform's override, then the
+  default, in every scope; a tenant row holding it (written by hand, or before the property was marked)
+  has no effect, and its `source` is never `tenant`.
+- `PUT /settings/{name}` refuses it while acting in a tenant with 400 `settingPropertyPlatformOnly`,
+  named `values.<property>`; in platform scope it is written like any other property. A tenant's
+  `DELETE` cannot touch it, since a tenant row never answers for it.
+- `GET /settings` reports it with `isPlatformOnly: true`, so the admin screen leaves it out inside a
+  tenant (render it only where its `source` can be `platform` — platform scope).
+- Startup refuses a property marked both `[PlatformSetting]` and `[SecretSetting]`.
+- An anonymous endpoint that tells the web app about it reads it with `GetAsync<T>(null)`, as
+  `GET /tenants/host` does for `isSignupEnabled`.
+
 ## 6. Reading a setting
 
 Depend on `ISettingProvider`; every read returns a new instance.
@@ -200,12 +223,13 @@ tenant's own row inside a tenant, the platform's in platform scope — under `Se
 
 | Endpoint | Does |
 |---|---|
-| `GET /settings` | Every setting as the acting scope resolves it: per property its `value`, its `source` (`tenant`, `platform` or `default`), `isSecret`, and for a secret `isSet` instead of a value |
+| `GET /settings` | Every setting as the acting scope resolves it: per property its `value`, its `source` (`tenant`, `platform` or `default`), `isSecret`, `isPlatformOnly`, and for a secret `isSet` instead of a value |
 | `PUT /settings/{name}` | Replaces the acting scope's overrides with `{ "values": { … } }` — a property left out follows the layer below again. A secret follows its own rule: left out or sent `null`, this scope's stored value is kept (so `{}` removes every override but a stored secret); sent `""`, this scope's override of it is removed and it follows the layer below, subject to its bound properties |
 | `DELETE /settings/{name}` | Removes the acting scope's overrides of the setting, stored secrets included. Idempotent |
 
 A write is refused with `settingNotFound` (404), `settingPropertyUnknown`, `settingPropertyInvalid`
-(the value does not deserialize to the property's type), or `settingValueInvalid` followed by the
+(the value does not deserialize to the property's type), `settingPropertyPlatformOnly` (a platform-only
+property named inside a tenant), or `settingValueInvalid` followed by the
 validator's failures, each named `values.<camelCaseProperty>`.
 
 ## 8. The admin screen
@@ -245,6 +269,11 @@ test. Inside it:
   on while it stands — simulate it for a tenant the test owns instead, with
   `Service<PlatformSettingOverlays>().Apply(tenantId, name, values)` (`Tests/Fakes`), which lays the
   values over the platform layer for that tenant alone;
+- code that reads the platform's own value (`GetAsync<T>(null)` — sign-up, the account emails) names no
+  tenant to key on, so overlay it per request instead: `ApplyForRequests(token, name, values)` plus the
+  `PlatformSettingOverlays.RequestHeader` on the client. `AppTestsBase.AllowSignup(client, generalValues)`
+  (and `SignupVisitorClient()`) does exactly that to open sign-up — off by default — for one client,
+  merging any other `General` values that client's requests need;
 - to exercise the mechanism itself, use the test-only probe setting (`Tests/Fakes`), which nothing in
   the application reads.
 
@@ -256,6 +285,7 @@ A test that only reads a setting, or writes a tenant row for its own tenant, nee
 - [ ] Validator beside it; coded rules use `.WithErrorCode(ErrorCodes.X.Value)` with a shipped `error.server.<code>`
 - [ ] `Core/<X>SettingsProvider.cs` registers it under a stable name, `.FromConfiguration(...)` if a deployment sets the baseline
 - [ ] Every secret is a `string` marked `[SecretSetting]`, bound to the properties that decide where it goes
+- [ ] A value only the platform may decide is marked `[PlatformSetting]` (never on a secret)
 - [ ] Read through `ISettingProvider`; `GetAsync<T>(tenantId)` outside a request, `GetAsync<T>(null)` for account-level decisions
 - [ ] A card on `/settings` if an administrator should edit it there, with translations in every locale
 - [ ] Tests that write a platform row derive from `SettingsTestsBase` (the `Settings` collection)

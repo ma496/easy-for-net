@@ -274,6 +274,8 @@
       "settingPropertyUnknown": "اس ترتیب میں ایسی کوئی خاصیت نہیں ہے۔",
       "settingPropertyInvalid": "یہ قدر اس ترتیب کی خاصیت کے لیے درست نہیں ہے۔",
       "settingValueInvalid": "ترتیب کی اقدار درست نہیں ہیں۔",
+      "settingPropertyPlatformOnly": "یہ خصوصیت صرف پلیٹ فارم ہی سیٹ کر سکتا ہے۔",
+      "signupDisabled": "سائن اپ بند ہے۔ اکاؤنٹ کے لیے پلیٹ فارم کے منتظم سے رابطہ کریں۔",
       "emailSmtpServerRequired": "SMTP سرور درکار ہے۔",
       "emailSmtpPortInvalid": "SMTP پورٹ 1 اور 65535 کے درمیان ہونا چاہیے۔",
       "emailSenderEmailInvalid": "بھیجنے والے کی ای میل ایک درست ای میل پتہ ہونی چاہیے۔"
@@ -496,7 +498,10 @@
         "addressPlaceholder": "your-name",
         "identifierHint": "چھوٹے انگریزی حروف، ہندسے اور ہائفن۔",
         "readyTitle": "آپ کا ٹیننٹ تیار ہے",
-        "goToTenant": "اپنے ٹیننٹ پر جائیں"
+        "goToTenant": "اپنے ٹیننٹ پر جائیں",
+        "disabledTitle": "سائن اپ بند ہے",
+        "disabledMessage": "نئے اکاؤنٹ پلیٹ فارم کا منتظم بناتا ہے۔ اگر آپ کا پہلے سے اکاؤنٹ ہے تو سائن ان کریں۔",
+        "disabledAction": "سائن ان پر جائیں"
       },
       "forgotPassword": {
         "title": "پاس ورڈ بھول گئے",
@@ -749,7 +754,9 @@
         "title": "عمومی",
         "description": "وہ اختیارات جو پوری ایپلیکیشن پر لاگو ہوتے ہیں۔",
         "isEmailVerificationRequired": "سائن ان کے لیے تصدیق شدہ ای میل پتہ لازمی کریں",
-        "isEmailVerificationRequiredHelp": "فعال ہونے پر، کسی اکاؤنٹ کو سائن ان کرنے سے پہلے اپنے ای میل پتے کی تصدیق کرنی ہوگی۔"
+        "isEmailVerificationRequiredHelp": "فعال ہونے پر، کسی اکاؤنٹ کو سائن ان کرنے سے پہلے اپنے ای میل پتے کی تصدیق کرنی ہوگی۔",
+        "isSignupEnabled": "سائن اپ کی اجازت دیں",
+        "isSignupEnabledHelp": "سائن اپ صفحے سے کسی کو بھی اکاؤنٹ اور اپنا ٹیننٹ بنانے دیں۔ یہ پورے پلیٹ فارم پر لاگو ہوتا ہے۔"
       },
       "email": {
         "title": "ای میل",

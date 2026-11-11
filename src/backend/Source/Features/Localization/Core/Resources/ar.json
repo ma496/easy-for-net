@@ -274,6 +274,8 @@
       "settingPropertyUnknown": "هذا الإعداد لا يحتوي على هذه الخاصية.",
       "settingPropertyInvalid": "القيمة غير صالحة لخاصية هذا الإعداد.",
       "settingValueInvalid": "قيم الإعداد غير صالحة.",
+      "settingPropertyPlatformOnly": "لا يمكن تعيين هذه الخاصية إلا من قِبل المنصة.",
+      "signupDisabled": "التسجيل متوقف. اطلب حسابًا من مسؤول المنصة.",
       "emailSmtpServerRequired": "خادم SMTP مطلوب.",
       "emailSmtpPortInvalid": "يجب أن يكون منفذ SMTP بين 1 و65535.",
       "emailSenderEmailInvalid": "يجب أن يكون بريد المرسل عنوان بريد إلكتروني صالحًا."
@@ -496,7 +498,10 @@
         "addressPlaceholder": "your-name",
         "identifierHint": "أحرف لاتينية صغيرة وأرقام وشرطات.",
         "readyTitle": "المستأجر الخاص بك جاهز",
-        "goToTenant": "الانتقال إلى المستأجر الخاص بك"
+        "goToTenant": "الانتقال إلى المستأجر الخاص بك",
+        "disabledTitle": "التسجيل مغلق",
+        "disabledMessage": "ينشئ مسؤول المنصة الحسابات الجديدة. إذا كان لديك حساب بالفعل، فسجّل الدخول.",
+        "disabledAction": "الانتقال إلى تسجيل الدخول"
       },
       "forgotPassword": {
         "title": "نسيت كلمة المرور",
@@ -749,7 +754,9 @@
         "title": "عام",
         "description": "خيارات تنطبق على التطبيق بأكمله.",
         "isEmailVerificationRequired": "اشتراط بريد إلكتروني مُتحقق منه لتسجيل الدخول",
-        "isEmailVerificationRequiredHelp": "عند التفعيل، يجب على الحساب تأكيد بريده الإلكتروني قبل أن يتمكن من تسجيل الدخول."
+        "isEmailVerificationRequiredHelp": "عند التفعيل، يجب على الحساب تأكيد بريده الإلكتروني قبل أن يتمكن من تسجيل الدخول.",
+        "isSignupEnabled": "السماح بالتسجيل",
+        "isSignupEnabledHelp": "السماح لأي شخص بإنشاء حساب ومستأجر خاص به من صفحة التسجيل. ينطبق على المنصة بأكملها."
       },
       "email": {
         "title": "البريد الإلكتروني",

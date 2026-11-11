@@ -139,9 +139,12 @@ public class AccountSelfServiceTests(App app) : TenancyTestsBase(app)
     /// </summary>
     /// <param name="client">The client to sign up with.</param>
     /// <returns>The status of the call.</returns>
-    private static async Task<List<HttpStatusCode>> SignUpAsync(HttpClient client)
+    private async Task<List<HttpStatusCode>> SignUpAsync(HttpClient client)
     {
         var username = $"signup-{Guid.NewGuid():N}";
+
+        // Sign-up is closed by default; this client's requests see it open, and no other test's do.
+        AllowSignup(client);
 
         var (response, _) = await client
             .POSTAsync<SignupEndpoint, SignupRequest, SignupResponse>(new()

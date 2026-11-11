@@ -33,7 +33,8 @@ const readSecret = (dto: SettingDto, name: string): SecretSettingState | null =>
 /** The `General` setting as a typed view model, or `null` when the response lacks one of its properties. */
 export const toGeneralSettings = (dto: SettingDto): GeneralSettingsDto | null => {
   const isEmailVerificationRequired = read(dto, 'isEmailVerificationRequired', asBoolean)
-  return isEmailVerificationRequired ? { isEmailVerificationRequired } : null
+  const isSignupEnabled = read(dto, 'isSignupEnabled', asBoolean)
+  return isEmailVerificationRequired && isSignupEnabled ? { isEmailVerificationRequired, isSignupEnabled } : null
 }
 
 /** The `Email` setting as a typed view model, or `null` when the response lacks one of its properties. */

@@ -27,7 +27,9 @@ namespace Backend.Features.Identity.Endpoints.Account;
 /// </para>
 /// <para>
 /// Sign-up is answered on the platform host or on a host naming nothing, and refused on a tenant host
-/// with 400 <c>tenantHostMismatch</c>. The verification email links to the new tenant's origin
+/// with 400 <c>tenantHostMismatch</c>. It is open only while the platform's
+/// <c>General.IsSignupEnabled</c> is on - off by default - and refused otherwise with 403
+/// <c>signupDisabled</c>, before anything is looked up or written. The verification email links to the new tenant's origin
 /// (<c>Web:DefaultDomain</c> when host resolution is off).
 /// </para>
 /// </remarks>
@@ -58,8 +60,13 @@ sealed class SignupEndpoint(IUserService userService,
             this.ThrowError(ErrorCodes.TenantHostMismatch);
         }
 
-        // The platform's value: the tenant this sign-up creates has no override of its own yet.
+        // The platform's value: the tenant this sign-up creates has no override of its own yet, and
+        // whether sign-up is open at all is the platform's decision alone.
         var generalSettings = await settingProvider.GetAsync<GeneralSettings>((Guid?)null, cancellationToken);
+        if (!generalSettings.IsSignupEnabled)
+        {
+            this.ThrowError(ErrorCodes.SignupDisabled, StatusCodes.Status403Forbidden);
+        }
 
         var usernameExists = await dbContext.Users
             .AsNoTracking()

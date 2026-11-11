@@ -73,8 +73,9 @@ sealed class SettingDefinition
     /// code default every resolution starts from.
     /// </summary>
     /// <exception cref="InvalidOperationException">
-    /// A <see cref="SecretSettingAttribute"/> marks a property that is not a string, or names a bound
-    /// property the class does not expose as a setting property.
+    /// A <see cref="SecretSettingAttribute"/> marks a property that is not a string, names a bound
+    /// property the class does not expose as a setting property, or marks a property that is also
+    /// <see cref="PlatformSettingAttribute"/>.
     /// </exception>
     public static SettingDefinition Create<T>(string name, IValidator<T> validator)
         where T : class, new()
@@ -94,10 +95,17 @@ sealed class SettingDefinition
             var secret = property.AttributeProvider?.GetCustomAttributes(typeof(SecretSettingAttribute), inherit: true)
                 .OfType<SecretSettingAttribute>()
                 .FirstOrDefault();
+            var isPlatformOnly = property.AttributeProvider?.IsDefined(typeof(PlatformSettingAttribute), inherit: true) == true;
             if (secret is null)
             {
-                properties.Add(new SettingPropertyDefinition(property.Name, property.PropertyType));
+                properties.Add(new SettingPropertyDefinition(property.Name, property.PropertyType, IsPlatformOnly: isPlatformOnly));
                 continue;
+            }
+
+            if (isPlatformOnly)
+            {
+                throw new InvalidOperationException(
+                    $"The property '{property.Name}' of the setting '{name}' is marked both [SecretSetting] and [PlatformSetting]. A secret cannot be platform-only.");
             }
 
             if (property.PropertyType != typeof(string))
@@ -202,7 +210,7 @@ sealed class SettingDefinition
 
 /// <summary>
 /// One value of a setting: its camelCase JSON name, the CLR type a stored or submitted value must
-/// deserialize to, and whether it is a secret.
+/// deserialize to, whether it is a secret, and whether it is platform-only.
 /// </summary>
 /// <param name="Name">The property's JSON name.</param>
 /// <param name="Type">The property's type.</param>
@@ -214,7 +222,11 @@ sealed class SettingDefinition
 /// For a secret, the JSON names of the properties that decide where it is sent: it is never inherited
 /// from a layer below one that overrides any of them (see <see cref="SecretSettingAttribute"/>).
 /// </param>
-sealed record SettingPropertyDefinition(string Name, Type Type, bool IsSecret = false, IReadOnlyList<string>? BoundTo = null)
+/// <param name="IsPlatformOnly">
+/// Whether the property carries <see cref="PlatformSettingAttribute"/> - never overridden by a tenant,
+/// so resolution skips the tenant layer for it.
+/// </param>
+sealed record SettingPropertyDefinition(string Name, Type Type, bool IsSecret = false, IReadOnlyList<string>? BoundTo = null, bool IsPlatformOnly = false)
 {
     /// <summary>The JSON names of the properties this secret is bound to; empty for any other property.</summary>
     public IReadOnlyList<string> BoundProperties => BoundTo ?? [];

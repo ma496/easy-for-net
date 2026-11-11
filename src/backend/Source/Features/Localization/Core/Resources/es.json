@@ -274,6 +274,8 @@
       "settingPropertyUnknown": "Esta configuración no tiene esa propiedad.",
       "settingPropertyInvalid": "El valor no es válido para esta propiedad de la configuración.",
       "settingValueInvalid": "Los valores de la configuración no son válidos.",
+      "settingPropertyPlatformOnly": "Solo la plataforma puede establecer esta propiedad.",
+      "signupDisabled": "El registro está desactivado. Pide una cuenta al administrador de la plataforma.",
       "emailSmtpServerRequired": "Se requiere un servidor SMTP.",
       "emailSmtpPortInvalid": "El puerto SMTP debe estar entre 1 y 65535.",
       "emailSenderEmailInvalid": "El correo del remitente debe ser una dirección de correo electrónico válida."
@@ -496,7 +498,10 @@
         "addressPlaceholder": "tu-nombre",
         "identifierHint": "Letras minúsculas, dígitos y guiones.",
         "readyTitle": "Tu inquilino está listo",
-        "goToTenant": "Ir a tu inquilino"
+        "goToTenant": "Ir a tu inquilino",
+        "disabledTitle": "El registro está cerrado",
+        "disabledMessage": "Las cuentas nuevas las crea el administrador de la plataforma. Si ya tienes una cuenta, inicia sesión.",
+        "disabledAction": "Ir a iniciar sesión"
       },
       "forgotPassword": {
         "title": "Olvidé mi Contraseña",
@@ -749,7 +754,9 @@
         "title": "General",
         "description": "Opciones que se aplican en toda la aplicación.",
         "isEmailVerificationRequired": "Exigir un correo electrónico verificado para iniciar sesión",
-        "isEmailVerificationRequiredHelp": "Si está activado, una cuenta debe confirmar su correo electrónico antes de poder iniciar sesión."
+        "isEmailVerificationRequiredHelp": "Si está activado, una cuenta debe confirmar su correo electrónico antes de poder iniciar sesión.",
+        "isSignupEnabled": "Permitir el registro",
+        "isSignupEnabledHelp": "Permite que cualquiera cree una cuenta y su propio inquilino desde la página de registro. Se aplica a toda la plataforma."
       },
       "email": {
         "title": "Correo electrónico",

@@ -10,6 +10,7 @@ import {
   markerOf,
   ownSourceOf,
   generalFormValues,
+  generalSources,
 } from './settings-form'
 
 const emailSettings = (sources: Partial<Record<keyof EmailSettingsDto, SettingSource>> = {}, isPasswordSet = true): EmailSettingsDto => ({
@@ -21,7 +22,10 @@ const emailSettings = (sources: Partial<Record<keyof EmailSettingsDto, SettingSo
   senderName: { value: 'Example', source: sources.senderName ?? 'default' },
 })
 
-const generalSettings = (source: SettingSource, value = false): GeneralSettingsDto => ({ isEmailVerificationRequired: { value, source } })
+const generalSettings = (source: SettingSource, value = false, signup: { value: boolean; source: SettingSource } = { value: false, source: 'default' }): GeneralSettingsDto => ({
+  isEmailVerificationRequired: { value, source },
+  isSignupEnabled: signup,
+})
 
 describe('ownSourceOf', () => {
   it('writes to the tenant inside a tenant and to the platform in none', () => {
@@ -79,7 +83,38 @@ describe('buildGeneralUpdateValues', () => {
     const settings = generalSettings('default')
     const initial = generalFormValues(settings)
 
-    expect(buildGeneralUpdateValues(settings, initial, { isEmailVerificationRequired: true }, 'platform')).toEqual({ isEmailVerificationRequired: true })
+    expect(buildGeneralUpdateValues(settings, initial, { ...initial, isEmailVerificationRequired: true }, 'platform')).toEqual({ isEmailVerificationRequired: true })
+  })
+
+  it('never sends the platform-only sign-up flag from a tenant, even when it differs', () => {
+    const settings = generalSettings('tenant', true, { value: true, source: 'platform' })
+    const initial = generalFormValues(settings)
+
+    expect(buildGeneralUpdateValues(settings, initial, { ...initial, isSignupEnabled: false }, 'tenant')).toEqual({ isEmailVerificationRequired: true })
+  })
+
+  it('sends a changed sign-up flag in platform scope', () => {
+    const settings = generalSettings('default')
+    const initial = generalFormValues(settings)
+
+    expect(buildGeneralUpdateValues(settings, initial, { ...initial, isSignupEnabled: true }, 'platform')).toEqual({ isSignupEnabled: true })
+  })
+
+  it('keeps the platform own sign-up override when untouched', () => {
+    const settings = generalSettings('default', false, { value: true, source: 'platform' })
+    const values = generalFormValues(settings)
+
+    expect(buildGeneralUpdateValues(settings, values, values, 'platform')).toEqual({ isSignupEnabled: true })
+  })
+})
+
+describe('generalSources', () => {
+  it('counts the sign-up flag in platform scope only', () => {
+    const settings = generalSettings('default', false, { value: true, source: 'platform' })
+
+    expect(generalSources(settings, 'platform')).toEqual(['default', 'platform'])
+    expect(generalSources(settings, 'tenant')).toEqual(['default'])
+    expect(hasOwnOverride(generalSources(settings, 'platform'), 'platform')).toBe(true)
   })
 })
 

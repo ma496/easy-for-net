@@ -274,6 +274,8 @@
       "settingPropertyUnknown": "इस सेटिंग में ऐसी कोई प्रॉपर्टी नहीं है।",
       "settingPropertyInvalid": "यह मान इस सेटिंग प्रॉपर्टी के लिए मान्य नहीं है।",
       "settingValueInvalid": "सेटिंग के मान मान्य नहीं हैं।",
+      "settingPropertyPlatformOnly": "यह गुण केवल प्लेटफ़ॉर्म द्वारा सेट किया जा सकता है।",
+      "signupDisabled": "साइन-अप बंद है। खाते के लिए प्लेटफ़ॉर्म व्यवस्थापक से पूछें।",
       "emailSmtpServerRequired": "SMTP सर्वर आवश्यक है।",
       "emailSmtpPortInvalid": "SMTP पोर्ट 1 और 65535 के बीच होना चाहिए।",
       "emailSenderEmailInvalid": "प्रेषक ईमेल एक मान्य ईमेल पता होना चाहिए।"
@@ -496,7 +498,10 @@
         "addressPlaceholder": "your-name",
         "identifierHint": "छोटे अक्षर, अंक और हाइफ़न।",
         "readyTitle": "आपका टेनेंट तैयार है",
-        "goToTenant": "अपने टेनेंट पर जाएँ"
+        "goToTenant": "अपने टेनेंट पर जाएँ",
+        "disabledTitle": "साइन-अप बंद है",
+        "disabledMessage": "नए खाते प्लेटफ़ॉर्म व्यवस्थापक बनाते हैं। यदि आपके पास पहले से खाता है, तो साइन इन करें।",
+        "disabledAction": "साइन इन पर जाएँ"
       },
       "forgotPassword": {
         "title": "पासवर्ड भूल गए",
@@ -749,7 +754,9 @@
         "title": "सामान्य",
         "description": "पूरे एप्लिकेशन पर लागू होने वाले विकल्प।",
         "isEmailVerificationRequired": "साइन इन के लिए सत्यापित ईमेल पता आवश्यक करें",
-        "isEmailVerificationRequiredHelp": "चालू होने पर, किसी खाते को साइन इन करने से पहले अपने ईमेल पते की पुष्टि करनी होगी।"
+        "isEmailVerificationRequiredHelp": "चालू होने पर, किसी खाते को साइन इन करने से पहले अपने ईमेल पते की पुष्टि करनी होगी।",
+        "isSignupEnabled": "साइन-अप की अनुमति दें",
+        "isSignupEnabledHelp": "साइन-अप पेज से किसी को भी खाता और अपना टेनेंट बनाने दें। यह पूरे प्लेटफ़ॉर्म पर लागू होता है।"
       },
       "email": {
         "title": "ईमेल",
