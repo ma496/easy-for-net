@@ -1,282 +1,107 @@
-# FullStack Template
+# EasyForNet
 
-A full-stack template built with ASP.NET 10 and Next.js 16. It’s well-structured, includes essential features, and lets you build applications quickly. It also works seamlessly with AI, including built-in rules for generating various parts of the project.
+### Build your app with AI agents on a solid, maintainable architecture.
 
-## Prerequisites
+A full-stack **ASP.NET 10 + Next.js 16** template and a one-command CLI that gives your coding agents
+the structure, rules and guardrails to build production-grade software — not just code that runs.
 
-- .NET 10 SDK
-- Node.js 24 or later
-- Git (the tool clones the template)
-- Docker, for PostgreSQL and Redis in development — or your own PostgreSQL on `localhost:5432` and Redis on `localhost:6379`
+[**Documentation**](https://easyfornet.com/docs) · [**Quick Start**](https://easyfornet.com/docs/getting-started/quick-start) · [**NuGet**](https://www.nuget.org/packages/EasyForNetTool) · [**GitHub**](https://github.com/ma496/EasyForNet)
 
-## Installation
+---
 
-To install the EasyForNet tool globally using the .NET CLI, run the following command:
+## The Problem
+
+Coding agents can ship an app in an afternoon — and leave you a mess you'll be untangling for months:
+
+- **No architecture** – every feature shaped differently, logic leaking across modules.
+- **Not optimized** – queries that load whole tables, N+1 calls, nothing that scales past one server.
+- **Not secure** – auth bolted on, tenants that can read each other's data, secrets in the wrong place.
+- **Not consistent** – each prompt invents its own conventions, and the codebase drifts with every change.
+
+## The Solution
+
+EasyForNet starts your project on a foundation built for agents to extend — and **checks** their work
+instead of trusting it.
+
+- 🏗️ **Architected** – vertical feature slices, one file per endpoint, and slice isolation enforced by architecture tests.
+- ⚡ **Optimized** – lean projected queries, compile-time mapping, Redis sessions, background jobs and a scale-out-ready real-time hub.
+- 🔒 **Secured** – server-side sessions revoked the moment access changes, tenant isolation from the session, hierarchical permissions, guard hooks that block destructive commands.
+- 🎯 **Consistent** – a `CLAUDE.md`, 21 skills and 7 specialist agents teach every session the same conventions; reviewers sign off before anything is committed.
+- 🧠 **Learns as it builds** – when a run hits a trap, it records the lesson in `.claude/memory/lessons/`, and every later task whose work it touches gets that lesson in its brief, so the project gets smarter with every task instead of rediscovering the same pitfalls.
+
+## Quick Start
+
+You need the **.NET 10 SDK**, **Node.js 24+**, **Git** and **Docker**.
 
 ```sh
+# 1. Install the CLI
 dotnet tool install --global EasyForNetTool
-```
 
-## Checking the Version
+# 2. Generate a project (save the seeded password it prints)
+dotnet efn cp -n my-shop
+cd my-shop
 
-To check the version of the EasyForNet tool, run the following command:
-
-```sh
-dotnet efn -v
-```
-
-or
-
-```sh
-dotnet efn --version
-```
-
-## Create a New Project
-
-To create a new project using the EasyForNet tool, run the following command:
-
-```sh
-dotnet efn cp -n {name} -o {path} -m {true|false} -e {true|false}
-```
-
-- `-n {name}`: Specifies the name of the new project.
-- `-o {path}`: (Optional) Specifies the output directory for the new project.
-- `-m {true|false}`: (Optional) Enable multi-language support. Default is `false`. When `false`, only English language files are included. When `true`, all supported languages (English, Urdu, Chinese, Arabic, Hindi, Spanish, French, Russian) are included.
-- `-e {true|false}`: (Optional) Include the UI component example pages (buttons, cards, date picker, date view, file upload, form elements, tooltips, tree view) under `/ui`. Default is `false`, which leaves them out together with their sidebar group, search entries and translation keys.
-
-The new project is a git repository with one initial commit. The tool prints the seeded administrators'
-password when it finishes (see **Seeded Accounts**).
-
-## Run the Project
-
-From the project's root directory (the one holding `{Name}.slnx`), prepare the backend once — `dotnet ef`
-needs the packages restored, and the API needs a migration to create its database:
-
-```sh
-dotnet tool restore                                           # dotnet-ef
-dotnet build {Name}.slnx
+# 3. Restore, build and add the initial migration
+dotnet tool restore
+dotnet build MyShop.slnx
 dotnet ef migrations add Initial --project src/backend/Source
-```
 
-Then run the whole application with one command:
-
-```sh
+# 4. Run everything: PostgreSQL, Redis, the API and the web app
 npm run dev
 ```
 
-It starts PostgreSQL and Redis with Docker (`docker-compose.yml`) when they are not already answering,
-installs the web app's packages when they are missing, and runs the API and the web app together in one
-terminal, each line prefixed by where it came from. The web app starts only once the API answers on
-`/health`, so its first page never meets an API still building:
+Open **http://app.localhost:3000** and sign in as `admin` (the platform), or
+**http://default.localhost:3000** as `tenantadmin` (the Default tenant), with the password from step 2.
 
-- API: [http://localhost:5000](http://localhost:5000), Swagger at [/swagger](http://localhost:5000/swagger/index.html)
-- Web app: [http://app.localhost:3000](http://app.localhost:3000) or [http://default.localhost:3000](http://default.localhost:3000) ([http://localhost:3000](http://localhost:3000) works too) — a dev proxy in front of `next dev` on :3001 that sends `/api`, `/hubs`, `/hangfire` and `/health` to the API, as Caddy does in production
+👉 Options, troubleshooting and next steps: [easyfornet.com/docs/getting-started/quick-start](https://easyfornet.com/docs/getting-started/quick-start)
 
-Press **Ctrl+C** to stop everything. The containers keep running; `docker compose down` stops them (the data is kept).
+## Build With AI Agents
 
-```sh
-npm run dev -- --no-docker      # use the PostgreSQL and Redis you already run
-npm run dev -- --api-only       # services + API, no web app and no proxy
-npm run dev -- --web-only       # the web app and the proxy, against an API started elsewhere on :5000
-npm run stop:api                # stop an API left running from this project (it locks bin/ on Windows)
+Describe a feature, and a team of agents builds it the way the codebase expects:
+
+```text
+/feature add invoices with line items and PDF export
 ```
 
-To run the pieces separately instead:
+The lead agent loads the matching skills, delegates design, data, backend and frontend work to
+specialists, runs the quality gate, has QA, security and code reviewers sign off, and commits — then
+stops for your review.
+
+For bigger work, write a spec in `specs/` and let the loop build it unattended:
 
 ```sh
-docker compose up -d                          # PostgreSQL (postgres/postgres) and Redis (password "redis"), on the ports DEV_POSTGRES_PORT / DEV_REDIS_PORT name (default 5432 / 6379)
-dotnet run --project src/backend/Source       # the API
-npm run dev -- --web-only                     # the web app behind the dev proxy on :3000 (next dev alone on :3000 has no /api)
+npm run loop       # plan the spec into tasks, build each one, verify, review, commit
+npm run monitor    # watch the run live
 ```
 
-Development and Testing apply migrations on startup. Any other environment applies them only when
-`Database:ApplyMigrationsOnStartup` is set (the Docker stacks below set it), or explicitly:
+Every task is verified by the runner itself, capped in cost, committed one task at a time, and never
+pushed or merged without your say-so.
 
-```sh
-dotnet ef database update --project src/backend/Source
-```
+## What's Inside
 
-## Seeded Accounts
+| | |
+|---|---|
+| **Identity** | Users, roles, hierarchical permissions, sign-up, email verification, password reset |
+| **Multi-tenancy** | A subdomain per tenant, isolated data, memberships and seats, platform admin area |
+| **Plans** | Editions with feature toggles and limits per tenant |
+| **Settings** | Typed run-time settings per platform and tenant, with encrypted secrets |
+| **Real-time** | Persistent notifications pushed over SignalR |
+| **Files & Email** | Uploads behind a pluggable storage provider; SMTP email through background jobs |
+| **Localization** | Eight languages, right-to-left support, translations editable in the app |
+| **Testing** | xUnit v3, architecture tests, Vitest and one quality gate: `npm run gate` |
+| **Deployment** | Docker Compose with automatic HTTPS, or one command to a VPS: `npm run deploy:vps` |
 
-Every start creates, when absent:
+**Stack:** ASP.NET 10 · FastEndpoints · EF Core 10 · PostgreSQL · Redis · Hangfire · SignalR · Next.js 16 · React 19 · RTK Query · Tailwind CSS 4
 
-- `admin`: the platform administrator. It manages tenants and editions, and belongs to no tenant.
-- `tenantadmin`: the administrator of the Default tenant.
+## Learn More
 
-Their password is generated for each project and printed when it is created. It is in the `Seed`
-section of `src/backend/Source/appsettings.json` (and of the Development and Testing files) and
-applied only when an account is first created, so change it in the app after that.
-
-## Change Connection Strings
-
-Go to `{name}/src/backend/Source` directory. By default, the EasyForNet sets up connection strings for PostgreSQL in the `appsettings.json`, `appsettings.Development.json` and `appsettings.Testing.json` files (the last two are git-ignored). Development and Testing connect as `postgres` / `postgres` and to Redis with the password `redis`, the `docker compose` defaults; `appsettings.json` keeps a `{password}` placeholder. To use another PostgreSQL or Redis, follow these steps:
-
-1. Open the `appsettings.Development.json` file. Update the `DefaultConnection`, `Redis` and `Hangfire` connection strings with your connection details:
-
-    ```json
-    {
-      "ConnectionStrings": {
-        "DefaultConnection": "Host=your_host;Database=your_db;Username=your_user;Password=your_password",
-        "Redis": "your_host:6379,password=your_redis_password"
-      },
-      "Hangfire": {
-        "Storage": {
-          "ConnectionString": "Host=your_host;Database=your_db;Username=your_user;Password=your_password"
-        }
-      }
-    }
-    ```
-
-2. Open the `appsettings.Testing.json` file. Update the PostgreSQL connection strings the same way (the test run creates and deletes its own database, and needs no Redis):
-
-    ```json
-    {
-      "ConnectionStrings": {
-        "DefaultConnection": "Host=your_host;Database=your_test_db;Username=your_user;Password=your_password"
-      },
-      "Hangfire": {
-        "Storage": {
-          "ConnectionString": "Host=your_host;Database=your_test_db;Username=your_user;Password=your_password"
-        }
-      }
-    }
-    ```
-
-To keep using the Docker containers with other passwords, set `DEV_POSTGRES_PASSWORD` / `DEV_REDIS_PASSWORD`
-(in the shell or the root `.env`) to the same values. A PostgreSQL password takes effect only when its
-volume is first created. Likewise `DEV_POSTGRES_PORT` / `DEV_REDIS_PORT` move the containers off a
-PostgreSQL or Redis already installed on the machine; the connection strings must name the same ports.
-`dotnet efn cp` does this itself when it finds 5432 or 6379 taken.
-
-## Run the Tests
-
-From the project root (the backend tests need PostgreSQL, not Redis):
-
-```sh
-dotnet test --project src/backend/Tests # backend tests
-npm run gate                        # everything: build, backend tests, web lint/typecheck/tests, next build
-npm run gate -- --fast              # the same without the production web build
-```
-
-## Docker (Production)
-
-`docker-compose.prod.yml` builds and runs the whole application — API, web app, PostgreSQL, Redis, and
-Caddy serving both apps from one HTTPS origin per host: the platform at `app.<DOMAIN>` (or
-`<PLATFORM_SUBDOMAIN>.<DOMAIN>`, see `.env.docker.example`) and every tenant at `<identifier>.<DOMAIN>`.
-The domain's DNS needs two A records pointing at the server, the platform's host and
-`*.<DOMAIN>`. Caddy obtains an HTTP-01 certificate per host — the platform's at startup, a tenant's on its
-first visit, once the API confirms the host belongs to an existing tenant (`GET /api/tenants/tls-allowed`) —
-so no DNS credentials are needed. Let's Encrypt issues at most 50 certificates per registered domain per
-week; an installation expecting more new tenants than that should use a DNS-01 wildcard certificate
-(see `docker/Caddyfile`).
-
-```sh
-docker compose -f docker-compose.prod.yml --env-file .env up -d --build
-```
-
-A generated project already has the root `.env` (git-ignored): random database, Redis and administrator
-(`SEED_ADMIN_PASSWORD`) passwords, a JWT key, and `DOMAIN=localhost` (the platform at `https://app.localhost`),
-so the stack starts as generated. Before deploying for real, set `DOMAIN`, `PLATFORM_SUBDOMAIN` (`app`
-unless the platform should live at another subdomain, such as `demo`), `PUBLIC_URL`
-(`https://<PLATFORM_SUBDOMAIN>.<DOMAIN>`), `TENANT_URL_TEMPLATE` (`https://{tenant}.<DOMAIN>`) and the SMTP values. `.env.docker.example`
-documents every value; copy it to `.env` and fill it in if the file is missing.
-
-The API applies migrations on startup, so add the initial migration first (see **Run the Project**).
-The web image is built with `NEXT_PUBLIC_API_URL=/api`, a relative URL the browser resolves against
-whatever host it is on (the proxy routes `/api` and `/hubs` to the API), so changing the domain needs no
-rebuild of the web image. Uploaded files and the Data Protection keys (which encrypt secret settings) live in named
-volumes; back up those and the database volume.
-
-## Deploy to a VPS (Coolify)
-
-`npm run deploy:vps` puts the application on a Linux VPS behind [Coolify](https://coolify.io), from
-Windows, macOS or Linux. It needs Node and the OpenSSH client here (both ship with Windows 10+ and
-macOS), and on the server only SSH access as root (or a sudo user) and two DNS A records pointing at
-it: `app.<domain>` (the platform) and `*.<domain>` (every tenant). `--domain` is the domain the
-application lives under, not the platform's host. The platform is served at `app.<domain>` unless
-`--platform-subdomain` names another label: `--domain easyfornet.com --platform-subdomain demo` serves
-it at `demo.easyfornet.com` (so that DNS record is `demo.<domain>`), and `demo` is then never a tenant's.
-
-```sh
-npm run deploy:vps -- --host 203.0.113.10 --domain example.com --email you@example.com
-npm run deploy:vps -- --domain example.com              # later deploys: the other answers are remembered
-EFN_DNS_TOKEN=<token> npm run deploy:vps -- --domain example.com --dns-provider cloudflare   # a *.example.com wildcard certificate
-npm run deploy:vps -- --domain easyfornet.com --platform-subdomain demo   # the platform at demo.easyfornet.com
-npm run deploy:vps -- --host 203.0.113.10 --check       # only report the server's prerequisites
-npm run deploy:vps -- --help                            # every option (--user, --port, --identity, --platform-subdomain, --repo, --branch, --name, --dns-provider, --dns-token, --yes)
-```
-
-Over SSH it checks the server first (distribution, CPU, memory, disk, ports 80/443/8000, an existing
-Docker) and stops if anything would fail; it also stops when `*.<domain>` has no DNS record (it resolves
-a random label to tell). It then installs only what is missing: the tools it needs, a
-swap file on a small server, firewall rules, Coolify itself and an API token. After that it creates
-a Coolify project and application named after the domain, attaches the platform's host (`https://app.<domain>` by default) and
-`https://*.<domain>`, fills in the environment variables, and deploys. Ubuntu, Debian, RHEL-family,
-SUSE, Arch and Alpine servers are supported. Running it again redeploys and changes nothing else:
-passwords and the JWT key are generated once, on the server, and are never overwritten.
-
-Coolify's Traefik obtains the platform's certificate over HTTP-01, but cannot obtain one per tenant
-host as it is first visited. `--dns-provider` (a [lego](https://go-acme.github.io/lego/dns/) provider
-name: `cloudflare`, `digitalocean`, `duckdns`, `gandiv5`, `godaddy`, `linode`, `vultr`, or any other
-with the token given as `VARIABLE=token`, several joined by commas) and an API token allowed to edit
-the domain's records (for `godaddy`, its API key and secret as `KEY:SECRET`) let it hold
-one `*.<domain>` wildcard certificate through DNS-01. Give the token as the `EFN_DNS_TOKEN` environment
-variable: `--dns-token` works too, but stays in the shell's history and npm's debug log. The script never
-prints, logs or saves it; on the server it lives in a root-only file Traefik reads. Without them only
-HTTP-01 per-host certificates apply and tenant hosts are served with Traefik's default certificate —
-pass the DNS flags, or deploy with `docker-compose.prod.yml`, whose Caddy issues them on demand.
-
-For a domain on GoDaddy, `--godaddy-key` and `--godaddy-secret` (or `GODADDY_API_KEY` and
-`GODADDY_API_SECRET` in the environment, or those two variables in the root `.env`; nothing else in
-`.env` is read) do both jobs: the deploy creates the `*.<domain>` A record in the account's zone,
-pointing at the server, and obtains the wildcard certificate (they imply `--dns-provider godaddy`).
-GoDaddy opens its DNS API only to some accounts, and the key must be a Production one; otherwise add
-the `*.<domain>` record yourself. The credentials are never printed or saved.
-
-Coolify builds from the Git repository with `docker-compose.coolify.yml`, so it deploys what is
-**pushed** to the branch (the repository's base branch by default). A private repository gets a
-read-only deploy key: the script adds it with `gh` when that is installed, or prints it for you to
-add. Each domain is its own Coolify application, so several apps can share one server. The Coolify
-dashboard is at `http://<server>:8000`; its login and the app's administrator password are saved on
-the server in `/root/.efn-deploy/`.
-
-## Features
-
-- **Authentication & Sessions** – JWT bearer or cookie sign-in with refresh tokens; every session lives in Redis and is revoked at once when the user's access changes.
-- **Permissions-Based Authorization** – Fine-grained, hierarchical permissions enforced on every endpoint and mirrored in the web app.
-- **Role & Permission Management** – Define roles and assign permissions dynamically through the frontend.
-- **User Management** – Pages and endpoints for user CRUD, changing passwords, and forgotten/reset passwords.
-- **Multi-Tenancy** – Tenants with isolated data, memberships, tenant switching, and a platform administrator above them.
-- **Editions & Feature Management** – Plans that switch features on or off and set limits (users per tenant, upload size) per tenant.
-- **Settings** – Typed settings the platform and each tenant can override at run time, with encrypted secrets.
-- **Localization** – Translations served by the API, with per-tenant and platform overrides and enabled languages edited in the app; right-to-left support.
-- **File Management** – Uploads with plan-based size limits.
-- **Real-Time Notifications** – In-app notifications pushed over SignalR.
-- **Self-Hosted Background Email Service** – Send emails directly from your own server without relying on third-party services.
-- **Automatic Cleanup Jobs** (Hangfire)
-  - `delete-expired-auth-tokens` – A recurring job that runs once per day to remove expired authentication tokens. The schedule can be customized.
-  - `delete-expired-tokens` – A recurring job that runs once per day to remove expired tokens used for the "Forgot Password" functionality. The schedule can be customized.
-  - `delete-expired-notifications` – A recurring job that runs once per day to remove notifications older than `Notifications:RetentionDays`.
-- **AI-Ready** – A `CLAUDE.md`, step-by-step skills, specialised agents, guard hooks, and a spec-driven task loop (`npm run loop`) for building features with Claude Code.
+Everything else — architecture, backend and frontend guides, configuration, deployment and the AI
+workflow — is at **[easyfornet.com](https://easyfornet.com/docs)**.
 
 ## Custom Development
 
-For custom development, you can email me at `easyfornet@outlook.com`
+If you want custom development, you can send me an email at [support@easyfornet.com](mailto:support@easyfornet.com).
 
-## Star the Project
+## Support the Project
 
-If you find this project helpful and appreciate the effort put into creating a robust backend template and tool for creating fast endpoints, please consider giving it a star on GitHub. Your support helps make the project more visible to others who might benefit from it.
-
-⭐ Star this [repository](https://github.com/ma496/EasyForNet) to show your support! ⭐
-
-Your stars motivate me to:
-
-- Add more features and improvements
-- Maintain documentation
-- Provide better support
-
-Thank you for your support! 👍
-
-## Documentation
-
-Check out the [Documentation](https://github.com/ma496/EasyForNet/wiki) for additional information.
+If EasyForNet saves you time, ⭐ [star it on GitHub](https://github.com/ma496/EasyForNet) — it helps others find it and keeps the project growing.
