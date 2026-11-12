@@ -173,6 +173,12 @@
       "match": ["^src/(?:[^/]+/)?frontend/web/store/api/"],
       "when": "for a web API slice change",
       "why": "Slices inject into the one shared appApi, and DTOs mirror the backend by name."
+    },
+    {
+      "skill": "seo",
+      "match": ["^src/(?:[^/]+/)?backend/Source/Features/Seo/", "^src/(?:[^/]+/)?frontend/web/lib/(?:server/)?seo", "^src/(?:[^/]+/)?frontend/web/app/(?:sitemap\\.ts$|robots\\.txt/)", "^src/(?:[^/]+/)?frontend/web/app/\\[lang\\]/\\(site\\)/"],
+      "when": "for a public page or SEO change",
+      "why": "A public page's metadata is a SeoPage row resolved through a cache on both the API and the web server; a page that hardcodes it, or a write that skips invalidation, serves stale or missing tags."
     }
   ],
   "unownedPaths": ["^\\.agent-queue/", "^\\.agent-runs/", "^docs/builds/"],

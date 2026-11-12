@@ -46,13 +46,26 @@ public class TemplateArgumentTests
     }
 
     /// <summary>
-    /// Tests that the user-facing template leaves out the skills about tenancy and plans.
+    /// Tests that each template leaves out the skills about what only the other one has: tenancy and
+    /// plans for the user-facing template, public SEO pages for the multi-tenant one.
     /// </summary>
     [Fact]
-    public void UserFacing_Excludes_Tenancy_Skills()
+    public void Each_Template_Excludes_The_Other_Templates_Skills()
     {
-        Assert.Contains("multi-tenancy", ProjectTemplate.UserFacing.ExcludedSkills);
-        Assert.Contains("feature-management", ProjectTemplate.UserFacing.ExcludedSkills);
-        Assert.Empty(ProjectTemplate.MultiTenant.ExcludedSkills);
+        Assert.Equal(["multi-tenancy", "feature-management"], ProjectTemplate.UserFacing.ExcludedSkills);
+        Assert.Equal(["seo"], ProjectTemplate.MultiTenant.ExcludedSkills);
+    }
+
+    /// <summary>
+    /// Tests that every excluded skill names a real directory under <c>.claude/skills</c>, so a rename
+    /// fails here rather than shipping the skill silently to the template that should not have it.
+    /// </summary>
+    [Fact]
+    public void Excluded_Skills_Exist()
+    {
+        var root = Path.GetDirectoryName(Generator.CustomizeAppSettingsTests.FindTemplateFile("agentic.config.json"))!;
+
+        foreach (var skill in ProjectTemplate.All.SelectMany(t => t.ExcludedSkills))
+            Assert.True(File.Exists(Path.Combine(root, ".claude", "skills", skill, "SKILL.md")), $"{skill} has no SKILL.md.");
     }
 }

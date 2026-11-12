@@ -364,6 +364,7 @@ The component example pages (`app/[lang]/(app)/ui/`) ship only with the CLI's `-
 - API: `backend-feature`, `backend-endpoint`, `backend-entity`, `backend-tests`, `multi-tenancy`, `permissions`, `feature-management`, `settings`, `background-jobs`, `file-storage`, `notifications`
 - Web: `rtk-query-api`, `frontend-page`, `frontend-crud`, `ui-component`, `redux-state`, `localization`, `frontend-tests`
 - Spanning both: `api-error-handling`
+- User-facing template only: `seo` (public pages and the `Seo` slice; the multi-tenant template leaves it out, as the user-facing one leaves out `multi-tenancy` and `feature-management`)
 - Committing: `commit` — stages deliberately and commits as the configured git user, with no co-author or attribution trailer
 - Process: spec-driven development — `specs/README.md`, the `.claude/commands` (`/orient`, `/feature`, `/fix`, `/auto`, `/queue`, `/spec-split`, `/check`, `/verify`, `/ship`, `/review-diff`, `/trace`, `/pr-msg`), and the agents in `.claude/agents`
 - This repository and the CLI: `new-project` (scaffolding), `template-maintenance`

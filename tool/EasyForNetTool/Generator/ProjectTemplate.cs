@@ -27,7 +27,7 @@ public sealed record ProjectTemplate(
         "multi-tenant",
         "new-project-claude.md",
         "new-project-readme.md",
-        [],
+        ["seo"],
         ["app.localhost", "default.localhost"],
         "admin and tenantadmin",
         ["app", "[lang]", "(app)", "ui"]);
