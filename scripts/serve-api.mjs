@@ -10,16 +10,18 @@
  */
 import { join } from "node:path";
 import { spawnPortable } from "./lib/proc.mjs";
-import { REPO_ROOT } from "./lib/project-config.mjs";
+import { REPO_ROOT, appArg, selectApp } from "./lib/project-config.mjs";
 
 const port = process.env.PORT || "5000";
+// Which app's API: `--app <name>`, else EFN_APP, else the first in agentic.config.json `apps`.
+const app = selectApp(appArg(process.argv.slice(2)));
 // Set by verify when its gate has just built the solution: compiling it again here only adds
 // tens of seconds to every live check. Anything else — a developer, a gate that skipped the
 // build — leaves `dotnet run` to build as usual.
 const prebuilt = process.env.SERVICE_PREBUILT === "1" ? ["--no-build"] : [];
 const child = spawnPortable(
   "dotnet",
-  ["run", "--project", join(REPO_ROOT, "src", "backend", "Source"), ...prebuilt, "--no-launch-profile", "--urls", `http://localhost:${port}`],
+  ["run", "--project", join(REPO_ROOT, app.backend, "Source"), ...prebuilt, "--no-launch-profile", "--urls", `http://localhost:${port}`],
   {
     cwd: REPO_ROOT,
     stdio: "inherit",

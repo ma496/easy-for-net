@@ -14,9 +14,9 @@ import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { IS_WINDOWS } from "./proc.mjs";
 
-/** The directory whose files a running API holds open. */
-export function apiBinDir(repoRoot) {
-  return join(repoRoot, "src", "backend", "Source", "bin");
+/** The directory whose files a running API of `app` (an `apps` entry) holds open. */
+export function apiBinDir(repoRoot, app = { backend: join("src", "backend") }) {
+  return join(repoRoot, app.backend, "Source", "bin");
 }
 
 /** Forward slashes, and lower case where the file system ignores case. */

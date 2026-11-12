@@ -8,10 +8,18 @@
     "conventions": [
       "Features are isolated vertical slices: a type under Features/X never references a type under Features/Y unless that type is marked [AllowOutside]. Cross-feature access goes through a service interface, never through another feature's entities — the architecture tests fail the gate otherwise.",
       "One endpoint is one file: the Endpoint, its Request, Validator, Response/DTOs and the Mapperly mapper live together. Global usings live in Meta.cs, and every C# file opens with its using directives, then a blank line, then its file-scoped namespace.",
-      "A new permission is three edits that must agree: the constant in Permissions/Allow.cs, its definition in the feature's PermissionsProvider, and the mirror in src/frontend/web/allow.ts. A new feature (entitlement) is the same triple: FeatureNames.cs, the slice's FeaturesProvider, and feature-names.ts.",
+      "A new permission is three edits that must agree: the constant in Permissions/Allow.cs, its definition in the feature's PermissionsProvider, and the mirror in the web app's allow.ts. A new feature (entitlement) is the same triple: FeatureNames.cs, the slice's FeaturesProvider, and feature-names.ts.",
       "An EF Core query reads only what it uses: a query whose rows are not modified and saved is AsNoTracking() and projects with Select (or a Mapperly ProjectTo) to the columns the response needs — never a whole entity loaded with Include and mapped afterwards; existence is AnyAsync, a count is CountAsync. A query that updates an entity loads it tracked, with no Include the update does not need. Every Skip/Take follows an OrderBy ending on a unique column (Process adds Id as tie-breaker); in Development and Testing an unordered row limit throws."
     ]
   },
+  "apps": [
+    {
+      "name": "multi-tenant",
+      "backend": "src/multi-tenant/backend",
+      "web": "src/multi-tenant/frontend/web",
+      "devHosts": ["app.localhost", "default.localhost"]
+    }
+  ],
   "commands": {
     "gate": "node scripts/gate.mjs",
     "verify": "npm run verify"
@@ -30,7 +38,7 @@
       "agent": "ui-ux-reviewer",
       "label": "Design",
       "phase": "design",
-      "match": ["^src/frontend/web/(app|components)/(?!.*\\.test\\.tsx$).*\\.tsx$"],
+      "match": ["^src/(?:[^/]+/)?frontend/web/(app|components)/(?!.*\\.test\\.tsx$).*\\.tsx$"],
       "why": "Decides what the screen should be — layout, states, narrow widths, dark mode and RTL — before code makes that decision by accident."
     },
     {
@@ -38,9 +46,9 @@
       "label": "Data",
       "phase": "build",
       "match": [
-        "^src/backend/Source/Features/[^/]+/Core/Entities/",
-        "^src/backend/Source/Migrations/",
-        "^src/backend/Source/ShareData/"
+        "^src/(?:[^/]+/)?backend/Source/Features/[^/]+/Core/Entities/",
+        "^src/(?:[^/]+/)?backend/Source/Migrations/",
+        "^src/(?:[^/]+/)?backend/Source/ShareData/"
       ],
       "why": "Entities, their EF configuration, migrations and seeding — a shape change invalidates queries, indexes and the seeder together."
     },
@@ -48,14 +56,14 @@
       "agent": "backend-engineer",
       "label": "Backend",
       "phase": "build",
-      "match": ["^src/backend/(?!Source/Features/Localization/Core/Resources/)", "^tool/"],
+      "match": ["^src/(?:[^/]+/)?backend/(?!Source/Features/Localization/Core/Resources/)", "^tool/"],
       "why": "Endpoints, services, permissions, feature management and their tests — everything behind the HTTP surface."
     },
     {
       "agent": "frontend-engineer",
       "label": "Front end",
       "phase": "build",
-      "match": ["^src/frontend/web/", "^src/backend/Source/Features/Localization/Core/Resources/"],
+      "match": ["^src/(?:[^/]+/)?frontend/web/", "^src/(?:[^/]+/)?backend/Source/Features/Localization/Core/Resources/"],
       "why": "The Next.js app: locale-prefixed routes, RTK Query slices, forms, translations and the shared components."
     },
     {
@@ -76,12 +84,12 @@
         "^agentic\\.config\\.json$",
         "^scripts/(agent-run|agent-queue|auto-ship|verify|gate)\\.mjs$",
         "^scripts/lib/(departments|project-config|stage-paths|changed-paths|gate-scope|stream-render|claude-events|attempt-outcome)\\.mjs$",
-        "^src/backend/Source/Permissions/",
-        "^src/backend/Source/Features/(Identity|Tenancy)/",
-        "^src/backend/Source/Program\\.cs$",
-        "^src/backend/Source/Middleware/",
-        "^src/backend/Source/appsettings[^/]*\\.json$",
-        "^src/frontend/web/(proxy|auth-urls|allow)\\.ts$",
+        "^src/(?:[^/]+/)?backend/Source/Permissions/",
+        "^src/(?:[^/]+/)?backend/Source/Features/(Identity|Tenancy)/",
+        "^src/(?:[^/]+/)?backend/Source/Program\\.cs$",
+        "^src/(?:[^/]+/)?backend/Source/Middleware/",
+        "^src/(?:[^/]+/)?backend/Source/appsettings[^/]*\\.json$",
+        "^src/(?:[^/]+/)?frontend/web/(proxy|auth-urls|allow)\\.ts$",
         "\\.env(\\.docker)?\\.example$",
         "(^|/)Dockerfile$",
         "^docker-compose[^/]*\\.ya?ml$",
@@ -94,7 +102,7 @@
       "label": "UI / UX",
       "phase": "review",
       "order": 1,
-      "match": ["^src/frontend/web/(app|components)/(?!.*\\.test\\.tsx$).*\\.tsx$"],
+      "match": ["^src/(?:[^/]+/)?frontend/web/(app|components)/(?!.*\\.test\\.tsx$).*\\.tsx$"],
       "why": "Layout, hierarchy and states are judged by eye, and nothing else in the loop looks."
     },
     {
@@ -110,53 +118,53 @@
   "skills": [
     {
       "skill": "backend-endpoint",
-      "match": ["^src/backend/Source/Features/[^/]+/Endpoints/.*Endpoint\\.cs$"],
+      "match": ["^src/(?:[^/]+/)?backend/Source/Features/[^/]+/Endpoints/.*Endpoint\\.cs$"],
       "when": "for an endpoint change",
       "why": "The one-file layout, route group, permissions, validator and Mapperly mapper have an order that is easy to get half-right."
     },
     {
       "skill": "backend-entity",
-      "match": ["^src/backend/Source/Features/[^/]+/Core/Entities/", "^src/backend/Source/Migrations/"],
+      "match": ["^src/(?:[^/]+/)?backend/Source/Features/[^/]+/Core/Entities/", "^src/(?:[^/]+/)?backend/Source/Migrations/"],
       "when": "for a schema change",
       "why": "An entity change is not done until its configuration, DbSet and migration agree."
     },
     {
       "skill": "backend-tests",
-      "match": ["^src/backend/Tests/"],
+      "match": ["^src/(?:[^/]+/)?backend/Tests/"],
       "when": "for a backend test change",
       "why": "Test classes run in parallel against one database; a test that leans on state it did not create fails intermittently."
     },
     {
       "skill": "permissions",
-      "match": ["^src/backend/Source/Permissions/Allow\\.cs$", "^src/frontend/web/allow\\.ts$"],
+      "match": ["^src/(?:[^/]+/)?backend/Source/Permissions/Allow\\.cs$", "^src/(?:[^/]+/)?frontend/web/allow\\.ts$"],
       "when": "for a permission change",
       "why": "A permission lives in three places that must agree, plus the nav and route gating on the web."
     },
     {
       "skill": "feature-management",
-      "match": ["/FeatureManagement/FeatureNames\\.cs$", "^src/frontend/web/feature-names\\.ts$"],
+      "match": ["/FeatureManagement/FeatureNames\\.cs$", "^src/(?:[^/]+/)?frontend/web/feature-names\\.ts$"],
       "when": "for an entitlement change",
       "why": "A feature is declared in three places, and gating a permission on it has three callers that must not disagree."
     },
     {
       "skill": "multi-tenancy",
       "match": [
-        "^src/backend/Source/ShareData/Entities/Base/I(May)?HaveTenant\\.cs$",
-        "^src/backend/Source/Processors/TenantContextProcessor\\.cs$",
-        "^src/backend/Source/Features/Tenancy/Core/Tenant[^/]*\\.cs$"
+        "^src/(?:[^/]+/)?backend/Source/ShareData/Entities/Base/I(May)?HaveTenant\\.cs$",
+        "^src/(?:[^/]+/)?backend/Source/Processors/TenantContextProcessor\\.cs$",
+        "^src/(?:[^/]+/)?backend/Source/Features/Tenancy/Core/Tenant[^/]*\\.cs$"
       ],
       "when": "for a tenancy change",
       "why": "Tenant scope is established once per token and filtered in the DbContext; a change that misreads either leaks rows across tenants."
     },
     {
       "skill": "localization",
-      "match": ["^src/backend/Source/Features/Localization/", "^src/frontend/web/i18n/"],
+      "match": ["^src/(?:[^/]+/)?backend/Source/Features/Localization/", "^src/(?:[^/]+/)?frontend/web/i18n/"],
       "when": "for a translation change",
       "why": "Keys live in the API's resource files and must match across every locale; the web reads them through three translator entry points and a locale routing rule the proxy and guard share."
     },
     {
       "skill": "rtk-query-api",
-      "match": ["^src/frontend/web/store/api/"],
+      "match": ["^src/(?:[^/]+/)?frontend/web/store/api/"],
       "when": "for a web API slice change",
       "why": "Slices inject into the one shared appApi, and DTOs mirror the backend by name."
     }
@@ -169,7 +177,7 @@
         "name": "smoke",
         "description": "health, OpenAPI document, anonymous refusal",
         "when": [
-          "^src/backend/Source/(?!Features/Localization/Core/Resources/)"
+          "^src/(?:[^/]+/)?backend/Source/(?!Features/Localization/Core/Resources/)"
         ],
         "run": "node scripts/smoke.mjs {{api}}",
         "needsService": true,
@@ -238,14 +246,14 @@
     "protectedPaths": [],
     "conventions": [
       {
-        "paths": ["/src/backend/.*\\.cs$", "/tool/.*\\.cs$"],
+        "paths": ["/src/(?:[^/]+/)?backend/.*\\.cs$", "/tool/.*\\.cs$"],
         "except": ["/Migrations/", "/Program\\.cs$", "/NamespaceRewriterTests\\.cs$"],
         "forbid": "(?<=^namespace\\s+[\\w.]+\\s*;[\\s\\S]*)^using\\s+(?:static\\s+)?[\\w.@]+(?:\\s*=\\s*[^;\\n]+)?\\s*;",
         "flags": "m",
         "message": "a using directive comes after the namespace. Every C# file opens with its using directives, then a blank line, then its file-scoped namespace (`namespace X;`)"
       },
       {
-        "paths": ["/src/frontend/web/.*\\.tsx?$"],
+        "paths": ["/src/(?:[^/]+/)?frontend/web/.*\\.tsx?$"],
         "except": ["/store/api/_app-api\\.ts$", "/node_modules/"],
         "forbid": "\\bcreateApi\\s*\\(",
         "message": "createApi is called outside store/api/_app-api.ts. Feature slices attach to the shared appApi with enhanceEndpoints(...).injectEndpoints(...)"

@@ -6,12 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Two coupled deliverables live here:
 
-- `src/` — the **project template** itself: an ASP.NET 10 (FastEndpoints) backend and a Next.js 16 frontend. It is a working application (Identity, FileManagement, Notifications), but its primary purpose is to be the source that gets copied into new projects.
-- `tool/EasyForNetTool` — the **`dotnet efn` CLI** (packaged as `EasyForNetTool`, command `dotnet-efn`). `efn cp -n <name>` clones `https://github.com/ma496/EasyForNet.git` into `%LOCALAPPDATA%/EasyForNet/Templates/<version>`, checks out the tag `v{tool version}`, copies `src/`, and rewrites namespaces/project names (see `Generator/CreateProjectGenerator.cs`, `NamespaceRewriter.cs`).
+- `src/<template>/` — the **project templates**, each an ASP.NET 10 (FastEndpoints) backend (`backend/{Source,Tests}`) and a Next.js 16 frontend (`frontend/web`). Each is a working application, but its primary purpose is to be the source that gets copied into new projects. `src/multi-tenant` is the multi-tenant SaaS (tenants, editions, feature management) that the rest of this file describes and the default template.
+- `tool/EasyForNetTool` — the **`dotnet efn` CLI** (packaged as `EasyForNetTool`, command `dotnet-efn`). `efn cp -n <name> [-t <template>]` clones `https://github.com/ma496/EasyForNet.git` into `%LOCALAPPDATA%/EasyForNet/Templates/<version>`, checks out the tag `v{tool version}`, copies `src/<template>/backend` and `src/<template>/frontend/web` to the generated project's `src/backend` and `src/frontend/web` — a generated project has the same layout whichever template it came from — and rewrites namespaces/project names (see `Generator/CreateProjectGenerator.cs`, `ProjectTemplate.cs`, `NamespaceRewriter.cs`).
 
 Consequences to keep in mind when editing:
 
-- Changes under `src/` ship to every newly scaffolded project, so keep the template generic (no project-specific hardcoding).
+- Changes under `src/` ship to every newly scaffolded project, so keep the templates generic (no project-specific hardcoding). The templates share no code: each must stand alone when generated, so a fix that applies to both is made in both.
+- **`apps` in `agentic.config.json` lists the templates' paths** (one entry per template, the first the default). The stack scripts (`gate`, `dev`, `serve-api`, `stop-api`, `pg-ready`, `redis-ready`) read their paths from it — `gate` runs each app's backend and web steps, suffixed `[<app>]`, and the others take `--app <name>` or `EFN_APP` — and the generator rewrites it to the single `src/backend` + `src/frontend/web` entry of a generated project (`WriteAppsAsync`). Department, skill and convention patterns are written `^src/(?:[^/]+/)?backend/…` so the same pattern matches both layouts and ships unchanged; shipped skills and agents name the generated layout (`src/backend/...`).
+- A template may carry `src/<template>/overlay/`, whose files replace the shared root files at the same path in a generated project (`ApplyOverlay`), and `ProjectTemplate` names the skills it leaves out and the embedded `CLAUDE.md`/`README.md` it is given.
 - The tool resolves the template by **git tag matching its own version**. `publish-package.sh` enforces this: clean working tree → run tool tests → `dotnet pack` → create/push tag `v$VERSION` → `dotnet nuget push`.
 - `CreateProjectGenerator` copies an explicit list of root files/directories (`.editorconfig`, `.gitignore`, `.gitattributes`, `global.json`, `package.json`, `agentic.config.json`, `docker-compose.yml`, `docker-compose.prod.yml`, `docker-compose.coolify.yml`, `.env.docker.example`, `docker`, `.config`, `.vscode`, `scripts`, `.claude` minus the `new-project` and `template-maintenance` skills and `memory/lessons`, a `CLAUDE.md` and a `README.md` written from the embedded `new-project-claude.md` and `new-project-readme.md`, and a root `.env` written from `.env.docker.example` with the project's names, fresh random secrets and development PostgreSQL/Redis ports — 5432/6379 unless something on the machine already holds them, then the next free ones, written into the connection strings too (`DevPorts`)), then lays out the task loop's `specs/` and `docs/` as an empty skeleton (`CopyTaskLoopSkeleton`; `.agent-queue/` and `.claude/memory/lessons/` appear when the loop first writes to them, and no `.gitkeep` is ever copied) — this repository's own specs, build records, queue and lessons never ship — and finally makes the project a git repository with one commit (a missing git or a refused commit is reported, never fatal). If a new root-level file should reach generated projects, it must be added to that list. Inside `.claude` the rule inverts: exclusion is by directory *name* at any depth, so anything added under `.claude` ships with no generator change. Markdown under `.claude` is rewritten on copy (`Backend.` → the new root namespace, `EasyForNet.slnx` → `<Name>.slnx`), so keep namespace references there in that qualified form; any other file type is copied byte-for-byte.
 - Migrations are deliberately **not** copied into generated projects (`CopyDirectory(..., ["Migrations"])`); new projects run `dotnet ef migrations add Initial` themselves.
@@ -22,25 +24,25 @@ Backend (from the repository root):
 
 ```sh
 dotnet tool restore                 # restores dotnet-ef 10 pinned in .config/dotnet-tools.json
-dotnet build EasyForNet.slnx        # or dotnet build from src/backend/Source
-dotnet ef migrations add <Name> --project src/backend/Source/Backend.csproj
-dotnet ef database update --project src/backend/Source/Backend.csproj
-dotnet run --project src/backend/Source/Backend.csproj   # needs PostgreSQL and Redis (ConnectionStrings:Redis)
-npm run dev                         # from the repository root: the whole app — PostgreSQL + Redis (Docker), the API on :5000, then the web app (next dev on :3001) behind the dev proxy on :3000 once the API's /health answers; open http://app.localhost:3000 or http://default.localhost:3000 (scripts/dev.mjs, scripts/dev-proxy.mjs; --no-docker, --api-only, --web-only)
+dotnet build EasyForNet.slnx        # or dotnet build from src/multi-tenant/backend/Source
+dotnet ef migrations add <Name> --project src/multi-tenant/backend/Source/Backend.csproj
+dotnet ef database update --project src/multi-tenant/backend/Source/Backend.csproj
+dotnet run --project src/multi-tenant/backend/Source/Backend.csproj   # needs PostgreSQL and Redis (ConnectionStrings:Redis)
+npm run dev                         # from the repository root: the whole app — PostgreSQL + Redis (Docker), the API on :5000, then the web app (next dev on :3001) behind the dev proxy on :3000 once the API's /health answers; open http://app.localhost:3000 or http://default.localhost:3000 (scripts/dev.mjs, scripts/dev-proxy.mjs; --no-docker, --api-only, --web-only, --app <name> for another template)
 npm run stop:api                    # from the repository root: stop this checkout's running API before a build (it locks bin/ on Windows)
 docker compose up -d                # from the repository root: PostgreSQL + Redis for development (docker-compose.yml)
 npm run deploy:vps -- --host <ip> --domain <domain> --email <email>   # deploy to a VPS through Coolify: the platform at app.<domain> (--platform-subdomain <label> for <label>.<domain>), every tenant at <tenant>.<domain> (DNS: A for the platform host and A *.<domain>; --dns-provider/--dns-token for a DNS-01 wildcard certificate) (scripts/deploy-vps.mjs + scripts/deploy/vps/remote.sh, docker-compose.coolify.yml)
 ```
 
-Backend tests (`src/backend/Tests`) — **require a running PostgreSQL** matching `appsettings.Testing.json` (not Redis: the Testing host keeps sessions in memory); the Testing environment migrates and seeds on startup:
+Backend tests (`src/multi-tenant/backend/Tests`) — **require a running PostgreSQL** matching `appsettings.Testing.json` (not Redis: the Testing host keeps sessions in memory); the Testing environment migrates and seeds on startup:
 
 ```sh
-dotnet test --project src/backend/Tests/Backend.Tests.csproj
-dotnet test --project src/backend/Tests/Backend.Tests.csproj --filter-class "*UserCreateTests"
-dotnet test --project src/backend/Tests/Backend.Tests.csproj --filter-method "*UserCreateTests.Valid_Input"
+dotnet test --project src/multi-tenant/backend/Tests/Backend.Tests.csproj
+dotnet test --project src/multi-tenant/backend/Tests/Backend.Tests.csproj --filter-class "*UserCreateTests"
+dotnet test --project src/multi-tenant/backend/Tests/Backend.Tests.csproj --filter-method "*UserCreateTests.Valid_Input"
 ```
 
-Frontend (`src/frontend/web`, Node >= 24):
+Frontend (`src/multi-tenant/frontend/web`, Node >= 24):
 
 ```sh
 npm install
@@ -64,7 +66,7 @@ Everything at once, from the repository root (the gate needs PostgreSQL running;
 npm run gate                        # build, backend + tool tests, web lint/tsc/vitest, engine + hook tests, next build
 npm run gate -- --fast              # the same without the production web build
 npm run gate -- --changed --plan    # which steps the working tree's changes reach, without running them
-npm run verify -- --autostart       # the gate steps the diff reaches, plus the live API smoke check when src/backend/Source changed
+npm run verify -- --autostart       # the gate steps the diff reaches, plus the live API smoke check when an API's Source changed
 npm run verify -- --full            # the same with every gate step
 ```
 
@@ -196,7 +198,7 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
 
 **Feature isolation is enforced by tests.** `Tests/Architect/FeatureDependencyTests` fails if a type under `Backend.Features.X` depends on a type under `Backend.Features.Y` unless that type is marked `[AllowOutside]`. `[NoDirectUse]` (with `[BypassNoDirectUse]` as the escape hatch) enforces consuming a class through its interface. `Tests/Architect/Features/Feature{A,B}` are fixtures that exercise the rules themselves — not real features.
 
-**Permissions** are string constants in `Permissions/Allow.cs`, declared as a hierarchy by each feature's `IPermissionDefinitionProvider`, enforced on endpoints via `Permissions(Allow.X)`, and reconciled into the database by `ShareData/DataSeeder` on every startup (adds/renames/deletes rows and strips deleted permissions from roles). Adding a permission means: constant in `Allow.cs` → definition in the provider → mirror the constant in `src/frontend/web/allow.ts`. A definition may also call `.RequireFeatures(...)` — see **Features (entitlements)** below.
+**Permissions** are string constants in `Permissions/Allow.cs`, declared as a hierarchy by each feature's `IPermissionDefinitionProvider`, enforced on endpoints via `Permissions(Allow.X)`, and reconciled into the database by `ShareData/DataSeeder` on every startup (adds/renames/deletes rows and strips deleted permissions from roles). Adding a permission means: constant in `Allow.cs` → definition in the provider → mirror the constant in the web app's `allow.ts`. A definition may also call `.RequireFeatures(...)` — see **Features (entitlements)** below.
 
 Each definition also carries a `PermissionScope` — `Tenant` (the default), `Platform` or `Both` — and `SessionGrants` narrows the permissions a session is created with to the scope it acts in: `Platform` + `Both` acting in no tenant, `Tenant` + `Both` acting inside one, nothing at all for an ordinary account with no tenant. Which roles count follows the scope too: inside a tenant only that tenant's own roles, in no tenant only the platform roles (`Role.TenantId == null`) — so a platform role holds only `Platform` + `Both` permissions (`ChangePermissionsEndpoint` refuses a `Tenant` one with `tenantPermissionNotGrantable`, as it refuses a `Platform` one on a tenant role). **Permissions are the only authorization input**, so a tenant-scoped operation is kept out of platform scope by declaring a `Tenant`-scoped permission and by nothing else — there is no endpoint attribute beside it. The separate `User.IsPlatform` column names the account's tier, travels as the `is_platform` claim, and is read only where the tier itself is the question — sign-in, the Hangfire dashboard, leaving a tenant for platform scope, what tier a newly created account gets, and who a tenant administers. It is no standing inside a tenant: a platform account enters only a tenant it is a member of, and acts there on the roles that membership holds. Nor is it administered from inside one: `IUserService.TenantUsers()`, the tenant member endpoints and the role user counts leave platform accounts out unless the caller is a platform account acting in no tenant, so a tenant's administrators can neither see, add, re-role, remove, edit nor delete one.
 
@@ -210,7 +212,7 @@ Each slice declares its own features in `Core/<X>FeaturesProvider.cs`, beside th
 `<X>PermissionsProvider` it already has; `<X>Feature.cs : IFeature` remains the slice's DI module and
 has nothing to do with this. Adding a feature means: constant in
 `Features/Tenancy/Core/FeatureManagement/FeatureNames.cs` → definition in the slice's provider →
-mirror the constant in `src/frontend/web/feature-names.ts`. **Every feature ships
+mirror the constant in the web app's `feature-names.ts`. **Every feature ships
 enabled by default**, so an installation that has sold nothing behaves as though the system were not
 there.
 

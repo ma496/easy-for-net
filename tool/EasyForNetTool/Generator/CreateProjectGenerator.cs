@@ -269,8 +269,15 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             }
 
             Console.WriteLine("Copying template files...");
-            var backendProjectPath = Path.Combine(versionedTemplateDir, "src", "backend");
-            var webProjectPath = Path.Combine(versionedTemplateDir, "src", "frontend", "web");
+            // each template lives under src/<template>; a generated project gets the plain
+            // src/backend + src/frontend/web layout whichever one it came from
+            var template = argument.SelectedTemplate;
+            Console.WriteLine($"Template: {template.Name}");
+            var templateSourcePath = Path.Combine(versionedTemplateDir, "src", template.Name);
+            if (!Directory.Exists(templateSourcePath))
+                throw new UserFriendlyException($"The template '{template.Name}' is not in version {version} of the template repository.");
+            var backendProjectPath = Path.Combine(templateSourcePath, "backend");
+            var webProjectPath = Path.Combine(templateSourcePath, "frontend", "web");
             var pascalCaseProjectName = argument.Name.ToPascalCase();
             var kebabCaseProjectName = argument.Name.ToKebabCase();
             var targetPath = Path.Combine(Directory.GetCurrentDirectory(), argument.Output ?? string.Empty, kebabCaseProjectName);
@@ -310,13 +317,18 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             // the new-project and template-maintenance skills describe working on the template
             // repository itself, so they are of no use inside a generated project; the lessons
             // the task loop recorded are about the template repository too
-            CopyDirectory($"{versionedTemplateDir}/.claude", $"{targetPath}/.claude", true, ["new-project", "template-maintenance", "lessons"]);
-            WriteEmbeddedFile("new-project-claude.md", Path.Combine(targetPath, "CLAUDE.md"));
-            WriteEmbeddedFile("new-project-readme.md", Path.Combine(targetPath, "README.md"));
+            // the template's excluded skills describe something it does not have (tenancy, plans)
+            CopyDirectory($"{versionedTemplateDir}/.claude", $"{targetPath}/.claude", true, ["new-project", "template-maintenance", "lessons", .. template.ExcludedSkills]);
+            WriteEmbeddedFile(template.ClaudeResource, Path.Combine(targetPath, "CLAUDE.md"));
+            WriteEmbeddedFile(template.ReadmeResource, Path.Combine(targetPath, "README.md"));
             // the spec-driven task loop: its engine ships whole, and the places it records work
             // ship empty, so a new project starts with no specs, queue, build records or lessons
             CopyDirectory($"{versionedTemplateDir}/scripts", $"{targetPath}/scripts", true);
             CopyTaskLoopSkeleton(versionedTemplateDir, targetPath);
+            // what the template does differently from the shared root files (its deployment, the
+            // skills that describe it) replaces them, before the markdown under .claude is rewritten
+            ApplyOverlay(templateSourcePath, targetPath);
+            await WriteAppsAsync(Path.Combine(targetPath, "agentic.config.json"), template);
 
             Console.WriteLine("Customizing project files...");
             var (backendProjectName, backendProjectRootNamespace) = Helpers.GetProjectInfo(backendProjectTargetPath);
@@ -425,7 +437,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
 
             Console.WriteLine("Project creation completed successfully!");
             Console.WriteLine();
-            Console.WriteLine($"  Seeded accounts: admin and tenantadmin, password {LocalAdminPassword} in development");
+            Console.WriteLine($"  Seeded accounts: {template.SeededAccounts}, password {LocalAdminPassword} in development");
             Console.WriteLine("  (production seeds them with the random SEED_ADMIN_PASSWORD in .env)");
             Console.WriteLine($"  Development PostgreSQL on localhost:{devPorts.Postgres}, Redis on localhost:{devPorts.Redis}");
             if (devPorts != DevPorts.Default)
@@ -438,6 +450,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             Console.WriteLine("    dotnet ef migrations add Initial --project src/backend/Source");
             Console.WriteLine("    git add src/backend/Source/Migrations && git commit -m \"Add the initial migration\"");
             Console.WriteLine("    npm run dev        # PostgreSQL + Redis (Docker), the API on :5000 and the web app on :3000; Ctrl+C stops both");
+            Console.WriteLine($"    then open {string.Join(" or ", template.DevHosts.Select(h => $"http://{h}:3000"))}");
             Console.WriteLine();
             Console.WriteLine("  README.md has the rest.");
         }
@@ -590,7 +603,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
     /// <summary>
     /// Recursively copies a directory from source to target, optionally ignoring certain subdirectory names.
     /// </summary>
-    private static void CopyDirectory(string sourceDir, string targetDir, bool recursive, string[]? ignoreDirectories = null)
+    private static void CopyDirectory(string sourceDir, string targetDir, bool recursive, string[]? ignoreDirectories = null, bool overwrite = false)
     {
         var dir = new DirectoryInfo(sourceDir);
         var dirs = dir.GetDirectories()
@@ -603,7 +616,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
         foreach (var file in dir.GetFiles().Where(f => f.Name != ".gitkeep"))
         {
             var targetFilePath = Path.Combine(targetDir, file.Name);
-            file.CopyTo(targetFilePath);
+            file.CopyTo(targetFilePath, overwrite);
         }
 
         if (recursive)
@@ -611,9 +624,54 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             foreach (var subDir in dirs)
             {
                 var newTargetDir = Path.Combine(targetDir, subDir.Name);
-                CopyDirectory(subDir.FullName, newTargetDir, true, ignoreDirectories);
+                CopyDirectory(subDir.FullName, newTargetDir, true, ignoreDirectories, overwrite);
             }
         }
+    }
+
+    /// <summary>
+    /// Copies the template's <c>overlay</c> directory, when it has one, over the generated project's
+    /// root: each file in it replaces the shared file at the same relative path, or is added.
+    /// </summary>
+    /// <param name="templateSourcePath">The template's directory, <c>src/&lt;template&gt;</c> in the template repository.</param>
+    /// <param name="targetPath">The generated project's root.</param>
+    internal static void ApplyOverlay(string templateSourcePath, string targetPath)
+    {
+        var overlay = Path.Combine(templateSourcePath, ProjectTemplate.OverlayDirectory);
+        if (Directory.Exists(overlay))
+            CopyDirectory(overlay, targetPath, true, overwrite: true);
+    }
+
+    /// <summary>
+    /// Rewrites <c>apps</c> in the generated project's <c>agentic.config.json</c> to the one application
+    /// it has, at the generated layout. The template repository lists one entry per template, under
+    /// <c>src/&lt;template&gt;</c>; the stack scripts read their paths from this list.
+    /// </summary>
+    /// <param name="configPath">The generated project's <c>agentic.config.json</c>.</param>
+    /// <param name="template">The template the project was generated from.</param>
+    internal static async Task WriteAppsAsync(string configPath, ProjectTemplate template)
+    {
+        if (!File.Exists(configPath))
+            return;
+        var text = await File.ReadAllTextAsync(configPath);
+        var json = System.Text.Json.Nodes.JsonNode.Parse(text)!.AsObject();
+        var hosts = new System.Text.Json.Nodes.JsonArray();
+        foreach (var host in template.DevHosts)
+            hosts.Add(host);
+        json["apps"] = new System.Text.Json.Nodes.JsonArray(new System.Text.Json.Nodes.JsonObject
+        {
+            ["name"] = "app",
+            ["backend"] = "src/backend",
+            ["web"] = "src/frontend/web",
+            ["devHosts"] = hosts,
+        });
+        var options = new System.Text.Json.JsonSerializerOptions
+        {
+            WriteIndented = true,
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+            NewLine = "\n",
+        };
+        await File.WriteAllTextAsync(configPath, json.ToJsonString(options) + "\n");
     }
 
     /// <summary>

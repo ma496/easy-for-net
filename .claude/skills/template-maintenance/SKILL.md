@@ -7,12 +7,32 @@ description: Work on the EasyForNet template repository itself — how src/ and 
 
 This repository holds two coupled deliverables:
 
-- `src/` — the template: the API (`src/backend`) and the web app (`src/frontend/web`). It is a
-  working application, but its primary job is to be copied into new projects, together with the
-  agentic layer at the root (`.claude`, `scripts/`, `agentic.config.json`, the task-loop skeleton).
+- `src/<template>/` — the templates, each an API (`backend/{Source,Tests}`) and a web app
+  (`frontend/web`): `src/multi-tenant` (the default) and any other listed in
+  `Generator/ProjectTemplate.cs`. Each is a working application, but its primary job is to be copied
+  into new projects, together with the agentic layer at the root (`.claude`, `scripts/`,
+  `agentic.config.json`, the task-loop skeleton). The templates share no code — each stands alone
+  when generated.
 - `tool/EasyForNetTool` — the `dotnet efn` CLI, packaged as `EasyForNetTool` with command
   `dotnet-efn`. One command: `createproject` / `cp` with `-n/--name`, `-o/--output`,
-  `-m/--multilanguage`, `-e/--examples` (options are defined in `ArgumentInfo.cs`, parsed in `Parsing/`).
+  `-m/--multilanguage`, `-e/--examples`, `-t/--template` (options are defined in `ArgumentInfo.cs`,
+  parsed in `Parsing/`).
+
+## One layout in every generated project
+
+A generated project is `src/backend/{Source,Tests}` + `src/frontend/web` whichever template it came
+from, so everything shared at the root works unchanged in all of them. In this repository the stack
+scripts find each template through `apps` in `agentic.config.json` (`selectApp`/`APPS` in
+`scripts/lib/project-config.mjs`; `--app <name>` or `EFN_APP` picks one, the first is the default), and
+the generator rewrites that list to the single generated entry (`WriteAppsAsync`). Path patterns in
+`agentic.config.json` are written `^src/(?:[^/]+/)?backend/…` so they match both layouts.
+
+What a template does differently from the shared root lives in `ProjectTemplate` (the skills it
+leaves out, its embedded `CLAUDE.md`/`README.md`, its development hosts) and in
+`src/<template>/overlay/`, whose files replace the shared root files at the same relative path
+(`ApplyOverlay`, run before the `.claude` markdown rewrite). A new template is a directory under
+`src/`, an entry in `ProjectTemplate.All` and in `apps`, its two embedded files in the tool's csproj,
+and its projects in `EasyForNet.slnx`.
 
 ## The version ↔ tag contract
 
@@ -35,11 +55,11 @@ would want.
 
 `tool/EasyForNetTool/Generator/CreateProjectGenerator.cs` copies an **explicit** list:
 
-- `src/backend` recursively, excluding every directory named `Migrations`, and `src/frontend/web`
-  recursively (whatever is on disk in the tagged clone — only tracked files, since it is a fresh
-  clone)
+- `src/<template>/backend` recursively to `src/backend`, excluding every directory named
+  `Migrations`, and `src/<template>/frontend/web` recursively to `src/frontend/web` (whatever is on
+  disk in the tagged clone — only tracked files, since it is a fresh clone)
 - `appsettings.json` duplicated into `appsettings.Development.json` / `appsettings.Testing.json`
-- `src/frontend/web/.env.example` copied to `.env.development`
+- the web app's `.env.example` copied to `src/frontend/web/.env.development`
 - the root `.env` written from `.env.docker.example` by `WriteDockerEnvAsync`: the project's Compose
   project, database and Redis key prefix, `DOMAIN=localhost` / `PUBLIC_URL=https://app.localhost` /
   `TENANT_URL_TEMPLATE=https://{tenant}.localhost`, and
@@ -54,7 +74,7 @@ would want.
   (what `npm run deploy:vps` points Coolify at), `.env.docker.example`
   (`CopyFiles` throws if one is missing)
 - directories `.config`, `.vscode`, `docker`, `scripts` (whole), and `.claude` minus any directory named
-  `new-project`, `template-maintenance` or `lessons`
+  `new-project`, `template-maintenance` or `lessons`, and the template's `ExcludedSkills`
 - `CLAUDE.md` and `README.md`, written from the embedded resources
   `tool/EasyForNetTool/new-project-claude.md` and `new-project-readme.md` (`{{Name}}` / `{{name}}`
   replaced with the project name)
@@ -120,7 +140,7 @@ names out of them — they address the solution by globbing the root `*.slnx` an
 ## Locale filtering
 
 Translations ship as the API's resource files, so without multi-language the generator deletes
-`{ur,zh,ar,hi,es,fr,ru}.json` from `src/backend/Source/Features/Localization/Core/Resources` and
+`{ur,zh,ar,hi,es,fr,ru}.json` from the generated `src/backend/Source/Features/Localization/Core/Resources` and
 regex-rewrites one literal to English only: `locales: [...]` in `i18n/config.ts`. Changing the shape
 of that literal makes the regex miss silently (and `i18n/locales.test.ts` then fails in the generated
 project); adding or removing a shipped language means updating the generator's list too.
@@ -132,7 +152,7 @@ through its `PropertyName`, since the PascalCase of the option name would not ma
 
 ## Component examples
 
-The pages under `src/frontend/web/app/[lang]/(app)/ui/` demonstrate the component kit and ship only
+The pages under the multi-tenant web app's `app/[lang]/(app)/ui/` demonstrate the component kit and ship only
 with `-e true`. `-e false`, the default, deletes that directory. Everything else that exists only for
 those pages is found in two ways:
 

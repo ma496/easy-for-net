@@ -3,12 +3,12 @@
     <File Path=".editorconfig" />
     <File Path=".gitignore" />
   </Folder>
-  <Folder Name="/Template/" />
-  <Folder Name="/Template/Source/">
-    <Project Path="src/backend/Source/Backend.csproj" />
+  <Folder Name="/MultiTenant/" />
+  <Folder Name="/MultiTenant/Source/">
+    <Project Path="src/multi-tenant/backend/Source/Backend.csproj" />
   </Folder>
-  <Folder Name="/Template/Tests/">
-    <Project Path="src/backend/Tests/Backend.Tests.csproj" />
+  <Folder Name="/MultiTenant/Tests/">
+    <Project Path="src/multi-tenant/backend/Tests/Backend.Tests.csproj" />
   </Folder>
   <Folder Name="/Tool/">
     <Project Path="tool/EasyForNetTool.Tests/EasyForNetTool.Tests.csproj" />

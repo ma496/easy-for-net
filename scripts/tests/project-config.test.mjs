@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
-import { config, modelArgs, resolveModel, validateConfig } from "../lib/project-config.mjs";
+import { appArg, config, modelArgs, resolveModel, selectApp, validateConfig } from "../lib/project-config.mjs";
 
 const valid = () => structuredClone(config);
 
@@ -53,4 +53,38 @@ test("the model resolves env, then flag, then config, and blank means unset", ()
 test("inherit passes no --model at all", () => {
   assert.deepEqual(modelArgs("inherit"), []);
   assert.deepEqual(modelArgs("opus"), ["--model", "opus"]);
+});
+
+// --- apps ----------------------------------------------------------------------------
+const TWO_APPS = [
+  { name: "multi-tenant", backend: "src/multi-tenant/backend", web: "src/multi-tenant/frontend/web" },
+  { name: "user-facing", backend: "src/user-facing/backend", web: "src/user-facing/frontend/web" },
+];
+
+test("selectApp picks the named app, else the first", () => {
+  assert.equal(selectApp("user-facing", TWO_APPS).name, "user-facing");
+  assert.equal(selectApp(undefined, TWO_APPS).name, "multi-tenant");
+  assert.equal(selectApp("", TWO_APPS).name, "multi-tenant");
+});
+
+test("selectApp refuses an unknown app rather than acting on another", () => {
+  assert.throws(() => selectApp("single", TWO_APPS), /Unknown app "single"/);
+});
+
+test("appArg reads --app's value", () => {
+  assert.equal(appArg(["--no-docker", "--app", "user-facing"]), "user-facing");
+  assert.equal(appArg(["--no-docker"]), undefined);
+});
+
+test("the repository's own config lists valid apps", () => {
+  assert.ok(config.apps.length >= 1);
+  assert.deepEqual(validateConfig(config).filter((p) => p.startsWith("apps")), []);
+});
+
+test("validateConfig refuses empty, incomplete and duplicate apps", () => {
+  const problems = (apps) => validateConfig({ ...config, apps }).filter((p) => p.startsWith("apps"));
+  assert.equal(problems([]).length, 1);
+  assert.equal(problems([{ name: "x", backend: "src/backend" }]).length, 1);
+  assert.equal(problems([TWO_APPS[0], { ...TWO_APPS[1], name: "multi-tenant" }]).length, 1);
+  assert.deepEqual(problems(TWO_APPS), []);
 });

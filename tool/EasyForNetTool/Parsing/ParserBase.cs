@@ -73,7 +73,15 @@ public abstract class ParserBase
             property.SetValue(argument, flag);
             return;
         }
-        property.SetValue(argument, value);
+        try
+        {
+            property.SetValue(argument, value);
+        }
+        catch (System.Reflection.TargetInvocationException ex) when (ex.InnerException is UserFriendlyException inner)
+        {
+            // a setter that validates (Name, Template) reports its own readable message
+            throw inner;
+        }
     }
 
     /// <summary>

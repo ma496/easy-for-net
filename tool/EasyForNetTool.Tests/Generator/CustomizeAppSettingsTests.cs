@@ -172,12 +172,12 @@ public class CustomizeAppSettingsTests
     {
         for (var current = new DirectoryInfo(AppContext.BaseDirectory); current != null; current = current.Parent)
         {
-            var candidate = Path.Combine(current.FullName, "src", "backend", "Source", "appsettings.json");
+            var candidate = Path.Combine(current.FullName, "src", "multi-tenant", "backend", "Source", "appsettings.json");
             if (File.Exists(candidate))
                 return candidate;
         }
 
-        throw new FileNotFoundException("The template's src/backend/Source/appsettings.json was not found above the test output directory.");
+        throw new FileNotFoundException("The template's src/multi-tenant/backend/Source/appsettings.json was not found above the test output directory.");
     }
 
     private static async Task<string> ReadAsync(string dir, string file, params string[] path)

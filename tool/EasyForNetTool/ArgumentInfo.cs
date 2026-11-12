@@ -61,6 +61,15 @@ public class ArgumentInfo
                         Required = false,
                         Default = "false",
                     },
+                    new ArgumentOption
+                    {
+                        Name = "--template",
+                        ShortName = "-t",
+                        PropertyName = nameof(CreateProjectArgument.Template),
+                        Description = "Application template: multi-tenant (default) or user-facing.",
+                        Required = false,
+                        Default = "multi-tenant",
+                    },
                 ]
             },
         ];

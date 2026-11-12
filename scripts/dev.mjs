@@ -6,6 +6,7 @@
  *   npm run dev -- --no-docker       # use the PostgreSQL and Redis you already run
  *   npm run dev -- --api-only        # services + API, no web app and no proxy
  *   npm run dev -- --web-only        # the web app and the proxy, against an API started elsewhere on :5000
+ *   npm run dev -- --app <name>      # which app of agentic.config.json `apps` (default: the first)
  *
  * The browser opens the proxy (dev-proxy.mjs), never next dev directly: it is the one origin that
  * serves both the pages and the API's /api, /hubs, /hangfire and /health, as docker/Caddyfile does in
@@ -29,13 +30,16 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { hasExecutable, killTree, IS_WINDOWS, runSync, sleepSync, spawnPortable } from "./lib/proc.mjs";
-import { REPO_ROOT } from "./lib/project-config.mjs";
+import { REPO_ROOT, appArg, selectApp } from "./lib/project-config.mjs";
 
 const args = process.argv.slice(2);
+const APP = selectApp(appArg(args));
+// Every child — serve-api.mjs, the readiness probes, stop-api — reads the app from here.
+process.env.EFN_APP = APP.name;
 const NO_DOCKER = args.includes("--no-docker");
 const API_ONLY = args.includes("--api-only");
 const WEB_ONLY = args.includes("--web-only");
-const WEB = join(REPO_ROOT, "src", "frontend", "web");
+const WEB = join(REPO_ROOT, APP.web);
 const API_PORT = process.env.PORT || "5000";
 /** The proxy is the address the browser opens; next dev sits behind it. Production's Caddy serves the same shape. */
 const PROXY_PORT = "3000";
@@ -52,10 +56,10 @@ const SERVICES = [
 ];
 const PORT_ADVICE =
   "set {variable} in the root .env to a free port and the same port in the connection strings of " +
-  "src/backend/Source/appsettings.Development.json and appsettings.Testing.json";
+  `${APP.backend}/Source/appsettings.Development.json and appsettings.Testing.json`;
 
 if (args.includes("--help")) {
-  console.log("usage: npm run dev [-- --no-docker] [-- --api-only | --web-only]");
+  console.log("usage: npm run dev [-- --no-docker] [-- --api-only | --web-only] [-- --app <name>]");
   process.exit(0);
 }
 if (API_ONLY && WEB_ONLY) fail("--api-only and --web-only cannot be used together.");
@@ -63,10 +67,10 @@ if (API_ONLY && WEB_ONLY) fail("--api-only and --web-only cannot be used togethe
 if (!WEB_ONLY) {
   ensureServices();
   runSync("node", [join(REPO_ROOT, "scripts", "stop-api.mjs")], { cwd: REPO_ROOT, stdio: "inherit" });
-  if (!existsSync(join(REPO_ROOT, "src", "backend", "Source", "Migrations"))) {
+  if (!existsSync(join(REPO_ROOT, APP.backend, "Source", "Migrations"))) {
     console.log(
       "dev: no migrations yet — run `dotnet tool restore` and " +
-        "`dotnet ef migrations add Initial --project src/backend/Source` first, or the API cannot create its database.",
+        `\`dotnet ef migrations add Initial --project ${APP.backend}/Source\` first, or the API cannot create its database.`,
     );
   }
 }
@@ -116,7 +120,7 @@ if (!API_ONLY) {
 console.log(
   [
     !WEB_ONLY && `dev: API  http://localhost:${API_PORT}  (Swagger at /swagger)`,
-    !API_ONLY && `dev: web  http://app.localhost:${PROXY_PORT}  http://default.localhost:${PROXY_PORT}`,
+    !API_ONLY && `dev: web  ${(APP.devHosts ?? ["localhost"]).map((h) => `http://${h}:${PROXY_PORT}`).join("  ")}`,
     !API_ONLY && `dev:      (the proxy on :${PROXY_PORT}; next dev itself is on :${WEB_PORT})`,
     "dev: Ctrl+C stops everything.",
   ]

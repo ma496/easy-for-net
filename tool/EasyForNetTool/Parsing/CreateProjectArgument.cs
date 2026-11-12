@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using EasyForNetTool.Generator;
 
 namespace EasyForNetTool.Parsing;
 
@@ -27,4 +28,19 @@ public class CreateProjectArgument : Argument
     public string Output { get; set; } = null!;
     public bool MultiLanguage { get; set; }
     public bool IncludeExamples { get; set; }
+
+    private ProjectTemplate _template = ProjectTemplate.MultiTenant;
+
+    /// <summary>
+    /// The application template the project is generated from — <c>multi-tenant</c> (the default) or
+    /// <c>user-facing</c>. Setting an unknown name throws.
+    /// </summary>
+    public string Template
+    {
+        get => _template.Name;
+        set => _template = ProjectTemplate.Find(value);
+    }
+
+    /// <summary>The template <see cref="Template"/> names.</summary>
+    public ProjectTemplate SelectedTemplate => _template;
 }

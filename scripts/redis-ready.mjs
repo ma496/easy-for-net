@@ -13,10 +13,11 @@
 import { existsSync, readFileSync } from "node:fs";
 import { connect } from "node:net";
 import { join } from "node:path";
-import { REPO_ROOT } from "./lib/project-config.mjs";
+import { REPO_ROOT, selectApp } from "./lib/project-config.mjs";
 
 const environment = process.argv[2] || "Development";
-const settingsDir = join(REPO_ROOT, "src", "backend", "Source");
+// The app whose settings name the server: EFN_APP, else the first in agentic.config.json `apps`.
+const settingsDir = join(REPO_ROOT, selectApp().backend, "Source");
 
 /** Host and port from the connection string (`host:port[,options]`), falling back to the base file, then the default. */
 function target() {

@@ -71,10 +71,10 @@ public class JsonPropertyUpdaterTests
     /// </summary>
     [Theory]
     [InlineData("name", "package.json")]
-    [InlineData("name", "src", "frontend", "web", "package.json")]
-    [InlineData("name", "src", "frontend", "web", "package-lock.json")]
+    [InlineData("name", "src", "multi-tenant", "frontend", "web", "package.json")]
+    [InlineData("name", "src", "multi-tenant", "frontend", "web", "package-lock.json")]
     [InlineData("project.name", "agentic.config.json")]
-    [InlineData("Redis.InstanceName", "src", "backend", "Source", "appsettings.json")]
+    [InlineData("Redis.InstanceName", "src", "multi-tenant", "backend", "Source", "appsettings.json")]
     public async Task Should_Not_Escape_Template_Files(string property, params string[] relativePath)
     {
         // Arrange

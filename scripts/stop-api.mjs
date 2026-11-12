@@ -5,7 +5,7 @@
  *   npm run stop:api              # stop it, if one is running
  *   npm run stop:api -- --list    # say what would be stopped, stop nothing
  *
- * A running API holds `src/backend/Source/bin/` open, and on Windows `dotnet build`,
+ * A running API holds its `Source/bin/` (under each app's backend in agentic.config.json) open, and on Windows `dotnet build`,
  * `dotnet test` and `dotnet ef migrations add` then fail with MSB3027/MSB3021. The gate calls
  * this before its build step, and the backend agents before every build they run. Only
  * processes running from this checkout's bin directory are touched (see lib/api-process.mjs).
@@ -17,14 +17,16 @@ import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { apiBinDir, listProcesses, matchApiProcesses } from "./lib/api-process.mjs";
 import { isAlive, killTree, sleepSync } from "./lib/proc.mjs";
-import { REPO_ROOT } from "./lib/project-config.mjs";
+import { APPS, REPO_ROOT } from "./lib/project-config.mjs";
 import { normalizeRoot } from "./lib/api-identity.mjs";
 
 const LIST_ONLY = process.argv.includes("--list") || process.argv.includes("--help");
 
 let found;
 try {
-  found = matchApiProcesses(listProcesses(), apiBinDir(REPO_ROOT));
+  // Every app's API: a build compiles the whole solution, so any of them can hold the lock.
+  const processes = listProcesses();
+  found = APPS.flatMap((app) => matchApiProcesses(processes, apiBinDir(REPO_ROOT, app)));
 } catch (err) {
   // Not being able to look is not a reason to fail a build that may well not be locked.
   console.log(`stop-api: ${err.message}; carrying on without stopping anything.`);

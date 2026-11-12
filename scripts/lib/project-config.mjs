@@ -63,6 +63,14 @@ const DEFAULTS = {
     gate: "npm run gate",
     verify: "npm run verify",
   },
+  /**
+   * The applications in this checkout: each an API (`backend`, holding `Source/` and `Tests/`)
+   * and a web app (`web`), as repository-relative paths. A generated project has one; the
+   * template repository carries one per template. The stack-specific scripts (gate, dev,
+   * serve-api, the readiness probes, stop-api) read them through `selectApp`/`APPS` instead
+   * of naming a path, and the first entry is the one a script uses when none is chosen.
+   */
+  apps: [{ name: "app", backend: "src/backend", web: "src/frontend/web" }],
   tests: {
     roots: ["tests"],
     pattern: "\\.test\\.(m?js|ts)$",
@@ -200,6 +208,28 @@ function readConfigFile() {
 
 export const config = merge(DEFAULTS, readConfigFile());
 
+/** Every application in this checkout, in the order the config lists them. */
+export const APPS = Array.isArray(config.apps) && config.apps.length ? config.apps : DEFAULTS.apps;
+
+/**
+ * The application a stack script acts on: the one `name` names, else `EFN_APP` from the
+ * environment (so verify's service and the probes it runs follow the caller's choice), else
+ * the first. An unknown name throws rather than quietly falling back to another app, which
+ * would start, probe or stop the wrong one.
+ */
+export function selectApp(name = process.env.EFN_APP, apps = APPS) {
+  if (!name) return apps[0];
+  const app = apps.find((a) => a.name === name);
+  if (!app) throw new Error(`Unknown app ${JSON.stringify(name)}; known: ${apps.map((a) => a.name).join(", ")}.`);
+  return app;
+}
+
+/** The value of `--app <name>` in an argument list, or undefined. */
+export function appArg(argv) {
+  const at = argv.indexOf("--app");
+  return at >= 0 ? argv[at + 1] : undefined;
+}
+
 /** The ways a project may share its queue — see `project.workflow` in DEFAULTS. */
 export const WORKFLOWS = ["solo", "team"];
 
@@ -231,6 +261,18 @@ function regexProblems(list, where, flags = "") {
  */
 export function validateConfig(cfg) {
   const problems = [];
+  if (!Array.isArray(cfg.apps) || cfg.apps.length === 0) {
+    problems.push("apps must be a non-empty array of { name, backend, web }");
+  } else {
+    const names = new Set();
+    for (const app of cfg.apps) {
+      if (!["name", "backend", "web"].every((k) => typeof app?.[k] === "string" && app[k].length > 0)) {
+        problems.push(`apps: every entry needs string name, backend and web (got ${JSON.stringify(app)})`);
+      } else if (names.has(app.name)) {
+        problems.push(`apps: duplicate name ${JSON.stringify(app.name)}`);
+      } else names.add(app.name);
+    }
+  }
   if (!WORKFLOWS.includes(cfg.project?.workflow)) {
     problems.push(`project.workflow must be ${WORKFLOWS.join(" or ")} (got ${JSON.stringify(cfg.project?.workflow)})`);
   }

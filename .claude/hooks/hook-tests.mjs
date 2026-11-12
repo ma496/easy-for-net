@@ -72,6 +72,9 @@ const cases = [
   { label: "per-env appsettings in PowerShell", command: `Get-Content src${BS}backend${BS}Source${BS}${DEV_SETTINGS}`, expect: "block" },
   { label: "base appsettings.json is shared", command: "cat src/backend/Source/appsettings.json", expect: "allow" },
   { label: "per-env appsettings existence check", command: `Test-Path src/backend/Source/${DEV_SETTINGS}`, expect: "allow" },
+  // The template repository keeps each template under src/<template>/; the rules are path-agnostic.
+  { label: "reading a template's per-env appsettings", command: `cat src/multi-tenant/backend/Source/${DEV_SETTINGS}`, expect: "block" },
+  { label: "a template's base appsettings.json is shared", command: "cat src/user-facing/backend/Source/appsettings.json", expect: "allow" },
   // An exemption covers its own segment, not the whole line: a leading `ls` used to excuse
   // everything after it.
   { label: "ls, then cat the env file", command: `ls . && cat ${DOTENV}`, expect: "block" },
@@ -493,6 +496,8 @@ const pathCases = [
   { label: "writing Next.js build output", file: "/repo/src/frontend/web/.next/server/app.js", expect: "block" },
   { label: "writing per-env appsettings", file: `/repo/src/backend/Source/${DEV_SETTINGS}`, expect: "block" },
   { label: "writing base appsettings.json", file: "/repo/src/backend/Source/appsettings.json", expect: "allow" },
+  { label: "writing a template's build output", file: "/repo/src/user-facing/backend/Source/bin/Debug/x.dll", expect: "block" },
+  { label: "writing a template's source", file: "/repo/src/user-facing/backend/Source/Program.cs", expect: "allow" },
   { label: "a folder merely named like binary", file: "/repo/src/binaries/readme.md", expect: "allow" },
   // Every dotenv file is a secret, not only `.env` and `.env.local`.
   { label: "writing .env.production", file: `/repo/${DOTENV}.production`, expect: "block" },

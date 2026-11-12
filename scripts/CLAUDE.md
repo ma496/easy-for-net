@@ -31,7 +31,7 @@ loop.mjs            the whole cycle: look → observe → plan → drain → rep
 | `serve-api.mjs` | Starts the API on `$PORT` as Development — what verify starts for a live check. With `SERVICE_PREBUILT=1` (set by verify when its gate has just run `verify.service.prebuiltBy`) it starts with `--no-build`. |
 | `dev.mjs` | `npm run dev`: the whole app for a developer — PostgreSQL and Redis through `docker compose` when the probes say they are down, then the API (via `serve-api.mjs`), the dev proxy on :3000 and, once the API's `/health` answers, `next dev` on :3001 behind it, each line prefixed. Not part of the loop or the gate. |
 | `dev-proxy.mjs` | The development front door on :3000 (loopback only; `--host` opts in to another address), mirroring `docker/Caddyfile`: `/api/*`, `/hubs/*`, `/hangfire*` and `/health` to the API, everything else to `next dev`, WebSocket upgrades piped for the hub and hot reload, `Host` kept, 502 when an upstream is down. Dependency-free; the pure parts are `lib/dev-proxy.mjs`. |
-| `stop-api.mjs` | Stops this checkout's running API (anything running from `src/backend/Source/bin/`), which on Windows locks the build output. The gate runs it before `dotnet build`; `npm run stop:api`. |
+| `stop-api.mjs` | Stops this checkout's running API (anything running from an app's `Source/bin/`), which on Windows locks the build output. The gate runs it before `dotnet build`; `npm run stop:api`. |
 | `pg-ready.mjs` | Whether PostgreSQL accepts connections — the dependency probe for verify and the loop. |
 | `redis-ready.mjs` | Whether the Redis in `ConnectionStrings:Redis` accepts a TCP connection — the same probe, for the session store. |
 | `smoke.mjs` | The live check: health, the OpenAPI document, and an anonymous caller refused. |

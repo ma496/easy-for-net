@@ -27,7 +27,7 @@ import { join, relative } from "node:path";
 import { workingTreePaths } from "./lib/changed-paths.mjs";
 import { selectGateSteps } from "./lib/gate-scope.mjs";
 import { runSync } from "./lib/proc.mjs";
-import { REPO_ROOT } from "./lib/project-config.mjs";
+import { APPS, REPO_ROOT } from "./lib/project-config.mjs";
 
 const argv = process.argv.slice(2);
 const FAST = argv.includes("--fast");
@@ -36,9 +36,33 @@ const PLAN = argv.includes("--plan");
 const onlyAt = argv.indexOf("--only");
 const ONLY = onlyAt >= 0 ? argv[onlyAt + 1] : null;
 
-const API_TESTS = join(REPO_ROOT, "src", "backend", "Tests");
 const TOOL = join(REPO_ROOT, "tool");
-const WEB = join(REPO_ROOT, "src", "frontend", "web");
+
+/**
+ * Every application in the checkout (agentic.config.json `apps`), with the paths and watch
+ * patterns its steps use. A generated project has one, and its steps keep their plain names
+ * ("backend tests"); with several, each app's steps are suffixed with its name, so a report
+ * says which app failed.
+ */
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const MULTI = APPS.length > 1;
+const apps = APPS.map((app) => {
+  const backend = escapeRe(app.backend.replace(/\\/g, "/").replace(/\/+$/, ""));
+  const web = escapeRe(app.web.replace(/\\/g, "/").replace(/\/+$/, ""));
+  return {
+    ...app,
+    label: (name) => (MULTI ? `${name} [${app.name}]` : name),
+    tests: join(REPO_ROOT, app.backend, "Tests"),
+    webDir: join(REPO_ROOT, app.web),
+    backendRe: new RegExp(`^${backend}/`),
+    // The shipped translation files are embedded in the API, so they still rebuild it, but only the
+    // resource-store tests read them — a change to them alone does not run the whole backend suite.
+    resourcesRe: new RegExp(`^${backend}/Source/Features/Localization/Core/Resources/`),
+    testsRe: new RegExp(`^${backend}/(?!Source/Features/Localization/Core/Resources/)`),
+    appSettingsRe: new RegExp(`^${backend}/Source/appsettings[^/]*\\.json$`),
+    webRe: new RegExp(`^${web}/`),
+  };
+});
 
 /** Test projects of any tooling under `tool/` — a `*.Tests` directory each. None in most checkouts. */
 const toolTestDirs = existsSync(TOOL)
@@ -47,31 +71,25 @@ const toolTestDirs = existsSync(TOOL)
       .map((d) => join("tool", d.name))
   : [];
 
-/** The solution at the root when there is one, else the test project (which builds the API). */
+/** The solution at the root when there is one, else the first app's test project (which builds its API). */
 function buildTarget() {
   const solution = readdirSync(REPO_ROOT).find((f) => /\.slnx?$/.test(f));
-  return solution ?? relative(REPO_ROOT, API_TESTS);
+  return solution ?? relative(REPO_ROOT, apps[0].tests);
 }
 
 // --- what each step can be broken by ---------------------------------------------------
 // A path belongs in a step's list when a change to it can make that step fail. Reads across
 // areas count: the web's locale tests read the API's resource files, the tool's tests read
 // the template's appsettings.json, and the hooks import the engine's config reader.
-const DOTNET = [
-  /^src\/backend\//,
+const DOTNET_SHARED = [
   /^global\.json$/,
   /^[^/]+\.slnx?$/,
   /^Directory\.[^/]+$/,
   /^\.config\/dotnet-tools\.json$/,
   /^\.editorconfig$/,
 ];
-// The shipped translation files are embedded in the API, so they still rebuild it, but only the
-// resource-store tests read them — a change to them alone does not run the whole backend suite.
-const RESOURCES = /^src\/backend\/Source\/Features\/Localization\/Core\/Resources\//;
-const DOTNET_TESTS = [/^src\/backend\/(?!Source\/Features\/Localization\/Core\/Resources\/)/, ...DOTNET.slice(1)];
-const TOOL_PATHS = [/^tool\//, /^global\.json$/, /^[^/]+\.slnx?$/, /^src\/backend\/Source\/appsettings[^/]*\.json$/];
-const WEB_PATHS = [/^src\/frontend\/web\//];
-const WEB_TESTS = [...WEB_PATHS, RESOURCES];
+const DOTNET = [...apps.map((a) => a.backendRe), ...DOTNET_SHARED];
+const TOOL_PATHS = [/^tool\//, /^global\.json$/, /^[^/]+\.slnx?$/, ...apps.map((a) => a.appSettingsRe)];
 const ENGINE = [/^scripts\//, /^agentic\.config\.json$/, /^package(-lock)?\.json$/];
 const HOOKS = [/^\.claude\/hooks\//, /^\.claude\/settings\.json$/, /^\.claude\/statusline\.mjs$/, /^scripts\/lib\//, /^agentic\.config\.json$/];
 
@@ -93,6 +111,48 @@ const INERT = [
   /^\.env\.docker\.example$/,
 ];
 
+/** One app's backend test steps. */
+const apiTestSteps = (app) => [
+  {
+    area: "api",
+    name: app.label("backend tests"),
+    cmd: "dotnet",
+    args: ["test", "--project", relative(REPO_ROOT, app.tests), "--no-build"],
+    watches: [app.testsRe, ...DOTNET_SHARED],
+  },
+  {
+    area: "api",
+    name: app.label("backend resource tests"),
+    cmd: "dotnet",
+    args: ["test", "--project", relative(REPO_ROOT, app.tests), "--no-build", "--filter-class", "*LocalizationResourceStoreTests"],
+    watches: [app.resourcesRe],
+    // Covered already when the whole suite runs.
+    supersededBy: app.label("backend tests"),
+  },
+];
+
+/** One app's web steps, before the engine's (all but the production build). */
+const webSteps = (app) => {
+  const WEB_PATHS = [app.webRe];
+  const WEB_TESTS = [...WEB_PATHS, app.resourcesRe];
+  return [
+    {
+      area: "web",
+      name: app.label("npm ci"),
+      cmd: "npm",
+      args: ["ci", "--no-audit", "--no-fund"],
+      cwd: app.webDir,
+      watches: WEB_TESTS,
+      // Only on a fresh checkout — an unattended run cannot type it, and without it every
+      // later web step fails for a reason that has nothing to do with the change.
+      when: () => !existsSync(join(app.webDir, "node_modules")),
+    },
+    { area: "web", name: app.label("eslint"), cmd: "npm", args: ["run", "lint"], cwd: app.webDir, watches: WEB_PATHS },
+    { area: "web", name: app.label("tsc --noEmit"), cmd: "npx", args: ["tsc", "--noEmit"], cwd: app.webDir, watches: WEB_PATHS },
+    { area: "web", name: app.label("vitest"), cmd: "npm", args: ["run", "test"], cwd: app.webDir, watches: WEB_TESTS },
+  ];
+};
+
 /** Each step: the area it belongs to, what it is called, how to run it, and what it watches. */
 const steps = [
   {
@@ -105,34 +165,20 @@ const steps = [
     // fails with MSB3027 for a reason that has nothing to do with the change.
     before: () => runSync("node", ["scripts/stop-api.mjs"], { cwd: REPO_ROOT, stdio: "inherit" }),
   },
-  { area: "api", name: "backend tests", cmd: "dotnet", args: ["test", "--project", relative(REPO_ROOT, API_TESTS), "--no-build"], watches: DOTNET_TESTS },
-  {
-    area: "api",
-    name: "backend resource tests",
-    cmd: "dotnet",
-    args: ["test", "--project", relative(REPO_ROOT, API_TESTS), "--no-build", "--filter-class", "*LocalizationResourceStoreTests"],
-    watches: [RESOURCES],
-    // Covered already when the whole suite runs.
-    supersededBy: "backend tests",
-  },
+  ...apps.flatMap(apiTestSteps),
   ...toolTestDirs.map((dir) => ({ area: "api", name: `tests: ${dir}`, cmd: "dotnet", args: ["test", "--project", dir], watches: TOOL_PATHS })),
-  {
-    area: "web",
-    name: "npm ci",
-    cmd: "npm",
-    args: ["ci", "--no-audit", "--no-fund"],
-    cwd: WEB,
-    watches: WEB_TESTS,
-    // Only on a fresh checkout — an unattended run cannot type it, and without it every
-    // later web step fails for a reason that has nothing to do with the change.
-    when: () => !existsSync(join(WEB, "node_modules")),
-  },
-  { area: "web", name: "eslint", cmd: "npm", args: ["run", "lint"], cwd: WEB, watches: WEB_PATHS },
-  { area: "web", name: "tsc --noEmit", cmd: "npx", args: ["tsc", "--noEmit"], cwd: WEB, watches: WEB_PATHS },
-  { area: "web", name: "vitest", cmd: "npm", args: ["run", "test"], cwd: WEB, watches: WEB_TESTS },
+  ...apps.flatMap(webSteps),
   { area: "engine", name: "engine tests", cmd: "node", args: ["scripts/test.mjs"], watches: ENGINE },
   { area: "engine", name: "hook tests", cmd: "node", args: [".claude/hooks/hook-tests.mjs"], watches: HOOKS },
-  { area: "web", name: "next build", cmd: "npm", args: ["run", "build"], cwd: WEB, watches: WEB_PATHS, when: () => !FAST },
+  ...apps.map((app) => ({
+    area: "web",
+    name: app.label("next build"),
+    cmd: "npm",
+    args: ["run", "build"],
+    cwd: app.webDir,
+    watches: [app.webRe],
+    when: () => !FAST,
+  })),
 ];
 
 /** The paths `--changed` judges: the list verify wrote, else the working tree. */
