@@ -7,7 +7,7 @@ import { parseRemote } from "./remote.mjs";
 
 /** Options that take a value, and the flags that do not. */
 const VALUE_OPTIONS = ["host", "user", "port", "identity", "domain", "repo", "branch", "name", "email", "platform-subdomain", "dns-provider", "dns-token", "godaddy-key", "godaddy-secret"];
-const FLAGS = ["check", "yes", "help"];
+const FLAGS = ["check", "yes", "help", "www"];
 
 /**
  * `--key value`, `--key=value` and bare flags into `{ options, flags, errors }`. An unknown
@@ -54,6 +54,22 @@ export function isValidDomain(domain) {
  */
 export function appNameFor(domain) {
   return String(domain).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+/**
+ * The two shapes of deployment. `tenants`: the platform at `<subdomain>.<domain>` and every tenant at
+ * `<identifier>.<domain>` (the multi-tenant template). `single`: one site at `<domain>` itself, with
+ * `www.<domain>` optionally redirecting to it (the user-facing template).
+ */
+export const SITE_TENANTS = "tenants";
+export const SITE_SINGLE = "single";
+
+/**
+ * Which shape a project deploys, read from the compose file Coolify runs: a stack that hands the API
+ * no tenant template (`${TENANT_URL_TEMPLATE}`) serves one domain.
+ */
+export function siteModeOf(composeText) {
+  return /(?<!\$)\$\{TENANT_URL_TEMPLATE\b/.test(String(composeText ?? "")) ? SITE_TENANTS : SITE_SINGLE;
 }
 
 /** The platform's subdomain when none is given: the platform at app.<domain>. */
@@ -205,17 +221,22 @@ export function randomLabel(random = Math.random) {
 }
 
 /**
- * What DNS says about a deployment's two records: the platform's host (`app.<domain>` unless
- * `subdomain` names another), and `*.<domain>` probed through a random label. `resolve(name)` gives a name's addresses (or throws when it has none). Returns
+ * What DNS says about a deployment's records. In the `tenants` shape, two: the platform's host
+ * (`app.<domain>` unless `subdomain` names another), and `*.<domain>` probed through a random label.
+ * In the `single` shape, `<domain>` itself, and `www.<domain>` when `www` is set.
+ * `resolve(name)` gives a name's addresses (or throws when it has none). Returns
  * `{ missing, elsewhere }`, each a list of `{ record, name, addresses? }` in that order: `missing`
  * stops a deploy, `elsewhere` (resolving, but not to the server) is a warning.
  */
-export async function checkDomainDns({ domain, subdomain, serverAddresses, resolve, label = randomLabel() }) {
+export async function checkDomainDns({ domain, subdomain, serverAddresses, resolve, label = randomLabel(), mode = SITE_TENANTS, www = false }) {
   const platform = platformHost(domain, subdomain);
-  const records = [
-    { record: platform, name: platform },
-    { record: `*.${domain}`, name: `${label}.${domain}` },
-  ];
+  const site = String(domain).toLowerCase();
+  const records = mode === SITE_SINGLE
+    ? [{ record: site, name: site }, ...(www ? [{ record: `www.${site}`, name: `www.${site}` }] : [])]
+    : [
+        { record: platform, name: platform },
+        { record: `*.${domain}`, name: `${label}.${domain}` },
+      ];
   const answers = await Promise.all(records.map((r) => Promise.resolve().then(() => resolve(r.name)).catch(() => [])));
   const missing = [];
   const elsewhere = [];

@@ -1,0 +1,42 @@
+using Backend.Features.Identity.Core;
+using Backend.Features.Notifications.Core;
+
+namespace Backend.Features.Notifications.Endpoints.Notifications;
+
+/// <summary>
+/// GET endpoint that returns the number of unread notifications the current user can see. The count is the
+/// unread part of exactly the set <c>NotificationListEndpoint</c> would list, so the badge cannot advertise a
+/// notification the list will not show.
+/// </summary>
+sealed class NotificationGetUnreadCountEndpoint(ICurrentUserService currentUserService, INotificationService notificationService) : EndpointWithoutRequest<NotificationGetUnreadCountResponse>
+{
+    public override void Configure()
+    {
+        Get("unread-count");
+        Group<NotificationsGroup>();
+    }
+
+    public override async Task HandleAsync(CancellationToken cancellationToken)
+    {
+        var userId = currentUserService.GetCurrentUserId();
+        if (userId == null)
+        {
+            await Send.UnauthorizedAsync(cancellationToken);
+            return;
+        }
+
+        // The scope narrowing lives in the service: it reads the active scope itself and counts only
+        // the rows the list endpoint would show, through the same VisibleTo the list reads through.
+        var count = await notificationService.GetUnreadCountAsync(userId.Value, cancellationToken);
+
+        await Send.ResponseAsync(new NotificationGetUnreadCountResponse { Count = count }, cancellation: cancellationToken);
+    }
+}
+
+/// <summary>
+/// Response payload containing the unread notification count for the current user in the active scope.
+/// </summary>
+public sealed class NotificationGetUnreadCountResponse
+{
+    public int Count { get; set; }
+}

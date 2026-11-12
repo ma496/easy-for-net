@@ -1,0 +1,801 @@
+{
+  "brand": {
+    "name": "Easy For Net"
+  },
+  "cookieConsent": {
+    "title": "نحن نقدر خصوصيتك",
+    "description": "نستخدم ملفات تعريف الارتباط لتحسين تجربة التصفح لديك. بمتابعة زيارة هذا الموقع فأنت توافق على استخدامنا لملفات تعريف الارتباط.",
+    "accept": "قبول",
+    "decline": "رفض"
+  },
+  "common": {
+    "back": "رجوع",
+    "more": "المزيد",
+    "list": "قائمة",
+    "preview": "معاينة",
+    "add": "إضافة",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "save": "حفظ",
+    "update": "تحديث",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "search": "بحث...",
+    "loading": "جاري التحميل...",
+    "success": "نجاح",
+    "error": "خطأ",
+    "warning": "تحذير",
+    "info": "معلومات",
+    "yes": "نعم",
+    "no": "لا",
+    "ok": "موافق",
+    "retry": "إعادة المحاولة",
+    "submit": "إرسال",
+    "actions": "إجراءات",
+    "allRightsReserved": "جميع الحقوق محفوظة.",
+    "deleteConfirm": "نعم، احذفه",
+    "notifications": "الإشعارات",
+    "viewAll": "عرض الكل",
+    "close": "إغلاق",
+    "menu": "القائمة",
+    "theme": "المظهر",
+    "themeLight": "فاتح",
+    "themeDark": "داكن",
+    "themeSystem": "النظام",
+    "noResults": "لا توجد نتائج",
+    "selectPlaceholder": "اختر…",
+    "noOptions": "لا توجد خيارات",
+    "scrollToTop": "العودة إلى الأعلى",
+    "collapseSidebar": "طي الشريط الجانبي",
+    "opensInNewTab": "(يفتح في علامة تبويب جديدة)",
+    "goHome": "الذهاب إلى الصفحة الرئيسية"
+  },
+  "navigation": {
+    "home": "الرئيسية",
+    "dashboard": "لوحة القيادة",
+    "dashboardSales": "المبيعات",
+    "administration": "الإدارة",
+    "users": "المستخدمين",
+    "roles": "الأدوار",
+    "rolesList": "قائمة",
+    "rolesCreate": "إنشاء",
+    "rolesUpdate": "تحديث",
+    "rolesChangePermissions": "تغيير الأذونات",
+    "components": "المكونات",
+    "uiFormElements": "عناصر النموذج",
+    "uiButtons": "أزرار",
+    "uiCards": "بطاقات",
+    "uiDatePicker": "منتقي التاريخ",
+    "uiDateView": "عرض التاريخ",
+    "uiTreeview": "عرض شجري",
+    "changePassword": "تغيير كلمة المرور",
+    "profile": "الملف الشخصي",
+    "uiFileUpload": "رفع الملفات",
+    "uiTooltips": "تلميحات",
+    "usersList": "قائمة",
+    "usersCreate": "إنشاء",
+    "usersUpdate": "تحديث",
+    "notifications": "الإشعارات",
+    "notificationsList": "قائمة",
+    "notificationsDetail": "التفاصيل",
+    "localization": "التوطين",
+    "settings": "الإعدادات",
+    "admin": "الإدارة",
+    "viewSite": "عرض الموقع",
+    "seo": "تحسين محركات البحث",
+    "seoList": "القائمة",
+    "seoCreate": "إنشاء",
+    "seoUpdate": "تحديث"
+  },
+  "search": {
+    "dashboard": "لوحة القيادة",
+    "users": "المستخدمين",
+    "usersCreate": "إنشاء مستخدم",
+    "roles": "الأدوار",
+    "rolesCreate": "إنشاء دور",
+    "uiButtons": "أزرار واجهة المستخدم",
+    "uiCards": "بطاقات واجهة المستخدم",
+    "uiDatePicker": "منتقي التاريخ",
+    "uiDateView": "عرض التاريخ",
+    "uiTreeview": "عرض شجري",
+    "changePassword": "تغيير كلمة المرور",
+    "profile": "الملف الشخصي",
+    "notifications": "الإشعارات",
+    "uiFormElements": "عناصر النموذج",
+    "uiFileUpload": "رفع الملفات",
+    "uiTooltips": "تلميحات واجهة المستخدم",
+    "localization": "التوطين",
+    "settings": "الإعدادات",
+    "seo": "تحسين محركات البحث",
+    "seoCreate": "إضافة إعدادات تحسين محركات البحث"
+  },
+  "form": {
+    "label": {
+      "username": "اسم المستخدم",
+      "password": "كلمة المرور",
+      "firstName": "الاسم الأول",
+      "lastName": "اسم العائلة",
+      "email": "البريد الإلكتروني",
+      "currentPassword": "كلمة المرور الحالية",
+      "newPassword": "كلمة المرور الجديدة",
+      "confirmPassword": "تأكيد كلمة المرور",
+      "roleName": "اسم الدور",
+      "roleDescription": "الوصف",
+      "roles": "الأدوار",
+      "isActive": "نشط",
+      "name": "الاسم",
+      "user": "المستخدم",
+      "defaultLanguage": "اللغة الافتراضية"
+    },
+    "placeholder": {
+      "username": "أدخل اسم المستخدم",
+      "password": "أدخل كلمة المرور",
+      "firstName": "أدخل الاسم الأول",
+      "lastName": "أدخل اسم العائلة",
+      "email": "أدخل البريد الإلكتروني",
+      "currentPassword": "أدخل كلمة المرور الحالية",
+      "newPassword": "أدخل كلمة المرور الجديدة",
+      "confirmPassword": "أدخل تأكيد كلمة المرور",
+      "roleName": "أدخل اسم الدور",
+      "roleDescription": "أدخل وصف الدور",
+      "roles": "اختر الأدوار",
+      "user": "اختر المستخدم"
+    }
+  },
+  "validation": {
+    "required": "هذا الحقل مطلوب",
+    "minLength": "يجب أن يحتوي الحقل على الأقل على ${min} أحرف",
+    "maxLength": "يجب ألا يتجاوز الحقل ${max} أحرف",
+    "email": "تنسيق البريد الإلكتروني غير صالح",
+    "invalidEmail": "بريد إلكتروني غير صالح",
+    "mustMatch": "يجب أن يتطابق الحقل مع ${otherField}",
+    "atLeastOneSelected": "يجب اختيار عنصر واحد على الأقل",
+    "number": "يجب أن يكون رقمًا",
+    "min": "يجب ألا يقل عن ${min}"
+  },
+  "error": {
+    "400": {
+      "title": "طلب غير صالح"
+    },
+    "401": {
+      "title": "غير مصرح",
+      "message": "ليس لديك صلاحية الوصول لهذا المورد."
+    },
+    "403": {
+      "title": "ممنوع",
+      "message": "غير مسموح لك بالوصول لهذا المورد."
+    },
+    "404": {
+      "title": "غير موجود",
+      "message": "لم يتم العثور على المورد المطلوب."
+    },
+    "413": {
+      "title": "الحمولة كبيرة جداً",
+      "message": "حمولة الطلب كبيرة جداً."
+    },
+    "415": {
+      "title": "نوع الوسائط غير مدعوم",
+      "message": "نوع وسائط الطلب غير مدعوم."
+    },
+    "500": {
+      "title": "خطأ داخلي في الخادم",
+      "message": "حدث خطأ أثناء معالجة الطلب."
+    },
+    "connection": {
+      "title": "خطأ في الاتصال",
+      "message": "تعذر الاتصال بالخادم. يرجى التحقق من اتصالك أو المحاولة لاحقاً."
+    },
+    "serviceUnavailable": {
+      "title": "الخدمة غير متوفرة",
+      "message": "الخادم غير قابل للوصول حالياً. يرجى المحاولة مرة أخرى بعد قليل.",
+      "retry": "إعادة المحاولة"
+    },
+    "server": {
+      "internalServerError": "خطأ داخلي في الخادم",
+      "duplicateValue": "قيمة مكررة",
+      "duplicatePropertyValue": "قيمة خاصية مكررة",
+      "requiredFieldMissing": "حقل مطلوب مفقود",
+      "requiredPropertyFieldMissing": "حقل خاصية مطلوب مفقود",
+      "referencedRecordNotFound": "السجل المشار إليه غير موجود",
+      "invalidValueProvided": "تم تقديم قيمة غير صالحة",
+      "databaseError": "خطأ في قاعدة البيانات",
+      "authenticationRequired": "تتطلب هذه العملية تسجيل الدخول.",
+      "permissionDenied": "لا تمنح أدوارك الإذن الذي تتطلبه هذه العملية.",
+      "invalidCurrentPassword": "كلمة المرور الحالية غير صالحة",
+      "invalidToken": "رمز غير صالح",
+      "tokenExpired": "انتهت صلاحية الرمز",
+      "payloadTooLarge": "الحمولة كبيرة جداً",
+      "invalidUsernamePassword": "اسم المستخدم أو كلمة المرور غير صالحة",
+      "invalidEmailPassword": "البريد الإلكتروني أو كلمة المرور غير صالحة",
+      "userNotActive": "المستخدم غير نشط",
+      "userNotFound": "المستخدم غير موجود",
+      "emailAlreadyExists": "البريد الإلكتروني موجود بالفعل",
+      "usernameAlreadyExists": "اسم المستخدم موجود بالفعل",
+      "emailNotVerified": "البريد الإلكتروني غير تم التحقق منه",
+      "roleNameAlreadyExists": "اسم الدور موجود بالفعل",
+      "roleNotFound": "الدور غير موجود",
+      "systemCreatedRolePermissionsCannotBeChanged": "لا يمكن تغيير أذونات الدور الذي أنشأه النظام",
+      "systemCreatedRoleCannotBeDeleted": "لا يمكن حذف الدور الذي أنشأه النظام",
+      "systemCreatedRoleCannotBeUpdated": "لا يمكن تحديث الدور الذي أنشأه النظام",
+      "systemCreatedUserCannotBeDeleted": "لا يمكن حذف المستخدم الذي أنشأه النظام",
+      "systemCreatedUserCannotBeUpdated": "لا يمكن تحديث المستخدم الذي أنشأه النظام",
+      "concurrentModification": "تم تغيير هذا السجل بواسطة شخص آخر. أعد التحميل وحاول مرة أخرى.",
+      "sessionStoreUnavailable": "خدمة الجلسات غير متاحة مؤقتًا. يرجى المحاولة مرة أخرى بعد قليل.",
+      "settingNotFound": "الإعداد غير موجود.",
+      "settingPropertyUnknown": "هذا الإعداد لا يحتوي على هذه الخاصية.",
+      "settingPropertyInvalid": "القيمة غير صالحة لخاصية هذا الإعداد.",
+      "settingValueInvalid": "قيم الإعداد غير صالحة.",
+      "signupDisabled": "التسجيل متوقف. اطلب حسابًا من أحد المسؤولين.",
+      "emailSmtpServerRequired": "خادم SMTP مطلوب.",
+      "emailSmtpPortInvalid": "يجب أن يكون منفذ SMTP بين 1 و65535.",
+      "emailSenderEmailInvalid": "يجب أن يكون بريد المرسل عنوان بريد إلكتروني صالحًا.",
+      "seoPageNotFound": "لم يتم العثور على إعدادات تحسين محركات البحث هذه.",
+      "seoPageAlreadyExists": "لهذه الصفحة إعدادات تحسين محركات البحث لهذه اللغة بالفعل.",
+      "invalidJsonLd": "البيانات المنظمة ليست JSON صالحًا."
+    }
+  },
+  "table": {
+    "columns": {
+      "firstName": "الاسم الأول",
+      "lastName": "اسم العائلة",
+      "email": "البريد الإلكتروني",
+      "roles": "الأدوار",
+      "userName": "اسم المستخدم",
+      "isActive": "نشط",
+      "name": "الاسم",
+      "description": "الوصف",
+      "userCount": "المستخدمين",
+      "type": "النوع",
+      "title": "العنوان",
+      "message": "الرسالة",
+      "status": "الحالة",
+      "date": "التاريخ",
+      "group": "المجموعة",
+      "created": "تم الإنشاء",
+      "updated": "محدث",
+      "key": "المفتاح",
+      "defaultValue": "القيمة الافتراضية",
+      "override": "التجاوز",
+      "path": "المسار",
+      "language": "اللغة",
+      "indexing": "الفهرسة",
+      "inSitemap": "في خريطة الموقع"
+    },
+    "pagination": {
+      "showingEntries": "عرض ${from} إلى ${to} من ${totalRecords} مُدخل"
+    },
+    "noRecords": "لم يتم العثور على سجلات",
+    "searchPlaceholder": "بحث...",
+    "sort": {
+      "label": "ترتيب حسب",
+      "none": "الترتيب الافتراضي",
+      "ascending": "تصاعدي — انقر للترتيب تنازليًا",
+      "descending": "تنازلي — انقر للترتيب تصاعديًا"
+    },
+    "export": {
+      "button": "تصدير",
+      "excel": "إكسل",
+      "csv": "CSV",
+      "currentPage": "الصفحة الحالية",
+      "allRecords": "كل السجلات"
+    },
+    "actions": "إجراءات",
+    "createLink": "إنشاء",
+    "filter": {
+      "button": "تصفية",
+      "all": "الكل",
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "allRoles": "كل الأدوار",
+      "activeStatus": "حالة النشاط",
+      "role": "الدور",
+      "selectRole": "اختر دوراً",
+      "search": "بحث",
+      "clear": "مسح"
+    },
+    "loadFailed": "تعذر تحميل السجلات",
+    "loadFailedHint": "تحقق من الاتصال وحاول مرة أخرى."
+  },
+  "file": {
+    "upload": "رفع الملف",
+    "deleteTitle": "حذف الملف",
+    "deleteConfirm": "هل أنت متأكد أنك تريد حذف هذا الملف؟",
+    "tooLarge": "الملف كبير جداً. يمكنك فقط رفع ملفات حتى ${max} ميغابايت."
+  },
+  "page": {
+    "dashboard": {
+      "title": "لوحة القيادة",
+      "sales": "المبيعات",
+      "revenue": "الإيرادات",
+      "salesByCategory": "المبيعات حسب الفئة",
+      "dailySales": "المبيعات اليومية",
+      "summary": "الملخص",
+      "totalOrders": "إجمالي الطلبات",
+      "totalProfit": "إجمالي الربح",
+      "income": "الدخل",
+      "expenses": "المصروفات",
+      "profit": "الربح",
+      "weekly": "أسبوعي",
+      "monthly": "شهري",
+      "yearly": "سنوي",
+      "viewReport": "عرض التقرير",
+      "editReport": "تعديل التقرير",
+      "markAsDone": "تحديد كمكتمل",
+      "goToColumns": "اذهب إلى الأعمدة للتفاصيل",
+      "description": "نظرة عامة على الإيرادات والطلبات والمبيعات."
+    },
+    "users": {
+      "title": "المستخدمين",
+      "createSuccess": "تم إنشاء المستخدم بنجاح",
+      "updateSuccess": "تم تحديث المستخدم بنجاح",
+      "deleteTitle": "حذف المستخدم",
+      "deleteConfirm": "هل أنت متأكد أنك تريد حذف هذا المستخدم؟",
+      "deleteSuccess": "تم حذف المستخدم بنجاح",
+      "create": {
+        "title": "إنشاء مستخدم"
+      },
+      "update": {
+        "title": "تحديث المستخدم"
+      },
+      "accountDetails": "تفاصيل الحساب",
+      "passwordDescription": "كلمة المرور التي يسجل بها هذا المستخدم الدخول.",
+      "isActiveDescription": "لا يمكن للمستخدم غير النشط تسجيل الدخول."
+    },
+    "roles": {
+      "title": "الأدوار",
+      "createSuccess": "تم إنشاء الدور بنجاح",
+      "updateSuccess": "تم تحديث الدور بنجاح",
+      "deleteTitle": "حذف الدور",
+      "deleteConfirm": "هل أنت متأكد أنك تريد حذف هذا الدور؟",
+      "deleteSuccess": "تم حذف الدور بنجاح",
+      "notFound": "الدور غير موجود",
+      "permissions": "الأذونات",
+      "permissionsUpdateSuccess": "تم تحديث الأذونات بنجاح",
+      "changePermissions": {
+        "title": "تغيير الصلاحيات"
+      },
+      "create": {
+        "title": "إنشاء دور"
+      },
+      "update": {
+        "title": "تحديث الدور"
+      },
+      "permissionGroups": "مجموعات الصلاحيات"
+    },
+    "profile": {
+      "title": "الملف الشخصي",
+      "description": "تحديث معلوماتك الشخصية",
+      "updateSuccess": "تم تحديث الملف الشخصي بنجاح",
+      "deleteAvatarTitle": "حذف الصورة الشخصية",
+      "deleteAvatarConfirm": "هل أنت متأكد أنك تريد حذف صورتك الشخصية؟",
+      "altImage": "الصورة الشخصية",
+      "changePasswordSuccess": "تم تغيير كلمة المرور بنجاح"
+    },
+    "verifyEmail": {
+      "verifying": "جاري التحقق من بريدك الإلكتروني...",
+      "verifiedTitle": "تم التحقق من البريد الإلكتروني!",
+      "verifiedMessage": "تم التحقق من بريدك الإلكتروني بنجاح. يمكنك الآن تسجيل الدخول.",
+      "buttonSignin": "تسجيل الدخول الآن",
+      "resendButton": "إعادة إرسال بريد التحقق",
+      "resendSuccess": "تم إعادة إرسال بريد التحقق.",
+      "resendWait": "يرجى الانتظار ${seconds} ثانية",
+      "notVerifiedTitle": "التحقق من البريد الإلكتروني مطلوب",
+      "notVerifiedMessage": "عنوان بريدك الإلكتروني لم يتم التحقق منه. يرجى التحقق من صندوق الوارد للحصول على رابط التحقق أو النقر على الزر أدناه لإعادة إرساله.",
+      "failedTitle": "فشل التحقق",
+      "failedMessage": "رابط التحقق غير صالح أو انتهت صلاحيته.",
+      "title": "تأكيد البريد الإلكتروني"
+    },
+    "auth": {
+      "signin": {
+        "title": "تسجيل الدخول",
+        "description": "أدخل بيانات اعتمادك لتسجيل الدخول",
+        "button": "تسجيل الدخول",
+        "forgotPassword": "هل نسيت كلمة المرور؟",
+        "signupLink": "اشتراك",
+        "noAccount": "ليس لديك حساب؟",
+        "backToSignin": "العودة لتسجيل الدخول"
+      },
+      "signup": {
+        "title": "اشتراك",
+        "description": "أدخل بريدك الإلكتروني وكلمة المرور للتسجيل",
+        "button": "اشتراك",
+        "signinLink": "تسجيل الدخول",
+        "alreadyHaveAccount": "لديك حساب بالفعل؟",
+        "successTitle": "نجاح!",
+        "successVerifyEmail": "تم التسجيل بنجاح! يرجى التحقق من بريدك الإلكتروني لتفعيل حسابك.",
+        "successMessage": "تم التسجيل بنجاح! اذهب لصفحة تسجيل الدخول.",
+        "disabledTitle": "التسجيل مغلق",
+        "disabledMessage": "يُنشئ المسؤول الحسابات الجديدة. إذا كان لديك حساب بالفعل فسجّل الدخول.",
+        "disabledAction": "الانتقال إلى تسجيل الدخول"
+      },
+      "forgotPassword": {
+        "title": "نسيت كلمة المرور",
+        "description": "أدخل بريدك الإلكتروني لإعادة تعيين كلمة المرور",
+        "button": "إرسال رابط إعادة التعيين",
+        "success": "تم إرسال رابط إعادة تعيين كلمة المرور",
+        "checkEmail": "يرجى التحقق من بريدك الإلكتروني للحصول على تعليمات إعادة تعيين كلمة المرور"
+      },
+      "resetPassword": {
+        "title": "إعادة تعيين كلمة المرور",
+        "description": "أدخل كلمة المرور الجديدة لإعادة تعيين حسابك",
+        "button": "إعادة تعيين كلمة المرور",
+        "success": "تم إعادة تعيين كلمة المرور بنجاح",
+        "hasBeenReset": "تم إعادة تعيين كلمة مرورك بنجاح"
+      },
+      "signout": "تسجيل الخروج",
+      "unauthorized": {
+        "title": "غير مصرح"
+      }
+    },
+    "changePassword": {
+      "title": "تغيير كلمة المرور",
+      "description": "تأكد من أن حسابك آمن"
+    },
+    "ui": {
+      "buttons": {
+        "title": "أزرار واجهة المستخدم"
+      },
+      "cards": {
+        "title": "بطاقات واجهة المستخدم"
+      },
+      "datePicker": {
+        "title": "منتقي التاريخ لواجهة المستخدم"
+      },
+      "dateView": {
+        "title": "عرض التاريخ لواجهة المستخدم"
+      },
+      "fileUpload": {
+        "title": "رفع الملفات لواجهة المستخدم"
+      },
+      "formElements": {
+        "title": "عناصر نموذج واجهة المستخدم"
+      },
+      "treeview": {
+        "title": "عرض شجري لواجهة المستخدم"
+      },
+      "tooltip": {
+        "title": "تلميح واجهة المستخدم"
+      }
+    },
+    "notifications": {
+      "title": "الإشعارات",
+      "detail": {
+        "title": "تفاصيل الإشعار"
+      },
+      "viewAll": "عرض جميع الإشعارات"
+    },
+    "localization": {
+      "title": "التوطين",
+      "readOnly": "يمكنك عرض هذه الإعدادات ولكن لا يمكنك تغييرها.",
+      "tabs": {
+        "texts": "النصوص",
+        "languages": "اللغات"
+      },
+      "texts": {
+        "onlyOverridden": "التي تم تجاوزها فقط",
+        "setHere": "مُعيَّن هنا",
+        "notOverridden": "لم يتم تجاوزها",
+        "editTitle": "تعديل النص",
+        "defaultLabel": "القيمة الافتراضية",
+        "overrideLabel": "نصك",
+        "placeholders": "احتفظ بهذه العناصر النائبة:",
+        "placeholderMissing": "أحد العناصر النائبة مفقود — سيظهر فارغًا في التطبيق.",
+        "reset": "إعادة التعيين إلى القيمة الموروثة",
+        "resetTitle": "هل تريد إعادة تعيين هذا النص؟",
+        "resetConfirm": "سيؤدي هذا إلى إزالة تجاوزك والعودة إلى القيمة الموروثة.",
+        "resetSuccess": "تمت إعادة تعيين النص إلى القيمة الموروثة",
+        "saveSuccess": "تم حفظ النص",
+        "noOverrides": "لا يوجد أي تجاوز في هذه اللغة بعد."
+      },
+      "languages": {
+        "inherited": "موروث",
+        "inheritedFromShipped": "مدمج: جميع اللغات، بلا لغة افتراضية",
+        "inheritedSummary": "الموروث: ${languages} · الافتراضي: ${default}",
+        "customize": "تخصيص",
+        "customized": "مخصص",
+        "resetToInherited": "إعادة التعيين إلى الموروث",
+        "resetTitle": "هل تريد إعادة تعيين اللغات؟",
+        "resetConfirm": "سيؤدي هذا إلى إزالة التخصيص والعودة إلى الإعدادات الموروثة.",
+        "resetSuccess": "تمت إعادة تعيين اللغات إلى الإعدادات الموروثة",
+        "enabled": "اللغات المفعّلة",
+        "enabledCount": "${count} من ${total} مفعّلة",
+        "rtl": "من اليمين لليسار",
+        "atLeastOne": "يجب أن تبقى لغة واحدة على الأقل مفعّلة",
+        "noDefault": "لا شيء — استخدام لغة متصفح الزائر",
+        "defaultCleared": "تم مسح اللغة الافتراضية لأنه تم للتو تعطيلها",
+        "currentWillSwitch": "اللغة التي تشاهد بها هذه الشاشة قيد التعطيل — سيتم تحويلك إلى اللغة الافتراضية.",
+        "unsaved": "لديك تغييرات غير محفوظة",
+        "saveSuccess": "تم تحديث اللغات"
+      }
+    },
+    "settings": {
+      "title": "الإعدادات",
+      "readOnly": "يمكنك عرض هذه الإعدادات ولكن لا يمكنك تغييرها.",
+      "empty": "لا توجد إعدادات متاحة",
+      "customized": "مخصص",
+      "source": {
+        "own": "محدد هنا",
+        "default": "الافتراضي"
+      },
+      "changed": "تم التغيير",
+      "unsaved": "تغييرات غير محفوظة",
+      "discard": "تجاهل التغييرات",
+      "resetTitle": "إعادة تعيين إعدادات ${setting}؟",
+      "resetConfirmButton": "نعم، أعد التعيين",
+      "resetSuccess": "تمت إعادة تعيين إعدادات ${setting} إلى القيم الموروثة",
+      "saveSuccess": "تم حفظ إعدادات ${setting}",
+      "general": {
+        "title": "عام",
+        "description": "خيارات تنطبق على التطبيق بأكمله.",
+        "isEmailVerificationRequired": "اشتراط بريد إلكتروني مُتحقق منه لتسجيل الدخول",
+        "isEmailVerificationRequiredHelp": "عند التفعيل، يجب على الحساب تأكيد بريده الإلكتروني قبل أن يتمكن من تسجيل الدخول.",
+        "isSignupEnabled": "السماح بالتسجيل",
+        "isSignupEnabledHelp": "السماح لأي شخص بإنشاء حساب من صفحة التسجيل."
+      },
+      "email": {
+        "title": "البريد الإلكتروني",
+        "description": "خادم SMTP والمرسل اللذان يُرسل عبرهما البريد الإلكتروني الصادر.",
+        "smtpServer": "خادم SMTP",
+        "smtpPort": "منفذ SMTP",
+        "smtpUsername": "اسم مستخدم SMTP",
+        "smtpPassword": "كلمة مرور SMTP",
+        "senderEmail": "بريد المرسل الإلكتروني",
+        "senderName": "اسم المرسل",
+        "portInvalid": "أدخل عددًا صحيحًا بين 1 و65535",
+        "passwordSet": "محددة",
+        "passwordNotSet": "غير محددة",
+        "passwordKeepPlaceholder": "اتركه فارغًا للاحتفاظ بكلمة المرور الحالية",
+        "passwordNotSetPlaceholder": "غير محددة",
+        "passwordClear": "مسح",
+        "passwordWillClear": "سيتم مسحها عند الحفظ",
+        "passwordUndo": "تراجع",
+        "passwordInheritHint": "لا تُورث كلمة المرور إلا مع الخادم والمنفذ واسم المستخدم معًا. إذا غيّرت أيًا منها هنا دون إدخال كلمة مرور، فلن تُستخدم أي كلمة مرور."
+      },
+      "seo": {
+        "title": "تحسين محركات البحث",
+        "description": "إعدادات افتراضية للموقع كله لمحركات البحث والمشاركة الاجتماعية. يمكن لكل صفحة تجاوزها من شاشة تحسين محركات البحث.",
+        "siteName": "اسم الموقع",
+        "siteNameHelp": "يظهر في العناوين وعند مشاركة الصفحة.",
+        "titleTemplate": "قالب العنوان",
+        "titleTemplateHelp": "مثل \"%s | موقعي\". يُستبدل %s بعنوان الصفحة.",
+        "titleTemplateInvalid": "يجب أن يحتوي القالب على %s حيث يوضع عنوان كل صفحة",
+        "siteUrl": "عنوان الموقع",
+        "siteUrlHelp": "العنوان العام الذي تُبنى منه الروابط الأساسية وخريطة الموقع.",
+        "siteUrlInvalid": "أدخل عنوان الموقع، مثل https://www.example.com",
+        "twitterSite": "حساب X (تويتر)",
+        "twitterSiteHelp": "المعرّف @ الذي يظهر على بطاقات المشاركة.",
+        "defaultDescription": "الوصف الافتراضي",
+        "defaultOgImage": "صورة المشاركة الافتراضية",
+        "defaultOgImageHelp": "تُستخدم عندما لا تكون للصفحة صورة خاصة بها. الأفضل 1200 × 630 بكسل.",
+        "allowIndexing": "السماح لمحركات البحث بفهرسة الموقع",
+        "allowIndexingHelp": "عند إيقافه يطلب robots.txt من كل الزواحف الابتعاد. أوقفه في مواقع الاختبار.",
+        "robotsExtra": "أسطر إضافية في robots.txt"
+      },
+      "usingDefaults": "يستخدم القيم الافتراضية",
+      "resetToDefaults": "إعادة التعيين إلى الافتراضي",
+      "resetConfirm": "ستُزال إعدادات ${setting} الخاصة بالموقع، وتُطبَّق القيم الافتراضية بدلًا منها."
+    },
+    "seo": {
+      "title": "تحسين محركات البحث",
+      "description": "العناوين والأوصاف وبطاقات المشاركة والفهرسة لكل صفحة عامة. الإعدادات الافتراضية للموقع في شاشة الإعدادات.",
+      "create": {
+        "title": "إضافة إعدادات تحسين محركات البحث"
+      },
+      "update": {
+        "title": "تعديل إعدادات تحسين محركات البحث"
+      },
+      "createSuccess": "تم إنشاء إعدادات تحسين محركات البحث",
+      "updateSuccess": "تم حفظ إعدادات تحسين محركات البحث",
+      "notFound": "لم تعد إعدادات تحسين محركات البحث هذه موجودة",
+      "allLanguages": "كل اللغات",
+      "deleteTitle": "حذف إعدادات تحسين محركات البحث",
+      "deleteConfirm": "ستعود الصفحة ${path} إلى الإعدادات الافتراضية للموقع.",
+      "deleteSuccess": "تم حذف إعدادات تحسين محركات البحث",
+      "untitled": "الافتراضي للموقع",
+      "indexed": "مُفهرس",
+      "form": {
+        "basics": "الأساسيات",
+        "basicsHelp": "ما هذه الصفحة، وكيف تظهر في نتائج البحث.",
+        "pathHelp": "عنوان الصفحة دون اللغة، مثل / أو /about.",
+        "pathInvalid": "أدخل مسار صفحة عامة، مثل /about",
+        "titleHelp": "يظهر في تبويب المتصفح ونتائج البحث عبر قالب عنوان الموقع.",
+        "keywords": "الكلمات المفتاحية",
+        "keywordsHelp": "مفصولة بفواصل.",
+        "characters": "${count} حرفًا (يظهر نحو 155 في النتائج)",
+        "social": "المشاركة الاجتماعية",
+        "socialHelp": "كيف تبدو الصفحة عندما يشارك أحد رابطها. الحقول الفارغة تستخدم الأساسيات.",
+        "ogTitle": "عنوان المشاركة",
+        "ogDescription": "وصف المشاركة",
+        "ogImage": "صورة المشاركة",
+        "ogImageHelp": "إن تُرك فارغًا تُستخدم صورة الموقع الافتراضية. الأفضل 1200 × 630 بكسل.",
+        "twitterCard": "بطاقة X (تويتر)",
+        "twitterCardLarge": "صورة كبيرة",
+        "twitterCardSummary": "صورة صغيرة",
+        "indexing": "الفهرسة وخريطة الموقع",
+        "indexingHelp": "هل تُدرج محركات البحث الصفحة، وكيف تصفها خريطة الموقع.",
+        "noIndex": "إخفاء من نتائج البحث (noindex)",
+        "noFollow": "عدم تتبع الروابط في هذه الصفحة (nofollow)",
+        "includeInSitemap": "تضمين في خريطة الموقع",
+        "canonicalUrl": "العنوان الأساسي",
+        "canonicalUrlHelp": "إن تُرك فارغًا يُستخدم عنوان الصفحة نفسها.",
+        "urlInvalid": "أدخل عنوانًا كاملًا يبدأ بـ https://",
+        "changeFrequency": "معدل التغيير",
+        "frequencyNone": "غير محدد",
+        "frequency": {
+          "always": "دائمًا",
+          "hourly": "كل ساعة",
+          "daily": "يوميًا",
+          "weekly": "أسبوعيًا",
+          "monthly": "شهريًا",
+          "yearly": "سنويًا",
+          "never": "أبدًا"
+        },
+        "priority": "الأولوية",
+        "priorityHelp": "من 0 إلى 1، مقارنة بصفحاتك الأخرى.",
+        "priorityInvalid": "أدخل رقمًا من 0 إلى 1",
+        "structuredData": "البيانات المنظمة",
+        "structuredDataHelp": "مستند JSON-LD يصف الصفحة لمحركات البحث، مثل Organization أو Product.",
+        "jsonLdInvalid": "هذا ليس JSON صالحًا",
+        "noImage": "لا توجد صورة",
+        "uploadImage": "رفع صورة",
+        "replaceImage": "استبدال الصورة",
+        "removeImage": "إزالة الصورة",
+        "imageUnavailable": "الصورة غير متاحة",
+        "titleCharacters": "${count} حرفًا (يظهر نحو 60 منها في النتائج)"
+      },
+      "noIndexBadge": "noindex",
+      "empty": "لا توجد صفحة لها إعدادات SEO خاصة بها بعد - تستخدم كل الصفحات الإعدادات الافتراضية للموقع."
+    }
+  },
+  "notifications": {
+    "noNotifications": "لا توجد إشعارات",
+    "notFound": "الإشعار غير موجود",
+    "viewAll": "عرض جميع الإشعارات",
+    "markAllRead": "تحديد الكل كمقروء",
+    "markAsRead": "تحديد كمقروء",
+    "markAsUnread": "تحديد كغير مقروء",
+    "delete": "حذف",
+    "all": "الكل",
+    "read": "مقروء",
+    "unread": "غير مقروء",
+    "group": "المجموعة",
+    "metadata": "البيانات الوصفية",
+    "markedAsRead": "تم تحديد الإشعار كمقروء",
+    "markedAsUnread": "تم تحديد الإشعار كغير مقروء",
+    "markedAllAsRead": "تم تحديد جميع الإشعارات كمقروءة",
+    "deleted": "تم حذف الإشعار",
+    "deleteTitle": "حذف الإشعار",
+    "deleteConfirm": "هل أنت متأكد أنك تريد حذف هذا الإشعار؟",
+    "markAllReadConfirmTitle": "تحديد الكل كمقروء",
+    "markAllReadConfirmText": "هل أنت متأكد أنك تريد تحديد جميع الإشعارات كمقروءة؟",
+    "filterByGroup": "تصفية حسب المجموعة",
+    "groups": {
+      "inventory": "المخزون",
+      "system": "النظام",
+      "payments": "المدفوعات",
+      "orders": "الطلبات"
+    },
+    "types": {
+      "info": "معلومات",
+      "warning": "تحذير",
+      "error": "خطأ",
+      "success": "نجاح"
+    },
+    "inventoryBelowLimit": {
+      "title": "تنبيه انخفاض المخزون",
+      "message": "العنصر أقل من مستوى المخزون الأدنى"
+    },
+    "systemUpdate": {
+      "title": "تحديث النظام",
+      "message": "يتوفر تحديث للنظام"
+    },
+    "orderCompleted": {
+      "title": "اكتمل الطلب",
+      "message": "تم إكمال طلبك بنجاح"
+    },
+    "paymentFailed": {
+      "title": "فشل الدفع",
+      "message": "فشلت معاملة الدفع"
+    },
+    "welcome": {
+      "title": "مرحبا",
+      "message": "مرحبا بك في التطبيق"
+    }
+  },
+  "site": {
+    "nav": {
+      "label": "الرئيسية",
+      "home": "الرئيسية",
+      "about": "من نحن",
+      "contact": "اتصل بنا"
+    },
+    "footer": {
+      "tagline": "موقع سريع وملائم لمحركات البحث، مع حسابات ومنطقة إدارة مدمجة.",
+      "navLabel": "التذييل"
+    },
+    "home": {
+      "hero": {
+        "badge": "جاهز لمشروعك القادم",
+        "title": "ابنِ شيئًا",
+        "highlight": "يحب الناس استخدامه",
+        "description": "موقع سريع وملائم لمحركات البحث، فيه حسابات الزوار واللغات ومنطقة الإدارة جاهزة، لتبدأ مباشرة بما يميّز موقعك.",
+        "primaryCta": "ابدأ الآن",
+        "secondaryCta": "اعرف المزيد"
+      },
+      "features": {
+        "title": "كل ما يحتاجه موقع حديث",
+        "subtitle": "الأساس جاهز ومختبر، من أول عرض للصفحة حتى شاشات الإدارة.",
+        "items": {
+          "seo": {
+            "title": "ملائم لمحركات البحث",
+            "description": "تُعرض كل صفحة على الخادم، مع عناوين وأوصاف وبطاقات مشاركة وخريطة موقع تعدّلها من منطقة الإدارة."
+          },
+          "accounts": {
+            "title": "حسابات الزوار",
+            "description": "التسجيل وتسجيل الدخول والتحقق من البريد واستعادة كلمة المرور، مع أدوار وصلاحيات تدعمها."
+          },
+          "languages": {
+            "title": "لغات متعددة",
+            "description": "قدّم كل صفحة باللغات التي تختارها، بما فيها اللغات من اليمين إلى اليسار، وعدّل أي نص دون إعادة نشر."
+          },
+          "admin": {
+            "title": "منطقة الإدارة",
+            "description": "أدِر المستخدمين والأدوار والإعدادات والترجمات والإشعارات من مكان واحد."
+          }
+        }
+      },
+      "cta": {
+        "title": "هل أنت مستعد للبدء؟",
+        "description": "أنشئ حسابًا في دقيقة وجرّب بنفسك.",
+        "closedDescription": "اطّلع على ما هو متضمَّن وكيف يتكامل كل شيء معًا."
+      }
+    },
+    "about": {
+      "title": "من نحن",
+      "intro": "نحن فريق صغير يبني برمجيات موثوقة للويب. هذه الصفحة نقطة بداية: أخبر زوارك من أنت ولماذا تفعل ما تفعله.",
+      "mission": {
+        "title": "مهمتنا",
+        "text": "أن نجعل بناء المواقع الجيدة وتشغيلها أسهل، ليُصرف جزء أكبر من كل مشروع على الأفكار المهمة."
+      },
+      "values": {
+        "title": "ما نؤمن به",
+        "items": {
+          "quality": {
+            "title": "الجودة",
+            "description": "نفضّل تقديم شيء واحد يعمل على ثلاثة أشياء تكاد تعمل."
+          },
+          "openness": {
+            "title": "الانفتاح",
+            "description": "نشرح خياراتنا بوضوح ونشارك ما نتعلمه."
+          },
+          "care": {
+            "title": "الاهتمام",
+            "description": "يستحق كل زائر صفحة سريعة وواضحة وسهلة الوصول."
+          }
+        }
+      },
+      "contactCta": "تواصل معنا"
+    },
+    "contact": {
+      "title": "اتصل بنا",
+      "intro": "لديك سؤال أو فكرة أو ملاحظة؟ يسعدنا سماعك، وعادةً نرد خلال يوم عمل واحد.",
+      "email": {
+        "label": "البريد الإلكتروني",
+        "value": "hello@example.com"
+      },
+      "phone": {
+        "label": "الهاتف",
+        "value": "+1 555 0100"
+      },
+      "address": {
+        "label": "العنوان",
+        "value": "100 Example Street, Springfield"
+      },
+      "hours": {
+        "label": "ساعات العمل",
+        "value": "من الاثنين إلى الجمعة، 9:00 حتى 17:00"
+      }
+    },
+    "skipToContent": "تخطَّ إلى المحتوى"
+  }
+}

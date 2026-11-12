@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <OutputType>Exe</OutputType>
+        <NoWarn>CS1591;CA2016</NoWarn>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="FastEndpoints" Version="8.3.0" />
+        <PackageReference Include="FastEndpoints.Generator" Version="8.3.0" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
+        <PackageReference Include="FastEndpoints.Security" Version="8.3.0" />
+        <PackageReference Include="FastEndpoints.Swagger" Version="8.3.0" />
+        <PackageReference Include="Hangfire.AspNetCore" Version="1.8.25" />
+        <PackageReference Include="Hangfire.PostgreSql" Version="1.21.1" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.StackExchangeRedis" Version="10.0.14" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.14" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.14">
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+          <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.14" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+        <PackageReference Include="Riok.Mapperly" Version="4.3.1" />
+        <PackageReference Include="StackExchange.Redis" Version="3.4.31" />
+        <PackageReference Include="System.Linq.Dynamic.Core" Version="1.7.4" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Features\Identity\Endpoints\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <!-- Shipped locale files: embedded so LocalizationResourceStore can read them off the assembly
+           manifest, and removed from whatever implicit item type the SDK would otherwise give them so
+           they are not also copied to the output/publish directory as loose content. The fixed
+           LogicalName keeps the manifest name independent of the project's root namespace. -->
+      <Content Remove="Features\Localization\Core\Resources\*.json" />
+      <None Remove="Features\Localization\Core\Resources\*.json" />
+      <EmbeddedResource Include="Features\Localization\Core\Resources\*.json" LogicalName="Localization.Resources.%(Filename)%(Extension)" />
+    </ItemGroup>
+
+</Project>

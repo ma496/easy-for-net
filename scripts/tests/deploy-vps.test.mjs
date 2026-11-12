@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   appNameFor,
@@ -18,6 +18,9 @@ import {
   remoteCommand,
   repoUrls,
   shellQuote,
+  SITE_SINGLE,
+  SITE_TENANTS,
+  siteModeOf,
   wildcardRecordName,
   zoneCandidates,
 } from "../lib/deploy-vps.mjs";
@@ -29,6 +32,13 @@ test("options take a value in either form, and flags take none", () => {
   const { options, flags, errors } = parseDeployArgs(["--host", "203.0.113.10", "--domain=app.example.com", "--check"]);
   assert.deepEqual(options, { host: "203.0.113.10", domain: "app.example.com" });
   assert.deepEqual(flags, { check: true });
+  assert.deepEqual(errors, []);
+});
+
+test("--www is a flag of its own", () => {
+  const { options, flags, errors } = parseDeployArgs(["--domain", "example.com", "--www"]);
+  assert.deepEqual(options, { domain: "example.com" });
+  assert.deepEqual(flags, { www: true });
   assert.deepEqual(errors, []);
 });
 
@@ -106,21 +116,141 @@ test("results are read from their marker lines, across terminal line endings", (
 
 // --- the compose files ---------------------------------------------------------------------
 
-test("the Coolify stack runs the same services and reads the same values as the production one", () => {
-  const read = (file) => composeShape(readFileSync(join(REPO_ROOT, file), "utf8"));
-  const prod = read("docker-compose.prod.yml");
-  const coolify = read("docker-compose.coolify.yml");
-  assert.deepEqual(coolify.services, prod.services);
-  // Coolify names the stack itself, and its proxy serves whatever host Traefik routes to it.
-  const prodOnly = new Set(["PROD_PROJECT_NAME", "DOMAIN", "PLATFORM_SUBDOMAIN"]);
-  // The Traefik service the tenants' router sends tenant hosts to (Caddy routes them in production).
-  const coolifyOnly = new Set(["TENANTS_SERVICE"]);
-  assert.deepEqual(coolify.variables.filter((v) => !coolifyOnly.has(v)), prod.variables.filter((v) => !prodOnly.has(v)));
+// The deployment files come in two shapes: the shared root ones (multi-tenant in the template
+// repository, whatever the template's overlay made them in a generated project) and, in the
+// template repository, the user-facing template's overlay, which replaces them in its projects
+// with a single-domain stack. Each set present is held to the rules of its own shape.
+const OVERLAY = join(REPO_ROOT, "src", "user-facing", "overlay");
+const readIn = (dir, ...path) => readFileSync(join(dir, ...path), "utf8").replace(/\r\n/g, "\n");
+const SHAPES = [
+  { name: "the root files", dir: REPO_ROOT },
+  ...(existsSync(OVERLAY) ? [{ name: "the user-facing overlay", dir: OVERLAY }] : []),
+].map((shape) => ({ ...shape, mode: siteModeOf(readIn(shape.dir, "docker-compose.coolify.yml")) }));
+
+test("the deployment's shape is read from whether its stack hands the API a tenant template", () => {
+  assert.equal(siteModeOf("      Web__TenantOriginTemplate: ${TENANT_URL_TEMPLATE:?set TENANT_URL_TEMPLATE}\n"), SITE_TENANTS);
+  assert.equal(siteModeOf("      Web__DefaultDomain: ${PUBLIC_URL:?set PUBLIC_URL}\n"), SITE_SINGLE);
+  // An escaped dollar is the container's own shell, and a longer name is another variable.
+  assert.equal(siteModeOf("test: $${TENANT_URL_TEMPLATE}\n"), SITE_SINGLE);
+  assert.equal(siteModeOf("${TENANT_URL_TEMPLATES}\n"), SITE_SINGLE);
+  assert.equal(siteModeOf(undefined), SITE_SINGLE);
+  if (existsSync(OVERLAY)) assert.equal(SHAPES[1].mode, SITE_SINGLE, "the user-facing overlay serves one domain");
 });
 
-test("the tenants' router reaches the proxy through the service its label defines, never a container name", () => {
-  const compose = readFileSync(join(REPO_ROOT, "docker-compose.coolify.yml"), "utf8");
-  assert.match(compose, /^ {6}- traefik\.http\.services\.\$\{TENANTS_SERVICE:\?set TENANTS_SERVICE\}\.loadbalancer\.server\.port=80$/m);
+for (const { name, dir, mode } of SHAPES) {
+  const tenants = mode === SITE_TENANTS;
+
+  test(`${name}: the Coolify stack runs the same services and reads the same values as the production one`, () => {
+    const prod = composeShape(readIn(dir, "docker-compose.prod.yml"));
+    const coolify = composeShape(readIn(dir, "docker-compose.coolify.yml"));
+    assert.deepEqual(coolify.services, prod.services);
+    // Coolify names the stack itself, and its proxy serves whatever host Traefik routes to it.
+    const prodOnly = new Set(["PROD_PROJECT_NAME", "DOMAIN", "PLATFORM_SUBDOMAIN"]);
+    // The Traefik service the tenants' router sends tenant hosts to (Caddy routes them in production).
+    const coolifyOnly = new Set(["TENANTS_SERVICE"]);
+    assert.deepEqual(coolify.variables.filter((v) => !coolifyOnly.has(v)), prod.variables.filter((v) => !prodOnly.has(v)));
+  });
+
+  test(`${name}: the stacks build the generated layout's API and web app`, () => {
+    for (const file of ["docker-compose.prod.yml", "docker-compose.coolify.yml"]) {
+      const text = readIn(dir, file);
+      assert.match(text, /^ {6}context: \.\/src\/backend$/m, file);
+      assert.match(text, /^ {6}context: \.\/src\/frontend\/web$/m, file);
+    }
+  });
+
+  test(`${name}: .env.docker.example fills every value the production stack requires`, () => {
+    const example = readIn(dir, ".env.docker.example");
+    const values = Object.fromEntries([...example.matchAll(/^([A-Z_][A-Z0-9_]*)=(.*)$/gm)].map((m) => [m[1], m[2].trim()]));
+    const prod = readIn(dir, "docker-compose.prod.yml");
+    for (const [, variable] of prod.matchAll(/\$\{([A-Z_][A-Z0-9_]*):\?/g)) assert.ok(variable in values, `${variable} is missing`);
+    assert.equal(values.DOMAIN, "example.com");
+    if (tenants) {
+      assert.equal(values.PLATFORM_SUBDOMAIN, "app");
+      assert.equal(values.PUBLIC_URL, `https://${platformHost(values.DOMAIN, values.PLATFORM_SUBDOMAIN)}`);
+      assert.equal(values.TENANT_URL_TEMPLATE, `https://{tenant}.${values.DOMAIN}`);
+    } else {
+      // The generator tells the shapes apart by this line too (CreateProjectGenerator.WriteDockerEnvAsync).
+      assert.equal(values.PUBLIC_URL, `https://${values.DOMAIN}`);
+      for (const variable of ["PLATFORM_SUBDOMAIN", "TENANT_URL_TEMPLATE", "TENANTS_SERVICE"]) assert.ok(!(variable in values), `${variable} is set`);
+    }
+  });
+
+  test(`${name}: the Coolify Caddyfile answers whatever host Traefik forwards, with the one-origin routes`, () => {
+    const caddyfile = readIn(dir, "docker", "Caddyfile.coolify");
+    assert.match(caddyfile, /^:80 \{/m);
+    assert.match(caddyfile, /@api path \/api\/\* \/hubs\/\* \/hangfire \/hangfire\/\* \/health\n\s*handle @api \{\s*reverse_proxy api:8080\s*\}/);
+    assert.match(caddyfile, /handle \{\s*reverse_proxy web:3000\s*\}/);
+  });
+
+  if (tenants) {
+    test(`${name}: the tenants' router reaches the proxy through the service its label defines, never a container name`, () => {
+      const compose = readIn(dir, "docker-compose.coolify.yml");
+      assert.match(compose, /^ {6}- traefik\.http\.services\.\$\{TENANTS_SERVICE:\?set TENANTS_SERVICE\}\.loadbalancer\.server\.port=80$/m);
+    });
+
+    test(`${name}: both compose files hand the API the tenant template beside the platform origin`, () => {
+      for (const file of ["docker-compose.prod.yml", "docker-compose.coolify.yml"]) {
+        const text = readIn(dir, file);
+        assert.match(text, /^ {6}Web__DefaultDomain: \$\{PUBLIC_URL:\?set PUBLIC_URL\}$/m, file);
+        assert.match(text, /^ {6}Web__TenantOriginTemplate: \$\{TENANT_URL_TEMPLATE:\?set TENANT_URL_TEMPLATE\}$/m, file);
+      }
+    });
+
+    test(`${name}: Caddy serves the platform and every tenant subdomain with the same routes`, () => {
+      const blocks = caddyBlocks(readIn(dir, "docker", "Caddyfile"));
+      // The platform's site is named by PLATFORM_SUBDOMAIN, app when the environment leaves it unset.
+      assert.ok(blocks["{$PLATFORM_SUBDOMAIN:app}.{$DOMAIN}"], "the platform's site block");
+      assert.match(blocks[""] ?? "", /on_demand_tls \{\s*ask http:\/\/api:8080\/api\/tenants\/tls-allowed\s*\}/);
+      const routes = blocks["(app_routes)"];
+      assert.match(routes, /@api path \/api\/\* \/hubs\/\* \/hangfire \/hangfire\/\* \/health\n\s*handle @api \{\s*reverse_proxy api:8080\s*\}/);
+      assert.match(routes, /handle \{\s*reverse_proxy web:3000\s*\}/);
+      assert.match(blocks["{$PLATFORM_SUBDOMAIN:app}.{$DOMAIN}"], /import app_routes/);
+      assert.doesNotMatch(blocks["{$PLATFORM_SUBDOMAIN:app}.{$DOMAIN}"], /on_demand/);
+      assert.match(blocks["*.{$DOMAIN}"], /tls \{\s*on_demand\s*\}/);
+      assert.match(blocks["*.{$DOMAIN}"], /import app_routes/);
+    });
+  } else {
+    test(`${name}: the single-domain stacks seed one administrator and name no tenant`, () => {
+      for (const file of ["docker-compose.prod.yml", "docker-compose.coolify.yml"]) {
+        const text = readIn(dir, file);
+        assert.match(text, /^ {6}Seed__AdminPassword: \$\{SEED_ADMIN_PASSWORD:\?set SEED_ADMIN_PASSWORD\}$/m, file);
+        assert.match(text, /^ {6}Web__DefaultDomain: \$\{PUBLIC_URL:\?set PUBLIC_URL\}$/m, file);
+        assert.match(text, /^ {6}Web__Domains__0: \$\{PUBLIC_URL\}$/m, file);
+        assert.doesNotMatch(text, /TenantOriginTemplate|TENANT|PLATFORM_SUBDOMAIN|PlatformAdmin|TenantAdmin|traefik\./, file);
+      }
+    });
+
+    test(`${name}: Caddy serves the site at the domain and redirects www to it, with no on-demand certificates`, () => {
+      const caddyfile = readIn(dir, "docker", "Caddyfile");
+      const blocks = caddyBlocks(caddyfile);
+      assert.deepEqual(Object.keys(blocks).sort(), ["www.{$DOMAIN}", "{$DOMAIN}"].sort());
+      assert.match(blocks["{$DOMAIN}"], /@api path \/api\/\* \/hubs\/\* \/hangfire \/hangfire\/\* \/health\n\s*handle @api \{\s*reverse_proxy api:8080\s*\}/);
+      assert.match(blocks["{$DOMAIN}"], /handle \{\s*reverse_proxy web:3000\s*\}/);
+      assert.match(blocks["www.{$DOMAIN}"], /^\s*redir https:\/\/\{\$DOMAIN\}\{uri\} permanent\s*$/);
+      assert.doesNotMatch(caddyfile, /on_demand|tls-allowed|\*\./);
+      // Behind Coolify, a www host Traefik forwards is redirected the same way.
+      assert.match(readIn(dir, "docker", "Caddyfile.coolify"), /@www header_regexp www Host \^www\\\.\(\.\+\)\$\n\s*redir @www https:\/\/\{re\.www\.1\}\{uri\} permanent/);
+    });
+  }
+}
+
+test("the compose shape skips escaped dollars and nested keys", () => {
+  const shape = composeShape("services:\n  db:\n    environment:\n      A: ${A:?x}\n    test: $${B}\nvolumes:\n  data:\n");
+  assert.deepEqual(shape, { services: ["db"], variables: ["A"] });
+});
+
+// --- the Caddyfile -------------------------------------------------------------------------
+
+/**
+ * A Caddyfile's top-level blocks: a name (none for the global options; one may open with a
+ * `{$VAR}` placeholder) at column 0 and `{`, up to `}` at column 0.
+ */
+function caddyBlocks(caddyfile) {
+  return Object.fromEntries([...caddyfile.matchAll(/^((?:\{\$|[^\s{#])[^\n]*?)?\s*\{\n([\s\S]*?)^\}/gm)].map((m) => [m[1] ?? "", m[2]]));
+}
+
+test("the tenants' router is named by the service the proxy's label defines, and the label escaping is off", () => {
   const script = readFileSync(join(REPO_ROOT, "scripts", "deploy", "vps", "remote.sh"), "utf8").replace(/\r\n/g, "\n");
   assert.match(script, /tenants_service\(\) \{ printf 'efn-%s-tenants' "\$1"; \}/);
   assert.match(script, /set_env TENANTS_SERVICE "\$\(tenants_service "\$app"\)"/);
@@ -129,54 +259,6 @@ test("the tenants' router reaches the proxy through the service its label define
   assert.match(script, /'\{"is_container_label_escape_enabled": false\}'/);
   // Coolify suffixes the container name with each deployment's timestamp.
   assert.doesNotMatch(script, /http:\/\/proxy-/);
-});
-
-test("the compose shape skips escaped dollars and nested keys", () => {
-  const shape = composeShape("services:\n  db:\n    environment:\n      A: ${A:?x}\n    test: $${B}\nvolumes:\n  data:\n");
-  assert.deepEqual(shape, { services: ["db"], variables: ["A"] });
-});
-
-test("both compose files hand the API the tenant template beside the platform origin", () => {
-  for (const file of ["docker-compose.prod.yml", "docker-compose.coolify.yml"]) {
-    const text = readFileSync(join(REPO_ROOT, file), "utf8");
-    assert.match(text, /^ {6}Web__DefaultDomain: \$\{PUBLIC_URL:\?set PUBLIC_URL\}$/m, file);
-    assert.match(text, /^ {6}Web__TenantOriginTemplate: \$\{TENANT_URL_TEMPLATE:\?set TENANT_URL_TEMPLATE\}$/m, file);
-  }
-});
-
-test(".env.docker.example fills every value the production stack requires", () => {
-  const example = readFileSync(join(REPO_ROOT, ".env.docker.example"), "utf8");
-  const values = Object.fromEntries([...example.matchAll(/^([A-Z_][A-Z0-9_]*)=(.*)$/gm)].map((m) => [m[1], m[2].trim()]));
-  const prod = readFileSync(join(REPO_ROOT, "docker-compose.prod.yml"), "utf8");
-  for (const [, name] of prod.matchAll(/\$\{([A-Z_][A-Z0-9_]*):\?/g)) assert.ok(name in values, `${name} is missing`);
-  assert.equal(values.DOMAIN, "example.com");
-  assert.equal(values.PLATFORM_SUBDOMAIN, "app");
-  assert.equal(values.PUBLIC_URL, `https://${platformHost(values.DOMAIN, values.PLATFORM_SUBDOMAIN)}`);
-  assert.equal(values.TENANT_URL_TEMPLATE, `https://{tenant}.${values.DOMAIN}`);
-});
-
-// --- the Caddyfile -------------------------------------------------------------------------
-
-test("Caddy serves the platform and every tenant subdomain with the same routes", () => {
-  const caddyfile = readFileSync(join(REPO_ROOT, "docker", "Caddyfile"), "utf8").replace(/\r\n/g, "\n");
-  // Top-level blocks: a name (none for the global options; one may open with a `{$VAR}` placeholder)
-  // at column 0 and `{`, up to `}` at column 0.
-  const blocks = Object.fromEntries([...caddyfile.matchAll(/^((?:\{\$|[^\s{#])[^\n]*?)?\s*\{\n([\s\S]*?)^\}/gm)].map((m) => [m[1] ?? "", m[2]]));
-  // The platform's site is named by PLATFORM_SUBDOMAIN, app when the environment leaves it unset.
-  assert.ok(blocks["{$PLATFORM_SUBDOMAIN:app}.{$DOMAIN}"], "the platform's site block");
-  assert.match(blocks[""] ?? "", /on_demand_tls \{\s*ask http:\/\/api:8080\/api\/tenants\/tls-allowed\s*\}/);
-  const routes = blocks["(app_routes)"];
-  assert.match(routes, /@api path \/api\/\* \/hubs\/\* \/hangfire \/hangfire\/\* \/health\n\s*handle @api \{\s*reverse_proxy api:8080\s*\}/);
-  assert.match(routes, /handle \{\s*reverse_proxy web:3000\s*\}/);
-  assert.match(blocks["{$PLATFORM_SUBDOMAIN:app}.{$DOMAIN}"], /import app_routes/);
-  assert.doesNotMatch(blocks["{$PLATFORM_SUBDOMAIN:app}.{$DOMAIN}"], /on_demand/);
-  assert.match(blocks["*.{$DOMAIN}"], /tls \{\s*on_demand\s*\}/);
-  assert.match(blocks["*.{$DOMAIN}"], /import app_routes/);
-});
-
-test("the Coolify Caddyfile answers whatever host Traefik forwards", () => {
-  const caddyfile = readFileSync(join(REPO_ROOT, "docker", "Caddyfile.coolify"), "utf8");
-  assert.match(caddyfile, /^:80 \{/m);
 });
 
 test("the server script attaches the platform host and the wildcard, and sets the tenant template", () => {
@@ -198,6 +280,34 @@ test("the server script attaches the platform host and the wildcard, and sets th
   const start = script.indexOf("dns_challenge() {");
   const challenge = script.slice(start, script.indexOf("\n}\n", start));
   assert.deepEqual(challenge.split("\n").filter((l) => l.includes('"$3"')), [String.raw`  printf '%s\n' "$3" >"$env_file"`]);
+});
+
+test("a single site is the domain itself: no tenant template, router, wildcard or DNS-01", () => {
+  const script = readFileSync(join(REPO_ROOT, "scripts", "deploy", "vps", "remote.sh"), "utf8").replace(/\r\n/g, "\n");
+  assert.match(script, /if \[ "\$site_mode" = single \]; then\n\s*platform_host=\$domain\n\s*url="https:\/\/\$domain"\n\s*fi/);
+  assert.match(script, /site_domains="\$url:80,https:\/\/www\.\$domain:80"/);
+  assert.match(script, /if \[ "\$site_mode" = single \] && \[ -n "\$dns_provider" \]; then\n\s*die /);
+  // The tenant template and the tenants' service are set only outside single mode.
+  assert.match(script, /if \[ "\$site_mode" != single \]; then\n\s*set_env TENANT_URL_TEMPLATE "\$tenant_template"\n\s*set_env TENANTS_SERVICE /);
+  // The label escaping, the wildcard domain, the DNS challenge and the tenants' router sit in the
+  // branch a single site never takes.
+  const start = script.indexOf('  if [ "$site_mode" = single ]; then\n    # The domain is set');
+  const end = script.indexOf('    tenant_router "$app" "$domain" "$wildcard_via"\n  fi\n', start);
+  assert.ok(start > 0 && end > start, "the single/tenants branch around the domains");
+  const branch = script.slice(start, end);
+  const split = branch.indexOf("\n  else\n");
+  assert.ok(split > 0);
+  for (const tenantOnly of ["is_container_label_escape_enabled", "all_domains", "dns_challenge", "wildcard_via"]) {
+    assert.ok(!branch.slice(0, split).includes(tenantOnly), tenantOnly);
+    assert.ok(branch.slice(split).includes(tenantOnly), tenantOnly);
+  }
+  assert.match(script, /if \[ "\$site_mode" != single \] && \[ -f "\$PROXY_DIR\/dynamic\/efn-\$app\.yaml" \]; then/);
+});
+
+test("the deploy phase is told the single shape only for a single site, so a multi-tenant command line is unchanged", () => {
+  const values = (single) => ({ APP_NAME: "a", SITE_MODE: single ? SITE_SINGLE : undefined, WWW: single ? 1 : undefined });
+  assert.doesNotMatch(remoteCommand("deploy", values(false)), /SITE_MODE|WWW/);
+  assert.match(remoteCommand("deploy", values(true)), /'SITE_MODE=single' 'WWW=1'/);
 });
 
 // --- tenant subdomains and DNS -------------------------------------------------------------
@@ -361,4 +471,28 @@ test("records pointing at another address are a warning, not a refusal", async (
   assert.deepEqual(missing, []);
   assert.deepEqual(elsewhere.map((e) => e.record), ["app.example.com", "*.example.com"]);
   assert.deepEqual(elsewhere[1].addresses, ["198.51.100.7"]);
+});
+
+test("a single site's DNS check probes the domain itself, and www only when asked", async () => {
+  const asked = [];
+  const resolve = async (name) => {
+    asked.push(name);
+    return ["203.0.113.10"];
+  };
+  const base = { domain: "Example.com", serverAddresses: ["203.0.113.10"], resolve, label: "efn-check-abc", mode: SITE_SINGLE };
+  assert.deepEqual(await checkDomainDns(base), { missing: [], elsewhere: [] });
+  assert.deepEqual(asked, ["example.com"]);
+  asked.length = 0;
+  assert.deepEqual(await checkDomainDns({ ...base, www: true }), { missing: [], elsewhere: [] });
+  assert.deepEqual(asked.sort(), ["example.com", "www.example.com"]);
+});
+
+test("a single site's missing record is reported, and never a wildcard", async () => {
+  const resolve = async (name) => {
+    if (name === "example.com") return ["198.51.100.7"];
+    throw Object.assign(new Error("not found"), { code: "ENOTFOUND" });
+  };
+  const { missing, elsewhere } = await checkDomainDns({ domain: "example.com", serverAddresses: ["203.0.113.10"], resolve, mode: SITE_SINGLE, www: true });
+  assert.deepEqual(missing, [{ record: "www.example.com", name: "www.example.com" }]);
+  assert.deepEqual(elsewhere, [{ record: "example.com", name: "example.com", addresses: ["198.51.100.7"] }]);
 });

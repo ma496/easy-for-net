@@ -1,0 +1,801 @@
+{
+  "brand": {
+    "name": "Easy For Net"
+  },
+  "cookieConsent": {
+    "title": "We value your privacy",
+    "description": "We use cookies to enhance your browsing experience. By continuing to visit this site you agree to our use of cookies.",
+    "accept": "Accept",
+    "decline": "Decline"
+  },
+  "common": {
+    "back": "Back",
+    "more": "More",
+    "list": "List",
+    "preview": "Preview",
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "update": "Update",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "search": "Search...",
+    "loading": "Loading...",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "retry": "Retry",
+    "submit": "Submit",
+    "actions": "Actions",
+    "allRightsReserved": "All rights reserved.",
+    "deleteConfirm": "Yes, delete it",
+    "notifications": "Notifications",
+    "viewAll": "View all",
+    "close": "Close",
+    "menu": "Menu",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "noResults": "No results found",
+    "selectPlaceholder": "Select…",
+    "noOptions": "No options",
+    "scrollToTop": "Scroll to top",
+    "collapseSidebar": "Collapse sidebar",
+    "opensInNewTab": "(opens in a new tab)",
+    "goHome": "Go to home page"
+  },
+  "navigation": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "dashboardSales": "Sales",
+    "administration": "Administration",
+    "users": "Users",
+    "roles": "Roles",
+    "rolesList": "List",
+    "rolesCreate": "Create",
+    "rolesUpdate": "Update",
+    "rolesChangePermissions": "Change Permissions",
+    "components": "Components",
+    "uiFormElements": "Form Elements",
+    "uiButtons": "Buttons",
+    "uiCards": "Cards",
+    "uiDatePicker": "Date Picker",
+    "uiDateView": "Date View",
+    "uiTreeview": "Tree View",
+    "changePassword": "Change Password",
+    "profile": "Profile",
+    "uiFileUpload": "File Upload",
+    "uiTooltips": "Tooltips",
+    "usersList": "List",
+    "usersCreate": "Create",
+    "usersUpdate": "Update",
+    "notifications": "Notifications",
+    "notificationsList": "List",
+    "notificationsDetail": "Detail",
+    "localization": "Localization",
+    "settings": "Settings",
+    "admin": "Admin",
+    "viewSite": "View site",
+    "seo": "SEO",
+    "seoList": "List",
+    "seoCreate": "Create",
+    "seoUpdate": "Update"
+  },
+  "search": {
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "usersCreate": "Create User",
+    "roles": "Roles",
+    "rolesCreate": "Create Role",
+    "uiButtons": "UI Buttons",
+    "uiCards": "UI Cards",
+    "uiDatePicker": "UI Date Picker",
+    "uiDateView": "UI Date View",
+    "uiTreeview": "UI Tree View",
+    "changePassword": "Change Password",
+    "profile": "Profile",
+    "notifications": "Notifications",
+    "uiFormElements": "UI Form Elements",
+    "uiFileUpload": "UI File Upload",
+    "uiTooltips": "UI Tooltips",
+    "localization": "Localization",
+    "settings": "Settings",
+    "seo": "SEO",
+    "seoCreate": "Add SEO settings"
+  },
+  "form": {
+    "label": {
+      "username": "Username",
+      "password": "Password",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "roleName": "Role Name",
+      "roleDescription": "Description",
+      "roles": "Roles",
+      "isActive": "Active",
+      "name": "Name",
+      "user": "User",
+      "defaultLanguage": "Default language"
+    },
+    "placeholder": {
+      "username": "Enter username",
+      "password": "Enter password",
+      "firstName": "Enter first name",
+      "lastName": "Enter last name",
+      "email": "Enter email",
+      "currentPassword": "Enter current password",
+      "newPassword": "Enter new password",
+      "confirmPassword": "Enter confirm password",
+      "roleName": "Enter role name",
+      "roleDescription": "Enter role description",
+      "roles": "Select roles",
+      "user": "Select user"
+    }
+  },
+  "validation": {
+    "required": "Field is required",
+    "minLength": "Field must be at least ${min} characters",
+    "maxLength": "Field must not exceed ${max} characters",
+    "email": "Invalid email format",
+    "invalidEmail": "Invalid email",
+    "mustMatch": "Field must match with ${otherField}",
+    "atLeastOneSelected": "At least one item must be selected",
+    "number": "Must be a number",
+    "min": "Must be at least ${min}"
+  },
+  "error": {
+    "400": {
+      "title": "Bad Request"
+    },
+    "401": {
+      "title": "Unauthorized",
+      "message": "You are not authorized to access this resource."
+    },
+    "403": {
+      "title": "Forbidden",
+      "message": "You are not allowed to access this resource."
+    },
+    "404": {
+      "title": "Not Found",
+      "message": "The requested resource was not found."
+    },
+    "413": {
+      "title": "Payload Too Large",
+      "message": "The request payload is too large."
+    },
+    "415": {
+      "title": "Unsupported Media Type",
+      "message": "The request media type is not supported."
+    },
+    "500": {
+      "title": "Internal Server Error",
+      "message": "An error occurred while processing the request."
+    },
+    "connection": {
+      "title": "Connection Error",
+      "message": "Unable to connect to the server. Please check your connection or try again later."
+    },
+    "serviceUnavailable": {
+      "title": "Service Unavailable",
+      "message": "The server is currently unreachable. Please try again in a few moments.",
+      "retry": "Retry"
+    },
+    "server": {
+      "internalServerError": "Internal server error",
+      "duplicateValue": "Duplicate value",
+      "duplicatePropertyValue": "Duplicate property value",
+      "requiredFieldMissing": "Required field missing",
+      "requiredPropertyFieldMissing": "Required property field missing",
+      "referencedRecordNotFound": "Referenced record not found",
+      "invalidValueProvided": "Invalid value provided",
+      "databaseError": "Database error",
+      "authenticationRequired": "Authentication is required for this operation.",
+      "permissionDenied": "Your roles do not grant the permission this operation requires.",
+      "invalidCurrentPassword": "Invalid current password",
+      "invalidToken": "Invalid token",
+      "tokenExpired": "Token expired",
+      "payloadTooLarge": "Payload too large",
+      "invalidUsernamePassword": "Invalid username or password",
+      "invalidEmailPassword": "Invalid email or password",
+      "userNotActive": "User not active",
+      "userNotFound": "User not found",
+      "emailAlreadyExists": "Email already exists",
+      "usernameAlreadyExists": "Username already exists",
+      "emailNotVerified": "Email is not verified",
+      "roleNameAlreadyExists": "Role name already exists",
+      "roleNotFound": "Role not found",
+      "systemCreatedRolePermissionsCannotBeChanged": "System-created role permissions cannot be changed",
+      "systemCreatedRoleCannotBeDeleted": "System-created role cannot be deleted",
+      "systemCreatedRoleCannotBeUpdated": "System-created role cannot be updated",
+      "systemCreatedUserCannotBeDeleted": "System-created user cannot be deleted",
+      "systemCreatedUserCannotBeUpdated": "System-created user cannot be updated",
+      "concurrentModification": "This record was changed by someone else. Reload and try again.",
+      "sessionStoreUnavailable": "The session service is temporarily unavailable. Please try again in a moment.",
+      "settingNotFound": "Setting not found.",
+      "settingPropertyUnknown": "This setting has no such property.",
+      "settingPropertyInvalid": "The value is not valid for this setting property.",
+      "settingValueInvalid": "The setting's values are not valid.",
+      "signupDisabled": "Sign-up is turned off. Ask an administrator for an account.",
+      "emailSmtpServerRequired": "An SMTP server is required.",
+      "emailSmtpPortInvalid": "The SMTP port must be between 1 and 65535.",
+      "emailSenderEmailInvalid": "The sender email must be a valid email address.",
+      "seoPageNotFound": "These SEO settings were not found.",
+      "seoPageAlreadyExists": "This page already has SEO settings for that language.",
+      "invalidJsonLd": "The structured data is not valid JSON."
+    }
+  },
+  "table": {
+    "columns": {
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "roles": "Roles",
+      "userName": "User Name",
+      "isActive": "Active",
+      "name": "Name",
+      "description": "Description",
+      "userCount": "Users",
+      "type": "Type",
+      "title": "Title",
+      "message": "Message",
+      "status": "Status",
+      "date": "Date",
+      "group": "Group",
+      "created": "Created",
+      "updated": "Updated",
+      "key": "Key",
+      "defaultValue": "Default value",
+      "override": "Override",
+      "path": "Path",
+      "language": "Language",
+      "indexing": "Indexing",
+      "inSitemap": "In sitemap"
+    },
+    "pagination": {
+      "showingEntries": "Showing ${from} to ${to} of ${totalRecords} entries"
+    },
+    "noRecords": "No records found",
+    "searchPlaceholder": "Search...",
+    "sort": {
+      "label": "Sort by",
+      "none": "Default order",
+      "ascending": "Ascending — tap to sort descending",
+      "descending": "Descending — tap to sort ascending"
+    },
+    "export": {
+      "button": "Export",
+      "excel": "Excel",
+      "csv": "CSV",
+      "currentPage": "Current Page",
+      "allRecords": "All Records"
+    },
+    "actions": "Actions",
+    "createLink": "Create",
+    "filter": {
+      "button": "Filters",
+      "all": "All",
+      "active": "Active",
+      "inactive": "Inactive",
+      "allRoles": "All Roles",
+      "activeStatus": "Active Status",
+      "role": "Role",
+      "selectRole": "Select Role",
+      "search": "Search",
+      "clear": "Clear"
+    },
+    "loadFailed": "Could not load the records",
+    "loadFailedHint": "Check your connection and try again."
+  },
+  "file": {
+    "upload": "File Upload",
+    "deleteTitle": "Delete File",
+    "deleteConfirm": "Are you sure you want to delete this file?",
+    "tooLarge": "File is too large. You can only upload files up to ${max} MB."
+  },
+  "page": {
+    "dashboard": {
+      "title": "Dashboard",
+      "sales": "Sales",
+      "revenue": "Revenue",
+      "salesByCategory": "Sales By Category",
+      "dailySales": "Daily Sales",
+      "summary": "Summary",
+      "totalOrders": "Total Orders",
+      "totalProfit": "Total Profit",
+      "income": "Income",
+      "expenses": "Expenses",
+      "profit": "Profit",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "viewReport": "View Report",
+      "editReport": "Edit Report",
+      "markAsDone": "Mark as Done",
+      "goToColumns": "Go to columns for details",
+      "description": "An overview of revenue, orders and sales."
+    },
+    "users": {
+      "title": "Users",
+      "createSuccess": "User created successfully",
+      "updateSuccess": "User updated successfully",
+      "deleteTitle": "Delete User",
+      "deleteConfirm": "Are you sure you want to delete this user?",
+      "deleteSuccess": "User deleted successfully",
+      "create": {
+        "title": "Create User"
+      },
+      "update": {
+        "title": "Update User"
+      },
+      "accountDetails": "Account details",
+      "passwordDescription": "The password this user signs in with.",
+      "isActiveDescription": "An inactive user cannot sign in."
+    },
+    "roles": {
+      "title": "Roles",
+      "createSuccess": "Role created successfully",
+      "updateSuccess": "Role updated successfully",
+      "deleteTitle": "Delete Role",
+      "deleteConfirm": "Are you sure you want to delete this role?",
+      "deleteSuccess": "Role deleted successfully",
+      "notFound": "Role not found",
+      "permissions": "Permissions",
+      "permissionsUpdateSuccess": "Permissions updated successfully",
+      "changePermissions": {
+        "title": "Change Permissions"
+      },
+      "create": {
+        "title": "Create Role"
+      },
+      "update": {
+        "title": "Update Role"
+      },
+      "permissionGroups": "Permission Groups"
+    },
+    "profile": {
+      "title": "Profile",
+      "description": "Update your personal information",
+      "updateSuccess": "Profile updated successfully",
+      "deleteAvatarTitle": "Delete Profile Picture",
+      "deleteAvatarConfirm": "Are you sure you want to delete your profile picture?",
+      "altImage": "Profile Image",
+      "changePasswordSuccess": "Password changed successfully"
+    },
+    "verifyEmail": {
+      "verifying": "Verifying your email...",
+      "verifiedTitle": "Email Verified!",
+      "verifiedMessage": "Your email has been successfully verified. You can now sign in.",
+      "buttonSignin": "Sign In Now",
+      "resendButton": "Resend Verification Email",
+      "resendSuccess": "Verification email has been resent.",
+      "resendWait": "Please wait ${seconds}s",
+      "notVerifiedTitle": "Email Verification Required",
+      "notVerifiedMessage": "Your email address is not verified. Please check your inbox for the verification link or click the button below to resend it.",
+      "failedTitle": "Verification Failed",
+      "failedMessage": "The verification link is invalid or has expired.",
+      "title": "Verify Email"
+    },
+    "auth": {
+      "signin": {
+        "title": "Sign In",
+        "description": "Enter your credentials to sign in",
+        "button": "Sign In",
+        "forgotPassword": "Forgot Password?",
+        "signupLink": "Sign Up",
+        "noAccount": "Don't have an account?",
+        "backToSignin": "Back to Sign In"
+      },
+      "signup": {
+        "title": "Sign Up",
+        "description": "Enter your email and password to register",
+        "button": "Sign Up",
+        "signinLink": "Sign In",
+        "alreadyHaveAccount": "Already have an account?",
+        "successTitle": "Success!",
+        "successVerifyEmail": "Registration successful! Please check your email to verify your account.",
+        "successMessage": "Registration successful! Go to sign in page.",
+        "disabledTitle": "Sign-up is closed",
+        "disabledMessage": "New accounts are created by an administrator. If you already have an account, sign in.",
+        "disabledAction": "Go to sign in"
+      },
+      "forgotPassword": {
+        "title": "Forget Password",
+        "description": "Enter your email to reset your password",
+        "button": "Send Reset Link",
+        "success": "Password Reset Link Sent",
+        "checkEmail": "Please check your email for password reset instructions"
+      },
+      "resetPassword": {
+        "title": "Reset Password",
+        "description": "Enter your new password to reset your account",
+        "button": "Reset Password",
+        "success": "Password reset successfully",
+        "hasBeenReset": "Your password has been reset successfully"
+      },
+      "signout": "Sign Out",
+      "unauthorized": {
+        "title": "Unauthorized"
+      }
+    },
+    "changePassword": {
+      "title": "Change Password",
+      "description": "Ensure your account stays secure"
+    },
+    "ui": {
+      "buttons": {
+        "title": "UI Buttons"
+      },
+      "cards": {
+        "title": "UI Cards"
+      },
+      "datePicker": {
+        "title": "UI Date Picker"
+      },
+      "dateView": {
+        "title": "UI Date View"
+      },
+      "fileUpload": {
+        "title": "UI File Upload"
+      },
+      "formElements": {
+        "title": "UI Form Elements"
+      },
+      "treeview": {
+        "title": "UI Tree View"
+      },
+      "tooltip": {
+        "title": "UI Tooltip"
+      }
+    },
+    "notifications": {
+      "title": "Notifications",
+      "detail": {
+        "title": "Notification Details"
+      },
+      "viewAll": "View all notifications"
+    },
+    "localization": {
+      "title": "Localization",
+      "readOnly": "You can view these settings but not change them.",
+      "tabs": {
+        "texts": "Texts",
+        "languages": "Languages"
+      },
+      "texts": {
+        "onlyOverridden": "Only overridden",
+        "setHere": "Set here",
+        "notOverridden": "Not overridden",
+        "editTitle": "Edit text",
+        "defaultLabel": "Default value",
+        "overrideLabel": "Your text",
+        "placeholders": "Keep these placeholders:",
+        "placeholderMissing": "A placeholder is missing — the app will show it empty.",
+        "reset": "Reset to inherited",
+        "resetTitle": "Reset this text?",
+        "resetConfirm": "This removes your override and falls back to the inherited value.",
+        "resetSuccess": "Text reset to the inherited value",
+        "saveSuccess": "Text saved",
+        "noOverrides": "Nothing is overridden in this language yet."
+      },
+      "languages": {
+        "inherited": "Inherited",
+        "inheritedFromShipped": "Built-in: every language, no default",
+        "inheritedSummary": "Inherited: ${languages} · Default: ${default}",
+        "customize": "Customize",
+        "customized": "Customized",
+        "resetToInherited": "Reset to inherited",
+        "resetTitle": "Reset languages?",
+        "resetConfirm": "This removes your customization and falls back to what is inherited.",
+        "resetSuccess": "Languages reset to the inherited settings",
+        "enabled": "Enabled languages",
+        "enabledCount": "${count} of ${total} enabled",
+        "rtl": "RTL",
+        "atLeastOne": "At least one language must stay enabled",
+        "noDefault": "None — use the visitor's browser language",
+        "defaultCleared": "The default language was cleared because it was just disabled",
+        "currentWillSwitch": "The language you are viewing this screen in is being disabled — you will be switched to the default.",
+        "unsaved": "You have unsaved changes",
+        "saveSuccess": "Languages updated"
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "readOnly": "You can view these settings but not change them.",
+      "empty": "No settings are available",
+      "customized": "Customized",
+      "source": {
+        "own": "Set here",
+        "default": "Default"
+      },
+      "changed": "Changed",
+      "unsaved": "Unsaved changes",
+      "discard": "Discard changes",
+      "resetTitle": "Reset ${setting} settings?",
+      "resetConfirmButton": "Yes, reset",
+      "resetSuccess": "${setting} settings reset to inherited values",
+      "saveSuccess": "${setting} settings saved",
+      "general": {
+        "title": "General",
+        "description": "Options that apply across the application.",
+        "isEmailVerificationRequired": "Require a verified email address to sign in",
+        "isEmailVerificationRequiredHelp": "When on, an account must confirm its email address before it can sign in.",
+        "isSignupEnabled": "Allow sign-up",
+        "isSignupEnabledHelp": "Let anyone create an account from the sign-up page."
+      },
+      "email": {
+        "title": "Email",
+        "description": "The SMTP server and sender that outgoing email is delivered through.",
+        "smtpServer": "SMTP server",
+        "smtpPort": "SMTP port",
+        "smtpUsername": "SMTP username",
+        "smtpPassword": "SMTP password",
+        "senderEmail": "Sender email",
+        "senderName": "Sender name",
+        "portInvalid": "Enter a whole number between 1 and 65535",
+        "passwordSet": "Set",
+        "passwordNotSet": "Not set",
+        "passwordKeepPlaceholder": "Leave blank to keep the current password",
+        "passwordNotSetPlaceholder": "Not set",
+        "passwordClear": "Clear",
+        "passwordWillClear": "Will be cleared when you save",
+        "passwordUndo": "Undo",
+        "passwordInheritHint": "The password is only inherited together with the server, port and username. If you change any of those here without entering a password, no password is used."
+      },
+      "seo": {
+        "title": "SEO",
+        "description": "Site-wide defaults for search engines and social sharing. Each page can override them on the SEO screen.",
+        "siteName": "Site name",
+        "siteNameHelp": "Shown in titles and when a page is shared.",
+        "titleTemplate": "Title template",
+        "titleTemplateHelp": "For example \"%s | My Site\". %s is replaced by the page title.",
+        "titleTemplateInvalid": "The template must contain %s, where each page title goes",
+        "siteUrl": "Site address",
+        "siteUrlHelp": "The public address canonical links and the sitemap are built from.",
+        "siteUrlInvalid": "Enter the site address, such as https://www.example.com",
+        "twitterSite": "X (Twitter) account",
+        "twitterSiteHelp": "The @handle shown on shared cards.",
+        "defaultDescription": "Default description",
+        "defaultOgImage": "Default sharing image",
+        "defaultOgImageHelp": "Used when a page has no image of its own. 1200 x 630 pixels works best.",
+        "allowIndexing": "Allow search engines to index the site",
+        "allowIndexingHelp": "When off, robots.txt asks every crawler to stay away. Turn it off on staging sites.",
+        "robotsExtra": "Extra robots.txt lines"
+      },
+      "usingDefaults": "Using defaults",
+      "resetToDefaults": "Reset to defaults",
+      "resetConfirm": "The site's own ${setting} settings will be removed, and the defaults will apply instead."
+    },
+    "seo": {
+      "title": "SEO",
+      "description": "Titles, descriptions, sharing cards and indexing for each public page. Site-wide defaults are on the Settings screen.",
+      "create": {
+        "title": "Add SEO settings"
+      },
+      "update": {
+        "title": "Edit SEO settings"
+      },
+      "createSuccess": "SEO settings created",
+      "updateSuccess": "SEO settings saved",
+      "notFound": "These SEO settings no longer exist",
+      "allLanguages": "All languages",
+      "deleteTitle": "Delete SEO settings",
+      "deleteConfirm": "The page ${path} will fall back to the site defaults.",
+      "deleteSuccess": "SEO settings deleted",
+      "untitled": "Site default",
+      "indexed": "Indexed",
+      "form": {
+        "basics": "Basics",
+        "basicsHelp": "Which page this is, and how it appears in search results.",
+        "pathHelp": "The page address without the language, such as / or /about.",
+        "pathInvalid": "Enter the path of a public page, such as /about",
+        "titleHelp": "Shown in the browser tab and search results, through the site title template.",
+        "keywords": "Keywords",
+        "keywordsHelp": "Separated by commas.",
+        "characters": "${count} characters (about 155 show in results)",
+        "social": "Social sharing",
+        "socialHelp": "How the page looks when someone shares a link to it. Blank fields use the basics.",
+        "ogTitle": "Sharing title",
+        "ogDescription": "Sharing description",
+        "ogImage": "Sharing image",
+        "ogImageHelp": "Blank uses the site default. 1200 x 630 pixels works best.",
+        "twitterCard": "X (Twitter) card",
+        "twitterCardLarge": "Large image",
+        "twitterCardSummary": "Small image",
+        "indexing": "Indexing & sitemap",
+        "indexingHelp": "Whether search engines list the page, and how the sitemap describes it.",
+        "noIndex": "Hide from search results (noindex)",
+        "noFollow": "Don't follow links on this page (nofollow)",
+        "includeInSitemap": "Include in the sitemap",
+        "canonicalUrl": "Canonical address",
+        "canonicalUrlHelp": "Blank uses the page's own address.",
+        "urlInvalid": "Enter a full address, starting with https://",
+        "changeFrequency": "Change frequency",
+        "frequencyNone": "Not stated",
+        "frequency": {
+          "always": "Always",
+          "hourly": "Hourly",
+          "daily": "Daily",
+          "weekly": "Weekly",
+          "monthly": "Monthly",
+          "yearly": "Yearly",
+          "never": "Never"
+        },
+        "priority": "Priority",
+        "priorityHelp": "From 0 to 1, relative to your other pages.",
+        "priorityInvalid": "Enter a number from 0 to 1",
+        "structuredData": "Structured data",
+        "structuredDataHelp": "A JSON-LD document describing the page to search engines, such as an Organization or a Product.",
+        "jsonLdInvalid": "This is not valid JSON",
+        "noImage": "No image",
+        "uploadImage": "Upload image",
+        "replaceImage": "Replace image",
+        "removeImage": "Remove image",
+        "imageUnavailable": "Image unavailable",
+        "titleCharacters": "${count} characters (about 60 show in results)"
+      },
+      "noIndexBadge": "noindex",
+      "empty": "No page has its own SEO settings yet - every page uses the site defaults."
+    }
+  },
+  "notifications": {
+    "noNotifications": "No notifications",
+    "notFound": "Notification not found",
+    "viewAll": "View all notifications",
+    "markAllRead": "Mark all as read",
+    "markAsRead": "Mark as read",
+    "markAsUnread": "Mark as unread",
+    "delete": "Delete",
+    "all": "All",
+    "read": "Read",
+    "unread": "Unread",
+    "group": "Group",
+    "metadata": "Metadata",
+    "markedAsRead": "Notification marked as read",
+    "markedAsUnread": "Notification marked as unread",
+    "markedAllAsRead": "All notifications marked as read",
+    "deleted": "Notification deleted",
+    "deleteTitle": "Delete Notification",
+    "deleteConfirm": "Are you sure you want to delete this notification?",
+    "markAllReadConfirmTitle": "Mark All as Read",
+    "markAllReadConfirmText": "Are you sure you want to mark all notifications as read?",
+    "filterByGroup": "Filter by group",
+    "groups": {
+      "inventory": "Inventory",
+      "system": "System",
+      "payments": "Payments",
+      "orders": "Orders"
+    },
+    "types": {
+      "info": "Info",
+      "warning": "Warning",
+      "error": "Error",
+      "success": "Success"
+    },
+    "inventoryBelowLimit": {
+      "title": "Low Inventory Alert",
+      "message": "Item is below the minimum stock level"
+    },
+    "systemUpdate": {
+      "title": "System Update",
+      "message": "A system update is available"
+    },
+    "orderCompleted": {
+      "title": "Order Completed",
+      "message": "Your order has been completed successfully"
+    },
+    "paymentFailed": {
+      "title": "Payment Failed",
+      "message": "A payment transaction has failed"
+    },
+    "welcome": {
+      "title": "Welcome",
+      "message": "Welcome to the application"
+    }
+  },
+  "site": {
+    "nav": {
+      "label": "Main",
+      "home": "Home",
+      "about": "About",
+      "contact": "Contact"
+    },
+    "footer": {
+      "tagline": "A fast, search-friendly website with accounts and an admin area built in.",
+      "navLabel": "Footer"
+    },
+    "home": {
+      "hero": {
+        "badge": "Ready for your next project",
+        "title": "Build something people",
+        "highlight": "love to use",
+        "description": "A fast, search-friendly website with visitor accounts, languages and an admin area already in place, so you can start on what makes yours different.",
+        "primaryCta": "Get started",
+        "secondaryCta": "Learn more"
+      },
+      "features": {
+        "title": "Everything a modern site needs",
+        "subtitle": "The groundwork is done and tested, from the first page view to the admin screens.",
+        "items": {
+          "seo": {
+            "title": "Search friendly",
+            "description": "Every page is rendered on the server, with titles, descriptions, sharing cards and a sitemap you edit from the admin area."
+          },
+          "accounts": {
+            "title": "Visitor accounts",
+            "description": "Sign-up, sign-in, email verification and password recovery, with roles and permissions behind them."
+          },
+          "languages": {
+            "title": "Many languages",
+            "description": "Serve every page in the languages you choose, right-to-left included, and edit any text without a deployment."
+          },
+          "admin": {
+            "title": "Admin area",
+            "description": "Manage users, roles, settings, translations and notifications from one place."
+          }
+        }
+      },
+      "cta": {
+        "title": "Ready to begin?",
+        "description": "Create an account in a minute and see it for yourself.",
+        "closedDescription": "See what is included and how it all fits together."
+      }
+    },
+    "about": {
+      "title": "About us",
+      "intro": "We are a small team that builds dependable software for the web. This page is a starting point: tell your visitors who you are and why you do what you do.",
+      "mission": {
+        "title": "Our mission",
+        "text": "To make good websites easier to build and easier to run, so more of every project is spent on the ideas that matter."
+      },
+      "values": {
+        "title": "What we value",
+        "items": {
+          "quality": {
+            "title": "Quality",
+            "description": "We would rather ship one thing that works than three that almost do."
+          },
+          "openness": {
+            "title": "Openness",
+            "description": "We explain our choices plainly and share what we learn."
+          },
+          "care": {
+            "title": "Care",
+            "description": "Every visitor deserves a page that is fast, clear and accessible."
+          }
+        }
+      },
+      "contactCta": "Get in touch"
+    },
+    "contact": {
+      "title": "Contact us",
+      "intro": "Questions, ideas or feedback? We would love to hear from you and usually answer within one working day.",
+      "email": {
+        "label": "Email",
+        "value": "hello@example.com"
+      },
+      "phone": {
+        "label": "Phone",
+        "value": "+1 555 0100"
+      },
+      "address": {
+        "label": "Address",
+        "value": "100 Example Street, Springfield"
+      },
+      "hours": {
+        "label": "Opening hours",
+        "value": "Monday to Friday, 9:00 to 17:00"
+      }
+    },
+    "skipToContent": "Skip to content"
+  }
+}

@@ -48,6 +48,47 @@ public class WriteDockerEnvTests
     }
 
     /// <summary>
+    /// Tests that the user-facing template's single-domain example is filled for the site at
+    /// https://localhost, with no tenant or platform-subdomain key added, and its comments kept.
+    /// </summary>
+    [Fact]
+    public async Task Should_Fill_The_Single_Domain_Overlay()
+    {
+        // Arrange
+        var example = CustomizeAppSettingsTests.FindTemplateFile("src", "user-facing", ProjectTemplate.OverlayDirectory, ".env.docker.example");
+        var envPath = Path.Combine(Path.GetTempPath(), "efn-env-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            // Act
+            await CreateProjectGenerator.WriteDockerEnvAsync(example, envPath, "demo-shop", new DevPorts(5433, 6380));
+
+            // Assert
+            var lines = await File.ReadAllLinesAsync(envPath, TestContext.Current.CancellationToken);
+            var values = Parse(lines);
+            Assert.Equal("demo-shop", values["PROD_PROJECT_NAME"]);
+            Assert.Equal("localhost", values["DOMAIN"]);
+            Assert.Equal("https://localhost", values["PUBLIC_URL"]);
+            Assert.False(values.ContainsKey("TENANT_URL_TEMPLATE"));
+            Assert.False(values.ContainsKey("PLATFORM_SUBDOMAIN"));
+            Assert.Equal("demo_shop", values["POSTGRES_DB"]);
+            Assert.Equal("demo_shop", values["POSTGRES_USER"]);
+            Assert.Equal("demo_shop:", values["REDIS_INSTANCE_NAME"]);
+            Assert.Equal(32, values["POSTGRES_PASSWORD"].Length);
+            Assert.Equal(32, values["REDIS_PASSWORD"].Length);
+            Assert.True(values["JWT_KEY"].Length >= 32);
+            Assert.InRange(values["SEED_ADMIN_PASSWORD"].Length, 8, 50);
+            Assert.Equal("5433", values["DEV_POSTGRES_PORT"]);
+            Assert.Equal("6380", values["DEV_REDIS_PORT"]);
+            Assert.Equal(Parse(await File.ReadAllLinesAsync(example, TestContext.Current.CancellationToken)).Keys.Order(), values.Keys.Order());
+            Assert.Equal(File.ReadAllLines(example).Count(line => line.StartsWith('#')), lines.Count(line => line.StartsWith('#')));
+        }
+        finally
+        {
+            File.Delete(envPath);
+        }
+    }
+
+    /// <summary>
     /// Tests that the ports picked for the development containers are the ones docker-compose.yml reads.
     /// </summary>
     [Fact]

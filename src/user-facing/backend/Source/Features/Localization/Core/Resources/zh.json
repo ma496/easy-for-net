@@ -1,0 +1,801 @@
+{
+  "brand": {
+    "name": "Easy For Net"
+  },
+  "cookieConsent": {
+    "title": "我们重视您的隐私",
+    "description": "我们使用 cookie 来增强您的浏览体验。继续访问此网站即表示您同意我们使用 cookie。",
+    "accept": "接受",
+    "decline": "拒绝"
+  },
+  "common": {
+    "back": "返回",
+    "more": "更多",
+    "list": "列表",
+    "preview": "预览",
+    "add": "添加",
+    "edit": "编辑",
+    "delete": "删除",
+    "save": "保存",
+    "update": "更新",
+    "cancel": "取消",
+    "confirm": "确认",
+    "search": "搜索...",
+    "loading": "加载中...",
+    "success": "成功",
+    "error": "错误",
+    "warning": "警告",
+    "info": "信息",
+    "yes": "是",
+    "no": "否",
+    "ok": "确定",
+    "retry": "重试",
+    "submit": "提交",
+    "actions": "操作",
+    "allRightsReserved": "版权所有。",
+    "deleteConfirm": "是的，删除它",
+    "notifications": "通知",
+    "viewAll": "查看全部",
+    "close": "关闭",
+    "menu": "菜单",
+    "theme": "主题",
+    "themeLight": "浅色",
+    "themeDark": "深色",
+    "themeSystem": "跟随系统",
+    "noResults": "未找到结果",
+    "selectPlaceholder": "请选择…",
+    "noOptions": "无选项",
+    "scrollToTop": "回到顶部",
+    "collapseSidebar": "收起侧边栏",
+    "opensInNewTab": "（在新标签页中打开）",
+    "goHome": "前往首页"
+  },
+  "navigation": {
+    "home": "首页",
+    "dashboard": "仪表板",
+    "dashboardSales": "销售",
+    "administration": "管理",
+    "users": "用户",
+    "roles": "角色",
+    "rolesList": "列表",
+    "rolesCreate": "创建",
+    "rolesUpdate": "更新",
+    "rolesChangePermissions": "更改权限",
+    "components": "组件",
+    "uiFormElements": "表单元素",
+    "uiButtons": "按钮",
+    "uiCards": "卡片",
+    "uiDatePicker": "日期选择器",
+    "uiDateView": "日期视图",
+    "uiTreeview": "树形视图",
+    "changePassword": "更改密码",
+    "profile": "个人资料",
+    "uiFileUpload": "文件上传",
+    "uiTooltips": "工具提示",
+    "usersList": "列表",
+    "usersCreate": "创建",
+    "usersUpdate": "更新",
+    "notifications": "通知",
+    "notificationsList": "列表",
+    "notificationsDetail": "详情",
+    "localization": "本地化",
+    "settings": "设置",
+    "admin": "管理",
+    "viewSite": "查看网站",
+    "seo": "SEO",
+    "seoList": "列表",
+    "seoCreate": "创建",
+    "seoUpdate": "更新"
+  },
+  "search": {
+    "dashboard": "仪表板",
+    "users": "用户",
+    "usersCreate": "创建用户",
+    "roles": "角色",
+    "rolesCreate": "创建角色",
+    "uiButtons": "UI 按钮",
+    "uiCards": "UI 卡片",
+    "uiDatePicker": "UI 日期选择器",
+    "uiDateView": "UI 日期视图",
+    "uiTreeview": "UI 树形视图",
+    "changePassword": "更改密码",
+    "profile": "个人资料",
+    "notifications": "通知",
+    "uiFormElements": "UI 表单元素",
+    "uiFileUpload": "UI 文件上传",
+    "uiTooltips": "UI 工具提示",
+    "localization": "本地化",
+    "settings": "设置",
+    "seo": "SEO",
+    "seoCreate": "添加 SEO 设置"
+  },
+  "form": {
+    "label": {
+      "username": "用户名",
+      "password": "密码",
+      "firstName": "名",
+      "lastName": "姓",
+      "email": "电子邮件",
+      "currentPassword": "当前密码",
+      "newPassword": "新密码",
+      "confirmPassword": "确认密码",
+      "roleName": "角色名称",
+      "roleDescription": "描述",
+      "roles": "角色",
+      "isActive": "启用",
+      "name": "名称",
+      "user": "用户",
+      "defaultLanguage": "默认语言"
+    },
+    "placeholder": {
+      "username": "输入用户名",
+      "password": "输入密码",
+      "firstName": "输入名字",
+      "lastName": "输入姓氏",
+      "email": "输入电子邮件",
+      "currentPassword": "输入当前密码",
+      "newPassword": "输入新密码",
+      "confirmPassword": "输入确认密码",
+      "roleName": "输入角色名称",
+      "roleDescription": "输入角色描述",
+      "roles": "选择角色",
+      "user": "选择用户"
+    }
+  },
+  "validation": {
+    "required": "必填字段",
+    "minLength": "字段长度必须至少为 ${min}",
+    "maxLength": "字段长度不能超过 ${max}",
+    "email": "无效的电子邮件格式",
+    "invalidEmail": "无效的电子邮件",
+    "mustMatch": "字段必须与 ${otherField}匹配",
+    "atLeastOneSelected": "必须至少选择一项",
+    "number": "必须是数字",
+    "min": "不得小于 ${min}"
+  },
+  "error": {
+    "400": {
+      "title": "错误请求"
+    },
+    "401": {
+      "title": "未授权",
+      "message": "您无权访问此资源。"
+    },
+    "403": {
+      "title": "禁止访问",
+      "message": "您不被允许访问此资源。"
+    },
+    "404": {
+      "title": "未找到",
+      "message": "未找到请求的资源。"
+    },
+    "413": {
+      "title": "负载过大",
+      "message": "请求负载过大。"
+    },
+    "415": {
+      "title": "不支持的媒体类型",
+      "message": "不支持请求的媒体类型。"
+    },
+    "500": {
+      "title": "服务器内部错误",
+      "message": "处理请求时发生错误。"
+    },
+    "connection": {
+      "title": "连接错误",
+      "message": "无法连接到服务器。请检查您的网络连接或稍后重试。"
+    },
+    "serviceUnavailable": {
+      "title": "服务不可用",
+      "message": "服务器当前无法访问。请稍后再试。",
+      "retry": "重试"
+    },
+    "server": {
+      "internalServerError": "服务器内部错误",
+      "duplicateValue": "重复值",
+      "duplicatePropertyValue": "重复属性值",
+      "requiredFieldMissing": "缺少必填字段",
+      "requiredPropertyFieldMissing": "缺少必填属性字段",
+      "referencedRecordNotFound": "未找到引用的记录",
+      "invalidValueProvided": "提供的值无效",
+      "databaseError": "数据库错误",
+      "authenticationRequired": "此操作需要登录。",
+      "permissionDenied": "您的角色不授予此操作所需的权限。",
+      "invalidCurrentPassword": "当前密码无效",
+      "invalidToken": "无效的令牌",
+      "tokenExpired": "令牌已过期",
+      "payloadTooLarge": "负载过大",
+      "invalidUsernamePassword": "用户名或密码无效",
+      "invalidEmailPassword": "电子邮件或密码无效",
+      "userNotActive": "用户未激活",
+      "userNotFound": "用户未找到",
+      "emailAlreadyExists": "电子邮件已存在",
+      "usernameAlreadyExists": "用户名已存在",
+      "emailNotVerified": "电子邮件未验证",
+      "roleNameAlreadyExists": "角色名称已存在",
+      "roleNotFound": "角色未找到",
+      "systemCreatedRolePermissionsCannotBeChanged": "无法更改系统创建的角色权限",
+      "systemCreatedRoleCannotBeDeleted": "无法删除系统创建的角色",
+      "systemCreatedRoleCannotBeUpdated": "无法更新系统创建的角色",
+      "systemCreatedUserCannotBeDeleted": "无法删除系统创建的用户",
+      "systemCreatedUserCannotBeUpdated": "无法更新系统创建的用户",
+      "concurrentModification": "此记录已被他人修改。请重新加载后重试。",
+      "sessionStoreUnavailable": "会话服务暂时不可用，请稍后重试。",
+      "settingNotFound": "未找到该设置。",
+      "settingPropertyUnknown": "此设置没有该属性。",
+      "settingPropertyInvalid": "该值对此设置属性无效。",
+      "settingValueInvalid": "设置的值无效。",
+      "signupDisabled": "注册已关闭。请向管理员申请账户。",
+      "emailSmtpServerRequired": "必须提供 SMTP 服务器。",
+      "emailSmtpPortInvalid": "SMTP 端口必须介于 1 到 65535 之间。",
+      "emailSenderEmailInvalid": "发件人邮箱必须是有效的电子邮件地址。",
+      "seoPageNotFound": "未找到这些 SEO 设置。",
+      "seoPageAlreadyExists": "该页面已有此语言的 SEO 设置。",
+      "invalidJsonLd": "结构化数据不是有效的 JSON。"
+    }
+  },
+  "table": {
+    "columns": {
+      "firstName": "名",
+      "lastName": "姓",
+      "email": "电子邮件",
+      "roles": "角色",
+      "userName": "用户名",
+      "isActive": "启用",
+      "name": "名称",
+      "description": "描述",
+      "userCount": "用户",
+      "type": "类型",
+      "title": "标题",
+      "message": "消息",
+      "status": "状态",
+      "date": "日期",
+      "group": "组",
+      "created": "已创建",
+      "updated": "已更新",
+      "key": "键",
+      "defaultValue": "默认值",
+      "override": "覆盖值",
+      "path": "路径",
+      "language": "语言",
+      "indexing": "索引",
+      "inSitemap": "在站点地图中"
+    },
+    "pagination": {
+      "showingEntries": "显示 ${from} 到 ${to} 条，共 ${totalRecords} 条记录"
+    },
+    "noRecords": "未找到记录",
+    "searchPlaceholder": "搜索...",
+    "sort": {
+      "label": "排序方式",
+      "none": "默认顺序",
+      "ascending": "升序 — 点按改为降序",
+      "descending": "降序 — 点按改为升序"
+    },
+    "export": {
+      "button": "导出",
+      "excel": "Excel",
+      "csv": "CSV",
+      "currentPage": "当前页",
+      "allRecords": "所有记录"
+    },
+    "actions": "操作",
+    "createLink": "创建",
+    "filter": {
+      "button": "筛选",
+      "all": "全部",
+      "active": "启用",
+      "inactive": "停用",
+      "allRoles": "所有角色",
+      "activeStatus": "启用状态",
+      "role": "角色",
+      "selectRole": "选择角色",
+      "search": "搜索",
+      "clear": "清除"
+    },
+    "loadFailed": "无法加载记录",
+    "loadFailedHint": "请检查网络连接后重试。"
+  },
+  "file": {
+    "upload": "文件上传",
+    "deleteTitle": "删除文件",
+    "deleteConfirm": "您确定要删除此文件吗？",
+    "tooLarge": "文件过大。您只能上传不超过 ${max} MB 的文件。"
+  },
+  "page": {
+    "dashboard": {
+      "title": "仪表板",
+      "sales": "销售",
+      "revenue": "收入",
+      "salesByCategory": "按类别销售",
+      "dailySales": "每日销售",
+      "summary": "摘要",
+      "totalOrders": "总订单",
+      "totalProfit": "总利润",
+      "income": "收入",
+      "expenses": "支出",
+      "profit": "利润",
+      "weekly": "每周",
+      "monthly": "每月",
+      "yearly": "每年",
+      "viewReport": "查看报告",
+      "editReport": "编辑报告",
+      "markAsDone": "标记为完成",
+      "goToColumns": "前往列查看详细信息",
+      "description": "收入、订单和销售概览。"
+    },
+    "users": {
+      "title": "用户",
+      "createSuccess": "用户创建成功",
+      "updateSuccess": "用户更新成功",
+      "deleteTitle": "删除用户",
+      "deleteConfirm": "您确定要删除此用户吗？",
+      "deleteSuccess": "用户删除成功",
+      "create": {
+        "title": "创建用户"
+      },
+      "update": {
+        "title": "更新用户"
+      },
+      "accountDetails": "账户详情",
+      "passwordDescription": "该用户登录时使用的密码。",
+      "isActiveDescription": "未激活的用户无法登录。"
+    },
+    "roles": {
+      "title": "角色",
+      "createSuccess": "角色创建成功",
+      "updateSuccess": "角色更新成功",
+      "deleteTitle": "删除角色",
+      "deleteConfirm": "您确定要删除此角色吗？",
+      "deleteSuccess": "角色删除成功",
+      "notFound": "角色未找到",
+      "permissions": "权限",
+      "permissionsUpdateSuccess": "权限更新成功",
+      "changePermissions": {
+        "title": "更改权限"
+      },
+      "create": {
+        "title": "创建角色"
+      },
+      "update": {
+        "title": "更新角色"
+      },
+      "permissionGroups": "权限组"
+    },
+    "profile": {
+      "title": "个人资料",
+      "description": "更新您的个人信息",
+      "updateSuccess": "个人资料更新成功",
+      "deleteAvatarTitle": "删除头像",
+      "deleteAvatarConfirm": "您确定要删除您的个人资料图片吗？",
+      "altImage": "个人资料图片",
+      "changePasswordSuccess": "密码更改成功"
+    },
+    "verifyEmail": {
+      "verifying": "正在验证您的电子邮件...",
+      "verifiedTitle": "电子邮件已验证！",
+      "verifiedMessage": "您的电子邮件已成功验证。您现在可以登录。",
+      "buttonSignin": "立即登录",
+      "resendButton": "重新发送验证邮件",
+      "resendSuccess": "验证邮件已重新发送。",
+      "resendWait": "请等待 ${seconds} 秒",
+      "notVerifiedTitle": "需要验证电子邮件",
+      "notVerifiedMessage": "您的电子邮件地址未验证。请检查您的收件箱以获取验证链接，或点击下方按钮重新发送。",
+      "failedTitle": "验证失败",
+      "failedMessage": "验证链接无效或已过期。",
+      "title": "验证电子邮件"
+    },
+    "auth": {
+      "signin": {
+        "title": "登录",
+        "description": "输入您的凭据以登录",
+        "button": "登录",
+        "forgotPassword": "忘记密码？",
+        "signupLink": "注册",
+        "noAccount": "没有账户？",
+        "backToSignin": "返回登录"
+      },
+      "signup": {
+        "title": "注册",
+        "description": "输入您的电子邮件和密码进行注册",
+        "button": "注册",
+        "signinLink": "登录",
+        "alreadyHaveAccount": "已有账户？",
+        "successTitle": "成功！",
+        "successVerifyEmail": "注册成功！请检查您的电子邮件以验证您的账户。",
+        "successMessage": "注册成功！前往登录页面。",
+        "disabledTitle": "注册已关闭",
+        "disabledMessage": "新账户由管理员创建。如果你已有账户，请登录。",
+        "disabledAction": "前往登录"
+      },
+      "forgotPassword": {
+        "title": "忘记密码",
+        "description": "输入您的电子邮件以重置密码",
+        "button": "发送重置链接",
+        "success": "密码重置链接已发送",
+        "checkEmail": "请检查您的电子邮件以获取密码重置说明"
+      },
+      "resetPassword": {
+        "title": "重置密码",
+        "description": "输入您的新密码以重置您的账户",
+        "button": "重置密码",
+        "success": "密码重置成功",
+        "hasBeenReset": "您的密码已成功重置"
+      },
+      "signout": "退出登录",
+      "unauthorized": {
+        "title": "未授权"
+      }
+    },
+    "changePassword": {
+      "title": "修改密码",
+      "description": "确保您的账户安全"
+    },
+    "ui": {
+      "buttons": {
+        "title": "UI 按钮"
+      },
+      "cards": {
+        "title": "UI 卡片"
+      },
+      "datePicker": {
+        "title": "UI 日期选择器"
+      },
+      "dateView": {
+        "title": "UI 日期视图"
+      },
+      "fileUpload": {
+        "title": "UI 文件上传"
+      },
+      "formElements": {
+        "title": "UI 表单元素"
+      },
+      "treeview": {
+        "title": "UI 树形视图"
+      },
+      "tooltip": {
+        "title": "UI 工具提示"
+      }
+    },
+    "notifications": {
+      "title": "通知",
+      "detail": {
+        "title": "通知详情"
+      },
+      "viewAll": "查看所有通知"
+    },
+    "localization": {
+      "title": "本地化",
+      "readOnly": "您可以查看这些设置，但无法更改它们。",
+      "tabs": {
+        "texts": "文本",
+        "languages": "语言"
+      },
+      "texts": {
+        "onlyOverridden": "仅显示已覆盖的",
+        "setHere": "在此设置",
+        "notOverridden": "未覆盖",
+        "editTitle": "编辑文本",
+        "defaultLabel": "默认值",
+        "overrideLabel": "您的文本",
+        "placeholders": "请保留这些占位符：",
+        "placeholderMissing": "缺少一个占位符 — 应用中将显示为空。",
+        "reset": "恢复为继承值",
+        "resetTitle": "要重置此文本吗？",
+        "resetConfirm": "这将删除您的覆盖并恢复为继承值。",
+        "resetSuccess": "文本已恢复为继承值",
+        "saveSuccess": "文本已保存",
+        "noOverrides": "此语言尚未覆盖任何内容。"
+      },
+      "languages": {
+        "inherited": "已继承",
+        "inheritedFromShipped": "内置：所有语言，无默认语言",
+        "inheritedSummary": "继承：${languages} · 默认：${default}",
+        "customize": "自定义",
+        "customized": "已自定义",
+        "resetToInherited": "恢复为继承设置",
+        "resetTitle": "要重置语言设置吗？",
+        "resetConfirm": "这将删除您的自定义设置并恢复为继承设置。",
+        "resetSuccess": "语言设置已恢复为继承设置",
+        "enabled": "已启用的语言",
+        "enabledCount": "已启用 ${count}/${total}",
+        "rtl": "从右到左",
+        "atLeastOne": "必须至少保留一种已启用的语言",
+        "noDefault": "无 — 使用访问者浏览器的语言",
+        "defaultCleared": "默认语言因刚被禁用而已被清除",
+        "currentWillSwitch": "您正在使用的语言即将被禁用 — 您将被切换到默认语言。",
+        "unsaved": "您有未保存的更改",
+        "saveSuccess": "语言设置已更新"
+      }
+    },
+    "settings": {
+      "title": "设置",
+      "readOnly": "您可以查看这些设置，但无法更改。",
+      "empty": "没有可用的设置",
+      "customized": "已自定义",
+      "source": {
+        "own": "在此处设置",
+        "default": "默认"
+      },
+      "changed": "已更改",
+      "unsaved": "未保存的更改",
+      "discard": "放弃更改",
+      "resetTitle": "重置 ${setting} 设置？",
+      "resetConfirmButton": "是，重置",
+      "resetSuccess": "${setting} 设置已重置为继承值",
+      "saveSuccess": "${setting} 设置已保存",
+      "general": {
+        "title": "常规",
+        "description": "适用于整个应用程序的选项。",
+        "isEmailVerificationRequired": "登录需要已验证的电子邮件地址",
+        "isEmailVerificationRequiredHelp": "开启后，账户必须先确认其电子邮件地址才能登录。",
+        "isSignupEnabled": "允许注册",
+        "isSignupEnabledHelp": "允许任何人通过注册页面创建账户。"
+      },
+      "email": {
+        "title": "电子邮件",
+        "description": "发送外发电子邮件所使用的 SMTP 服务器和发件人。",
+        "smtpServer": "SMTP 服务器",
+        "smtpPort": "SMTP 端口",
+        "smtpUsername": "SMTP 用户名",
+        "smtpPassword": "SMTP 密码",
+        "senderEmail": "发件人电子邮件",
+        "senderName": "发件人名称",
+        "portInvalid": "请输入 1 到 65535 之间的整数",
+        "passwordSet": "已设置",
+        "passwordNotSet": "未设置",
+        "passwordKeepPlaceholder": "留空以保留当前密码",
+        "passwordNotSetPlaceholder": "未设置",
+        "passwordClear": "清除",
+        "passwordWillClear": "保存时将被清除",
+        "passwordUndo": "撤销",
+        "passwordInheritHint": "密码只会与服务器、端口和用户名一起继承。如果您在此处更改了其中任何一项而未输入密码，则不会使用任何密码。"
+      },
+      "seo": {
+        "title": "SEO",
+        "description": "面向搜索引擎和社交分享的全站默认值。每个页面都可以在 SEO 页面中覆盖它们。",
+        "siteName": "网站名称",
+        "siteNameHelp": "显示在标题中以及分享页面时。",
+        "titleTemplate": "标题模板",
+        "titleTemplateHelp": "例如“%s | 我的网站”。%s 会被页面标题替换。",
+        "titleTemplateInvalid": "模板必须包含 %s，用于放置每个页面的标题",
+        "siteUrl": "网站地址",
+        "siteUrlHelp": "用于生成规范链接和站点地图的公开地址。",
+        "siteUrlInvalid": "请输入网站地址，例如 https://www.example.com",
+        "twitterSite": "X（Twitter）账号",
+        "twitterSiteHelp": "显示在分享卡片上的 @账号。",
+        "defaultDescription": "默认描述",
+        "defaultOgImage": "默认分享图片",
+        "defaultOgImageHelp": "当页面没有自己的图片时使用。最佳尺寸为 1200 x 630 像素。",
+        "allowIndexing": "允许搜索引擎索引本站",
+        "allowIndexingHelp": "关闭后，robots.txt 会要求所有爬虫不要访问。在测试站点上请关闭它。",
+        "robotsExtra": "robots.txt 附加行"
+      },
+      "usingDefaults": "使用默认值",
+      "resetToDefaults": "恢复默认值",
+      "resetConfirm": "将移除本站自己的 ${setting} 设置，改用默认值。"
+    },
+    "seo": {
+      "title": "SEO",
+      "description": "每个公开页面的标题、描述、分享卡片和索引设置。全站默认值在“设置”页面。",
+      "create": {
+        "title": "添加 SEO 设置"
+      },
+      "update": {
+        "title": "编辑 SEO 设置"
+      },
+      "createSuccess": "SEO 设置已创建",
+      "updateSuccess": "SEO 设置已保存",
+      "notFound": "这些 SEO 设置已不存在",
+      "allLanguages": "所有语言",
+      "deleteTitle": "删除 SEO 设置",
+      "deleteConfirm": "页面 ${path} 将改用全站默认值。",
+      "deleteSuccess": "SEO 设置已删除",
+      "untitled": "全站默认",
+      "indexed": "允许索引",
+      "form": {
+        "basics": "基本信息",
+        "basicsHelp": "这是哪个页面，以及它在搜索结果中如何显示。",
+        "pathHelp": "不含语言前缀的页面地址，例如 / 或 /about。",
+        "pathInvalid": "请输入公开页面的路径，例如 /about",
+        "titleHelp": "通过网站标题模板显示在浏览器标签和搜索结果中。",
+        "keywords": "关键词",
+        "keywordsHelp": "用逗号分隔。",
+        "characters": "${count} 个字符（搜索结果中约显示 155 个）",
+        "social": "社交分享",
+        "socialHelp": "有人分享此页面链接时的显示效果。留空的字段使用基本信息。",
+        "ogTitle": "分享标题",
+        "ogDescription": "分享描述",
+        "ogImage": "分享图片",
+        "ogImageHelp": "留空则使用全站默认图片。最佳尺寸为 1200 x 630 像素。",
+        "twitterCard": "X（Twitter）卡片",
+        "twitterCardLarge": "大图",
+        "twitterCardSummary": "小图",
+        "indexing": "索引与站点地图",
+        "indexingHelp": "搜索引擎是否收录此页面，以及站点地图如何描述它。",
+        "noIndex": "在搜索结果中隐藏（noindex）",
+        "noFollow": "不跟踪此页面上的链接（nofollow）",
+        "includeInSitemap": "包含在站点地图中",
+        "canonicalUrl": "规范地址",
+        "canonicalUrlHelp": "留空则使用页面自己的地址。",
+        "urlInvalid": "请输入以 https:// 开头的完整地址",
+        "changeFrequency": "更新频率",
+        "frequencyNone": "未指定",
+        "frequency": {
+          "always": "始终",
+          "hourly": "每小时",
+          "daily": "每天",
+          "weekly": "每周",
+          "monthly": "每月",
+          "yearly": "每年",
+          "never": "从不"
+        },
+        "priority": "优先级",
+        "priorityHelp": "0 到 1，相对于你的其他页面。",
+        "priorityInvalid": "请输入 0 到 1 之间的数字",
+        "structuredData": "结构化数据",
+        "structuredDataHelp": "向搜索引擎描述此页面的 JSON-LD 文档，例如 Organization 或 Product。",
+        "jsonLdInvalid": "这不是有效的 JSON",
+        "noImage": "无图片",
+        "uploadImage": "上传图片",
+        "replaceImage": "更换图片",
+        "removeImage": "移除图片",
+        "imageUnavailable": "图片不可用",
+        "titleCharacters": "${count} 个字符（搜索结果中约显示 60 个）"
+      },
+      "noIndexBadge": "noindex",
+      "empty": "还没有页面设置自己的 SEO - 所有页面都使用网站默认设置。"
+    }
+  },
+  "notifications": {
+    "noNotifications": "没有通知",
+    "notFound": "通知未找到",
+    "viewAll": "查看所有通知",
+    "markAllRead": "全部标为已读",
+    "markAsRead": "标为已读",
+    "markAsUnread": "标为未读",
+    "delete": "删除",
+    "all": "全部",
+    "read": "已读",
+    "unread": "未读",
+    "group": "组",
+    "metadata": "元数据",
+    "markedAsRead": "通知已标为已读",
+    "markedAsUnread": "通知已标为未读",
+    "markedAllAsRead": "所有通知已标为已读",
+    "deleted": "通知已删除",
+    "deleteTitle": "删除通知",
+    "deleteConfirm": "您确定要删除此通知吗？",
+    "markAllReadConfirmTitle": "全部标为已读",
+    "markAllReadConfirmText": "您确定要将所有通知标为已读吗？",
+    "filterByGroup": "按组筛选",
+    "groups": {
+      "inventory": "库存",
+      "system": "系统",
+      "payments": "支付",
+      "orders": "订单"
+    },
+    "types": {
+      "info": "信息",
+      "warning": "警告",
+      "error": "错误",
+      "success": "成功"
+    },
+    "inventoryBelowLimit": {
+      "title": "库存不足警告",
+      "message": "物品低于最低库存水平"
+    },
+    "systemUpdate": {
+      "title": "系统更新",
+      "message": "有系统更新可用"
+    },
+    "orderCompleted": {
+      "title": "订单已完成",
+      "message": "您的订单已成功完成"
+    },
+    "paymentFailed": {
+      "title": "支付失败",
+      "message": "支付交易失败"
+    },
+    "welcome": {
+      "title": "欢迎",
+      "message": "欢迎使用应用程序"
+    }
+  },
+  "site": {
+    "nav": {
+      "label": "主导航",
+      "home": "首页",
+      "about": "关于",
+      "contact": "联系"
+    },
+    "footer": {
+      "tagline": "一个快速、对搜索引擎友好的网站，内置账户和管理后台。",
+      "navLabel": "页脚"
+    },
+    "home": {
+      "hero": {
+        "badge": "为你的下一个项目做好准备",
+        "title": "打造人们",
+        "highlight": "喜爱使用的产品",
+        "description": "一个快速、对搜索引擎友好的网站，访客账户、多语言和管理后台都已就绪，让你专注于打造自己的特色。",
+        "primaryCta": "开始使用",
+        "secondaryCta": "了解更多"
+      },
+      "features": {
+        "title": "现代网站所需的一切",
+        "subtitle": "从第一个页面到管理界面，基础工作都已完成并经过测试。",
+        "items": {
+          "seo": {
+            "title": "搜索友好",
+            "description": "每个页面都在服务器端渲染，标题、描述、分享卡片和站点地图都可以在管理后台编辑。"
+          },
+          "accounts": {
+            "title": "访客账户",
+            "description": "注册、登录、邮箱验证和找回密码，背后有角色和权限支撑。"
+          },
+          "languages": {
+            "title": "多语言",
+            "description": "以你选择的语言提供每个页面（包括从右到左的语言），无需重新部署即可修改任何文字。"
+          },
+          "admin": {
+            "title": "管理后台",
+            "description": "在一个地方管理用户、角色、设置、翻译和通知。"
+          }
+        }
+      },
+      "cta": {
+        "title": "准备好开始了吗？",
+        "description": "一分钟创建账户，亲自体验。",
+        "closedDescription": "了解其中包含哪些内容，以及它们如何协同工作。"
+      }
+    },
+    "about": {
+      "title": "关于我们",
+      "intro": "我们是一个为网络构建可靠软件的小团队。这个页面只是起点：告诉访客你是谁、为什么做这件事。",
+      "mission": {
+        "title": "我们的使命",
+        "text": "让优秀的网站更容易构建和运行，使每个项目把更多精力投入到真正重要的想法上。"
+      },
+      "values": {
+        "title": "我们的价值观",
+        "items": {
+          "quality": {
+            "title": "品质",
+            "description": "我们宁愿交付一件真正可用的东西，也不交付三件差不多能用的东西。"
+          },
+          "openness": {
+            "title": "开放",
+            "description": "我们坦率地解释自己的选择，并分享所学。"
+          },
+          "care": {
+            "title": "用心",
+            "description": "每位访客都应得到快速、清晰、无障碍的页面。"
+          }
+        }
+      },
+      "contactCta": "联系我们"
+    },
+    "contact": {
+      "title": "联系我们",
+      "intro": "有问题、想法或反馈？我们很乐意听到你的声音，通常在一个工作日内回复。",
+      "email": {
+        "label": "邮箱",
+        "value": "hello@example.com"
+      },
+      "phone": {
+        "label": "电话",
+        "value": "+1 555 0100"
+      },
+      "address": {
+        "label": "地址",
+        "value": "100 Example Street, Springfield"
+      },
+      "hours": {
+        "label": "营业时间",
+        "value": "周一至周五，9:00 至 17:00"
+      }
+    },
+    "skipToContent": "跳到内容"
+  }
+}

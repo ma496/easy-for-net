@@ -1,0 +1,801 @@
+{
+  "brand": {
+    "name": "Easy For Net"
+  },
+  "cookieConsent": {
+    "title": "हम आपकी गोपनीयता का सम्मान करते हैं",
+    "description": "हम आपके ब्राउज़िंग अनुभव को बेहतर बनाने के लिए कुकीज़ का उपयोग करते हैं। इस साइट पर जारी रکھ کر آپ ہمارے کوکیز کے استعمال سے سہم ت ہوتے ہیں۔",
+    "accept": "سوئیکار کریں",
+    "decline": "ا سہیکار کریں"
+  },
+  "common": {
+    "back": "वापस",
+    "more": "अधिक",
+    "list": "सूची",
+    "preview": "पूर्वावलोकन",
+    "add": "जोड़ें",
+    "edit": "संपादित करें",
+    "delete": "हटाएं",
+    "save": "सहेजें",
+    "update": "अपडेट करें",
+    "cancel": "रद्द करें",
+    "confirm": "पुष्टि करें",
+    "search": "खोजें...",
+    "loading": "लोड हो रहा है...",
+    "success": "सफलता",
+    "error": "त्रुटि",
+    "warning": "चेतावनी",
+    "info": "जानकारी",
+    "yes": "हाँ",
+    "no": "नहीं",
+    "ok": "ठीक है",
+    "retry": "पुनः प्रयास करें",
+    "submit": "जमा करें",
+    "actions": "क्रियाएं",
+    "allRightsReserved": "सर्वाधिकार सुरक्षित।",
+    "deleteConfirm": "हाँ, इसे हटा दें",
+    "notifications": "सूचनाएं",
+    "viewAll": "सभी देखें",
+    "close": "बंद करें",
+    "menu": "मेनू",
+    "theme": "थीम",
+    "themeLight": "लाइट",
+    "themeDark": "डार्क",
+    "themeSystem": "सिस्टम",
+    "noResults": "कोई परिणाम नहीं मिला",
+    "selectPlaceholder": "चुनें…",
+    "noOptions": "कोई विकल्प नहीं",
+    "scrollToTop": "ऊपर जाएँ",
+    "collapseSidebar": "साइडबार छोटा करें",
+    "opensInNewTab": "(नए टैब में खुलता है)",
+    "goHome": "होम पेज पर जाएँ"
+  },
+  "navigation": {
+    "home": "होम",
+    "dashboard": "डैशबोर्ड",
+    "dashboardSales": "बिक्री",
+    "administration": "प्रशासन",
+    "users": "उपयोगकर्ता",
+    "roles": "भूमिकाएं",
+    "rolesList": "सूची",
+    "rolesCreate": "बनाएं",
+    "rolesUpdate": "अपडेट करें",
+    "rolesChangePermissions": "अनुमतियां बदलें",
+    "components": "घटक",
+    "uiFormElements": "फॉर्म तत्व",
+    "uiButtons": "बटन",
+    "uiCards": "कार्ड",
+    "uiDatePicker": "दिनांक चयनकर्ता",
+    "uiDateView": "दिनांक दृश्य",
+    "uiTreeview": "ट्री व्यू",
+    "changePassword": "पासवर्ड बदलें",
+    "profile": "प्रोफ़ाइल",
+    "uiFileUpload": "फ़ाइल अपलोड",
+    "uiTooltips": "टूलटिप्स",
+    "usersList": "सूची",
+    "usersCreate": "बनाएं",
+    "usersUpdate": "अपडेट करें",
+    "notifications": "सूचनाएं",
+    "notificationsList": "सूची",
+    "notificationsDetail": "विवरण",
+    "localization": "स्थानीयकरण",
+    "settings": "सेटिंग्स",
+    "admin": "एडमिन",
+    "viewSite": "साइट देखें",
+    "seo": "SEO",
+    "seoList": "सूची",
+    "seoCreate": "बनाएँ",
+    "seoUpdate": "अपडेट"
+  },
+  "search": {
+    "dashboard": "डैशबोर्ड",
+    "users": "उपयोगकर्ता",
+    "usersCreate": "उपयोगकर्ता बनाएं",
+    "roles": "भूमिकाएं",
+    "rolesCreate": "भूमिका बनाएं",
+    "uiButtons": "UI बटन",
+    "uiCards": "UI कार्ड",
+    "uiDatePicker": "UI दिनांक चयनकर्ता",
+    "uiDateView": "UI दिनांक दृश्य",
+    "uiTreeview": "UI ट्री व्यू",
+    "changePassword": "पासवर्ड बदलें",
+    "profile": "प्रोफ़ाइल",
+    "notifications": "सूचनाएं",
+    "uiFormElements": "UI फॉर्म तत्व",
+    "uiFileUpload": "UI फ़ाइल अपलोड",
+    "uiTooltips": "UI टूलटिप्स",
+    "localization": "स्थानीयकरण",
+    "settings": "सेटिंग्स",
+    "seo": "SEO",
+    "seoCreate": "SEO सेटिंग जोड़ें"
+  },
+  "form": {
+    "label": {
+      "username": "उपयोगकर्ता नाम",
+      "password": "पासवर्ड",
+      "firstName": "पहला नाम",
+      "lastName": "अंतिम नाम",
+      "email": "ईमेल",
+      "currentPassword": "वर्तमान पासवर्ड",
+      "newPassword": "नया पासवर्ड",
+      "confirmPassword": "पासवर्ड की पुष्टि करें",
+      "roleName": "भूमिका नाम",
+      "roleDescription": "विवरण",
+      "roles": "भूमिकाएं",
+      "isActive": "सक्रिय",
+      "name": "नाम",
+      "user": "उपयोगकर्ता",
+      "defaultLanguage": "डिफ़ॉल्ट भाषा"
+    },
+    "placeholder": {
+      "username": "उपयोगकर्ता नाम दर्ज करें",
+      "password": "पासवर्ड दर्ज करें",
+      "firstName": "पहला नाम दर्ज करें",
+      "lastName": "अंतिम नाम दर्ज करें",
+      "email": "ईमेल दर्ज करें",
+      "currentPassword": "वर्तमान पासवर्ड दर्ज करें",
+      "newPassword": "नया पासवर्ड दर्ज करें",
+      "confirmPassword": "पुष्टि पासवर्ड दर्ज करें",
+      "roleName": "भूमिका नाम दर्ज करें",
+      "roleDescription": "भूमिका विवरण दर्ज करें",
+      "roles": "भूमिकाएं चुनें",
+      "user": "उपयोगकर्ता चुनें"
+    }
+  },
+  "validation": {
+    "required": "फ़ील्ड आवश्यक है",
+    "minLength": "फ़ील्ड कम से कम ${min} वर्णों का होना चाहिए",
+    "maxLength": "फ़ील्ड ${max} वर्णों से अधिक नहीं होना चाहिए",
+    "email": "अमान्य ईमेल प्रारूप",
+    "invalidEmail": "अमान्य ईमेल",
+    "mustMatch": "फ़ील्ड ${otherField} के साथ मेल खाना चाहिए",
+    "atLeastOneSelected": "कम से कम एक आइटम का चयन किया जाना चाहिए",
+    "number": "संख्या होनी चाहिए",
+    "min": "कम से कम ${min} होना चाहिए"
+  },
+  "error": {
+    "400": {
+      "title": "खराब अनुरोध"
+    },
+    "401": {
+      "title": "अनधिकृत",
+      "message": "आप इस संसाधन तक पहुँचने के लिए अधिकृत नहीं हैं।"
+    },
+    "403": {
+      "title": "वर्जित",
+      "message": "आपको इस संसाधन तक पहुँचने की अनुमति नहीं है।"
+    },
+    "404": {
+      "title": "नहीं मिला",
+      "message": "अनुरोधित संसाधन नहीं मिला।"
+    },
+    "413": {
+      "title": "पेलोड बहुत बड़ा है",
+      "message": "अनुरोध पेलोड बहुत बड़ा है।"
+    },
+    "415": {
+      "title": "असमर्थित मीडिया प्रकार",
+      "message": "अनुरोध मीडिया प्रकार समर्थित नहीं है।"
+    },
+    "500": {
+      "title": "आंतरिक सर्वर त्रुटि",
+      "message": "अनुरोध को संसाधित करते समय एक त्रुटि हुई।"
+    },
+    "connection": {
+      "title": "कनेक्शन त्रुटि",
+      "message": "सर्वर से कनेक्ट करने में असमर्थ। कृपया अपना कनेक्शन जांचें या बाद में पुनः प्रयास करें।"
+    },
+    "serviceUnavailable": {
+      "title": "सेवा अनुपलब्ध",
+      "message": "सर्वर इस समय अनुपलब्ध है। कृपया कुछ क्षणों में पुनः प्रयास करें।",
+      "retry": "पुनः प्रयास करें"
+    },
+    "server": {
+      "internalServerError": "आंतरिक सर्वर त्रुटि",
+      "duplicateValue": "डुप्लिकेट मान",
+      "duplicatePropertyValue": "डुप्लिकेट संपत्ति मान",
+      "requiredFieldMissing": "आवश्यक फ़ील्ड गायब है",
+      "requiredPropertyFieldMissing": "आवश्यक संपत्ति फ़ील्ड गायब है",
+      "referencedRecordNotFound": "संदर्भित रिकॉर्ड नहीं मिला",
+      "invalidValueProvided": "अमान्य मान प्रदान किया गया",
+      "databaseError": "डेटाबेस त्रुटि",
+      "authenticationRequired": "इस कार्रवाई के लिए साइन इन आवश्यक है।",
+      "permissionDenied": "आपकी भूमिकाएँ इस कार्रवाई के लिए आवश्यक अनुमति नहीं देती हैं।",
+      "invalidCurrentPassword": "अमान्य वर्तमान पासवर्ड",
+      "invalidToken": "अमान्य टोकन",
+      "tokenExpired": "टोकन समाप्त हो गया",
+      "payloadTooLarge": "पेलोड बहुत बड़ा है",
+      "invalidUsernamePassword": "अमान्य उपयोगकर्ता नाम या पासवर्ड",
+      "invalidEmailPassword": "अमान्य ईमेल या पासवर्ड",
+      "userNotActive": "उपयोगकर्ता सक्रिय नहीं है",
+      "userNotFound": "उपयोगकर्ता नहीं मिला",
+      "emailAlreadyExists": "ईमेल पहले से मौजूद है",
+      "usernameAlreadyExists": "उपयोगकर्ता नाम पहले से मौजूद है",
+      "emailNotVerified": "ईमेल सत्यापित नहीं है",
+      "roleNameAlreadyExists": "भूमिका नाम पहले से मौजूद है",
+      "roleNotFound": "भूमिका नहीं मिली",
+      "systemCreatedRolePermissionsCannotBeChanged": "सिस्टम द्वारा बनाई गई भूमिका की अनुमतियां बदली नहीं जा सकतीं",
+      "systemCreatedRoleCannotBeDeleted": "सिस्टम द्वारा बनाई गई भूमिका हटाई नहीं जा सकती",
+      "systemCreatedRoleCannotBeUpdated": "सिस्टम द्वारा बनाई गई भूमिका अपडेट नहीं की जा सकती",
+      "systemCreatedUserCannotBeDeleted": "सिस्टम द्वारा बनाया गया उपयोगकर्ता हटाया नहीं जा सकता",
+      "systemCreatedUserCannotBeUpdated": "सिस्टम द्वारा बनाया गया उपयोगकर्ता अपडेट नहीं किया जा सकता",
+      "concurrentModification": "यह रिकॉर्ड किसी और ने बदल दिया था। पुनः लोड करें और फिर से प्रयास करें।",
+      "sessionStoreUnavailable": "सत्र सेवा अस्थायी रूप से उपलब्ध नहीं है। कृपया थोड़ी देर बाद पुनः प्रयास करें।",
+      "settingNotFound": "सेटिंग नहीं मिली।",
+      "settingPropertyUnknown": "इस सेटिंग में ऐसी कोई प्रॉपर्टी नहीं है।",
+      "settingPropertyInvalid": "यह मान इस सेटिंग प्रॉपर्टी के लिए मान्य नहीं है।",
+      "settingValueInvalid": "सेटिंग के मान मान्य नहीं हैं।",
+      "signupDisabled": "साइन-अप बंद है। अकाउंट के लिए किसी एडमिनिस्ट्रेटर से कहें।",
+      "emailSmtpServerRequired": "SMTP सर्वर आवश्यक है।",
+      "emailSmtpPortInvalid": "SMTP पोर्ट 1 और 65535 के बीच होना चाहिए।",
+      "emailSenderEmailInvalid": "प्रेषक ईमेल एक मान्य ईमेल पता होना चाहिए।",
+      "seoPageNotFound": "ये SEO सेटिंग नहीं मिलीं।",
+      "seoPageAlreadyExists": "इस पेज की उस भाषा के लिए SEO सेटिंग पहले से मौजूद है।",
+      "invalidJsonLd": "संरचित डेटा मान्य JSON नहीं है।"
+    }
+  },
+  "table": {
+    "columns": {
+      "firstName": "पहला नाम",
+      "lastName": "अंतिम नाम",
+      "email": "ईमेल",
+      "roles": "भूमिकाएं",
+      "userName": "उपयोगकर्ता नाम",
+      "isActive": "सक्रिय",
+      "name": "नाम",
+      "description": "विवरण",
+      "userCount": "उपयोगकर्ता",
+      "type": "प्रकार",
+      "title": "शीर्षक",
+      "message": "संदेश",
+      "status": "स्थिति",
+      "date": "तारीख",
+      "group": "समूह",
+      "created": "बनाया गया",
+      "updated": "अपडेट किया गया",
+      "key": "कुंजी",
+      "defaultValue": "डिफ़ॉल्ट मान",
+      "override": "ओवरराइड",
+      "path": "पाथ",
+      "language": "भाषा",
+      "indexing": "इंडेक्सिंग",
+      "inSitemap": "साइटमैप में"
+    },
+    "pagination": {
+      "showingEntries": "${totalRecords} प्रविष्टियों में से ${from} से ${to} दिखा रहा है"
+    },
+    "noRecords": "कोई रिकॉर्ड नहीं मिला",
+    "searchPlaceholder": "खोजें...",
+    "sort": {
+      "label": "इसके अनुसार क्रमबद्ध करें",
+      "none": "डिफ़ॉल्ट क्रम",
+      "ascending": "आरोही — अवरोही क्रम के लिए टैप करें",
+      "descending": "अवरोही — आरोही क्रम के लिए टैप करें"
+    },
+    "export": {
+      "button": "निर्यात",
+      "excel": "एक्सेल",
+      "csv": "सीएसवी",
+      "currentPage": "वर्तमान पृष्ठ",
+      "allRecords": "सभी रिकॉर्ड"
+    },
+    "actions": "क्रियाएं",
+    "createLink": "बनाएं",
+    "filter": {
+      "button": "फिल्टर",
+      "all": "सभी",
+      "active": "सक्रिय",
+      "inactive": "निष्क्रिय",
+      "allRoles": "सभी भूमिकाएं",
+      "activeStatus": "सक्रिय स्थिति",
+      "role": "भूमिका",
+      "selectRole": "भूमिका चुनें",
+      "search": "खोजें",
+      "clear": "साफ़ करें"
+    },
+    "loadFailed": "रिकॉर्ड लोड नहीं हो सके",
+    "loadFailedHint": "अपना कनेक्शन जाँचें और फिर से प्रयास करें।"
+  },
+  "file": {
+    "upload": "फ़ाइल अपलोड",
+    "deleteTitle": "फ़ाइल हटाएं",
+    "deleteConfirm": "क्या आप वाकई इस फ़ाइल को हटाना चाहते हैं?",
+    "tooLarge": "फ़ाइल बहुत बड़ी है। आप केवल ${max} MB तक की फ़ाइलें अपलोड कर सकते हैं।"
+  },
+  "page": {
+    "dashboard": {
+      "title": "डैशबोर्ड",
+      "sales": "बिक्री",
+      "revenue": "राजस्व",
+      "salesByCategory": "श्रेणी के अनुसार बिक्री",
+      "dailySales": "दैनिक बिक्री",
+      "summary": "सारांश",
+      "totalOrders": "कुल आदेश",
+      "totalProfit": "कुल लाभ",
+      "income": "आय",
+      "expenses": "व्यय",
+      "profit": "लाभ",
+      "weekly": "साप्ताहिक",
+      "monthly": "मासिक",
+      "yearly": "वार्षिक",
+      "viewReport": "रिपोर्ट देखें",
+      "editReport": "रिपोर्ट संपादित करें",
+      "markAsDone": "पूर्ण के रूप में चिह्नित करें",
+      "goToColumns": "विवरण के लिए कॉलम पर जाएं",
+      "description": "राजस्व, ऑर्डर और बिक्री का अवलोकन।"
+    },
+    "users": {
+      "title": "उपयोगकर्ता",
+      "createSuccess": "उपयोगकर्ता सफलतापूर्वक बनाया गया",
+      "updateSuccess": "उपयोगकर्ता सफलतापूर्वक अपडेट किया गया",
+      "deleteTitle": "उपयोगकर्ता हटाएं",
+      "deleteConfirm": "क्या आप वाकई इस उपयोगकर्ता को हटाना चाहते हैं?",
+      "deleteSuccess": "उपयोगकर्ता सफलतापूर्वक हटाया गया",
+      "create": {
+        "title": "उपयोगकर्ता बनाएँ"
+      },
+      "update": {
+        "title": "उपयोगकर्ता अपडेट करें"
+      },
+      "accountDetails": "खाते का विवरण",
+      "passwordDescription": "वह पासवर्ड जिससे यह उपयोगकर्ता साइन इन करता है।",
+      "isActiveDescription": "निष्क्रिय उपयोगकर्ता साइन इन नहीं कर सकता।"
+    },
+    "roles": {
+      "title": "भूमिकाएं",
+      "createSuccess": "भूमिका सफलतापूर्वक बनाई गई",
+      "updateSuccess": "भूमिका सफलतापूर्वक अपडेट की गई",
+      "deleteTitle": "भूमिका हटाएं",
+      "deleteConfirm": "क्या आप वाकई इस भूमिका को हटाना चाहते हैं?",
+      "deleteSuccess": "भूमिका सफलतापूर्वक हटाई गई",
+      "notFound": "भूमिका नहीं मिली",
+      "permissions": "अनुमतियां",
+      "permissionsUpdateSuccess": "अनुमतियां सफलतापूर्वक अपडेट की गईं",
+      "changePermissions": {
+        "title": "अनुमतियाँ बदलें"
+      },
+      "create": {
+        "title": "भूमिका बनाएँ"
+      },
+      "update": {
+        "title": "भूमिका अपडेट करें"
+      },
+      "permissionGroups": "अनुमति समूह"
+    },
+    "profile": {
+      "title": "प्रोफ़ाइल",
+      "description": "अपनी व्यक्तिगत जानकारी अपडेट करें",
+      "updateSuccess": "प्रोफ़ाइल सफलतापूर्वक अपडेट की गई",
+      "deleteAvatarTitle": "प्रोफ़ाइल चित्र हटाएं",
+      "deleteAvatarConfirm": "क्या आप वाकई अपना प्रोफ़ाइल चित्र हटाना चाहते हैं?",
+      "altImage": "प्रोफ़ाइल छवि",
+      "changePasswordSuccess": "पासवर्ड सफलतापूर्वक बदला गया"
+    },
+    "verifyEmail": {
+      "verifying": "आपके ईमेल का सत्यापन हो रहा है...",
+      "verifiedTitle": "ईमेल सत्यापित!",
+      "verifiedMessage": "आपका ईमेल सफलतापूर्वक सत्यापित हो गया है। अब आप साइन इन कर सकते हैं।",
+      "buttonSignin": "अभी साइन इन करें",
+      "resendButton": "सत्यापन ईमेल पुनः भेजें",
+      "resendSuccess": "सत्यापन ईमेल पुनः भेज दिया गया है।",
+      "resendWait": "कृपया ${seconds} सेकंड प्रतीक्षा करें",
+      "notVerifiedTitle": "ईमेल सत्यापन आवश्यक",
+      "notVerifiedMessage": "आपका ईमेल पता सत्यापित नहीं है। कृपया सत्यापन लिंक के लिए अपना इनबॉक्स देखें या इसे पुनः भेजने के लिए नीचे क्लिक करें।",
+      "failedTitle": "सत्यापन विफल",
+      "failedMessage": "सत्यापन लिंक अमान्य है या समाप्त हो गया है।",
+      "title": "ईमेल सत्यापित करें"
+    },
+    "auth": {
+      "signin": {
+        "title": "साइन इन",
+        "description": "साइन इन करने के लिए अपनी साख दर्ज करें",
+        "button": "साइन इन",
+        "forgotPassword": "पासवर्ड भूल गए?",
+        "signupLink": "साइन अप",
+        "noAccount": "खाता नहीं है?",
+        "backToSignin": "साइन इन पर वापस जाएं"
+      },
+      "signup": {
+        "title": "साइन अप",
+        "description": "रजिस्टर करने के लिए अपना ईमेल और पासवर्ड दर्ज करें",
+        "button": "साइन अप",
+        "signinLink": "साइन इन",
+        "alreadyHaveAccount": "पहले से खाता है?",
+        "successTitle": "सफलता!",
+        "successVerifyEmail": "पंजीकरण सफल! कृपया अपने खाते को सत्यापित करने के लिए अपना ईमेल देखें।",
+        "successMessage": "पंजीकरण सफल! साइन इन पेज पर जाएं।",
+        "disabledTitle": "साइन-अप बंद है",
+        "disabledMessage": "नए अकाउंट एक एडमिनिस्ट्रेटर बनाता है। अगर आपका अकाउंट पहले से है तो साइन इन करें।",
+        "disabledAction": "साइन इन पर जाएँ"
+      },
+      "forgotPassword": {
+        "title": "पासवर्ड भूल गए",
+        "description": "अपना पासवर्ड रीसेट करने के लिए अपना ईमेल दर्ज करें",
+        "button": "रीसेट लिंक भेजें",
+        "success": "पासवर्ड रीसेट लिंक भेजा गया",
+        "checkEmail": "कृपया पासवर्ड रीसेट निर्देशों के लिए अपना ईमेल देखें"
+      },
+      "resetPassword": {
+        "title": "पासवर्ड रीसेट करें",
+        "description": "अपना खाता रीसेट करने के लिए अपना नया पासवर्ड दर्ज करें",
+        "button": "पासवर्ड रीसेट करें",
+        "success": "पासवर्ड सफलतापूर्वक रीसेट किया गया",
+        "hasBeenReset": "आपका पासवर्ड सफलतापूर्वक रीसेट कर दिया गया है"
+      },
+      "signout": "साइन आउट",
+      "unauthorized": {
+        "title": "अनधिकृत"
+      }
+    },
+    "changePassword": {
+      "title": "पासवर्ड बदलें",
+      "description": "अपने खाते को सुरक्षित रखें"
+    },
+    "ui": {
+      "buttons": {
+        "title": "यूआई बटन"
+      },
+      "cards": {
+        "title": "यूआई कार्ड"
+      },
+      "datePicker": {
+        "title": "यूआई डेट पिकर"
+      },
+      "dateView": {
+        "title": "यूआई डेट व्यू"
+      },
+      "fileUpload": {
+        "title": "यूआई फ़ाइल अपलोड"
+      },
+      "formElements": {
+        "title": "यूआई फॉर्म तत्व"
+      },
+      "treeview": {
+        "title": "यूआई ट्री व्यू"
+      },
+      "tooltip": {
+        "title": "UI टूलटिप"
+      }
+    },
+    "notifications": {
+      "title": "सूचनाएं",
+      "detail": {
+        "title": "सूचना विवरण"
+      },
+      "viewAll": "सभी सूचनाएं देखें"
+    },
+    "localization": {
+      "title": "स्थानीयकरण",
+      "readOnly": "आप इन सेटिंग्स को देख सकते हैं लेकिन बदल नहीं सकते।",
+      "tabs": {
+        "texts": "टेक्स्ट",
+        "languages": "भाषाएँ"
+      },
+      "texts": {
+        "onlyOverridden": "केवल ओवरराइड किए गए",
+        "setHere": "यहाँ सेट किया गया",
+        "notOverridden": "ओवरराइड नहीं किया गया",
+        "editTitle": "टेक्स्ट संपादित करें",
+        "defaultLabel": "डिफ़ॉल्ट मान",
+        "overrideLabel": "आपका टेक्स्ट",
+        "placeholders": "इन प्लेसहोल्डर्स को बनाए रखें:",
+        "placeholderMissing": "एक प्लेसहोल्डर गायब है — ऐप इसे खाली दिखाएगा।",
+        "reset": "विरासत में मिले मान पर रीसेट करें",
+        "resetTitle": "क्या इस टेक्स्ट को रीसेट करना है?",
+        "resetConfirm": "इससे आपका ओवरराइड हट जाएगा और विरासत में मिले मान पर वापस चला जाएगा।",
+        "resetSuccess": "टेक्स्ट विरासत में मिले मान पर रीसेट कर दिया गया",
+        "saveSuccess": "टेक्स्ट सहेजा गया",
+        "noOverrides": "इस भाषा में अभी तक कुछ भी ओवरराइड नहीं किया गया है।"
+      },
+      "languages": {
+        "inherited": "विरासत में मिला",
+        "inheritedFromShipped": "बिल्ट-इन: सभी भाषाएँ, कोई डिफ़ॉल्ट नहीं",
+        "inheritedSummary": "विरासत में मिला: ${languages} · डिफ़ॉल्ट: ${default}",
+        "customize": "अनुकूलित करें",
+        "customized": "अनुकूलित",
+        "resetToInherited": "विरासत में मिले मान पर रीसेट करें",
+        "resetTitle": "क्या भाषाएँ रीसेट करनी हैं?",
+        "resetConfirm": "इससे आपका अनुकूलन हट जाएगा और विरासत में मिली सेटिंग्स पर वापस चला जाएगा।",
+        "resetSuccess": "भाषाएँ विरासत में मिली सेटिंग्स पर रीसेट कर दी गईं",
+        "enabled": "सक्षम भाषाएँ",
+        "enabledCount": "${total} में से ${count} सक्षम",
+        "rtl": "दाएँ से बाएँ",
+        "atLeastOne": "कम से कम एक भाषा सक्षम रहनी चाहिए",
+        "noDefault": "कोई नहीं — विज़िटर के ब्राउज़र की भाषा का उपयोग करें",
+        "defaultCleared": "डिफ़ॉल्ट भाषा साफ़ कर दी गई क्योंकि इसे अभी अक्षम किया गया है",
+        "currentWillSwitch": "जिस भाषा में आप यह स्क्रीन देख रहे हैं वह अक्षम की जा रही है — आपको डिफ़ॉल्ट भाषा पर बदल दिया जाएगा।",
+        "unsaved": "आपके पास असहेजे परिवर्तन हैं",
+        "saveSuccess": "भाषाएँ अपडेट की गईं"
+      }
+    },
+    "settings": {
+      "title": "सेटिंग्स",
+      "readOnly": "आप ये सेटिंग्स देख सकते हैं, लेकिन बदल नहीं सकते।",
+      "empty": "कोई सेटिंग उपलब्ध नहीं है",
+      "customized": "कस्टमाइज़ किया गया",
+      "source": {
+        "own": "यहाँ तय किया गया",
+        "default": "डिफ़ॉल्ट"
+      },
+      "changed": "बदला गया",
+      "unsaved": "असहेजे परिवर्तन",
+      "discard": "परिवर्तन त्यागें",
+      "resetTitle": "${setting} सेटिंग्स रीसेट करें?",
+      "resetConfirmButton": "हाँ, रीसेट करें",
+      "resetSuccess": "${setting} सेटिंग्स विरासत में मिले मानों पर रीसेट की गईं",
+      "saveSuccess": "${setting} सेटिंग्स सहेजी गईं",
+      "general": {
+        "title": "सामान्य",
+        "description": "पूरे एप्लिकेशन पर लागू होने वाले विकल्प।",
+        "isEmailVerificationRequired": "साइन इन के लिए सत्यापित ईमेल पता आवश्यक करें",
+        "isEmailVerificationRequiredHelp": "चालू होने पर, किसी खाते को साइन इन करने से पहले अपने ईमेल पते की पुष्टि करनी होगी।",
+        "isSignupEnabled": "साइन-अप की अनुमति दें",
+        "isSignupEnabledHelp": "किसी को भी साइन-अप पेज से अकाउंट बनाने दें।"
+      },
+      "email": {
+        "title": "ईमेल",
+        "description": "वह SMTP सर्वर और प्रेषक जिसके माध्यम से आउटगोइंग ईमेल भेजे जाते हैं।",
+        "smtpServer": "SMTP सर्वर",
+        "smtpPort": "SMTP पोर्ट",
+        "smtpUsername": "SMTP उपयोगकर्ता नाम",
+        "smtpPassword": "SMTP पासवर्ड",
+        "senderEmail": "प्रेषक ईमेल",
+        "senderName": "प्रेषक का नाम",
+        "portInvalid": "1 और 65535 के बीच कोई पूर्ण संख्या दर्ज करें",
+        "passwordSet": "सेट है",
+        "passwordNotSet": "सेट नहीं है",
+        "passwordKeepPlaceholder": "वर्तमान पासवर्ड रखने के लिए खाली छोड़ें",
+        "passwordNotSetPlaceholder": "सेट नहीं है",
+        "passwordClear": "साफ़ करें",
+        "passwordWillClear": "सहेजने पर साफ़ कर दिया जाएगा",
+        "passwordUndo": "पूर्ववत करें",
+        "passwordInheritHint": "पासवर्ड केवल सर्वर, पोर्ट और उपयोगकर्ता नाम के साथ ही विरासत में मिलता है। यदि आप पासवर्ड दर्ज किए बिना यहाँ इनमें से कोई भी बदलते हैं, तो कोई पासवर्ड उपयोग नहीं किया जाता।"
+      },
+      "seo": {
+        "title": "SEO",
+        "description": "सर्च इंजन और सोशल शेयरिंग के लिए पूरी साइट के डिफ़ॉल्ट। हर पेज इन्हें SEO स्क्रीन पर बदल सकता है।",
+        "siteName": "साइट का नाम",
+        "siteNameHelp": "शीर्षकों में और पेज शेयर करते समय दिखता है।",
+        "titleTemplate": "शीर्षक टेम्पलेट",
+        "titleTemplateHelp": "जैसे \"%s | My Site\"। %s की जगह पेज का शीर्षक आता है।",
+        "titleTemplateInvalid": "टेम्पलेट में %s होना ज़रूरी है, जहाँ हर पेज का शीर्षक आता है",
+        "siteUrl": "साइट का पता",
+        "siteUrlHelp": "वह सार्वजनिक पता जिससे कैनोनिकल लिंक और साइटमैप बनते हैं।",
+        "siteUrlInvalid": "साइट का पता लिखें, जैसे https://www.example.com",
+        "twitterSite": "X (ट्विटर) अकाउंट",
+        "twitterSiteHelp": "शेयर किए गए कार्ड पर दिखने वाला @हैंडल।",
+        "defaultDescription": "डिफ़ॉल्ट विवरण",
+        "defaultOgImage": "डिफ़ॉल्ट शेयरिंग इमेज",
+        "defaultOgImageHelp": "जब पेज की अपनी इमेज न हो तब इस्तेमाल होती है। 1200 x 630 पिक्सेल सबसे अच्छा है।",
+        "allowIndexing": "सर्च इंजनों को साइट इंडेक्स करने दें",
+        "allowIndexingHelp": "बंद होने पर robots.txt हर क्रॉलर को दूर रहने को कहता है। स्टेजिंग साइटों पर इसे बंद रखें।",
+        "robotsExtra": "robots.txt की अतिरिक्त पंक्तियाँ"
+      },
+      "usingDefaults": "डिफ़ॉल्ट इस्तेमाल हो रहे हैं",
+      "resetToDefaults": "डिफ़ॉल्ट पर लौटाएँ",
+      "resetConfirm": "साइट की अपनी ${setting} सेटिंग हटा दी जाएँगी, और उनकी जगह डिफ़ॉल्ट लागू होंगे।"
+    },
+    "seo": {
+      "title": "SEO",
+      "description": "हर सार्वजनिक पेज के शीर्षक, विवरण, शेयरिंग कार्ड और इंडेक्सिंग। पूरी साइट के डिफ़ॉल्ट सेटिंग स्क्रीन पर हैं।",
+      "create": {
+        "title": "SEO सेटिंग जोड़ें"
+      },
+      "update": {
+        "title": "SEO सेटिंग बदलें"
+      },
+      "createSuccess": "SEO सेटिंग बन गई",
+      "updateSuccess": "SEO सेटिंग सहेज ली गई",
+      "notFound": "ये SEO सेटिंग अब मौजूद नहीं हैं",
+      "allLanguages": "सभी भाषाएँ",
+      "deleteTitle": "SEO सेटिंग हटाएँ",
+      "deleteConfirm": "पेज ${path} साइट के डिफ़ॉल्ट पर लौट जाएगा।",
+      "deleteSuccess": "SEO सेटिंग हटा दी गई",
+      "untitled": "साइट डिफ़ॉल्ट",
+      "indexed": "इंडेक्स किया गया",
+      "form": {
+        "basics": "मूल जानकारी",
+        "basicsHelp": "यह कौन-सा पेज है, और सर्च नतीजों में कैसा दिखता है।",
+        "pathHelp": "भाषा के बिना पेज का पता, जैसे / या /about।",
+        "pathInvalid": "किसी सार्वजनिक पेज का पाथ लिखें, जैसे /about",
+        "titleHelp": "साइट के शीर्षक टेम्पलेट के ज़रिए ब्राउज़र टैब और सर्च नतीजों में दिखता है।",
+        "keywords": "कीवर्ड",
+        "keywordsHelp": "कॉमा से अलग करें।",
+        "characters": "${count} अक्षर (नतीजों में लगभग 155 दिखते हैं)",
+        "social": "सोशल शेयरिंग",
+        "socialHelp": "जब कोई इसका लिंक शेयर करे तो पेज कैसा दिखे। खाली फ़ील्ड मूल जानकारी लेते हैं।",
+        "ogTitle": "शेयरिंग शीर्षक",
+        "ogDescription": "शेयरिंग विवरण",
+        "ogImage": "शेयरिंग इमेज",
+        "ogImageHelp": "खाली छोड़ने पर साइट की डिफ़ॉल्ट इमेज लगेगी। 1200 x 630 पिक्सेल सबसे अच्छा है।",
+        "twitterCard": "X (ट्विटर) कार्ड",
+        "twitterCardLarge": "बड़ी इमेज",
+        "twitterCardSummary": "छोटी इमेज",
+        "indexing": "इंडेक्सिंग और साइटमैप",
+        "indexingHelp": "क्या सर्च इंजन यह पेज दिखाएँ, और साइटमैप इसे कैसे बताए।",
+        "noIndex": "सर्च नतीजों से छिपाएँ (noindex)",
+        "noFollow": "इस पेज के लिंक फ़ॉलो न करें (nofollow)",
+        "includeInSitemap": "साइटमैप में शामिल करें",
+        "canonicalUrl": "कैनोनिकल पता",
+        "canonicalUrlHelp": "खाली छोड़ने पर पेज का अपना पता लगेगा।",
+        "urlInvalid": "https:// से शुरू होने वाला पूरा पता लिखें",
+        "changeFrequency": "बदलाव की आवृत्ति",
+        "frequencyNone": "तय नहीं",
+        "frequency": {
+          "always": "हमेशा",
+          "hourly": "हर घंटे",
+          "daily": "रोज़",
+          "weekly": "साप्ताहिक",
+          "monthly": "मासिक",
+          "yearly": "वार्षिक",
+          "never": "कभी नहीं"
+        },
+        "priority": "प्राथमिकता",
+        "priorityHelp": "0 से 1 तक, आपके दूसरे पेजों की तुलना में।",
+        "priorityInvalid": "0 से 1 के बीच कोई संख्या लिखें",
+        "structuredData": "संरचित डेटा",
+        "structuredDataHelp": "सर्च इंजनों को पेज के बारे में बताने वाला JSON-LD दस्तावेज़, जैसे Organization या Product।",
+        "jsonLdInvalid": "यह मान्य JSON नहीं है",
+        "noImage": "कोई इमेज नहीं",
+        "uploadImage": "इमेज अपलोड करें",
+        "replaceImage": "इमेज बदलें",
+        "removeImage": "इमेज हटाएँ",
+        "imageUnavailable": "छवि उपलब्ध नहीं है",
+        "titleCharacters": "${count} वर्ण (परिणामों में लगभग 60 दिखते हैं)"
+      },
+      "noIndexBadge": "noindex",
+      "empty": "अभी किसी भी पेज की अपनी SEO सेटिंग नहीं है - हर पेज साइट की डिफ़ॉल्ट सेटिंग का उपयोग करता है।"
+    }
+  },
+  "notifications": {
+    "noNotifications": "कोई सूचना नहीं",
+    "notFound": "सूचना नहीं मिली",
+    "viewAll": "सभी सूचनाएं देखें",
+    "markAllRead": "सभी को पढ़ा हुआ चिह्नित करें",
+    "markAsRead": "पढ़ा हुआ चिह्नित करें",
+    "markAsUnread": "अपढ़ा चिह्नित करें",
+    "delete": "हटाएं",
+    "all": "सभी",
+    "read": "पढ़ा हुआ",
+    "unread": "अपठित",
+    "group": "समूह",
+    "metadata": "मेटाडेटा",
+    "markedAsRead": "सूचना पढ़ा हुआ चिह्नित",
+    "markedAsUnread": "सूचना अपढ़ी चिह्नित",
+    "markedAllAsRead": "सभी सूचनाएं पढ़ा हुआ चिह्नित",
+    "deleted": "सूचना हटाई गई",
+    "deleteTitle": "सूचना हटाएं",
+    "deleteConfirm": "क्या आप वाकई इस सूचना को हटाना चाहते हैं?",
+    "markAllReadConfirmTitle": "सभी को पढ़ा हुआ चिह्नित करें",
+    "markAllReadConfirmText": "क्या आप वाकई सभी सूचनाओं को पढ़ा हुआ चिह्नित करना चाहते हैं?",
+    "filterByGroup": "समूह के अनुसार फ़िल्टर करें",
+    "groups": {
+      "inventory": "इन्वेंटरी",
+      "system": "सिस्टम",
+      "payments": "भुगतान",
+      "orders": "ऑर्डर"
+    },
+    "types": {
+      "info": "जानकारी",
+      "warning": "चेतावनी",
+      "error": "त्रुटि",
+      "success": "सफलता"
+    },
+    "inventoryBelowLimit": {
+      "title": "कम इन्वेंटरी चेतावनी",
+      "message": "आइटम न्यूनतम स्टॉक स्तर से नीचे है"
+    },
+    "systemUpdate": {
+      "title": "सिस्टम अपडेट",
+      "message": "एक सिस्टम अपडेट उपलब्ध है"
+    },
+    "orderCompleted": {
+      "title": "ऑर्डर पूर्ण",
+      "message": "आपका ऑर्डर सफलतापूर्वक पूर्ण हुआ"
+    },
+    "paymentFailed": {
+      "title": "भुगतान विफल",
+      "message": "एक भुगतान लेनदेन विफल रहा"
+    },
+    "welcome": {
+      "title": "स्वागत है",
+      "message": "आवेदन में आपका स्वागत है"
+    }
+  },
+  "site": {
+    "nav": {
+      "label": "मुख्य",
+      "home": "होम",
+      "about": "परिचय",
+      "contact": "संपर्क"
+    },
+    "footer": {
+      "tagline": "एक तेज़, सर्च-फ्रेंडली वेबसाइट, जिसमें अकाउंट और एडमिन क्षेत्र पहले से मौजूद हैं।",
+      "navLabel": "फ़ुटर"
+    },
+    "home": {
+      "hero": {
+        "badge": "आपके अगले प्रोजेक्ट के लिए तैयार",
+        "title": "कुछ ऐसा बनाइए जिसे लोग",
+        "highlight": "इस्तेमाल करना पसंद करें",
+        "description": "एक तेज़, सर्च-फ्रेंडली वेबसाइट जिसमें विज़िटर अकाउंट, भाषाएँ और एडमिन क्षेत्र पहले से तैयार हैं, ताकि आप वही बनाना शुरू करें जो आपकी साइट को अलग बनाता है।",
+        "primaryCta": "शुरू करें",
+        "secondaryCta": "और जानें"
+      },
+      "features": {
+        "title": "एक आधुनिक साइट की हर ज़रूरत",
+        "subtitle": "पहले पेज से लेकर एडमिन स्क्रीन तक, बुनियादी काम पूरा और परखा हुआ है।",
+        "items": {
+          "seo": {
+            "title": "सर्च-फ्रेंडली",
+            "description": "हर पेज सर्वर पर रेंडर होता है, और शीर्षक, विवरण, शेयरिंग कार्ड और साइटमैप आप एडमिन क्षेत्र से बदलते हैं।"
+          },
+          "accounts": {
+            "title": "विज़िटर अकाउंट",
+            "description": "साइन अप, साइन इन, ईमेल सत्यापन और पासवर्ड रिकवरी, भूमिकाओं और अनुमतियों के साथ।"
+          },
+          "languages": {
+            "title": "कई भाषाएँ",
+            "description": "हर पेज अपनी चुनी हुई भाषाओं में दिखाएँ, दाएँ से बाएँ वाली भाषाएँ भी, और कोई भी टेक्स्ट बिना डिप्लॉयमेंट के बदलें।"
+          },
+          "admin": {
+            "title": "एडमिन क्षेत्र",
+            "description": "उपयोगकर्ता, भूमिकाएँ, सेटिंग, अनुवाद और सूचनाएँ एक ही जगह से संभालें।"
+          }
+        }
+      },
+      "cta": {
+        "title": "शुरू करने के लिए तैयार हैं?",
+        "description": "एक मिनट में अकाउंट बनाइए और खुद देखिए।",
+        "closedDescription": "देखें कि इसमें क्या शामिल है और सब कुछ एक साथ कैसे काम करता है।"
+      }
+    },
+    "about": {
+      "title": "हमारे बारे में",
+      "intro": "हम एक छोटी टीम हैं जो वेब के लिए भरोसेमंद सॉफ़्टवेयर बनाती है। यह पेज एक शुरुआत है: अपने विज़िटर्स को बताइए कि आप कौन हैं और यह काम क्यों करते हैं।",
+      "mission": {
+        "title": "हमारा मिशन",
+        "text": "अच्छी वेबसाइटें बनाना और चलाना आसान बनाना, ताकि हर प्रोजेक्ट का ज़्यादा समय ज़रूरी विचारों पर लगे।"
+      },
+      "values": {
+        "title": "हमारे मूल्य",
+        "items": {
+          "quality": {
+            "title": "गुणवत्ता",
+            "description": "हम तीन लगभग चलने वाली चीज़ों के बजाय एक ऐसी चीज़ देना पसंद करते हैं जो सच में काम करे।"
+          },
+          "openness": {
+            "title": "खुलापन",
+            "description": "हम अपने फ़ैसले साफ़-साफ़ समझाते हैं और जो सीखते हैं, उसे साझा करते हैं।"
+          },
+          "care": {
+            "title": "परवाह",
+            "description": "हर विज़िटर एक तेज़, साफ़ और सुलभ पेज का हक़दार है।"
+          }
+        }
+      },
+      "contactCta": "संपर्क करें"
+    },
+    "contact": {
+      "title": "हमसे संपर्क करें",
+      "intro": "सवाल, विचार या सुझाव? हमें आपसे सुनकर खुशी होगी, और हम आमतौर पर एक कार्यदिवस में जवाब देते हैं।",
+      "email": {
+        "label": "ईमेल",
+        "value": "hello@example.com"
+      },
+      "phone": {
+        "label": "फ़ोन",
+        "value": "+1 555 0100"
+      },
+      "address": {
+        "label": "पता",
+        "value": "100 Example Street, Springfield"
+      },
+      "hours": {
+        "label": "कार्य समय",
+        "value": "सोमवार से शुक्रवार, 9:00 से 17:00"
+      }
+    },
+    "skipToContent": "सामग्री पर जाएँ"
+  }
+}

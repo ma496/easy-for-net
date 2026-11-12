@@ -1,0 +1,24 @@
+# The site at DOMAIN, one origin for the web app and the API. Caddy redirects HTTP to HTTPS, keeps the
+# browser's Host and sets X-Forwarded-For, -Proto and -Host (the API trusts them under
+# ForwardedHeaders:TrustAllProxies), and proxies WebSockets (the notification hub).
+#
+# Certificates are HTTP-01, one per host, obtained at startup, so no DNS credentials are needed.
+# www.DOMAIN only redirects to DOMAIN. Without a DNS record for www.DOMAIN Caddy cannot obtain that
+# host's certificate and keeps retrying in its log; DOMAIN itself is served regardless.
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	@api path /api/* /hubs/* /hangfire /hangfire/* /health
+	handle @api {
+		reverse_proxy api:8080
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}
+
+www.{$DOMAIN} {
+	redir https://{$DOMAIN}{uri} permanent
+}

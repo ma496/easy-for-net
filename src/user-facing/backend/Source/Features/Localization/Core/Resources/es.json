@@ -1,0 +1,801 @@
+{
+  "brand": {
+    "name": "Easy For Net"
+  },
+  "cookieConsent": {
+    "title": "Valoramos tu privacidad",
+    "description": "Utilizamos cookies para mejorar su experiencia de navegación. Al continuar visitando este sitio, acepta nuestro uso de cookies.",
+    "accept": "Aceptar",
+    "decline": "Rechazar"
+  },
+  "common": {
+    "back": "Atrás",
+    "more": "Más",
+    "list": "Lista",
+    "preview": "Vista previa",
+    "add": "Añadir",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "save": "Guardar",
+    "update": "Actualizar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "search": "Buscar...",
+    "loading": "Cargando...",
+    "success": "Éxito",
+    "error": "Error",
+    "warning": "Advertencia",
+    "info": "Información",
+    "yes": "Sí",
+    "no": "No",
+    "ok": "OK",
+    "retry": "Reintentar",
+    "submit": "Enviar",
+    "actions": "Acciones",
+    "allRightsReserved": "Todos los derechos reservados.",
+    "deleteConfirm": "Sí, eliminarlo",
+    "notifications": "Notificaciones",
+    "viewAll": "Ver todo",
+    "close": "Cerrar",
+    "menu": "Menú",
+    "theme": "Tema",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
+    "themeSystem": "Sistema",
+    "noResults": "No se encontraron resultados",
+    "selectPlaceholder": "Seleccionar…",
+    "noOptions": "Sin opciones",
+    "scrollToTop": "Volver arriba",
+    "collapseSidebar": "Contraer barra lateral",
+    "opensInNewTab": "(se abre en una pestaña nueva)",
+    "goHome": "Ir a la página de inicio"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "dashboard": "Tablero",
+    "dashboardSales": "Ventas",
+    "administration": "Administración",
+    "users": "Usuarios",
+    "roles": "Roles",
+    "rolesList": "Lista",
+    "rolesCreate": "Crear",
+    "rolesUpdate": "Actualizar",
+    "rolesChangePermissions": "Cambiar Permisos",
+    "components": "Componentes",
+    "uiFormElements": "Elementos de Formulario",
+    "uiButtons": "Botones",
+    "uiCards": "Tarjetas",
+    "uiDatePicker": "Selector de Fecha",
+    "uiDateView": "Vista de Fecha",
+    "uiTreeview": "Vista de Árbol",
+    "changePassword": "Cambiar Contraseña",
+    "profile": "Perfil",
+    "uiFileUpload": "Subir Archivo",
+    "uiTooltips": "Tooltips",
+    "usersList": "Lista",
+    "usersCreate": "Crear",
+    "usersUpdate": "Actualizar",
+    "notifications": "Notificaciones",
+    "notificationsList": "Lista",
+    "notificationsDetail": "Detalles",
+    "localization": "Localización",
+    "settings": "Configuración",
+    "admin": "Administración",
+    "viewSite": "Ver sitio",
+    "seo": "SEO",
+    "seoList": "Lista",
+    "seoCreate": "Crear",
+    "seoUpdate": "Actualizar"
+  },
+  "search": {
+    "dashboard": "Tablero",
+    "users": "Usuarios",
+    "usersCreate": "Crear Usuario",
+    "roles": "Roles",
+    "rolesCreate": "Crear Rol",
+    "uiButtons": "Botones UI",
+    "uiCards": "Tarjetas UI",
+    "uiDatePicker": "Selector de Fecha UI",
+    "uiDateView": "Vista de Fecha UI",
+    "uiTreeview": "Vista de Árbol UI",
+    "changePassword": "Cambiar Contraseña",
+    "profile": "Perfil",
+    "notifications": "Notificaciones",
+    "uiFormElements": "Elementos de Formulario UI",
+    "uiFileUpload": "Subida de Archivos UI",
+    "uiTooltips": "Tooltips UI",
+    "localization": "Localización",
+    "settings": "Configuración",
+    "seo": "SEO",
+    "seoCreate": "Añadir ajustes SEO"
+  },
+  "form": {
+    "label": {
+      "username": "Nombre de usuario",
+      "password": "Contraseña",
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "email": "Correo electrónico",
+      "currentPassword": "Contraseña actual",
+      "newPassword": "Nueva contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "roleName": "Nombre del rol",
+      "roleDescription": "Descripción",
+      "roles": "Roles",
+      "isActive": "Activo",
+      "name": "Nombre",
+      "user": "Usuario",
+      "defaultLanguage": "Idioma predeterminado"
+    },
+    "placeholder": {
+      "username": "Ingrese nombre de usuario",
+      "password": "Ingrese contraseña",
+      "firstName": "Ingrese nombre",
+      "lastName": "Ingrese apellido",
+      "email": "Ingrese correo electrónico",
+      "currentPassword": "Ingrese contraseña actual",
+      "newPassword": "Ingrese nueva contraseña",
+      "confirmPassword": "Confirme la contraseña",
+      "roleName": "Ingrese nombre del rol",
+      "roleDescription": "Ingrese descripción del rol",
+      "roles": "Seleccione roles",
+      "user": "Seleccione un usuario"
+    }
+  },
+  "validation": {
+    "required": "Campo obligatorio",
+    "minLength": "El campo debe tener al menos ${min} caracteres",
+    "maxLength": "El campo no debe exceder ${max} caracteres",
+    "email": "Formato de correo inválido",
+    "invalidEmail": "Correo inválido",
+    "mustMatch": "El campo debe coincidir con ${otherField}",
+    "atLeastOneSelected": "Debe seleccionar al menos un elemento",
+    "number": "Debe ser un número",
+    "min": "Debe ser como mínimo ${min}"
+  },
+  "error": {
+    "400": {
+      "title": "Solicitud Incorrecta"
+    },
+    "401": {
+      "title": "No Autorizado",
+      "message": "No está autorizado para acceder a este recurso."
+    },
+    "403": {
+      "title": "Prohibido",
+      "message": "No tiene permiso para acceder a este recurso."
+    },
+    "404": {
+      "title": "No Encontrado",
+      "message": "No se encontró el recurso solicitado."
+    },
+    "413": {
+      "title": "Carga Útil Demasiado Grande",
+      "message": "La carga útil de la solicitud es demasiado grande."
+    },
+    "415": {
+      "title": "Tipo de Medio No Soportado",
+      "message": "El tipo de medio de la solicitud no es soportado."
+    },
+    "500": {
+      "title": "Error Interno del Servidor",
+      "message": "Ocurrió un error al procesar la solicitud."
+    },
+    "connection": {
+      "title": "Error de Conexión",
+      "message": "No se puede conectar al servidor. Verifique su conexión o intente más tarde."
+    },
+    "serviceUnavailable": {
+      "title": "Servicio No Disponible",
+      "message": "El servidor no está accesible en este momento. Intente de nuevo en unos momentos.",
+      "retry": "Reintentar"
+    },
+    "server": {
+      "internalServerError": "Error interno del servidor",
+      "duplicateValue": "Valor duplicado",
+      "duplicatePropertyValue": "Valor de propiedad duplicado",
+      "requiredFieldMissing": "Falta campo obligatorio",
+      "requiredPropertyFieldMissing": "Falta campo de propiedad obligatorio",
+      "referencedRecordNotFound": "Registro referenciado no encontrado",
+      "invalidValueProvided": "Valor proporcionado inválido",
+      "databaseError": "Error de base de datos",
+      "authenticationRequired": "Esta operación requiere iniciar sesión.",
+      "permissionDenied": "Sus roles no otorgan el permiso que requiere esta operación.",
+      "invalidCurrentPassword": "Contraseña actual inválida",
+      "invalidToken": "Token inválido",
+      "tokenExpired": "Token expirado",
+      "payloadTooLarge": "Carga útil demasiado grande",
+      "invalidUsernamePassword": "Usuario o contraseña inválidos",
+      "invalidEmailPassword": "Correo o contraseña inválidos",
+      "userNotActive": "Usuario no activo",
+      "userNotFound": "Usuario no encontrado",
+      "emailAlreadyExists": "El correo ya existe",
+      "usernameAlreadyExists": "El nombre de usuario ya existe",
+      "emailNotVerified": "Correo no verificado",
+      "roleNameAlreadyExists": "El nombre del rol ya existe",
+      "roleNotFound": "Rol no encontrado",
+      "systemCreatedRolePermissionsCannotBeChanged": "Los permisos del rol creado por el sistema no se pueden cambiar",
+      "systemCreatedRoleCannotBeDeleted": "El rol creado por el sistema no se puede eliminar",
+      "systemCreatedRoleCannotBeUpdated": "El rol creado por el sistema no se puede actualizar",
+      "systemCreatedUserCannotBeDeleted": "El usuario creado por el sistema no se puede eliminar",
+      "systemCreatedUserCannotBeUpdated": "El usuario creado por el sistema no se puede actualizar",
+      "concurrentModification": "Otra persona modificó este registro. Recargue e inténtelo de nuevo.",
+      "sessionStoreUnavailable": "El servicio de sesiones no está disponible temporalmente. Inténtalo de nuevo en un momento.",
+      "settingNotFound": "Configuración no encontrada.",
+      "settingPropertyUnknown": "Esta configuración no tiene esa propiedad.",
+      "settingPropertyInvalid": "El valor no es válido para esta propiedad de la configuración.",
+      "settingValueInvalid": "Los valores de la configuración no son válidos.",
+      "signupDisabled": "El registro está desactivado. Pide una cuenta a un administrador.",
+      "emailSmtpServerRequired": "Se requiere un servidor SMTP.",
+      "emailSmtpPortInvalid": "El puerto SMTP debe estar entre 1 y 65535.",
+      "emailSenderEmailInvalid": "El correo del remitente debe ser una dirección de correo electrónico válida.",
+      "seoPageNotFound": "No se encontraron estos ajustes SEO.",
+      "seoPageAlreadyExists": "Esta página ya tiene ajustes SEO para ese idioma.",
+      "invalidJsonLd": "Los datos estructurados no son un JSON válido."
+    }
+  },
+  "table": {
+    "columns": {
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "email": "Correo",
+      "roles": "Roles",
+      "userName": "Usuario",
+      "isActive": "Activo",
+      "name": "Nombre",
+      "description": "Descripción",
+      "userCount": "Usuarios",
+      "type": "Tipo",
+      "title": "Título",
+      "message": "Mensaje",
+      "status": "Estado",
+      "date": "Fecha",
+      "group": "Grupo",
+      "created": "Creado",
+      "updated": "Actualizado",
+      "key": "Clave",
+      "defaultValue": "Valor predeterminado",
+      "override": "Sobrescritura",
+      "path": "Ruta",
+      "language": "Idioma",
+      "indexing": "Indexación",
+      "inSitemap": "En el mapa del sitio"
+    },
+    "pagination": {
+      "showingEntries": "Mostrando ${from} a ${to} de ${totalRecords} entradas"
+    },
+    "noRecords": "No se encontraron registros",
+    "searchPlaceholder": "Buscar...",
+    "sort": {
+      "label": "Ordenar por",
+      "none": "Orden predeterminado",
+      "ascending": "Ascendente — toque para ordenar de forma descendente",
+      "descending": "Descendente — toque para ordenar de forma ascendente"
+    },
+    "export": {
+      "button": "Exportar",
+      "excel": "Excel",
+      "csv": "CSV",
+      "currentPage": "Página Actual",
+      "allRecords": "Todos los Registros"
+    },
+    "actions": "Acciones",
+    "createLink": "Crear",
+    "filter": {
+      "button": "Filtros",
+      "all": "Todos",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "allRoles": "Todos los Roles",
+      "activeStatus": "Estado Activo",
+      "role": "Rol",
+      "selectRole": "Seleccionar Rol",
+      "search": "Buscar",
+      "clear": "Limpiar"
+    },
+    "loadFailed": "No se pudieron cargar los registros",
+    "loadFailedHint": "Comprueba tu conexión e inténtalo de nuevo."
+  },
+  "file": {
+    "upload": "Subir Archivo",
+    "deleteTitle": "Eliminar Archivo",
+    "deleteConfirm": "¿Está seguro de que desea eliminar este archivo?",
+    "tooLarge": "El archivo es demasiado grande. Solo puede subir archivos de hasta ${max} MB."
+  },
+  "page": {
+    "dashboard": {
+      "title": "Tablero",
+      "sales": "Ventas",
+      "revenue": "Ingresos",
+      "salesByCategory": "Ventas por Categoría",
+      "dailySales": "Ventas Diarias",
+      "summary": "Resumen",
+      "totalOrders": "Total de Pedidos",
+      "totalProfit": "Beneficio Total",
+      "income": "Ingresos",
+      "expenses": "Gastos",
+      "profit": "Beneficio",
+      "weekly": "Semanal",
+      "monthly": "Mensual",
+      "yearly": "Anual",
+      "viewReport": "Ver Informe",
+      "editReport": "Editar Informe",
+      "markAsDone": "Marcar como Hecho",
+      "goToColumns": "Ir a columnas para detalles",
+      "description": "Un resumen de ingresos, pedidos y ventas."
+    },
+    "users": {
+      "title": "Usuarios",
+      "createSuccess": "Usuario creado exitosamente",
+      "updateSuccess": "Usuario actualizado exitosamente",
+      "deleteTitle": "Eliminar Usuario",
+      "deleteConfirm": "¿Está seguro de que desea eliminar este usuario?",
+      "deleteSuccess": "Usuario eliminado exitosamente",
+      "create": {
+        "title": "Crear usuario"
+      },
+      "update": {
+        "title": "Actualizar usuario"
+      },
+      "accountDetails": "Datos de la cuenta",
+      "passwordDescription": "La contraseña con la que este usuario inicia sesión.",
+      "isActiveDescription": "Un usuario inactivo no puede iniciar sesión."
+    },
+    "roles": {
+      "title": "Roles",
+      "createSuccess": "Rol creado exitosamente",
+      "updateSuccess": "Rol actualizado exitosamente",
+      "deleteTitle": "Eliminar Rol",
+      "deleteConfirm": "¿Está seguro de que desea eliminar este rol?",
+      "deleteSuccess": "Rol eliminado exitosamente",
+      "notFound": "Rol no encontrado",
+      "permissions": "Permisos",
+      "permissionsUpdateSuccess": "Permisos actualizados exitosamente",
+      "changePermissions": {
+        "title": "Cambiar permisos"
+      },
+      "create": {
+        "title": "Crear rol"
+      },
+      "update": {
+        "title": "Actualizar rol"
+      },
+      "permissionGroups": "Grupos de Permisos"
+    },
+    "profile": {
+      "title": "Perfil",
+      "description": "Actualiza tu información personal",
+      "updateSuccess": "Perfil actualizado exitosamente",
+      "deleteAvatarTitle": "Eliminar Foto de Perfil",
+      "deleteAvatarConfirm": "¿Está seguro de que desea eliminar su foto de perfil?",
+      "altImage": "Imagen de Perfil",
+      "changePasswordSuccess": "Contraseña cambiada exitosamente"
+    },
+    "verifyEmail": {
+      "verifying": "Verificando su correo...",
+      "verifiedTitle": "¡Correo Verificado!",
+      "verifiedMessage": "Su correo ha sido verificado exitosamente. Ahora puede iniciar sesión.",
+      "buttonSignin": "Iniciar Sesión Ahora",
+      "resendButton": "Reenviar Correo de Verificación",
+      "resendSuccess": "El correo de verificación ha sido reenviado.",
+      "resendWait": "Por favor espere ${seconds}s",
+      "notVerifiedTitle": "Verificación de Correo Requerida",
+      "notVerifiedMessage": "Su dirección de correo no está verificada. Por favor revise su bandeja de entrada o haga clic abajo para reenviar.",
+      "failedTitle": "Verificación Fallida",
+      "failedMessage": "El enlace de verificación es inválido o ha expirado.",
+      "title": "Verificar correo electrónico"
+    },
+    "auth": {
+      "signin": {
+        "title": "Iniciar Sesión",
+        "description": "Ingrese sus credenciales para iniciar sesión",
+        "button": "Iniciar Sesión",
+        "forgotPassword": "¿Olvidó su contraseña?",
+        "signupLink": "Registrarse",
+        "noAccount": "¿No tiene una cuenta?",
+        "backToSignin": "Volver a Iniciar Sesión"
+      },
+      "signup": {
+        "title": "Registrarse",
+        "description": "Ingrese su correo electrónico y contraseña para registrarse",
+        "button": "Registrarse",
+        "signinLink": "Iniciar Sesión",
+        "alreadyHaveAccount": "¿Ya tiene una cuenta?",
+        "successTitle": "¡Éxito!",
+        "successVerifyEmail": "¡Registro exitoso! Por favor verifique su correo electrónico.",
+        "successMessage": "¡Registro exitoso! Vaya a la página de inicio de sesión.",
+        "disabledTitle": "El registro está cerrado",
+        "disabledMessage": "Las cuentas nuevas las crea un administrador. Si ya tienes una cuenta, inicia sesión.",
+        "disabledAction": "Ir a iniciar sesión"
+      },
+      "forgotPassword": {
+        "title": "Olvidé mi Contraseña",
+        "description": "Ingrese su correo electrónico para restablecer su contraseña",
+        "button": "Enviar Enlace de Restablecimiento",
+        "success": "Enlace de restablecimiento enviado",
+        "checkEmail": "Revise su correo electrónico para ver las instrucciones"
+      },
+      "resetPassword": {
+        "title": "Restablecer Contraseña",
+        "description": "Ingrese su nueva contraseña para restablecer su cuenta",
+        "button": "Restablecer Contraseña",
+        "success": "Contraseña restablecida exitosamente",
+        "hasBeenReset": "Su contraseña ha sido restablecida exitosamente"
+      },
+      "signout": "Cerrar Sesión",
+      "unauthorized": {
+        "title": "No autorizado"
+      }
+    },
+    "changePassword": {
+      "title": "Cambiar contraseña",
+      "description": "Asegura tu cuenta manteniéndola segura"
+    },
+    "ui": {
+      "buttons": {
+        "title": "Botones de UI"
+      },
+      "cards": {
+        "title": "Tarjetas de UI"
+      },
+      "datePicker": {
+        "title": "Selector de fecha de UI"
+      },
+      "dateView": {
+        "title": "Vista de fecha de UI"
+      },
+      "fileUpload": {
+        "title": "Subida de archivos de UI"
+      },
+      "formElements": {
+        "title": "Elementos de formulario de UI"
+      },
+      "treeview": {
+        "title": "Vista de árbol de UI"
+      },
+      "tooltip": {
+        "title": "UI Tooltip"
+      }
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "detail": {
+        "title": "Detalles de la notificación"
+      },
+      "viewAll": "Ver todas las notificaciones"
+    },
+    "localization": {
+      "title": "Localización",
+      "readOnly": "Puede ver esta configuración, pero no modificarla.",
+      "tabs": {
+        "texts": "Textos",
+        "languages": "Idiomas"
+      },
+      "texts": {
+        "onlyOverridden": "Solo los sobrescritos",
+        "setHere": "Definido aquí",
+        "notOverridden": "No sobrescrito",
+        "editTitle": "Editar texto",
+        "defaultLabel": "Valor predeterminado",
+        "overrideLabel": "Su texto",
+        "placeholders": "Conserve estos marcadores de posición:",
+        "placeholderMissing": "Falta un marcador de posición: la aplicación lo mostrará vacío.",
+        "reset": "Restablecer al valor heredado",
+        "resetTitle": "¿Restablecer este texto?",
+        "resetConfirm": "Esto eliminará su valor personalizado y volverá al valor heredado.",
+        "resetSuccess": "Texto restablecido al valor heredado",
+        "saveSuccess": "Texto guardado",
+        "noOverrides": "Todavía no se ha sobrescrito nada en este idioma."
+      },
+      "languages": {
+        "inherited": "Heredado",
+        "inheritedFromShipped": "Integrado: todos los idiomas, sin predeterminado",
+        "inheritedSummary": "Heredado: ${languages} · Predeterminado: ${default}",
+        "customize": "Personalizar",
+        "customized": "Personalizado",
+        "resetToInherited": "Restablecer a lo heredado",
+        "resetTitle": "¿Restablecer los idiomas?",
+        "resetConfirm": "Esto eliminará su personalización y volverá a lo heredado.",
+        "resetSuccess": "Idiomas restablecidos a la configuración heredada",
+        "enabled": "Idiomas habilitados",
+        "enabledCount": "${count} de ${total} habilitados",
+        "rtl": "De derecha a izquierda",
+        "atLeastOne": "Debe permanecer habilitado al menos un idioma",
+        "noDefault": "Ninguno: usar el idioma del navegador del visitante",
+        "defaultCleared": "El idioma predeterminado se borró porque acaba de deshabilitarse",
+        "currentWillSwitch": "El idioma en el que está viendo esta pantalla se está deshabilitando; se le cambiará al predeterminado.",
+        "unsaved": "Tiene cambios sin guardar",
+        "saveSuccess": "Idiomas actualizados"
+      }
+    },
+    "settings": {
+      "title": "Configuración",
+      "readOnly": "Puede ver esta configuración, pero no modificarla.",
+      "empty": "No hay configuraciones disponibles",
+      "customized": "Personalizado",
+      "source": {
+        "own": "Definido aquí",
+        "default": "Predeterminado"
+      },
+      "changed": "Modificado",
+      "unsaved": "Cambios sin guardar",
+      "discard": "Descartar cambios",
+      "resetTitle": "¿Restablecer la configuración de ${setting}?",
+      "resetConfirmButton": "Sí, restablecer",
+      "resetSuccess": "Configuración de ${setting} restablecida a los valores heredados",
+      "saveSuccess": "Configuración de ${setting} guardada",
+      "general": {
+        "title": "General",
+        "description": "Opciones que se aplican en toda la aplicación.",
+        "isEmailVerificationRequired": "Exigir un correo electrónico verificado para iniciar sesión",
+        "isEmailVerificationRequiredHelp": "Si está activado, una cuenta debe confirmar su correo electrónico antes de poder iniciar sesión.",
+        "isSignupEnabled": "Permitir el registro",
+        "isSignupEnabledHelp": "Permite que cualquiera cree una cuenta desde la página de registro."
+      },
+      "email": {
+        "title": "Correo electrónico",
+        "description": "El servidor SMTP y el remitente a través de los cuales se envía el correo saliente.",
+        "smtpServer": "Servidor SMTP",
+        "smtpPort": "Puerto SMTP",
+        "smtpUsername": "Usuario SMTP",
+        "smtpPassword": "Contraseña SMTP",
+        "senderEmail": "Correo del remitente",
+        "senderName": "Nombre del remitente",
+        "portInvalid": "Introduzca un número entero entre 1 y 65535",
+        "passwordSet": "Definida",
+        "passwordNotSet": "No definida",
+        "passwordKeepPlaceholder": "Déjelo en blanco para conservar la contraseña actual",
+        "passwordNotSetPlaceholder": "No definida",
+        "passwordClear": "Borrar",
+        "passwordWillClear": "Se borrará al guardar",
+        "passwordUndo": "Deshacer",
+        "passwordInheritHint": "La contraseña solo se hereda junto con el servidor, el puerto y el usuario. Si cambia alguno de ellos aquí sin introducir una contraseña, no se usará ninguna contraseña."
+      },
+      "seo": {
+        "title": "SEO",
+        "description": "Valores predeterminados del sitio para buscadores y redes sociales. Cada página puede cambiarlos en la pantalla SEO.",
+        "siteName": "Nombre del sitio",
+        "siteNameHelp": "Aparece en los títulos y al compartir una página.",
+        "titleTemplate": "Plantilla de título",
+        "titleTemplateHelp": "Por ejemplo \"%s | Mi sitio\". %s se sustituye por el título de la página.",
+        "titleTemplateInvalid": "La plantilla debe contener %s, donde va el título de cada página",
+        "siteUrl": "Dirección del sitio",
+        "siteUrlHelp": "La dirección pública con la que se crean los enlaces canónicos y el mapa del sitio.",
+        "siteUrlInvalid": "Introduce la dirección del sitio, como https://www.example.com",
+        "twitterSite": "Cuenta de X (Twitter)",
+        "twitterSiteHelp": "El @usuario que aparece en las tarjetas compartidas.",
+        "defaultDescription": "Descripción predeterminada",
+        "defaultOgImage": "Imagen predeterminada para compartir",
+        "defaultOgImageHelp": "Se usa cuando una página no tiene imagen propia. Lo ideal es 1200 x 630 píxeles.",
+        "allowIndexing": "Permitir que los buscadores indexen el sitio",
+        "allowIndexingHelp": "Si está desactivado, robots.txt pide a todos los rastreadores que no entren. Desactívalo en sitios de pruebas.",
+        "robotsExtra": "Líneas adicionales de robots.txt"
+      },
+      "usingDefaults": "Valores predeterminados",
+      "resetToDefaults": "Restablecer valores predeterminados",
+      "resetConfirm": "Se eliminarán los ajustes de ${setting} propios del sitio y se aplicarán los predeterminados."
+    },
+    "seo": {
+      "title": "SEO",
+      "description": "Títulos, descripciones, tarjetas para compartir e indexación de cada página pública. Los valores predeterminados del sitio están en Ajustes.",
+      "create": {
+        "title": "Añadir ajustes SEO"
+      },
+      "update": {
+        "title": "Editar ajustes SEO"
+      },
+      "createSuccess": "Ajustes SEO creados",
+      "updateSuccess": "Ajustes SEO guardados",
+      "notFound": "Estos ajustes SEO ya no existen",
+      "allLanguages": "Todos los idiomas",
+      "deleteTitle": "Eliminar ajustes SEO",
+      "deleteConfirm": "La página ${path} volverá a los valores predeterminados del sitio.",
+      "deleteSuccess": "Ajustes SEO eliminados",
+      "untitled": "Predeterminado del sitio",
+      "indexed": "Indexada",
+      "form": {
+        "basics": "Lo básico",
+        "basicsHelp": "Qué página es y cómo aparece en los resultados de búsqueda.",
+        "pathHelp": "La dirección de la página sin el idioma, como / o /about.",
+        "pathInvalid": "Introduce la ruta de una página pública, como /about",
+        "titleHelp": "Se muestra en la pestaña del navegador y en los resultados, a través de la plantilla de título del sitio.",
+        "keywords": "Palabras clave",
+        "keywordsHelp": "Separadas por comas.",
+        "characters": "${count} caracteres (se muestran unos 155 en los resultados)",
+        "social": "Compartir en redes",
+        "socialHelp": "Cómo se ve la página cuando alguien comparte un enlace. Los campos vacíos usan lo básico.",
+        "ogTitle": "Título para compartir",
+        "ogDescription": "Descripción para compartir",
+        "ogImage": "Imagen para compartir",
+        "ogImageHelp": "Si se deja vacío se usa la del sitio. Lo ideal es 1200 x 630 píxeles.",
+        "twitterCard": "Tarjeta de X (Twitter)",
+        "twitterCardLarge": "Imagen grande",
+        "twitterCardSummary": "Imagen pequeña",
+        "indexing": "Indexación y mapa del sitio",
+        "indexingHelp": "Si los buscadores muestran la página y cómo la describe el mapa del sitio.",
+        "noIndex": "Ocultar de los resultados (noindex)",
+        "noFollow": "No seguir los enlaces de esta página (nofollow)",
+        "includeInSitemap": "Incluir en el mapa del sitio",
+        "canonicalUrl": "Dirección canónica",
+        "canonicalUrlHelp": "Si se deja vacío se usa la dirección de la propia página.",
+        "urlInvalid": "Introduce una dirección completa que empiece por https://",
+        "changeFrequency": "Frecuencia de cambio",
+        "frequencyNone": "Sin indicar",
+        "frequency": {
+          "always": "Siempre",
+          "hourly": "Cada hora",
+          "daily": "Diaria",
+          "weekly": "Semanal",
+          "monthly": "Mensual",
+          "yearly": "Anual",
+          "never": "Nunca"
+        },
+        "priority": "Prioridad",
+        "priorityHelp": "De 0 a 1, en relación con tus otras páginas.",
+        "priorityInvalid": "Introduce un número de 0 a 1",
+        "structuredData": "Datos estructurados",
+        "structuredDataHelp": "Un documento JSON-LD que describe la página a los buscadores, como Organization o Product.",
+        "jsonLdInvalid": "Esto no es un JSON válido",
+        "noImage": "Sin imagen",
+        "uploadImage": "Subir imagen",
+        "replaceImage": "Reemplazar imagen",
+        "removeImage": "Quitar imagen",
+        "imageUnavailable": "Imagen no disponible",
+        "titleCharacters": "${count} caracteres (se muestran unos 60 en los resultados)"
+      },
+      "noIndexBadge": "noindex",
+      "empty": "Ninguna página tiene todavía su propia configuración SEO: todas usan los valores predeterminados del sitio."
+    }
+  },
+  "notifications": {
+    "noNotifications": "No hay notificaciones",
+    "notFound": "Notificación no encontrada",
+    "viewAll": "Ver todas las notificaciones",
+    "markAllRead": "Marcar todo como leído",
+    "markAsRead": "Marcar como leído",
+    "markAsUnread": "Marcar como no leído",
+    "delete": "Eliminar",
+    "all": "Todos",
+    "read": "Leído",
+    "unread": "No leído",
+    "group": "Grupo",
+    "metadata": "Metadatos",
+    "markedAsRead": "Notificación marcada como leída",
+    "markedAsUnread": "Notificación marcada como no leída",
+    "markedAllAsRead": "Todas las notificaciones marcadas como leídas",
+    "deleted": "Notificación eliminada",
+    "deleteTitle": "Eliminar notificación",
+    "deleteConfirm": "¿Está seguro de que desea eliminar esta notificación?",
+    "markAllReadConfirmTitle": "Marcar todo como leído",
+    "markAllReadConfirmText": "¿Está seguro de que desea marcar todas las notificaciones como leídas?",
+    "filterByGroup": "Filtrar por grupo",
+    "groups": {
+      "inventory": "Inventario",
+      "system": "Sistema",
+      "payments": "Pagos",
+      "orders": "Pedidos"
+    },
+    "types": {
+      "info": "Información",
+      "warning": "Advertencia",
+      "error": "Error",
+      "success": "Éxito"
+    },
+    "inventoryBelowLimit": {
+      "title": "Alerta de inventario bajo",
+      "message": "El artículo está por debajo del nivel mínimo de stock"
+    },
+    "systemUpdate": {
+      "title": "Actualización del sistema",
+      "message": "Hay una actualización del sistema disponible"
+    },
+    "orderCompleted": {
+      "title": "Pedido completado",
+      "message": "Su pedido se ha completado correctamente"
+    },
+    "paymentFailed": {
+      "title": "Pago fallido",
+      "message": "Ha fallado una transacción de pago"
+    },
+    "welcome": {
+      "title": "Bienvenido",
+      "message": "Bienvenido a la aplicación"
+    }
+  },
+  "site": {
+    "nav": {
+      "label": "Principal",
+      "home": "Inicio",
+      "about": "Acerca de",
+      "contact": "Contacto"
+    },
+    "footer": {
+      "tagline": "Un sitio web rápido y optimizado para buscadores, con cuentas y área de administración incluidas.",
+      "navLabel": "Pie de página"
+    },
+    "home": {
+      "hero": {
+        "badge": "Listo para tu próximo proyecto",
+        "title": "Crea algo que la gente",
+        "highlight": "disfrute usar",
+        "description": "Un sitio rápido y optimizado para buscadores, con cuentas de visitantes, idiomas y área de administración ya listos, para que empieces por lo que hace único al tuyo.",
+        "primaryCta": "Empezar",
+        "secondaryCta": "Saber más"
+      },
+      "features": {
+        "title": "Todo lo que necesita un sitio moderno",
+        "subtitle": "La base está hecha y probada, desde la primera página hasta las pantallas de administración.",
+        "items": {
+          "seo": {
+            "title": "Optimizado para buscadores",
+            "description": "Cada página se genera en el servidor, con títulos, descripciones, tarjetas para compartir y un mapa del sitio que editas desde la administración."
+          },
+          "accounts": {
+            "title": "Cuentas de visitantes",
+            "description": "Registro, inicio de sesión, verificación de correo y recuperación de contraseña, con roles y permisos detrás."
+          },
+          "languages": {
+            "title": "Varios idiomas",
+            "description": "Sirve cada página en los idiomas que elijas, incluidos los de derecha a izquierda, y edita cualquier texto sin desplegar."
+          },
+          "admin": {
+            "title": "Área de administración",
+            "description": "Gestiona usuarios, roles, ajustes, traducciones y notificaciones desde un solo lugar."
+          }
+        }
+      },
+      "cta": {
+        "title": "¿Listo para empezar?",
+        "description": "Crea una cuenta en un minuto y compruébalo tú mismo.",
+        "closedDescription": "Descubre qué incluye y cómo encaja todo."
+      }
+    },
+    "about": {
+      "title": "Sobre nosotros",
+      "intro": "Somos un pequeño equipo que crea software fiable para la web. Esta página es un punto de partida: cuenta a tus visitantes quién eres y por qué haces lo que haces.",
+      "mission": {
+        "title": "Nuestra misión",
+        "text": "Hacer que los buenos sitios web sean más fáciles de crear y de mantener, para dedicar más de cada proyecto a las ideas que importan."
+      },
+      "values": {
+        "title": "Lo que valoramos",
+        "items": {
+          "quality": {
+            "title": "Calidad",
+            "description": "Preferimos entregar una cosa que funciona que tres que casi funcionan."
+          },
+          "openness": {
+            "title": "Transparencia",
+            "description": "Explicamos nuestras decisiones con claridad y compartimos lo que aprendemos."
+          },
+          "care": {
+            "title": "Cuidado",
+            "description": "Cada visitante merece una página rápida, clara y accesible."
+          }
+        }
+      },
+      "contactCta": "Ponte en contacto"
+    },
+    "contact": {
+      "title": "Contáctanos",
+      "intro": "¿Preguntas, ideas o comentarios? Nos encantará saber de ti; solemos responder en un día laborable.",
+      "email": {
+        "label": "Correo electrónico",
+        "value": "hello@example.com"
+      },
+      "phone": {
+        "label": "Teléfono",
+        "value": "+1 555 0100"
+      },
+      "address": {
+        "label": "Dirección",
+        "value": "100 Example Street, Springfield"
+      },
+      "hours": {
+        "label": "Horario",
+        "value": "De lunes a viernes, de 9:00 a 17:00"
+      }
+    },
+    "skipToContent": "Saltar al contenido"
+  }
+}

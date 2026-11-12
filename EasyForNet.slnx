@@ -10,6 +10,13 @@
   <Folder Name="/MultiTenant/Tests/">
     <Project Path="src/multi-tenant/backend/Tests/Backend.Tests.csproj" />
   </Folder>
+  <Folder Name="/UserFacing/" />
+  <Folder Name="/UserFacing/Source/">
+    <Project Path="src/user-facing/backend/Source/Backend.csproj" />
+  </Folder>
+  <Folder Name="/UserFacing/Tests/">
+    <Project Path="src/user-facing/backend/Tests/Backend.Tests.csproj" />
+  </Folder>
   <Folder Name="/Tool/">
     <Project Path="tool/EasyForNetTool.Tests/EasyForNetTool.Tests.csproj" />
     <Project Path="tool/EasyForNetTool/EasyForNetTool.csproj" />

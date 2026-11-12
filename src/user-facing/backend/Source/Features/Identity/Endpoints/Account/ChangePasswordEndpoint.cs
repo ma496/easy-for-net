@@ -1,0 +1,82 @@
+using Backend.Features.Identity.Core;
+using Backend.Features.Identity.Core.Sessions;
+
+namespace Backend.Features.Identity.Endpoints.Account;
+
+/// <summary>
+/// Authenticated POST endpoint that changes the current user's password after verifying the
+/// existing one.
+/// </summary>
+/// <remarks>
+/// Once the new password is saved, every other session of the account ends - its access token answers
+/// 401 and its refresh token is refused - so whoever held the old password is locked out. The session
+/// making the change is kept, so the person changing it is not signed out by doing so.
+/// </remarks>
+sealed class ChangePasswordEndpoint(AppDbContext dbContext,
+                                    ICurrentUserService currentUserService,
+                                    IUserService userService,
+                                    ISessionRevocationService sessionRevocationService,
+                                    IAuthTokenService authTokenService)
+    : Endpoint<ChangePasswordRequest, EmptyResponse>
+{
+    public override void Configure()
+    {
+        Post("change-password");
+        Group<AccountGroup>();
+    }
+
+    public override async Task HandleAsync(ChangePasswordRequest request, CancellationToken cancellationToken)
+    {
+        var userId = currentUserService.GetCurrentUserId();
+        var user = await dbContext.Users.FindAsync([userId], cancellationToken);
+        if (user is null)
+        {
+            await Send.NotFoundAsync(cancellationToken);
+            return;
+        }
+        var verified = await userService.ValidatePasswordAsync(user, request.CurrentPassword);
+        if (!verified)
+        {
+            this.ThrowError(x => x.CurrentPassword, ErrorCodes.InvalidCurrentPassword);
+            return;
+        }
+        await userService.UpdatePasswordAsync(user, request.NewPassword);
+        if (SessionClaims.ReadSessionId(User) is { } currentSessionId)
+        {
+            await sessionRevocationService.RevokeUserExceptAsync(user.Id, currentSessionId, cancellationToken);
+
+            // The change rotated the account's security stamp, which refuses every refresh token issued
+            // before it and every switch made from a session minted before it - this session's too, unless its
+            // row and its record are moved onto the new stamp.
+            await authTokenService.RestampSessionAsync(user.Id, currentSessionId, user.SecurityStamp, cancellationToken);
+        }
+        else
+        {
+            await sessionRevocationService.RevokeUserAsync(user.Id, cancellationToken);
+        }
+        await Send.OkAsync(cancellationToken);
+    }
+}
+
+/// <summary>
+/// Request payload for changing a password, containing the current and new password values.
+/// </summary>
+sealed class ChangePasswordRequest
+{
+    public string CurrentPassword { get; set; } = null!;
+    public string NewPassword { get; set; } = null!;
+}
+
+/// <summary>
+/// FluentValidation rules for <see cref="ChangePasswordRequest"/>, enforcing presence of
+/// the current password and a minimum/maximum length for the new password.
+/// </summary>
+sealed class ChangePasswordValidator : Validator<ChangePasswordRequest>
+{
+    public ChangePasswordValidator()
+    {
+        RuleFor(x => x.CurrentPassword).NotEmpty();
+        RuleFor(x => x.NewPassword).NotEmpty().MinimumLength(8).MaximumLength(50);
+    }
+}
+

@@ -83,6 +83,9 @@ public class TemplateLayoutTests
             Assert.Equal("src/frontend/web", apps[0].GetProperty("web").GetString());
             Assert.Equal(firstHost, apps[0].GetProperty("devHosts")[0].GetString());
             Assert.True(doc.RootElement.TryGetProperty("departments", out _));
+            var skills = doc.RootElement.GetProperty("skills").EnumerateArray().Select(s => s.GetProperty("skill").GetString()).ToList();
+            Assert.Contains("backend-endpoint", skills);
+            Assert.Empty(skills.Intersect(ProjectTemplate.Find(templateName).ExcludedSkills));
             Assert.DoesNotContain("\\u", text);
             Assert.EndsWith("}\n", text);
         }
@@ -90,6 +93,41 @@ public class TemplateLayoutTests
         {
             Directory.Delete(dir, true);
         }
+    }
+
+    /// <summary>
+    /// Tests that the tool carries each template's CLAUDE.md and README.md, which the generator writes
+    /// out by resource name: a missing one would fail only when a project is created.
+    /// </summary>
+    [Theory]
+    [InlineData("multi-tenant")]
+    [InlineData("user-facing")]
+    public void Embedded_Files_Exist_For_Every_Template(string templateName)
+    {
+        var template = ProjectTemplate.Find(templateName);
+        var assembly = typeof(CreateProjectGenerator).Assembly;
+        var names = assembly.GetManifestResourceNames();
+
+        Assert.Contains($"EasyForNetTool.{template.ClaudeResource}", names);
+        Assert.Contains($"EasyForNetTool.{template.ReadmeResource}", names);
+    }
+
+    /// <summary>
+    /// Tests that each template's example pages are where the generator deletes them from, so moving
+    /// them without updating <see cref="ProjectTemplate.ExamplePagesPath"/> fails here rather than
+    /// shipping them silently in every generated project.
+    /// </summary>
+    [Theory]
+    [InlineData("multi-tenant")]
+    [InlineData("user-facing")]
+    public void ExamplePagesPath_Exists_In_The_Template(string templateName)
+    {
+        var template = ProjectTemplate.Find(templateName);
+        var root = Path.GetDirectoryName(CustomizeAppSettingsTests.FindTemplateFile("agentic.config.json"))!;
+
+        var path = Path.Combine([root, "src", template.Name, "frontend", "web", .. template.ExamplePagesPath]);
+
+        Assert.True(Directory.Exists(path), $"{path} does not exist.");
     }
 
     private static string CreateTempDir()

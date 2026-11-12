@@ -1,0 +1,21 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+
+  // A self-contained server in .next/standalone, which the production Docker image runs
+  output: 'standalone',
+
+  // Enable Typed Routes (stable in Next.js 15.5)
+  typedRoutes: true,
+
+  experimental: {
+    // Optional: Enable Turbopack for development (beta)
+    // turbo: {
+    //   rules: {
+    //     // Custom Turbopack rules if needed
+    //   }
+    // }
+  },
+};
+
+module.exports = nextConfig;

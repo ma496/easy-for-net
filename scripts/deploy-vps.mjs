@@ -14,9 +14,16 @@
  * at the server, the platform's host and *.<domain>; the deploy checks both (the wildcard through
  * a random label) and stops when either is missing.
  *
+ * Single-domain projects (the user-facing template: a docker-compose.coolify.yml that hands the API
+ * no TENANT_URL_TEMPLATE) are served at --domain itself instead, and with --www also at
+ * www.<domain>, which redirects to it. Their DNS needs an A record for the domain (and one for
+ * www.<domain> with --www); certificates are HTTP-01 per host, so the platform subdomain, the
+ * wildcard record, the tenants' router and the DNS and GoDaddy flags do not apply and are refused.
+ *
  * Options: --host (server IP or name), --user (SSH user, default root; any other needs sudo),
  * --port (SSH port, default 22), --identity (SSH private key file), --domain (see above),
- * --platform-subdomain (default app, see above), --email (Coolify's administrator account),
+ * --platform-subdomain (default app, see above), --www (single-domain only, see above),
+ * --email (Coolify's administrator account),
  * --repo (default: the origin remote), --branch (default: the base branch), --name (Coolify
  * project/application, default: from the domain), --dns-provider and --dns-token (optional, see
  * below), --godaddy-key and --godaddy-secret (optional, see below), --yes (no confirmations).
@@ -84,6 +91,8 @@ import {
   repoUrls,
   REMOTE_DNS_TOKEN,
   REMOTE_SCRIPT,
+  SITE_SINGLE,
+  siteModeOf,
   wildcardRecordName,
   zoneCandidates,
 } from "./lib/deploy-vps.mjs";
@@ -93,7 +102,7 @@ import { sshHostName } from "./lib/remote.mjs";
 
 const COMPOSE_FILE = "docker-compose.coolify.yml";
 const SAVED_DIR = join(REPO_ROOT, ".deploy", "vps");
-const SAVED_KEYS = ["host", "user", "port", "identity", "domain", "platform-subdomain", "repo", "branch", "name", "email"];
+const SAVED_KEYS = ["host", "user", "port", "identity", "domain", "platform-subdomain", "www", "repo", "branch", "name", "email"];
 
 const log = (message = "") => console.log(message);
 const fail = (message) => {
@@ -109,6 +118,20 @@ if (flags.help) {
   process.exit(0);
 }
 if (errors.length) fail(`${errors.join("; ")} (npm run deploy:vps -- --help)`);
+
+// The shape of the deployment is the project's own: a stack that hands the API no tenant template
+// serves one site at the domain itself, with none of the multi-tenant parts below.
+const composePath = join(REPO_ROOT, COMPOSE_FILE);
+const single = existsSync(composePath) && siteModeOf(readFileSync(composePath, "utf8")) === SITE_SINGLE;
+if (single) {
+  const tenantOnly = ["platform-subdomain", "dns-provider", "dns-token", "godaddy-key", "godaddy-secret"].filter((k) => given[k]);
+  if (tenantOnly.length) {
+    fail(`this project serves one domain (${COMPOSE_FILE} names no TENANT_URL_TEMPLATE): ${tenantOnly.map((k) => `--${k}`).join(", ")} ` +
+      "apply only to multi-tenant deployments; its certificates are HTTP-01, with no DNS credentials");
+  }
+} else if (flags.www) {
+  fail("--www applies only to a single-domain project; every subdomain of a multi-tenant deployment is a tenant's");
+}
 // Read once, never saved and never printed: only the uploaded token file carries it to the server.
 // The token is best given as EFN_DNS_TOKEN: a command-line argument stays in the shell's history,
 // the process list and npm's debug log.
@@ -123,8 +146,8 @@ delete given["dns-token"];
 // variables are taken from that file; nothing else in it is read into the process. They also stand
 // in for --dns-provider godaddy and its token, and let the deploy create the wildcard record.
 const envFile = join(REPO_ROOT, ".env");
-const fromEnvFile = existsSync(envFile) ? readDotenvValues(readFileSync(envFile, "utf8"), ["GODADDY_API_KEY", "GODADDY_API_SECRET"]) : {};
-const found = godaddyCredentials({ given, env: process.env, dotenv: fromEnvFile, dnsProvider, dnsToken });
+const fromEnvFile = !single && existsSync(envFile) ? readDotenvValues(readFileSync(envFile, "utf8"), ["GODADDY_API_KEY", "GODADDY_API_SECRET"]) : {};
+const found = single ? {} : godaddyCredentials({ given, env: process.env, dotenv: fromEnvFile, dnsProvider, dnsToken });
 delete given["godaddy-key"];
 delete given["godaddy-secret"];
 if (found.error) fail(found.error);
@@ -187,7 +210,13 @@ opts.user ||= "root";
 opts.port ||= "22";
 if (!/^\d+$/.test(String(opts.port))) fail(`--port must be a number, not '${opts.port}'`);
 
-if (!flags.check) {
+if (!flags.check && single) {
+  opts.domain ||= await ask("Domain the site is served at (e.g. example.com)");
+  if (!isValidDomain(opts.domain)) fail(`'${opts.domain ?? ""}' is not a domain name (--domain example.com)`);
+  opts.domain = opts.domain.toLowerCase();
+  delete opts["platform-subdomain"];
+  if (flags.www) opts.www = true;
+} else if (!flags.check) {
   opts.domain ||= await ask("Domain the app lives under (e.g. example.com: the platform at app.example.com)");
   if (!isValidDomain(opts.domain)) fail(`'${opts.domain ?? ""}' is not a domain name (--domain example.com)`);
   opts.domain = opts.domain.toLowerCase();
@@ -201,6 +230,9 @@ if (!flags.check) {
     && !(await confirm(`--domain is the domain tenants live under: this serves the platform at ${platformHost(opts.domain, sub)}. Meant --domain ${opts.domain.slice(sub.length + 1)}? Continue with ${opts.domain} anyway?`))) {
     fail(`stopped: pass --domain ${opts.domain.slice(sub.length + 1)} to serve the platform at ${opts.domain}`);
   }
+}
+
+if (!flags.check) {
   opts.email ||= await ask("Email for Coolify's administrator account", git("config", "user.email"));
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(opts.email ?? "")) fail("--email is required (Coolify's administrator account)");
   opts.name ||= appNameFor(opts.domain);
@@ -212,6 +244,8 @@ if (!flags.check) {
 }
 
 const repo = flags.check ? null : repoUrls(opts.repo, sshHostName);
+// The host the app answers on: the domain itself for a single site, else the platform's.
+const siteHost = flags.check ? null : single ? opts.domain : platformHost(opts.domain, opts["platform-subdomain"]);
 if (!flags.check && !repo) fail(`cannot read the repository URL '${opts.repo}'`);
 
 if (!hasExecutable("ssh")) {
@@ -234,7 +268,9 @@ if (opts.domain) {
 
 // --- checks on this side -------------------------------------------------------------------
 
-if (!flags.check) {
+if (!flags.check && single) {
+  log(`Deploying ${repo.https} (${opts.branch}) to https://${siteHost}${opts.www ? ` (and https://www.${siteHost}, redirecting to it)` : ""} on ${opts.user}@${opts.host}`);
+} else if (!flags.check) {
   log(`Deploying ${repo.https} (${opts.branch}) to https://${platformHost(opts.domain, opts["platform-subdomain"])} and https://*.${opts.domain} on ${opts.user}@${opts.host}`);
   if (dns.provider) {
     log(`Tenant subdomains: a *.${opts.domain} wildcard certificate through ${dns.provider}'s DNS (DNS-01).`);
@@ -245,7 +281,9 @@ if (!flags.check) {
     log("  (a *.domain wildcard through DNS-01), or deploy with docker-compose.prod.yml, whose Caddy issues them on demand.");
     log("  A DNS provider an earlier deploy configured on this server stays in force.");
   }
+}
 
+if (!flags.check) {
   // Coolify clones the branch from the remote, so the compose file has to be pushed there.
   if (git("rev-parse", "--verify", "--quiet", `refs/remotes/origin/${opts.branch}`)
     && !git("rev-parse", "--verify", "--quiet", `origin/${opts.branch}:${COMPOSE_FILE}`)) {
@@ -279,13 +317,18 @@ if (!flags.check) {
   const addresses = async (name) => (isIP(name) ? [name] : (await lookup(name, { all: true })).map((a) => a.address));
   const hostIps = await addresses(serverAddress).catch(() => []);
   const target = hostIps.join(", ") || serverAddress;
-  const { missing, elsewhere } = await checkDomainDns({ domain: opts.domain, subdomain: opts["platform-subdomain"], serverAddresses: hostIps, resolve: addresses });
+  const { missing, elsewhere } = single
+    ? await checkDomainDns({ domain: opts.domain, serverAddresses: hostIps, resolve: addresses, mode: SITE_SINGLE, www: Boolean(opts.www) })
+    : await checkDomainDns({ domain: opts.domain, subdomain: opts["platform-subdomain"], serverAddresses: hostIps, resolve: addresses });
   const wildcard = `*.${opts.domain}`;
-  if (missing.some((m) => m.record === wildcard)) {
+  if (single && missing.length) {
+    log(`warning: ${missing.map((m) => m.record).join(" and ")} ${missing.length > 1 ? "do" : "does"} not resolve yet. Add a DNS A record for each pointing at ${target}.`);
+    if (!(await confirm("Continue anyway?"))) fail("stopped: add the DNS record and run again");
+  } else if (missing.some((m) => m.record === wildcard)) {
     fail(`${wildcard} has no DNS record (a random label, which resolves only through it, does not resolve). ` +
       `Add a DNS A record for ${wildcard} pointing at ${target}, then run again; every tenant is served on a subdomain`);
   }
-  if (missing.length) {
+  if (!single && missing.length) {
     log(`warning: ${platformHost(opts.domain, opts["platform-subdomain"])} does not resolve yet. Add a DNS A record pointing at ${target}.`);
     if (!(await confirm("Continue anyway?"))) fail("stopped: add the DNS record and run again");
   }
@@ -428,6 +471,8 @@ const deployed = await runPhase("deploy", {
   APP_NAME: opts.name,
   DOMAIN: opts.domain,
   PLATFORM_SUBDOMAIN: opts["platform-subdomain"],
+  SITE_MODE: single ? SITE_SINGLE : undefined,
+  WWW: single && opts.www ? 1 : undefined,
   REPO: source.visibility === "private" ? repo.ssh : repo.https,
   BRANCH: opts.branch,
   KEY_UUID: source.keyUuid,
@@ -445,7 +490,7 @@ if (deployed.code !== 0) {
 }
 
 // The same check from out here proves DNS and the certificate as a visitor sees them.
-const url = `https://${platformHost(opts.domain, opts["platform-subdomain"])}`;
+const url = `https://${siteHost}`;
 try {
   const res = await fetch(`${url}/health`, { signal: AbortSignal.timeout(15_000) });
   log(res.ok ? `\n${url} is live.` : `\nwarning: ${url}/health answered ${res.status} from here.`);

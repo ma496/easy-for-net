@@ -1,0 +1,89 @@
+using Backend.Features.Identity.Core;
+using Backend.Features.Identity.Core.Entities;
+using Backend.Features.Identity.Core.Sessions;
+
+namespace Backend.Features.Identity.Endpoints.Account;
+
+/// <summary>
+/// Anonymous POST endpoint that completes the password-reset flow by validating a
+/// previously issued reset token and updating the user's password.
+/// </summary>
+/// <remarks>
+/// Every session of the account ends once the new password has committed: whoever held the old one is
+/// locked out, and a reset that rolls back leaves the sessions working.
+/// </remarks>
+sealed class ResetPasswordEndpoint(ITokenService tokenService,
+                                   IUserService userService,
+                                   IPasswordHasher passwordHasher,
+                                   ISessionRevocationService sessionRevocationService,
+                                   AppDbContext dbContext)
+    : Endpoint<ResetPasswordRequest>
+{
+    public override void Configure()
+    {
+        Post("reset-password");
+        Group<AccountGroup>();
+        AllowAnonymous();
+    }
+
+    public override async Task HandleAsync(ResetPasswordRequest request, CancellationToken cancellationToken)
+    {
+        var token = await tokenService.GetTokenAsync(request.Token, TokenPurpose.PasswordReset, cancellationToken);
+        if (token == null)
+        {
+            this.ThrowError(ErrorCodes.InvalidToken);
+        }
+        if (!tokenService.ValidateToken(token))
+        {
+            this.ThrowError(ErrorCodes.TokenExpired);
+        }
+        var user = await userService.GetByIdAsync(token.UserId);
+        if (user == null)
+        {
+            await Send.NotFoundAsync(cancellationToken);
+            return;
+        }
+        user.PasswordHash = passwordHasher.HashPassword(request.Password);
+        user.SecurityStamp = Guid.NewGuid();
+
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        await userService.UpdateAsync(user);
+        if (!await tokenService.UseTokenAsync(token, cancellationToken))
+        {
+            this.ThrowError(ErrorCodes.InvalidToken);
+        }
+        await transaction.CommitAsync(cancellationToken);
+
+        await sessionRevocationService.RevokeUserAsync(user.Id, cancellationToken);
+
+        await Send.OkAsync(cancellation: cancellationToken);
+    }
+}
+
+/// <summary>
+/// Request payload for resetting a password, supplying the reset token together with
+/// the new password value.
+/// </summary>
+sealed class ResetPasswordRequest
+{
+    public string Token { get; set; } = null!;
+    public string Password { get; set; } = null!;
+}
+
+/// <summary>
+/// FluentValidation rules for <see cref="ResetPasswordRequest"/>, ensuring a valid, 
+/// non-empty token and password.
+/// </summary>
+sealed class ResetPasswordRequestValidator : Validator<ResetPasswordRequest>
+{
+    public ResetPasswordRequestValidator()
+    {
+        RuleFor(x => x.Token)
+            .NotEmpty();
+
+        RuleFor(x => x.Password)
+            .NotEmpty()
+            .MinimumLength(8)
+            .MaximumLength(50);
+    }
+}

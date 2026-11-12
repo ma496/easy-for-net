@@ -1,0 +1,95 @@
+using Backend.External.Email;
+using Backend.Features.FileManagement.Core;
+using Backend.Features.Identity.Core;
+using Backend.Features.Identity.Core.Sessions;
+using Backend.Features.Settings.Core;
+
+namespace Backend.Tests.Fakes;
+
+/// <summary>
+/// Registers the implementations the test host substitutes for production ones.
+/// </summary>
+/// <remarks>
+/// These run through <c>ConfigureTestServices</c>, which is applied after the application's own
+/// registrations, so each one replaces what the feature registered rather than competing with it.
+/// </remarks>
+public static class TestDoubles
+{
+    /// <summary>
+    /// Substitutes the cheap password hasher and a mail transport that delivers nothing but records what
+    /// it was handed (<see cref="RecordingEmailTransport"/>, behind the real <see cref="IEmailService"/>), adds
+    /// the probe setting the settings suite writes freely, and lets a test overlay settings per request.
+    /// </summary>
+    public static IServiceCollection RegisterTestDoubles(this IServiceCollection services)
+    {
+        services.AddScoped<IPasswordHasher, TestPasswordHasher>();
+        services.AddSingleton<RecordingEmailTransport>();
+        services.AddSingleton<IEmailTransport>(provider => provider.GetRequiredService<RecordingEmailTransport>());
+        services.AddSessionStoreFaults();
+        services.AddSingleton<SessionEndedHandlerFaults>();
+        services.AddSingleton<ISessionEndedHandler, FaultingSessionEndedHandler>();
+        services.AddSingleton<ISettingDefinitionProvider, ProbeSettingsProvider>();
+        services.AddSettingOverlays();
+        services.AddStorageRecording();
+        return services;
+    }
+
+    /// <summary>
+    /// Decorates the storage provider the host registered with one that records every file it saves -
+    /// see <see cref="RecordingStorageProvider"/> - so the run can remove whatever its tests left behind.
+    /// </summary>
+    private static IServiceCollection AddStorageRecording(this IServiceCollection services)
+    {
+        var registered = services.Last(descriptor => descriptor.ServiceType == typeof(IStorageProvider));
+        services.Remove(registered);
+
+        services.AddSingleton<UploadedFilesRecorder>();
+        services.Add(ServiceDescriptor.Describe(
+            typeof(IStorageProvider),
+            provider => new RecordingStorageProvider(
+                (IStorageProvider)ActivatorUtilities.CreateInstance(provider, registered.ImplementationType!),
+                provider.GetRequiredService<UploadedFilesRecorder>()),
+            registered.Lifetime));
+
+        return services;
+    }
+
+    /// <summary>
+    /// Decorates the setting store the host registered with one that reports, for the requests a test
+    /// marks, the overrides that test chose - see <see cref="SettingOverlays"/>.
+    /// </summary>
+    private static IServiceCollection AddSettingOverlays(this IServiceCollection services)
+    {
+        var registered = services.Last(descriptor => descriptor.ServiceType == typeof(ISettingValueStore));
+        services.Remove(registered);
+
+        services.AddSingleton<SettingOverlays>();
+        services.AddScoped<ISettingValueStore>(provider => new OverlayingSettingValueStore(
+            (ISettingValueStore)ActivatorUtilities.CreateInstance(provider, registered.ImplementationType!),
+            provider.GetRequiredService<SettingOverlays>(),
+            provider.GetRequiredService<Microsoft.AspNetCore.Http.IHttpContextAccessor>()));
+
+        return services;
+    }
+
+    /// <summary>
+    /// Decorates the session store the host registered (the shared in-memory one, behind the decorator that
+    /// announces ended sessions) with one that can be told to fail for particular sessions and accounts - the
+    /// only way a test can make the store "unreachable" without touching any other test running beside it. A
+    /// failure injected here stops the call before it reaches the announcing store, as an outage would.
+    /// </summary>
+    private static IServiceCollection AddSessionStoreFaults(this IServiceCollection services)
+    {
+        var registered = services.Last(descriptor => descriptor.ServiceType == typeof(ISessionStore));
+        services.Remove(registered);
+
+        services.AddSingleton<SessionStoreFaults>();
+        services.AddSingleton<ISessionStore>(provider => new FaultInjectingSessionStore(
+            (ISessionStore)(registered.ImplementationFactory?.Invoke(provider)
+                            ?? registered.ImplementationInstance
+                            ?? ActivatorUtilities.CreateInstance(provider, registered.ImplementationType!)),
+            provider.GetRequiredService<SessionStoreFaults>()));
+
+        return services;
+    }
+}

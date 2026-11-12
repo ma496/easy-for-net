@@ -1,0 +1,94 @@
+'use client'
+import * as Yup from 'yup'
+import { useTranslation } from '@/i18n'
+import { useLocalizedRouter } from '@/hooks'
+import { useChangePasswordMutation } from '@/store/api/identity'
+import { leaveSignedOut } from '@/store/leave-signed-out'
+import { apiErrorAlert, successAlert } from '@/lib/utils'
+import { Form, Formik } from 'formik'
+import { FormPasswordInput } from '@/components/ui/form'
+import { Button, LocalizedLink } from '@/components/ui'
+import { Lock } from 'lucide-react'
+
+/**
+ * Builds a Yup validation schema for the change-password form using the supplied translation function for error messages.
+ */
+const createValidationSchema = (t: (key: string, params?: Record<string, string | number>) => string) => {
+  return Yup.object().shape({
+    currentPassword: Yup.string()
+      .required(t('validation.required') || 'Field is required'),
+    newPassword: Yup.string()
+      .required(t('validation.required') || 'Field is required')
+      .min(8, t('validation.minLength', { min: 8 }) || `Field must be at least ${8} characters`)
+      .max(50, t('validation.maxLength', { max: 50 }) || `Field must not exceed ${50} characters`),
+    confirmPassword: Yup.string()
+      .required(t('validation.required') || 'Field is required')
+      .oneOf([Yup.ref('newPassword')], t('validation.mustMatch', { otherField: t('form.label.newPassword') || 'New Password' }) || `Field must match with ${t('form.label.newPassword') || 'New Password'}`),
+  })
+}
+
+/**
+ * Interactive client-side form that lets an authenticated user change their account password.
+ * Submits the new credentials, signs the user out on success, and redirects to the sign-in page.
+ */
+export const ChangePasswordForm = () => {
+  const { t } = useTranslation()
+  const validationSchema = createValidationSchema(t)
+  type ChangePasswordFormValues = Yup.InferType<typeof validationSchema>
+  const [changePassword, { isLoading: isChangingPassword }] = useChangePasswordMutation()
+  const router = useLocalizedRouter()
+
+  const onSubmit = async (data: ChangePasswordFormValues) => {
+    const result = await changePassword({
+      currentPassword: data.currentPassword,
+      newPassword: data.newPassword,
+    })
+
+    if (result.error) {
+      apiErrorAlert(result.error)
+      return
+    }
+
+    // An alert the user dismisses rather than a toast, because the full page load below would wipe a
+    // toast before it could be read.
+    await successAlert({
+      text: t('page.profile.changePasswordSuccess') || 'Password changed successfully',
+    })
+    // Changing the password ends every session this account had, so it is a sign-out path and has to
+    // leave nothing behind like any other: leaveSignedOut loads the sign-in page afresh, so the records
+    // cached for this account are not served to the next user signing in on this browser.
+    leaveSignedOut(router.localize('/signin'))
+  }
+
+  return (
+    <Formik
+      initialValues={{
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      }}
+      validationSchema={validationSchema}
+      onSubmit={onSubmit}
+    >
+      {() => (
+        <Form noValidate className="rounded-xl border border-border bg-surface shadow-xs">
+          <div className="space-y-5 p-5 sm:p-6">
+            <FormPasswordInput name="currentPassword" label={t('form.label.currentPassword') || 'Current Password'} placeholder={t('form.placeholder.currentPassword') || 'Enter current password'} icon={<Lock size={16} />} autoFocus={true} required={true} />
+            <div className="grid gap-5 border-t border-border pt-5 sm:grid-cols-2">
+              <FormPasswordInput name="newPassword" label={t('form.label.newPassword') || 'New Password'} placeholder={t('form.placeholder.newPassword') || 'Enter new password'} icon={<Lock size={16} />} required={true} />
+              <FormPasswordInput name="confirmPassword" label={t('form.label.confirmPassword') || 'Confirm Password'} placeholder={t('form.placeholder.confirmPassword') || 'Enter confirm password'} icon={<Lock size={16} />} required={true} />
+            </div>
+          </div>
+          <div className="flex flex-col-reverse gap-2 rounded-b-xl border-t border-border bg-surface-2/50 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+            <LocalizedLink href="/" className="btn btn-secondary">
+              {t('common.cancel') || 'Cancel'}
+            </LocalizedLink>
+            <Button type="submit" isLoading={isChangingPassword}>
+              {t('common.submit') || 'Submit'}
+            </Button>
+          </div>
+        </Form>
+      )}
+    </Formik>
+  )
+}

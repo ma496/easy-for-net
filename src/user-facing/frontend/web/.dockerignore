@@ -1,0 +1,8 @@
+node_modules/
+.next/
+# Local environment files hold per-machine values; the image gets its values as build arguments
+.env*
+!.env.example
+tsconfig.tsbuildinfo
+Dockerfile
+.dockerignore

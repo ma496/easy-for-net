@@ -12,13 +12,15 @@ namespace EasyForNetTool.Generator;
 /// <param name="ExcludedSkills">Skills under <c>.claude/skills</c> that describe something the template does not have.</param>
 /// <param name="DevHosts">The hosts the development proxy is opened on, written to <c>agentic.config.json</c>.</param>
 /// <param name="SeededAccounts">The accounts the data seeder creates, as printed after generation.</param>
+/// <param name="ExamplePagesPath">The component example pages, relative to the web app, deleted unless <c>-e true</c>.</param>
 public sealed record ProjectTemplate(
     string Name,
     string ClaudeResource,
     string ReadmeResource,
     IReadOnlyList<string> ExcludedSkills,
     IReadOnlyList<string> DevHosts,
-    string SeededAccounts)
+    string SeededAccounts,
+    IReadOnlyList<string> ExamplePagesPath)
 {
     /// <summary>The multi-tenant SaaS: tenants on their own hosts, editions and features. The default.</summary>
     public static readonly ProjectTemplate MultiTenant = new(
@@ -27,7 +29,8 @@ public sealed record ProjectTemplate(
         "new-project-readme.md",
         [],
         ["app.localhost", "default.localhost"],
-        "admin and tenantadmin");
+        "admin and tenantadmin",
+        ["app", "[lang]", "(app)", "ui"]);
 
     /// <summary>The single-tenant, user-facing web app: public SEO pages at <c>/</c>, administration at <c>/admin</c>.</summary>
     public static readonly ProjectTemplate UserFacing = new(
@@ -36,7 +39,8 @@ public sealed record ProjectTemplate(
         "user-facing-readme.md",
         ["multi-tenancy", "feature-management"],
         ["localhost"],
-        "admin");
+        "admin",
+        ["app", "[lang]", "admin", "ui"]);
 
     /// <summary>Every template, the default first.</summary>
     public static readonly IReadOnlyList<ProjectTemplate> All = [MultiTenant, UserFacing];

@@ -92,23 +92,27 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
     /// the template's <c>.env.docker.example</c>, keeping its comments: the project's own Compose
     /// project, database and Redis key prefix, fresh random database, Redis and administrator
     /// passwords and JWT signing key, <c>localhost</c> as the domain - the platform at
-    /// <c>https://app.localhost</c> and each tenant at <c>https://{tenant}.localhost</c> - so the
-    /// stack starts as generated, and the host ports the development <c>docker-compose.yml</c> publishes PostgreSQL
-    /// and Redis on. Values the example leaves for the developer (SMTP) are copied as they are.
+    /// <c>https://app.localhost</c> and each tenant at <c>https://{tenant}.localhost</c>, or, for a
+    /// single-domain example (one with no <c>TENANT_URL_TEMPLATE=</c> line), the site at
+    /// <c>https://localhost</c> - so the stack starts as generated, and the host ports the development
+    /// <c>docker-compose.yml</c> publishes PostgreSQL and Redis on. Only the keys the example has are
+    /// written. Values the example leaves for the developer (SMTP) are copied as they are.
     /// </summary>
-    /// <param name="examplePath">The template's <c>.env.docker.example</c>.</param>
+    /// <param name="examplePath">The template's <c>.env.docker.example</c>: its overlay's when it has one, else the shared one.</param>
     /// <param name="envPath">The <c>.env</c> file to create.</param>
     /// <param name="kebabCaseProjectName">The kebab-case project name.</param>
     /// <param name="ports">The host ports for the development containers, the same the appsettings files connect to.</param>
     internal static async Task WriteDockerEnvAsync(string examplePath, string envPath, string kebabCaseProjectName, DevPorts ports)
     {
+        var content = await File.ReadAllTextAsync(examplePath);
+        var singleDomain = !Regex.IsMatch(content, @"(?m)^TENANT_URL_TEMPLATE=");
         var snakeCaseProjectName = kebabCaseProjectName.Replace('-', '_');
         var values = new Dictionary<string, string>
         {
             ["PROD_PROJECT_NAME"] = kebabCaseProjectName,
             ["DOMAIN"] = "localhost",
             ["PLATFORM_SUBDOMAIN"] = "app",
-            ["PUBLIC_URL"] = "https://app.localhost",
+            ["PUBLIC_URL"] = singleDomain ? "https://localhost" : "https://app.localhost",
             ["TENANT_URL_TEMPLATE"] = "https://{tenant}.localhost",
             ["POSTGRES_DB"] = snakeCaseProjectName,
             ["POSTGRES_USER"] = snakeCaseProjectName,
@@ -122,7 +126,6 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             ["DEV_REDIS_PORT"] = ports.Redis.ToString(),
         };
 
-        var content = await File.ReadAllTextAsync(examplePath);
         foreach (var (key, value) in values)
             content = Regex.Replace(content, $@"(?m)^{Regex.Escape(key)}=[^\r\n]*", $"{key}={value.Replace("$", "$$")}");
 
@@ -310,7 +313,10 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             // a PostgreSQL or Redis already running on this machine keeps its port; the project's containers take the next free one
             var devPorts = DevPorts.Find(DevPorts.IsFree);
             // .env is git-ignored in the template, so it is written from the tracked example with this project's values
-            await WriteDockerEnvAsync(Path.Combine(versionedTemplateDir, ".env.docker.example"), Path.Combine(targetPath, ".env"), kebabCaseProjectName, devPorts);
+            // a template whose overlay replaces .env.docker.example (a single-domain deployment) is written from that one
+            var overlayEnvExample = Path.Combine(templateSourcePath, ProjectTemplate.OverlayDirectory, ".env.docker.example");
+            var envExample = File.Exists(overlayEnvExample) ? overlayEnvExample : Path.Combine(versionedTemplateDir, ".env.docker.example");
+            await WriteDockerEnvAsync(envExample, Path.Combine(targetPath, ".env"), kebabCaseProjectName, devPorts);
             CopyDirectory($"{versionedTemplateDir}/docker", $"{targetPath}/docker", true);
             CopyDirectory($"{versionedTemplateDir}/.config", $"{targetPath}/.config", true);
             CopyDirectory($"{versionedTemplateDir}/.vscode", $"{targetPath}/.vscode", true);
@@ -380,14 +386,14 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             await ReplaceInFiles(claudeSkillsPath, $@"{Regex.Escape(backendProjectRootNamespace)}\.", $@"{pascalCaseProjectName}.", ".md");
             await ReplaceInFiles(claudeSkillsPath, @"EasyForNet\.slnx", $@"{pascalCaseProjectName}.slnx", ".md");
 
-            // The component example pages ((app)/ui) ship only on request; the code that exists for
+            // The component example pages (ProjectTemplate.ExamplePagesPath) ship only on request; the code that exists for
             // them elsewhere - their nav and search entries, their platform route prefix - sits between
             // efn:examples markers, and their translation keys follow a naming convention.
             await StripExampleRegionsAsync(webTargetPath, argument.IncludeExamples);
             if (!argument.IncludeExamples)
             {
                 Console.WriteLine("Removing component example pages...");
-                var examplePagesPath = Path.Combine(webTargetPath, "app", "[lang]", "(app)", "ui");
+                var examplePagesPath = Path.Combine([webTargetPath, .. template.ExamplePagesPath]);
                 if (Directory.Exists(examplePagesPath))
                     Directory.Delete(examplePagesPath, true);
                 await RemoveExampleResourceKeysAsync(Path.Combine(backendProjectTargetPath, "Features", "Localization", "Core", "Resources"));
@@ -645,7 +651,9 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
     /// <summary>
     /// Rewrites <c>apps</c> in the generated project's <c>agentic.config.json</c> to the one application
     /// it has, at the generated layout. The template repository lists one entry per template, under
-    /// <c>src/&lt;template&gt;</c>; the stack scripts read their paths from this list.
+    /// <c>src/&lt;template&gt;</c>; the stack scripts read their paths from this list. The entries of
+    /// <c>skills</c> naming a skill the template leaves out are dropped too, so the project's briefs never
+    /// point at a procedure it does not have.
     /// </summary>
     /// <param name="configPath">The generated project's <c>agentic.config.json</c>.</param>
     /// <param name="template">The template the project was generated from.</param>
@@ -665,6 +673,15 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             ["web"] = "src/frontend/web",
             ["devHosts"] = hosts,
         });
+        if (json["skills"] is System.Text.Json.Nodes.JsonArray skills)
+        {
+            foreach (var entry in skills.ToList())
+            {
+                var name = entry?["skill"]?.GetValue<string>();
+                if (name is not null && template.ExcludedSkills.Contains(name))
+                    skills.Remove(entry);
+            }
+        }
         var options = new System.Text.Json.JsonSerializerOptions
         {
             WriteIndented = true,

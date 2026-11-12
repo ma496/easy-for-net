@@ -18,6 +18,12 @@
       "backend": "src/multi-tenant/backend",
       "web": "src/multi-tenant/frontend/web",
       "devHosts": ["app.localhost", "default.localhost"]
+    },
+    {
+      "name": "user-facing",
+      "backend": "src/user-facing/backend",
+      "web": "src/user-facing/frontend/web",
+      "devHosts": ["localhost"]
     }
   ],
   "commands": {

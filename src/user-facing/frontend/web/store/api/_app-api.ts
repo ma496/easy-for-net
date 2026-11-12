@@ -1,0 +1,120 @@
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import { environment } from '@/config'
+import { Mutex } from 'async-mutex'
+import { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { setUserInfo, signout } from '../slices/authSlice'
+import { signinRedirectAfterFailedRefresh } from '../signed-out-navigation'
+// Imported straight from the DTO file rather than through the feature barrel, and as a type alone,
+// so this module gains no runtime edge back to the feature APIs that are injected into it.
+import type { GetUserInfoResponse } from './identity/account/account-dtos'
+
+const mutex = new Mutex()
+
+/** Signs the app out and, on a page that requires a session, sends the browser to sign in. */
+const leaveSignedOut = (dispatch: (action: ReturnType<typeof signout>) => unknown) => {
+  dispatch(signout())
+  const signinUrl = typeof window !== 'undefined'
+    ? signinRedirectAfterFailedRefresh(window.location.pathname, window.location.origin)
+    : null
+  if (signinUrl) {
+    window.location.href = signinUrl
+  }
+}
+
+const baseQuery = fetchBaseQuery({
+  baseUrl: environment.apiUrl,
+  // The server localizes every coded error (and the resource dictionary itself) into the culture
+  // named here, so every request - not just the localization fetch - has to carry it. `window.location`
+  // rather than a router hook because this runs outside React, on every query and mutation the app
+  // makes. The `@/i18n` barrel is imported dynamically rather than at the top of the file: this module
+  // sits under every feature API, and `@/i18n` reaches - through `components/layouts`' single barrel -
+  // back up to `@/store` for unrelated reasons of its own, so a static import here would make this
+  // module and the store circularly depend on each other. A dynamic import resolves after `appApi` -
+  // and the feature APIs injected into it - have already finished evaluating, which is what breaks
+  // the cycle; there is no pathname to read on the very first server-rendered response, but that
+  // request never reaches this base query - only the browser's own subsequent calls do.
+  prepareHeaders: async (headers) => {
+    if (typeof window !== 'undefined') {
+      const { localeFromPathname } = await import('@/i18n')
+      headers.set('Accept-Language', localeFromPathname(window.location.pathname))
+    }
+    return headers
+  },
+  credentials: 'include',
+})
+
+const baseQueryWithReauth: BaseQueryFn<
+  string | FetchArgs,
+  unknown,
+  FetchBaseQueryError
+> = async (args, api, extraOptions) => {
+  // wait until the mutex is available without locking it
+  await mutex.waitForUnlock()
+  let result = await baseQuery(args, api, extraOptions)
+
+  if (result.error && (result.error.status === 401 || result.error.status === 404)) {
+    const isUserInfoEndpoint = (
+      typeof args === 'string' ? args : args.url
+    )?.includes('/account/get-info')
+
+    if (result.error.status === 404 && !isUserInfoEndpoint) {
+      return result
+    }
+    if (!mutex.isLocked()) {
+      const release = await mutex.acquire()
+      try {
+        const refreshResult = await baseQuery(
+          {
+            url: '/account/refresh-token',
+            method: 'POST',
+            body: {
+              // The backend will read from the cookie if refreshToken is missing
+              // We can include userId if available in the state, but let's try relying on the cookie + updated logic
+              // However, the backend logic I wrote earlier checks `httpContext.User` which might be unauthenticated if 401.
+              // So, ideally, we should pass the userId.
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              userId: (api.getState() as any).auth?.user?.id ?? ''
+            },
+          },
+          api,
+          extraOptions
+        )
+
+        if (refreshResult.data) {
+          // Retry the initial query
+          result = await baseQuery(args, api, extraOptions)
+
+          // A renewal re-reads what the caller may do, so the account info - the roles and permissions the
+          // screens gate on - is read again here, through the plain base query rather than this one, so a
+          // 401 on the read cannot re-enter the refresh it was triggered by. A read that fails leaves the
+          // previous info standing and is not retried here.
+          const userInfo = await baseQuery('/account/get-info', api, extraOptions)
+          if (userInfo.data) {
+            api.dispatch(setUserInfo(userInfo.data as GetUserInfoResponse))
+          }
+        } else {
+          leaveSignedOut(api.dispatch)
+        }
+      } finally {
+        release()
+      }
+    } else {
+      // wait until the mutex is available without locking it
+      await mutex.waitForUnlock()
+      result = await baseQuery(args, api, extraOptions)
+    }
+  }
+  return result
+}
+
+/**
+ * Base RTK Query API instance used as the root for all feature APIs
+ * (account, users, roles, files, notifications, etc.). Wraps a
+ * fetchBaseQuery with a reauth flow that refreshes the access token on
+ * 401/404 and signs the user out / redirects on failure.
+ */
+export const appApi = createApi({
+  reducerPath: 'appApi',
+  baseQuery: baseQueryWithReauth,
+  endpoints: () => ({}),
+})

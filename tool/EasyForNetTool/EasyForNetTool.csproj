@@ -21,6 +21,9 @@
     <EmbeddedResource Include="new-project-claude.md" LogicalName="EasyForNetTool.new-project-claude.md" />
     <!-- Written out as README.md when a project is created; {{Name}} and {{name}} are replaced with the project name. -->
     <EmbeddedResource Include="new-project-readme.md" LogicalName="EasyForNetTool.new-project-readme.md" />
+    <!-- The same pair for a project made from the user-facing template (efn cp -t user-facing). -->
+    <EmbeddedResource Include="user-facing-claude.md" LogicalName="EasyForNetTool.user-facing-claude.md" />
+    <EmbeddedResource Include="user-facing-readme.md" LogicalName="EasyForNetTool.user-facing-readme.md" />
   </ItemGroup>
 
   <ItemGroup>

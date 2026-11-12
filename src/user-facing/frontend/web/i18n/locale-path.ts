@@ -1,0 +1,55 @@
+import { i18nConfig } from './config'
+
+/**
+ * Reads the locale segment off a (locale-prefixed or unprefixed) pathname - the same "first path
+ * segment, if it names a routable locale" rule the client translator, the root layout guard and the
+ * proxy's own routing decision all apply - falling back to `i18nConfig.defaultLocale` for an
+ * unprefixed path or one whose first segment names no routable locale. Shared by anything that needs
+ * "what locale is this browser currently reading the app in" without a `usePathname()` of its own,
+ * such as the `Accept-Language` header every API request carries.
+ */
+export const localeFromPathname = (pathname: string): string => {
+  const segment = pathname.split('/')[1]
+  return (i18nConfig.locales as readonly string[]).includes(segment) ? segment : i18nConfig.defaultLocale
+}
+
+/**
+ * Removes the locale segment from a pathname when its first segment names a routable locale, leaving
+ * any other path untouched - so a two-letter route such as `/ui` is never mistaken for a locale.
+ * The root of a locale (`/fr`) comes back as `/`.
+ */
+export const withoutLocale = (pathname: string): string => {
+  const segment = pathname.split('/')[1]
+  if (!(i18nConfig.locales as readonly string[]).includes(segment)) return pathname
+  return pathname.slice(segment.length + 1) || '/'
+}
+
+/**
+ * Swaps the locale segment of a (locale-prefixed or unprefixed) pathname for another locale,
+ * adding or removing the segment as the "default locale carries no prefix" convention requires.
+ * Shared by every place that navigates to a different locale: the client `changeLanguage` calls,
+ * the non-component translator, and the locale guard's correction.
+ */
+export const withLocale = (pathname: string, locale: string): string => {
+  // Normalized so the root path and a trailing slash never leave a stray empty segment behind:
+  // '/' becomes '', so it is treated exactly like an unprefixed path with nothing after the locale.
+  const withoutTrailingSlash = pathname !== '/' && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname
+  const path = withoutTrailingSlash === '/' ? '' : withoutTrailingSlash
+
+  const segments = path.split('/')
+  const hasLocaleSegment = segments.length > 1 && (i18nConfig.locales as readonly string[]).includes(segments[1])
+
+  if (hasLocaleSegment) {
+    segments[1] = locale
+  } else {
+    segments.splice(1, 0, locale)
+  }
+
+  if (locale === i18nConfig.defaultLocale && segments.length > 1 && segments[1] === locale) {
+    segments.splice(1, 1)
+  }
+
+  // Collapsed so a pathname with an empty first segment can never come back protocol-relative ('//host'),
+  // which a redirect built with new URL(path, base) would resolve to another origin.
+  return segments.join('/').replace(/^\/{2,}/, '/') || '/'
+}

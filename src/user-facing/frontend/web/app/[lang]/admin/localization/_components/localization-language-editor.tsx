@@ -1,0 +1,248 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { RotateCcw } from 'lucide-react'
+import { useTranslation } from '@/i18n'
+import { useLocalizedRouter } from '@/hooks'
+import { ApiErrorMessages, Badge, Button, Loader, Tooltip } from '@/components/ui'
+import { Checkbox, Select } from '@/components/ui/form'
+import { apiErrorAlert, cn, confirmDeleteAlert, successToast } from '@/lib/utils'
+import { LanguagesGetResponse, useLocalizationLanguagesGetQuery, useLocalizationLanguagesResetMutation, useLocalizationLanguagesUpdateMutation } from '@/store/api/localization'
+import { revalidatePublicCache } from '@/lib/revalidate-client'
+
+/** Props for the Languages tab, naming whether the caller may edit it or only see it. */
+interface LocalizationLanguageEditorProps {
+  canUpdate: boolean
+}
+
+/** Whether two culture lists name the same set, order aside. */
+const sameCultureSet = (a: string[], b: string[]): boolean => a.length === b.length && [...a].sort().every((code, index) => code === [...b].sort()[index])
+
+/** What the site's own row would hold, or what it would inherit without one - whichever the draft is seeded from. */
+const effectiveOf = (data: LanguagesGetResponse) =>
+  data.isInherited
+    ? { enabledCultures: data.inheritedEnabledCultures, defaultCulture: data.inheritedDefaultCulture ?? '' }
+    : { enabledCultures: data.enabledCultures, defaultCulture: data.defaultCulture ?? '' }
+
+/** A culture's display name, or its code when the catalogue does not (yet) name it. */
+const nameOf = (data: LanguagesGetResponse, code: string): string => data.languages.find((language) => language.code === code)?.name ?? code
+
+/**
+ * The Languages tab of the localization admin screen: which cultures the acting scope enables, and
+ * which one is the default for a visitor whose own preference names none. A scope with no row of its
+ * own shows what it inherits, disabled, behind a "Customize" button that seeds an editable draft from
+ * those same values - so unlocking the controls never changes what they show. Saving replaces the
+ * scope's own row; resetting removes it and falls back to what is inherited, both refreshing the
+ * app's own layout so a change to the language actually in use takes effect immediately.
+ */
+export const LocalizationLanguageEditor = ({ canUpdate }: LocalizationLanguageEditorProps) => {
+  const { t, i18n } = useTranslation()
+  const router = useLocalizedRouter()
+  const { data, isLoading, error } = useLocalizationLanguagesGetQuery()
+  const [updateLanguages, { isLoading: isSaving }] = useLocalizationLanguagesUpdateMutation()
+  const [resetLanguages, { isLoading: isResetting }] = useLocalizationLanguagesResetMutation()
+
+  const [isCustomizing, setIsCustomizing] = useState(false)
+  const [seeded, setSeeded] = useState(false)
+  const [draftEnabled, setDraftEnabled] = useState<string[]>([])
+  const [draftDefault, setDraftDefault] = useState('')
+  const [defaultClearedByToggle, setDefaultClearedByToggle] = useState(false)
+
+  const seedFrom = (source: LanguagesGetResponse) => {
+    const effective = effectiveOf(source)
+    setDraftEnabled(effective.enabledCultures)
+    setDraftDefault(effective.defaultCulture)
+    setDefaultClearedByToggle(false)
+  }
+
+  useEffect(() => {
+    if (!data || seeded) return
+    // Seeding only happens once, from whatever the acting scope holds on first load - a later
+    // background refetch (after this screen's own save or reset) must not clobber a draft the
+    // caller is still editing.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    seedFrom(data)
+    setSeeded(true)
+  }, [data, seeded])
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-64 items-center justify-center">
+        <Loader />
+      </div>
+    )
+  }
+
+  if (error || !data) {
+    return <ApiErrorMessages error={error} />
+  }
+
+  const editable = canUpdate && (isCustomizing || !data.isInherited)
+  const isBusy = isSaving || isResetting
+
+  const baseline = effectiveOf(data)
+  const isDirty = !sameCultureSet(draftEnabled, baseline.enabledCultures) || draftDefault !== baseline.defaultCulture
+  const saveDisabled = !editable || !isDirty || draftEnabled.length === 0 || isBusy
+
+  const toggleCulture = (code: string) => {
+    if (!editable) return
+
+    if (draftEnabled.includes(code)) {
+      if (draftEnabled.length <= 1) return
+      setDraftEnabled(draftEnabled.filter((candidate) => candidate !== code))
+      if (draftDefault === code) {
+        setDraftDefault('')
+        setDefaultClearedByToggle(true)
+      }
+    } else {
+      setDraftEnabled([...draftEnabled, code])
+    }
+  }
+
+  const handleDefaultChange = (value: string) => {
+    setDraftDefault(value)
+    setDefaultClearedByToggle(false)
+  }
+
+  const handleCancel = () => {
+    seedFrom(data)
+    setIsCustomizing(false)
+  }
+
+  const handleSave = async () => {
+    const result = await updateLanguages({ enabledCultures: draftEnabled, defaultCulture: draftDefault || null })
+    if (result.error) {
+      apiErrorAlert(result.error)
+      return
+    }
+    successToast.fire({ text: t('page.localization.languages.saveSuccess') || 'Languages updated' })
+    void revalidatePublicCache(['localization'])
+    router.refresh()
+  }
+
+  const handleReset = async () => {
+    const confirmed = await confirmDeleteAlert({
+      title: t('page.localization.languages.resetTitle') || 'Reset languages?',
+      text: t('page.localization.languages.resetConfirm') || 'This removes your customization and falls back to what is inherited.',
+    })
+    if (!confirmed.isConfirmed) return
+
+    const result = await resetLanguages()
+    if (result.error) {
+      apiErrorAlert(result.error)
+      return
+    }
+    successToast.fire({ text: t('page.localization.languages.resetSuccess') || 'Languages reset to the inherited settings' })
+    void revalidatePublicCache(['localization'])
+    setIsCustomizing(false)
+    setDraftEnabled(data.inheritedEnabledCultures)
+    setDraftDefault(data.inheritedDefaultCulture ?? '')
+    setDefaultClearedByToggle(false)
+    router.refresh()
+  }
+
+  const inheritedSummary = t('page.localization.languages.inheritedSummary', {
+    languages: data.inheritedEnabledCultures.map((code) => nameOf(data, code)).join(', '),
+    default: data.inheritedDefaultCulture ? nameOf(data, data.inheritedDefaultCulture) : t('page.localization.languages.noDefault') || "None — use the visitor's browser language",
+  }) || `Inherited: ${data.inheritedEnabledCultures.map((code) => nameOf(data, code)).join(', ')} · Default: ${data.inheritedDefaultCulture ? nameOf(data, data.inheritedDefaultCulture) : t('page.localization.languages.noDefault') || "None — use the visitor's browser language"}`
+
+  const currentUrlLanguageWillSwitch = editable && !draftEnabled.includes(i18n.language)
+
+  const defaultLanguageOptions = [{ value: '', label: t('page.localization.languages.noDefault') || "None — use the visitor's browser language" }, ...draftEnabled.map((code) => ({ value: code, label: nameOf(data, code) }))]
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          {data.isInherited ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="secondary" type="outline">
+                {t('page.localization.languages.inherited') || 'Inherited'}
+              </Badge>
+              <span className="text-sm text-muted-foreground">{t('page.localization.languages.inheritedFromShipped') || 'Built-in: every language, no default'}</span>
+            </div>
+          ) : (
+            <Badge variant="primary" type="solid">
+              {t('page.localization.languages.customized') || 'Customized'}
+            </Badge>
+          )}
+          <p className="mt-2 text-sm wrap-break-word text-muted-foreground">{inheritedSummary}</p>
+        </div>
+
+        {canUpdate &&
+          (data.isInherited ? (
+            !isCustomizing && (
+              <Button type="button" variant="outline" size="sm" className="self-start" onClick={() => setIsCustomizing(true)}>
+                {t('page.localization.languages.customize') || 'Customize'}
+              </Button>
+            )
+          ) : (
+            <Button type="button" variant="outline" size="sm" className="self-start" onClick={handleReset} disabled={isBusy}>
+              <RotateCcw className="h-4 w-4" />
+              {t('page.localization.languages.resetToInherited') || 'Reset to inherited'}
+            </Button>
+          ))}
+      </div>
+
+      <div className="border-t border-border pt-6">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <span className="text-[11px] font-semibold tracking-wider text-subtle-foreground uppercase">{t('page.localization.languages.enabled') || 'Enabled languages'}</span>
+          <span className="text-xs text-muted-foreground tabular-nums">{t('page.localization.languages.enabledCount', { count: draftEnabled.length, total: data.languages.length }) || `${draftEnabled.length} of ${data.languages.length} enabled`}</span>
+        </div>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          {data.languages.map((language) => {
+            const checked = draftEnabled.includes(language.code)
+            const isLastEnabled = checked && draftEnabled.length === 1
+            const checkbox = <Checkbox name={`language-${language.code}`} label={language.name} checked={checked} disabled={!editable || isLastEnabled} onChange={() => toggleCulture(language.code)} />
+
+            return (
+              <div
+                key={language.code}
+                className={cn('flex min-w-0 items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors', checked ? 'border-primary/40 bg-primary/5' : 'border-border bg-surface')}
+              >
+                <div className="min-w-0 flex-1">{isLastEnabled ? <Tooltip content={t('page.localization.languages.atLeastOne') || 'At least one language must stay enabled'}>{checkbox}</Tooltip> : checkbox}</div>
+                {language.isRtl && (
+                  <Badge variant="info" type="outline">
+                    {t('page.localization.languages.rtl') || 'RTL'}
+                  </Badge>
+                )}
+                <span className="shrink-0 rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">{language.code}</span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="border-t border-border pt-6">
+        <div className="w-full sm:w-80">
+          <Select
+            name="defaultCulture"
+            label={t('form.label.defaultLanguage') || 'Default language'}
+            value={draftDefault}
+            options={defaultLanguageOptions}
+            placeholder={t('page.localization.languages.noDefault') || "None — use the visitor's browser language"}
+            disabled={!editable}
+            clearable={false}
+            searchable={false}
+            onChange={(_, value) => handleDefaultChange(value)}
+          />
+        </div>
+        {defaultClearedByToggle && <div className="mt-1.5 text-xs text-warning">{t('page.localization.languages.defaultCleared') || 'The default language was cleared because it was just disabled'}</div>}
+      </div>
+
+      {currentUrlLanguageWillSwitch && <div className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2.5 text-sm text-warning">{t('page.localization.languages.currentWillSwitch') || 'The language you are viewing this screen in is being disabled — you will be switched to the default.'}</div>}
+
+      {canUpdate && (
+        <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-5">
+          {isDirty && <span className="me-auto text-sm text-muted-foreground">{t('page.localization.languages.unsaved') || 'You have unsaved changes'}</span>}
+          <Button type="button" variant="outline" onClick={handleCancel} disabled={isBusy}>
+            {t('common.cancel') || 'Cancel'}
+          </Button>
+          <Button type="button" onClick={handleSave} isLoading={isSaving} disabled={saveDisabled}>
+            {t('common.save') || 'Save'}
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}

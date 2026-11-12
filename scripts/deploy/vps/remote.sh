@@ -6,7 +6,8 @@
 #   sh remote.sh prepare [KEY=value ...]   # prerequisites, swap, firewall, Coolify, API token,
 #                                          # and a deploy key when the repository is private
 #   sh remote.sh deploy  [KEY=value ...]   # project, application, domains (the platform host and
-#                                          # *.<domain>), env vars, DNS-01, deployment
+#                                          # *.<domain>, or with SITE_MODE=single the domain alone),
+#                                          # env vars, DNS-01, deployment
 #
 # POSIX sh on purpose: it runs on whatever the VPS ships (dash, bash, busybox ash). Every
 # step looks before it acts, so running a phase again changes only what is missing.
@@ -565,10 +566,26 @@ deploy() {
   if [ -n "$dns_provider" ] && { [ -z "$dns_env" ] || [ -z "$dns_token" ]; }; then
     die "DNS_PROVIDER needs DNS_ENV and the uploaded token file"
   fi
+  # SITE_MODE=single (a project whose stack hands the API no tenant template) serves one site at the
+  # domain itself, www.<domain> redirecting to it with WWW=1: no tenant router, wildcard or DNS-01.
+  site_mode=$(arg SITE_MODE)
+  case $site_mode in
+    "" | tenants | single) ;;
+    *) die "SITE_MODE '$site_mode' is neither tenants nor single" ;;
+  esac
+  www=$(arg WWW)
+  if [ "$site_mode" = single ] && [ -n "$dns_provider" ]; then
+    die "DNS_PROVIDER applies only to a multi-tenant deployment; a single site's certificates are HTTP-01"
+  fi
   # The platform at <platform subdomain>.<domain> (app.<domain> by default), every tenant at
   # <identifier>.<domain>.
   platform_host="$platform_subdomain.$domain"
   url="https://$platform_host"
+  # A single site is the domain itself.
+  if [ "$site_mode" = single ]; then
+    platform_host=$domain
+    url="https://$domain"
+  fi
   tenant_template="https://{tenant}.$domain"
   load_token
 
@@ -610,6 +627,13 @@ deploy() {
   # Coolify accepts; the wildcard is added below, once it exists.
   domains=$(jq -cn --arg d "$url:80" '[{name: "proxy", domain: $d}]')
   all_domains=$(jq -cn --arg d "$url:80,https://*.$domain:80" '[{name: "proxy", domain: $d}]')
+  if [ "$site_mode" = single ]; then
+    # One site: the domain, and www.<domain> (which Caddy redirects to it) when asked for.
+    site_domains="$url:80"
+    if [ "$www" = 1 ]; then site_domains="$url:80,https://www.$domain:80"; fi
+    domains=$(jq -cn --arg d "$site_domains" '[{name: "proxy", domain: $d}]')
+    all_domains=$domains
+  fi
 
   api_must GET /applications
   app_uuid=$(printf '%s' "$API_BODY" | jq -r --arg n "$app" '[.[] | select(.name == $n)][0].uuid // empty')
@@ -637,36 +661,49 @@ deploy() {
   # Only the branch: Coolify splits the repository URL into a source and a path when the
   # application is created, and a full URL sent again would be stored inside that path.
   api_must PATCH "/applications/$app_uuid" "$(jq -cn --arg b "$branch" '{git_branch: $b}')"
-  # Coolify escapes every $ in a compose file's labels by default, which would keep Compose from
-  # filling in the tenants' service name (docker-compose.coolify.yml).
-  api PATCH "/applications/$app_uuid" '{"is_container_label_escape_enabled": false}'
-  api_ok || die "could not turn off label escaping ($API_STATUS: $API_BODY). In the dashboard, open the application and untick 'Escape special characters in labels', then run again"
-  # The domain is set when the application is created. Coolify accepts a change to it only once
-  # it has read the compose file, at the first deployment; until then the creation's value stands.
-  api PATCH "/applications/$app_uuid" "$(jq -cn --argjson d "$all_domains" '{docker_compose_domains: $d}')"
-  if api_ok; then
-    ok "domains $url and https://*.$domain -> proxy:80"
-  elif printf '%s' "$API_BODY" | grep -q docker_compose_raw; then
-    ok "domain $url -> proxy:80 (set when the application was created; *.$domain is added on the next deploy)"
-  else
-    # A Coolify that refuses a wildcard domain still serves the tenants, through tenant_router.
+  if [ "$site_mode" = single ]; then
+    # The domain is set when the application is created. Coolify accepts a change to it only once
+    # it has read the compose file, at the first deployment; until then the creation's value stands.
     api PATCH "/applications/$app_uuid" "$(jq -cn --argjson d "$domains" '{docker_compose_domains: $d}')"
     if api_ok; then
-      ok "domain $url -> proxy:80 (Coolify refused https://*.$domain; the tenants' router serves it)"
+      ok "domains $site_domains -> proxy:80"
+    elif printf '%s' "$API_BODY" | grep -q docker_compose_raw; then
+      ok "domains $site_domains -> proxy:80 (set when the application was created)"
     else
-      die "could not attach $url ($API_STATUS: $API_BODY). In the dashboard, open the application and set the 'proxy' service's domains to $url:80,https://*.$domain:80"
+      die "could not attach $url ($API_STATUS: $API_BODY). In the dashboard, open the application and set the 'proxy' service's domains to $site_domains"
     fi
-  fi
+  else
+    # Coolify escapes every $ in a compose file's labels by default, which would keep Compose from
+    # filling in the tenants' service name (docker-compose.coolify.yml).
+    api PATCH "/applications/$app_uuid" '{"is_container_label_escape_enabled": false}'
+    api_ok || die "could not turn off label escaping ($API_STATUS: $API_BODY). In the dashboard, open the application and untick 'Escape special characters in labels', then run again"
+    # The domain is set when the application is created. Coolify accepts a change to it only once
+    # it has read the compose file, at the first deployment; until then the creation's value stands.
+    api PATCH "/applications/$app_uuid" "$(jq -cn --argjson d "$all_domains" '{docker_compose_domains: $d}')"
+    if api_ok; then
+      ok "domains $url and https://*.$domain -> proxy:80"
+    elif printf '%s' "$API_BODY" | grep -q docker_compose_raw; then
+      ok "domain $url -> proxy:80 (set when the application was created; *.$domain is added on the next deploy)"
+    else
+      # A Coolify that refuses a wildcard domain still serves the tenants, through tenant_router.
+      api PATCH "/applications/$app_uuid" "$(jq -cn --argjson d "$domains" '{docker_compose_domains: $d}')"
+      if api_ok; then
+        ok "domain $url -> proxy:80 (Coolify refused https://*.$domain; the tenants' router serves it)"
+      else
+        die "could not attach $url ($API_STATUS: $API_BODY). In the dashboard, open the application and set the 'proxy' service's domains to $url:80,https://*.$domain:80"
+      fi
+    fi
 
-  # A DNS challenge an earlier deploy configured stays in force when this one names no provider.
-  wildcard_via=$dns_provider
-  if [ -z "$wildcard_via" ] && grep -q 'dnschallenge.provider=.*# efn-dns' "$PROXY_DIR/docker-compose.yml" 2>/dev/null; then
-    wildcard_via=configured
+    # A DNS challenge an earlier deploy configured stays in force when this one names no provider.
+    wildcard_via=$dns_provider
+    if [ -z "$wildcard_via" ] && grep -q 'dnschallenge.provider=.*# efn-dns' "$PROXY_DIR/docker-compose.yml" 2>/dev/null; then
+      wildcard_via=configured
+    fi
+    # The challenge first: a router asking for the wildcard is written only once it can be answered.
+    if [ -n "$dns_provider" ]; then dns_challenge "$dns_provider" "$dns_env" "$dns_token" "$domain"; fi
+    dns_token=""
+    tenant_router "$app" "$domain" "$wildcard_via"
   fi
-  # The challenge first: a router asking for the wildcard is written only once it can be answered.
-  if [ -n "$dns_provider" ]; then dns_challenge "$dns_provider" "$dns_env" "$dns_token" "$domain"; fi
-  dns_token=""
-  tenant_router "$app" "$domain" "$wildcard_via"
 
   step "Environment variables"
   api_must GET "/applications/$app_uuid/envs"
@@ -676,8 +713,10 @@ deploy() {
   set_env() { changes=$(printf '%s' "$changes" | jq -c --arg k "$1" --arg v "$2" '. + [{key: $k, value: $v, is_preview: false}]'); }
   # Replaced every run: what the domain decides.
   set_env PUBLIC_URL "$url"
-  set_env TENANT_URL_TEMPLATE "$tenant_template"
-  set_env TENANTS_SERVICE "$(tenants_service "$app")"
+  if [ "$site_mode" != single ]; then
+    set_env TENANT_URL_TEMPLATE "$tenant_template"
+    set_env TENANTS_SERVICE "$(tenants_service "$app")"
+  fi
   # Filled once and never overwritten: changing a password here would lock the app out of its own
   # database, and a new JWT key would sign every user out.
   [ -n "$(env_value POSTGRES_DB)" ] || set_env POSTGRES_DB app
@@ -694,8 +733,11 @@ deploy() {
   fi
   api_must PATCH "/applications/$app_uuid/envs/bulk" "$(jq -cn --argjson d "$changes" '{data: $d}')"
   ok "$(printf '%s' "$changes" | jq -r 'map(.key) | join(", ")') set"
+  # The seeded accounts: one admin on a single site, the platform's and the tenant's otherwise.
+  accounts="admin and tenantadmin"
+  if [ "$site_mode" = single ]; then accounts=admin; fi
   if [ -n "$seed_password" ]; then
-    printf 'App %s (%s)\nadmin and tenantadmin password: %s\n' "$app" "$url" "$seed_password" >"$STATE_DIR/$app.txt"
+    printf 'App %s (%s)\n%s password: %s\n' "$app" "$url" "$accounts" "$seed_password" >"$STATE_DIR/$app.txt"
   fi
 
   step "Deploying (the first build takes several minutes)"
@@ -742,7 +784,7 @@ deploy() {
 
   # A host no tenant holds still reaches the app through the tenants' router; -k because without a
   # DNS provider Traefik serves its default certificate there.
-  if [ -f "$PROXY_DIR/dynamic/efn-$app.yaml" ]; then
+  if [ "$site_mode" != single ] && [ -f "$PROXY_DIR/dynamic/efn-$app.yaml" ]; then
     probe="efn-check-$(rand_alnum 8 | tr 'A-Z' 'a-z').$domain"
     i=0
     until curl -fsSk --max-time 10 --resolve "$probe:443:127.0.0.1" "https://$probe/health" >/dev/null 2>&1; do
@@ -759,7 +801,11 @@ deploy() {
   say ""
   say "Deployed: $url"
   if [ -f "$STATE_DIR/$app.txt" ]; then
-    say "Sign in as admin (platform) or tenantadmin; the password is in $STATE_DIR/$app.txt"
+    if [ "$site_mode" = single ]; then
+      say "Sign in as admin; the password is in $STATE_DIR/$app.txt"
+    else
+      say "Sign in as admin (platform) or tenantadmin; the password is in $STATE_DIR/$app.txt"
+    fi
     if [ -n "$seed_password" ]; then say "  password: $seed_password"; fi
   fi
   result "$(jq -cn --arg u "$url" '{url: $u}')"

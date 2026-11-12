@@ -1,0 +1,148 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import { useTranslation } from '@/i18n'
+import { useLocalizedRouter } from '@/hooks'
+import { Badge, Button, Modal } from '@/components/ui'
+import { Textarea } from '@/components/ui/form'
+import { apiErrorAlert, confirmDeleteAlert, successToast } from '@/lib/utils'
+import { TextListItemDto, useLocalizationTextDeleteMutation, useLocalizationTextUpsertMutation } from '@/store/api/localization'
+import { revalidatePublicCache } from '@/lib/revalidate-client'
+
+/** Every `${name}` token a text carries, in the order it first appears, without duplicates. */
+const extractPlaceholders = (value: string): string[] => {
+  const matches = value.match(/\$\{[^}]+\}/g) ?? []
+  return [...new Set(matches.map((token) => token.slice(2, -1)))]
+}
+
+/** Props for the text edit modal, naming the culture and row being edited. */
+interface LocalizationTextEditModalProps {
+  isOpen: boolean
+  onClose: () => void
+  culture: string
+  cultureName: string
+  isRtl: boolean
+  row: TextListItemDto
+}
+
+/**
+ * Modal that edits (or clears) the acting scope's override of one key in one culture. The read-only
+ * block above the textarea shows the shipped value - and every `${name}`
+ * placeholder that value carries is called out below the textarea, with a warning (never a block) for
+ * one the draft has dropped. Saving and resetting both close the modal and refresh the app's own
+ * layout, so a text changed here shows up immediately.
+ */
+export const LocalizationTextEditModal = ({ isOpen, onClose, culture, cultureName, isRtl, row }: LocalizationTextEditModalProps) => {
+  const { t } = useTranslation()
+  const router = useLocalizedRouter()
+  const [value, setValue] = useState(row.value ?? row.inheritedValue)
+  const [upsert, { isLoading: isSaving }] = useLocalizationTextUpsertMutation()
+  const [remove, { isLoading: isResetting }] = useLocalizationTextDeleteMutation()
+
+  const placeholders = useMemo(() => extractPlaceholders(row.inheritedValue), [row.inheritedValue])
+  const missingPlaceholders = placeholders.filter((name) => !value.includes(`\${${name}}`))
+
+  const trimmed = value.trim()
+  const isUnchanged = trimmed === (row.value ?? row.inheritedValue)
+  const canSave = trimmed.length > 0 && !isUnchanged
+  const isBusy = isSaving || isResetting
+  const dir = isRtl ? 'rtl' : 'ltr'
+
+  const handleSave = async () => {
+    const result = await upsert({ culture, key: row.key, value: trimmed })
+    if (result.error) {
+      apiErrorAlert(result.error)
+      return
+    }
+    successToast.fire({ text: t('page.localization.texts.saveSuccess') || 'Text saved' })
+    void revalidatePublicCache(['localization'])
+    onClose()
+    router.refresh()
+  }
+
+  const handleReset = async () => {
+    const confirmed = await confirmDeleteAlert({
+      title: t('page.localization.texts.resetTitle') || 'Reset this text?',
+      text: t('page.localization.texts.resetConfirm') || 'This removes your override and falls back to the inherited value.',
+    })
+    if (!confirmed.isConfirmed) return
+
+    const result = await remove({ culture, key: row.key })
+    if (result.error) {
+      apiErrorAlert(result.error)
+      return
+    }
+    successToast.fire({ text: t('page.localization.texts.resetSuccess') || 'Text reset to the inherited value' })
+    void revalidatePublicCache(['localization'])
+    onClose()
+    router.refresh()
+  }
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} size="lg">
+      <Modal.Header>{t('page.localization.texts.editTitle') || 'Edit text'}</Modal.Header>
+
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-md bg-surface-2 px-2 py-1 font-mono text-xs break-all text-foreground" dir="ltr">
+            {row.key}
+          </span>
+          <Badge variant="secondary" type="outline">
+            {cultureName}
+          </Badge>
+        </div>
+
+        <div>
+          <div className="label form-label">{t('page.localization.texts.defaultLabel') || 'Default value'}</div>
+          <div className="max-h-40 overflow-y-auto rounded-md border border-border bg-surface-2 p-3 text-sm wrap-break-word whitespace-pre-wrap text-muted-foreground" dir={dir}>
+            {row.inheritedValue}
+          </div>
+        </div>
+
+        <div>
+          <Textarea name="overrideValue" label={t('page.localization.texts.overrideLabel') || 'Your text'} rows={6} maxLength={4000} dir={dir} value={value} onChange={(event) => setValue(event.target.value)} />
+          <div className="text-end text-xs text-muted-foreground">{value.length}/4000</div>
+          {trimmed.length === 0 && <div className="mt-1 text-sm text-danger">{t('validation.required') || 'Field is required'}</div>}
+        </div>
+
+        {placeholders.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <span className="text-sm text-muted-foreground">{t('page.localization.texts.placeholders') || 'Keep these placeholders:'}</span>
+            <div className="flex flex-wrap gap-2">
+              {placeholders.map((name) =>
+                missingPlaceholders.includes(name) ? (
+                  <Badge key={name} variant="warning" type="outline" className="font-mono">
+                    {`\${${name}}`}
+                  </Badge>
+                ) : (
+                  <Badge key={name} variant="dark" type="outline" className="font-mono">
+                    {`\${${name}}`}
+                  </Badge>
+                ),
+              )}
+            </div>
+            {missingPlaceholders.length > 0 && <span className="text-sm text-warning">{t('page.localization.texts.placeholderMissing') || 'A placeholder is missing — the app will show it empty.'}</span>}
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4">
+          <div>
+            {row.value != null && (
+              <Button type="button" variant="outline-warning" onClick={handleReset} disabled={isBusy}>
+                {t('page.localization.texts.reset') || 'Reset to inherited'}
+              </Button>
+            )}
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onClose} disabled={isBusy}>
+              {t('common.cancel') || 'Cancel'}
+            </Button>
+            <Button type="button" onClick={handleSave} isLoading={isSaving} disabled={!canSave || isBusy}>
+              {t('common.save') || 'Save'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  )
+}
