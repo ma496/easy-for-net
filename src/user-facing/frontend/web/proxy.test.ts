@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { i18nConfig } from './i18n/config'
 
 /**
  * The proxy's auth gate. Whether the request carries the auth cookie is the only input it reads
@@ -49,8 +50,11 @@ describe('proxy auth gate', () => {
     expect(redirectTarget(response)).toBe(target)
   })
 
-  it('names the screen asked for as the redirect, without its locale segment', async () => {
-    expect(redirectTarget(await proxy(request('/fr/admin/users', { cookie: 'preferred-language=fr' })))).toBe('/fr/signin?redirect=%2Fadmin%2Fusers')
+  // A project generated with English only routes no other locale, so there is nothing to prefix.
+  const otherLocale = i18nConfig.locales.find((locale) => locale !== i18nConfig.defaultLocale)
+
+  it.skipIf(!otherLocale)('names the screen asked for as the redirect, without its locale segment', async () => {
+    expect(redirectTarget(await proxy(request(`/${otherLocale}/admin/users`, { cookie: `preferred-language=${otherLocale}` })))).toBe(`/${otherLocale}/signin?redirect=%2Fadmin%2Fusers`)
   })
 
   it.each(['/admin', '/admin/users', '/admin/users?page=2', '/account/profile'])('lets a request carrying the session through to %s', async (path) => {

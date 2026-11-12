@@ -26,6 +26,9 @@ public class SessionStoreUnavailableTests(App app) : UsersTestsBase(app)
     [InlineData("es")]
     public async Task Unreachable_Store_Answers_503_In_The_Callers_Language(string culture)
     {
+        var expected = Service<ILocalizationResourceStore>().GetResources(culture)?["error.server.sessionStoreUnavailable"];
+        Assert.SkipWhen(expected is null, $"this test needs {culture} shipped, and a project generated with -m false ships English only");
+
         await SetAuthTokenAsync();
         Service<SessionStoreFaults>().MakeUnreachable(SessionIdOfClient());
         Client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(culture);
@@ -35,7 +38,7 @@ public class SessionStoreUnavailableTests(App app) : UsersTestsBase(app)
         response.StatusCode.Should().Be(HttpStatusCode.ServiceUnavailable);
         var error = problem.Errors.Single();
         error.Code.Should().Be(ErrorCodes.SessionStoreUnavailable.Value);
-        error.Reason.Should().Be(Service<ILocalizationResourceStore>().GetResources(culture)!["error.server.sessionStoreUnavailable"],
+        error.Reason.Should().Be(expected,
             "the message is the shipped one for the caller's culture");
     }
 

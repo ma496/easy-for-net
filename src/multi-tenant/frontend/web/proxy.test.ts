@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { i18nConfig } from './i18n/config'
 
 /**
  * The proxy's auth gate, on the requests a sign-in passes through. Whether the request carries the auth
@@ -37,9 +38,15 @@ describe('proxy auth gate', () => {
     expect(redirectTarget(response)).toBe('/signin?redirect=%2F')
   })
 
-  it('names the screen asked for as the redirect, without its locale segment', async () => {
+  // A project generated with English only routes no other locale, so there is nothing to prefix.
+  const otherLocale = i18nConfig.locales.find((locale) => locale !== i18nConfig.defaultLocale)
+
+  it('names the screen asked for as the redirect', async () => {
     expect(redirectTarget(await proxy(request('/users')))).toBe('/signin?redirect=%2Fusers')
-    expect(redirectTarget(await proxy(request('/fr/users', { cookie: 'preferred-language=fr' })))).toBe('/fr/signin?redirect=%2Fusers')
+  })
+
+  it.skipIf(!otherLocale)('names the screen asked for as the redirect, without its locale segment', async () => {
+    expect(redirectTarget(await proxy(request(`/${otherLocale}/users`, { cookie: `preferred-language=${otherLocale}` })))).toBe(`/${otherLocale}/signin?redirect=%2Fusers`)
   })
 
   it('answers a router prefetch with the same redirect, which is why the client must not reuse it once signed in', async () => {
