@@ -54,8 +54,10 @@ public class TenantPermissionTests(App app) : TenancyTestsBase(app)
     /// <summary>
     /// The namespace the tenancy surface's endpoints live in, matched as a prefix so an endpoint added
     /// to a new area of the same feature is covered by the reflection below rather than escaping it.
+    /// Read off an endpoint type rather than written out, so it follows the root namespace a generated
+    /// project is given.
     /// </summary>
-    private const string TenancyEndpointNamespace = "Backend.Features.Tenancy.Endpoints";
+    private static readonly string TenancyEndpointNamespace = typeof(TenantCreateEndpoint).Namespace![..typeof(TenantCreateEndpoint).Namespace!.LastIndexOf('.')];
 
     /// <summary>
     /// The seeded account holding <see cref="TestRoles.LimitedTenantRoleId"/> and no other role

@@ -215,7 +215,8 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
             DbContext.Roles.Add(first);
             await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-            var second = new Role { SystemCreated = true, Name = name, Description = "Platform role arranged by a uniqueness test" };
+            // Upper-cased so only the normalized index collides; see RefuseDuplicateRoleAsync.
+            var second = new Role { SystemCreated = true, Name = name.ToUpperInvariant(), Description = "Platform role arranged by a uniqueness test" };
             DbContext.Roles.Add(second);
 
             var saved = async () => await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
@@ -353,7 +354,11 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
     {
         using var platformScope = TenantContext.BeginPlatformScope();
 
-        var duplicate = new Tenant { Name = "Duplicate Identifier Tenant", Identifier = identifier };
+        // Upper-cased, so only the normalized column collides: a raw-column index that the database
+        // happens to check first would otherwise be the one reported, and which one that is depends on
+        // the order the indexes were created in - a project's fresh Initial migration orders them
+        // differently from this repository's migration history.
+        var duplicate = new Tenant { Name = "Duplicate Identifier Tenant", Identifier = identifier.ToUpperInvariant() };
         DbContext.Tenants.Add(duplicate);
 
         var saved = async () => await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
@@ -372,7 +377,11 @@ public class TenantUniquenessTests(App app) : TenancyTestsBase(app)
     {
         using var tenantScope = TenantContext.BeginTenant(tenantId);
 
-        var duplicate = new Role { SystemCreated = false, Name = name, Description = "Role arranged by a uniqueness test" };
+        // Upper-cased, so only the normalized column collides: a raw-column index that the database
+        // happens to check first would otherwise be the one reported, and which one that is depends on
+        // the order the indexes were created in - a project's fresh Initial migration orders them
+        // differently from this repository's migration history.
+        var duplicate = new Role { SystemCreated = false, Name = name.ToUpperInvariant(), Description = "Role arranged by a uniqueness test" };
         DbContext.Roles.Add(duplicate);
 
         var saved = async () => await DbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
