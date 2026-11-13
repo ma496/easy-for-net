@@ -6,16 +6,13 @@ namespace Backend.Tests.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// Tests for the <see cref="NotificationMarkAllAsReadEndpoint"/> covering marking all notifications as
-/// read for the current user, the tenant restriction both of its bulk statements carry, the
-/// tenant whose notifications it may mark, and the recipient's other tenants it leaves unread
-///.
+/// read for the current user, the read cursor that carries it for the notifications addressed to every
+/// user, and the notifications raised after the call that it leaves unread.
 /// </summary>
 /// <remarks>
-/// The endpoint marks rows through bulk statements that no tenant filter reaches - one <c>ExecuteUpdate</c>
-/// and hand-written <c>INSERT ... ON CONFLICT</c> statements for the read cursors of audience notifications - so
-/// the tests here are written against one recipient who is a member of two tenants. That is what makes
-/// the restriction observable: the same recipient's rows exist in both, and only the active tenant's may
-/// change, which is a claim no single-tenant arrangement could state.
+/// The endpoint marks rows through bulk statements - one <c>ExecuteUpdate</c> and hand-written
+/// <c>INSERT ... ON CONFLICT</c> statements for the read cursors of audience notifications - so what they
+/// changed is read back from the database or through the API rather than from the change tracker.
 /// </remarks>
 public class NotificationMarkAllAsReadTests(App app) : NotificationsTestsBase(app)
 {
@@ -48,7 +45,7 @@ public class NotificationMarkAllAsReadTests(App app) : NotificationsTestsBase(ap
 
     /// <summary>
     /// Verifies that mark-all-as-read covers the audience notifications raised up to the call and no later
-    /// one: afterwards the older tenant-wide and platform-wide notifications read as read, while ones raised
+    /// one: afterwards the older notifications addressed to every user read as read, while ones raised
     /// after the call read as unread and are counted.
     /// </summary>
     [Fact]
@@ -167,8 +164,7 @@ public class NotificationMarkAllAsReadTests(App app) : NotificationsTestsBase(ap
     }
 
     /// <summary>
-    /// Reads a user's read cursors across every tenant, because the platform-wide one names no tenant and
-    /// the tenant filter alone would hide it.
+    /// Reads a user's read cursors straight from the database, since no endpoint reports them.
     /// </summary>
     /// <param name="userId">The user whose cursors are wanted.</param>
     /// <returns>The cursors as the database holds them.</returns>

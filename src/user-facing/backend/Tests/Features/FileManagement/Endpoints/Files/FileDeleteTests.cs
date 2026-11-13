@@ -3,22 +3,17 @@ using Backend.Features.FileManagement.Endpoints.Files;
 namespace Backend.Tests.Features.FileManagement.Endpoints.Files;
 
 /// <summary>
-/// Tests for <see cref="FileDeleteEndpoint"/>: that replacing or removing a file of another tenant is
-/// refused with the code that names why and leaves the file exactly as it was, that removal in
-/// the owning tenant takes both the record and the content, and that an unauthenticated caller is refused
-///.
+/// Tests for <see cref="FileDeleteEndpoint"/>: that removing a file takes both the record and the
+/// content, and that an unauthenticated caller is refused before any file is looked for.
 /// </summary>
 /// <remarks>
-/// A caller acting in the wrong tenant is given the delete permission itself, so what refuses them is the
-/// file's attribution rather than their authority over the endpoint: without that, the refusal would be
-/// produced by authorization before any file was ever considered and the test would prove nothing about
-/// the tenant. Replacing a file is a deletion followed by an upload, so what holds for removal holds for
+/// Replacing a file is a deletion followed by an upload, so what holds for removal holds for
 /// replacement.
 /// </remarks>
 public class FileDeleteTests(App app) : FileTestsBase(app)
 {
     /// <summary>
-    /// Verifies that a file belonging to the tenant the caller is acting in is removed, record and content
+    /// Verifies that a file the caller may delete is removed, record and content
     /// together.
     /// </summary>
     /// <remarks>
@@ -32,21 +27,20 @@ public class FileDeleteTests(App app) : FileTestsBase(app)
         var member = await CreateUserAsync(roleId);
         var client = await ClientForAsync(member.Username);
 
-        var storedName = await UploadAsync(client, "notes the tenant is about to remove");
+        var storedName = await UploadAsync(client, "notes about to be removed");
 
         StorageProvider.Exists(storedName).Should().BeTrue("the content reached storage before the removal");
 
         var response = await RequestDeleteAsync(client, storedName);
 
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent, "the member holds the delete permission in the tenant that owns the file");
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent, "the caller holds the delete permission");
 
         (await StoredFileExistsAsync(storedName)).Should().BeFalse("the record granting access to the file is gone with it");
         StorageProvider.Exists(storedName).Should().BeFalse("and the content is gone, so nothing is left pointing at nothing");
     }
 
     /// <summary>
-    /// Verifies that an unauthenticated removal is refused with the standard unauthenticated response
-    ///.
+    /// Verifies that an unauthenticated removal is refused with the standard unauthenticated response.
     /// </summary>
     [Fact]
     public async Task Unauthenticated()
@@ -56,6 +50,6 @@ public class FileDeleteTests(App app) : FileTestsBase(app)
         var response = await RequestDeleteAsync(Client, $"{Guid.NewGuid():N}.txt");
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized,
-            "an anonymous caller has no tenant to be judged against, so no file is even looked for");
+            "an anonymous caller is refused before any file is even looked for");
     }
 }

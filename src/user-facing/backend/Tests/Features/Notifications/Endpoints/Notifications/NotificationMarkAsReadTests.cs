@@ -29,10 +29,7 @@ public class NotificationMarkAsReadTests(App app) : NotificationsTestsBase(app)
         res.Id.Should().Be(notification.Id);
 
         DbContext.ChangeTracker.Clear();
-        // Read across every tenant: the row carries the tenant it was raised in and the lookup here is
-        // about the row itself rather than about who may see it while acting where.
         var updated = await DbContext.Notifications
-            
             .FirstOrDefaultAsync(x => x.Id == notification.Id, cancellationToken: TestContext.Current.CancellationToken);
         updated!.IsRead.Should().BeTrue();
     }

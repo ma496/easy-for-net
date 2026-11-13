@@ -5,16 +5,8 @@ using Backend.Tests.Seeder;
 namespace Backend.Tests.Features.Identity.Endpoints.Users;
 
 /// <summary>
-/// Tests for the <see cref="UserListEndpoint"/> covering listing, pagination, and filtering of users,
-/// and the set of accounts the caller may administer at all - the tenant being acted in, widened to
-/// every account for a platform administrator.
+/// Tests for the <see cref="UserListEndpoint"/> covering listing, pagination, and filtering of users.
 /// </summary>
-/// <remarks>
-/// The restriction is asserted through the search rather than against the whole page: the suite runs
-/// against one shared database and its collections in parallel, so a test may count only what it made.
-/// Searching for an account by its own unique name asks the same question - is this account in the set
-/// the caller may administer - and answers it with a total the test can assert exactly.
-/// </remarks>
 public class UserListTests(App app) : UsersTestsBase(app)
 {
     /// <summary>

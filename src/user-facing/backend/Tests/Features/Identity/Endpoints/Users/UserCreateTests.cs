@@ -6,9 +6,7 @@ namespace Backend.Tests.Features.Identity.Endpoints.Users;
 
 /// <summary>
 /// Tests for the <see cref="UserCreateEndpoint"/> covering validation and successful user creation,
-/// the sign-in identifiers that are unique across the whole platform, the membership an
-/// account created inside a tenant is granted in it, and the account tier that follows the
-/// scope it was created in.
+/// and the sign-in identifiers that are unique across the whole application.
 /// </summary>
 public class UserCreateTests(App app) : UsersTestsBase(app)
 {
@@ -67,13 +65,12 @@ public class UserCreateTests(App app) : UsersTestsBase(app)
 
     /// <summary>
     /// Verifies that a username or an email address already taken is refused even when the account
-    /// holding it belongs to a tenant the caller does not administer.
+    /// holding it was created by another administrator.
     /// </summary>
     /// <remarks>
-    /// The two administrators act in different tenants and neither is a member of the other's, so the
-    /// second one cannot see the first one's account on any list of its own and still cannot create a
-    /// second account under the same sign-in identifier. Granting it would produce two accounts that
-    /// sign-in could not tell apart, since sign-in names no tenant to choose between them by.
+    /// The two administrators hold separate roles, and the second one still cannot create a second
+    /// account under the sign-in identifier the first one used. Granting it would produce two accounts
+    /// that sign-in could not tell apart.
     /// </remarks>
     [Fact]
     public async Task Username_And_Email_Stay_Globally_Unique()
@@ -112,7 +109,7 @@ public class UserCreateTests(App app) : UsersTestsBase(app)
             });
 
         reusedUsername.StatusCode.Should().Be(HttpStatusCode.BadRequest,
-            "a name taken in another tenant is taken here, because one person authenticates with one account however many tenants they belong to");
+            "a name another administrator has already given an account is taken, because one person authenticates with one account");
         usernameRefusal.Errors.Should().ContainSingle();
         usernameRefusal.Errors.First().Code.Should().Be(ErrorCodes.UsernameAlreadyExists.Value);
 

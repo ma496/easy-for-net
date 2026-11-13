@@ -13,12 +13,12 @@ namespace Backend.Tests;
 /// <remarks>
 /// <para>
 /// Every run drops its database on teardown, so every run started from nothing: all the migrations,
-/// the Hangfire schema, the platform seed. That fixed cost was paid by each <c>dotnet test</c>
+/// the Hangfire schema, the seed. That fixed cost was paid by each <c>dotnet test</c>
 /// whatever its filter, and an unattended task runs several. Cloning a template is a file copy on
 /// the server, and the run still starts from a database no test has touched.
 /// </para>
 /// <para>
-/// The template is keyed by what decides its contents - the migrations, the platform seeder and the
+/// The template is keyed by what decides its contents - the migrations, the seeder and the
 /// <c>Seed</c> configuration - so changing any of them builds a new one, and it is rebuilt at least
 /// daily so a seed stamped with the time it ran never grows stale. Anything that goes wrong here is
 /// reported and the run falls back to building the database the long way; a template is a
@@ -221,7 +221,7 @@ internal sealed class TestDatabaseTemplate
 
     /// <summary>
     /// Twelve hex characters over everything the template's contents follow from: each migration and
-    /// the platform seeder (path and bytes), and the <c>Seed</c> configuration the seeded accounts are
+    /// the seeder (path and bytes), and the <c>Seed</c> configuration the seeded accounts are
     /// created with.
     /// </summary>
     private static string Key(string repositoryRoot, IConfiguration configuration)

@@ -85,11 +85,11 @@ public abstract class SettingsTestsBase(App app) : UsersTestsBase(app)
     {
         var cancellationToken = TestContext.Current.CancellationToken;
 
-        var platformRows = await DbContext.SettingValues
+        var rows = await DbContext.SettingValues
             .ToListAsync(cancellationToken);
-        if (platformRows.Count > 0)
+        if (rows.Count > 0)
         {
-            DbContext.SettingValues.RemoveRange(platformRows);
+            DbContext.SettingValues.RemoveRange(rows);
             await DbContext.SaveChangesAsync(cancellationToken);
         }
 

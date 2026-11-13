@@ -9,12 +9,12 @@ namespace Backend.Tests.ErrorHandling;
 /// <summary>
 /// Tests that a business error's message - one carrying an <see cref="ErrorCodes"/> value with a
 /// matching <c>error.server.&lt;code&gt;</c> resource key - is served in the culture the request
-/// negotiated via <c>Accept-Language</c>, through the acting scope's own override chain, while a plain
+/// negotiated via <c>Accept-Language</c>, through the stored override chain, while a plain
 /// FluentValidation rule with no such key is left exactly as FluentValidation wrote it.
 /// </summary>
 /// <remarks>
 /// Derives from <see cref="LocalizationTestsBase"/> (the <c>Localization</c> xunit collection) because
-/// every case here reads the same globally-shared platform resource layer that class's own tests write
+/// every case here reads the same globally-shared override layer that class's own tests write
 /// overrides into, whether or not this particular test writes one itself.
 /// </remarks>
 public class ErrorLocalizationTests(App app) : LocalizationTestsBase(app)

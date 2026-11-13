@@ -3,8 +3,9 @@ using Backend.Features.Localization.Endpoints.Localization;
 namespace Backend.Tests.Features.Localization.Endpoints.Localization;
 
 /// <summary>
-/// Tests for <see cref="ResourcesGetEndpoint"/>: the resolution chain (tenant beats platform beats
-/// shipped), tenant isolation, what an anonymous caller sees, and the served-culture fallback.
+/// Tests for <see cref="ResourcesGetEndpoint"/>: the served-culture fallback when
+/// the requested culture is not enabled, the enabled languages it lists, and the canonical culture an
+/// uppercase route is served.
 /// </summary>
 public class ResourcesGetTests(App app) : LocalizationTestsBase(app)
 {

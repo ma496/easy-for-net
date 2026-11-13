@@ -5,7 +5,7 @@ namespace Backend.Tests.Features.Identity.Endpoints.Roles;
 
 /// <summary>
 /// Tests for the <see cref="RoleUpdateEndpoint"/> covering updating roles, non-existent roles,
-/// protected system-created roles, and the role of another tenant that cannot be renamed.
+/// protected system-created roles, and the name a deleted role still holds.
 /// </summary>
 public class RoleUpdateTests(App app) : UsersTestsBase(app)
 {
@@ -63,10 +63,9 @@ public class RoleUpdateTests(App app) : UsersTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        // The bootstrap tenant's administrator role, read across tenants because the row carries the
-        // tenant it belongs to and the lookup here is the seeder's rather than a caller's.
+        // The seeded administrator role, read straight from the database because the lookup here is
+        // the seeder's rather than a caller's.
         var systemCreatedRole = await DbContext.Roles
-            
             .AsNoTracking()
             .SingleAsync(role => role.Id == TestRoles.AdminRoleId, TestContext.Current.CancellationToken);
         systemCreatedRole.SystemCreated.Should().BeTrue("the premise of this test is that the role is one the seeder made");
@@ -84,14 +83,13 @@ public class RoleUpdateTests(App app) : UsersTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that the name a deleted role of the tenant was given is not free to take: renaming
-    /// another role onto it is refused, because deleting a role does not release the name it used
-    ///.
+    /// Verifies that the name a deleted role was given is not free to take: renaming another role onto
+    /// it is refused, because deleting a role does not release the name it used.
     /// </summary>
     /// <remarks>
-    /// The deleted role is shown to be gone from the tenant's own view before the rename is attempted, so
+    /// The deleted role is shown to be gone from the role list before the rename is attempted, so
     /// the refusal cannot be explained by the deleted role still being visible: the name is being held by
-    /// a row the tenant no longer lists at all.
+    /// a row no longer listed at all.
     /// </remarks>
     [Fact]
     public async Task Renaming_Onto_A_Deleted_Roles_Name_Is_Refused()
@@ -152,20 +150,18 @@ public class RoleUpdateTests(App app) : UsersTestsBase(app)
             .ToListAsync(TestContext.Current.CancellationToken);
 
     /// <summary>
-    /// Reads a role back across every tenant, because what is asserted of it is a row a caller acting in
-    /// another tenant must have been unable to rename.
+    /// Reads a role back straight from the database, so that what is asserted of it does not depend on
+    /// the endpoint under test.
     /// </summary>
     /// <param name="roleId">The role to read.</param>
     /// <returns>The stored role.</returns>
     private async Task<Role> RoleAsync(Guid roleId)
         => await DbContext.Roles
-            
             .AsNoTracking()
             .SingleAsync(role => role.Id == roleId, TestContext.Current.CancellationToken);
 
     /// <summary>
-    /// The permissions a role holds, read from the join rows rather than through any surface that
-    /// narrows to the tenant being acted in.
+    /// The permissions a role holds, read from the join rows rather than through the endpoint under test.
     /// </summary>
     /// <param name="roleId">The role whose permissions are wanted.</param>
     /// <returns>The permission identifiers the role holds.</returns>

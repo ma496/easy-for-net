@@ -3,7 +3,7 @@ using Backend.Features.Localization.Endpoints.Localization;
 namespace Backend.Tests.Features.Localization.Endpoints.Localization;
 
 /// <summary>
-/// Tests for <see cref="TextUpdateEndpoint"/>: upserting the acting scope's own override, validation of
+/// Tests for <see cref="TextUpdateEndpoint"/>: upserting a text override, validation of
 /// the culture, key and value, and the permission it requires.
 /// </summary>
 public class TextUpdateTests(App app) : LocalizationTestsBase(app)

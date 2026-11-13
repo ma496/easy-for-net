@@ -26,7 +26,7 @@ namespace Backend.Tests.Features.FileManagement;
 /// require, so what the storage holds is asserted alongside what the caller was answered.
 /// </para>
 /// <para>
-/// Every tenant, role, membership, account and file a test asserts on is made by the test itself. The
+/// Every role, account and file a test asserts on is made by the test itself. The
 /// suite runs its collections sequentially against one shared database and one shared storage
 /// directory, so a test that weighed its own upload against rows or bytes it did not create would be
 /// asserting on whatever the rest of the suite has left behind.
@@ -62,7 +62,7 @@ public abstract class FileTestsBase(App app) : UsersTestsBase(app)
     /// <param name="content">The text the file is to hold.</param>
     /// <param name="fileName">The original filename to submit.</param>
     /// <param name="contentType">The content type to submit.</param>
-    /// <param name="accountOwned">Whether the upload is to belong to the calling account rather than to a tenant.</param>
+    /// <param name="accountOwned">Whether the upload is to belong to the calling account rather than being an application file.</param>
     /// <returns>The request, ready to be posted as form data.</returns>
     /// <remarks>
     /// The stream behind the form part is a <see cref="MemoryStream"/> over the bytes and is deliberately
@@ -90,10 +90,10 @@ public abstract class FileTestsBase(App app) : UsersTestsBase(app)
     /// <summary>
     /// Uploads the given text as a file and returns the stored name the endpoint answered with.
     /// </summary>
-    /// <param name="client">The client to upload as, and the tenant it is acting in.</param>
+    /// <param name="client">The client to upload as.</param>
     /// <param name="content">The text the file is to hold.</param>
     /// <param name="fileName">The original filename to submit.</param>
-    /// <param name="accountOwned">Whether the upload is to belong to the calling account rather than to a tenant.</param>
+    /// <param name="accountOwned">Whether the upload is to belong to the calling account rather than being an application file.</param>
     /// <returns>The stored name of the uploaded file.</returns>
     /// <remarks>The file is removed from storage when the test tears down (<see cref="AppTestsBase.DeleteAfterTest"/>).</remarks>
     protected async Task<string> UploadAsync(HttpClient client,
@@ -113,13 +113,12 @@ public abstract class FileTestsBase(App app) : UsersTestsBase(app)
     }
 
     /// <summary>
-    /// Reads the record attributing a stored file, across every tenant.
+    /// Reads the record attributing a stored file.
     /// </summary>
     /// <param name="fileName">The stored file name the record is found by.</param>
     /// <returns>The record, as the database holds it.</returns>
     protected async Task<StoredFile> StoredFileAsync(string fileName)
         => await DbContext.StoredFiles
-            
             .AsNoTracking()
             .SingleAsync(file => file.FileName == fileName, TestContext.Current.CancellationToken);
 
@@ -131,7 +130,6 @@ public abstract class FileTestsBase(App app) : UsersTestsBase(app)
     /// <returns><see langword="true"/> when a record names that original filename.</returns>
     protected async Task<bool> AnyStoredFileNamedAsync(string originalFileName)
         => await DbContext.StoredFiles
-            
             .AnyAsync(file => file.OriginalFileName == originalFileName, TestContext.Current.CancellationToken);
 
     /// <summary>
@@ -141,7 +139,6 @@ public abstract class FileTestsBase(App app) : UsersTestsBase(app)
     /// <returns><see langword="true"/> when the record still exists.</returns>
     protected async Task<bool> StoredFileExistsAsync(string fileName)
         => await DbContext.StoredFiles
-            
             .AnyAsync(file => file.FileName == fileName, TestContext.Current.CancellationToken);
 
     /// <summary>
@@ -170,7 +167,7 @@ public abstract class FileTestsBase(App app) : UsersTestsBase(app)
     /// <summary>
     /// Reads a stored file's content through the endpoint that streams it.
     /// </summary>
-    /// <param name="client">The client to read as, and the tenant it is acting in.</param>
+    /// <param name="client">The client to read as.</param>
     /// <param name="fileName">The stored file name to read.</param>
     /// <returns>The response, whose body is the file itself when the read was granted.</returns>
     /// <remarks>
@@ -184,7 +181,7 @@ public abstract class FileTestsBase(App app) : UsersTestsBase(app)
     /// <summary>
     /// Deletes a stored file through the endpoint that removes it.
     /// </summary>
-    /// <param name="client">The client to delete as, and the tenant it is acting in.</param>
+    /// <param name="client">The client to delete as.</param>
     /// <param name="fileName">The stored file name to remove.</param>
     /// <returns>The response, which carries no content whether it granted or refused.</returns>
     /// <remarks>

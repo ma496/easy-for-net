@@ -6,7 +6,7 @@ namespace Backend.Tests.Features.Identity.Endpoints.Account;
 /// <summary>
 /// Tests for password changes: that the new password is what authenticates afterwards, that the old
 /// one stops doing so, that every other session of the account ends while the one making the change
-/// survives, and that the change is owed to a caller whatever tenant they are acting in.
+/// survives, and that any caller may change their own password.
 /// </summary>
 /// <remarks>
 /// A password change ends every other session of the account - its access token answers 401 and its
@@ -68,8 +68,8 @@ public class ChangePasswordTests(App app) : SessionRevocationTestsBase(app)
     }
 
     /// <summary>
-    /// Verifies that a caller acting in a tenant can change its own password, which is about the person
-    /// rather than about the tenant.
+    /// Verifies that any caller can change their own password, whatever permissions they hold, since the
+    /// password belongs to the person rather than to any role.
     /// </summary>
     /// <remarks>
     /// The account is made by the test rather than named from the seed, because the password it holds
@@ -92,7 +92,7 @@ public class ChangePasswordTests(App app) : SessionRevocationTestsBase(app)
             });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK,
-            "the password belongs to the person rather than to the tenant they are working in");
+            "the password belongs to the person rather than to any role they hold");
 
         await AssertCredentialsReplacedAsync(account.Username, TestUsers.DefaultPassword, newPassword);
     }

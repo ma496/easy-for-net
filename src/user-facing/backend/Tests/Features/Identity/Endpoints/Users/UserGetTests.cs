@@ -4,8 +4,8 @@ using Backend.Features.Identity.Endpoints.Users;
 namespace Backend.Tests.Features.Identity.Endpoints.Users;
 
 /// <summary>
-/// Tests for the <see cref="UserGetEndpoint"/> covering retrieval of existing and non-existent users,
-/// and the account of another tenant that is not there to be read.
+/// Tests for the <see cref="UserGetEndpoint"/> covering retrieval of existing, system-created
+/// and non-existent users.
 /// </summary>
 public class UserGetTests(App app) : UsersTestsBase(app)
 {

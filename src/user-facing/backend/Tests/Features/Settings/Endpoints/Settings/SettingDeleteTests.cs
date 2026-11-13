@@ -4,8 +4,8 @@ using Backend.Features.Settings.Endpoints.Settings;
 namespace Backend.Tests.Features.Settings.Endpoints.Settings;
 
 /// <summary>
-/// Tests for <see cref="SettingDeleteEndpoint"/>: removing the acting scope's own overrides - and only
-/// those - so the setting follows the layer below again, and the permission it requires.
+/// Tests for <see cref="SettingDeleteEndpoint"/>: removing a setting's stored overrides so it
+/// follows its default again, and the permission it requires.
 /// </summary>
 public class SettingDeleteTests(App app) : SettingsTestsBase(app)
 {

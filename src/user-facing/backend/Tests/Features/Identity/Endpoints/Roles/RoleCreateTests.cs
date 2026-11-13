@@ -5,8 +5,7 @@ namespace Backend.Tests.Features.Identity.Endpoints.Roles;
 
 /// <summary>
 /// Tests for the <see cref="RoleCreateEndpoint"/> covering validation and successful role creation, the
-/// name a role is held to - unique within its tenant and nowhere wider - the tenant a
-/// created role is attributed to without being told, and the audit fields it records.
+/// unique name a role is held to, and the audit fields it records.
 /// </summary>
 public class RoleCreateTests(App app) : UsersTestsBase(app)
 {
@@ -88,24 +87,23 @@ public class RoleCreateTests(App app) : UsersTestsBase(app)
     /// A description valid under the endpoint's rules and identical for every role a test makes, so the
     /// name is the only thing that ever distinguishes one creation from another.
     /// </summary>
-    private const string RoleDescription = "Role made by a tenancy test";
+    private const string RoleDescription = "Role made by a test";
 
     /// <summary>
-    /// A role name no other role can hold: role names are unique within their tenant, and a name derived
+    /// A role name no other role can hold: role names are unique, and a name derived
     /// from a fresh identifier cannot collide with one a previous run of the suite left behind.
     /// </summary>
     /// <returns>The role name.</returns>
     private static string NewRoleName() => $"Role {Guid.NewGuid():N}";
 
     /// <summary>
-    /// Reads a role back through the database rather than through the surface that just wrote it, and
-    /// across every tenant, because what is being asserted is where the row landed.
+    /// Reads a role back through the database rather than through the surface that just wrote it,
+    /// because what is being asserted is the row as it was stored.
     /// </summary>
     /// <param name="roleId">The role to read.</param>
     /// <returns>The stored role.</returns>
     private async Task<Role> RoleAsync(Guid roleId)
         => await DbContext.Roles
-            
             .AsNoTracking()
             .SingleAsync(role => role.Id == roleId, TestContext.Current.CancellationToken);
 

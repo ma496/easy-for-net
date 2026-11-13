@@ -63,8 +63,8 @@ public abstract class LocalizationTestsBase(App app) : UsersTestsBase(app)
     }
 
     /// <summary>
-    /// Two distinct shipped cultures other than English, for a test that must tell a tenant's own
-    /// setting apart from what it inherits. Skips when fewer than two non-English cultures are shipped.
+    /// Two distinct shipped cultures other than English, for a test that must enable two cultures while
+    /// leaving English out. Skips when fewer than two non-English cultures are shipped.
     /// </summary>
     protected (string First, string Second) RequireTwoOtherCultures()
     {

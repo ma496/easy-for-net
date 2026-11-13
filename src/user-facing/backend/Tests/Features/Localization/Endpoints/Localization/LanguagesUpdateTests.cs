@@ -3,7 +3,7 @@ using Backend.Features.Localization.Endpoints.Localization;
 namespace Backend.Tests.Features.Localization.Endpoints.Localization;
 
 /// <summary>
-/// Tests for <see cref="LanguagesUpdateEndpoint"/>: upserting the acting scope's own row, validation of
+/// Tests for <see cref="LanguagesUpdateEndpoint"/>: upserting the stored language row, validation of
 /// the enabled set and default, and the permission it requires.
 /// </summary>
 public class LanguagesUpdateTests(App app) : LocalizationTestsBase(app)
@@ -25,7 +25,6 @@ public class LanguagesUpdateTests(App app) : LocalizationTestsBase(app)
         secondResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
 
         var rows = await DbContext.LanguageSettings
-            
             .ToListAsync(TestContext.Current.CancellationToken);
 
         rows.Should().ContainSingle();

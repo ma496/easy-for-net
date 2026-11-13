@@ -3,9 +3,8 @@ using Backend.Features.FileManagement.Endpoints.Files;
 namespace Backend.Tests.Features.FileManagement.Endpoints.Files;
 
 /// <summary>
-/// Tests for <see cref="FileUploadEndpoint"/>: that a tenant-scoped upload is attributed to the tenant
-/// the caller is acting in, that one reached with no tenant active is refused and stores
-/// nothing, and that an unauthenticated caller is refused before any of that.
+/// Tests for <see cref="FileUploadEndpoint"/>: that an unauthenticated caller is refused before
+/// anything is stored.
 /// </summary>
 /// <remarks>
 /// Attribution is read off the record and off the file's reach rather than off the response, because the
@@ -17,8 +16,7 @@ namespace Backend.Tests.Features.FileManagement.Endpoints.Files;
 public class FileUploadTests(App app) : FileTestsBase(app)
 {
     /// <summary>
-    /// Verifies that an unauthenticated upload is refused with the standard unauthenticated response
-    ///.
+    /// Verifies that an unauthenticated upload is refused with the standard unauthenticated response.
     /// </summary>
     [Fact]
     public async Task Unauthenticated()
@@ -30,6 +28,6 @@ public class FileUploadTests(App app) : FileTestsBase(app)
         DeleteAfterTest(uploaded);
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized,
-            "an anonymous caller has no tenant and no account, so there would be nothing to attribute the file to");
+            "an anonymous caller has no account, so there would be nothing to attribute the file to");
     }
 }

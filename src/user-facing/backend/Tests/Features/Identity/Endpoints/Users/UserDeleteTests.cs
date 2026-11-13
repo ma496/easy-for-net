@@ -4,8 +4,8 @@ using Backend.Features.Identity.Endpoints.Users;
 namespace Backend.Tests.Features.Identity.Endpoints.Users;
 
 /// <summary>
-/// Tests for the <see cref="UserDeleteEndpoint"/> covering deletion of users, non-existent users,
-/// protected system-created users, and the account of another tenant that is out of reach.
+/// Tests for the <see cref="UserDeleteEndpoint"/> covering deletion of users, non-existent users
+/// and protected system-created users.
 /// </summary>
 public class UserDeleteTests(App app) : UsersTestsBase(app)
 {

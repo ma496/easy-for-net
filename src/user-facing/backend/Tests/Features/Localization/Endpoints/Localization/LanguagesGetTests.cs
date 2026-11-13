@@ -4,8 +4,8 @@ using Backend.Features.Localization.Endpoints.Localization;
 namespace Backend.Tests.Features.Localization.Endpoints.Localization;
 
 /// <summary>
-/// Tests for <see cref="LanguagesGetEndpoint"/>: row-level inheritance between a tenant's own settings,
-/// the platform's, and the shipped defaults, and the permission it requires.
+/// Tests for <see cref="LanguagesGetEndpoint"/>: the stored language row and the
+/// shipped defaults it falls back to, and the permission it requires.
 /// </summary>
 public class LanguagesGetTests(App app) : LocalizationTestsBase(app)
 {

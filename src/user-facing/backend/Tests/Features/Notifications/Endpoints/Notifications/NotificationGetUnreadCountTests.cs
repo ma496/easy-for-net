@@ -6,13 +6,13 @@ namespace Backend.Tests.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
 /// Tests for the <see cref="NotificationGetUnreadCountEndpoint"/> covering unread notification counting
-/// in general and the tenant the count is taken over.
+/// and the cap the count stops at.
 /// </summary>
 /// <remarks>
-/// The count is relative rather than absolute throughout: notifications are counted per tenant and the
-/// database also holds the platform-wide ones every caller sees, so a test that asserted a total would
-/// be asserting on rows it did not create. What it asserts instead is how the reading moves when a
-/// notification is raised.
+/// The count is relative rather than absolute throughout: the database also holds the notifications
+/// addressed to every user, which every caller sees, so a test that asserted a total would be asserting
+/// on rows it did not create. What it asserts instead is how the reading moves when a notification is
+/// raised.
 /// </remarks>
 public class NotificationGetUnreadCountTests(App app) : NotificationsTestsBase(app)
 {
@@ -55,9 +55,9 @@ public class NotificationGetUnreadCountTests(App app) : NotificationsTestsBase(a
     /// Verifies that the count stops at the cap however many notifications are unread.
     /// </summary>
     /// <remarks>
-    /// The notifications are addressed to an account of a tenant the test creates, so nothing another test
-    /// raises reaches the tenant's rows, and they are written in one save because what is under test is
-    /// the count, not how the rows were raised.
+    /// The notifications are addressed to an account the test creates, so nothing another test raises
+    /// to a single account reaches its rows, and they are written in one save because what is under test
+    /// is the count, not how the rows were raised.
     /// </remarks>
     [Fact]
     public async Task Count_Never_Exceeds_The_Cap()

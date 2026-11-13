@@ -5,10 +5,7 @@ namespace Backend.Tests.Features.Identity.Endpoints.Permissions;
 
 /// <summary>
 /// Tests for the <see cref="GetDefinePermissionsEndpoint"/> covering the catalogue a caller is offered:
-/// the one declared in code, identical in every tenant and the same on every read, narrowed to
-/// what a tenant role can hold for a caller acting inside a tenant, and narrowed to the
-/// platform scope, with each leaf carrying the scope it was declared with, for a platform account
-/// acting in none.
+/// the one declared in code, the same whatever the caller holds.
 /// </summary>
 public class GetDefinePermissionsTests(App app) : UsersTestsBase(app)
 {
@@ -20,8 +17,8 @@ public class GetDefinePermissionsTests(App app) : UsersTestsBase(app)
         Service<IPermissionDefinitionService>();
 
     /// <summary>
-    /// Verifies that the catalogue a caller is offered is the same set in each of two tenants, and is
-    /// the set the code declares for a caller acting inside one.
+    /// Verifies that the catalogue a caller is offered is the same set for two callers holding different
+    /// permissions, and is the set the code declares.
     /// </summary>
     [Fact]
     public async Task Catalogue_Is_Global_And_Not_Extensible()

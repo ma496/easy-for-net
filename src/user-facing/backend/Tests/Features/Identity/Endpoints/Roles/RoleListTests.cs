@@ -3,9 +3,8 @@ using Backend.Features.Identity.Endpoints.Roles;
 namespace Backend.Tests.Features.Identity.Endpoints.Roles;
 
 /// <summary>
-/// Tests for the <see cref="RoleListEndpoint"/> covering listing and pagination of roles, the roles a
-/// caller acting in a tenant is shown and the widening a platform administrator is given
-/// instead.
+/// Tests for the <see cref="RoleListEndpoint"/> covering listing and pagination of roles, and the
+/// system-created flag each listed role reports.
 /// </summary>
 public class RoleListTests(App app) : UsersTestsBase(app)
 {

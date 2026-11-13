@@ -3,8 +3,8 @@ using Backend.Features.Notifications.Endpoints.Notifications;
 namespace Backend.Tests.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
-/// Tests for the <see cref="NotificationListEndpoint"/> covering listing, pagination, filtering by read status and group, authorization,
-/// and the tenant whose notifications the list is answered from.
+/// Tests for the <see cref="NotificationListEndpoint"/> covering listing, pagination, filtering by read status and group,
+/// and authorization.
 /// </summary>
 public class NotificationListTests(App app) : NotificationsTestsBase(app)
 {
@@ -24,8 +24,8 @@ public class NotificationListTests(App app) : NotificationsTestsBase(app)
             {
                 Page = 1,
                 // Asking for everything rather than for a very large page: the arranged notification is
-                // an unread one, so it sorts ahead of the read ones, but the platform-wide notifications
-                // every caller sees are in the same list and a page can only hold so many of them.
+                // an unread one, so it sorts ahead of the read ones, but the notifications addressed to
+                // every user are in the same list and a page can only hold so many of them.
                 All = true
             });
 

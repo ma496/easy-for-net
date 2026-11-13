@@ -3,8 +3,8 @@ using Backend.Features.Localization.Endpoints.Localization;
 namespace Backend.Tests.Features.Localization.Endpoints.Localization;
 
 /// <summary>
-/// Tests for <see cref="LanguagesDeleteEndpoint"/>: removing the acting scope's own row so it reverts
-/// to what it inherits, idempotency, and the permission it requires.
+/// Tests for <see cref="LanguagesDeleteEndpoint"/>: removing the stored language row so the
+/// shipped defaults apply again, idempotency, and the permission it requires.
 /// </summary>
 public class LanguagesDeleteTests(App app) : LocalizationTestsBase(app)
 {

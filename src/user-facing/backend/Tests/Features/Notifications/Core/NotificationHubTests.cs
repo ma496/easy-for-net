@@ -19,7 +19,7 @@ namespace Backend.Tests.Features.Notifications.Core;
 /// never shown by sleeping: <see cref="HubProbe.DrainAsync"/> sends a sentinel to the connection after the
 /// push under test, and messages to one connection arrive in order, so once the sentinel is in, the push
 /// would have been too. The class sits in the <c>Notifications</c> collection through its base, because a
-/// platform-wide notification it raises reaches every account's unread count.
+/// notification it raises to every user reaches every account's unread count.
 /// </remarks>
 public class NotificationHubTests(App app) : NotificationsTestsBase(app)
 {
@@ -146,7 +146,6 @@ public class NotificationHubTests(App app) : NotificationsTestsBase(app)
         }
 
         var stored = await DbContext.Notifications
-            
             .AsNoTracking()
             .Where(notification => notification.TitleKey == titleKey)
             .ToListAsync(TestContext.Current.CancellationToken);
@@ -158,7 +157,7 @@ public class NotificationHubTests(App app) : NotificationsTestsBase(app)
         toFirst.Id.Should().Be(stored.Single(notification => notification.UserId == first.Id).Id);
         toSecond.Id.Should().Be(stored.Single(notification => notification.UserId == second.Id).Id);
 
-        await AssertNotReceivedAsync(bystanderProbe, titleKey, "a member who was not named is not told");
+        await AssertNotReceivedAsync(bystanderProbe, titleKey, "an account that was not named is not told");
         await firstProbe.DrainAsync(Sender);
         firstProbe.Notifications.Count(message => message.TitleKey == titleKey).Should().Be(1, "one push per recipient");
     }
@@ -449,7 +448,6 @@ public class NotificationHubTests(App app) : NotificationsTestsBase(app)
     /// <summary>The stored notification with a title key.</summary>
     private async Task<Backend.Features.Notifications.Core.Entities.Notification> NotificationByTitleAsync(string titleKey)
         => await DbContext.Notifications
-            
             .AsNoTracking()
             .SingleAsync(notification => notification.TitleKey == titleKey, TestContext.Current.CancellationToken);
 

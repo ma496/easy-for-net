@@ -4,7 +4,7 @@ using Backend.Features.Settings.Endpoints.Settings;
 namespace Backend.Tests.Features.Settings.Endpoints.Settings;
 
 /// <summary>
-/// Tests for <see cref="SettingListEndpoint"/>: every declared setting as the acting scope resolves it,
+/// Tests for <see cref="SettingListEndpoint"/>: every declared setting as it resolves,
 /// each property's value and the layer it came from, and the permission the listing requires.
 /// </summary>
 public class SettingListTests(App app) : SettingsTestsBase(app)

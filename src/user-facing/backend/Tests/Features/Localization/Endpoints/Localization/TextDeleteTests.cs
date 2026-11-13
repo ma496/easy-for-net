@@ -3,8 +3,8 @@ using Backend.Features.Localization.Endpoints.Localization;
 namespace Backend.Tests.Features.Localization.Endpoints.Localization;
 
 /// <summary>
-/// Tests for <see cref="TextDeleteEndpoint"/>: removing the acting scope's own override, idempotency,
-/// leaving the platform layer untouched, and the permission it requires.
+/// Tests for <see cref="TextDeleteEndpoint"/>: removing a text override, idempotency, the
+/// canonical culture an override is found under, and the permission it requires.
 /// </summary>
 public class TextDeleteTests(App app) : LocalizationTestsBase(app)
 {

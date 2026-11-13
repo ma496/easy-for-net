@@ -6,27 +6,12 @@ using Backend.Features.Notifications.Endpoints.Notifications;
 namespace Backend.Tests.Features.Notifications.Endpoints.Notifications;
 
 /// <summary>
-/// Base class for notification endpoint tests: the four ways a notification can be addressed, arranged
-/// directly through the fixture's <see cref="AppTestsBase.DbContext"/> - to a single member of a tenant,
-/// to every member of one, to a single account acting in platform scope, and to every user of the platform.
+/// Base class for notification endpoint tests: the two ways a notification can be addressed, arranged
+/// directly through the fixture's <see cref="AppTestsBase.DbContext"/> - to a single account, and to
+/// every user.
 /// </summary>
-/// <remarks>
-/// <para>
-/// Every row is written inside the scope that attributes it - a tenant for the two tenant-scoped
-/// addressing modes, platform scope for the platform-scope personal and platform-wide ones - which is the arrangement standing in
-/// for the scope a request would have opened. Attribution is taken from the active scope at save time,
-/// so a row naming no tenant cannot be written at all with no scope established, and a platform-wide
-/// notification written while a tenant is active would quietly become that tenant's.
-/// </para>
-/// <para>
-/// The tenant the tenant-scoped helpers default to is the bootstrap tenant, where every seeded account
-/// holds its single membership: a notification there is one a seeded caller sees while acting in the
-/// tenant sign-in resolves for it, which is what keeps the tests that came before the tenancy work
-/// reading as they did.
-/// </para>
-/// </remarks>
-// One collection for the whole notifications suite. A platform-wide notice reaches every account
-// by definition, so a test that reads an unread count as a delta is measuring something any
+// One collection for the whole notifications suite. A notice addressed to every user reaches every
+// account by definition, so a test that reads an unread count as a delta is measuring something any
 // concurrently running notification test can change under it.
 [Collection("Notifications")]
 public abstract class NotificationsTestsBase(App app) : UsersTestsBase(app)
@@ -68,14 +53,13 @@ public abstract class NotificationsTestsBase(App app) : UsersTestsBase(app)
     }
 
     /// <summary>
-    /// Reads a notification back across every tenant, because what is asserted of it is a row that a
-    /// caller acting in another tenant must have been unable to reach.
+    /// Reads a notification back straight from the database, so that what is asserted of it does not
+    /// depend on the endpoint under test.
     /// </summary>
     /// <param name="notificationId">The notification to read.</param>
     /// <returns>The stored notification as the database holds it, not as the change tracker last saw it.</returns>
     protected async Task<Notification> StoredNotificationAsync(Guid notificationId)
         => await DbContext.Notifications
-            
             .AsNoTracking()
             .SingleAsync(notification => notification.Id == notificationId, TestContext.Current.CancellationToken);
 
@@ -136,8 +120,8 @@ public abstract class NotificationsTestsBase(App app) : UsersTestsBase(app)
     }
 
     /// <summary>
-    /// The notifications the list answers with for a term, read through a caller's own client so that the
-    /// tenant being acted in is that caller's.
+    /// The notifications the list answers with for a term, read through a caller's own client so that
+    /// the notifications listed are that caller's.
     /// </summary>
     /// <remarks>
     /// The term is the title key of a notification arranged or raised by the test, which carries a fresh

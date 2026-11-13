@@ -4,11 +4,9 @@ using Backend.Features.Identity.Endpoints.Roles;
 namespace Backend.Tests.Features.Identity.Endpoints.Roles;
 
 /// <summary>
-/// Tests for the <see cref="ChangePermissionsEndpoint"/> covering assigning permissions to roles, the
-/// platform permission a tenant role can never be given, the tenant-only permission a platform
-/// role can never be given, the system-created tenant role whose
-/// permissions cannot be changed at all, and the role of another tenant that cannot be reached
-///.
+/// Tests for the <see cref="ChangePermissionsEndpoint"/> covering assigning permissions to roles,
+/// replacing the permissions a role already holds, and the system-created role whose permissions
+/// cannot be changed at all.
 /// </summary>
 public class ChangePermissionsTests(App app) : UsersTestsBase(app)
 {
@@ -16,10 +14,8 @@ public class ChangePermissionsTests(App app) : UsersTestsBase(app)
     /// Verifies that permissions can be successfully assigned to a newly created role.
     /// </summary>
     /// <remarks>
-    /// The role belongs to a tenant this test made and the caller administers it from inside, because a
-    /// role belongs to a tenant and only the tenant-tier permissions of the catalogue can be granted
-    /// through one - so the set assigned here is drawn from that tier rather than from whatever
-    /// the catalogue happens to return first.
+    /// The set assigned here is drawn from the stored catalogue in a fixed order rather than from
+    /// whatever the catalogue happens to return first.
     /// </remarks>
     [Fact]
     public async Task Change_Permissions()
@@ -110,8 +106,7 @@ public class ChangePermissionsTests(App app) : UsersTestsBase(app)
             .SingleAsync(TestContext.Current.CancellationToken);
 
     /// <summary>
-    /// The permissions a role holds, read from the join rows rather than through any surface that
-    /// narrows to the tenant being acted in.
+    /// The permissions a role holds, read from the join rows rather than through the endpoint under test.
     /// </summary>
     /// <param name="roleId">The role whose permissions are wanted.</param>
     /// <returns>The permission identifiers the role holds.</returns>

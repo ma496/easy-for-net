@@ -4,9 +4,8 @@ using Backend.Features.Identity.Endpoints.Roles;
 namespace Backend.Tests.Features.Identity.Endpoints.Roles;
 
 /// <summary>
-/// Tests for the <see cref="RoleDeleteEndpoint"/> covering deletion of roles, non-existent roles,
-/// protected system-created roles - the platform role and a tenant's own - and the
-/// role of another tenant that cannot be deleted.
+/// Tests for the <see cref="RoleDeleteEndpoint"/> covering deletion of roles, non-existent roles
+/// and protected system-created roles.
 /// </summary>
 public class RoleDeleteTests(App app) : UsersTestsBase(app)
 {
@@ -72,10 +71,9 @@ public class RoleDeleteTests(App app) : UsersTestsBase(app)
     {
         await SetAuthTokenAsync();
 
-        // The bootstrap tenant's administrator role, read across tenants because the row carries the
-        // tenant it belongs to and the lookup here is the seeder's rather than a caller's.
+        // The seeded administrator role, read straight from the database because the lookup here is
+        // the seeder's rather than a caller's.
         var systemCreatedRole = await DbContext.Roles
-            
             .AsNoTracking()
             .SingleAsync(role => role.Id == TestRoles.AdminRoleId, TestContext.Current.CancellationToken);
         systemCreatedRole.SystemCreated.Should().BeTrue("the premise of this test is that the role is one the seeder made");
@@ -93,20 +91,18 @@ public class RoleDeleteTests(App app) : UsersTestsBase(app)
     }
 
     /// <summary>
-    /// Reads a role back across every tenant, because what is asserted of it is a row a caller acting in
-    /// another tenant must have been unable to touch.
+    /// Reads a role back straight from the database, so that what is asserted of it does not depend on
+    /// the endpoint under test.
     /// </summary>
     /// <param name="roleId">The role to read.</param>
     /// <returns>The stored role.</returns>
     private async Task<Role> RoleAsync(Guid roleId)
         => await DbContext.Roles
-            
             .AsNoTracking()
             .SingleAsync(role => role.Id == roleId, TestContext.Current.CancellationToken);
 
     /// <summary>
-    /// The permissions a role holds, read from the join rows rather than through any surface that
-    /// narrows to the tenant being acted in.
+    /// The permissions a role holds, read from the join rows rather than through the endpoint under test.
     /// </summary>
     /// <param name="roleId">The role whose permissions are wanted.</param>
     /// <returns>The permission identifiers the role holds.</returns>
