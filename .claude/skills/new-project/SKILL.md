@@ -1,6 +1,6 @@
 ---
 name: new-project
-description: Scaffold a new application from this template with the dotnet efn CLI (efn cp -n <name>), and do the post-create setup — database password, git repository, initial migration, running the API and the web app, and signing in with the seeded accounts. Use when asked to create/start a new project, or when a freshly generated project does not build or run yet.
+description: Scaffold a new application from one of the templates (multi-tenant SaaS, or user-facing web app with -t user-facing) with the dotnet efn CLI (efn cp -n <name>), and do the post-create setup — database password, git repository, initial migration, running the API and the web app, and signing in with the seeded accounts. Use when asked to create/start a new project, or when a freshly generated project does not build or run yet.
 ---
 
 # Creating a new project with `dotnet efn`
@@ -18,43 +18,61 @@ Prerequisites: the .NET SDK pinned in `global.json` (10.0.x), **git on PATH** (t
 template), Node >= 24, a reachable PostgreSQL on `localhost:5432` (user `postgres`), and a Redis on
 `localhost:6379` (`docker compose up -d` in the project root starts both, see step 4).
 
+## Choose a template
+
+| Template | `-t` | What it is |
+| --- | --- | --- |
+| Multi-tenant (the default) | `multi-tenant` | A SaaS: each tenant on its own subdomain (`<tenant>.<domain>`), a platform admin area at `app.<domain>`, editions (plans) with feature toggles and limits, memberships and seats. Sign-up creates a tenant and is off until the platform enables it. |
+| User-facing | `user-facing` | A single-tenant site on one domain: public, server-rendered pages at `/` whose SEO (titles, Open Graph, JSON-LD, sitemap, robots) is edited in the app, an admin area at `/admin`, and visitor accounts at `/account`. Visitors sign up into the `User` role, on by default. No tenants, editions or feature management. |
+
+Ask which one when the request does not make it clear: a product sold to organizations, each with its
+own users, is multi-tenant; a public website or a consumer app whose visitors sign up for themselves is
+user-facing. A project cannot be switched from one to the other after it is generated.
+
 ## Generate
 
 ```sh
-dotnet efn cp -n my-shop                   # createproject, short form
-dotnet efn createproject --name my-shop --output projects
+dotnet efn cp -n my-shop                   # createproject, short form; the multi-tenant template
+dotnet efn cp -n my-site -t user-facing    # the user-facing template
+dotnet efn createproject --name my-shop --output projects --template multi-tenant
 ```
 
 | Option | Meaning |
 | --- | --- |
 | `-n`, `--name` (required) | Letters, `-` and `_` only, at least two characters, starting and ending with a letter. Parts split on `-`/`_` are joined in PascalCase (`my-shop` → `MyShop`) for namespaces, project files and the solution; the kebab-case form (`my-shop`) names the folder and the npm packages. |
 | `-o`, `--output` | Parent directory (relative to the current directory, or absolute). The project is created in `<output>/<kebab-name>`, which must not exist yet. Defaults to the current directory. |
+| `-t`, `--template` | `multi-tenant` (the default) or `user-facing`, compared case-insensitively. Any other value is refused with the list of templates. |
 | `-m`, `--multilanguage` | `true` keeps all eight locales; `false` (the default) ships English only. Any other value is refused. |
-| `-e`, `--examples` | `true` keeps the UI component example pages under `/ui`; `false` (the default) leaves them out, with their sidebar group, search entries and translation keys. Any other value is refused. |
+| `-e`, `--examples` | `true` keeps the UI component example pages (under `/ui` in the multi-tenant template, `/admin/ui` in the user-facing one); `false` (the default) leaves them out, with their sidebar group, search entries and translation keys. Any other value is refused. |
 
 The tool clones `https://github.com/ma496/EasyForNet.git` into
 `%LOCALAPPDATA%/EasyForNet/Templates/<tool version>` and checks out the tag `v<tool version>`, so the
 template always matches the installed tool. An existing cache directory is reused without fetching;
 delete it to force a fresh clone. A failed clone or checkout removes the cache it created.
 
-What you get:
+What you get — the same layout whichever template you chose:
 
 - `src/backend/{Source,Tests}` (no `Migrations`), `src/frontend/web`, and a `<Name>.slnx` with both
   backend projects added.
 - `appsettings.Development.json` / `appsettings.Testing.json` copied from `appsettings.json`, and
   `src/frontend/web/.env.development` copied from `.env.example`.
 - A root `.env` for `docker-compose.prod.yml` (git-ignored), written from `.env.docker.example` with the
-  project's names, `DOMAIN=localhost` and fresh random database, Redis and administrator passwords and
-  JWT key, plus a `README.md` for the project.
+  project's names, `DOMAIN=localhost` (with `PUBLIC_URL=https://app.localhost` and
+  `TENANT_URL_TEMPLATE=https://{tenant}.localhost` for multi-tenant, `PUBLIC_URL=https://localhost` for
+  user-facing) and fresh random database, Redis and administrator passwords and JWT key, plus a
+  `README.md` for the project.
 - A git repository holding everything generated in one commit, `Initial project` (skipped with a
   message when git is missing; when the commit is refused — no `user.name` — the repository is left
   initialized for you to commit).
 - Root files `.editorconfig`, `.gitignore`, `.gitattributes`, `global.json`, `package.json` (the gate
   and task-loop scripts) and `agentic.config.json`, plus `.config` (pinned `dotnet-ef`) and `.vscode`.
 - The Docker files: `docker-compose.yml` (development PostgreSQL and Redis),
-  `docker-compose.prod.yml`, `docker-compose.coolify.yml`, `.env.docker.example` and `docker/`.
+  `docker-compose.prod.yml`, `docker-compose.coolify.yml`, `.env.docker.example` and `docker/` — the
+  user-facing template's own single-domain versions of the last four.
 - `CLAUDE.md` and the agentic layer: `.claude` (agents, commands, hooks, `settings.json`, status
-  line, skills, `memory/README.md`), `scripts/` (the loop's engine), and an empty task-loop skeleton —
+  line, skills, `memory/README.md`) — both written for the chosen template: a multi-tenant project has
+  no `seo` skill, a user-facing one no `multi-tenancy` or `feature-management` skill —, `scripts/`
+  (the loop's engine), and an empty task-loop skeleton —
   `specs/{README,TEMPLATE}.md`, `docs/AGENTIC_WORKFLOW.md` and `docs/capabilities/README.md`
   (`.agent-queue/` and `.claude/memory/lessons/` appear when the loop first writes to them).
 
@@ -113,21 +131,32 @@ Run these from the new project's root.
    ```
 
    It listens on `http://localhost:5000` (routes under `/api`). Swagger is served in Development,
-   health at `/health`, and the Hangfire dashboard at `/hangfire` for a signed-in platform account
-   only. Every start — in every environment — reconciles the permission catalogue and seeds, when
-   absent:
+   health at `/health`, and the Hangfire dashboard at `/hangfire` (multi-tenant: a signed-in platform
+   account only; user-facing: a caller holding `Hangfire.Dashboard`). Every start — in every
+   environment — reconciles the permission catalogue and seeds, when absent:
+
+   **Multi-tenant:**
    - the **Default** tenant (identifier `default`);
    - `admin` — the platform account: no tenant membership, signs in to platform scope
      (tenants, editions, platform roles, Hangfire);
    - `tenantadmin` — administrator of the Default tenant, with sample notifications.
 
-   Locally both use the password `Admin#123`: the `Seed` section (`PlatformAdminPassword`,
-   `TenantAdminPassword`) of `appsettings.json` and the Development/Testing files, the same in every
-   project and applied only when an account is created. Sign in as `admin` at
-   `http://app.localhost:3000` and as `tenantadmin` at `http://default.localhost:3000`; the project's
-   `CLAUDE.md` names both for browser testing. Production seeds them with the random
-   `SEED_ADMIN_PASSWORD` from the root `.env`, and the API refuses `Admin#123` outside
-   Development/Testing.
+   Locally both use the password `Admin#123` (`Seed:PlatformAdminPassword`, `Seed:TenantAdminPassword`).
+   Sign in as `admin` at `http://app.localhost:3000` and as `tenantadmin` at
+   `http://default.localhost:3000`.
+
+   **User-facing:**
+   - `admin` — the administrator, in the `Admin` role, which holds every permission;
+   - the `User` role that sign-up assigns, with no administration permissions;
+   - culture-neutral SEO rows for `/`, `/about` and `/contact`.
+
+   Locally `admin` uses the password `Admin#123` (`Seed:AdminPassword`). Sign in at
+   `http://localhost:3000/admin`.
+
+   The password sits in the `Seed` section of `appsettings.json` and the Development/Testing files, the
+   same in every project and applied only when an account is created; the project's `CLAUDE.md` names
+   the accounts for browser testing. Production seeds them with the random `SEED_ADMIN_PASSWORD` from
+   the root `.env`, and the API refuses `Admin#123` outside Development/Testing.
 6. **Run the web app.**
 
    ```sh
@@ -138,10 +167,18 @@ Run these from the new project's root.
 
    It serves `http://localhost:3000` (the origin `Web:Domains` allows for CORS). `.env.development`
    points `API_INTERNAL_URL` (the Next.js server's own fetches) at `http://localhost:5000/api`; the
-   browser calls the API as the relative `/api`, which the dev proxy `npm run dev` starts routes to it. The host
-   is the tenant, so the sign-in page has no tenant field: sign in as `tenantadmin` at
-   `http://default.localhost:3000` (the Default tenant), and as `admin` at `http://app.localhost:3000`
-   (the platform). Sign up for a new tenant on `http://app.localhost:3000`.
+   browser calls the API as the relative `/api`, which the dev proxy `npm run dev` starts routes to it.
+   From the project root, `npm run dev` starts all of it at once — PostgreSQL and Redis, the API, and
+   the web app on :3001 behind the dev proxy on :3000.
+
+   - **Multi-tenant:** the host is the tenant, so the sign-in page has no tenant field: sign in as
+     `tenantadmin` at `http://default.localhost:3000` (the Default tenant), and as `admin` at
+     `http://app.localhost:3000` (the platform). Sign up for a new tenant on `http://app.localhost:3000`
+     once **Settings → General → Allow sign-up** is on.
+   - **User-facing:** the public site is `http://localhost:3000` — every page but `/admin` and
+     `/account` is open without a session. Sign in as `admin` at `http://localhost:3000/admin`;
+     visitors sign up at `/signup`. Sign-up and the role it assigns are under
+     **Admin → Settings → General**, and each public page's SEO under **Admin → SEO**.
 7. **Tests and the gate.** `dotnet test --project src/backend/Tests` needs PostgreSQL reachable with the
    `appsettings.Testing.json` connection string and the `Initial` migration in place; the run
    migrates and seeds `<name>_test` and deletes it at the end; it needs no Redis. From the root, `npm run gate`
@@ -154,12 +191,21 @@ Run these from the new project's root.
    origins, `Database:ApplyMigrationsOnStartup` defaults to false there (run
    `dotnet ef database update` explicitly), and the seeded accounts' passwords should be changed in the
    app. For the Docker stack, the generated root `.env` already holds every secret
-   `docker-compose.prod.yml` needs (`SEED_ADMIN_PASSWORD` for the administrators); point DNS A records for
-   `app.<DOMAIN>` and `*.<DOMAIN>` at the server, set `DOMAIN`, `PUBLIC_URL` (`https://app.<DOMAIN>`),
-   `TENANT_URL_TEMPLATE` (`https://{tenant}.<DOMAIN>`) and the SMTP values, then
-   `docker compose -f docker-compose.prod.yml --env-file .env up -d --build`. To put it on a VPS
-   behind Coolify instead, push the project and run
-   `npm run deploy:vps -- --host <ip> --domain <domain> --email <email>` (see the README's **Deploy to a VPS** section).
+   `docker-compose.prod.yml` needs (`SEED_ADMIN_PASSWORD` for the administrators), and the SMTP values
+   are left to fill in. Then:
+
+   - **Multi-tenant:** point DNS A records for `app.<DOMAIN>` and `*.<DOMAIN>` at the server, set
+     `DOMAIN`, `PUBLIC_URL` (`https://app.<DOMAIN>`) and `TENANT_URL_TEMPLATE`
+     (`https://{tenant}.<DOMAIN>`).
+   - **User-facing:** point a DNS A record for `<DOMAIN>` (and `www.<DOMAIN>`, which redirects to it)
+     at the server, set `DOMAIN` and `PUBLIC_URL` (`https://<DOMAIN>`), and once it runs set the site's
+     public URL under **Admin → Settings → SEO** so canonical and sitemap addresses use it.
+
+   Start it with `docker compose -f docker-compose.prod.yml --env-file .env up -d --build`. To put it on
+   a VPS behind Coolify instead, push the project and run
+   `npm run deploy:vps -- --host <ip> --domain <domain> --email <email>` — a user-facing project is
+   served at `<domain>` itself, with `--www` adding `www.<domain>` as a redirect (see the README's
+   **Deploy to a VPS** section).
 
 ## Then
 

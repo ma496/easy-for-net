@@ -2,8 +2,9 @@
 
 ### Build your app with AI agents on a solid, maintainable architecture.
 
-A full-stack **ASP.NET 10 + Next.js 16** template and a one-command CLI that gives your coding agents
-the structure, rules and guardrails to build production-grade software — not just code that runs.
+Full-stack **ASP.NET 10 + Next.js 16** templates — a **multi-tenant SaaS** or a **user-facing web app** —
+and a one-command CLI that gives your coding agents the structure, rules and guardrails to build
+production-grade software — not just code that runs.
 
 <a href="https://easyfornet.com" target="_blank" rel="noopener noreferrer"><strong>Web</strong></a> · <a href="https://easyfornet.com/docs" target="_blank" rel="noopener noreferrer"><strong>Documentation</strong></a> · <a href="https://easyfornet.com/docs/getting-started/quick-start" target="_blank" rel="noopener noreferrer"><strong>Quick Start</strong></a> · <a href="https://www.nuget.org/packages/EasyForNetTool" target="_blank" rel="noopener noreferrer"><strong>NuGet</strong></a> · <a href="https://github.com/ma496/EasyForNet" target="_blank" rel="noopener noreferrer"><strong>GitHub</strong></a>
 
@@ -25,8 +26,8 @@ instead of trusting it.
 
 - 🏗️ **Architected** – vertical feature slices, one file per endpoint, and slice isolation enforced by architecture tests.
 - ⚡ **Optimized** – lean projected queries, compile-time mapping, Redis sessions, background jobs and a scale-out-ready real-time hub.
-- 🔒 **Secured** – server-side sessions revoked the moment access changes, tenant isolation from the session, hierarchical permissions, guard hooks that block destructive commands.
-- 🎯 **Consistent** – a `CLAUDE.md`, 21 skills and 7 specialist agents teach every session the same conventions; reviewers sign off before anything is committed.
+- 🔒 **Secured** – server-side sessions revoked the moment access changes, tenant isolation from the session (multi-tenant), hierarchical permissions, guard hooks that block destructive commands.
+- 🎯 **Consistent** – a `CLAUDE.md`, 20+ skills and 7 specialist agents, written for the template you chose, teach every session the same conventions; reviewers sign off before anything is committed.
 - 🧠 **Learns as it builds** – when a run hits a trap, it records the lesson in `.claude/memory/lessons/`, and every later task whose work it touches gets that lesson in its brief, so the project gets smarter with every task instead of rediscovering the same pitfalls.
 
 ## Quick Start
@@ -37,8 +38,10 @@ You need the **.NET 10 SDK**, **Node.js 24+**, **Git** and **Docker**.
 # 1. Install the CLI
 dotnet tool install --global EasyForNetTool
 
-# 2. Generate a project
+# 2. Generate a project: the multi-tenant SaaS (the default) ...
 dotnet efn cp -n my-shop
+#    ... or the user-facing web app
+dotnet efn cp -n my-shop -t user-facing
 cd my-shop
 
 # 3. Restore, build and add the initial migration
@@ -50,8 +53,12 @@ dotnet ef migrations add Initial --project src/backend/Source
 npm run dev
 ```
 
-Open **http://app.localhost:3000** and sign in as `admin` (the platform), or
-**http://default.localhost:3000** as `tenantadmin` (the Default tenant). Both use the password `Admin#123` locally; production seeds them with a random one.
+- **Multi-tenant:** open **http://app.localhost:3000** and sign in as `admin` (the platform), or
+  **http://default.localhost:3000** as `tenantadmin` (the Default tenant).
+- **User-facing:** open **http://localhost:3000** for the public site, and **http://localhost:3000/admin**
+  to sign in as `admin`.
+
+Every seeded account uses the password `Admin#123` locally; production seeds them with a random one.
 
 👉 Options, troubleshooting and next steps: <a href="https://easyfornet.com/docs/getting-started/quick-start" target="_blank" rel="noopener noreferrer">easyfornet.com/docs/getting-started/quick-start</a>
 
@@ -77,14 +84,24 @@ npm run monitor    # watch the run live
 Every task is verified by the runner itself, capped in cost, committed one task at a time, and never
 pushed or merged without your say-so.
 
+## Two Templates
+
+| | **Multi-tenant** (`-t multi-tenant`, the default) | **User-facing** (`-t user-facing`) |
+|---|---|---|
+| **For** | A SaaS sold to organizations | A public site or product with its own visitors |
+| **Shape** | A subdomain per tenant, a platform admin area at `app.<domain>` | One domain: a public site at `/`, an admin area at `/admin`, visitor accounts at `/account` |
+| **Only here** | Tenants, memberships and seats; editions (plans) with feature toggles and limits | Server-rendered public pages with SEO edited in the app: titles, Open Graph, JSON-LD, sitemap and robots |
+| **Sign-up** | Creates a new tenant (off until the platform enables it) | Visitors join a configurable role (on by default) |
+
 ## What's Inside
 
 | | |
 |---|---|
 | **Identity** | Users, roles, hierarchical permissions, sign-up, email verification, password reset |
-| **Multi-tenancy** | A subdomain per tenant, isolated data, memberships and seats, platform admin area |
-| **Plans** | Editions with feature toggles and limits per tenant |
-| **Settings** | Typed run-time settings per platform and tenant, with encrypted secrets |
+| **Multi-tenancy** | A subdomain per tenant, isolated data, memberships and seats, platform admin area (multi-tenant) |
+| **Plans** | Editions with feature toggles and limits per tenant (multi-tenant) |
+| **SEO** | Per-page metadata, social cards, structured data, sitemap and robots, edited from the admin area (user-facing) |
+| **Settings** | Typed run-time settings, overridable per tenant in the multi-tenant template, with encrypted secrets |
 | **Real-time** | Persistent notifications pushed over SignalR |
 | **Files & Email** | Uploads behind a pluggable storage provider; SMTP email through background jobs |
 | **Localization** | Eight languages, right-to-left support, translations editable in the app |

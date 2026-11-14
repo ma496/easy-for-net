@@ -8,8 +8,9 @@ description: Work on the EasyForNet template repository itself — how src/ and 
 This repository holds two coupled deliverables:
 
 - `src/<template>/` — the templates, each an API (`backend/{Source,Tests}`) and a web app
-  (`frontend/web`): `src/multi-tenant` (the default) and any other listed in
-  `Generator/ProjectTemplate.cs`. Each is a working application, but its primary job is to be copied
+  (`frontend/web`), listed in `Generator/ProjectTemplate.cs`: `src/multi-tenant` (the default — the
+  SaaS with tenants, editions and feature management) and `src/user-facing` (a single-tenant site:
+  public SEO pages at `/`, administration at `/admin`, visitor accounts). Each is a working application, but its primary job is to be copied
   into new projects, together with the agentic layer at the root (`.claude`, `scripts/`,
   `agentic.config.json`, the task-loop skeleton). The templates share no code — each stands alone
   when generated.
@@ -28,11 +29,20 @@ the generator rewrites that list to the single generated entry (`WriteAppsAsync`
 `agentic.config.json` are written `^src/(?:[^/]+/)?backend/…` so they match both layouts.
 
 What a template does differently from the shared root lives in `ProjectTemplate` (the skills it
-leaves out, its embedded `CLAUDE.md`/`README.md`, its development hosts) and in
+leaves out, its embedded `CLAUDE.md`/`README.md`, its development hosts, the seeded accounts printed
+after generation, its example pages' path) and in
 `src/<template>/overlay/`, whose files replace the shared root files at the same relative path
 (`ApplyOverlay`, run before the `.claude` markdown rewrite). A new template is a directory under
 `src/`, an entry in `ProjectTemplate.All` and in `apps`, its two embedded files in the tool's csproj,
 and its projects in `EasyForNet.slnx`.
+
+| | `multi-tenant` | `user-facing` |
+| --- | --- | --- |
+| Embedded files | `new-project-claude.md`, `new-project-readme.md` | `user-facing-claude.md`, `user-facing-readme.md` |
+| Skills left out | `seo` | `multi-tenancy`, `feature-management` |
+| Dev hosts | `app.localhost`, `default.localhost` | `localhost` |
+| Example pages | `app/[lang]/(app)/ui` | `app/[lang]/admin/ui` |
+| Overlay | none | `.claude` agents, commands and skills describing the single-tenant app; single-domain `.env.docker.example`, `docker-compose.prod.yml`, `docker-compose.coolify.yml`, `docker/Caddyfile{,.coolify}` |
 
 ## The version ↔ tag contract
 
@@ -47,9 +57,10 @@ only reaches users after the next tagged release** — and the tool never reads 
 ## Keep the template generic
 
 Everything copied lands in every scaffolded project. No project-specific names, no hardcoded
-domains, no sample business entities. `Identity`, `Tenancy` (with feature management),
-`Settings`, `Localization`, `FileManagement` and `Notifications` are the baseline; add to them only what every new project
-would want.
+domains, no sample business entities. `Identity`, `Settings`, `Localization`, `FileManagement` and
+`Notifications` are the baseline of both templates, plus `Tenancy` (with feature management) in
+`multi-tenant` and `Seo` in `user-facing`; add to them only what every new project of that template
+would want. The templates share no code, so a fix that applies to both is made in both.
 
 ## What gets copied — and what does not
 
@@ -60,9 +71,11 @@ would want.
   disk in the tagged clone — only tracked files, since it is a fresh clone)
 - `appsettings.json` duplicated into `appsettings.Development.json` / `appsettings.Testing.json`
 - the web app's `.env.example` copied to `src/frontend/web/.env.development`
-- the root `.env` written from `.env.docker.example` by `WriteDockerEnvAsync`: the project's Compose
-  project, database and Redis key prefix, `DOMAIN=localhost` / `PUBLIC_URL=https://app.localhost` /
-  `TENANT_URL_TEMPLATE=https://{tenant}.localhost`, and
+- the root `.env` written from `.env.docker.example` (the overlay's when the template has one) by
+  `WriteDockerEnvAsync`: the project's Compose project, database and Redis key prefix,
+  `DOMAIN=localhost` / `PUBLIC_URL=https://app.localhost` /
+  `TENANT_URL_TEMPLATE=https://{tenant}.localhost` — or, for a single-domain example (one with no
+  `TENANT_URL_TEMPLATE=` line, the user-facing overlay's), `PUBLIC_URL=https://localhost` — and
   fresh random database, Redis and administrator passwords and JWT key, and `DEV_POSTGRES_PORT` /
   `DEV_REDIS_PORT` (a key added to the example ships as it is unless it is named there)
 - the development ports: `DevPorts.Find(DevPorts.IsFree)` keeps 5432 and 6379 when nothing on the
@@ -75,9 +88,13 @@ would want.
   (`CopyFiles` throws if one is missing)
 - directories `.config`, `.vscode`, `docker`, `scripts` (whole), and `.claude` minus any directory named
   `new-project`, `template-maintenance` or `lessons`, and the template's `ExcludedSkills`
-- `CLAUDE.md` and `README.md`, written from the embedded resources
-  `tool/EasyForNetTool/new-project-claude.md` and `new-project-readme.md` (`{{Name}}` / `{{name}}`
-  replaced with the project name)
+- `CLAUDE.md` and `README.md`, written from the template's embedded resources
+  (`ProjectTemplate.ClaudeResource` / `ReadmeResource`: `new-project-claude.md` and
+  `new-project-readme.md` for multi-tenant, `user-facing-claude.md` and `user-facing-readme.md` for
+  user-facing, all in `tool/EasyForNetTool/`; `{{Name}}` / `{{name}}` replaced with the project name)
+- the template's `overlay/`, applied over the copied root files, and `apps` in `agentic.config.json`
+  rewritten to the single generated entry (`WriteAppsAsync`); the template's `ExcludedSkills` are also
+  dropped from `agentic.config.json`
 - **the task loop's records as an empty skeleton** (`CopyTaskLoopSkeleton`): `specs/README.md`,
   `specs/TEMPLATE.md`, `docs/AGENTIC_WORKFLOW.md` and `docs/capabilities/README.md`, with no
   `.gitkeep` anywhere. The queue creates its lanes and `planned/` itself, the first lesson creates
@@ -152,15 +169,16 @@ through its `PropertyName`, since the PascalCase of the option name would not ma
 
 ## Component examples
 
-The pages under the multi-tenant web app's `app/[lang]/(app)/ui/` demonstrate the component kit and ship only
-with `-e true`. `-e false`, the default, deletes that directory. Everything else that exists only for
-those pages is found in two ways:
+The pages under the template's `ProjectTemplate.ExamplePagesPath` — `app/[lang]/(app)/ui/` in the
+multi-tenant web app, `app/[lang]/admin/ui/` in the user-facing one — demonstrate the component kit
+and ship only with `-e true`. `-e false`, the default, deletes that directory. Everything else that
+exists only for those pages is found in two ways:
 
 - **Code** sits between marker lines: `// efn:examples:start` / `// efn:examples:end` in `.ts`/`.tsx`,
   and `/* efn:examples:start */` / `/* efn:examples:end */` in `.css`. Each marker sits alone on its
-  line. Today they mark the nav group and its icon import (`nav-items.ts`), the search entries
-  (`searchable-items.ts`), and the `/ui` platform prefix and its test case
-  (`lib/utils/tenant-routing{,.test}.ts`).
+  line. Today they mark, in both templates, the nav group and its icon import (`nav-items.ts`) and the
+  search entries (`searchable-items.ts`), and in the multi-tenant template also the `/ui` platform
+  prefix and its test case (`lib/utils/tenant-routing{,.test}.ts`).
 - **Translation keys** follow a naming rule: `page.ui.*`, `navigation.components`, and every
   `navigation.ui<Name>` and `search.ui<Name>` key. `RemoveExampleResourceKeysAsync` removes them from
   every resource file, so the cultures keep one key set.
@@ -168,7 +186,7 @@ those pages is found in two ways:
 `StripExampleRegionsAsync` removes the marked regions, or with `-e true` only the marker lines, so
 no marker reaches a generated project either way. An unbalanced or nested marker fails generation.
 
-A new example page goes under `(app)/ui/`, names its keys by that rule, and marks anything it needs
+A new example page goes under that directory, names its keys by that rule, and marks anything it needs
 outside the directory. A component the examples merely use (`CodeShowcase`, `DatePicker`, `TreeView`,
 …) is part of the kit and is never marked.
 
@@ -181,27 +199,38 @@ own `Initial`. Data a migration inserts (rather than the seeder) never reaches a
 
 ## Seeded first run
 
-`ShareData/DataSeeder` runs on every start in every environment and seeds, when absent: the
-**Default** tenant (identifier `default`), the platform account `admin` (no
-membership) and the Default tenant's administrator `tenantadmin`, with the passwords in the `Seed`
-section of `appsettings.json` (`Admin#123`, here and in every generated project:
-`CustomizeAppSettingsAsync` writes `CreateProjectGenerator.LocalAdminPassword` into all three
-appsettings files, and `SeedSetting.LocalPassword` is the value startup refuses outside
-Development/Testing). Tests sign in with these through `TestUsers.AdminPassword` /
-`PlatformAdminPassword`, and `new-project`, `CLAUDE.md`, `new-project-claude.md` and the READMEs
+`ShareData/DataSeeder` runs on every start in every environment and seeds, when absent:
+
+- **multi-tenant:** the **Default** tenant (identifier `default`), the platform account `admin` (no
+  membership) and the Default tenant's administrator `tenantadmin`, with `Seed:PlatformAdminPassword`
+  and `Seed:TenantAdminPassword`;
+- **user-facing:** the administrator `admin` in the `Admin` role, the `User` role sign-up assigns, and
+  SEO rows for `/`, `/about` and `/contact`, with `Seed:AdminPassword`.
+
+The password is `Admin#123` here and in every generated project: `CustomizeAppSettingsAsync` writes
+`CreateProjectGenerator.LocalAdminPassword` into the `Seed.PlatformAdminPassword` /
+`Seed.TenantAdminPassword` keys of all three appsettings files, and `JsonPropertyUpdater` skips a key
+the file does not have — so the user-facing `Seed:AdminPassword` keeps the `Admin#123` its
+`appsettings.json` ships with, and renaming a `Seed` key in either template must be mirrored in the
+generator. `SeedSetting.LocalPassword` is the value startup refuses outside Development/Testing. Tests
+sign in with these through `TestUsers.AdminPassword` (and `PlatformAdminPassword` in multi-tenant),
+and `new-project`, `CLAUDE.md`, both templates' embedded `CLAUDE.md`/`README.md` and the root READMEs
 document them, with the sign-in hosts, for browser testing. Change them in all places together.
 
 ## Documentation that ships
 
-The architecture is described twice: this repo's `CLAUDE.md` and the embedded
-`tool/EasyForNetTool/new-project-claude.md` that becomes the generated project's `CLAUDE.md`, plus
-the skills under `.claude/skills`. **Any architecture change written into `CLAUDE.md` must also be
-written into `new-project-claude.md`** — it is a separate file, and nothing copies one into the
-other. It differs from `CLAUDE.md` on purpose in: its opening (project layout rather than this
-repository), generic namespace forms, no tool commands, the git-init note for the task loop, and no
-`new-project` / `template-maintenance` entries in its skill list. Keep all of them purely
-operational: no provenance or origin statements. The embedded file is compiled into the tool, so a
-change to it ships with the next package, not the next tag alone.
+The architecture is described in this repo's `CLAUDE.md` (the multi-tenant template) and in each
+template's embedded `CLAUDE.md` — `tool/EasyForNetTool/new-project-claude.md` (multi-tenant) and
+`user-facing-claude.md` (user-facing) — plus the skills under `.claude/skills` and the user-facing
+overlay's `.claude` files. **Any architecture change written into `CLAUDE.md` must also be written
+into `new-project-claude.md`, and into `user-facing-claude.md` when the user-facing template has the
+same code** — they are separate files, and nothing copies one into another. The same holds for a
+shared skill or agent that the user-facing overlay replaces: change both copies. The embedded files
+differ from `CLAUDE.md` on purpose in: their opening (project layout rather than this repository),
+generic namespace forms, no tool commands, the git-init note for the task loop, and no
+`new-project` / `template-maintenance` entries in their skill lists. Keep all of them purely
+operational: no provenance or origin statements. The embedded files are compiled into the tool, so a
+change to one ships with the next package, not the next tag alone.
 
 ## Commands
 
@@ -227,10 +256,11 @@ rm -rf "$LOCALAPPDATA/EasyForNet/Templates/0.0.0"
 git clone . "$LOCALAPPDATA/EasyForNet/Templates/0.0.0"
 git -C "$LOCALAPPDATA/EasyForNet/Templates/0.0.0" checkout <your-branch>
 dotnet run --project tool/EasyForNetTool --property:Version=0.0.0 -- cp -n scratch-app -o <scratch dir>
+dotnet run --project tool/EasyForNetTool --property:Version=0.0.0 -- cp -n scratch-site -t user-facing -o <scratch dir>
 ```
 
-Then build the generated solution, add the `Initial` migration, and start both apps before
-publishing.
+Then, for each template the change reaches, build the generated solution, add the `Initial`
+migration, and start both apps before publishing.
 
 ## Publishing
 
