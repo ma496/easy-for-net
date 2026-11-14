@@ -338,4 +338,4 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
 - Web: `rtk-query-api`, `frontend-page`, `frontend-crud`, `ui-component`, `redux-state`, `localization`, `frontend-tests`
 - Spanning both: `api-error-handling`
 - Committing: `commit` — stages deliberately and commits as the configured git user, with no co-author or attribution trailer
-- Process: spec-driven development — `specs/README.md`, the `.claude/commands` (`/orient`, `/feature`, `/fix`, `/auto`, `/queue`, `/spec-split`, `/check`, `/verify`, `/ship`, `/review-diff`, `/trace`, `/pr-msg`), and the agents in `.claude/agents`
+- Process: spec-driven development — `specs/README.md`, the `.claude/commands` (`/orient`, `/feature`, `/fix`, `/auto`, `/queue`, `/spec`, `/spec-split`, `/check`, `/verify`, `/ship`, `/review-diff`, `/trace`, `/pr-msg`), and the agents in `.claude/agents`

@@ -366,7 +366,7 @@ The component example pages (`app/[lang]/(app)/ui/`; `app/[lang]/admin/ui/` in t
 - Spanning both: `api-error-handling`
 - User-facing template only: `seo` (public pages and the `Seo` slice; the multi-tenant template leaves it out, as the user-facing one leaves out `multi-tenancy` and `feature-management`)
 - Committing: `commit` — stages deliberately and commits as the configured git user, with no co-author or attribution trailer
-- Process: spec-driven development — `specs/README.md`, the `.claude/commands` (`/orient`, `/feature`, `/fix`, `/auto`, `/queue`, `/spec-split`, `/check`, `/verify`, `/ship`, `/review-diff`, `/trace`, `/pr-msg`), and the agents in `.claude/agents`
+- Process: spec-driven development — `specs/README.md`, the `.claude/commands` (`/orient`, `/feature`, `/fix`, `/auto`, `/queue`, `/spec`, `/spec-split`, `/check`, `/verify`, `/ship`, `/review-diff`, `/trace`, `/pr-msg`), and the agents in `.claude/agents`
 - This repository and the CLI: `new-project` (scaffolding), `template-maintenance`
 
 Every skill except those last two ships to generated projects, so keep them generic.

@@ -27,7 +27,9 @@ branch of your own — the queue refuses to plan or build on the shared base bra
 its pull request carry the spec and everything built from it. `docs/AGENTIC_WORKFLOW.md` has
 the whole arrangement.
 
-`TEMPLATE.md` is a worked example. Copy it and edit.
+`TEMPLATE.md` is a worked example. Copy it and edit, or run `/spec <what you want built>`:
+it asks what it needs to know, writes a draft to `specs/drafts/`, and leaves moving it here
+to you.
 
 ## Files that are already built are history, not backlog
 
