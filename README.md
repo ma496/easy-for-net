@@ -6,7 +6,7 @@ Full-stack **ASP.NET 10 + Next.js 16** templates — a **multi-tenant SaaS** or 
 and a one-command CLI that gives your coding agents the structure, rules and guardrails to build
 production-grade software — not just code that runs.
 
-<a href="https://easyfornet.com" target="_blank" rel="noopener noreferrer"><strong>Web</strong></a> · <a href="https://easyfornet.com/docs" target="_blank" rel="noopener noreferrer"><strong>Documentation</strong></a> · <a href="https://easyfornet.com/docs/getting-started/quick-start" target="_blank" rel="noopener noreferrer"><strong>Quick Start</strong></a> · <a href="https://www.nuget.org/packages/EasyForNetTool" target="_blank" rel="noopener noreferrer"><strong>NuGet</strong></a> · <a href="https://github.com/ma496/EasyForNet" target="_blank" rel="noopener noreferrer"><strong>GitHub</strong></a>
+**[Web](https://easyfornet.com)** · **[Documentation](https://easyfornet.com/docs)** · **[Quick Start](https://easyfornet.com/docs/getting-started/quick-start)** · **[NuGet](https://www.nuget.org/packages/EasyForNetTool)** · **[GitHub](https://github.com/ma496/EasyForNet)**
 
 ---
 
@@ -60,7 +60,7 @@ npm run dev
 
 Every seeded account uses the password `Admin#123` locally; production seeds them with a random one.
 
-👉 Options, troubleshooting and next steps: <a href="https://easyfornet.com/docs/getting-started/quick-start" target="_blank" rel="noopener noreferrer">easyfornet.com/docs/getting-started/quick-start</a>
+👉 Options, troubleshooting and next steps: [easyfornet.com/docs/getting-started/quick-start](https://easyfornet.com/docs/getting-started/quick-start)
 
 ## Build With AI Agents
 
@@ -113,7 +113,7 @@ pushed or merged without your say-so.
 ## Learn More
 
 Everything else — architecture, backend and frontend guides, configuration, deployment and the AI
-workflow — is at <strong><a href="https://easyfornet.com/docs" target="_blank" rel="noopener noreferrer">easyfornet.com</a></strong>.
+workflow — is at **[easyfornet.com](https://easyfornet.com/docs)**.
 
 ## Custom Development
 
@@ -121,4 +121,4 @@ If you want custom development, you can send me an email at [support@easyfornet.
 
 ## Support the Project
 
-If EasyForNet saves you time, ⭐ <a href="https://github.com/ma496/EasyForNet" target="_blank" rel="noopener noreferrer">star it on GitHub</a> — it helps others find it and keeps the project growing.
+If EasyForNet saves you time, ⭐ [star it on GitHub](https://github.com/ma496/EasyForNet) — it helps others find it and keeps the project growing.

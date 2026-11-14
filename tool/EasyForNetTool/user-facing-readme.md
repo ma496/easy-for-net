@@ -1,11 +1,11 @@
 # {{Name}}
 
 An **ASP.NET 10 (FastEndpoints)** API in `src/backend` and a **Next.js 16** web app in
-`src/frontend/web`, generated with <a href="https://easyfornet.com" target="_blank" rel="noopener noreferrer">EasyForNet</a>:
+`src/frontend/web`, generated with [EasyForNet](https://easyfornet.com):
 a public, server-rendered site at `/` whose SEO (titles, descriptions, social images, sitemap, robots)
 is edited from the admin area at `/admin`, with visitor accounts, users, roles and permissions.
 `CLAUDE.md` describes the architecture and `.claude/skills` holds a step-by-step guide for each recurring task.
-The full documentation is at <a href="https://easyfornet.com/docs" target="_blank" rel="noopener noreferrer">easyfornet.com/docs</a>.
+The full documentation is at [easyfornet.com/docs](https://easyfornet.com/docs).
 
 ## Quick Start
 
@@ -122,7 +122,7 @@ Before deploying for real:
 
 ## Deploy to a VPS (Coolify)
 
-`npm run deploy:vps` puts the application on a Linux VPS behind <a href="https://coolify.io" target="_blank" rel="noopener noreferrer">Coolify</a>
+`npm run deploy:vps` puts the application on a Linux VPS behind [Coolify](https://coolify.io)
 from Windows, macOS or Linux. It needs Node and an OpenSSH client on your machine. On the server it needs
 SSH access as root (or a sudo user) and the DNS A record above.
 
