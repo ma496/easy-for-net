@@ -266,13 +266,17 @@ migration, and start both apps before publishing.
 
 `publish-package.sh`, from the repository root:
 
-1. Refuses a dirty working tree.
-2. Proposes the latest tag's patch + 1 as the version (override at the prompt). The `<Version>` in
-   `EasyForNetTool.csproj` is not changed by the script; it is what local builds report.
-3. Runs the tool tests (Release), then `dotnet pack` with `-p:Version` / `-p:PackageVersion`.
-4. Asks for confirmation; declining stops before anything is tagged.
-5. Creates tag `v$VERSION` at `HEAD` (reuses it if it already points at `HEAD`, fails if it points
-   elsewhere) and pushes it to `origin`.
+1. Refuses a dirty working tree or a detached `HEAD`.
+2. Proposes the latest tag's patch + 1 as the version (override at the prompt). A tag that already
+   exists must point at `HEAD` with that version already in the project file (a re-run after a
+   failed push); anywhere else it fails before anything runs.
+3. Runs the tool tests (Release), writes the version into `<Version>` in `EasyForNetTool.csproj` —
+   the version's one source, so local builds report the release they were built from — and runs
+   `dotnet pack`.
+4. Asks for confirmation; declining restores the project file and stops before anything is
+   committed or tagged.
+5. Commits the project file as `Bump version to $VERSION`, tags that commit `v$VERSION`, and pushes
+   the branch and the tag to `origin` together (`git push --atomic`).
 6. `dotnet nuget push` to nuget.org, with `--api-key "$NUGET_API_KEY"` when that variable is set.
 
-The tag is pushed before the package so that no published version lacks its template.
+The commit and tag are pushed before the package so that no published version lacks its template.
