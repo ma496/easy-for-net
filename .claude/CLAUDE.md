@@ -105,8 +105,10 @@ the bar there high — injection is capped, so every platitude evicts something 
   prose costs tokens on every task.
 - **Every agent definition ends with how to verify its own work.** An agent that cannot say
   what it checked has not finished.
-- **Permissions in `settings.json` are for read-only and gate commands.** Anything that
-  writes, pushes, commits, or spawns agents belongs in `ask`, not `allow`.
+- **Permissions in `settings.json` are for read-only and gate commands, plus `git add` and
+  `git commit`.** A local commit is undone with one command, and `guard-bash.mjs` still refuses
+  a blind `git add -A` and, in `team`, a commit on the base branch. Anything else that writes,
+  pushes, or spawns agents belongs in `ask`, not `allow`.
 - **The allow-list is not a safety boundary; the hooks are.** `Bash(cat *)` is allowed
   because prompting for every file read is unusable — which is exactly why `cat .env` has to
   be stopped by `guard-bash.mjs` rather than by a permission entry. When you widen the

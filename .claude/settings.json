@@ -43,6 +43,10 @@
       "Bash(git branch -v*)",
       "Bash(git branch --list*)",
       "Bash(git rev-parse*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "PowerShell(git add *)",
+      "PowerShell(git commit *)",
       "PowerShell(git status*)",
       "PowerShell(git diff*)",
       "PowerShell(git log*)",
@@ -66,7 +70,6 @@
     ],
     "ask": [
       "Bash(git push*)",
-      "Bash(git commit*)",
       "Bash(npm run queue -- drain*)",
       "Bash(npm run auto -- *)",
       "Bash(npm run loop*)",
