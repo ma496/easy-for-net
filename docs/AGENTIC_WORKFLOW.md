@@ -37,6 +37,12 @@ checkout of the branch sees the spec as planned — and two branches planning di
 never touch the same file. To read the split before anything is built, run
 `npm run queue -- plan` first; the next drain builds what it queued.
 
+To have the spec drafted with you, run `/spec <what you want built>`. It reads the code,
+asks at most one round of questions whose answers would change the work, and writes
+`specs/drafts/<name>.md`. Only top-level `specs/*.md` are planned, so a draft is never built.
+`/spec specs/drafts/<name>.md <what to change>` revises it. Moving the file into `specs/` is
+the approval, and the command leaves that to you. It never plans, drains or commits.
+
 Re-planning an edited spec withdraws that spec's tasks still waiting in `todo/` to
 `.agent-runs/superseded/` and asks the planner to replace them (they come back if planning
 fails); tasks that already landed stay. A spec still uncommitted after intake — its planning
@@ -248,7 +254,7 @@ than moving the queue there.
 
 ```sh
 git switch -c feat/billing-export
-# write specs/billing-export.md
+# write specs/billing-export.md (or /spec, then move the draft from specs/drafts/)
 npm run loop                         # plans it (one "Plan" commit), builds each task (one commit each)
 git push -u origin HEAD              # yours to run; the loop never pushes unless AGENT_AUTO_PUSH=1
 npm run pr                           # prints the pull-request URL for the pushed branch
@@ -259,7 +265,8 @@ branch, so a spec that arrived from someone else's merged work is never planned 
 time — and a drain builds only the briefs this branch added or changed, so a teammate's task
 that was still queued when their pull request merged is left for them, and listed. The guard
 also refuses a commit on the base branch itself, and the interactive commands (`/feature`,
-`/auto`, `/ship`) branch off it first.
+`/auto`, `/ship`) branch off it first. `/spec` does not, since it writes only an uncommitted
+draft, so switch to the spec's branch before moving the draft into `specs/`.
 
 A timer belongs to a checkout, and is pinned to the branch it was installed on
 (`AGENT_WORK_BRANCH`): a cycle that fires while another branch is checked out refuses rather

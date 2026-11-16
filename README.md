@@ -74,7 +74,8 @@ The lead agent loads the matching skills, delegates design, data, backend and fr
 specialists, runs the quality gate, has QA, security and code reviewers sign off, and commits — then
 stops for your review.
 
-For bigger work, write a spec in `specs/` and let the loop build it unattended:
+For bigger work, write a spec in `specs/` and let the loop build it unattended. `/spec <what you want
+built>` drafts one with you in `specs/drafts/`, and moving it into `specs/` approves it:
 
 ```sh
 npm run loop       # plan the spec into tasks, build each one, verify, review, commit

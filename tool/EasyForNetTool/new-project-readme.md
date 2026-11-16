@@ -75,7 +75,8 @@ Describe a feature and the agents in `.claude/agents` build it the way the codeb
 The lead loads the matching skills, hands design, data, backend and frontend work to specialists, runs
 the gate, has QA, security and code reviewers sign off, and commits. Then it stops for your review.
 
-For bigger work, write a spec in `specs/` (see `specs/TEMPLATE.md`) and let the loop build it unattended:
+For bigger work, write a spec in `specs/` (see `specs/TEMPLATE.md`) and let the loop build it unattended.
+`/spec <what you want built>` drafts one with you in `specs/drafts/`, and moving it into `specs/` approves it:
 
 ```sh
 npm run loop                    # plan the spec into tasks, build each one, verify, review, commit
