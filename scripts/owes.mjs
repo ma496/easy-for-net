@@ -4,7 +4,7 @@
  * must see it, in the order the runner enforces, and the skills its shape calls for.
  *
  *   npm run owes                    # the working tree's changes
- *   npm run owes -- --base master   # everything since the branch left master, plus the tree
+ *   npm run owes -- --base main     # everything since the branch left main, plus the tree
  *
  * The runner derives the same set from a task's finished diff and refuses an attempt that
  * skipped one (lib/departments.mjs). Working by hand, nothing told you that set — so a

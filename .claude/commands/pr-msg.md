@@ -14,7 +14,7 @@ Arguments: **$ARGUMENTS**
 
 - An argument naming an existing branch: that branch.
 - Otherwise `project.baseBranch` in `agentic.config.json`, else `origin/HEAD`
-  (`git symbolic-ref refs/remotes/origin/HEAD`), else `master` / `main`, whichever exists.
+  (`git symbolic-ref refs/remotes/origin/HEAD`), else `main` / `master`, whichever exists.
 - Anything else in the arguments is a hint from the user — the intent, a ticket, what to
   emphasise. Use it to frame the text, but describe only what the branch actually does.
 
@@ -44,4 +44,4 @@ changes, say so in one line after the output — they are not part of the PR.
 
 The title on its own line as `# <title>`, then the description, all inside a single fenced
 ` ```markdown ` block ready to paste, followed by one line naming what it covers
-(e.g. "Covers 3 commits on `feat/x` against `master`"). No pull request is created.
+(e.g. "Covers 3 commits on `feat/x` against `main`"). No pull request is created.

@@ -48,9 +48,9 @@ test("the work branch is the configured one, else the one checked out", () => {
 });
 
 test("the base branch is configured, else origin/HEAD, else main or master", () => {
-  assert.equal(resolveBaseBranch("release", { originHead: "refs/remotes/origin/master" }), "release");
-  assert.equal(resolveBaseBranch(null, { originHead: "refs/remotes/origin/master" }), "master");
-  assert.equal(resolveBaseBranch(null, { originHead: "", existing: ["master"] }), "master");
+  assert.equal(resolveBaseBranch("release", { originHead: "refs/remotes/origin/main" }), "release");
+  assert.equal(resolveBaseBranch(null, { originHead: "refs/remotes/origin/main" }), "main");
+  assert.equal(resolveBaseBranch(null, { originHead: "", existing: ["main"] }), "main");
   assert.equal(resolveBaseBranch(null, { originHead: "", existing: [] }), "main");
 });
 
@@ -100,8 +100,8 @@ test("an SSH alias resolves through ssh's own config", () => {
 
 test("pull request URLs name the base branch", () => {
   assert.equal(
-    pullRequestUrl("github", "o/r", "feat/x", "master"),
-    "https://github.com/o/r/compare/master...feat%2Fx?expand=1",
+    pullRequestUrl("github", "o/r", "feat/x", "main"),
+    "https://github.com/o/r/compare/main...feat%2Fx?expand=1",
   );
   assert.equal(pullRequestUrl(null, "o/r", "x", "main"), null);
 });
