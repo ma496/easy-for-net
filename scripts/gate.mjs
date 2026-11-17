@@ -90,7 +90,7 @@ const DOTNET_SHARED = [
 ];
 const DOTNET = [...apps.map((a) => a.backendRe), ...DOTNET_SHARED];
 const TOOL_PATHS = [/^tool\//, /^global\.json$/, /^[^/]+\.slnx?$/, ...apps.map((a) => a.appSettingsRe)];
-const ENGINE = [/^scripts\//, /^agentic\.config\.json$/, /^package(-lock)?\.json$/];
+const ENGINE = [/^scripts\//, /^agentic\.config\.json$/, /^package(-lock)?\.json$/, /^\.mcp\.json$/];
 const HOOKS = [/^\.claude\/hooks\//, /^\.claude\/settings\.json$/, /^\.claude\/statusline\.mjs$/, /^scripts\/lib\//, /^agentic\.config\.json$/];
 
 /** Paths no step needs to see: prose, queue bookkeeping, run records, editor settings. */

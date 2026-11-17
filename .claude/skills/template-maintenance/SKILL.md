@@ -84,7 +84,7 @@ would want. The templates share no code, so a fix that applies to both is made i
   (PostgreSQL, Hangfire, Redis) agree
 - root files `.editorconfig`, `.gitignore`, `.gitattributes`, `global.json`, `package.json`,
   `agentic.config.json`, `docker-compose.yml`, `docker-compose.prod.yml`, `docker-compose.coolify.yml`
-  (what `npm run deploy:vps` points Coolify at), `.env.docker.example`
+  (what `npm run deploy:vps` points Coolify at), `.env.docker.example`, `.mcp.json`
   (`CopyFiles` throws if one is missing)
 - directories `.config`, `.vscode`, `docker`, `scripts` (whole), and `.claude` minus any directory named
   `new-project`, `template-maintenance` or `lessons`, and the template's `ExcludedSkills`

@@ -55,6 +55,16 @@ npm run verify -- --full            # the same with every gate step
 
 The API that `verify` starts for the live check waits on `scripts/pg-ready.mjs` and `scripts/redis-ready.mjs` (a TCP probe of `ConnectionStrings:Redis`), both listed under `verify.service.dependsOn` in `agentic.config.json`.
 
+## MCP servers
+
+`.mcp.json` gives every session three MCP servers, enabled for the project by `enabledMcpjsonServers` in `.claude/settings.json`. Each one starts through a wrapper in `scripts/mcp/`. `.mcp.json` itself names no credential: at start-up, the PostgreSQL and Redis wrappers read the connection strings from `src/backend/Source/appsettings.Development.json` and pass them in the server's environment, never in argv.
+
+- **`postgres`**: Postgres MCP Pro in `restricted` mode, which means read-only transactions with a time limit. SQL sent through MCP is not seen by the shell guards, so this mode is the only thing refusing a write. Schema changes still go through EF migrations.
+- **`redis`**: the official Redis MCP server. It has no read-only mode, so every tool that writes (`mcp__redis__set`, `…__delete`, `…__expire`, …) is in `permissions.deny`, since this Redis holds the API's sessions.
+- **`playwright`**: Microsoft's Playwright MCP, with a fresh profile each session (`--isolated`) and its output in the git-ignored `.playwright-mcp/`. It reaches the app on the hosts below once `npm run dev` runs.
+
+The PostgreSQL and Redis servers need `uv` (`uvx`) on the PATH, and a wrapper that cannot start says why on stderr.
+
 ## Local sign-in (browser testing)
 
 Two accounts are seeded on first run. Locally (Development and Testing) both use the password `Admin#123`:

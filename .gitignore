@@ -292,3 +292,6 @@ uploads/
 .agent-queue/doing/
 .agent-queue/done/
 .agent-queue/failed/
+
+# Screenshots and traces of the Playwright MCP server (scripts/mcp/playwright.mjs)
+/.playwright-mcp/

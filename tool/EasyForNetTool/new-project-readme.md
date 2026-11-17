@@ -8,7 +8,8 @@ The full documentation is at [easyfornet.com/docs](https://easyfornet.com/docs).
 ## Quick Start
 
 You need the .NET SDK pinned in `global.json`, **Node.js 24+**, **Git** and **Docker** (or your own
-PostgreSQL and Redis).
+PostgreSQL and Redis). The project's MCP servers for Claude Code (PostgreSQL, Redis, Playwright, in
+`.mcp.json`) also need **[uv](https://docs.astral.sh/uv/)**; check them with `/mcp`.
 
 ```sh
 # 1. Once: restore, build and add the initial migration

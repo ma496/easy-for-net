@@ -309,7 +309,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             // .env.development is git-ignored in the template, so seed it from the tracked example file
             CopyFrom(webProjectPath, webTargetPath, ".env.example", ".env.development");
             CopyFiles(versionedTemplateDir, targetPath, ".editorconfig", ".gitignore", ".gitattributes", "global.json", "package.json", "agentic.config.json",
-                "docker-compose.yml", "docker-compose.prod.yml", "docker-compose.coolify.yml", ".env.docker.example");
+                "docker-compose.yml", "docker-compose.prod.yml", "docker-compose.coolify.yml", ".env.docker.example", ".mcp.json");
             // a PostgreSQL or Redis already running on this machine keeps its port; the project's containers take the next free one
             var devPorts = DevPorts.Find(DevPorts.IsFree);
             // .env is git-ignored in the template, so it is written from the tracked example with this project's values

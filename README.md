@@ -32,7 +32,8 @@ instead of trusting it.
 
 ## Quick Start
 
-You need the **.NET 10 SDK**, **Node.js 24+**, **Git** and **Docker**.
+You need the **.NET 10 SDK**, **Node.js 24+**, **Git** and **Docker**, plus **[uv](https://docs.astral.sh/uv/)**
+for the Claude Code MCP servers.
 
 ```sh
 # 1. Install the CLI
@@ -84,6 +85,14 @@ npm run monitor    # watch the run live
 
 Every task is verified by the runner itself, capped in cost, committed one task at a time, and never
 pushed or merged without your say-so.
+
+Agents can also look at the running app through the project's MCP servers (`.mcp.json`):
+
+- **PostgreSQL:** read-only queries against the development database.
+- **Redis:** read-only, since every write tool is denied.
+- **Playwright:** drives a real browser.
+
+Connections come from the project's own development settings, so nothing secret is committed.
 
 ## Two Templates
 

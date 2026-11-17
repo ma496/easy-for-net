@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "node",
+      "args": ["scripts/mcp/postgres.mjs"]
+    },
+    "redis": {
+      "command": "node",
+      "args": ["scripts/mcp/redis.mjs"]
+    },
+    "playwright": {
+      "command": "node",
+      "args": ["scripts/mcp/playwright.mjs"]
+    }
+  }
+}
