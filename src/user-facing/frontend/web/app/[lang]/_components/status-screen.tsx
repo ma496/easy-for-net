@@ -1,12 +1,10 @@
-'use client'
-
 import type { ReactNode } from 'react'
-import { ArrowLeft, type LucideIcon } from 'lucide-react'
-import { useLocalizedRouter } from '@/hooks'
-import { useTranslation } from '@/i18n'
-import { Button } from '@/components/ui'
+import type { LucideIcon } from 'lucide-react'
 import { BrandMark } from './brand-mark'
 import { SiteControls } from './site-controls'
+import { StatusBackButton } from './status-back-button'
+
+export { StatusBackButton }
 
 /**
  * Props for the {@link StatusScreen} component.
@@ -24,23 +22,10 @@ interface StatusScreenProps {
 }
 
 /**
- * The outline Back button that returns one step in the browser history - the status screen's default
- * way on, and usable inside a screen's own `action` beside another link.
- */
-export const StatusBackButton = ({ className }: { className?: string }) => {
-  const router = useLocalizedRouter()
-  const { t } = useTranslation()
-
-  return (
-    <Button type="button" variant="outline" size="lg" className={className} icon={<ArrowLeft className="size-4 rtl:-scale-x-100" />} onClick={() => router.back()}>
-      {t('common.back') || 'Back'}
-    </Button>
-  )
-}
-
-/**
  * Full-page status view (not found, forbidden) with the site's top bar, an icon tile, the status code,
  * a title and message, and a back button that returns one step in the browser history - or the screen's own action in its place.
+ * It holds no client code of its own, so a server component may render it and pass `icon` as a
+ * component: the hooks live in {@link BrandMark}, {@link SiteControls} and {@link StatusBackButton}.
  */
 export const StatusScreen = ({ code, icon: Icon, tone = 'danger', title, message, action }: StatusScreenProps) => {
   return (
