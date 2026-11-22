@@ -57,7 +57,6 @@
     "administration": "管理",
     "users": "用户",
     "roles": "角色",
-    "rolesList": "列表",
     "rolesCreate": "创建",
     "rolesUpdate": "更新",
     "rolesChangePermissions": "更改权限",
@@ -72,7 +71,6 @@
     "profile": "个人资料",
     "uiFileUpload": "文件上传",
     "uiTooltips": "工具提示",
-    "usersList": "列表",
     "usersCreate": "创建",
     "usersUpdate": "更新",
     "notifications": "通知",
@@ -83,7 +81,6 @@
     "admin": "管理",
     "viewSite": "查看网站",
     "seo": "SEO",
-    "seoList": "列表",
     "seoCreate": "创建",
     "seoUpdate": "更新"
   },

@@ -44,19 +44,13 @@ export const navItems: (NavItem | NavItemGroup)[] = [
         icon: Users,
         children: [
           {
-            title: 'navigation.usersList',
-            url: '/users',
-
-          },
-          {
             title: 'navigation.usersCreate',
             url: '/users/create',
-
+            show: false,
           },
           {
             title: 'navigation.usersUpdate',
             url: '/users/{id}/update',
-
             show: false,
           },
         ],
@@ -67,25 +61,18 @@ export const navItems: (NavItem | NavItemGroup)[] = [
         icon: Shield,
         children: [
           {
-            title: 'navigation.rolesList',
-            url: '/roles',
-
-          },
-          {
             title: 'navigation.rolesCreate',
             url: '/roles/create',
-
+            show: false,
           },
           {
             title: 'navigation.rolesUpdate',
             url: '/roles/{id}/update',
-
             show: false,
           },
           {
             title: 'navigation.rolesChangePermissions',
             url: '/roles/{id}/change-permissions',
-
             show: false,
           },
         ],
@@ -96,12 +83,9 @@ export const navItems: (NavItem | NavItemGroup)[] = [
         icon: Building2,
         children: [
           {
-            title: 'navigation.tenantsList',
-            url: '/tenants',
-          },
-          {
             title: 'navigation.tenantsCreate',
             url: '/tenants/create',
+            show: false,
           },
           {
             title: 'navigation.tenantsUpdate',
@@ -131,12 +115,9 @@ export const navItems: (NavItem | NavItemGroup)[] = [
         icon: Layers,
         children: [
           {
-            title: 'navigation.editionsList',
-            url: '/editions',
-          },
-          {
             title: 'navigation.editionsCreate',
             url: '/editions/create',
+            show: false,
           },
           {
             title: 'navigation.editionsUpdate',

@@ -146,7 +146,9 @@ translator, overrides and adding a language.
 - `nav-items.ts` — sidebar entry. Items are either a `NavItem` or a `NavItemGroup` (`{ title, items }`).
   `title` is an i18n key, `url` is unprefixed, `icon` comes from `lucide-react`, and detail routes are
   listed as children with `show: false` so they highlight the parent (and feed the breadcrumbs)
-  without appearing in the menu. There is no permission field: the sidebar drops an item whose `url`
+  without appearing in the menu. A CRUD set is one link to its list: the parent's `url` is the list
+  page and the create route is a `show: false` child like update — no List/Create submenu, since
+  create is reached from the list's toolbar. There is no permission field: the sidebar drops an item whose `url`
   exactly matches an `auth-urls.ts` entry the caller fails or that `isPathAvailable` rejects, and a
   parent whose children are all dropped.
 - `searchable-items.ts` — global search entry (`{ title: 'search.users', url: '/users' }`),

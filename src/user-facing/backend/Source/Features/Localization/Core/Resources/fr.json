@@ -57,7 +57,6 @@
     "administration": "Administration",
     "users": "Utilisateurs",
     "roles": "Rôles",
-    "rolesList": "Liste",
     "rolesCreate": "Créer",
     "rolesUpdate": "Mettre à jour",
     "rolesChangePermissions": "Modifier les permissions",
@@ -72,7 +71,6 @@
     "profile": "Profil",
     "uiFileUpload": "Téléchargement de fichiers",
     "uiTooltips": "Info-bulles",
-    "usersList": "Liste",
     "usersCreate": "Créer",
     "usersUpdate": "Mettre à jour",
     "notifications": "Notifications",
@@ -83,7 +81,6 @@
     "admin": "Administration",
     "viewSite": "Voir le site",
     "seo": "SEO",
-    "seoList": "Liste",
     "seoCreate": "Créer",
     "seoUpdate": "Modifier"
   },

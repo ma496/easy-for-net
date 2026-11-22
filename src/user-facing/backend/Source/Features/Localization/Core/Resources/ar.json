@@ -57,7 +57,6 @@
     "administration": "الإدارة",
     "users": "المستخدمين",
     "roles": "الأدوار",
-    "rolesList": "قائمة",
     "rolesCreate": "إنشاء",
     "rolesUpdate": "تحديث",
     "rolesChangePermissions": "تغيير الأذونات",
@@ -72,7 +71,6 @@
     "profile": "الملف الشخصي",
     "uiFileUpload": "رفع الملفات",
     "uiTooltips": "تلميحات",
-    "usersList": "قائمة",
     "usersCreate": "إنشاء",
     "usersUpdate": "تحديث",
     "notifications": "الإشعارات",
@@ -83,7 +81,6 @@
     "admin": "الإدارة",
     "viewSite": "عرض الموقع",
     "seo": "تحسين محركات البحث",
-    "seoList": "القائمة",
     "seoCreate": "إنشاء",
     "seoUpdate": "تحديث"
   },

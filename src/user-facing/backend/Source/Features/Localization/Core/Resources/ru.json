@@ -57,7 +57,6 @@
     "administration": "Администрирование",
     "users": "Пользователи",
     "roles": "Роли",
-    "rolesList": "Список",
     "rolesCreate": "Создать",
     "rolesUpdate": "Обновить",
     "rolesChangePermissions": "Изменить права",
@@ -72,7 +71,6 @@
     "profile": "Профиль",
     "uiFileUpload": "Загрузка файлов",
     "uiTooltips": "Подсказки",
-    "usersList": "Список",
     "usersCreate": "Создать",
     "usersUpdate": "Обновить",
     "notifications": "Уведомления",
@@ -83,7 +81,6 @@
     "admin": "Администрирование",
     "viewSite": "Открыть сайт",
     "seo": "SEO",
-    "seoList": "Список",
     "seoCreate": "Создать",
     "seoUpdate": "Изменить"
   },

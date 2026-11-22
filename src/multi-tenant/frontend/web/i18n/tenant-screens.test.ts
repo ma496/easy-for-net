@@ -49,7 +49,6 @@ const tenantErrorCodes = [
 /** The keys the tenant screens render from, one per string a person reads on them. */
 const tenantScreenKeys = [
   'navigation.tenants',
-  'navigation.tenantsList',
   'navigation.tenantsCreate',
   'navigation.tenantsUpdate',
   'navigation.tenantsMembers',

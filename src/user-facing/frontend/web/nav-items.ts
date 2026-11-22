@@ -45,19 +45,13 @@ export const navItems: (NavItem | NavItemGroup)[] = [
         icon: Users,
         children: [
           {
-            title: 'navigation.usersList',
-            url: adminPath('/users'),
-
-          },
-          {
             title: 'navigation.usersCreate',
             url: adminPath('/users/create'),
-
+            show: false,
           },
           {
             title: 'navigation.usersUpdate',
             url: adminPath('/users/{id}/update'),
-
             show: false,
           },
         ],
@@ -68,25 +62,18 @@ export const navItems: (NavItem | NavItemGroup)[] = [
         icon: Shield,
         children: [
           {
-            title: 'navigation.rolesList',
-            url: adminPath('/roles'),
-
-          },
-          {
             title: 'navigation.rolesCreate',
             url: adminPath('/roles/create'),
-
+            show: false,
           },
           {
             title: 'navigation.rolesUpdate',
             url: adminPath('/roles/{id}/update'),
-
             show: false,
           },
           {
             title: 'navigation.rolesChangePermissions',
             url: adminPath('/roles/{id}/change-permissions'),
-
             show: false,
           },
         ],
@@ -97,12 +84,9 @@ export const navItems: (NavItem | NavItemGroup)[] = [
         icon: Search,
         children: [
           {
-            title: 'navigation.seoList',
-            url: adminPath('/seo'),
-          },
-          {
             title: 'navigation.seoCreate',
             url: adminPath('/seo/create'),
+            show: false,
           },
           {
             title: 'navigation.seoUpdate',
