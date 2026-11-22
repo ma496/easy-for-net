@@ -24,11 +24,11 @@
 import { spawnSync } from "node:child_process";
 import { mkdirSync, openSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { request as httpRequest } from "node:http";
-import { createServer } from "node:net";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { apiAdoptionVerdict } from "./lib/api-identity.mjs";
+import { isPortFree } from "./lib/dev-ports.mjs";
 import { workingTreePaths } from "./lib/changed-paths.mjs";
 import { gateBuilt, readGateReport, stepTimings } from "./lib/gate-report.mjs";
 import { IS_WINDOWS, killTree, runCommandSync, sleepSync, spawnCommand } from "./lib/proc.mjs";
@@ -99,7 +99,9 @@ const CHECKS = (config.verify.checks ?? []).map((c) => ({
 // *preference*, not a guarantee: if whatever answers there turns out to be serving some
 // other checkout, this run moves to a free port and starts its own. Both are mutable for
 // that reason.
-let PORT = Number(argOf("port", SERVICE?.port ?? 3000));
+// DEV_API_PORT, when the environment names one, is where `npm run dev` put this checkout's API, so
+// that is where an API worth adopting would be.
+let PORT = Number(argOf("port", process.env.DEV_API_PORT || (SERVICE?.port ?? 3000)));
 // An explicit --api names one specific server. Relocating away from it would silently
 // ignore the operator, so an identity mismatch there is a failure rather than a move.
 const API_PINNED = argv.includes("--api");
@@ -240,12 +242,12 @@ const recordPath = (port) => join(RUNS_DIR, `dev-service-${port}.json`);
  * only to 127.0.0.1 slips in beside it and reports the port free. This is still only a
  * hint — the identity re-check after startup is what actually stops a wrong adoption.
  */
+/**
+ * Free for a loopback listener: nothing answers there and both loopback addresses bind. A bind
+ * alone is not enough on Windows or macOS, where it succeeds beside another app's wildcard listener.
+ */
 function portFree(port) {
-  return new Promise((resolve) => {
-    const probe = createServer();
-    probe.once("error", () => resolve(false));
-    probe.listen(port, () => probe.close(() => resolve(true)));
-  });
+  return isPortFree(port);
 }
 
 /** Ports to try, preferred one first, then upwards past whatever is squatting. */

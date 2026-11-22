@@ -29,7 +29,7 @@ loop.mjs            the whole cycle: look → observe → plan → drain → rep
 | `open-pr.mjs` | Prints (or opens) the pull-request page for the current branch. Never merges. |
 | `gate.mjs` | The static gate: solution build, backend and tool tests, web lint + `tsc` + vitest, engine and hook tests, web build. `--changed` runs only the steps whose watched paths changed (`lib/gate-scope.mjs` decides). |
 | `serve-api.mjs` | Starts the API on `$PORT` as Development — what verify starts for a live check. With `SERVICE_PREBUILT=1` (set by verify when its gate has just run `verify.service.prebuiltBy`) it starts with `--no-build`. |
-| `dev.mjs` | `npm run dev`: the whole app for a developer — PostgreSQL and Redis through `docker compose` when the probes say they are down, then the API (via `serve-api.mjs`), the dev proxy on :3000 and, once the API's `/health` answers, `next dev` on :3001 behind it, each line prefixed. Not part of the loop or the gate. |
+| `dev.mjs` | `npm run dev`: the whole app for a developer — PostgreSQL and Redis through `docker compose` when the probes say they are down, then the API (via `serve-api.mjs`), the dev proxy on :3000 and, once the API's `/health` answers, `next dev` on :3001 behind it, each line prefixed. The three ports are `DEV_PROXY_PORT` / `DEV_WEB_PORT` / `DEV_API_PORT` (`lib/dev-ports.mjs`), each checked first: one something else holds — on loopback or the wildcard address, since Windows and macOS let a loopback bind sit beside another app's wildcard listener and hide it — is refused, naming the holder and a free port. The API gets the proxy's port in its `Web` origins. Not part of the loop or the gate. |
 | `dev-proxy.mjs` | The development front door on :3000 (loopback only; `--host` opts in to another address), mirroring `docker/Caddyfile`: `/api/*`, `/hubs/*`, `/hangfire*` and `/health` to the API, everything else to `next dev`, WebSocket upgrades piped for the hub and hot reload, `Host` kept, 502 when an upstream is down. Dependency-free; the pure parts are `lib/dev-proxy.mjs`. |
 | `stop-api.mjs` | Stops this checkout's running API (anything running from an app's `Source/bin/`), which on Windows locks the build output. The gate runs it before `dotnet build`; `npm run stop:api`. |
 | `pg-ready.mjs` | Whether PostgreSQL accepts connections — the dependency probe for verify and the loop. |
@@ -66,9 +66,11 @@ works on one machine and silently fails on the next.
   will report the wrong thing to a person who is not watching.
 - **A required check that could not run is a failure.** Never a pass with a footnote.
 - **The scripts never read `.env`.** Ceilings and flags come from the environment the caller
-  already has; the timer gets them from the command it was installed with. The one exception is
-  `deploy-vps.mjs`, which takes `GODADDY_API_KEY` and `GODADDY_API_SECRET` from the root `.env`
-  when neither the flag nor the environment gives them (`readDotenvValues`: only those two
-  variables, nothing else in the file); it is owner-run only.
+  already has; the timer gets them from the command it was installed with. Two exceptions, both
+  through `readDotenvValues` and so reading only the variables they name, nothing else in the file:
+  `deploy-vps.mjs` takes `GODADDY_API_KEY` and `GODADDY_API_SECRET` when neither the flag nor the
+  environment gives them, and is owner-run only; `dev.mjs` takes `DEV_PROXY_PORT`, `DEV_WEB_PORT` and
+  `DEV_API_PORT` (`lib/dev-ports.mjs`) when the environment does not. The engine (`verify.mjs`
+  included) reads neither.
 - **Pure helpers get unit tests** under the test roots, so `lib/` stays honest. A helper with
   branching logic and no test will be wrong within a month.

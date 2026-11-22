@@ -156,6 +156,72 @@ public class CustomizeAppSettingsTests
         }
     }
 
+    /// <summary>
+    /// Tests that the Web origins of appsettings.json and appsettings.Development.json name the proxy port
+    /// picked for the project, and that Testing keeps the template's.
+    /// </summary>
+    [Fact]
+    public async Task Should_Write_The_Proxy_Port_Into_The_Web_Origins()
+    {
+        // Arrange
+        var templateSettings = FindTemplateAppSettings();
+        var dir = Path.Combine(Path.GetTempPath(), "efn-appsettings-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            foreach (var name in new[] { "appsettings.json", "appsettings.Development.json", "appsettings.Testing.json" })
+                File.Copy(templateSettings, Path.Combine(dir, name));
+
+            // Act
+            await CreateProjectGenerator.CustomizeAppSettingsAsync(dir, "demo", DevPorts.Default with { Proxy = 3005 });
+
+            // Assert
+            foreach (var name in new[] { "appsettings.json", "appsettings.Development.json" })
+            {
+                Assert.Equal("http://app.localhost:3005", await ReadAsync(dir, name, "Web", "DefaultDomain"));
+                Assert.Equal("http://{tenant}.localhost:3005", await ReadAsync(dir, name, "Web", "TenantOriginTemplate"));
+                Assert.Equal("http://localhost:3005", await ReadAsync(dir, name, "Web", "Domains", "0"));
+            }
+            Assert.Equal("http://app.localhost:3000", await ReadAsync(dir, "appsettings.Testing.json", "Web", "DefaultDomain"));
+        }
+        finally
+        {
+            Directory.Delete(dir, true);
+        }
+    }
+
+    /// <summary>
+    /// Tests that only localhost origins take the port, whatever port they named before.
+    /// </summary>
+    [Theory]
+    [InlineData("http://localhost:3000", "http://localhost:4100")]
+    [InlineData("http://localhost", "http://localhost:4100")]
+    [InlineData("http://app.localhost:3000/", "http://app.localhost:4100/")]
+    [InlineData("http://{tenant}.localhost:3000", "http://{tenant}.localhost:4100")]
+    [InlineData("https://example.com", "https://example.com")]
+    [InlineData("http://localhost.example.com:3000", "http://localhost.example.com:3000")]
+    public void Should_Set_The_Port_Of_Localhost_Origins_Only(string origin, string expected)
+    {
+        Assert.Equal(expected, CreateProjectGenerator.WithLocalOriginPort(origin, 4100));
+    }
+
+    /// <summary>
+    /// Tests that the default ports in a document are replaced in one pass, so a proxy moved onto 3001
+    /// does not then move again with next dev.
+    /// </summary>
+    [Fact]
+    public void Should_Rewrite_Default_Dev_Ports_In_Text_Once()
+    {
+        // Arrange
+        var text = "the API on :5000, next dev on :3001, open http://default.localhost:3000 (`:3000`); port 30001 and 5000ms stay";
+
+        // Act
+        var rewritten = CreateProjectGenerator.WithDevPorts(text, new DevPorts(5432, 6379, 3001, 3002, 5001));
+
+        // Assert
+        Assert.Equal("the API on :5001, next dev on :3002, open http://default.localhost:3001 (`:3001`); port 30001 and 5000ms stay", rewritten);
+    }
+
     internal static string FindTemplateFile(params string[] relativePath)
     {
         for (var current = new DirectoryInfo(AppContext.BaseDirectory); current != null; current = current.Parent)
@@ -185,7 +251,7 @@ public class CustomizeAppSettingsTests
         using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(dir, file), TestContext.Current.CancellationToken));
         var element = doc.RootElement;
         foreach (var key in path)
-            element = element.GetProperty(key);
+            element = element.ValueKind == JsonValueKind.Array ? element[int.Parse(key)] : element.GetProperty(key);
         return element.GetString()!;
     }
 }

@@ -5,8 +5,16 @@
  *   npm run dev                      # PostgreSQL + Redis, the API on :5000, next dev on :3001, the proxy on :3000
  *   npm run dev -- --no-docker       # use the PostgreSQL and Redis you already run
  *   npm run dev -- --api-only        # services + API, no web app and no proxy
- *   npm run dev -- --web-only        # the web app and the proxy, against an API started elsewhere on :5000
+ *   npm run dev -- --web-only        # the web app and the proxy, against an API started elsewhere on DEV_API_PORT
  *   npm run dev -- --app <name>      # which app of agentic.config.json `apps` (default: the first)
+ *
+ * The three ports are DEV_API_PORT, DEV_WEB_PORT and DEV_PROXY_PORT, from the environment or the root
+ * .env, defaulting to 5000, 3001 and 3000 (lib/dev-ports.mjs). Each is checked before anything
+ * starts, and one something else holds is refused with who holds it and a free port to move to:
+ * on Windows and macOS a loopback bind succeeds beside another app's wildcard listener, so without
+ * the check this app would quietly hide that one at the same address. The API is told the proxy's
+ * port for its Web origins (Web__DefaultDomain, …), so links it builds name the address the
+ * browser actually opens.
  *
  * The browser opens the proxy (dev-proxy.mjs), never next dev directly: it is the one origin that
  * serves both the pages and the API's /api, /hubs, /hangfire and /health, as docker/Caddyfile does in
@@ -19,16 +27,18 @@
  *    another server already holds is named, with how to move off it (DEV_POSTGRES_PORT /
  *    DEV_REDIS_PORT in .env and the connection strings); a service that answers but is not this
  *    project's container (a PostgreSQL installed on the machine) is warned about, not used silently.
- * 2. Stops an API already running from this checkout, which would hold the port and lock bin/.
+ * 2. Stops an API already running from this checkout, which would hold the port and lock bin/,
+ *    then refuses any of the three ports that something else still holds.
  * 3. Installs the web app's packages when node_modules is missing.
  * 4. Starts the API (serve-api.mjs, Development) and the proxy, waits for the API's /health to
- *    answer, then starts `next dev` on :3001 — told to call the API as `/api` from the browser and
+ *    answer, then starts `next dev` on DEV_WEB_PORT — told to call the API as `/api` from the browser and
  *    as API_INTERNAL_URL (the API on loopback) from its own server — with each line prefixed by
  *    where it came from. Ctrl+C, or any one process exiting, stops them all. The containers are
  *    left running; `docker compose down` stops them.
  */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { DEV_PORTS, describePortHolder, isPortFree, knownHolderHint, nextFreePort, readDevPorts, readWebSettings, webOriginOverrides } from "./lib/dev-ports.mjs";
 import { hasExecutable, killTree, IS_WINDOWS, runSync, sleepSync, spawnPortable } from "./lib/proc.mjs";
 import { REPO_ROOT, appArg, selectApp } from "./lib/project-config.mjs";
 
@@ -40,10 +50,22 @@ const NO_DOCKER = args.includes("--no-docker");
 const API_ONLY = args.includes("--api-only");
 const WEB_ONLY = args.includes("--web-only");
 const WEB = join(REPO_ROOT, APP.web);
-const API_PORT = process.env.PORT || "5000";
-/** The proxy is the address the browser opens; next dev sits behind it. Production's Caddy serves the same shape. */
-const PROXY_PORT = "3000";
-const WEB_PORT = "3001";
+/**
+ * The proxy is the address the browser opens; next dev sits behind it. Production's Caddy serves the
+ * same shape. A PORT already in the environment still moves the API, as it always has, unless
+ * DEV_API_PORT says otherwise.
+ */
+const PORTS = (() => {
+  try {
+    const env = process.env.PORT && !process.env.DEV_API_PORT ? { ...process.env, DEV_API_PORT: process.env.PORT } : process.env;
+    return readDevPorts({ env, root: REPO_ROOT });
+  } catch (err) {
+    fail(err.message);
+  }
+})();
+const API_PORT = String(PORTS.api);
+const PROXY_PORT = String(PORTS.proxy);
+const WEB_PORT = String(PORTS.web);
 /** How long the web app waits for the API to answer before starting regardless. */
 const API_WAIT_SECONDS = 600;
 /**
@@ -60,6 +82,7 @@ const PORT_ADVICE =
 
 if (args.includes("--help")) {
   console.log("usage: npm run dev [-- --no-docker] [-- --api-only | --web-only] [-- --app <name>]");
+  console.log("ports: DEV_PROXY_PORT (3000), DEV_WEB_PORT (3001), DEV_API_PORT (5000), from the environment or the root .env");
   process.exit(0);
 }
 if (API_ONLY && WEB_ONLY) fail("--api-only and --web-only cannot be used together.");
@@ -74,6 +97,7 @@ if (!WEB_ONLY) {
     );
   }
 }
+await ensurePortsFree();
 if (!API_ONLY && !existsSync(join(WEB, "node_modules"))) {
   console.log("dev: installing the web app's packages…");
   if (runSync("npm", ["install"], { cwd: WEB, stdio: "inherit" }).status !== 0) fail("npm install failed.");
@@ -84,7 +108,12 @@ let stopping = false;
 for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => stopAll(0));
 if (!WEB_ONLY) {
   children.push(
-    start("api", "node", [join(REPO_ROOT, "scripts", "serve-api.mjs")], { cwd: REPO_ROOT, env: { PORT: API_PORT } }),
+    start("api", "node", [join(REPO_ROOT, "scripts", "serve-api.mjs")], {
+      cwd: REPO_ROOT,
+      // The Web origins name the proxy's port, so an emailed link or a CORS origin is the address the
+      // browser opens; when DEV_PROXY_PORT moves the proxy they are moved with it.
+      env: { PORT: API_PORT, ...webOriginOverrides(readWebSettings({ root: REPO_ROOT, backend: APP.backend }), PORTS.proxy) },
+    }),
   );
 }
 if (!API_ONLY) {
@@ -110,6 +139,9 @@ if (!API_ONLY) {
       // environment still wins.
       env: {
         PORT: WEB_PORT,
+        // The web app sends a page opened on next dev's own port to the same page through the proxy
+        // (lib/utils/dev-proxy-redirect.ts): there /api reaches nothing and a sign-in fails.
+        DEV_PROXY_PORT: PROXY_PORT,
         NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "/api",
         API_INTERNAL_URL: process.env.API_INTERNAL_URL || `http://localhost:${API_PORT}/api`,
       },
@@ -127,6 +159,33 @@ console.log(
     .filter(Boolean)
     .join("\n"),
 );
+
+/**
+ * Refuse to start when something else holds a port this run is about to bind. The API's port is
+ * not checked under --web-only, where an API started elsewhere is expected to hold it.
+ */
+async function ensurePortsFree() {
+  const wanted = DEV_PORTS.filter((p) => (p.key === "api" ? !WEB_ONLY : !API_ONLY));
+  const held = [];
+  for (const p of wanted) if (!(await isPortFree(PORTS[p.key]))) held.push(p);
+  if (held.length === 0) return;
+  const taken = DEV_PORTS.map((p) => PORTS[p.key]);
+  const lines = [];
+  for (const p of held) {
+    const port = PORTS[p.key];
+    const holder = describePortHolder(port);
+    const hint = knownHolderHint(port);
+    const free = await nextFreePort(port, { taken });
+    if (free) taken.push(free);
+    lines.push(
+      `  port ${port}, for ${p.label}, is already in use${holder ? ` by ${holder}` : ""}${hint ? ` — ${hint}` : ""}.`,
+      free
+        ? `    Stop that process, or set ${p.variable}=${free} in the root .env (or the environment).`
+        : `    Stop that process, or set ${p.variable} to a free port.`,
+    );
+  }
+  fail([`cannot start: ${held.length === 1 ? "a port is" : "ports are"} taken.`, ...lines].join("\n"));
+}
 
 function stopAll(code) {
   if (stopping) return;

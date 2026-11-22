@@ -71,6 +71,12 @@ use the same ports, so change a port in both places. The development passwords a
 and `redis`. To use other ones, set `DEV_POSTGRES_PASSWORD` / `DEV_REDIS_PASSWORD` in the root `.env`
 and update the connection strings to match. Development and Testing apply migrations on startup.
 
+The web app runs on `DEV_PROXY_PORT` (3000, the address you open), with `next dev` behind it on
+`DEV_WEB_PORT` (3001) and the API on `DEV_API_PORT` (5000), all in the root `.env` — or the next
+free ports, if those were taken when the project was created. `npm run dev` refuses a port that
+something else already holds, says what holds it and suggests a free one; change the value in `.env`
+and run it again. The API's `Web` origins follow `DEV_PROXY_PORT` without any other edit.
+
 ## Tests
 
 ```sh

@@ -169,7 +169,8 @@ Run these from the new project's root.
    points `API_INTERNAL_URL` (the Next.js server's own fetches) at `http://localhost:5000/api`; the
    browser calls the API as the relative `/api`, which the dev proxy `npm run dev` starts routes to it.
    From the project root, `npm run dev` starts all of it at once — PostgreSQL and Redis, the API, and
-   the web app on :3001 behind the dev proxy on :3000.
+   the web app on :3001 behind the dev proxy on :3000 — or the ports `DEV_WEB_PORT`, `DEV_PROXY_PORT`
+   and `DEV_API_PORT` in the root `.env` name, which the generator moves past any port already taken.
 
    - **Multi-tenant:** the host is the tenant, so the sign-in page has no tenant field: sign in as
      `tenantadmin` at `http://default.localhost:3000` (the Default tenant), and as `admin` at

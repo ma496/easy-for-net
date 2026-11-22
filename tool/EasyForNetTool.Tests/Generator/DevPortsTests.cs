@@ -39,6 +39,23 @@ public class DevPortsTests
     }
 
     /// <summary>
+    /// Tests that the proxy, web and API ports move past held ones too, and never onto a port another of
+    /// the project's own already took: the proxy pushed onto 3001 pushes next dev to 3002.
+    /// </summary>
+    [Fact]
+    public void Should_Move_The_App_Ports_Without_Sharing_One()
+    {
+        // Arrange
+        var held = new HashSet<int> { 3000, 5000 };
+
+        // Act
+        var ports = DevPorts.Find(port => !held.Contains(port));
+
+        // Assert
+        Assert.Equal(new DevPorts(5432, 6379, 3001, 3002, 5001), ports);
+    }
+
+    /// <summary>
     /// Tests that the default is kept when no port in the search range is free, so generation still finishes.
     /// </summary>
     [Fact]

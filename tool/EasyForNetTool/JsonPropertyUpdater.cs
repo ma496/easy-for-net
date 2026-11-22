@@ -26,7 +26,65 @@ public static class JsonPropertyUpdater
             return;
 
         SetProperty(json, propertyPath, ConvertValue(value));
+        await WriteAsync(filePath, text, json);
+    }
 
+    /// <summary>
+    /// Passes every string directly inside the object at <paramref name="sectionPath"/> - its string
+    /// properties, and the strings of its array properties - through <paramref name="transform"/>, and
+    /// writes the file back only when one changed. A missing file or section is left alone.
+    /// </summary>
+    /// <param name="filePath">The path to the JSON file.</param>
+    /// <param name="sectionPath">Dot-separated path to an object (e.g., "Web").</param>
+    /// <param name="transform">The new value for a string; returning it unchanged leaves it as it is.</param>
+    public static async Task TransformStringsAsync(string filePath, string sectionPath, Func<string, string> transform)
+    {
+        if (!File.Exists(filePath))
+            return;
+
+        var text = File.ReadAllText(filePath);
+        var json = JsonNode.Parse(text)!;
+        JsonNode? section = json;
+        foreach (var part in sectionPath.Split('.'))
+            section = section is JsonObject parent ? parent[part] : null;
+        if (section is not JsonObject obj)
+            return;
+
+        var changed = false;
+        string? Apply(JsonNode? node)
+        {
+            if (node is not JsonValue value || !value.TryGetValue<string>(out var current))
+                return null;
+            var next = transform(current);
+            return next == current ? null : next;
+        }
+
+        foreach (var (key, node) in obj.ToList())
+        {
+            if (Apply(node) is { } replaced)
+            {
+                obj[key] = replaced;
+                changed = true;
+            }
+            else if (node is JsonArray array)
+            {
+                for (var i = 0; i < array.Count; i++)
+                {
+                    if (Apply(array[i]) is { } item)
+                    {
+                        array[i] = item;
+                        changed = true;
+                    }
+                }
+            }
+        }
+
+        if (changed)
+            await WriteAsync(filePath, text, json);
+    }
+
+    private static async Task WriteAsync(string filePath, string originalText, JsonNode json)
+    {
         // The default encoder HTML-escapes <, >, &, ', + and every non-ASCII character (">=24" becomes
         // ">=24"), so the relaxed one keeps the file's untouched values as written. LF and the
         // trailing newline keep the rewrite from touching lines it did not change.
@@ -37,7 +95,7 @@ public static class JsonPropertyUpdater
             NewLine = "\n",
         };
         var output = json.ToJsonString(options);
-        if (text.EndsWith('\n'))
+        if (originalText.EndsWith('\n'))
             output += "\n";
 
         await File.WriteAllTextAsync(filePath, output);

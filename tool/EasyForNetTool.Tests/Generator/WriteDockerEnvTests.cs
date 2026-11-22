@@ -100,12 +100,15 @@ public class WriteDockerEnvTests
         try
         {
             // Act
-            await CreateProjectGenerator.WriteDockerEnvAsync(example, envPath, "demo", new DevPorts(5433, 6380));
+            await CreateProjectGenerator.WriteDockerEnvAsync(example, envPath, "demo", new DevPorts(5433, 6380, 3002, 3003, 5001));
 
             // Assert
             var values = Parse(await File.ReadAllLinesAsync(envPath, TestContext.Current.CancellationToken));
             Assert.Equal("5433", values["DEV_POSTGRES_PORT"]);
             Assert.Equal("6380", values["DEV_REDIS_PORT"]);
+            Assert.Equal("3002", values["DEV_PROXY_PORT"]);
+            Assert.Equal("3003", values["DEV_WEB_PORT"]);
+            Assert.Equal("5001", values["DEV_API_PORT"]);
         }
         finally
         {

@@ -77,11 +77,14 @@ would want. The templates share no code, so a fix that applies to both is made i
   `TENANT_URL_TEMPLATE=https://{tenant}.localhost` — or, for a single-domain example (one with no
   `TENANT_URL_TEMPLATE=` line, the user-facing overlay's), `PUBLIC_URL=https://localhost` — and
   fresh random database, Redis and administrator passwords and JWT key, and `DEV_POSTGRES_PORT` /
-  `DEV_REDIS_PORT` (a key added to the example ships as it is unless it is named there)
-- the development ports: `DevPorts.Find(DevPorts.IsFree)` keeps 5432 and 6379 when nothing on the
-  machine holds them and otherwise takes the next free port above each, and the same pair goes to
-  `WriteDockerEnvAsync` and `CustomizeAppSettingsAsync` so `.env` and every connection string
-  (PostgreSQL, Hangfire, Redis) agree
+  `DEV_REDIS_PORT` / `DEV_PROXY_PORT` / `DEV_WEB_PORT` / `DEV_API_PORT` (a key added to the example ships as it is unless it is named there)
+- the development ports: `DevPorts.Find(DevPorts.IsFree)` keeps 5432, 6379, 3000, 3001 and 5000 when
+  nothing on the machine holds them and otherwise takes the next free port above each, never one the
+  project already took; the same set goes to `WriteDockerEnvAsync` and `CustomizeAppSettingsAsync`, so
+  `.env`, every connection string (PostgreSQL, Hangfire, Redis) and the `Web` origins of
+  `appsettings.json` / `appsettings.Development.json` agree, and `WriteDevPortsAsync` rewrites the
+  default ports in the generated `CLAUDE.md`, `README.md`, web `.env.development` and
+  `launchSettings.json`
 - root files `.editorconfig`, `.gitignore`, `.gitattributes`, `global.json`, `package.json`,
   `agentic.config.json`, `docker-compose.yml`, `docker-compose.prod.yml`, `docker-compose.coolify.yml`
   (what `npm run deploy:vps` points Coolify at), `.env.docker.example`, `.mcp.json`

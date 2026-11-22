@@ -85,6 +85,55 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(settings, "Seed.PlatformAdminPassword", LocalAdminPassword);
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(settings, "Seed.TenantAdminPassword", LocalAdminPassword);
         }
+
+        // the browser opens the dev proxy, so the origins the API trusts and builds links from name its port;
+        // Testing keeps the template's, which nothing binds
+        foreach (var settings in new[] { appSettings, developmentSettings })
+            await JsonPropertyUpdater.TransformStringsAsync(settings, "Web", origin => WithLocalOriginPort(origin, ports.Proxy));
+    }
+
+    /// <summary>
+    /// Matches the scheme and host of a <c>localhost</c> origin - <c>localhost</c> itself or any
+    /// <c>*.localhost</c> name, <c>{tenant}.localhost</c> included - with the port it names, if any.
+    /// </summary>
+    private static readonly Regex _localOrigin = new(@"^(https?://(?:[^/@:]+\.)?localhost)(?::\d+)?(?=/|$)", RegexOptions.IgnoreCase);
+
+    /// <summary>
+    /// <paramref name="origin"/> with its port set to <paramref name="port"/> when it is a <c>localhost</c>
+    /// origin; any other origin unchanged. The same rule <c>scripts/lib/dev-ports.mjs</c> applies when
+    /// <c>npm run dev</c> runs on another <c>DEV_PROXY_PORT</c> than the settings name.
+    /// </summary>
+    internal static string WithLocalOriginPort(string origin, int port) =>
+        _localOrigin.Replace(origin, m => $"{m.Groups[1].Value}:{port}");
+
+    /// <summary>
+    /// Matches a default development port where the template's files and documents name one: after
+    /// <c>localhost:</c> (any <c>*.localhost</c> host too), or written alone as <c>:3000</c> after a space,
+    /// a bracket or a backtick.
+    /// </summary>
+    private static readonly Regex _defaultDevPort = new(@"(?<=localhost:|[\s(`]:)(3000|3001|5000)(?!\d)");
+
+    /// <summary>
+    /// <paramref name="text"/> with the default proxy, web and API ports (3000, 3001, 5000) replaced by
+    /// <paramref name="ports"/>, in one pass so a port moved onto another default is not moved twice.
+    /// </summary>
+    internal static string WithDevPorts(string text, DevPorts ports) =>
+        _defaultDevPort.Replace(text, m => m.Value switch
+        {
+            "3000" => ports.Proxy.ToString(),
+            "3001" => ports.Web.ToString(),
+            _ => ports.Api.ToString(),
+        });
+
+    /// <summary>Rewrites a generated file's default development ports to <paramref name="ports"/>; a missing file is skipped.</summary>
+    internal static async Task WriteDevPortsAsync(string filePath, DevPorts ports)
+    {
+        if (!File.Exists(filePath))
+            return;
+        var text = await File.ReadAllTextAsync(filePath);
+        var rewritten = WithDevPorts(text, ports);
+        if (rewritten != text)
+            await File.WriteAllTextAsync(filePath, rewritten);
     }
 
     /// <summary>
@@ -95,7 +144,8 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
     /// <c>https://app.localhost</c> and each tenant at <c>https://{tenant}.localhost</c>, or, for a
     /// single-domain example (one with no <c>TENANT_URL_TEMPLATE=</c> line), the site at
     /// <c>https://localhost</c> - so the stack starts as generated, and the host ports the development
-    /// <c>docker-compose.yml</c> publishes PostgreSQL and Redis on. Only the keys the example has are
+    /// <c>docker-compose.yml</c> publishes PostgreSQL and Redis on and the ports <c>npm run dev</c> runs the
+    /// proxy, the web app and the API on. Only the keys the example has are
     /// written. Values the example leaves for the developer (SMTP) are copied as they are.
     /// </summary>
     /// <param name="examplePath">The template's <c>.env.docker.example</c>: its overlay's when it has one, else the shared one.</param>
@@ -124,6 +174,9 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             ["SEED_ADMIN_PASSWORD"] = Secrets.Alphanumeric(20),
             ["DEV_POSTGRES_PORT"] = ports.Postgres.ToString(),
             ["DEV_REDIS_PORT"] = ports.Redis.ToString(),
+            ["DEV_PROXY_PORT"] = ports.Proxy.ToString(),
+            ["DEV_WEB_PORT"] = ports.Web.ToString(),
+            ["DEV_API_PORT"] = ports.Api.ToString(),
         };
 
         foreach (var (key, value) in values)
@@ -327,6 +380,14 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             CopyDirectory($"{versionedTemplateDir}/.claude", $"{targetPath}/.claude", true, ["new-project", "template-maintenance", "lessons", .. template.ExcludedSkills]);
             WriteEmbeddedFile(template.ClaudeResource, Path.Combine(targetPath, "CLAUDE.md"));
             WriteEmbeddedFile(template.ReadmeResource, Path.Combine(targetPath, "README.md"));
+            // the documents, the web app's server-side API address and the launch profile name the ports this project runs on
+            foreach (var file in new[]
+                     {
+                         Path.Combine(targetPath, "CLAUDE.md"), Path.Combine(targetPath, "README.md"),
+                         Path.Combine(webTargetPath, ".env.development"),
+                         Path.Combine(backendTargetPath, "Source", "Properties", "launchSettings.json"),
+                     })
+                await WriteDevPortsAsync(file, devPorts);
             // the spec-driven task loop: its engine ships whole, and the places it records work
             // ship empty, so a new project starts with no specs, queue, build records or lessons
             CopyDirectory($"{versionedTemplateDir}/scripts", $"{targetPath}/scripts", true);
@@ -446,8 +507,9 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             Console.WriteLine($"  Seeded accounts: {template.SeededAccounts}, password {LocalAdminPassword} in development");
             Console.WriteLine("  (production seeds them with the random SEED_ADMIN_PASSWORD in .env)");
             Console.WriteLine($"  Development PostgreSQL on localhost:{devPorts.Postgres}, Redis on localhost:{devPorts.Redis}");
+            Console.WriteLine($"  Development web app on :{devPorts.Proxy} (next dev on :{devPorts.Web}), API on :{devPorts.Api}");
             if (devPorts != DevPorts.Default)
-                Console.WriteLine("  (a default port was already in use; DEV_POSTGRES_PORT / DEV_REDIS_PORT in .env match the connection strings)");
+                Console.WriteLine("  (a default port was already in use; the DEV_*_PORT values in .env name the ports picked, and the settings match them)");
             Console.WriteLine();
             Console.WriteLine("  Next steps:");
             Console.WriteLine($"    cd {kebabCaseProjectName}");
@@ -455,8 +517,8 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             Console.WriteLine($"    dotnet build {pascalCaseProjectName}.slnx");
             Console.WriteLine("    dotnet ef migrations add Initial --project src/backend/Source");
             Console.WriteLine("    git add src/backend/Source/Migrations && git commit -m \"Add the initial migration\"");
-            Console.WriteLine("    npm run dev        # PostgreSQL + Redis (Docker), the API on :5000 and the web app on :3000; Ctrl+C stops both");
-            Console.WriteLine($"    then open {string.Join(" or ", template.DevHosts.Select(h => $"http://{h}:3000"))}");
+            Console.WriteLine($"    npm run dev        # PostgreSQL + Redis (Docker), the API on :{devPorts.Api} and the web app on :{devPorts.Proxy}; Ctrl+C stops both");
+            Console.WriteLine($"    then open {string.Join(" or ", template.DevHosts.Select(h => $"http://{h}:{devPorts.Proxy}"))}");
             Console.WriteLine();
             Console.WriteLine("  README.md has the rest.");
         }
@@ -510,18 +572,23 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
 
             process.Start();
 
+            // Both pipes are drained at once, and the timeout covers the reading too: read one to its end
+            // before the other and a command that fills the second (git add's per-file line-ending
+            // warnings on stderr) blocks writing it, never closes the first, and waits for ever.
             var timeoutTask = Task.Delay(TimeSpan.FromMinutes(5));
-            var processTask = process.WaitForExitAsync();
-
-            var output = await process.StandardOutput.ReadToEndAsync();
-            var error = await process.StandardError.ReadToEndAsync();
+            var outputTask = process.StandardOutput.ReadToEndAsync();
+            var errorTask = process.StandardError.ReadToEndAsync();
+            var processTask = Task.WhenAll(process.WaitForExitAsync(), outputTask, errorTask);
 
             var completedTask = await Task.WhenAny(processTask, timeoutTask);
             if (completedTask == timeoutTask)
             {
-                process.Kill();
+                process.Kill(entireProcessTree: true);
                 throw new Exception($"Command timed out after 5 minutes: {command} {arguments}");
             }
+
+            var output = await outputTask;
+            var error = await errorTask;
 
             if (process.ExitCode != 0)
                 throw new Exception($"Command failed with exit code {process.ExitCode}:\nCommand: {command} {arguments}\nError: {error}\nOutput: {output}");

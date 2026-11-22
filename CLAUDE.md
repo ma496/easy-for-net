@@ -28,6 +28,7 @@ dotnet build EasyForNet.slnx        # or dotnet build from src/multi-tenant/back
 dotnet ef migrations add <Name> --project src/multi-tenant/backend/Source/Backend.csproj
 dotnet ef database update --project src/multi-tenant/backend/Source/Backend.csproj
 dotnet run --project src/multi-tenant/backend/Source/Backend.csproj   # needs PostgreSQL and Redis (ConnectionStrings:Redis)
+npm run dev                         # ports: DEV_PROXY_PORT (3000) / DEV_WEB_PORT (3001) / DEV_API_PORT (5000), from the environment or the root .env (scripts/lib/dev-ports.mjs); a port something else holds is refused, naming the holder and a free port, and the API's Web origins follow DEV_PROXY_PORT
 npm run dev                         # from the repository root: the whole app — PostgreSQL + Redis (Docker), the API on :5000, then the web app (next dev on :3001) behind the dev proxy on :3000 once the API's /health answers; open http://app.localhost:3000 or http://default.localhost:3000 (scripts/dev.mjs, scripts/dev-proxy.mjs; --no-docker, --api-only, --web-only, --app <name> for another template)
 npm run stop:api                    # from the repository root: stop this checkout's running API before a build (it locks bin/ on Windows)
 docker compose up -d                # from the repository root: PostgreSQL + Redis for development (docker-compose.yml)
