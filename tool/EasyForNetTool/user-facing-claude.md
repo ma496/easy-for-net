@@ -62,7 +62,7 @@ The API that `verify` starts for the live check waits on `scripts/pg-ready.mjs` 
 
 - **`postgres`**: Postgres MCP Pro in `restricted` mode, which means read-only transactions with a time limit. SQL sent through MCP is not seen by the shell guards, so this mode is the only thing refusing a write. Schema changes still go through EF migrations.
 - **`redis`**: the official Redis MCP server. It has no read-only mode, so every tool that writes (`mcp__redis__set`, `…__delete`, `…__expire`, …) is in `permissions.deny`, since this Redis holds the API's sessions.
-- **`playwright`**: Microsoft's Playwright MCP, with a fresh profile each session (`--isolated`) and its output in the git-ignored `.playwright-mcp/`. It reaches the app on the hosts below once `pnpm dev` runs.
+- **`playwright`**: Microsoft's Playwright MCP, headless (`--headless`), with a fresh profile each session (`--isolated`) and its output in the git-ignored `.playwright-mcp/`. It reaches the app on the hosts below once `pnpm dev` runs. A browser check ends with `browser_close`, so the browser does not hold memory for the rest of the session; the next browser call starts a fresh one.
 
 The PostgreSQL and Redis servers need `uv` (`uvx`) on the PATH, and a wrapper that cannot start says why on stderr.
 

@@ -107,6 +107,14 @@ test(".mcp.json starts every server through a script that exists, and names no c
   assert.doesNotMatch(text, /password|pwd|postgres(ql)?:\/\/|redis:\/\//i);
 });
 
+test("the Playwright MCP server runs headless with an isolated profile", () => {
+  const text = readFileSync(join(REPO_ROOT, "scripts", "mcp", "playwright.mjs"), "utf8");
+  const launch = text.match(/launchMcpServer\("playwright",[^\n]*\);/);
+  assert.ok(launch, "scripts/mcp/playwright.mjs no longer calls launchMcpServer the way this test reads it");
+  assert.match(launch[0], /"--headless"/);
+  assert.match(launch[0], /"--isolated"/);
+});
+
 test("every Redis MCP tool that writes is denied in .claude/settings.json", () => {
   const { permissions } = JSON.parse(readFileSync(join(REPO_ROOT, ".claude", "settings.json"), "utf8"));
   const writers = ["set", "delete", "expire", "rename", "hset", "hdel", "json_set", "json_del", "lpush", "rpush", "lpop", "rpop", "lrem", "sadd", "srem", "zadd", "zrem", "xadd", "xdel", "xack", "xgroup_create", "xgroup_destroy", "xreadgroup", "publish", "set_vector_in_hash", "create_vector_index_hash"];
