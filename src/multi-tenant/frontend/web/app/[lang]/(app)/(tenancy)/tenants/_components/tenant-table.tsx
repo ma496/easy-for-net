@@ -101,6 +101,7 @@ export const TenantTable = () => {
       status: pendingFilters.status === '' ? null : (pendingFilters.status as 'Active' | 'Suspended'),
     })
     url.resetPage()
+    setFiltersOpen(false)
   }
 
   const handleClear = () => {

@@ -88,6 +88,7 @@ export const NotificationTable = () => {
       group: pendingFilters.group === '' ? null : pendingFilters.group,
     })
     url.resetPage()
+    setFiltersOpen(false)
   }
 
   const handleClear = () => {

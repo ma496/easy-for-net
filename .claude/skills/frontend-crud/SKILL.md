@@ -179,7 +179,7 @@ The shared `DataTableFilterButton` goes in the toolbar (icon-only, shows the act
 the route supplies an `<Entity>FilterPanel` rendered between the toolbar and the table. The panel is
 controlled (`filters`, `onChange`, `onSearch`, `onClear`) and edits **draft state** the table owns —
 keep `pendingFilters` in `useState`, sync it from the URL in an effect when the panel opens, and only
-write to the URL on *Search*:
+write to the URL on *Search*, which also closes the panel (*Clear* resets the filters and leaves it open):
 
 ```tsx
 const handleSearch = () => {
@@ -188,6 +188,7 @@ const handleSearch = () => {
     roleId: pendingFilters.roleId || null,
   })
   url.resetPage()
+  setFiltersOpen(false)
 }
 
 const handleClear = () => {

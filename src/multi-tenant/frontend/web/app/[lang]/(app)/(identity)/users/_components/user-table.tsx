@@ -99,6 +99,7 @@ export const UserTable = () => {
       roleId: pendingFilters.roleId === '' ? null : pendingFilters.roleId,
     })
     url.resetPage()
+    setFiltersOpen(false)
   }
 
   const handleClear = () => {
