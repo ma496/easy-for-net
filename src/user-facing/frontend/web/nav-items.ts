@@ -31,7 +31,7 @@ export const navItems: (NavItem | NavItemGroup)[] = [
     icon: Home,
     children: [
       {
-        title: 'navigation.dashboardSales',
+        title: 'navigation.insights',
         url: adminPath('/'),
       },
     ],
