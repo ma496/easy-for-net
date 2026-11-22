@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { hasAuthCookie } from '@/lib/utils/authentication-and-authorization'
+import { devProxyRedirect } from '@/lib/utils/dev-proxy-redirect'
 import { isAuthRequired } from './auth-urls'
 import { decideLocaleRouting, i18nConfig, PREFERRED_LANGUAGE_COOKIE, SCOPE_LANGUAGE_COOKIE, SCOPE_LANGUAGES_COOKIE } from './i18n'
 import { match as matchLocale } from '@formatjs/intl-localematcher'
@@ -36,6 +37,13 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   // Framework and API requests that reach this function are neither localized nor gated - only pages are.
   const isPagePath = !pathname.startsWith('/api') && !pathname.startsWith('/_next') && !pathname.startsWith('/assets') && !pathname.includes('favicon.ico')
+
+  // 0. Development only: a page opened on `next dev`'s own port cannot reach the API, so it is sent
+  // to the same page through the dev proxy (`DEV_PROXY_PORT`, set by `npm run dev`).
+  if (process.env.NODE_ENV === 'development' && isPagePath && (request.method === 'GET' || request.method === 'HEAD')) {
+    const target = devProxyRedirect(request.nextUrl, request.headers.get('host'), process.env.DEV_PROXY_PORT)
+    if (target) return NextResponse.redirect(target)
+  }
 
   // 1. Localization Logic
   const pathnameIsMissingLocale = i18nConfig.locales.every((locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`)
