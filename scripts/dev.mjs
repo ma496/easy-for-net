@@ -39,6 +39,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { DEV_PORTS, describePortHolder, isPortFree, knownHolderHint, nextFreePort, readDevPorts, readWebSettings, webOriginOverrides } from "./lib/dev-ports.mjs";
+import { webEnv } from "./lib/dev-stack.mjs";
 import { hasExecutable, killTree, IS_WINDOWS, runSync, sleepSync, spawnPortable, scriptArgs } from "./lib/proc.mjs";
 import { REPO_ROOT, appArg, selectApp } from "./lib/project-config.mjs";
 
@@ -139,15 +140,8 @@ if (!API_ONLY) {
       cwd: WEB,
       // Set here rather than left to .env.development, so a copy written before the proxy existed
       // (an absolute NEXT_PUBLIC_API_URL) cannot send the browser around it; a value already in the
-      // environment still wins.
-      env: {
-        PORT: WEB_PORT,
-        // The web app sends a page opened on next dev's own port to the same page through the proxy
-        // (lib/utils/dev-proxy-redirect.ts): there /api reaches nothing and a sign-in fails.
-        DEV_PROXY_PORT: PROXY_PORT,
-        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "/api",
-        API_INTERNAL_URL: process.env.API_INTERNAL_URL || `http://localhost:${API_PORT}/api`,
-      },
+      // environment still wins. `pnpm stack` builds the same environment (lib/dev-stack.mjs).
+      env: webEnv({ webPort: WEB_PORT, proxyPort: PROXY_PORT, apiPort: API_PORT, env: process.env }),
     }),
   );
 }

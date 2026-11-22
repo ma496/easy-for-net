@@ -40,6 +40,7 @@ const ENTRIES = [
   { file: "deploy-vps.mjs", args: ["--help"] },
   { file: "monitor.mjs", args: ["--help"] },
   { file: "dev-proxy.mjs", args: ["--help"] },
+  { file: "stack.mjs", args: ["status"] },
 ];
 
 for (const { file, args } of ENTRIES) {

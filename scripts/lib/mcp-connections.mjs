@@ -137,3 +137,17 @@ export function stackExchangeToRedisEnv(cs) {
   }
   return env;
 }
+
+/**
+ * Where the Playwright MCP server writes screenshots and snapshots: one folder per branch, and
+ * under it one per task, so everything a task's browser checks produced is in one place —
+ * `.playwright-mcp/<branch>/<spec>/<task>/`. The runner names the task (`AGENT_TASK_ID`, the
+ * task's `<spec>/<name>` stem); a session outside a run is `manual`. A branch's `/` becomes `-`,
+ * so `feat/users` is one folder rather than two, and anything a folder name cannot hold is
+ * replaced too. Pure, so the layout is tested without git.
+ */
+export function screenshotDir({ branch, taskId, root = ".playwright-mcp" } = {}) {
+  const clean = (part) => String(part ?? "").trim().replace(/[\/]+/g, "-").replace(/[^\w.-]+/g, "-").replace(/^[-.]+|[-.]+$/g, "");
+  const parts = String(taskId ?? "").split("/").map(clean).filter(Boolean);
+  return [root, clean(branch) || "detached", ...(parts.length ? parts : ["manual"])].join("/");
+}

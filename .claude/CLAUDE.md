@@ -79,6 +79,15 @@ collected from the stream like delegations.
 appears again in the review tier, checking the built page against what it specified — that
 repeat is the design closing its own loop, not a duplicate.
 
+**A page is reviewed by looking at it.** The UI reviewer's review is `"browser": "required"`,
+so its last pass must have opened the changed screen through the Playwright MCP, screenshotted
+it and closed the browser. Otherwise its verdict must say `BROWSER: NOT NEEDED — <reason>`, in its
+own words: a waiver the lead suggested is refused. The app exists only for that tier:
+`pnpm stack up` before it, `pnpm stack down` after it. A claimed failure to start is re-tried by
+the runner. The session has one browser, so the UI reviewer goes first and alone, and two agents
+driving it at once are refused. QA has the same tools for a flow a person clicks through, and uses
+them only when the change has one.
+
 **The rest of the order is enforced too.** Everything that writes finishes before anything
 that judges; reviewers sharing a tier run together, because they ask unrelated questions and
 running them in sequence spends wall-clock for nothing; a later tier, where a project declares

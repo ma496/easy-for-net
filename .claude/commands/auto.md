@@ -52,6 +52,14 @@ Add unit tests for any pure helper you add or change.
 After the writers finish, run `pnpm owes` and dispatch each review tier it names in a
 single message, a later tier (where one is declared) once the earlier has reported.
 
+When it owes `ui-ux-reviewer`, bring the app up for that tier alone: run `pnpm stack up` first.
+Then send `ui-ux-reviewer` on its own, with the addresses, screenshot folder and local sign-in,
+because the browser is shared and only one agent may drive it at a time. Once it has reported,
+send the rest of the tier. Run `pnpm stack down` when they have all reported. The reviewer must
+open the page, screenshot it and close the browser, or say in its own words
+`BROWSER: NOT NEEDED — <reason>`; never suggest that waiver to it. `pnpm auto` refuses an
+attempt that did neither.
+
 `pnpm auto` refuses an attempt that skipped a department owed by the finished diff. Hold
 yourself to the same bar here.
 

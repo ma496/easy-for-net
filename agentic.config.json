@@ -108,8 +108,9 @@
       "label": "UI / UX",
       "phase": "review",
       "order": 1,
+      "browser": "required",
       "match": ["^src/(?:[^/]+/)?frontend/web/(app|components)/(?!.*\\.test\\.tsx$).*\\.tsx$"],
-      "why": "Layout, hierarchy and states are judged by eye, and nothing else in the loop looks."
+      "why": "Layout, hierarchy and states are judged by eye, and nothing else in the loop looks — so it opens the built page in the browser (`pnpm stack up`) unless it states why nothing renders differently."
     },
     {
       "agent": "code-reviewer",

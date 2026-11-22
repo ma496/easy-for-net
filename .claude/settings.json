@@ -67,7 +67,29 @@
       "Bash(head *)",
       "Bash(tail *)",
       "Bash(sed -n *)",
-      "Bash(wc *)"
+      "Bash(wc *)",
+      "Bash(pnpm stack up)",
+      "Bash(pnpm stack status)",
+      "Bash(pnpm stack down)",
+      "PowerShell(pnpm stack up)",
+      "PowerShell(pnpm stack status)",
+      "PowerShell(pnpm stack down)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_navigate_back",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_resize",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_fill_form",
+      "mcp__playwright__browser_select_option",
+      "mcp__playwright__browser_press_key",
+      "mcp__playwright__browser_hover",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_emulate_media",
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_network_requests",
+      "mcp__playwright__browser_close"
     ],
     "ask": [
       "Bash(git push*)",
@@ -123,7 +145,11 @@
       "mcp__redis__create_vector_index_hash"
     ]
   },
-  "enabledMcpjsonServers": ["postgres", "redis", "playwright"],
+  "enabledMcpjsonServers": [
+    "postgres",
+    "redis",
+    "playwright"
+  ],
   "statusLine": {
     "type": "command",
     "command": "node $CLAUDE_PROJECT_DIR/.claude/statusline.mjs"

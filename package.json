@@ -16,6 +16,7 @@
     "dev": "node scripts/dev.mjs",
     "serve:api": "node scripts/serve-api.mjs",
     "stop:api": "node scripts/stop-api.mjs",
+    "stack": "node scripts/stack.mjs",
     "auto": "node scripts/agent-run.mjs",
     "auto:ship": "node scripts/auto-ship.mjs",
     "auto:status": "node scripts/run-journal.mjs",

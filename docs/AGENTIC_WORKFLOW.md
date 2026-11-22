@@ -102,6 +102,20 @@ ignored, because two tasks sharing a working tree would overwrite each other.
    the brief's prose, and read from the delegations actually observed in the run's stream —
    not from the session's own account of what it did.
 5. **Every skill that work owed.** Same mechanism.
+6. **A browser check of a changed screen.** A review department marked `"browser": "required"`
+   (`ui-ux-reviewer`) is owed one whenever it is owed. Its last review in the attempt must
+   have called `browser_navigate` and `browser_take_screenshot`, and then `browser_close` as
+   its last browser call, as seen in the stream. Two things excuse it, and both go in the build
+   record. One is a verdict line `BROWSER: NOT NEEDED — <reason>` when nothing renders differently,
+   in the reviewer's own words; it is refused if the lead named the waiver in a delegation or a
+   follow-up. The other is a failed `pnpm stack up` in that attempt, which the runner confirms by
+   trying `stack up` itself, since the failure record is a file the session could write. The
+   session has one browser, so the UI reviewer uses it first, on its own, and the rest of its tier
+   follows. Two delegations whose browser calls overlap are refused. The app exists only for that
+   review tier: the lead runs `pnpm stack up` just before it and `pnpm stack down` once it has
+   reported, and the runner stops any stack a session leaves running. Screenshots are filed in
+   `.playwright-mcp/<branch>/<spec>/<task>/`. The runner moves any saved at the repository root
+   there, and the build record lists them.
 
 Only then may it commit.
 
@@ -150,6 +164,7 @@ gets them from the command `pnpm schedule install` wrote.
 | `AGENT_MAX_MINUTES_PER_TASK` | `budget.maxMinutesPerTask` | Wall clock for the whole task; no attempt starts past it, and a session running when it passes is stopped. `off` removes it. |
 | `AGENT_SETTLE_SECONDS` | `budget.settleSeconds` (60) | Quiet after a session's stream says it has finished (a final result, nothing pending in the background) before a CLI that has not exited is closed and the attempt judged as finished, not timed out. `off` removes it. |
 | `AGENT_VERIFY_TIMEOUT_MINUTES` | 60 | How long one verify may run before it is stopped and counted as failed. |
+| `AGENT_STACK_MAX_MINUTES` | 30 | How old a running `pnpm stack` may be and still be reused by `stack up`. Past that age, `up` replaces it. |
 | `AGENT_ASSUMED_USD_PER_CALL` | learned from history, else 1 | What a call whose stream carried no cost is charged at. |
 | `AGENT_MODEL` | `budget.model` | The model every session and the planner run on; `inherit` passes none. |
 | `AGENT_AUTO_PUSH` | 0 | `1` pushes the work branch after each landed task. |

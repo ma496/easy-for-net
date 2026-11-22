@@ -23,6 +23,7 @@
  * and what to add up.
  */
 import {
+  BROWSER_TOOL_PREFIX,
   DELEGATION_TOOLS,
   LIMIT_SUBTYPES,
   SKILL_TOOL,
@@ -119,6 +120,15 @@ const TOOL_DETAIL = {
   WebFetch: (i) => i.url,
 };
 
+/** Whether a tool call's input names the browser waiver anywhere, however it is cased. */
+function mentionsBrowserWaiver(input) {
+  try {
+    return /BROWSER:\s*NOT NEEDED/i.test(JSON.stringify(input ?? {}));
+  } catch {
+    return false;
+  }
+}
+
 /** The one detail that identifies a tool call, or "" when the tool has none worth showing. */
 export const toolDetail = (use) => TOOL_DETAIL[use?.name]?.(use.input ?? {}) ?? "";
 
@@ -174,7 +184,11 @@ export function renderEvent(line, state = {}) {
  * work from one that only said it would. `skills` lists the procedures loaded anywhere in
  * the run — a builder loading the endpoint guide is the procedure being read, whoever read it —
  * except inside a subagent started in the background, whose events never reach the stream;
- * `backgroundSubagents` names those.
+ * `backgroundSubagents` names those. `delegations` is `subagents` again with what each subagent
+ * did that the runner judges: its browser tool calls (`browserTools`, without the server prefix),
+ * where they fell among the run's browser calls (`browserSpan`, first and last, or null), and its
+ * last message (`finalText`, where its verdict is). `leadSuggestedWaiver` is whether the lead
+ * named the browser waiver in any delegation or follow-up.
  *
  * `limits.maxTurns` is a backstop. The runner passes `--max-turns` to the CLI, which stops
  * the session itself and still reports what it cost; this only kills a session that went
@@ -223,6 +237,14 @@ export function renderStream(readable, write = (s) => console.log(s), limits = {
     // these when it reports a skill as not loaded, rather than claiming it was skipped.
     const backgroundSubagents = [];
     const skills = [];
+    // Each delegation the session made, in the order of `subagents`, with what its subagent did
+    // that the runner judges: the browser tools it called (in order) and the last thing it wrote,
+    // which is where its verdict is. Keyed by the delegating call's id, which every event of that
+    // subagent carries as `parent_tool_use_id` — including after the lead resumes it.
+    const delegations = [];
+    const delegationById = new Map();
+    let leadSuggestedWaiver = false;
+    let browserCalls = 0;
     // Each call is counted once, by its own id, however many events repeat its block.
     const seenCalls = new Set();
     const startedMs = Date.now();
@@ -272,6 +294,15 @@ export function renderStream(readable, write = (s) => console.log(s), limits = {
               onLimit({ turns: turns(), maxTurns });
             }
           }
+          const delegation = sub ? delegationById.get(event.parentToolUseId) : undefined;
+          // The subagent's last message, whole: one message arrives as one event per content
+          // block, so text blocks sharing a message id are joined rather than the last one kept
+          // — a verdict's lines may sit in any block of the final message.
+          if (delegation && event.texts.length > 0) {
+            const sameMessage = event.messageId && event.messageId === delegation.lastMessageId;
+            delegation.finalText = sameMessage ? `${delegation.finalText}\n${event.texts.join("\n")}` : event.texts.join("\n");
+            delegation.lastMessageId = event.messageId;
+          }
           for (const use of event.toolUses) {
             if (use.id) {
               if (seenCalls.has(use.id)) continue;
@@ -281,6 +312,28 @@ export function renderStream(readable, write = (s) => console.log(s), limits = {
               subagents.push(String(use.input.subagent_type));
               subagentAtSec.push(Math.round((Date.now() - startedMs) / 1000));
               if (use.input.run_in_background === true) backgroundSubagents.push(String(use.input.subagent_type));
+              const detail = {
+                agent: String(use.input.subagent_type),
+                browserTools: [],
+                browserSpan: null,
+                finalText: "",
+                lastMessageId: null,
+              };
+              delegations.push(detail);
+              if (use.id) delegationById.set(use.id, detail);
+            }
+            // Whatever the lead tells its reviewers, in a delegation or a follow-up. A browser waiver
+            // is the reviewer's own judgement; one the lead suggested is not (lib/departments.mjs).
+            if (!sub && (DELEGATION_TOOLS.has(use.name) || use.name === "SendMessage") && mentionsBrowserWaiver(use.input)) {
+              leadSuggestedWaiver = true;
+            }
+            if (delegation && use.name.startsWith(BROWSER_TOOL_PREFIX)) {
+              delegation.browserTools.push(use.name.slice(BROWSER_TOOL_PREFIX.length));
+              // Where in the run's sequence of browser calls this one fell. The browser is one per
+              // session, so two delegations whose spans overlap drove it at the same time.
+              browserCalls += 1;
+              if (delegation.browserSpan === null) delegation.browserSpan = [browserCalls, browserCalls];
+              else delegation.browserSpan[1] = browserCalls;
             }
             if (use.name === SKILL_TOOL) {
               const named = skillNameOf(use.input);
@@ -311,6 +364,8 @@ export function renderStream(readable, write = (s) => console.log(s), limits = {
       subagents,
       subagentAtSec,
       backgroundSubagents,
+      delegations: delegations.map(({ lastMessageId, ...d }) => d),
+      leadSuggestedWaiver,
       elapsedSec: Math.round((Date.now() - startedMs) / 1000),
       skills,
       turns: turns(),

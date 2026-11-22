@@ -304,3 +304,128 @@ export function explainMissingSkills(paths, briefText, loaded) {
       : (paths ?? []).filter((p) => s.match.some((re) => re.test(p))).slice(0, 3),
   }));
 }
+
+/**
+ * A review that judges a page by eye must have looked at it.
+ *
+ * A department marked `"browser": "required"` (the UI reviewer) is owed a browser check
+ * whenever it is owed at all: its *last* delegation in this attempt — the pass whose verdict
+ * stands — must have opened a page (`browser_navigate`), kept what it saw
+ * (`browser_take_screenshot`), and closed the browser after its last browser call
+ * (`browser_close`), so a review never leaves a browser holding memory for the rest of the run.
+ * Reading the JSX and the classes is not the same as seeing the page, and the verdict of a
+ * review that never rendered it reads exactly like one that did.
+ *
+ * Two answers excuse it, and both are written into the build record:
+ *
+ *   - the reviewer judged that nothing renders differently (a type-only edit to a `.tsx`, a
+ *     refactor with identical output) and said so on a line of its verdict:
+ *     `BROWSER: NOT NEEDED — <reason>`. The reason is required; a bare waiver is refused, and
+ *     so is one the lead put in the reviewer's mouth (`leadSuggestedWaiver`: the phrase in a
+ *     delegation or a follow-up message), since the lead is the one the check is checking.
+ *   - there was no app to open: `pnpm stack up` failed in this attempt (`stackFailure`, the
+ *     reason it wrote, which the runner has confirmed by trying `stack up` itself — the record
+ *     sits in a folder the session can write to). The review falls back to the code.
+ *
+ * @param {string[]} paths          the finished diff
+ * @param {Array<{ agent: string, browserTools: string[], finalText: string }>} delegations
+ *   this attempt's delegations, in order, as `renderStream` reports them
+ * @param {{ stackFailure?: string | null, leadSuggestedWaiver?: boolean }} [options]
+ * @returns {{ problems: string[], notes: string[] }} problems refuse the attempt; notes are
+ *   what the build record says about each browser check
+ */
+export function browserProblems(paths, delegations, { stackFailure = null, leadSuggestedWaiver = false } = {}) {
+  const owed = new Set(requiredAgents(paths));
+  const problems = [];
+  const notes = [];
+  for (const dept of DEPARTMENTS.filter((d) => d.browser === "required" && d.phase === "review" && owed.has(d.agent))) {
+    const last = [...(delegations ?? [])].reverse().find((d) => d.agent === dept.agent);
+    if (!last) continue; // never delegated: explainMissing already says so
+    const waiver = browserWaiver(last.finalText);
+    if (waiver && leadSuggestedWaiver) {
+      problems.push(
+        `${dept.agent} waived the browser check, but the waiver was suggested to it: a delegation or follow-up ` +
+          "named `BROWSER: NOT NEEDED`. Whether the page needs looking at is the reviewer's call. Send the review " +
+          "again without mentioning the waiver, with the addresses `pnpm stack up` printed.",
+      );
+      continue;
+    }
+    if (waiver?.reason) {
+      notes.push(`${dept.agent}: browser not needed — ${waiver.reason}`);
+      continue;
+    }
+    if (waiver) {
+      problems.push(
+        `${dept.agent} wrote "BROWSER: NOT NEEDED" without a reason. Say why nothing renders differently ` +
+          "(`BROWSER: NOT NEEDED — <reason>`), or open the page and look at it.",
+      );
+      continue;
+    }
+    if (stackFailure) {
+      notes.push(`${dept.agent}: reviewed from code — the app did not start (${stackFailure})`);
+      continue;
+    }
+    const tools = last.browserTools ?? [];
+    if (!tools.includes("browser_navigate") || !tools.includes("browser_take_screenshot")) {
+      problems.push(
+        `${dept.agent} never rendered the page it reviewed: its last review made no ` +
+          `${tools.includes("browser_navigate") ? "screenshot" : "browser_navigate call"}. Run \`pnpm stack up\`, ` +
+          "pass the URLs it prints to the reviewer, and have it open the changed screen, screenshot it, " +
+          "and close the browser — or, when nothing renders differently, end its verdict with " +
+          "`BROWSER: NOT NEEDED — <reason>`.",
+      );
+      continue;
+    }
+    if (tools[tools.length - 1] !== "browser_close") {
+      problems.push(
+        `${dept.agent} left its browser open: its last browser call was ${tools[tools.length - 1]}, not ` +
+          "browser_close. A browser check ends by closing the browser, so it does not hold memory for the rest of the run.",
+      );
+      continue;
+    }
+    notes.push(`${dept.agent}: rendered the page (${tools.filter((t) => t === "browser_take_screenshot").length} screenshot(s))`);
+  }
+  problems.push(...browserOverlaps(delegations));
+  return { problems, notes };
+}
+
+/**
+ * Delegations that drove the browser at the same time. A session has one Playwright browser,
+ * shared by every subagent, so a reviewer whose browser calls interleave with another's was
+ * screenshotting a page the other one was navigating, resizing or closing — its verdict is about
+ * a screen nobody can say it saw. Spans are positions in the run's sequence of browser calls
+ * (`renderStream`'s `browserSpan`); two that overlap are two users at once.
+ */
+export function browserOverlaps(delegations) {
+  const used = (delegations ?? []).filter((d) => Array.isArray(d.browserSpan));
+  const problems = [];
+  for (let i = 0; i < used.length; i++) {
+    for (let j = i + 1; j < used.length; j++) {
+      const [a, b] = [used[i], used[j]];
+      if (a.browserSpan[0] <= b.browserSpan[1] && b.browserSpan[0] <= a.browserSpan[1]) {
+        problems.push(
+          `${a.agent} and ${b.agent} drove the browser at the same time. There is one browser per session, ` +
+            `so each one's screenshots may show the other's page. Send ${a.agent} on its own, and ${b.agent} ` +
+            "once it has reported and closed the browser.",
+        );
+      }
+    }
+  }
+  return problems;
+}
+
+/**
+ * The `BROWSER: NOT NEEDED` line of a verdict, with its reason ("" when it gives none), or
+ * null when the verdict has no such line. The dash may be an em dash, an en dash or hyphens.
+ */
+export function browserWaiver(text) {
+  const m = /^[ \t>*_`]*BROWSER:\s*NOT NEEDED\b[ \t*_`]*(?:[—–:-]+[ \t]*(.*))?$/im.exec(String(text ?? ""));
+  if (!m) return null;
+  return { reason: String(m[1] ?? "").replace(/[*_`]+$/g, "").trim() };
+}
+
+/** Whether any department this change owes must review it in the browser. */
+export function owesBrowserCheck(paths) {
+  const owed = new Set(requiredAgents(paths));
+  return DEPARTMENTS.some((d) => d.browser === "required" && d.phase === "review" && owed.has(d.agent));
+}

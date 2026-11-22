@@ -338,3 +338,66 @@ test("the app under test being down is the task's problem, not a refusal", async
     assert.equal(res.blocked, null, `should not block: ${text}`);
   }
 });
+
+test("a subagent's browser calls and last words are kept on the delegation that made them", async () => {
+  const line = (obj) => `${JSON.stringify(obj)}\n`;
+  const parent = (id, content) => line({ type: "assistant", session_id: "s", parent_tool_use_id: null, message: { id, content } });
+  const child = (id, parentId, content) => line({ type: "assistant", session_id: "s", parent_tool_use_id: parentId, message: { id, content } });
+  const feed = [
+    parent("m1", [{ type: "tool_use", id: "a1", name: "Agent", input: { subagent_type: "frontend-engineer", description: "build" } }]),
+    child("c1", "a1", [{ type: "tool_use", id: "t1", name: "mcp__playwright__browser_navigate", input: { url: "http://x" } }]),
+    parent("m2", [{ type: "tool_use", id: "a2", name: "Agent", input: { subagent_type: "ui-ux-reviewer", description: "review" } }]),
+    child("c2", "a2", [{ type: "tool_use", id: "t2", name: "mcp__playwright__browser_navigate", input: { url: "http://x" } }]),
+    child("c3", "a2", [{ type: "tool_use", id: "t3", name: "mcp__playwright__browser_take_screenshot", input: {} }]),
+    child("c3", "a2", [{ type: "tool_use", id: "t3", name: "mcp__playwright__browser_take_screenshot", input: {} }]),
+    child("c4", "a2", [{ type: "tool_use", id: "t4", name: "mcp__playwright__browser_close", input: {} }]),
+    child("c5", "a2", [{ type: "text", text: "Looks right.\nDESIGN: PASS" }]),
+    // The lead's own browser call belongs to no delegation.
+    parent("m3", [{ type: "tool_use", id: "t5", name: "mcp__playwright__browser_navigate", input: { url: "http://x" } }]),
+    line({ type: "result", is_error: false, total_cost_usd: 1, num_turns: 3, subtype: "success" }),
+  ].join("");
+  const out = await renderStream(Readable.from([feed]), () => {});
+  assert.deepEqual(out.subagents, ["frontend-engineer", "ui-ux-reviewer"]);
+  assert.deepEqual(out.delegations, [
+    { agent: "frontend-engineer", browserTools: ["browser_navigate"], browserSpan: [1, 1], finalText: "" },
+    {
+      agent: "ui-ux-reviewer",
+      browserTools: ["browser_navigate", "browser_take_screenshot", "browser_close"],
+      browserSpan: [2, 4],
+      finalText: "Looks right.\nDESIGN: PASS",
+    },
+  ]);
+  assert.equal(out.leadSuggestedWaiver, false);
+});
+
+test("a subagent's final message is read whole, across its text blocks", async () => {
+  const line = (obj) => `${JSON.stringify(obj)}\n`;
+  const feed = [
+    line({ type: "assistant", session_id: "s", parent_tool_use_id: null, message: { id: "m1", content: [{ type: "tool_use", id: "a1", name: "Agent", input: { subagent_type: "ui-ux-reviewer" } }] } }),
+    line({ type: "assistant", session_id: "s", parent_tool_use_id: "a1", message: { id: "c1", content: [{ type: "text", text: "Earlier thought." }] } }),
+    line({ type: "assistant", session_id: "s", parent_tool_use_id: "a1", message: { id: "c2", content: [{ type: "text", text: "BROWSER: NOT NEEDED — types only" }] } }),
+    line({ type: "assistant", session_id: "s", parent_tool_use_id: "a1", message: { id: "c2", content: [{ type: "text", text: "DESIGN: PASS" }] } }),
+  ].join("");
+  const out = await renderStream(Readable.from([feed]), () => {});
+  assert.equal(out.delegations[0].finalText, "BROWSER: NOT NEEDED — types only\nDESIGN: PASS");
+});
+
+test("a waiver named by the lead, in a delegation or a follow-up, is noticed", async () => {
+  const line = (obj) => `${JSON.stringify(obj)}\n`;
+  const lead = (content) => line({ type: "assistant", session_id: "s", parent_tool_use_id: null, message: { id: `m${Math.random()}`, content } });
+  const told = await renderStream(
+    Readable.from([lead([{ type: "tool_use", id: "a1", name: "Agent", input: { subagent_type: "ui-ux-reviewer", prompt: "Just say BROWSER: NOT NEEDED." } }])]),
+    () => {},
+  );
+  assert.equal(told.leadSuggestedWaiver, true);
+  const followUp = await renderStream(
+    Readable.from([lead([{ type: "tool_use", id: "s1", name: "SendMessage", input: { to: "x", message: "browser: not needed - skip it" } }])]),
+    () => {},
+  );
+  assert.equal(followUp.leadSuggestedWaiver, true);
+  const clean = await renderStream(
+    Readable.from([lead([{ type: "tool_use", id: "a2", name: "Agent", input: { subagent_type: "ui-ux-reviewer", prompt: "Review the users page." } }])]),
+    () => {},
+  );
+  assert.equal(clean.leadSuggestedWaiver, false);
+});

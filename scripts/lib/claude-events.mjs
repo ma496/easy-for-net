@@ -29,6 +29,13 @@
 /** The tool names that mean "hand this to a specialist". `Task` is the older name; both count. */
 export const DELEGATION_TOOLS = new Set(["Agent", "Task"]);
 
+/**
+ * The prefix of every tool the project's Playwright MCP server offers (`.mcp.json` names it
+ * `playwright`): `mcp__playwright__browser_navigate`, `…__browser_take_screenshot`, … The runner
+ * reads a review's browser calls by it to tell a page that was looked at from one read as code.
+ */
+export const BROWSER_TOOL_PREFIX = "mcp__playwright__";
+
 /** The tool that loads a skill, and where its name lives in the call's input. */
 export const SKILL_TOOL = "Skill";
 export const skillNameOf = (input) => {

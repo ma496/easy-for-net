@@ -44,7 +44,7 @@
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { createServer } from "node:http";
-import { appendFileSync, createWriteStream, readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { appendFileSync, createWriteStream, readFileSync, renameSync, rmSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 import { appendRun, priorFailureBrief, priorTaskRuns, readRuns, LOG_DIR } from "./run-journal.mjs";
@@ -74,7 +74,7 @@ import {
   restoreSalvage,
   salvageBrief,
 } from "./lib/salvage.mjs";
-import { hasExecutable, isAlive, runWithDeadline, scriptArgs } from "./lib/proc.mjs";
+import { hasExecutable, isAlive, killTree, runWithDeadline, scriptArgs } from "./lib/proc.mjs";
 import { liveHolder } from "./lib/queue-lock.mjs";
 import {
   assertValidConfig, config, modelArgs, positiveInt, resolveModel, WORK_BRANCH, workflowRefusal,
@@ -85,9 +85,13 @@ import { runnerVerifyArgs, TASK_VERIFY_SCOPE } from "./lib/verify-scope.mjs";
 import { attemptOutcome } from "./lib/attempt-outcome.mjs";
 import { buildBrief } from "./lib/brief.mjs";
 import { ensureDependencies, taskDependencies } from "./lib/dependencies.mjs";
+import { STACK_FAILURE, STACK_RECORD, strayScreenshots } from "./lib/dev-stack.mjs";
+import { screenshotDir } from "./lib/mcp-connections.mjs";
 import {
   acceptanceProblems,
+  browserProblems,
   carriedDelegations,
+  owesBrowserCheck,
   expectedSequence,
   explainMissing,
   explainMissingSkills,
@@ -241,7 +245,13 @@ const startedAt = new Date().toISOString();
 // Handed to the session's environment.
 // AGENT_NO_AUTOSTART carries --no-autostart to the session's own verify, which otherwise
 // autostarts inside a run (verify.mjs).
-const childEnv = { AGENT_RUN_ID: RUN_ID, ...(flag("no-autostart") ? { AGENT_NO_AUTOSTART: "1" } : {}) };
+// AGENT_TASK_ID names the task to the Playwright MCP server, which files this task's screenshots
+// under .playwright-mcp/<branch>/<spec>/<task>/ (lib/mcp-connections.mjs, screenshotDir).
+const childEnv = {
+  AGENT_RUN_ID: RUN_ID,
+  AGENT_TASK_ID: taskSlug ?? `adhoc/${RUN_ID}`,
+  ...(flag("no-autostart") ? { AGENT_NO_AUTOSTART: "1" } : {}),
+};
 
 // What one `claude` call is charged at when its stream carried no readable cost. Scripts
 // read the environment directly; every AGENT_* setting is listed in docs/AGENTIC_WORKFLOW.md.
@@ -464,6 +474,83 @@ function recordPhase(text) {
   }
 }
 
+/**
+ * The running app a browser check started (`pnpm stack up`, .agent-runs/stack.json in the
+ * checkout), stopped when the session ends. The brief has the lead stop it as soon as the reviews
+ * that needed it have reported; this is the backstop for a session that did not, so no stack
+ * outlives the attempt that started it — the verify that follows builds the web app, and a
+ * running next dev would hold its port and memory for nothing.
+ */
+function stopLeftoverStack() {
+  const path = join(process.cwd(), STACK_RECORD);
+  if (!existsSync(path)) return;
+  let record = null;
+  try {
+    record = JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    /* unreadable: remove it below */
+  }
+  for (const pid of Object.values(record?.pids ?? {})) if (isAlive(pid)) killTree(pid);
+  rmSync(path, { force: true });
+  console.log("\nThe session left its app running (pnpm stack up without pnpm stack down) — stopped it.");
+  recordPhase("Stopped the app the session left running");
+}
+
+/**
+ * Move screenshots the session left at the repository root into this task's folder. A screenshot
+ * saved under a bare file name lands at the root, which git does not ignore, so it would otherwise
+ * join the task's diff and be committed with it. Moved, it sits beside the task's other screenshots
+ * and the build record lists it. Only untracked images directly at the root are touched.
+ */
+function fileStrayScreenshots() {
+  const strays = strayScreenshots(run("git", ["status", "--porcelain", "--untracked-files=all"]).stdout);
+  if (strays.length === 0) return;
+  const dir = join(process.cwd(), screenshotDir({ branch: branchName(), taskId: childEnv.AGENT_TASK_ID }));
+  mkdirSync(dir, { recursive: true });
+  for (const name of strays) {
+    try {
+      renameSync(join(process.cwd(), name), join(dir, name));
+    } catch (err) {
+      console.log(`   could not move ${name} into ${dir}: ${err.message}`);
+    }
+  }
+  console.log(`\nMoved ${strays.length} screenshot(s) the session saved at the repository root into ${dir}.`);
+}
+
+/** Why `pnpm stack up` failed in this run, as its record says; null when it did not. */
+function stackFailureOfThisRun() {
+  try {
+    const failure = JSON.parse(readFileSync(join(process.cwd(), STACK_FAILURE), "utf8"));
+    return failure?.runId === RUN_ID && failure.reason ? String(failure.reason) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A failed `stack up` excuses a review read from code, so the runner does not take the record's
+ * word for it: the record is a file in a folder the session can write to. When one is claimed and
+ * the change owes a browser check, the runner starts the app itself. If it comes up, the excuse
+ * is void (the app is stopped again and the review is sent back); only a start that fails here
+ * too stands, with the runner's own reason.
+ */
+async function confirmedStackFailure(claimed) {
+  if (!claimed) return null;
+  const stack = existsSync(join(process.cwd(), "scripts", "stack.mjs")) ? join(process.cwd(), "scripts", "stack.mjs") : join(SCRIPTS, "stack.mjs");
+  recordPhase("Checking that the app really does not start");
+  console.log("\nThe session says `pnpm stack up` failed — trying it before accepting a review read from code.");
+  const env = { ...process.env, AGENT_RUN_ID: "", AGENT_TASK_ID: "" };
+  const up = await runWithDeadline("node", [stack, "up"], { timeoutMs: 15 * 60_000, env, cwd: process.cwd() });
+  if (up.status === 0) {
+    await runWithDeadline("node", [stack, "down"], { timeoutMs: 2 * 60_000, env, cwd: process.cwd() });
+    console.log("It started, so the review owed a look at the page after all.");
+    return null;
+  }
+  const reason = `${up.stderr || up.stdout}`.split(/\r?\n/).find((l) => /cannot start/.test(l))?.replace(/^stack:\s*/, "") ?? claimed;
+  console.log(`It does not start here either: ${reason}`);
+  return reason;
+}
+
 function log(section) {
   console.log(`\n${"=".repeat(70)}\n${section}\n${"=".repeat(70)}`);
   recordPhase(section);
@@ -652,7 +739,9 @@ let attempt = 0;
 const earlierDelegations = [];
 // The delegations the last attempt was judged on. The give-up path accepts a tree only on
 // the same terms an attempt would have, so it needs them after the loop has ended.
-let lastDelegations = { delegated: [], current: [] };
+let lastDelegations = { delegated: [], current: [], details: [], stackFailure: null, leadSuggestedWaiver: false };
+// What the accepted attempt's browser checks came to, for the build record (lib/departments.mjs).
+let browserNotes = [];
 
 console.log(`Model: ${MODEL === "inherit" ? "the CLI default (AGENT_MODEL=inherit)" : MODEL} (AGENT_MODEL)`);
 if (Number.isFinite(MAX_USD_PER_TASK)) {
@@ -771,6 +860,8 @@ ${carried.slice(-6000)}`;
   // this task's ceiling — so one attempt can no longer spend the whole ceiling several times
   // over before anything between attempts gets to look. A session stopped by either leaves
   // its work in the tree, and verification below decides whether it was enough.
+  // A failed `stack up` excuses only the attempt it happened in.
+  rmSync(join(process.cwd(), STACK_FAILURE), { force: true });
   const remainingUsd = Number.isFinite(MAX_USD_PER_TASK) ? Math.max(0.01, MAX_USD_PER_TASK - taskSpentUsd) : null;
   const claudeRes = await runStreaming(
     "claude",
@@ -789,11 +880,23 @@ ${carried.slice(-6000)}`;
     { input: prompt, streamFile: join(LOG_DIR, `${RUN_ID}-attempt-${attempt}.stream.jsonl`) },
   );
 
+  stopLeftoverStack();
+  fileStrayScreenshots();
+  // Confirmed only when it would excuse something: a change that owes a browser check.
+  const claimedStackFailure = stackFailureOfThisRun();
+  const stackFailure = claimedStackFailure && owesBrowserCheck(workingTreePaths()) ? await confirmedStackFailure(claimedStackFailure) : null;
+
   // What the specialists of earlier attempts wrote is still in the tree, so their delegations
   // still count for this one (lib/departments.mjs, carriedDelegations); reviews do not carry.
   const delegated = [...carriedDelegations(earlierDelegations), ...(claudeRes.subagents ?? [])];
   earlierDelegations.push(...(claudeRes.subagents ?? []));
-  lastDelegations = { delegated, current: claudeRes.subagents ?? [] };
+  lastDelegations = {
+    delegated,
+    current: claudeRes.subagents ?? [],
+    details: claudeRes.delegations ?? [],
+    stackFailure,
+    leadSuggestedWaiver: Boolean(claudeRes.leadSuggestedWaiver),
+  };
 
   attemptCosts.push(typeof claudeRes.costUsd === "number" ? claudeRes.costUsd : null);
   attemptTurns.push(typeof claudeRes.turns === "number" ? claudeRes.turns : 0);
@@ -1014,6 +1117,25 @@ ${carried.slice(-6000)}`;
       continue;
     }
 
+    // A review that judges a page by eye must have looked at it (lib/departments.mjs).
+    const browser = browserProblems(changedPaths, claudeRes.delegations, {
+      stackFailure,
+      leadSuggestedWaiver: Boolean(claudeRes.leadSuggestedWaiver),
+    });
+    if (browser.problems.length > 0) {
+      console.log(`\nAttempt ${attempt} was reviewed, but a page was not looked at.`);
+      for (const p of browser.problems) console.log(`   ${p}`);
+      recordPhase(`Attempt ${attempt} — the UI review never rendered the page — not accepted`);
+      feedback =
+        "Every required department saw this change, but a browser check it owes did not happen:\n\n" +
+        browser.problems.map((p) => `- ${p}`).join("\n") +
+        "\n\nDo not redo the work. Run `pnpm stack up`, send the review again with the URLs it " +
+        "prints and the local sign-in from the guide, then run `pnpm stack down` once it has reported.";
+      continue;
+    }
+    browserNotes = browser.notes;
+    for (const note of browserNotes) console.log(`   browser: ${note}`);
+
     log(`All ${requiredAgents(changedPaths).length} required department(s) signed off, in order — accepting attempt ${attempt}`);
     passed = true;
     break;
@@ -1093,10 +1215,19 @@ if (!passed) {
     // A green gate is not the whole bar. An attempt refused for a missing or out-of-order
     // review verified too, and accepting it here on the gate alone committed exactly the
     // change that refusal was there to stop.
+    const salvagePaths = salvage.status === 0 ? workingTreePaths() : [];
+    const salvageBrowser = browserProblems(salvagePaths, lastDelegations.details, {
+      stackFailure: lastDelegations.stackFailure,
+      leadSuggestedWaiver: lastDelegations.leadSuggestedWaiver,
+    });
     const unreviewed =
       salvage.status === 0
-        ? acceptanceProblems(workingTreePaths(), lastDelegations.delegated, lastDelegations.current)
+        ? [
+            ...acceptanceProblems(salvagePaths, lastDelegations.delegated, lastDelegations.current),
+            ...salvageBrowser.problems,
+          ]
         : [];
+    if (unreviewed.length === 0) browserNotes = salvageBrowser.notes;
     if (salvage.status === 0 && unreviewed.length > 0) {
       console.error("\nIt verifies, but the reviews it owes did not all happen, so it is not accepted:");
       for (const p of unreviewed) console.error(`   ${p}`);
@@ -1150,7 +1281,9 @@ Verified and left uncommitted on ${WORK_BRANCH} (--no-commit).
 // rather than being left in the tree for the next one to sweep up. record-build.mjs never
 // fails the run; a task with no brief file (`pnpm auto "<task>"`) has nothing to record.
 recordPhase("Committing");
-if (taskFile) runLive("node", [join(SCRIPTS, "record-build.mjs"), "--task", taskFile]);
+if (taskFile) {
+  runLive("node", [join(SCRIPTS, "record-build.mjs"), "--task", taskFile, ...browserNotes.flatMap((note) => ["--browser-note", note])]);
+}
 
 const shipArgs = [join(SCRIPTS, "auto-ship.mjs"), subject, "--commit-only", "--verified"];
 // The brief this run came from, so `queue -- audit` can pair the commit to it by trailer

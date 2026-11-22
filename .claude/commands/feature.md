@@ -53,6 +53,12 @@ actual output. A passing typecheck alone does not prove behaviour.
 Dispatch each tier it names in a single message. Fix CHANGES NEEDED, and send the fix back to
 the reviewer that asked for it, before committing.
 
+When it owes `ui-ux-reviewer` (something on screen changed), run `pnpm stack up` just before
+that tier. Send `ui-ux-reviewer` first, on its own, with the addresses it prints, the screenshot
+folder and the local sign-in: the browser is shared, so only one agent drives it at a time.
+Send the rest of the tier once it has reported, and run `pnpm stack down` as soon as they have.
+Screenshots land in `.playwright-mcp/<branch>/manual/`.
+
 ## 7. Commit, then stop
 
 Commit through the `commit` skill — staging only the paths this feature touched, never

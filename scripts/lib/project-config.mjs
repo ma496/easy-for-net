@@ -313,6 +313,10 @@ export function validateConfig(cfg) {
     if (d?.phase !== undefined && !["design", "build", "review"].includes(d.phase)) {
       problems.push(`${where}.phase must be design, build or review (got ${JSON.stringify(d.phase)})`);
     }
+    // A browser check judges a built page, so only a reviewer can owe one.
+    if (d?.browser !== undefined && (d.browser !== "required" || (d.phase ?? "review") !== "review")) {
+      problems.push(`${where}.browser must be "required", on a review department (got ${JSON.stringify(d.browser)})`);
+    }
   }
 
   for (const [i, sk] of (Array.isArray(cfg.skills) ? cfg.skills : []).entries()) {

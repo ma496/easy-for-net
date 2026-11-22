@@ -17,6 +17,9 @@
  * This never fails a run: a task that lands unrecorded is a documentation gap, a task that
  * fails because a markdown file could not be written is a broken pipeline. Every error is
  * reported and the exit code stays 0, unless it was invoked with bad arguments.
+ *
+ * `--browser-note <text>` (repeatable) is the runner's account of each browser check the task
+ * owed; the screenshots are read from the task's own folder under `.playwright-mcp/`.
  */
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -27,6 +30,7 @@ import { stemOf } from "./lib/task-names.mjs";
 import { config } from "./lib/project-config.mjs";
 import { stageable } from "./lib/stage-paths.mjs";
 import { scriptArgs } from "./lib/proc.mjs";
+import { screenshotDir } from "./lib/mcp-connections.mjs";
 
 const ROOT = resolve(join(dirname(fileURLToPath(import.meta.url)), ".."));
 const BUILDS = String(config.docs.builds).replace(/[\\/]+$/, "");
@@ -34,6 +38,7 @@ const BUILDS = String(config.docs.builds).replace(/[\\/]+$/, "");
 const argv = scriptArgs();
 const i = argv.indexOf("--task");
 const taskFile = i >= 0 ? argv[i + 1] : null;
+const browserNotes = argv.flatMap((a, n) => (a === "--browser-note" && argv[n + 1] ? [argv[n + 1]] : []));
 if (!taskFile) {
   console.error("Usage: pnpm record --task <brief.md>");
   process.exit(2);
@@ -73,6 +78,19 @@ function changedFiles(stem) {
     });
 }
 
+/** The task's screenshots folder (the one the Playwright MCP server wrote to) and what is in it. */
+function browserChecks(stem) {
+  const branch = (git(["rev-parse", "--abbrev-ref", "HEAD"]).stdout ?? "").trim();
+  const dir = screenshotDir({ branch, taskId: stem });
+  let screenshots = [];
+  try {
+    screenshots = readdirSync(join(ROOT, dir)).filter((f) => /\.(png|jpe?g)$/i.test(f)).sort();
+  } catch {
+    /* no browser check took a screenshot */
+  }
+  return { dir, screenshots, notes: browserNotes };
+}
+
 try {
   const stem = stemOf(taskFile);
   const brief = readFileSync(taskFile, "utf8");
@@ -82,7 +100,10 @@ try {
   const rel = recordPathFor(stem, { planned, existing, date: now });
   const target = join(ROOT, BUILDS, rel);
   mkdirSync(dirname(target), { recursive: true });
-  writeFileSync(target, renderRecord({ stem, brief, date: now, files: changedFiles(stem), verify: config.commands.verify }));
+  writeFileSync(
+    target,
+    renderRecord({ stem, brief, date: now, files: changedFiles(stem), verify: config.commands.verify, browser: browserChecks(stem) }),
+  );
   console.log(`Recorded ${BUILDS}/${rel}`);
 } catch (err) {
   console.error(`record-build: ${err.message}`);

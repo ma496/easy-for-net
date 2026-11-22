@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { ipv4Loopback, npgsqlToUri, readDevConnectionStrings, stackExchangeToRedisEnv } from "../lib/mcp-connections.mjs";
+import { ipv4Loopback, npgsqlToUri, readDevConnectionStrings, screenshotDir, stackExchangeToRedisEnv } from "../lib/mcp-connections.mjs";
 import { REPO_ROOT } from "../lib/project-config.mjs";
 
 // --- npgsqlToUri -----------------------------------------------------------------------
@@ -119,4 +119,24 @@ test("every Redis MCP tool that writes is denied in .claude/settings.json", () =
   const { permissions } = JSON.parse(readFileSync(join(REPO_ROOT, ".claude", "settings.json"), "utf8"));
   const writers = ["set", "delete", "expire", "rename", "hset", "hdel", "json_set", "json_del", "lpush", "rpush", "lpop", "rpop", "lrem", "sadd", "srem", "zadd", "zrem", "xadd", "xdel", "xack", "xgroup_create", "xgroup_destroy", "xreadgroup", "publish", "set_vector_in_hash", "create_vector_index_hash"];
   for (const tool of writers) assert.ok(permissions.deny.includes(`mcp__redis__${tool}`), `mcp__redis__${tool} is not denied`);
+});
+
+// --- screenshotDir ---------------------------------------------------------------------
+
+test("screenshotDir files a task's screenshots under its branch, spec and task", () => {
+  assert.equal(screenshotDir({ branch: "main", taskId: "users-page/01-list" }), ".playwright-mcp/main/users-page/01-list");
+});
+
+test("screenshotDir keeps a branch with a slash as one folder", () => {
+  assert.equal(screenshotDir({ branch: "feat/users", taskId: "adhoc/02-fix" }), ".playwright-mcp/feat-users/adhoc/02-fix");
+});
+
+test("screenshotDir files a session outside a run under manual/", () => {
+  assert.equal(screenshotDir({ branch: "main" }), ".playwright-mcp/main/manual");
+  assert.equal(screenshotDir({ branch: "main", taskId: "" }), ".playwright-mcp/main/manual");
+});
+
+test("screenshotDir never climbs out of its root", () => {
+  assert.equal(screenshotDir({ branch: "", taskId: "../../etc" }), ".playwright-mcp/detached/etc");
+  assert.equal(screenshotDir({ branch: "a b:c", taskId: "s/t" }), ".playwright-mcp/a-b-c/s/t");
 });

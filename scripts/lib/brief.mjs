@@ -66,6 +66,43 @@ function reviewTiers() {
   });
 }
 
+/**
+ * The browser check, when a reviewer is marked `"browser": "required"`: start the app just
+ * before that tier, hand the reviewers its addresses, stop it as soon as they have reported.
+ * Started late and stopped early on purpose — a running `next dev` holds a port and a
+ * gigabyte of memory, and nothing before the review needs it.
+ */
+function browserBlock(verify) {
+  const lookers = (config.departments ?? []).filter((d) => d.phase === "review" && d.browser === "required").map((d) => d.agent);
+  if (lookers.length === 0) return "";
+  return `
+**A page is reviewed in the browser, and only when a review needs it.** When the diff owes
+\`${lookers.join("` or `")}\` — it changes something on screen — and only then:
+
+  1. After \`${verify}\` passes and before that review tier, run \`pnpm stack up\` (foreground,
+     longest timeout). It starts the API, the web app and the dev proxy on free ports and prints
+     the addresses to open and the folder this task's screenshots belong in.
+  2. **The browser is one, shared by every subagent of this session**, so two reviewers using it
+     at once would drive each other's page. In that tier, delegate \`${lookers.join("` and `")}\`
+     first, on its own, with the addresses, the screenshot folder, the changed routes and the
+     local sign-in from the guide. If \`stack up\` failed, say so and quote why: the reviewer then
+     reviews from code.
+  3. When it has reported (it closes the browser, \`browser_close\`, when its check is done),
+     send the rest of the tier together in one message, giving \`qa-engineer\` the same
+     addresses, folder and sign-in.
+  4. If a review returns CHANGES NEEDED, keep the stack up while the fix is made (next dev
+     reloads it) and send the fix back to that reviewer, one browser user at a time.
+  5. As soon as the tier has reported, run \`pnpm stack down\`.
+
+The runner checks that \`${lookers.join("` and `")}\` opened the page, took a screenshot and
+closed the browser. The only exception is a verdict that says, in the reviewer's own words,
+\`BROWSER: NOT NEEDED — <reason>\` because nothing renders differently. Never mention that
+waiver in a delegation or a follow-up: the reviewer's instructions already cover it, and a
+waiver the lead suggested is refused. A claimed \`stack up\` failure is also re-tried by the
+runner before it excuses anything. A backend-only or text-only change starts no app at all.
+`;
+}
+
 function skillLine() {
   const skills = config.skills ?? [];
   if (skills.length === 0) return "";
@@ -146,12 +183,13 @@ The writers first, then \`${verify}\`, then:
 `
 }
 ${reviewTiers().join("\n")}
-
+${browserBlock(verify)}
 **Delegate only the reviewers this diff owes**, by the rule beside each name — the runner
 derives the same set from the finished diff, and a reviewer it does not owe is time spent for
 no verdict. **Send each tier in a single message.** Reviewers in the same tier ask unrelated
 questions, so waiting for each in turn spends wall-clock for nothing. Read their verdicts
-together.
+together. The one exception is a tier with a browser check, as described above: the browser
+reviewer goes first, then the rest of the tier together.
 
 If one returns CHANGES NEEDED, fix what it names and send the fix back to that reviewer — not
 to the reviewers who already approved — before moving on. A later tier that has already

@@ -107,7 +107,7 @@ export function subjectOf(brief) {
  * hash; the commit names the task instead (`Task: <stem>`), and `git log --grep "Task: <stem>"`
  * finds it from the record.
  */
-export function renderRecord({ stem, brief, date = new Date(), files = [], verify = "pnpm verify" }) {
+export function renderRecord({ stem, brief, date = new Date(), files = [], verify = "pnpm verify", browser = null }) {
   const lines = String(brief ?? "").replace(/\r\n/g, "\n").split("\n");
   const first = lines.findIndex((l) => l.trim());
   const body = lines.slice(first + 1).join("\n").trim();
@@ -127,8 +127,31 @@ export function renderRecord({ stem, brief, date = new Date(), files = [], verif
 
 ${table}
 
-## The brief this was built from
+${browserSection(browser)}## The brief this was built from
 
 ${body}
 `;
+}
+
+/**
+ * What the task's browser checks came to: the runner's note on each one (rendered, not needed and
+ * why, or reviewed from code because the app did not start) and the screenshots the checks left in
+ * the task's folder under `.playwright-mcp/`. That folder is git-ignored, so the record names the
+ * files where they are on the machine that built the task rather than linking them. Empty when the
+ * task owed no browser check and took no screenshot.
+ *
+ * @param {{ dir?: string, screenshots?: string[], notes?: string[] } | null} browser
+ */
+export function browserSection(browser) {
+  const notes = browser?.notes ?? [];
+  const shots = browser?.screenshots ?? [];
+  if (notes.length === 0 && shots.length === 0) return "";
+  const lines = ["## Browser checks", ""];
+  for (const note of notes) lines.push(`- ${note}`);
+  if (shots.length > 0) {
+    if (notes.length > 0) lines.push("");
+    lines.push(`Screenshots, in \`${browser.dir}/\` on the machine that built it (not committed):`, "");
+    for (const shot of shots) lines.push(`- \`${shot}\``);
+  }
+  return `${lines.join("\n")}\n\n`;
 }

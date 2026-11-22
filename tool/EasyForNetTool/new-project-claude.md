@@ -21,6 +21,7 @@ dotnet run --project src/backend/Source   # needs PostgreSQL and Redis (Connecti
 pnpm dev                                 # ports: DEV_PROXY_PORT / DEV_WEB_PORT / DEV_API_PORT in the root .env; a port something else holds is refused with a free one to move to
 pnpm dev                                 # from the repository root: the whole app — PostgreSQL + Redis (Docker), the API on :5000, then the web app (next dev on :3001) behind the dev proxy on :3000 once the API's /health answers; open http://app.localhost:3000 or http://default.localhost:3000 (scripts/dev.mjs, scripts/dev-proxy.mjs; --no-docker, --api-only, --web-only)
 pnpm stop:api                            # from the repository root: stop this checkout's running API before a build (it locks bin/ on Windows)
+pnpm stack up|status|down                # from the repository root: the app for a browser check — API, next dev and dev proxy, detached on free ports (scripts/stack.mjs); `down` stops it
 docker compose up -d                     # from the repository root: PostgreSQL + Redis for development (docker-compose.yml)
 pnpm deploy:vps --host <ip> --domain <domain> --email <email>         # deploy to a VPS through Coolify: the platform at app.<domain> (--platform-subdomain <label> for <label>.<domain>), every tenant at <tenant>.<domain> (DNS: A for the platform host and A *.<domain>; --dns-provider/--dns-token for a DNS-01 wildcard certificate) (scripts/deploy-vps.mjs + scripts/deploy/vps/remote.sh, docker-compose.coolify.yml)
 ```
@@ -275,7 +276,7 @@ pnpm test:claude-contract           # check the installed Claude CLI still emits
 - **`agentic.config.json` is the one project-specific file.** It names the conventions every brief
   repeats, the departments (which agent owns which paths), the skills a diff owes, the gate and live
   checks, the service verify starts, and the hook rules. `scripts/lib/project-config.mjs` reads it;
-  the rest of `scripts/` is stack-agnostic, except `gate.mjs`, `serve-api.mjs`, `stop-api.mjs`, `pg-ready.mjs`,
+  the rest of `scripts/` is stack-agnostic, except `gate.mjs`, `serve-api.mjs`, `stack.mjs`, `stop-api.mjs`, `pg-ready.mjs`,
   `redis-ready.mjs` and `smoke.mjs`, which are how this stack builds and runs.
 - **Delegation is checked, not trusted.** The departments a change owes are derived from its finished
   diff and compared with the subagents actually seen in the run's stream: `ui-ux-reviewer` designs a
@@ -284,6 +285,17 @@ pnpm test:claude-contract           # check the installed Claude CLI still emits
   outside `.claude/` alone, `exceptWhenOnly`) review together, in one tier. A retry keeps the design and build
   delegations of the run's earlier attempts, since their work is still in the tree; a review counts
   only in the attempt it judged. The agents are in `.claude/agents/`.
+- **A changed screen is looked at, in the browser.** `ui-ux-reviewer`'s review is `"browser": "required"`:
+  when the diff owes it, the lead runs `pnpm stack up` just before that tier — the API, `next dev` and the dev
+  proxy, detached on free ports — and runs `pnpm stack down` as soon as the tier has reported (the runner stops
+  a stack the session left running). The session has one browser, so the UI reviewer goes first, on its own,
+  and the rest of the tier (with `qa-engineer`, which may use the browser for a flow a person walks through)
+  follows once it has reported; two delegations whose browser calls overlap are refused. The reviewer's last
+  review must open the page, take a screenshot and close the browser, or say in its own words
+  `BROWSER: NOT NEEDED — <reason>` when nothing renders differently — a waiver the lead named in a delegation
+  or follow-up is refused. A failed `stack up` excuses a review read from code only after the runner has tried
+  `stack up` itself and failed too. Screenshots land in `.playwright-mcp/<branch>/<spec>/<task>/` (`manual/`
+  outside a run); the runner moves any saved at the repository root there, and the build record lists them.
 - **Solo or team** is `project.workflow`. `solo` (the default) builds on whatever branch is checked
   out, the base branch included. `team` never plans or builds on the base branch — `queue plan`/`drain`,
   `loop`, `auto` and `schedule install` refuse there — so each spec is written, planned and built on a
