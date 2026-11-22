@@ -2,8 +2,10 @@
   "name": "easy-for-net",
   "private": true,
   "description": "Workspace scripts: the static gate and the spec-driven task loop.",
+  "packageManager": "pnpm@10.33.2",
   "engines": {
-    "node": ">=24"
+    "node": ">=24",
+    "pnpm": ">=10"
   },
   "scripts": {
     "gate": "node scripts/gate.mjs",

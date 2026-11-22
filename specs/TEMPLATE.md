@@ -23,7 +23,7 @@ cannot be ordered. Administrators can see them with a filter and restore them.
 
 ## Done when
 
-- `npm run verify` passes.
+- `pnpm verify` passes.
 - Integration tests cover: archive and restore succeed for a tenant administrator; a caller
   without `Products.Archive` gets 403; archiving a product from another tenant returns 404;
   the list omits archived products by default and includes them when asked.

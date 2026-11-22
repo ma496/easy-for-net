@@ -180,7 +180,7 @@ test("the session's result ends only agents the CLI does not track itself", () =
 
 test("a background shell command shows as it starts and ends", () => {
   const { rows } = describeAll([
-    system("task_started", { task_id: "b1", tool_use_id: "T1", task_type: "local_bash", description: "npm run gate" }),
+    system("task_started", { task_id: "b1", tool_use_id: "T1", task_type: "local_bash", description: "pnpm gate" }),
     system("task_progress", { task_id: "b1", tool_use_id: "T1", description: "still running" }),
     system("task_notification", { task_id: "b1", tool_use_id: "T1", status: "completed", summary: "gate passed" }),
   ]);
@@ -253,7 +253,7 @@ test("the lead keeps its own tally: calls, delegations, skills, time, and how it
     timed("m3", "2026-10-15T10:01:00.000Z", [{ type: "tool_use", id: "A1", name: "Agent", input: { subagent_type: "qa-engineer", description: "check" } }]),
     // A subagent's own call is not the lead's.
     timed("s1", "2026-10-15T10:05:00.000Z", [{ type: "tool_use", id: "t3", name: "Grep", input: { pattern: "x" } }], "A1"),
-    timed("m4", "2026-10-15T10:02:00.000Z", [{ type: "tool_use", id: "t4", name: "Bash", input: { command: "npm run verify" } }]),
+    timed("m4", "2026-10-15T10:02:00.000Z", [{ type: "tool_use", id: "t4", name: "Bash", input: { command: "pnpm verify" } }]),
   ]) describeEvent(line, state);
   assert.deepEqual(leadOf(state), {
     status: "running", toolUses: 2, delegations: 1, skills: 1, turns: 4, current: "Bash",

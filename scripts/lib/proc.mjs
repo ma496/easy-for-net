@@ -23,9 +23,21 @@ export function commandParts(command) {
 }
 
 /**
+ * A script's own arguments, with the `--` a caller may put in front of them removed.
+ *
+ * `pnpm verify --full` hands the script `--full`, but `pnpm verify -- --full` (the npm habit)
+ * hands it `--`, `--full`: pnpm passes the separator through. Left in, it reads as an unknown
+ * flag — and stops the runner answering a lead's verify, which forwards only known flags.
+ */
+export function scriptArgs(argv = process.argv) {
+  const args = argv.slice(2);
+  return args[0] === "--" ? args.slice(1) : args;
+}
+
+/**
  * Options that make a configured command resolve the way a terminal would.
  *
- * On Windows `npm`, `npx` and most tool shims are `.cmd` files, which `spawn` cannot start
+ * On Windows `pnpm`, `npx` and most tool shims are `.cmd` files, which `spawn` cannot start
  * without a shell — the call fails with ENOENT and a gate reads as failed when it never ran.
  * A shell is used there and only there; elsewhere the argv is passed straight through.
  */
@@ -89,7 +101,7 @@ export function sleepSync(ms) {
  * Stop a process and everything it started.
  *
  * A detached service on POSIX leads its own process group, so the negative pid reaches the
- * whole tree. Windows has no process groups in that sense, and `dotnet run` or `npm run dev`
+ * whole tree. Windows has no process groups in that sense, and `dotnet run` or `pnpm dev`
  * leave their real server as a grandchild — `taskkill /T` is what reaches it.
  */
 export function killTree(pid) {

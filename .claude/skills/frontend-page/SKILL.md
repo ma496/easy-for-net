@@ -160,4 +160,4 @@ translator, overrides and adding a language.
 - [ ] Scope registered in `lib/utils/tenant-routing.ts` if the screen is not tenant-only
 - [ ] Keys in every backend resource file (`Features/Localization/Core/Resources/*.json`)
 - [ ] `nav-items.ts` + `searchable-items.ts`
-- [ ] `npm run lint`, `npx tsc --noEmit`, `npm run test` and `npm run build` pass
+- [ ] `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test` and `pnpm build` pass

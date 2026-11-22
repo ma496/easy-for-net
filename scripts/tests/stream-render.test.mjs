@@ -18,10 +18,10 @@ test("a tool call names the tool and the detail that identifies it", () => {
 
 test("Bash prefers its description over the raw command", () => {
   const out = renderEvent(
-    assistant([{ type: "tool_use", name: "Bash", input: { description: "Run the gate", command: "npm run gate" } }]),
+    assistant([{ type: "tool_use", name: "Bash", input: { description: "Run the gate", command: "pnpm gate" } }]),
   );
   assert.match(out, /→ Bash {2}Run the gate/);
-  assert.ok(!out.includes("npm run gate"));
+  assert.ok(!out.includes("pnpm gate"));
 });
 
 test("an unknown tool still gets a line, just without detail", () => {

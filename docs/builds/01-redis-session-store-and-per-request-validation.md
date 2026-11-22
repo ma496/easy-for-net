@@ -5,7 +5,7 @@
 | **Commit** | `af3d2e34` |
 | **Landed** | 2026-09-29 |
 | **Task brief** | `01-redis-session-store-and-per-request-validation.md` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -129,7 +129,7 @@ Tokens should carry only who the caller is (`NameIdentifier`) and which session 
 - A docker-compose file or any other new root-level file.
 
 ## Done when
-- `npm run verify` passes, and `npm run gate` still needs only PostgreSQL.
+- `pnpm verify` passes, and `pnpm gate` still needs only PostgreSQL.
 - A decoded access token and the cookie ticket contain `NameIdentifier` and `sid` and nothing else about the session.
 - Every existing test still passes, including the ones that currently call `RenewAsync()`. Renewal still re-examines the account and the tenant: a deactivated account is refused, and a tenant that has been suspended, deleted or left is dropped.
 - An unknown `sid` answers 401.

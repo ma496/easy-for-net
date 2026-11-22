@@ -5,7 +5,7 @@
 | **Commit** | `f602df1d` |
 | **Landed** | 2026-09-30 |
 | **Task brief** | `04-document-settings-system.md` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -55,6 +55,6 @@ The settings system built by tasks 01 to 03 has to be discoverable by the next p
 - The agent definitions and hooks.
 
 ## Done when
-- `npm run verify` passes.
+- `pnpm verify` passes.
 - Every type, method and file the docs name exists under that name in the code.
 - The skill contains no reference specific to this repository beyond qualified `Backend.` namespaces.

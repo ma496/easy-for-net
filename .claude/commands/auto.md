@@ -9,7 +9,7 @@ Run this task unattended: **$ARGUMENTS**
 Nobody is going to answer a question. Do not ask one. Where the request is ambiguous, make
 the reasonable call, state the assumption in your final report, and finish the work.
 
-This is the same loop `npm run auto -- "<task>"` drives from the shell. Use that command
+This is the same loop `pnpm auto "<task>"` drives from the shell. Use that command
 when you want it fully detached; use this when you are already in a session.
 
 ## 1. Work in place
@@ -35,7 +35,7 @@ says which change owes which procedure.
 ## 3. Verify — the part that is not optional
 
 ```bash
-npm run verify -- --autostart --scope working
+pnpm verify --autostart --scope working
 ```
 
 It reads this task's uncommitted change and runs what that change demands — what is already
@@ -49,10 +49,10 @@ Add unit tests for any pure helper you add or change.
 
 ## 4. Review — also not optional
 
-After the writers finish, run `npm run owes` and dispatch each review tier it names in a
+After the writers finish, run `pnpm owes` and dispatch each review tier it names in a
 single message, a later tier (where one is declared) once the earlier has reported.
 
-`npm run auto` refuses an attempt that skipped a department owed by the finished diff. Hold
+`pnpm auto` refuses an attempt that skipped a department owed by the finished diff. Hold
 yourself to the same bar here.
 
 ## 5. Commit, then stop

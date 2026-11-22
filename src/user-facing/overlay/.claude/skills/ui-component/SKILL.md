@@ -193,4 +193,4 @@ event handlers — that covers most of `components/ui`. Pure wrappers such as `B
 - [ ] Semantic color tokens only (no hex, stock palette or `dark:` color classes) and logical (RTL-safe) utilities
 - [ ] Exported from the folder's barrel
 - [ ] For a form field: the bare and the `Form*` variant, wired to Formik the same way
-- [ ] `npm run lint` and `npx tsc --noEmit` pass
+- [ ] `pnpm lint` and `pnpm exec tsc --noEmit` pass

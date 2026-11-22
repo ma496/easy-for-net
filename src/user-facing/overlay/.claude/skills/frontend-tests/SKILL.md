@@ -5,11 +5,11 @@ description: Write and run Vitest tests for the web app in src/frontend/web — 
 
 # Frontend tests
 
-Vitest, run with `npm run test` (`vitest run`) from `src/frontend/web`. A single file:
+Vitest, run with `pnpm test` (`vitest run`) from `src/frontend/web`. A single file:
 
 ```sh
-npx vitest run lib/seo/metadata.test.ts
-npx vitest            # watch mode while iterating
+pnpm exec vitest run lib/seo/metadata.test.ts
+pnpm exec vitest      # watch mode while iterating
 ```
 
 `vitest.config.mts` maps the `@/` alias from `tsconfig.json` and collects **`**/*.test.ts` only** — a
@@ -130,5 +130,5 @@ endpoints. Endpoint behaviour is covered on the API side instead; see the `backe
   test sets it up; helpers that guard with `typeof window === 'undefined'` are testable as-is.
 - Assert on behaviour, not implementation details — call the exported function, check the result.
 - When you fix a bug in a helper, add the failing input as a case first.
-- `npm run test`, `npm run lint` and `npx tsc --noEmit` all need to pass before the change is done —
+- `pnpm test`, `pnpm lint` and `pnpm exec tsc --noEmit` all need to pass before the change is done —
   Vitest and ESLint both pass on code that fails the type check.

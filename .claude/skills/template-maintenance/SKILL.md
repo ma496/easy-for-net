@@ -87,7 +87,7 @@ would want. The templates share no code, so a fix that applies to both is made i
   `launchSettings.json`
 - root files `.editorconfig`, `.gitignore`, `.gitattributes`, `global.json`, `package.json`,
   `agentic.config.json`, `docker-compose.yml`, `docker-compose.prod.yml`, `docker-compose.coolify.yml`
-  (what `npm run deploy:vps` points Coolify at), `.env.docker.example`, `.mcp.json`
+  (what `pnpm deploy:vps` points Coolify at), `.env.docker.example`, `.mcp.json`
   (`CopyFiles` throws if one is missing)
 - directories `.config`, `.vscode`, `docker`, `scripts` (whole), and `.claude` minus any directory named
   `new-project`, `template-maintenance` or `lessons`, and the template's `ExcludedSkills`
@@ -140,7 +140,7 @@ name no shipped directory uses) or put it outside `.claude`.
   `Seed.TenantAdminPassword` of all three files. Only the root `.env`'s `SEED_ADMIN_PASSWORD`, which the
   production stacks seed with, is random. These are JSON-path
   updates, so renaming or moving those keys in `appsettings.json` must be mirrored in the generator.
-- `name` in the web `package.json` / `package-lock.json`, the root `package.json`, and
+- `name` in the web `package.json` (`pnpm-lock.yaml` names no package), the root `package.json`, and
   `project.name` in `agentic.config.json` become the kebab-case name.
 - The display name: `Easy\s+For\s+Net` in every `.json` under the web app and in the API's shipped
   translation resources (`Features/Localization/Core/Resources/*.json`) becomes the name in title
@@ -240,7 +240,7 @@ change to one ships with the next package, not the next tag alone.
 ```sh
 dotnet test --project tool/EasyForNetTool.Tests/EasyForNetTool.Tests.csproj
 dotnet build EasyForNet.slnx
-npm run gate                         # also runs every tool/*.Tests project it finds
+pnpm gate                            # also runs every tool/*.Tests project it finds
 ./publish-package.sh                 # interactive: version prompt + NuGet publish confirmation
 ```
 

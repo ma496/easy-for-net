@@ -1,5 +1,5 @@
 /**
- * The pure parts of `npm run deploy:vps`: reading its arguments, naming the Coolify application,
+ * The pure parts of `pnpm deploy:vps`: reading its arguments, naming the Coolify application,
  * turning a git remote into the URLs Coolify clones from, and building the command line each
  * server phase runs under. Nothing here touches the network or the file system.
  */

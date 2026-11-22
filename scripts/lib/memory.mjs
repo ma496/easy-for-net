@@ -193,7 +193,7 @@ export function formatForBrief(selected, { maxLessons = MAX_LESSONS, maxChars = 
     "",
     kept.join("\n\n"),
     dropped > 0
-      ? `\n_(${dropped} lesson(s) not shown — the brief's memory budget was reached; \`npm run lessons\` lists every one.)_`
+      ? `\n_(${dropped} lesson(s) not shown — the brief's memory budget was reached; \`pnpm lessons\` lists every one.)_`
       : "",
   ]
     .filter(Boolean)

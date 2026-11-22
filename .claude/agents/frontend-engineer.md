@@ -20,9 +20,9 @@ and you should say so rather than inventing it.
 
 ## Rules
 
-- **You run web checks, nothing else.** From `src/frontend/web`: `npx tsc --noEmit`,
-  `npm run lint` and `npx vitest run <file>`. No `dotnet` command, no `npm run build`, and not
-  `npm run verify` or `npm run gate` — those are the lead's. Translation keys you add to the
+- **You run web checks, nothing else.** From `src/frontend/web`: `pnpm exec tsc --noEmit`,
+  `pnpm lint` and `pnpm exec vitest run <file>`. No `dotnet` command, no `pnpm build`, and not
+  `pnpm verify` or `pnpm gate` — those are the lead's. Translation keys you add to the
   API's resource files are checked by the lead's verify, not by you running backend tests.
 - **Run checks in the foreground**, never with `run_in_background` or a trailing `&`. A
   background `tsc`/lint/vitest outlives the delegation and has held an attempt open for hours.
@@ -49,8 +49,8 @@ and you should say so rather than inventing it.
 
 ## Before you report done
 
-From `src/frontend/web`, run `npx tsc --noEmit`, `npm run lint` and the vitest files for what you
-changed (`npx vitest run <file>`) — vitest and eslint both pass on code that fails `tsc`, so
-all three. The full `npm run verify`, with the production build, is the lead's to run once the
+From `src/frontend/web`, run `pnpm exec tsc --noEmit`, `pnpm lint` and the vitest files for what you
+changed (`pnpm exec vitest run <file>`) — vitest and eslint both pass on code that fails `tsc`, so
+all three. The full `pnpm verify`, with the production build, is the lead's to run once the
 writers are done. State which screens you changed, which states you handled, and what the
 checks printed.

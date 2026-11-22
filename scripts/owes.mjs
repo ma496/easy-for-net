@@ -3,8 +3,8 @@
  * What the change in this checkout owes before it should be committed: the departments that
  * must see it, in the order the runner enforces, and the skills its shape calls for.
  *
- *   npm run owes                    # the working tree's changes
- *   npm run owes -- --base main     # everything since the branch left main, plus the tree
+ *   pnpm owes                    # the working tree's changes
+ *   pnpm owes --base main        # everything since the branch left main, plus the tree
  *
  * The runner derives the same set from a task's finished diff and refuses an attempt that
  * skipped one (lib/departments.mjs). Working by hand, nothing told you that set — so a
@@ -14,12 +14,13 @@
 import { spawnSync } from "node:child_process";
 import { expectedSequence, departmentsFor, requiredSkills } from "./lib/departments.mjs";
 import { workingTreePaths } from "./lib/changed-paths.mjs";
+import { scriptArgs } from "./lib/proc.mjs";
 
-const argv = process.argv.slice(2);
+const argv = scriptArgs();
 const baseAt = argv.indexOf("--base");
 const base = baseAt >= 0 ? argv[baseAt + 1] : null;
 if (baseAt >= 0 && (!base || base.startsWith("--"))) {
-  console.error("Usage: npm run owes [-- --base <branch>]");
+  console.error("Usage: pnpm owes [-- --base <branch>]");
   process.exit(1);
 }
 

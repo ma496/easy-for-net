@@ -5,7 +5,7 @@
 | **Commit** | `5a18f9c7` |
 | **Landed** | 2026-09-29 |
 | **Task brief** | `02-revoke-sessions-on-identity-access-changes.md` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -92,7 +92,7 @@ Task 01 put every session in `ISessionStore` and validates it on each request. T
 - Docs and skills (task 06), the generator and the `new-project` skill (task 05).
 
 ## Done when
-- `npm run verify` passes, and the gate still needs only PostgreSQL.
+- `pnpm verify` passes, and the gate still needs only PostgreSQL.
 - Every case above has an integration test showing that the old access token answers 401 without renewal, that its refresh token is refused, and that a session the change does not name keeps working.
 - A change whose transaction rolls back leaves the user's sessions working.
 - `FeatureDependencyTests` passes, with the revocation interface marked `[AllowOutside]`.

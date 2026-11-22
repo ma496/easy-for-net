@@ -2,8 +2,8 @@
 /**
  * One command for the whole cycle.
  *
- *   npm run loop                    # look, plan, build, report
- *   npm run loop -- --dry-run       # say what it would do, change nothing
+ *   pnpm loop                       # look, plan, build, report
+ *   pnpm loop --dry-run             # say what it would do, change nothing
  *
  * Everything else in scripts/ does one job. This is the one you run when you do not want
  * to think about which job that is: it works out where things stand, asks the running
@@ -19,14 +19,14 @@ import { spawnSync } from "node:child_process";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { BUDGET_EXIT_CODE } from "./lib/budget.mjs";
-import { runCommandSync, sleepSync } from "./lib/proc.mjs";
+import { runCommandSync, sleepSync, scriptArgs } from "./lib/proc.mjs";
 import { BASE_BRANCH, config, WORK_BRANCH, WORKFLOW, workflowRefusal } from "./lib/project-config.mjs";
 import { unpushedHere } from "./lib/remote.mjs";
 import { listTasks } from "./lib/task-names.mjs";
 import { isPlannableSpecPath } from "./lib/planning.mjs";
 
 const ROOT = resolve(join(dirname(fileURLToPath(import.meta.url)), ".."));
-const argv = process.argv.slice(2);
+const argv = scriptArgs();
 const flag = (name) => argv.includes(`--${name}`);
 const argOf = (name, fallback) => {
   const i = argv.indexOf(`--${name}`);
@@ -178,7 +178,7 @@ function cliContract() {
   console.log(
     "\nThis Claude Code version no longer emits what the runner reads. Nothing was built: every\n" +
       "task would have been judged on a stream the runner can no longer parse. Fix\n" +
-      "scripts/lib/claude-events.mjs, then `npm run test:claude-contract -- --record`.",
+      "scripts/lib/claude-events.mjs, then `pnpm test:claude-contract --record`.",
   );
   return 1;
 }
@@ -224,9 +224,9 @@ if (drainStatus === BUDGET_EXIT_CODE) {
     `${waiting} task(s) are still in todo/, untouched. The next scheduled run starts a fresh\n` +
       "budget and picks them up. To let one run go further, raise AGENT_MAX_USD_PER_DRAIN\n" +
       "(and AGENT_MAX_USD_PER_TASK for a single expensive task) — the timer passes both\n" +
-      "through, so `npm run schedule -- install` again after changing them.\n",
+      "through, so `pnpm schedule install` again after changing them.\n",
   );
-  console.log("  What each run cost:  npm run auto:status\n");
+  console.log("  What each run cost:  pnpm auto:status\n");
 }
 
 const failedTasks = listTasks(join(ROOT, ".agent-queue", "failed"));
@@ -234,8 +234,8 @@ if (failedTasks.length > 0) {
   console.log(`${failedTasks.length} task(s) failed and are waiting in .agent-queue/failed/:`);
   for (const f of failedTasks) console.log(`  ${f}`);
   console.log(
-    "\n  Why:     npm run auto:status\n" +
-      "  Retry:   npm run queue -- retry        (bounded — twice, then it needs you)\n",
+    "\n  Why:     pnpm auto:status\n" +
+      "  Retry:   pnpm queue retry        (bounded — twice, then it needs you)\n",
   );
 }
 
@@ -263,10 +263,10 @@ if (after.count === 0) {
   run("git", ["log", "--oneline", `${after.since}..HEAD`]);
   console.log(`
   Review:  git diff ${after.since}..HEAD
-  Push:    ${WORKFLOW === "team" ? "git push -u origin HEAD, then npm run pr" : "git push"}`);
+  Push:    ${WORKFLOW === "team" ? "git push -u origin HEAD, then pnpm pr" : "git push"}`);
 }
 
-console.log(`\nHistory: npm run auto:status`);
+console.log(`\nHistory: pnpm auto:status`);
 
 // The cycle's status is the drain's. It always exited 0, so the timer's "last result" said
 // every run succeeded — including the ones that stopped on budget or an account refusal.

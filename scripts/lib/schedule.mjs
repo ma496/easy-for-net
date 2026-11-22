@@ -36,11 +36,11 @@ export function scheduleEnv({ model, maxUsdPerTask, maxUsdPerDrain, maxRunsPerTa
 /** The POSIX command line a launchd agent or a cron entry runs. */
 export function posixCommand(root, env) {
   const assignments = Object.entries(env).map(([k, v]) => `${k}=${v}`).join(" ");
-  return `cd ${JSON.stringify(root)} && ${assignments} npm run loop`;
+  return `cd ${JSON.stringify(root)} && ${assignments} pnpm loop`;
 }
 
 /**
- * The batch file Task Scheduler runs on Windows. `call` because `npm` is itself a batch
+ * The batch file Task Scheduler runs on Windows. `call` because `pnpm` is itself a batch
  * file, and a batch file run without `call` never returns to the one that started it.
  */
 export function windowsWrapper(root, env, logFile) {
@@ -48,7 +48,7 @@ export function windowsWrapper(root, env, logFile) {
     "@echo off",
     `cd /d "${root}"`,
     ...Object.entries(env).map(([k, v]) => `set "${k}=${v}"`),
-    `call npm run loop >> "${logFile}" 2>&1`,
+    `call pnpm loop >> "${logFile}" 2>&1`,
     "",
   ].join("\r\n");
 }

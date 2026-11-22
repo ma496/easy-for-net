@@ -5,7 +5,7 @@
 | **Commit** | `0b6f89c9` |
 | **Landed** | 2026-09-29 |
 | **Task brief** | `05-generator-redis-instance-name-and-local-redis.md` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -44,7 +44,7 @@ After task 01, the API needs Redis outside `Testing` and prefixes every key with
 - A docker-compose file or any new root-level file. The generator's list of copied root files stays the same.
 
 ## Done when
-- `npm run verify` passes, and so does `dotnet test tool/EasyForNetTool.Tests/EasyForNetTool.Tests.csproj`.
+- `pnpm verify` passes, and so does `dotnet test tool/EasyForNetTool.Tests/EasyForNetTool.Tests.csproj`.
 - A project generated locally with `efn cp -n Demo`:
   - has `Redis:InstanceName` set to `Demo:` in `appsettings.json`;
   - has it set to `DemoTest:` in `appsettings.Testing.json`;

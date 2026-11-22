@@ -288,4 +288,4 @@ options are fetched and labelled. The id travels in the path, so the payload is
   `ui-component` skill — not in the route's `_components/`.
 - Register list/create/update routes in `auth-urls.ts`, `nav-items.ts`, `searchable-items.ts`, and
   in `lib/utils/tenant-routing.ts` when the entity is not tenant-only — see `frontend-page`.
-- `npm run lint`, `npx tsc --noEmit`, `npm run test` and `npm run build` before calling it done.
+- `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test` and `pnpm build` before calling it done.

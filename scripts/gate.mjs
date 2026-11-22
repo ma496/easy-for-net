@@ -2,11 +2,11 @@
 /**
  * The static gate: everything that must pass before a change may commit, in one command.
  *
- *   npm run gate                 # every step, stopping at the first failure
- *   npm run gate -- --fast       # skip the production web build, for quick iteration
- *   npm run gate -- --only web   # one area: api | web | engine
- *   npm run gate -- --changed    # only the steps the changed paths can break
- *   npm run gate -- --changed --plan   # say which steps --changed would run, run nothing
+ *   pnpm gate                    # every step, stopping at the first failure
+ *   pnpm gate --fast             # skip the production web build, for quick iteration
+ *   pnpm gate --only web         # one area: api | web | engine
+ *   pnpm gate --changed          # only the steps the changed paths can break
+ *   pnpm gate --changed --plan         # say which steps --changed would run, run nothing
  *
  * The API half builds the solution and runs every backend test project. Its integration
  * tests need the PostgreSQL named in appsettings.Testing.json — an unreachable database is
@@ -20,16 +20,16 @@
  * a documentation change runs nothing. The paths come from the file verify writes
  * (GATE_CHANGED_PATHS_FILE), else from the working tree. A changed path that no step watches
  * and `INERT` does not name runs the whole gate — an unlisted file is never assumed harmless.
- * GATE_FULL=1 (what `npm run verify -- --full` sets) ignores `--changed`.
+ * GATE_FULL=1 (what `pnpm verify --full` sets) ignores `--changed`.
  */
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { workingTreePaths } from "./lib/changed-paths.mjs";
 import { selectGateSteps } from "./lib/gate-scope.mjs";
-import { runSync } from "./lib/proc.mjs";
+import { runSync, scriptArgs } from "./lib/proc.mjs";
 import { APPS, REPO_ROOT } from "./lib/project-config.mjs";
 
-const argv = process.argv.slice(2);
+const argv = scriptArgs();
 const FAST = argv.includes("--fast");
 const CHANGED = argv.includes("--changed") && process.env.GATE_FULL !== "1";
 const PLAN = argv.includes("--plan");
@@ -138,18 +138,18 @@ const webSteps = (app) => {
   return [
     {
       area: "web",
-      name: app.label("npm ci"),
-      cmd: "npm",
-      args: ["ci", "--no-audit", "--no-fund"],
+      name: app.label("pnpm install"),
+      cmd: "pnpm",
+      args: ["install", "--frozen-lockfile"],
       cwd: app.webDir,
       watches: WEB_TESTS,
       // Only on a fresh checkout — an unattended run cannot type it, and without it every
       // later web step fails for a reason that has nothing to do with the change.
       when: () => !existsSync(join(app.webDir, "node_modules")),
     },
-    { area: "web", name: app.label("eslint"), cmd: "npm", args: ["run", "lint"], cwd: app.webDir, watches: WEB_PATHS },
-    { area: "web", name: app.label("tsc --noEmit"), cmd: "npx", args: ["tsc", "--noEmit"], cwd: app.webDir, watches: WEB_PATHS },
-    { area: "web", name: app.label("vitest"), cmd: "npm", args: ["run", "test"], cwd: app.webDir, watches: WEB_TESTS },
+    { area: "web", name: app.label("eslint"), cmd: "pnpm", args: ["lint"], cwd: app.webDir, watches: WEB_PATHS },
+    { area: "web", name: app.label("tsc --noEmit"), cmd: "pnpm", args: ["exec", "tsc", "--noEmit"], cwd: app.webDir, watches: WEB_PATHS },
+    { area: "web", name: app.label("vitest"), cmd: "pnpm", args: ["test"], cwd: app.webDir, watches: WEB_TESTS },
   ];
 };
 
@@ -173,8 +173,8 @@ const steps = [
   ...apps.map((app) => ({
     area: "web",
     name: app.label("next build"),
-    cmd: "npm",
-    args: ["run", "build"],
+    cmd: "pnpm",
+    args: ["build"],
     cwd: app.webDir,
     watches: [app.webRe],
     when: () => !FAST,

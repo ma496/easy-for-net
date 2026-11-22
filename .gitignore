@@ -276,7 +276,7 @@ appsettings.Testing.json
 appsettings.Production.json
 # Production secrets for docker-compose.prod.yml (the template is .env.docker.example)
 /.env
-# Deployment tools' remembered answers (npm run deploy:vps keeps one file per domain in .deploy/vps/)
+# Deployment tools' remembered answers (pnpm deploy:vps keeps one file per domain in .deploy/vps/)
 /.deploy/
 
 # Custom directories

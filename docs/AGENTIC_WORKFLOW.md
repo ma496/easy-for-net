@@ -8,10 +8,10 @@ How work gets done here without a person driving each step, and what each part r
 
 ```
 specs/*.md            somebody describes what they want
-   │  npm run queue -- plan        (a model splits it into tasks; committed as "Plan <spec>")
+   │  pnpm queue plan        (a model splits it into tasks; committed as "Plan <spec>")
    ▼
 .agent-queue/todo/    one task per file, in dependency order — shared through git
-   │  npm run queue -- drain       (serial, one at a time)
+   │  pnpm queue drain       (serial, one at a time)
    ▼
 agent-run.mjs         brief → claude -p → verify → review check → commit
    │
@@ -22,7 +22,7 @@ docs/builds/          the durable record of what shipped and why, in the task's 
 .claude/memory/       what a run learned, injected into later unrelated tasks
 ```
 
-`npm run loop` is all of it in one command, and `npm run schedule -- install` runs that on a
+`pnpm loop` is all of it in one command, and `pnpm schedule install` runs that on a
 timer.
 
 ## Work reaches the loop two ways
@@ -35,7 +35,7 @@ in one record per spec, `.agent-queue/planned/<spec>.md.json` (a legacy shared
 briefs, the spec and its record are committed together as `Plan <spec>`, so every other
 checkout of the branch sees the spec as planned — and two branches planning different specs
 never touch the same file. To read the split before anything is built, run
-`npm run queue -- plan` first; the next drain builds what it queued.
+`pnpm queue plan` first; the next drain builds what it queued.
 
 To have the spec drafted with you, run `/spec <what you want built>`. It reads the code,
 asks at most one round of questions whose answers would change the work, and writes
@@ -93,7 +93,7 @@ ignored, because two tasks sharing a working tree would overwrite each other.
 
 1. **The gate.** Typecheck, unit tests, hook tests, build — whatever `verify.gate` names. Here
    that is `gate.mjs --changed`: the steps the diff's paths can break, all of them when a path
-   is watched by none. `npm run verify -- --full` runs every step.
+   is watched by none. `pnpm verify --full` runs every step.
 2. **The live checks its diff demands.** From `verify.checks`. A required check that could
    not run counts as a failure, not as a pass with a footnote.
 3. **A non-empty diff.** Verification passing over an untouched tree is the gate proving the
@@ -113,7 +113,7 @@ to review, red means it only has to fix. Rebuilding from zero is what it avoids,
 most of the cost of a retry.
 
 Three attempts is the default (`budget.attempts`), and it is worth measuring with
-`npm run auto:status` before changing. A large share of landed work lands on the last attempt,
+`pnpm auto:status` before changing. A large share of landed work lands on the last attempt,
 and cutting one does not save that attempt's money: the task then fails, is requeued, and
 starts again from nothing.
 
@@ -130,7 +130,7 @@ morning. The per-task ceiling stops the *retrying*: the attempt already paid for
 is accepted if it verifies, and the run exits 3 with nothing committed, so "ran out of money"
 never reads as "never verified".
 
-`npm run queue -- retry` puts a failed task back, and clears its spend history in the same
+`pnpm queue retry` puts a failed task back, and clears its spend history in the same
 gesture, because requeueing by hand is the one signal that somebody looked. It does so at
 most twice per brief (counted in the gitignored `.agent-queue/retries.json`); past that, the
 brief needs changing, not another run — edit it, or delete its line from that file to allow
@@ -139,7 +139,7 @@ another retry.
 ### Every setting read from the environment
 
 The scripts never read `.env`; these come from the shell that starts them, and the timer
-gets them from the command `npm run schedule -- install` wrote.
+gets them from the command `pnpm schedule install` wrote.
 
 | Variable | Default | What it does |
 |---|---|---|
@@ -195,13 +195,13 @@ releases, so it is read in exactly one file, `scripts/lib/claude-events.mjs`.
 - `scripts/tests/claude-stream-contract.test.mjs` replays streams captured from real CLI
   versions (`scripts/tests/fixtures/claude-stream/<version>/`) and fails naming the field
   that moved.
-- `npm run test:claude-contract` runs short probes against the installed CLI on the cheapest
-  model; `npm run loop` runs it once per new CLI version and builds nothing when it fails.
-- After adapting `claude-events.mjs`, `npm run test:claude-contract -- --record` saves the new
+- `pnpm test:claude-contract` runs short probes against the installed CLI on the cheapest
+  model; `pnpm loop` runs it once per new CLI version and builds nothing when it fails.
+- After adapting `claude-events.mjs`, `pnpm test:claude-contract --record` saves the new
   version's fixtures, scrubbed of paths and content.
 - Each attempt's raw stream is kept in `.agent-runs/<run>-attempt-N.stream.jsonl`.
 
-`npm run auto:status` records turns and cost per attempt, which is what makes this
+`pnpm auto:status` records turns and cost per attempt, which is what makes this
 answerable rather than arguable.
 
 ## What is never automated
@@ -219,15 +219,15 @@ answerable rather than arguable.
 - **Node 24+**, **git**, the **.NET 10 SDK**, and the **`claude` CLI** on PATH.
 - **PostgreSQL running** where `appsettings.Testing.json` points. The gate runs the backend
   integration tests, which migrate and seed their own database; with the server down every
-  task fails its gate, and `npm run loop` says so in its preflight.
+  task fails its gate, and `pnpm loop` says so in its preflight.
 - **Redis running** where `ConnectionStrings:Redis` points, for the live check's API.
 - The runner probes both before an attempt starts and, when one is down and cannot be
   started, exits 4 having spent nothing; the drain puts the task back in `todo/` and stops.
-- `src/frontend/web/node_modules` — the gate runs `npm ci` there on a fresh checkout.
+- `src/frontend/web/node_modules` — the gate runs `pnpm install --frozen-lockfile` there on a fresh checkout.
 
 ## The queue repairs its own bookkeeping
 
-A run's commit carries a `Task: <brief-stem>` trailer, so `npm run queue -- audit` can tie a
+A run's commit carries a `Task: <brief-stem>` trailer, so `pnpm queue audit` can tie a
 brief to its commit even when someone committed the work by hand under a different message.
 `audit --fix` then files it: the brief moves to `done/`, its removal from `todo/` is committed
 (except on a team's base branch), and the tasks waiting on it are released. It acts only on a
@@ -243,7 +243,7 @@ either way.
 checked out — the base branch included — and the commits stay local until you push them.
 The guard refuses an agent's push to a protected branch (`main`, `master`, `develop`, the base,
 `project.branch`) whatever is said in the turn: you push it yourself, `! git push` in the
-prompt. Interactively, `/ship` verifies, asks `npm run owes` which reviewers the diff owes,
+prompt. Interactively, `/ship` verifies, asks `pnpm owes` which reviewers the diff owes,
 reviews and commits — the same bar the queue holds a task to. A timer is pinned to the branch it
 was installed on in `solo` too (see below), so checking out another branch pauses it rather
 than moving the queue there.
@@ -255,9 +255,9 @@ than moving the queue there.
 ```sh
 git switch -c feat/billing-export
 # write specs/billing-export.md (or /spec, then move the draft from specs/drafts/)
-npm run loop                         # plans it (one "Plan" commit), builds each task (one commit each)
+pnpm loop                            # plans it (one "Plan" commit), builds each task (one commit each)
 git push -u origin HEAD              # yours to run; the loop never pushes unless AGENT_AUTO_PUSH=1
-npm run pr                           # prints the pull-request URL for the pushed branch
+pnpm pr                              # prints the pull-request URL for the pushed branch
 ```
 
 Intake on a branch plans only the specs that branch added or changed since it left the base

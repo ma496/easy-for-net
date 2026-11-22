@@ -18,11 +18,11 @@ dotnet build EasyForNet.slnx
 dotnet ef migrations add <Name> --project src/backend/Source
 dotnet ef database update --project src/backend/Source
 dotnet run --project src/backend/Source   # needs PostgreSQL and Redis (ConnectionStrings:Redis)
-npm run dev                              # ports: DEV_PROXY_PORT / DEV_WEB_PORT / DEV_API_PORT in the root .env; a port something else holds is refused with a free one to move to
-npm run dev                              # from the repository root: the whole app — PostgreSQL + Redis (Docker), the API on :5000, then the web app (next dev on :3001) behind the dev proxy on :3000 once the API's /health answers; open http://app.localhost:3000 or http://default.localhost:3000 (scripts/dev.mjs, scripts/dev-proxy.mjs; --no-docker, --api-only, --web-only)
-npm run stop:api                         # from the repository root: stop this checkout's running API before a build (it locks bin/ on Windows)
+pnpm dev                                 # ports: DEV_PROXY_PORT / DEV_WEB_PORT / DEV_API_PORT in the root .env; a port something else holds is refused with a free one to move to
+pnpm dev                                 # from the repository root: the whole app — PostgreSQL + Redis (Docker), the API on :5000, then the web app (next dev on :3001) behind the dev proxy on :3000 once the API's /health answers; open http://app.localhost:3000 or http://default.localhost:3000 (scripts/dev.mjs, scripts/dev-proxy.mjs; --no-docker, --api-only, --web-only)
+pnpm stop:api                            # from the repository root: stop this checkout's running API before a build (it locks bin/ on Windows)
 docker compose up -d                     # from the repository root: PostgreSQL + Redis for development (docker-compose.yml)
-npm run deploy:vps -- --host <ip> --domain <domain> --email <email>   # deploy to a VPS through Coolify: the platform at app.<domain> (--platform-subdomain <label> for <label>.<domain>), every tenant at <tenant>.<domain> (DNS: A for the platform host and A *.<domain>; --dns-provider/--dns-token for a DNS-01 wildcard certificate) (scripts/deploy-vps.mjs + scripts/deploy/vps/remote.sh, docker-compose.coolify.yml)
+pnpm deploy:vps --host <ip> --domain <domain> --email <email>         # deploy to a VPS through Coolify: the platform at app.<domain> (--platform-subdomain <label> for <label>.<domain>), every tenant at <tenant>.<domain> (DNS: A for the platform host and A *.<domain>; --dns-provider/--dns-token for a DNS-01 wildcard certificate) (scripts/deploy-vps.mjs + scripts/deploy/vps/remote.sh, docker-compose.coolify.yml)
 ```
 
 Backend tests — **require a running PostgreSQL** matching `appsettings.Testing.json` (not Redis: the Testing host keeps sessions in memory); the Testing environment migrates and seeds the database on startup:
@@ -33,25 +33,25 @@ dotnet test --project src/backend/Tests --filter-class "*UserCreateTests"
 dotnet test --project src/backend/Tests --filter-method "*UserCreateTests.Valid_Input"
 ```
 
-Frontend (`src/frontend/web`, Node >= 24):
+Frontend (`src/frontend/web`, Node >= 24, pnpm 10):
 
 ```sh
-npm install
-npm run dev
-npm run build
-npm run lint                        # eslint flat config
-npm run test                        # vitest run
-npx vitest run lib/utils/redirect.test.ts
+pnpm install
+pnpm dev
+pnpm build
+pnpm lint                           # eslint flat config
+pnpm test                           # vitest run
+pnpm exec vitest run lib/utils/redirect.test.ts
 ```
 
 Everything at once, from the repository root (the gate needs PostgreSQL running; the live check also needs Redis):
 
 ```sh
-npm run gate                        # build, backend tests, web lint/tsc/vitest, engine + hook tests, next build
-npm run gate -- --fast              # the same without the production web build
-npm run gate -- --changed --plan    # which steps the working tree's changes reach, without running them
-npm run verify -- --autostart       # the gate steps the diff reaches, plus the live API smoke check when src/backend/Source changed
-npm run verify -- --full            # the same with every gate step
+pnpm gate                           # build, backend tests, web lint/tsc/vitest, engine + hook tests, next build
+pnpm gate --fast                    # the same without the production web build
+pnpm gate --changed --plan          # which steps the working tree's changes reach, without running them
+pnpm verify --autostart             # the gate steps the diff reaches, plus the live API smoke check when src/backend/Source changed
+pnpm verify --full                  # the same with every gate step
 ```
 
 The API that `verify` starts for the live check waits on `scripts/pg-ready.mjs` and `scripts/redis-ready.mjs` (a TCP probe of `ConnectionStrings:Redis`), both listed under `verify.service.dependsOn` in `agentic.config.json`.
@@ -62,7 +62,7 @@ The API that `verify` starts for the live check waits on `scripts/pg-ready.mjs` 
 
 - **`postgres`**: Postgres MCP Pro in `restricted` mode, which means read-only transactions with a time limit. SQL sent through MCP is not seen by the shell guards, so this mode is the only thing refusing a write. Schema changes still go through EF migrations.
 - **`redis`**: the official Redis MCP server. It has no read-only mode, so every tool that writes (`mcp__redis__set`, `…__delete`, `…__expire`, …) is in `permissions.deny`, since this Redis holds the API's sessions.
-- **`playwright`**: Microsoft's Playwright MCP, with a fresh profile each session (`--isolated`) and its output in the git-ignored `.playwright-mcp/`. It reaches the app on the hosts below once `npm run dev` runs.
+- **`playwright`**: Microsoft's Playwright MCP, with a fresh profile each session (`--isolated`) and its output in the git-ignored `.playwright-mcp/`. It reaches the app on the hosts below once `pnpm dev` runs.
 
 The PostgreSQL and Redis servers need `uv` (`uvx`) on the PATH, and a wrapper that cannot start says why on stderr.
 
@@ -251,25 +251,25 @@ Adding a language means a resource file `Features/Localization/Core/Resources/<c
 Work is described in `specs/` and built by an unattended loop. Saving a markdown file there is
 starting development: the planner splits it into tasks in `.agent-queue/todo/` (with
 `Depends-on:` ordering), and the runner builds them one at a time on the work branch — brief →
-`claude -p` → `npm run verify` → required reviews → commit. `specs/TEMPLATE.md` is a worked example;
+`claude -p` → `pnpm verify` → required reviews → commit. `specs/TEMPLATE.md` is a worked example;
 `specs/README.md` says what makes a brief work; `docs/AGENTIC_WORKFLOW.md` is the whole mechanism.
 The loop reads diffs and commits, so the project must be a git repository; it is created as one with a
 first commit, and when git was missing then, run `git init` and make that first commit before the loop runs.
 
 ```sh
-npm run queue -- add "<task>"       # queue one task directly
-npm run queue -- plan               # turn new specs/*.md into tasks, without building
-npm run queue -- drain              # build everything runnable, serially
-npm run queue                       # what is waiting, blocked, done or failed
-npm run auto -- "<task>"            # build one task now, outside the queue
-npm run loop                        # preflight → observe → plan → drain → report
-npm run schedule -- install         # run the loop on a timer (Task Scheduler / launchd)
-npm run auto:status                 # every attempt, its turns, cost and why it failed
-npm run monitor                     # read-only web page: tasks by lane per spec, live stream of the run (127.0.0.1:4000)
-npm run lessons                     # what past runs recorded for future ones
-npm run owes                        # which reviews and skills the working tree's change owes (the runner's rule)
-npm run pr                          # the pull-request URL for the current branch
-npm run test:claude-contract        # check the installed Claude CLI still emits what the runner reads
+pnpm queue add "<task>"             # queue one task directly
+pnpm queue plan                     # turn new specs/*.md into tasks, without building
+pnpm queue drain                    # build everything runnable, serially
+pnpm queue                          # what is waiting, blocked, done or failed
+pnpm auto "<task>"                  # build one task now, outside the queue
+pnpm loop                           # preflight → observe → plan → drain → report
+pnpm schedule install               # run the loop on a timer (Task Scheduler / launchd)
+pnpm auto:status                    # every attempt, its turns, cost and why it failed
+pnpm monitor                        # read-only web page: tasks by lane per spec, live stream of the run (127.0.0.1:4000)
+pnpm lessons                        # what past runs recorded for future ones
+pnpm owes                           # which reviews and skills the working tree's change owes (the runner's rule)
+pnpm pr                             # the pull-request URL for the current branch
+pnpm test:claude-contract           # check the installed Claude CLI still emits what the runner reads
 ```
 
 - **`agentic.config.json` is the one project-specific file.** It names the conventions every brief
@@ -298,8 +298,8 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
   The runner refuses a dirty tree that is not its own salvage (`--salvage` takes it over), a live
   drain and a half-finished git operation, commits each task with a `Task: <brief>` trailer, and
   **never pushes unless `AGENT_AUTO_PUSH=1`** — and nothing here merges. Pull requests go to
-  `project.baseBranch` (else `origin/HEAD`); `npm run pr` prints the URL, and
-  `npm run auto:ship -- "<subject>" --push` pushes a non-protected branch and opens one with `gh`.
+  `project.baseBranch` (else `origin/HEAD`); `pnpm pr` prints the URL, and
+  `pnpm auto:ship "<subject>" --push` pushes a non-protected branch and opens one with `gh`.
   In `team`, a drain builds only the briefs its own branch added, and the guard refuses a commit
   on the base branch.
 - **Spend is bounded** by `AGENT_MAX_USD_PER_TASK` (default 50), `AGENT_MAX_USD_PER_DRAIN` (200) and
@@ -313,9 +313,9 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
 - **A task is verified on its own change.** The runner and the brief run verify with
   `--scope working` — what is committed on the branch was verified when it was committed — while
   `/verify`, `/ship` and a pull request still judge the whole branch. Inside a run, the lead's plain
-  `npm run verify` is answered by the runner (`AGENT_VERIFY_URL`, a loopback endpoint), which runs
+  `pnpm verify` is answered by the runner (`AGENT_VERIFY_URL`, a loopback endpoint), which runs
   it itself and reuses that pass after the session when the tree has not changed, so the same gate
-  is not run twice; `npm run auto:status` shows each run's verify time.
+  is not run twice; `pnpm auto:status` shows each run's verify time.
 - **Every session runs on `opus`**, the alias for the newest Opus: the runner and the planner
   through `budget.model` (overridden by `AGENT_MODEL`; `inherit` passes no `--model`), and every
   agent in `.claude/agents/` through its `model:` line.
@@ -323,15 +323,15 @@ npm run test:claude-contract        # check the installed Claude CLI still emits
   skills, limit stops, account refusals — is parsed from `claude -p --output-format stream-json`
   in `scripts/lib/claude-events.mjs`, and nowhere else. `scripts/tests/claude-stream-contract.test.mjs`
   replays streams captured from real CLI versions (`scripts/tests/fixtures/claude-stream/<version>/`).
-  `npm run loop` runs `npm run test:claude-contract` once per new CLI version and builds nothing
-  when it fails; after fixing the adapter, `npm run test:claude-contract -- --record` captures the
+  `pnpm loop` runs `pnpm test:claude-contract` once per new CLI version and builds nothing
+  when it fails; after fixing the adapter, `pnpm test:claude-contract --record` captures the
   new version's fixtures.
 - **Guards run in every permission mode.** `.claude/hooks/` refuses reading or writing `.env*` and the
   per-environment `appsettings.*.json`, edits to build output, `dotnet ef database drop`, destructive
   SQL, `git reset --hard` and its equivalents (`checkout -- .`, `restore .`, `stash clear`,
   `branch -D`), `git add -A`, force-pushes, pushes to a protected branch (and, in `team`, a commit
-  on the base branch), every merge route and the VPS deploy (`npm run deploy:vps`, through `hooks.deniedCommands`) — for the Bash and PowerShell tools alike, with git's global options (`git -C …`) seen
-  through — and reading the secret files through the Read and Grep tools. `npm run test:hooks`
+  on the base branch), every merge route and the VPS deploy (`pnpm deploy:vps`, through `hooks.deniedCommands`) — for the Bash and PowerShell tools alike, with git's global options (`git -C …`) seen
+  through — and reading the secret files through the Read and Grep tools. `pnpm test:hooks`
   holds a block case and a neighbouring allow case for each rule; add both when you add a rule.
 - **Records.** `.agent-runs/` (git-ignored) is every attempt, with its raw stream beside its log
   (`<run>-attempt-N.stream.jsonl`); each task's commit is its code, its brief leaving `todo/` and its

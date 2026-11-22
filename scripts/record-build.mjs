@@ -2,7 +2,7 @@
 /**
  * The build record: one committed markdown file per task the queue lands.
  *
- *   npm run record -- --task <brief.md>
+ *   pnpm record --task <brief.md>
  *
  * The runner calls this once a task has verified and *before* it commits, so the record is
  * part of the task's own commit. It used to run after the commit, which left it — and the
@@ -26,15 +26,16 @@ import { readPlanned, recordPathFor, renderRecord } from "./lib/build-record.mjs
 import { stemOf } from "./lib/task-names.mjs";
 import { config } from "./lib/project-config.mjs";
 import { stageable } from "./lib/stage-paths.mjs";
+import { scriptArgs } from "./lib/proc.mjs";
 
 const ROOT = resolve(join(dirname(fileURLToPath(import.meta.url)), ".."));
 const BUILDS = String(config.docs.builds).replace(/[\\/]+$/, "");
 
-const argv = process.argv.slice(2);
+const argv = scriptArgs();
 const i = argv.indexOf("--task");
 const taskFile = i >= 0 ? argv[i + 1] : null;
 if (!taskFile) {
-  console.error("Usage: npm run record -- --task <brief.md>");
+  console.error("Usage: pnpm record --task <brief.md>");
   process.exit(2);
 }
 

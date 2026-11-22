@@ -11,7 +11,7 @@ Write **no implementation code**. Your entire output is task files under
 
 ## A spec in `specs/` is planned by the queue, not by hand
 
-If the file is a top-level `specs/*.md`, run `npm run queue -- plan` and stop there: it splits
+If the file is a top-level `specs/*.md`, run `pnpm queue plan` and stop there: it splits
 the spec with the same rules as below, records the version it planned in
 `.agent-queue/planned/`, and commits the plan. Briefs written by hand for such a spec are
 not recorded there, so the next drain plans it again and queues every task twice. Then read
@@ -59,7 +59,7 @@ Depends-on: 01-earlier-task          (omit the line entirely if nothing blocks i
   this same batch owns — name those files explicitly
 
 ## Done when
-- `npm run verify` passes
+- `pnpm verify` passes
 - the specific things a person would check by hand
 ```
 

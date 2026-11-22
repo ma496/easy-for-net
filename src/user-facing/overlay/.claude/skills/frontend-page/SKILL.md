@@ -192,4 +192,4 @@ translator, overrides and adding a language.
 - [ ] `revalidatePublicCache([...])` after admin saves that change what public pages show
 - [ ] Keys in every backend resource file (`Features/Localization/Core/Resources/*.json`)
 - [ ] Admin: `nav-items.ts` + `searchable-items.ts`; public: `SITE_LINKS` if it is in the header
-- [ ] `npm run lint`, `npx tsc --noEmit`, `npm run test` and `npm run build` pass
+- [ ] `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test` and `pnpm build` pass

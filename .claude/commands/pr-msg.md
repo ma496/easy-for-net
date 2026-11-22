@@ -33,7 +33,7 @@ changes, say so in one line after the output — they are not part of the PR.
   - `## Summary` — why the change exists and what it does, a short paragraph or 2–5 bullets.
   - `## Changes` — `-` bullets grouped by area (API, web, tooling, docs…), naming files or
     components only where it helps a reviewer find them.
-  - `## Testing` — tests added or changed, and how it was verified (e.g. `npm run verify`).
+  - `## Testing` — tests added or changed, and how it was verified (e.g. `pnpm verify`).
     Claim only what the commits or the tree show; if verification is unknown, say what to run.
   - `## Notes` — only when there is something a reviewer must know: migrations, configuration,
     breaking changes, follow-ups. Omit the section otherwise.

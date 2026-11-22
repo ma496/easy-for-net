@@ -5,7 +5,7 @@
 | **Task** | `tenant-subdomains/02-tenant-host-resolution-and-session-binding` |
 | **Landed** | 2026-10-16 |
 | **Commit** | the one whose message carries `Task: tenant-subdomains/02-tenant-host-resolution-and-session-binding` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -86,8 +86,8 @@ Depends-on: 01-same-origin-api-and-dev-proxy
 - Anything under `src/frontend/web`, `scripts/`, `docker/`, compose files — owned by `01-same-origin-api-and-dev-proxy`, `04-web-workspaces-by-host` and `05-subdomain-deployment`.
 
 ## Done when
-- `npm run verify -- --autostart` passes, and the existing backend suite is green with the template empty (Testing).
+- `pnpm verify --autostart` passes, and the existing backend suite is green with the template empty (Testing).
 - The `TenantHosting` tests above pass.
 - Under `None` (an unknown host, or the template empty), sign-in with `TenantIdentifier`, switch and exit behave exactly as before; a bearer client is unaffected.
 - Standing promises still hold: an access change still revokes the sessions in the existing revocation table; a store outage still answers 503 `sessionStoreUnavailable`, never 401 or 403; the hub upgrade still answers 401 exactly when an HTTP request with the same credential would; a coded error is still served in the request's culture.
-- By hand with `npm run dev`: signing in at `http://default.localhost:3000/signin` as `tenantadmin` lands in the default tenant (whatever the tenant field says if it names `default` or nothing); the same browser's cookie from `default.localhost` is not usable on another host; signing in at `http://app.localhost:3000` as `admin` works and as `tenantadmin` is refused with the `tenantHostRequired` message.
+- By hand with `pnpm dev`: signing in at `http://default.localhost:3000/signin` as `tenantadmin` lands in the default tenant (whatever the tenant field says if it names `default` or nothing); the same browser's cookie from `default.localhost` is not usable on another host; signing in at `http://app.localhost:3000` as `admin` works and as `tenantadmin` is refused with the `tenantHostRequired` message.

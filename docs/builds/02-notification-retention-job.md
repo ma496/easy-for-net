@@ -5,7 +5,7 @@
 | **Commit** | `c54430e2` |
 | **Landed** | 2026-10-01 |
 | **Task brief** | `02-notification-retention-job.md` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -51,6 +51,6 @@ Nothing is ever deleted from the notifications tables. This task adds a `Notific
 - The web app.
 
 ## Done when
-- `npm run verify` passes.
+- `pnpm verify` passes.
 - Starting the API with `Notifications:RetentionDays` set to 0 fails at startup.
 - The job appears in the Hangfire dashboard as a daily recurring job, and running it removes only old rows, across every tenant.

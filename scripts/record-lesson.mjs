@@ -3,7 +3,7 @@
  * Record one durable lesson into `.claude/memory/lessons/`.
  *
  *   node scripts/record-lesson.mjs --title "…" --scope queue --body "…"
- *   npm run lessons                       # list what the loop currently remembers
+ *   pnpm lessons                       # list what the loop currently remembers
  *
  * Called by an unattended task at the end of its run, because the session that hit the
  * trap is the only party that knows what the trap was. Every future task whose brief
@@ -23,6 +23,7 @@ import { listTasks } from "./lib/task-names.mjs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readLessons, writeLesson, scopeReach } from "./lib/memory.mjs";
+import { scriptArgs } from "./lib/proc.mjs";
 
 const ROOT = resolve(join(dirname(fileURLToPath(import.meta.url)), ".."));
 // Overridable so the unit tests can run this script without writing into the real memory.
@@ -30,7 +31,7 @@ const MEMORY_DIR = process.env.AGENT_MEMORY_DIR
   ? resolve(process.env.AGENT_MEMORY_DIR)
   : join(ROOT, ".claude", "memory");
 
-const argv = process.argv.slice(2);
+const argv = scriptArgs();
 const flag = (name) => argv.includes(`--${name}`);
 const argOf = (name, fallback = "") => {
   const i = argv.indexOf(`--${name}`);

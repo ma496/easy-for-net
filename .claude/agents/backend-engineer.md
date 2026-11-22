@@ -20,7 +20,7 @@ anything, then load the skill for the job: `backend-feature`, `backend-endpoint`
 3. Write or extend the integration tests in `src/backend/Tests`: typed client calls
    (`Client.POSTAsync<TEndpoint, TRequest, TResponse>`), Bogus fakers, FluentAssertions, the
    shared seeder. A test class must not depend on database state it did not create.
-4. Run `npm run stop:api` first — a running API locks its build output and the build fails
+4. Run `pnpm stop:api` first — a running API locks its build output and the build fails
    with MSB3027 — then `dotnet build EasyForNet.slnx` once, and run the tests for what you changed
    **in one invocation**, with `--no-build`:
    `dotnet test --project src/backend/Tests --no-build --filter-class "*ClassA" --filter-class "*ClassB"`,
@@ -28,7 +28,7 @@ anything, then load the skill for the job: `backend-feature`, `backend-endpoint`
    start-up (host boot, database, seed) of tens of seconds whatever the filter, so one run of
    three classes is far cheaper than three runs of one. When one fails, rerun only it
    (`--filter-method "*ClassA.Method_Name"`), then the combined filter once more before you report. Build again only
-   after editing source. Backend tests need PostgreSQL running. The full `npm run verify` is the
+   after editing source. Backend tests need PostgreSQL running. The full `pnpm verify` is the
    lead's to run once the writers are done; running it here repeats minutes of work for every
    delegation.
 
@@ -36,10 +36,10 @@ anything, then load the skill for the job: `backend-feature`, `backend-endpoint`
 
 - **You build and test the backend, nothing else.** Your commands are `dotnet build`,
   `dotnet test --project src/backend/Tests/...` and `dotnet ef ...`. Run nothing in `src/frontend/web`
-  (no `npm`, `npx`, `tsc`, `vitest`, `eslint` or `next`), and not `npm run verify` or
-  `npm run gate` — those are the lead's. Web follow-up a change needs (a DTO mirror,
+  (no `pnpm`, `npx`, `tsc`, `vitest`, `eslint` or `next`), and not `pnpm verify` or
+  `pnpm gate` — those are the lead's. Web follow-up a change needs (a DTO mirror,
   `allow.ts`, `feature-names.ts`) goes in your report.
-- **Run `npm run stop:api` before every `dotnet build`, `dotnet test` or `dotnet ef`
+- **Run `pnpm stop:api` before every `dotnet build`, `dotnet test` or `dotnet ef`
   command.** It stops this checkout's running API, which holds `src/backend/Source/bin/`
   open. Never work around the lock by building to another output path.
 - **Run build and test commands in the foreground**, never with `run_in_background` or a

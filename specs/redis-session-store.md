@@ -118,7 +118,7 @@ repeat the mint-time rule. Update the comment on `SlidingExpiration = false` in 
 
 ## Done when
 
-- `npm run verify` passes, and the gate still needs only PostgreSQL.
+- `pnpm verify` passes, and the gate still needs only PostgreSQL.
 - A decoded access token and the cookie ticket contain `NameIdentifier` and `sid` and no role,
   permission, `tenant_id` or `is_platform` claim. Update `SignupTests.PermissionClaimsOf` and
   `AuthTokenServiceTests.TenantClaimOf` to assert this against the session instead.

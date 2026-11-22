@@ -41,7 +41,7 @@ Honour the rules in `CLAUDE.md` and `project.conventions`.
 ## 5. Verify
 
 ```bash
-npm run verify -- --autostart
+pnpm verify --autostart
 ```
 
 If the change alters behaviour a person would notice, exercise it for real and quote the
@@ -49,7 +49,7 @@ actual output. A passing typecheck alone does not prove behaviour.
 
 ## 6. Review
 
-`npm run owes` lists the reviewers the diff owes, by the rule the task runner enforces.
+`pnpm owes` lists the reviewers the diff owes, by the rule the task runner enforces.
 Dispatch each tier it names in a single message. Fix CHANGES NEEDED, and send the fix back to
 the reviewer that asked for it, before committing.
 

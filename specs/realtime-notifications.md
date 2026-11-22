@@ -171,7 +171,7 @@ shared pieces, and the startup guards if any are added), and the same text in
 
 ## Done when
 
-- `npm run verify` passes, including the new backend and Vitest tests above.
+- `pnpm verify` passes, including the new backend and Vitest tests above.
 - `GetUnreadCountAsync` issues one SQL statement and never materializes a visit list; after
   mark-all-as-read in a tenant with N audience notifications, the number of visit rows for the caller
   does not grow with N.

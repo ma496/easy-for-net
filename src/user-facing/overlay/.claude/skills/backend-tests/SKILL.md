@@ -19,7 +19,7 @@ failure there is logged and falls back to the long way, so a server without the 
 databases from a template still runs the suite.
 
 ```sh
-npm run stop:api    # a running API locks the build output the test run rebuilds
+pnpm stop:api       # a running API locks the build output the test run rebuilds
 dotnet test --project src/backend/Tests/Backend.Tests.csproj
 dotnet test --project src/backend/Tests/Backend.Tests.csproj --filter-class "*UserCreateTests"
 dotnet test --project src/backend/Tests/Backend.Tests.csproj --filter-method "*UserCreateTests.Valid_Input"

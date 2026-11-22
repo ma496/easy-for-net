@@ -5,7 +5,7 @@ namespace EasyForNetTool.Generator;
 
 /// <summary>
 /// The host ports a generated project develops on: the PostgreSQL and Redis containers, and the
-/// three processes <c>npm run dev</c> starts.
+/// three processes <c>pnpm dev</c> starts.
 /// </summary>
 /// <param name="Postgres">The host port <c>docker-compose.yml</c> publishes PostgreSQL on.</param>
 /// <param name="Redis">The host port <c>docker-compose.yml</c> publishes Redis on.</param>

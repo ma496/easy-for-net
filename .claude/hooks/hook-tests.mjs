@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Tests for the .claude/ hooks. Run: node .claude/hooks/hook-tests.mjs (or `npm run gate`).
+ * Tests for the .claude/ hooks. Run: node .claude/hooks/hook-tests.mjs (or `pnpm gate`).
  *
  * Hooks fail closed and run on every tool call, so a broken one either blocks all work
  * or silently stops guarding. Both failure modes are invisible without this.
@@ -81,7 +81,7 @@ const cases = [
   { label: "test, then read per-env appsettings", command: `test -f x; cat src/backend/Source/${DEV_SETTINGS}`, expect: "block" },
   { label: "ls piped into a read of the env file", command: `ls | cat ${DOTENV}`, expect: "block" },
   { label: "two existence checks stay allowed", command: `ls ${DOTENV} && test -f ${DOTENV}`, expect: "allow" },
-  { label: "ls of the env file, then unrelated work", command: `ls -la ${DOTENV}; npm run build`, expect: "allow" },
+  { label: "ls of the env file, then unrelated work", command: `ls -la ${DOTENV}; pnpm build`, expect: "allow" },
   { label: "existence check, then the bootstrap copy", command: `Test-Path ${DOTENV}; Copy-Item ${DOTENV}.example ${DOTENV}`, expect: "allow" },
 
   // --- database loss -------------------------------------------------------------
@@ -93,7 +93,7 @@ const cases = [
   { label: "DELETE FROM through psql", command: 'psql -c "DELETE FROM tenants"', expect: "block" },
   { label: "dropping a column", command: 'psql -c "ALTER TABLE tenants DROP COLUMN name"', expect: "block" },
   { label: "SELECT is read-only", command: 'psql -c "SELECT count(*) FROM tenants"', expect: "allow" },
-  { label: "npm run docker:down (keeps data)", command: "npm run docker:down", expect: "allow" },
+  { label: "pnpm docker:down (keeps data)", command: "pnpm docker:down", expect: "allow" },
   { label: "dropping the EF database", command: "dotnet ef database drop --force", expect: "block" },
   { label: "updating the EF database", command: "dotnet ef database update", expect: "allow" },
   { label: "adding an EF migration", command: "dotnet ef migrations add AddOrders", expect: "allow" },
@@ -232,6 +232,10 @@ const cases = [
   { label: "deploy:vps --check still deploys tooling", command: "npm run deploy:vps -- --check", expect: "block" },
   { label: "deploy:vps via npm run-script", command: "npm run-script deploy:vps", expect: "block" },
   { label: "deploy:vps after another command", command: "npm run gate && npm run deploy:vps", expect: "block" },
+  { label: "pnpm deploy:vps", command: "pnpm deploy:vps --host 203.0.113.10 --domain a.example.com", expect: "block" },
+  { label: "pnpm run deploy:vps", command: "pnpm run deploy:vps -- --check", expect: "block" },
+  { label: "pnpm deploy:vps after another command", command: "pnpm gate && pnpm deploy:vps", expect: "block" },
+  { label: "pnpm deploy (pnpm's own command, not the VPS deploy)", command: "pnpm --filter web deploy out", expect: "allow" },
   { label: "the deploy script run by node", command: "node scripts/deploy-vps.mjs --yes", expect: "block" },
   { label: "the deploy script by a Windows path", command: `node .${BS}scripts${BS}deploy-vps.mjs`, expect: "block" },
   { label: "reading the deploy script", command: "cat scripts/deploy-vps.mjs", expect: "allow" },
@@ -292,8 +296,11 @@ const cases = [
   { label: "sed -n that only prints", command: "sed -n '1,20p' src/x.ts", expect: "allow" },
 
   // --- ordinary work must stay unblocked -----------------------------------------------
-  { label: "npm run gate", command: "npm run gate", expect: "allow" },
-  { label: "npm run verify", command: "npm run verify", expect: "allow" },
+  { label: "pnpm gate", command: "pnpm gate", expect: "allow" },
+  { label: "pnpm verify", command: "pnpm verify", expect: "allow" },
+  { label: "pnpm gate --fast", command: "pnpm gate --fast", expect: "allow" },
+  { label: "pnpm verify --autostart", command: "pnpm verify --autostart", expect: "allow" },
+  { label: "pnpm install in the web app", command: "cd src/frontend/web && pnpm install --frozen-lockfile", expect: "allow" },
   // NOTE: no commit/branch case belongs in this array. These run the guard against
   // whatever repo the suite happens to sit in, and the branch rule asks git what is checked
   // out — so an "allow" assertion here passes on a feature branch and fails on main, making

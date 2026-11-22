@@ -60,8 +60,8 @@ const DEFAULTS = {
     conventions: [],
   },
   commands: {
-    gate: "npm run gate",
-    verify: "npm run verify",
+    gate: "pnpm gate",
+    verify: "pnpm verify",
   },
   /**
    * The applications in this checkout: each an API (`backend`, holding `Source/` and `Tests/`)
@@ -109,7 +109,7 @@ const DEFAULTS = {
   unownedPaths: ["^\\.agent-queue/", "^\\.agent-runs/", "^docs/builds/"],
   verify: {
     /** Always runs, first. Non-zero here stops everything after it. */
-    gate: "npm run gate",
+    gate: "pnpm gate",
     /** Extra checks, each demanded by the paths a change touched. */
     checks: [],
     /** How to start the app when a check needs it live. `null` means there is nothing to start. */

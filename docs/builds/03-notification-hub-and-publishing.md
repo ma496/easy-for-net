@@ -5,7 +5,7 @@
 | **Commit** | `d3e8eaa7` |
 | **Landed** | 2026-10-01 |
 | **Task brief** | `03-notification-hub-and-publishing.md` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -82,7 +82,7 @@ Today the web app polls for notifications. This task adds a server-to-client `No
 - Any new root-level file (no docker-compose).
 
 ## Done when
-- `npm run verify` passes, and the suite still needs only PostgreSQL.
+- `pnpm verify` passes, and the suite still needs only PostgreSQL.
 - `FeatureDependencyTests` passes.
 - A hub connection receives exactly the rows `VisibleTo` would list for its session, and nothing from another tenant or scope.
 - Every existing caller of `INotificationService` compiles unchanged, and a raise whose push fails still saves the notification.

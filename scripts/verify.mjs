@@ -2,11 +2,11 @@
 /**
  * Scope-aware verification — the gate the autonomous loop actually trusts.
  *
- *   npm run verify                  # decide from the diff what needs checking, run it
- *   npm run verify -- --autostart   # bring the service up if a live check needs it
- *   npm run verify -- --json        # machine-readable summary for the runner
- *   npm run verify -- --scope working   # judge only uncommitted changes
- *   npm run verify -- --full        # every gate step, not only those the diff reaches
+ *   pnpm verify                     # decide from the diff what needs checking, run it
+ *   pnpm verify --autostart         # bring the service up if a live check needs it
+ *   pnpm verify --json              # machine-readable summary for the runner
+ *   pnpm verify --scope working         # judge only uncommitted changes
+ *   pnpm verify --full              # every gate step, not only those the diff reaches
  *
  * A static gate proves the code compiles, the unit suite passes, and everything builds.
  * For most products that is a weak signal on its own: a green gate says nothing about
@@ -31,7 +31,7 @@ import { apiAdoptionVerdict } from "./lib/api-identity.mjs";
 import { isPortFree } from "./lib/dev-ports.mjs";
 import { workingTreePaths } from "./lib/changed-paths.mjs";
 import { gateBuilt, readGateReport, stepTimings } from "./lib/gate-report.mjs";
-import { IS_WINDOWS, killTree, runCommandSync, sleepSync, spawnCommand } from "./lib/proc.mjs";
+import { IS_WINDOWS, killTree, runCommandSync, sleepSync, spawnCommand, scriptArgs } from "./lib/proc.mjs";
 import { BASE_BRANCH, compileRules, config, fill } from "./lib/project-config.mjs";
 import { shouldForwardVerify } from "./lib/verify-scope.mjs";
 
@@ -40,7 +40,7 @@ import { shouldForwardVerify } from "./lib/verify-scope.mjs";
 const SCRIPTS = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(SCRIPTS, "..");
 
-const argv = process.argv.slice(2);
+const argv = scriptArgs();
 
 // --- 0. inside an unattended run, the runner verifies -----------------------------------
 // The runner verifies the finished tree itself and cannot take the session's word for a pass,
@@ -99,7 +99,7 @@ const CHECKS = (config.verify.checks ?? []).map((c) => ({
 // *preference*, not a guarantee: if whatever answers there turns out to be serving some
 // other checkout, this run moves to a free port and starts its own. Both are mutable for
 // that reason.
-// DEV_API_PORT, when the environment names one, is where `npm run dev` put this checkout's API, so
+// DEV_API_PORT, when the environment names one, is where `pnpm dev` put this checkout's API, so
 // that is where an API worth adopting would be.
 let PORT = Number(argOf("port", process.env.DEV_API_PORT || (SERVICE?.port ?? 3000)));
 // An explicit --api names one specific server. Relocating away from it would silently

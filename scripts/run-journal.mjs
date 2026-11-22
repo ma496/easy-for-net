@@ -2,8 +2,8 @@
 /**
  * The autonomous loop's memory.
  *
- *   npm run auto:status            # what has been attempted, and how it went
- *   npm run auto:status -- --task "fix empty answers"
+ *   pnpm auto:status            # what has been attempted, and how it went
+ *   pnpm auto:status --task "fix empty answers"
  *
  * Without this every run starts from zero: the same task fails the same way on Tuesday
  * that it failed on Monday, and nobody finds out because each run's output scrolls past.
@@ -26,6 +26,7 @@ import {
   sumSpend,
 } from "./lib/spend.mjs";
 import { isUnfinished, markOf, tally } from "./lib/outcomes.mjs";
+import { scriptArgs } from "./lib/proc.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 export const LOG_DIR = join(ROOT, ".agent-runs");
@@ -234,14 +235,14 @@ export function verifySummary(run) {
 
 // --- CLI ------------------------------------------------------------------------------
 if (process.argv[1] && process.argv[1].endsWith("run-journal.mjs")) {
-  const argv = process.argv.slice(2);
+  const argv = scriptArgs();
   const i = argv.indexOf("--task");
   const filter = i >= 0 ? argv[i + 1] : null;
 
   const runs = readRuns().filter((r) => !filter || taskKey(r.task ?? "").includes(taskKey(filter)));
 
   if (runs.length === 0) {
-    console.log("No runs recorded yet. `npm run auto -- \"<task>\"` writes the first one.");
+    console.log("No runs recorded yet. `pnpm auto \"<task>\"` writes the first one.");
     process.exit(0);
   }
 

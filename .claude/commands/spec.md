@@ -50,7 +50,7 @@ Write `specs/drafts/<name>.md`, named for what it is (`product-archiving.md`), i
 - `## Scope`: concrete, checkable bullets naming the real entities, endpoints, permissions
   and screens.
 - `## Out of scope — do not touch`: the neighbouring areas this must leave alone.
-- `## Done when`: `npm run verify` passes, plus the tests and hand checks that prove it.
+- `## Done when`: `pnpm verify` passes, plus the tests and hand checks that prove it.
 - `## Open questions`: only if something is still undecided, with the assumption the draft
   makes for each. Leave it out when there is nothing open.
 
@@ -67,10 +67,10 @@ user:
   `specs/drafts/` into `specs/`, by dragging it in the editor or with the exact command
   written out with the draft's real name, e.g.
   `mv specs/drafts/product-archiving.md specs/product-archiving.md`. Only files directly in
-  `specs/` are planned, and the next `npm run queue -- plan` or drain picks it up.
+  `specs/` are planned, and the next `pnpm queue plan` or drain picks it up.
 - Finish editing before moving it: editing a spec in `specs/` plans it again and replaces its
   tasks that have not run yet.
 
 Moving the draft into `specs/` is the user's approval, so leave it to them: do not move it,
-and do not run `npm run queue -- plan` or `npm run queue -- drain`, which would start
+and do not run `pnpm queue plan` or `pnpm queue drain`, which would start
 building it.

@@ -15,11 +15,12 @@
 /** The scope the runner verifies a task's tree in, and tells the lead to verify in. */
 export const TASK_VERIFY_SCOPE = "working";
 
-/** `npm run verify -- --scope working` from the configured verify command. */
+/** `pnpm verify --scope working` from the configured verify command. */
 export function taskVerifyCommand(verifyCommand, scope = TASK_VERIFY_SCOPE) {
   const base = String(verifyCommand ?? "").trim();
   if (!base) throw new Error("taskVerifyCommand: no verify command is configured");
-  // `npm run x -- a` already forwards; a second `--` would reach the script as an argument.
+  // pnpm forwards a script's arguments as they are (`pnpm verify --scope working`). npm needs a
+  // `--` first (`npm run x -- a`), and one that already has it needs no second.
   const separator = /^npm(\.cmd)?\s+run\s+\S+$/.test(base) ? " --" : "";
   return `${base}${separator} --scope ${scope}`;
 }

@@ -35,7 +35,7 @@ without I/O.
 ## 5. Ship it
 
 Run `/ship`: it runs the full verify once, reviews the diff with every reviewer
-`npm run owes` names, then commits.
+`pnpm owes` names, then commits.
 
 If the cause was a trap an unrelated future task would fall into too — not this bug's
 details, the general shape — record it for the task loop:

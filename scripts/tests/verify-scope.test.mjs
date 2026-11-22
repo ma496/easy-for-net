@@ -6,6 +6,11 @@ test("a task is verified on its own change, not the whole branch", () => {
   assert.equal(TASK_VERIFY_SCOPE, "working");
 });
 
+test("a pnpm script takes the flag as it is: pnpm forwards a script's arguments", () => {
+  assert.equal(taskVerifyCommand("pnpm verify"), "pnpm verify --scope working");
+  assert.equal(taskVerifyCommand("pnpm verify --autostart"), "pnpm verify --autostart --scope working");
+});
+
 test("an npm script gets the separator npm needs to forward the flag", () => {
   assert.equal(taskVerifyCommand("npm run verify"), "npm run verify -- --scope working");
 });

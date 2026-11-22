@@ -1,11 +1,14 @@
 # The web app, built from src/frontend/web (the build context) as a Next.js standalone server.
 
+# pnpm comes from corepack, at the version package.json names in packageManager
 FROM node:24-alpine AS deps
+RUN corepack enable
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 FROM node:24-alpine AS build
+RUN corepack enable
 WORKDIR /app
 # NEXT_PUBLIC_* values are inlined into the bundle at build time, so they are build arguments
 ARG NEXT_PUBLIC_API_URL=/api
@@ -15,7 +18,7 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL \
     NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN pnpm build
 
 FROM node:24-alpine AS runtime
 WORKDIR /app

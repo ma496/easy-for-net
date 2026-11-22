@@ -14,7 +14,7 @@
  *
  * Exit 2 blocks the call and returns stderr to the model. Exit 0 allows it.
  *
- * Every rule here is covered by hook-tests.mjs, which `npm run gate` runs. A rule without
+ * Every rule here is covered by hook-tests.mjs, which `pnpm gate` runs. A rule without
  * a test is a rule that will be silently broken by the next edit.
  */
 import { execSync } from "node:child_process";
@@ -560,7 +560,7 @@ for (const args of pushSegments) {
         `this pushes straight to \`${destination}\`. That branch only ever moves when the ` +
           "repo owner moves it. " +
           (config.project.workflow === "team"
-            ? "In a team it moves through a pull request: push a branch of your own and give them the PR URL (`npm run pr`)."
+            ? "In a team it moves through a pull request: push a branch of your own and give them the PR URL (`pnpm pr`)."
             : "Leave the commits local, tell them what is waiting, and give them the command to run " +
               "themselves (`! git push` in this prompt)."),
       );
@@ -596,7 +596,7 @@ if (/\bgit\s+merge(?![-\w])/.test(gitScanned) && !MERGE_RECOVERY.test(gitScanned
   block(
     config.project.workflow === "team"
       ? "merging branches is the repo owner's call. Leave the branch as it is and give them " +
-          "the PR URL (`npm run pr`) so they can review and merge it themselves."
+          "the PR URL (`pnpm pr`) so they can review and merge it themselves."
       : "merging branches is the repo owner's call. Leave the branch as it is and give them " +
           "the exact command to run themselves (`! git merge --ff-only <branch>` in this prompt).",
   );

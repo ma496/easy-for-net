@@ -93,7 +93,7 @@ test("an empty brief pairs with nothing rather than everything", () => {
 
 test("every Task: line of a squashed message is read, in order", () => {
   const squash =
-    "Add billing export (#42)\n\n* Add the export endpoint\n\nVerified with `npm run verify`.\n\nTask: billing-01-endpoint\n\n" +
+    "Add billing export (#42)\n\n* Add the export endpoint\n\nVerified with `pnpm verify`.\n\nTask: billing-01-endpoint\n\n" +
     "* Add the export screen\n\nTask: billing-02-screen.md\n";
   assert.deepEqual(taskTrailersIn(squash), ["billing-01-endpoint", "billing-02-screen"]);
 });

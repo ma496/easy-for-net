@@ -4,8 +4,8 @@ argument-hint: "[--scope working] [--autostart] [--full]"
 allowed-tools: Bash, Read, Grep, Glob
 ---
 
-Run `npm run verify -- --autostart $ARGUMENTS` from the repo root (the `--` hands the flags
-to the script rather than to npm; `--autostart` brings the app up when a live check needs it).
+Run `pnpm verify --autostart $ARGUMENTS` from the repo root (pnpm hands the flags
+straight to the script; `--autostart` brings the app up when a live check needs it).
 
 It reads the diff and decides what this change actually needs: the gate steps the diff's
 paths can break (all of them when a path is watched by none, none for a documentation-only

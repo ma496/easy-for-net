@@ -28,7 +28,7 @@
   ],
   "commands": {
     "gate": "node scripts/gate.mjs",
-    "verify": "npm run verify"
+    "verify": "pnpm verify"
   },
   "tests": {
     "roots": ["scripts/tests"],
@@ -247,12 +247,12 @@
       {
         "pattern": "\\b(?:npm|pnpm|yarn|bun)(?:\\.cmd)?\\b[^\\n;&|]*\\bdeploy:vps\\b",
         "flags": "i",
-        "message": "deploying to a server is the owner's to run, never an agent's: it installs software on the server and changes what is live. Tell the user the command to run themselves (npm run deploy:vps -- --help lists its options)."
+        "message": "deploying to a server is the owner's to run, never an agent's: it installs software on the server and changes what is live. Tell the user the command to run themselves (pnpm deploy:vps --help lists its options)."
       },
       {
         "pattern": "\\b(?:node|bun|deno)(?:\\.exe)?\\b[^\\n;&|]*(?<!lib[/\\\\])(?<![\\w.-])deploy-vps\\.mjs\\b",
         "flags": "i",
-        "message": "this runs the VPS deploy script directly, which is npm run deploy:vps by another route. Deploying is the owner's to run, never an agent's: tell the user the command to run themselves."
+        "message": "this runs the VPS deploy script directly, which is pnpm deploy:vps by another route. Deploying is the owner's to run, never an agent's: tell the user the command to run themselves."
       }
     ],
     "protectedPaths": [],

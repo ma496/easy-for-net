@@ -101,7 +101,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
     /// <summary>
     /// <paramref name="origin"/> with its port set to <paramref name="port"/> when it is a <c>localhost</c>
     /// origin; any other origin unchanged. The same rule <c>scripts/lib/dev-ports.mjs</c> applies when
-    /// <c>npm run dev</c> runs on another <c>DEV_PROXY_PORT</c> than the settings name.
+    /// <c>pnpm dev</c> runs on another <c>DEV_PROXY_PORT</c> than the settings name.
     /// </summary>
     internal static string WithLocalOriginPort(string origin, int port) =>
         _localOrigin.Replace(origin, m => $"{m.Groups[1].Value}:{port}");
@@ -144,7 +144,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
     /// <c>https://app.localhost</c> and each tenant at <c>https://{tenant}.localhost</c>, or, for a
     /// single-domain example (one with no <c>TENANT_URL_TEMPLATE=</c> line), the site at
     /// <c>https://localhost</c> - so the stack starts as generated, and the host ports the development
-    /// <c>docker-compose.yml</c> publishes PostgreSQL and Redis on and the ports <c>npm run dev</c> runs the
+    /// <c>docker-compose.yml</c> publishes PostgreSQL and Redis on and the ports <c>pnpm dev</c> runs the
     /// proxy, the web app and the API on. Only the keys the example has are
     /// written. Values the example leaves for the developer (SMTP) are copied as they are.
     /// </summary>
@@ -431,10 +431,8 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             var titleCaseProjectName = kebabCaseProjectName.Split('-').Select(x => char.ToUpper(x[0]) + x[1..]).Aggregate((current, next) => current + " " + next);
             await ReplaceInFiles(webTargetPath, @"Easy\s+For\s+Net", titleCaseProjectName, ".json", ".ts", ".tsx");
             await ReplaceInFiles(Path.Combine(backendProjectTargetPath, "Features", "Localization", "Core", "Resources"), @"Easy\s+For\s+Net", titleCaseProjectName, ".json");
-            // update package.json and package-lock.json
+            // update package.json (pnpm-lock.yaml names no package, so it needs no rewrite)
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(webTargetPath, "package.json"), "name", kebabCaseProjectName);
-            await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(webTargetPath, "package-lock.json"), "name", kebabCaseProjectName);
-            await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(webTargetPath, "package-lock.json"), "packages..name", kebabCaseProjectName);
             // the workspace scripts and the task loop name the project in briefs, the status line and the scheduled task
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(targetPath, "package.json"), "name", kebabCaseProjectName);
             await JsonPropertyUpdater.UpdateJsonPropertyAsync(Path.Combine(targetPath, "agentic.config.json"), "project.name", kebabCaseProjectName);
@@ -517,7 +515,7 @@ public class CreateProjectGenerator : CodeGeneratorBase<CreateProjectArgument>
             Console.WriteLine($"    dotnet build {pascalCaseProjectName}.slnx");
             Console.WriteLine("    dotnet ef migrations add Initial --project src/backend/Source");
             Console.WriteLine("    git add src/backend/Source/Migrations && git commit -m \"Add the initial migration\"");
-            Console.WriteLine($"    npm run dev        # PostgreSQL + Redis (Docker), the API on :{devPorts.Api} and the web app on :{devPorts.Proxy}; Ctrl+C stops both");
+            Console.WriteLine($"    pnpm dev        # PostgreSQL + Redis (Docker), the API on :{devPorts.Api} and the web app on :{devPorts.Proxy}; Ctrl+C stops both");
             Console.WriteLine($"    then open {string.Join(" or ", template.DevHosts.Select(h => $"http://{h}:{devPorts.Proxy}"))}");
             Console.WriteLine();
             Console.WriteLine("  README.md has the rest.");

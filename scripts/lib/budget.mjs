@@ -40,7 +40,7 @@ import { chargeFor } from "./spend.mjs";
  * They were first set from attempt counts at the flat assumed rate, before the journal carried
  * costs. Measured since: a landed task's median is about $13 (see agent-run.mjs), and single
  * attempts have reached $20–$40 — so $50 is a few tasks' worth of headroom, not an order of
- * magnitude. Re-measure with `npm run auto:status` before changing either. Each attempt is
+ * magnitude. Re-measure with `pnpm auto:status` before changing either. Each attempt is
  * also handed what is left of the task ceiling as `--max-budget-usd`, so the ceiling bounds
  * the attempt in flight as well as the ones after it.
  */

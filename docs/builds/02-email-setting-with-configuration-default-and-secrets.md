@@ -5,7 +5,7 @@
 | **Commit** | `3d3f6ad8` |
 | **Landed** | 2026-09-30 |
 | **Task brief** | `02-email-setting-with-configuration-default-and-secrets.md` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -105,7 +105,7 @@ It then moves `EmailSettings` onto the system, so that each tenant can send mail
 - Every other options section. Password rules. Session revocation.
 
 ## Done when
-- `npm run verify` passes.
+- `pnpm verify` passes.
 - Every test listed under Scope exists and passes.
 - `FeatureDependencyTests` passes.
 - `LocalizationResourceStoreTests` passes.

@@ -11,11 +11,11 @@ Interpret `$ARGUMENTS` and run the matching command from the repo root:
 
 | Intent | Command |
 |--------|---------|
-| nothing, or "list"/"status" | `npm run queue` |
-| "add ..." | `npm run queue -- add "<the rest of the arguments>"` |
-| "drain" | `npm run queue -- drain` |
-| "resume" | `npm run queue -- resume` — requeue what an interrupted run left in `doing/` |
-| "plan" | `npm run queue -- plan` — turn new `specs/*.md` into tasks without building |
+| nothing, or "list"/"status" | `pnpm queue` |
+| "add ..." | `pnpm queue add "<the rest of the arguments>"` |
+| "drain" | `pnpm queue drain` |
+| "resume" | `pnpm queue resume` — requeue what an interrupted run left in `doing/` |
+| "plan" | `pnpm queue plan` — turn new `specs/*.md` into tasks without building |
 
 ## Draining
 
@@ -38,6 +38,6 @@ ask for it in this turn.
 
 ## After
 
-`npm run auto:status` shows the run history, including why a failed task failed.
-`npm run queue -- resume` requeues anything an interrupted run left in `doing/`.
-`npm run lessons` shows what past runs recorded for future ones to read.
+`pnpm auto:status` shows the run history, including why a failed task failed.
+`pnpm queue resume` requeues anything an interrupted run left in `doing/`.
+`pnpm lessons` shows what past runs recorded for future ones to read.

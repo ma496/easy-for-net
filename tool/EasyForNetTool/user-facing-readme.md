@@ -9,7 +9,7 @@ The full documentation is at [easyfornet.com/docs](https://easyfornet.com/docs).
 
 ## Quick Start
 
-You need the .NET SDK pinned in `global.json`, **Node.js 24+**, **Git** and **Docker** (or your own
+You need the .NET SDK pinned in `global.json`, **Node.js 24+** with **pnpm 10** (`npm install -g pnpm`, or `corepack enable`), **Git** and **Docker** (or your own
 PostgreSQL and Redis). The project's MCP servers for Claude Code (PostgreSQL, Redis, Playwright, in
 `.mcp.json`) also need **[uv](https://docs.astral.sh/uv/)**; check them with `/mcp`.
 
@@ -21,11 +21,11 @@ dotnet ef migrations add Initial --project src/backend/Source
 git add src/backend/Source/Migrations && git commit -m "Add the initial migration"
 
 # 2. Run everything: PostgreSQL, Redis, the API and the web app
-npm run dev
+pnpm dev
 ```
 
 Commit the migration: the task loop builds only from a clean tree, so an uncommitted one stops the
-first `npm run loop`.
+first `pnpm loop`.
 
 Open **http://localhost:3000** for the public site, and **http://localhost:3000/admin** to sign in as
 `admin` with the password `Admin#123`. It is applied only when the account is first created, so change it
@@ -50,7 +50,7 @@ it its own title and put it in the sitemap. The `seo` skill walks through it.
 
 ## Development
 
-`npm run dev` starts PostgreSQL and Redis with Docker (`docker-compose.yml`) when they are not already
+`pnpm dev` starts PostgreSQL and Redis with Docker (`docker-compose.yml`) when they are not already
 answering, installs the web app's packages when they are missing, and runs the API on :5000 (Swagger at
 `/swagger`) and the web app on :3001 behind a dev proxy on :3000. The proxy sends `/api`, `/hubs`,
 `/hangfire` and `/health` to the API and everything else to Next, as Caddy does in production. The web
@@ -58,10 +58,10 @@ app starts once the API answers on `/health`. **Ctrl+C stops everything**. The c
 until `docker compose down`, which keeps the data.
 
 ```sh
-npm run dev -- --no-docker      # use the PostgreSQL and Redis you already run
-npm run dev -- --api-only       # services + API, no web app and no proxy
-npm run dev -- --web-only       # the web app and the proxy, against an API started elsewhere on :5000
-npm run stop:api                # stop an API left running from this checkout (it locks bin/ on Windows)
+pnpm dev --no-docker            # use the PostgreSQL and Redis you already run
+pnpm dev --api-only             # services + API, no web app and no proxy
+pnpm dev --web-only             # the web app and the proxy, against an API started elsewhere on :5000
+pnpm stop:api                   # stop an API left running from this checkout (it locks bin/ on Windows)
 ```
 
 The containers publish on `DEV_POSTGRES_PORT` and `DEV_REDIS_PORT` from the root `.env`: 5432 and 6379,
@@ -73,7 +73,7 @@ and update the connection strings to match. Development and Testing apply migrat
 
 The web app runs on `DEV_PROXY_PORT` (3000, the address you open), with `next dev` behind it on
 `DEV_WEB_PORT` (3001) and the API on `DEV_API_PORT` (5000), all in the root `.env` — or the next
-free ports, if those were taken when the project was created. `npm run dev` refuses a port that
+free ports, if those were taken when the project was created. `pnpm dev` refuses a port that
 something else already holds, says what holds it and suggests a free one; change the value in `.env`
 and run it again. The API's `Web` origins follow `DEV_PROXY_PORT` without any other edit.
 
@@ -81,9 +81,9 @@ and run it again. The API's `Web` origins follow `DEV_PROXY_PORT` without any ot
 
 ```sh
 dotnet test --project src/backend/Tests   # needs PostgreSQL (not Redis); uses its own `<database>_test` database
-npm run gate                              # build, backend tests, web lint/typecheck/tests, next build
-npm run gate -- --fast                    # the same without the production web build
-npm run verify -- --autostart             # only the gate steps your change reaches, plus a live API check
+pnpm gate                                 # build, backend tests, web lint/typecheck/tests, next build
+pnpm gate --fast                          # the same without the production web build
+pnpm verify --autostart                   # only the gate steps your change reaches, plus a live API check
 ```
 
 ## Build With AI Agents
@@ -101,9 +101,9 @@ For bigger work, write a spec in `specs/` (see `specs/TEMPLATE.md`) and let the 
 `/spec <what you want built>` drafts one with you in `specs/drafts/`, and moving it into `specs/` approves it:
 
 ```sh
-npm run loop                    # plan the spec into tasks, build each one, verify, review, commit
-npm run monitor                 # watch the run live on http://127.0.0.1:4000
-npm run auto -- "<task>"        # build one task now, outside the queue
+pnpm loop                       # plan the spec into tasks, build each one, verify, review, commit
+pnpm monitor                    # watch the run live on http://127.0.0.1:4000
+pnpm auto "<task>"              # build one task now, outside the queue
 ```
 
 The runner verifies every task itself, caps what each one costs, and commits one task at a time. It
@@ -130,16 +130,16 @@ Before deploying for real:
 
 ## Deploy to a VPS (Coolify)
 
-`npm run deploy:vps` puts the application on a Linux VPS behind [Coolify](https://coolify.io)
+`pnpm deploy:vps` puts the application on a Linux VPS behind [Coolify](https://coolify.io)
 from Windows, macOS or Linux. It needs Node and an OpenSSH client on your machine. On the server it needs
 SSH access as root (or a sudo user) and the DNS A record above.
 
 ```sh
-npm run deploy:vps -- --host 203.0.113.10 --domain example.com --email you@example.com
-npm run deploy:vps -- --domain example.com --www            # also redirect www.example.com
-npm run deploy:vps -- --domain example.com                  # later deploys remember the other answers
-npm run deploy:vps -- --host 203.0.113.10 --check           # only report the server's prerequisites
-npm run deploy:vps -- --help                                # every option
+pnpm deploy:vps --host 203.0.113.10 --domain example.com --email you@example.com
+pnpm deploy:vps --domain example.com --www                  # also redirect www.example.com
+pnpm deploy:vps --domain example.com                        # later deploys remember the other answers
+pnpm deploy:vps --host 203.0.113.10 --check                 # only report the server's prerequisites
+pnpm deploy:vps --help                                      # every option
 ```
 
 It checks the server and stops if anything would fail, then installs only what is missing (Coolify

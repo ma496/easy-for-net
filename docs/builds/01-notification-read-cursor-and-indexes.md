@@ -5,7 +5,7 @@
 | **Commit** | `2a9eb95a` |
 | **Landed** | 2026-10-01 |
 | **Task brief** | `01-notification-read-cursor-and-indexes.md` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -70,7 +70,7 @@ Read state for audience rows (tenant-wide and platform-wide) is one `Notificatio
 - The web app, including the `99+` badge (task 05).
 
 ## Done when
-- `npm run verify` passes.
+- `pnpm verify` passes.
 - `GetUnreadCountAsync` issues one SQL statement (inspect the logged SQL) and never loads visit ids into memory.
 - After mark-all-as-read in a tenant with N audience notifications, the caller's visit rows do not grow with N.
 - Personal, tenant-wide and platform-wide notifications still list, count, mark read/unread and delete exactly as before from a user's point of view, in tenant and platform scope.

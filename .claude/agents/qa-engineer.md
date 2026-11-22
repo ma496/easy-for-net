@@ -26,7 +26,7 @@ git diff HEAD
 ## Then use it like a person
 
 Where the change touches something runnable, run it — but never the test suites or
-`npm run verify`. Reviewers run side by side, and two runs of the backend tests share one
+`pnpm verify`. Reviewers run side by side, and two runs of the backend tests share one
 test database and fail each other; verify has already passed on this tree. Run a single
 command, a script, or `node scripts/smoke.mjs` against an API that is already serving. A feature that satisfies its brief on
 paper and falls over on the first real input has not been delivered. Walk the actual journey:

@@ -3,9 +3,9 @@
  * A read-only web page over the agent queue: every spec's tasks by lane, each task's attempts
  * from the journal, and the live narration of the attempt being built.
  *
- *   npm run monitor                     # http://127.0.0.1:4000
- *   npm run monitor -- --port 4020
- *   npm run monitor -- --runs-dir <dir> # read stream files and drain.log from another folder
+ *   pnpm monitor                        # http://127.0.0.1:4000
+ *   pnpm monitor --port 4020
+ *   pnpm monitor --runs-dir <dir> # read stream files and drain.log from another folder
  *
  * It only reads — no lock, no lane moves, no model, no writes — so it can run beside a drain.
  * It listens on loopback alone and answers only a loopback Host header: a stream carries the
@@ -18,18 +18,18 @@ import { createServer } from "node:http";
 import { hostname } from "node:os";
 import { join, resolve } from "node:path";
 import { LANES, agentsOf, boardSnapshot, describeEvent, isStreamFileName, leadOf, newestStream } from "./lib/monitor.mjs";
-import { isAlive } from "./lib/proc.mjs";
+import { isAlive, scriptArgs } from "./lib/proc.mjs";
 import { REPO_ROOT } from "./lib/project-config.mjs";
 import { isHeld, parseLock } from "./lib/queue-lock.mjs";
 import { listTasks } from "./lib/task-names.mjs";
 import { LOG_DIR, readRuns } from "./run-journal.mjs";
 
-const HELP = `npm run monitor [-- --port <n>] [--runs-dir <dir>]
+const HELP = `pnpm monitor [-- --port <n>] [--runs-dir <dir>]
 
 A read-only dashboard over .agent-queue/ and .agent-runs/ at http://127.0.0.1:<port>
 (default 4000, or MONITOR_PORT). It never changes the queue.`;
 
-const argv = process.argv.slice(2);
+const argv = scriptArgs();
 if (argv.includes("--help") || argv.includes("-h")) {
   console.log(HELP);
   process.exit(0);

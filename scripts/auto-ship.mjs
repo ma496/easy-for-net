@@ -3,10 +3,10 @@
  * Unattended shipping: stage deliberately, commit, and — only when asked with `--push`, and
  * never to a protected branch — push and open a pull request.
  *
- *   npm run auto:ship -- "commit subject"                         # commit and stop
- *   npm run auto:ship -- "commit subject" --push                  # then push and open a PR
- *   npm run auto:ship -- "commit subject" --push --branch feat/x  # on a branch of its own
- *   npm run auto:ship -- "commit subject" --verified              # say verify passed (the runner does)
+ *   pnpm auto:ship "commit subject"                               # commit and stop
+ *   pnpm auto:ship "commit subject" --push                        # then push and open a PR
+ *   pnpm auto:ship "commit subject" --push --branch feat/x        # on a branch of its own
+ *   pnpm auto:ship "commit subject" --verified                    # say verify passed (the runner does)
  *
  * The pull request is created with the GitHub CLI (`gh`) when it is installed and signed
  * in and origin is on GitHub. Otherwise everything up to the PR still runs, and the
@@ -21,12 +21,12 @@
  */
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { hasExecutable } from "./lib/proc.mjs";
+import { hasExecutable, scriptArgs } from "./lib/proc.mjs";
 import { BASE_BRANCH, config, PROTECTED_BRANCHES, workflowRefusal } from "./lib/project-config.mjs";
 import { describeRemote, unpushedBaseHere } from "./lib/remote.mjs";
 import { stageable } from "./lib/stage-paths.mjs";
 
-const argv = process.argv.slice(2);
+const argv = scriptArgs();
 // `--task <stem>` takes a value; without skipping it the stem would be read as the
 // commit subject whenever it appeared before the real one.
 const flagsWithValues = new Set(["--branch", "--task"]);
@@ -41,7 +41,7 @@ const argOf = (name, fallback) => {
 };
 
 if (!subject) {
-  console.error('Usage: npm run auto:ship -- "commit subject" [--push [--branch <name>]] [--verified] [--task <brief-stem>]');
+  console.error('Usage: pnpm auto:ship "commit subject" [--push [--branch <name>]] [--verified] [--task <brief-stem>]');
   process.exit(1);
 }
 

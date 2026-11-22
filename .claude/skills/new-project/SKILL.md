@@ -15,7 +15,7 @@ dotnet efn cp --help
 ```
 
 Prerequisites: the .NET SDK pinned in `global.json` (10.0.x), **git on PATH** (the tool clones the
-template), Node >= 24, a reachable PostgreSQL on `localhost:5432` (user `postgres`), and a Redis on
+template), Node >= 24 with pnpm 10, a reachable PostgreSQL on `localhost:5432` (user `postgres`), and a Redis on
 `localhost:6379` (`docker compose up -d` in the project root starts both, see step 4).
 
 ## Choose a template
@@ -39,7 +39,7 @@ dotnet efn createproject --name my-shop --output projects --template multi-tenan
 
 | Option | Meaning |
 | --- | --- |
-| `-n`, `--name` (required) | Letters, `-` and `_` only, at least two characters, starting and ending with a letter. Parts split on `-`/`_` are joined in PascalCase (`my-shop` → `MyShop`) for namespaces, project files and the solution; the kebab-case form (`my-shop`) names the folder and the npm packages. |
+| `-n`, `--name` (required) | Letters, `-` and `_` only, at least two characters, starting and ending with a letter. Parts split on `-`/`_` are joined in PascalCase (`my-shop` → `MyShop`) for namespaces, project files and the solution; the kebab-case form (`my-shop`) names the folder and the web package. |
 | `-o`, `--output` | Parent directory (relative to the current directory, or absolute). The project is created in `<output>/<kebab-name>`, which must not exist yet. Defaults to the current directory. |
 | `-t`, `--template` | `multi-tenant` (the default) or `user-facing`, compared case-insensitively. Any other value is refused with the list of templates. |
 | `-m`, `--multilanguage` | `true` keeps all eight locales; `false` (the default) ships English only. Any other value is refused. |
@@ -76,9 +76,9 @@ What you get — the same layout whichever template you chose:
   `specs/{README,TEMPLATE}.md`, `docs/AGENTIC_WORKFLOW.md` and `docs/capabilities/README.md`
   (`.agent-queue/` and `.claude/memory/lessons/` appear when the loop first writes to them).
 
-Namespaces, project file names, `InternalsVisibleTo`, the `ReflectionCache.AddFrom…` call, the npm
+Namespaces, project file names, `InternalsVisibleTo`, the `ReflectionCache.AddFrom…` call, the
 package names (web and root), `agentic.config.json`'s `project.name`, the app's display name and the
-`.claude` markdown are rewritten to the project name. The generator does **not** run `npm install`
+`.claude` markdown are rewritten to the project name. The generator does **not** run `pnpm install`
 or `dotnet ef`. It prints the seeded administrators' generated password and the next steps when done.
 
 ## Post-create setup
@@ -161,14 +161,14 @@ Run these from the new project's root.
 
    ```sh
    cd src/frontend/web
-   npm install
-   npm run dev
+   pnpm install
+   pnpm dev
    ```
 
    It serves `http://localhost:3000` (the origin `Web:Domains` allows for CORS). `.env.development`
    points `API_INTERNAL_URL` (the Next.js server's own fetches) at `http://localhost:5000/api`; the
-   browser calls the API as the relative `/api`, which the dev proxy `npm run dev` starts routes to it.
-   From the project root, `npm run dev` starts all of it at once — PostgreSQL and Redis, the API, and
+   browser calls the API as the relative `/api`, which the dev proxy `pnpm dev` starts routes to it.
+   From the project root, `pnpm dev` starts all of it at once — PostgreSQL and Redis, the API, and
    the web app on :3001 behind the dev proxy on :3000 — or the ports `DEV_WEB_PORT`, `DEV_PROXY_PORT`
    and `DEV_API_PORT` in the root `.env` name, which the generator moves past any port already taken.
 
@@ -182,9 +182,9 @@ Run these from the new project's root.
      **Admin → Settings → General**, and each public page's SEO under **Admin → SEO**.
 7. **Tests and the gate.** `dotnet test --project src/backend/Tests` needs PostgreSQL reachable with the
    `appsettings.Testing.json` connection string and the `Initial` migration in place; the run
-   migrates and seeds `<name>_test` and deletes it at the end; it needs no Redis. From the root, `npm run gate`
+   migrates and seeds `<name>_test` and deletes it at the end; it needs no Redis. From the root, `pnpm gate`
    (`-- --fast` skips the production web build) runs the build, backend tests, web
-   lint/typecheck/vitest, the engine and hook tests and `next build`; it runs `npm ci` in the web app
+   lint/typecheck/vitest, the engine and hook tests and `next build`; it runs `pnpm install --frozen-lockfile` in the web app
    when `node_modules` is missing.
 8. **Before deploying anywhere non-development**, supply `Auth:Jwt:Key` (>= 32 chars),
    `Auth:Jwt:Issuer` and `Auth:Jwt:Audience` through secure configuration — startup refuses to boot
@@ -204,15 +204,15 @@ Run these from the new project's root.
 
    Start it with `docker compose -f docker-compose.prod.yml --env-file .env up -d --build`. To put it on
    a VPS behind Coolify instead, push the project and run
-   `npm run deploy:vps -- --host <ip> --domain <domain> --email <email>` — a user-facing project is
+   `pnpm deploy:vps --host <ip> --domain <domain> --email <email>` — a user-facing project is
    served at `<domain>` itself, with `--www` adding `www.<domain>` as a redirect (see the README's
    **Deploy to a VPS** section).
 
 ## Then
 
 The generated project's `CLAUDE.md`, `.claude/skills` and `specs/README.md` carry the code guides and
-the spec-driven workflow: save a spec under `specs/` and run `npm run loop`, or `npm run queue` /
-`npm run auto -- "<task>"`. Review `agentic.config.json` — `project.workflow` (`solo`, or `team`
+the spec-driven workflow: save a spec under `specs/` and run `pnpm loop`, or `pnpm queue` /
+`pnpm auto "<task>"`. Review `agentic.config.json` — `project.workflow` (`solo`, or `team`
 when several developers share the repository), `project.branch` / `project.baseBranch`,
 conventions, departments — since it is the one project-specific file of the loop. This scaffolding
 guide and `template-maintenance` are not in the generated project.

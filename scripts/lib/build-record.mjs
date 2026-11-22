@@ -107,7 +107,7 @@ export function subjectOf(brief) {
  * hash; the commit names the task instead (`Task: <stem>`), and `git log --grep "Task: <stem>"`
  * finds it from the record.
  */
-export function renderRecord({ stem, brief, date = new Date(), files = [], verify = "npm run verify" }) {
+export function renderRecord({ stem, brief, date = new Date(), files = [], verify = "pnpm verify" }) {
   const lines = String(brief ?? "").replace(/\r\n/g, "\n").split("\n");
   const first = lines.findIndex((l) => l.trim());
   const body = lines.slice(first + 1).join("\n").trim();

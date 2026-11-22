@@ -5,7 +5,7 @@
 | **Task** | `tenant-subdomains/04-web-workspaces-by-host` |
 | **Landed** | 2026-10-16 |
 | **Commit** | the one whose message carries `Task: tenant-subdomains/04-web-workspaces-by-host` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -102,9 +102,9 @@ The API now picks the tenant from the host, and each host keeps its own session.
 - Deployment files — `05-subdomain-deployment`.
 
 ## Done when
-- `npm run verify -- --autostart` passes; in `src/frontend/web`, `npm run lint`, `npx tsc --noEmit` and `npm run test` pass with the rewritten source-chain tests, and `i18n/default-texts.test.ts` and `LocalizationResourceStoreTests` stay green.
+- `pnpm verify --autostart` passes; in `src/frontend/web`, `pnpm lint`, `pnpm exec tsc --noEmit` and `pnpm test` pass with the rewritten source-chain tests, and `i18n/default-texts.test.ts` and `LocalizationResourceStoreTests` stay green.
 - A search of `src/frontend/web` finds no call to `/tenants/switch` or `/tenants/exit`, and no hard-coded domain in a workspace link.
-- By hand with `npm run dev`:
+- By hand with `pnpm dev`:
   - `http://default.localhost:3000/signin` has no tenant field, says which workspace it is, and signs `tenantadmin` in to the default tenant.
   - `http://nope.localhost:3000/signin` shows "workspace not found" with a working link to the platform.
   - A second tenant created by sign-up from `http://app.localhost:3000` can be signed in to in another tab from the success view's link; both tabs stay signed in to their own tenant; signing out of one leaves the other signed in; each receives its own notifications.

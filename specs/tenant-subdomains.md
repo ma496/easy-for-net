@@ -200,7 +200,7 @@ look a tenant up by identifier.
   - the Auth section: how sign-in picks the tenant, the host rule, the new revocation row, and the new
     error codes;
   - the frontend section: same-origin `/api`, and switching by navigation;
-  - the `npm run dev` description.
+  - the `pnpm dev` description.
 - **Skills:** `multi-tenancy`, `frontend-page`, `new-project` (the development URLs). Keep them generic,
   because they ship to generated projects.
 
@@ -215,7 +215,7 @@ look a tenant up by identifier.
 
 ## Done when
 
-- `npm run verify -- --autostart` passes, and the existing backend suite is green with the template
+- `pnpm verify --autostart` passes, and the existing backend suite is green with the template
   empty.
 - Backend integration tests, in their own `[Collection("TenantHosting")]`, enable the template through
   the fixture's configuration and send `Host` headers. They cover:
@@ -232,8 +232,8 @@ look a tenant up by identifier.
   - email links pointing at the right origin (`RecordingEmailTransport`);
   - `tls-allowed`;
   - `GET /tenants/host` for each kind.
-- Web: `npm run lint`, `npx tsc --noEmit` and `npm run test` pass, with the rewritten source-chain tests.
-- By hand with `npm run dev`:
+- Web: `pnpm lint`, `pnpm exec tsc --noEmit` and `pnpm test` pass, with the rewritten source-chain tests.
+- By hand with `pnpm dev`:
   - `http://default.localhost:3000/signin` has no tenant field and signs `tenantadmin` in to the default
     tenant.
   - A second tenant created from `http://app.localhost:3000` can be signed in to in another tab, and

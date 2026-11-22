@@ -2,15 +2,15 @@
 /**
  * Unattended task runner — the autonomous loop.
  *
- *   npm run auto -- "add a GET /products/{id}/summary endpoint"
- *   npm run auto -- --task-file ./task.md
- *   npm run auto -- "fix the empty role list for tenant admins" --attempts 4
- *   npm run auto -- "..." --no-commit        # verify only, leave the work uncommitted
- *   npm run auto -- "..." --no-autostart     # never start the stack for a live check
- *   npm run auto -- "..." --verify-port 5100 # live checks against a dedicated API port
- *   npm run auto -- "..." --verify-scope branch # judge the whole branch, not only this task's change
- *   npm run auto -- "..." --no-preflight     # start even when a service verify needs is down
- *   npm run auto -- "..." --salvage          # take over the uncommitted work already in the tree
+ *   pnpm auto "add a GET /products/{id}/summary endpoint"
+ *   pnpm auto --task-file ./task.md
+ *   pnpm auto "fix the empty role list for tenant admins" --attempts 4
+ *   pnpm auto "..." --no-commit              # verify only, leave the work uncommitted
+ *   pnpm auto "..." --no-autostart           # never start the stack for a live check
+ *   pnpm auto "..." --verify-port 5100 # live checks against a dedicated API port
+ *   pnpm auto "..." --verify-scope branch # judge the whole branch, not only this task's change
+ *   pnpm auto "..." --no-preflight           # start even when a service verify needs is down
+ *   pnpm auto "..." --salvage                # take over the uncommitted work already in the tree
  *
  * Work happens on the work branch (`project.branch`, or whichever is checked out), in this
  * checkout. There is no task branch: the run starts from a clean tree, builds, verifies,
@@ -74,7 +74,7 @@ import {
   restoreSalvage,
   salvageBrief,
 } from "./lib/salvage.mjs";
-import { hasExecutable, isAlive, runWithDeadline } from "./lib/proc.mjs";
+import { hasExecutable, isAlive, runWithDeadline, scriptArgs } from "./lib/proc.mjs";
 import { liveHolder } from "./lib/queue-lock.mjs";
 import {
   assertValidConfig, config, modelArgs, positiveInt, resolveModel, WORK_BRANCH, workflowRefusal,
@@ -106,7 +106,7 @@ const MEMORY_DIR = join(SCRIPTS, "..", ".claude", "memory");
 
 assertValidConfig();
 
-const argv = process.argv.slice(2);
+const argv = scriptArgs();
 const flag = (name) => argv.includes(`--${name}`);
 const argOf = (name, fallback) => {
   const i = argv.indexOf(`--${name}`);
@@ -126,7 +126,7 @@ const task = (taskFile ? readFileSync(taskFile, "utf8") : argv.find((a) => !a.st
 const taskSlug = taskFile ? stemOf(taskFile) : null;
 
 if (!task || !task.trim()) {
-  console.error('Usage: npm run auto -- "<task>"  [--attempts N] [--safe] [--salvage] [--no-commit] [--no-autostart]');
+  console.error('Usage: pnpm auto "<task>"  [--attempts N] [--safe] [--salvage] [--no-commit] [--no-autostart]');
   process.exit(1);
 }
 
@@ -150,7 +150,7 @@ if (!task || !task.trim()) {
  * weaker session spends more turns reaching the same place — and turns are both the clock and
  * the bill. There is no trade-off to weigh here: opus is faster and cheaper for this work.
  *
- * Re-measure before changing it back. `npm run auto:status` has the numbers, and the journal
+ * Re-measure before changing it back. `pnpm auto:status` has the numbers, and the journal
  * now records turns per attempt, which is what made this answerable at all.
  *
  *   AGENT_MODEL=sonnet    slower and dearer here; measure before assuming otherwise
@@ -552,7 +552,7 @@ function dirtyOutsideQueue(porcelain) {
   if (drain) {
     console.error(
       `A drain is running in this checkout (pid ${drain.pid}). Two runs at once edit the same tree,\n` +
-        "so this one is not starting. Queue the task instead: npm run queue -- add \"<task>\"",
+        "so this one is not starting. Queue the task instead: pnpm queue add \"<task>\"",
     );
     process.exit(1);
   }
@@ -1142,13 +1142,13 @@ if (flag("no-commit")) {
 Verified and left uncommitted on ${WORK_BRANCH} (--no-commit).
 
   Review it:  git status && git diff
-  Commit it:  npm run auto:ship -- "${subject.replace(/"/g, '\\"')}"`);
+  Commit it:  pnpm auto:ship "${subject.replace(/"/g, '\\"')}"`);
   process.exit(0);
 }
 
 // The build record is written now, before the commit, so it lands in the task's own commit
 // rather than being left in the tree for the next one to sweep up. record-build.mjs never
-// fails the run; a task with no brief file (`npm run auto -- "<task>"`) has nothing to record.
+// fails the run; a task with no brief file (`pnpm auto "<task>"`) has nothing to record.
 recordPhase("Committing");
 if (taskFile) runLive("node", [join(SCRIPTS, "record-build.mjs"), "--task", taskFile]);
 

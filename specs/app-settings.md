@@ -128,7 +128,7 @@ administrator to know what the value underneath was.
 
 ## Done when
 
-- `npm run verify` passes, and `dotnet ef migrations add` has produced the migration for `SettingValue`.
+- `pnpm verify` passes, and `dotnet ef migrations add` has produced the migration for `SettingValue`.
 - Integration tests cover:
   - with no overrides, `Signin` resolves to its code default and `Email` to the configuration section;
   - a platform override changes the value for platform scope and for every tenant without its own

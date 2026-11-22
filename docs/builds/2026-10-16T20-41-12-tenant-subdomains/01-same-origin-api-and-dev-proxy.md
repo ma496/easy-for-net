@@ -5,7 +5,7 @@
 | **Task** | `tenant-subdomains/01-same-origin-api-and-dev-proxy` |
 | **Landed** | 2026-10-16 |
 | **Commit** | the one whose message carries `Task: tenant-subdomains/01-same-origin-api-and-dev-proxy` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -44,7 +44,7 @@ The browser is about to reach the API as `<host>/api` and `<host>/hubs` on whate
 - One shared server-side helper that every server-side fetch to the API uses to forward `X-Forwarded-Host` set from the incoming request's `host` header; `getDictionary` in `i18n/server.ts` uses it, and so does any other server-side API fetch found in the web app. A Vitest test pins the helper (header present, host copied, no header when there is no incoming host).
 - Anything that builds the hub URL or an absolute API URL from `apiUrl` still works with a relative `/api` (check `lib/notifications/hub-url.ts` — it should already follow the page's origin; do not change its behaviour).
 - `docker-compose.prod.yml` and `docker-compose.coolify.yml`: build the web app with `NEXT_PUBLIC_API_URL: /api` instead of `${PUBLIC_URL}/api`, kept in step as `scripts/tests/deploy-vps.test.mjs` requires; `API_INTERNAL_URL` stays as it is.
-- Docs this change makes out of date: the `npm run dev` description in `CLAUDE.md` (proxy on :3000, web on :3001, the two printed URLs); the same in `tool/EasyForNetTool/new-project-claude.md` where it carries that text; the `NEXT_PUBLIC_API_URL` paragraphs in `README.md`, `tool/EasyForNetTool/README.md` and `tool/EasyForNetTool/new-project-readme.md`; the `NEXT_PUBLIC_API_URL` sentence in `.claude/skills/new-project/SKILL.md` (only that sentence — the tenant-field and development-URL wording there belongs to `04-web-workspaces-by-host`).
+- Docs this change makes out of date: the `pnpm dev` description in `CLAUDE.md` (proxy on :3000, web on :3001, the two printed URLs); the same in `tool/EasyForNetTool/new-project-claude.md` where it carries that text; the `NEXT_PUBLIC_API_URL` paragraphs in `README.md`, `tool/EasyForNetTool/README.md` and `tool/EasyForNetTool/new-project-readme.md`; the `NEXT_PUBLIC_API_URL` sentence in `.claude/skills/new-project/SKILL.md` (only that sentence — the tenant-field and development-URL wording there belongs to `04-web-workspaces-by-host`).
 
 ## Out of scope — do not touch
 - Any backend code or configuration (`src/backend/**`, `appsettings*.json`, `Web:*` options) — `02-tenant-host-resolution-and-session-binding` owns host resolution and the `Web:TenantOriginTemplate` setting.
@@ -53,9 +53,9 @@ The browser is about to reach the API as `<host>/api` and `<host>/hubs` on whate
 - `proxy.ts` (Next's middleware) — unchanged by this whole plan.
 
 ## Done when
-- `npm run verify` passes, including `scripts/tests/deploy-vps.test.mjs`.
-- `npm run dev` starts PostgreSQL/Redis, the API, the web app on :3001 and the proxy on :3000, and prints both URLs; `http://localhost:3000` and `http://default.localhost:3000` load the app, sign-in with `tenantadmin` works (the tenant field is still there at this point), and the browser's network tab shows API calls to `/api/...` on the page's own origin.
+- `pnpm verify` passes, including `scripts/tests/deploy-vps.test.mjs`.
+- `pnpm dev` starts PostgreSQL/Redis, the API, the web app on :3001 and the proxy on :3000, and prints both URLs; `http://localhost:3000` and `http://default.localhost:3000` load the app, sign-in with `tenantadmin` works (the tenant field is still there at this point), and the browser's network tab shows API calls to `/api/...` on the page's own origin.
 - In the browser, notifications still arrive live (the hub upgrade goes through the proxy) and editing a web file still hot-reloads (HMR through the proxy).
-- `npm run dev -- --api-only` and `npm run dev -- --web-only` still work as documented.
+- `pnpm dev --api-only` and `pnpm dev --web-only` still work as documented.
 - The translations still load with the API down (the empty-dictionary fallback is unchanged) and every server-side API fetch carries `X-Forwarded-Host`.
-- `npm run lint`, `npx tsc --noEmit` and `npm run test` pass in `src/frontend/web`.
+- `pnpm lint`, `pnpm exec tsc --noEmit` and `pnpm test` pass in `src/frontend/web`.

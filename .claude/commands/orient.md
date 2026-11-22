@@ -12,8 +12,8 @@ Work out the current state of this project and report it, then propose the next 
    sentences what the change in progress appears to be, and whether it looks finished.
 3. **Divergence.** How many commits is the working branch ahead of `origin`? Those are
    verified and waiting for the owner to push.
-4. **The loop.** `npm run queue` for what is waiting or blocked, `npm run schedule --
-   status` for whether the timer is running, and `npm run lessons` for what past runs
+4. **The loop.** `pnpm queue` for what is waiting or blocked, `pnpm schedule --
+   status` for whether the timer is running, and `pnpm lessons` for what past runs
    recorded. Check for an in-flight drain before suggesting any edit — a task mid-run
    commits the tree it finds.
 

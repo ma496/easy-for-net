@@ -2,9 +2,9 @@
 /**
  * Check that the installed Claude Code CLI still emits what the runner reads.
  *
- *   npm run test:claude-contract                 # run the probes, check the contract
- *   npm run test:claude-contract -- --record     # …and save them as fixtures for this version
- *   npm run test:claude-contract -- --if-changed # skip when this CLI version already passed
+ *   pnpm test:claude-contract                    # run the probes, check the contract
+ *   pnpm test:claude-contract --record           # …and save them as fixtures for this version
+ *   pnpm test:claude-contract --if-changed # skip when this CLI version already passed
  *
  * Everything the runner decides about a session — cost, turns, delegations, skills, whether
  * it hit a limit — is read out of `claude -p --output-format stream-json`, and that format
@@ -28,7 +28,7 @@ import { dirname, join, resolve } from "node:path";
 import { Readable } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { parseLine, schemaProblems, scrubEventLine } from "./lib/claude-events.mjs";
-import { hasExecutable, runSync } from "./lib/proc.mjs";
+import { hasExecutable, runSync, scriptArgs } from "./lib/proc.mjs";
 import { renderStream } from "./lib/stream-render.mjs";
 
 const ROOT = resolve(join(dirname(fileURLToPath(import.meta.url)), ".."));
@@ -36,7 +36,7 @@ const FIXTURES = join(ROOT, "scripts", "tests", "fixtures", "claude-stream");
 const STATE_FILE = join(ROOT, ".agent-runs", "cli-contract.json");
 const EXIT_BLOCKED = 4;
 
-const argv = process.argv.slice(2);
+const argv = scriptArgs();
 const flag = (name) => argv.includes(`--${name}`);
 const argOf = (name, fallback) => {
   const i = argv.indexOf(`--${name}`);
@@ -139,7 +139,7 @@ async function runProbe(probe) {
 
 // --- main ---------------------------------------------------------------------------------
 if (flag("help")) {
-  console.log("Usage: npm run test:claude-contract -- [--record] [--if-changed] [--model <alias>]");
+  console.log("Usage: pnpm test:claude-contract [--record] [--if-changed] [--model <alias>]");
   process.exit(0);
 }
 if (!hasExecutable("claude")) {

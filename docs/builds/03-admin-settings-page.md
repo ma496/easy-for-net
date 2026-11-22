@@ -5,7 +5,7 @@
 | **Commit** | `0c61bb5e` |
 | **Landed** | 2026-09-30 |
 | **Task brief** | `03-admin-settings-page.md` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -82,7 +82,7 @@ Tasks 01 and 02 put `Signin` and `Email` behind `/settings`. This task gives adm
 - The other admin screens, including `admin/localization`.
 
 ## Done when
-- `npm run verify` passes, including lint, `tsc --noEmit` and vitest.
+- `pnpm verify` passes, including lint, `tsc --noEmit` and vitest.
 - In tenant scope and in platform scope, the page loads, saves, resets, and shows where each value comes from.
 - A tenant's save does not change what platform scope shows.
 - A user without `Settings.Update` sees the page read-only.

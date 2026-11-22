@@ -1,4 +1,4 @@
-# Development services only: PostgreSQL and Redis. The API (dotnet run) and the web app (npm run dev)
+# Development services only: PostgreSQL and Redis. The API (dotnet run) and the web app (pnpm dev)
 # run on the host. Ports are bound to loopback, so nothing here is reachable from the network.
 #
 #   docker compose up -d      start (the databases themselves are created by EF migrations)

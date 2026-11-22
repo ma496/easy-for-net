@@ -2,11 +2,11 @@
 /**
  * Run the whole app for development with one command: services, API and web app.
  *
- *   npm run dev                      # PostgreSQL + Redis, the API on :5000, next dev on :3001, the proxy on :3000
- *   npm run dev -- --no-docker       # use the PostgreSQL and Redis you already run
- *   npm run dev -- --api-only        # services + API, no web app and no proxy
- *   npm run dev -- --web-only        # the web app and the proxy, against an API started elsewhere on DEV_API_PORT
- *   npm run dev -- --app <name>      # which app of agentic.config.json `apps` (default: the first)
+ *   pnpm dev                      # PostgreSQL + Redis, the API on :5000, next dev on :3001, the proxy on :3000
+ *   pnpm dev --no-docker          # use the PostgreSQL and Redis you already run
+ *   pnpm dev --api-only           # services + API, no web app and no proxy
+ *   pnpm dev --web-only           # the web app and the proxy, against an API started elsewhere on DEV_API_PORT
+ *   pnpm dev --app <name>         # which app of agentic.config.json `apps` (default: the first)
  *
  * The three ports are DEV_API_PORT, DEV_WEB_PORT and DEV_PROXY_PORT, from the environment or the root
  * .env, defaulting to 5000, 3001 and 3000 (lib/dev-ports.mjs). Each is checked before anything
@@ -39,10 +39,10 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { DEV_PORTS, describePortHolder, isPortFree, knownHolderHint, nextFreePort, readDevPorts, readWebSettings, webOriginOverrides } from "./lib/dev-ports.mjs";
-import { hasExecutable, killTree, IS_WINDOWS, runSync, sleepSync, spawnPortable } from "./lib/proc.mjs";
+import { hasExecutable, killTree, IS_WINDOWS, runSync, sleepSync, spawnPortable, scriptArgs } from "./lib/proc.mjs";
 import { REPO_ROOT, appArg, selectApp } from "./lib/project-config.mjs";
 
-const args = process.argv.slice(2);
+const args = scriptArgs();
 const APP = selectApp(appArg(args));
 // Every child — serve-api.mjs, the readiness probes, stop-api — reads the app from here.
 process.env.EFN_APP = APP.name;
@@ -81,7 +81,7 @@ const PORT_ADVICE =
   `${APP.backend}/Source/appsettings.Development.json and appsettings.Testing.json`;
 
 if (args.includes("--help")) {
-  console.log("usage: npm run dev [-- --no-docker] [-- --api-only | --web-only] [-- --app <name>]");
+  console.log("usage: pnpm dev [-- --no-docker] [-- --api-only | --web-only] [-- --app <name>]");
   console.log("ports: DEV_PROXY_PORT (3000), DEV_WEB_PORT (3001), DEV_API_PORT (5000), from the environment or the root .env");
   process.exit(0);
 }
@@ -98,9 +98,12 @@ if (!WEB_ONLY) {
   }
 }
 await ensurePortsFree();
+if (!API_ONLY && !hasExecutable("pnpm")) {
+  fail("pnpm is not on the PATH: the web app is installed and run with pnpm 10 (`npm install -g pnpm`, or `corepack enable`).");
+}
 if (!API_ONLY && !existsSync(join(WEB, "node_modules"))) {
   console.log("dev: installing the web app's packages…");
-  if (runSync("npm", ["install"], { cwd: WEB, stdio: "inherit" }).status !== 0) fail("npm install failed.");
+  if (runSync("pnpm", ["install"], { cwd: WEB, stdio: "inherit" }).status !== 0) fail("pnpm install failed.");
 }
 
 const children = [];
@@ -132,7 +135,7 @@ if (!API_ONLY) {
 if (!WEB_ONLY && !API_ONLY) await waitForApi();
 if (!API_ONLY) {
   children.push(
-    start("web", "npm", ["run", "dev"], {
+    start("web", "pnpm", ["dev"], {
       cwd: WEB,
       // Set here rather than left to .env.development, so a copy written before the proxy existed
       // (an absolute NEXT_PUBLIC_API_URL) cannot send the browser around it; a value already in the

@@ -72,7 +72,6 @@ public class JsonPropertyUpdaterTests
     [Theory]
     [InlineData("name", "package.json")]
     [InlineData("name", "src", "multi-tenant", "frontend", "web", "package.json")]
-    [InlineData("name", "src", "multi-tenant", "frontend", "web", "package-lock.json")]
     [InlineData("project.name", "agentic.config.json")]
     [InlineData("Redis.InstanceName", "src", "multi-tenant", "backend", "Source", "appsettings.json")]
     public async Task Should_Not_Escape_Template_Files(string property, params string[] relativePath)

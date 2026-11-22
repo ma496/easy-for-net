@@ -2,13 +2,13 @@
 /**
  * The work intake — what makes the loop start without a person typing a command.
  *
- *   npm run queue -- add "add a /v1/reports/:id/summary endpoint"
- *   npm run queue -- add --file ./specs/summary-endpoint.md
- *   npm run queue -- plan                          # turn new specs/*.md into queued tasks
- *   npm run queue                                  # list what is waiting
- *   npm run queue -- drain                         # work the queue down, one at a time
- *   npm run queue -- drain --max 5                 # stop after five tasks
- *   npm run queue -- resume                        # requeue whatever an interrupted run left behind
+ *   pnpm queue add "add a /v1/reports/:id/summary endpoint"
+ *   pnpm queue add --file ./specs/summary-endpoint.md
+ *   pnpm queue plan                                # turn new specs/*.md into queued tasks
+ *   pnpm queue                                     # list what is waiting
+ *   pnpm queue drain                               # work the queue down, one at a time
+ *   pnpm queue drain --max 5                       # stop after five tasks
+ *   pnpm queue resume                              # requeue whatever an interrupted run left behind
  *
  * A drain refuses to spend past AGENT_MAX_USD_PER_DRAIN, checked before each task begins and
  * never mid-task — a task killed halfway leaves a dirty tree and a half-finished change,
@@ -68,7 +68,7 @@ import {
 } from "node:fs";
 import { join, dirname, resolve, basename, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { IS_WINDOWS, hasExecutable, isAlive, killTree, sleepSync, spawnPortable } from "./lib/proc.mjs";
+import { IS_WINDOWS, hasExecutable, isAlive, killTree, sleepSync, spawnPortable, scriptArgs } from "./lib/proc.mjs";
 import { HEARTBEAT_MS, heartbeat, release, tryAcquire } from "./lib/queue-lock.mjs";
 import { dependencyState as depState } from "./lib/task-deps.mjs";
 import {
@@ -126,7 +126,7 @@ const MAX_USD_PER_DRAIN = parseCeiling(
 
 assertValidConfig();
 
-const argv = process.argv.slice(2);
+const argv = scriptArgs();
 const action = argv.find((a) => !a.startsWith("--")) ?? "list";
 const flag = (name) => argv.includes(`--${name}`);
 const argOf = (name, fallback) => {
@@ -488,7 +488,7 @@ async function planSpecs() {
       console.error(
         `  ${file}: this version already failed to plan ${failedBefore} time(s) ` +
           `(budget.planAttempts = ${config.budget.planAttempts}), so it is not planned again. ` +
-          "Edit the spec — any change earns it fresh attempts — or read why in `npm run auto:status`.",
+          "Edit the spec — any change earns it fresh attempts — or read why in `pnpm auto:status`.",
       );
       continue;
     }
@@ -688,7 +688,7 @@ if (action === "add") {
   const body = file ? readFileSync(file, "utf8") : inline;
 
   if (!body || !body.trim()) {
-    console.error('Usage: npm run queue -- add "<task>"   |   npm run queue -- add --file <path>');
+    console.error('Usage: pnpm queue add "<task>"   |   pnpm queue add --file <path>');
     process.exit(1);
   }
 
@@ -728,7 +728,7 @@ if (action === "list" || action === "status") {
     console.log("");
   }
   if (counts.doing > 0) {
-    console.log("Files in doing/ are from an interrupted run. `npm run queue -- resume` requeues them.");
+    console.log("Files in doing/ are from an interrupted run. `pnpm queue resume` requeues them.");
   }
   process.exit(0);
 }
@@ -813,7 +813,7 @@ if (action === "retry") {
     );
     for (const e of exhausted) console.log(`  ${e.file}`);
     console.log(
-      "\nThese need a person. Read why they failed (`npm run auto:status`), then either fix\n" +
+      "\nThese need a person. Read why they failed (`pnpm auto:status`), then either fix\n" +
         "the brief, fix what blocks them, or delete them. Retrying unchanged only spends money.",
     );
   }
@@ -902,7 +902,7 @@ if (action === "audit") {
     if (!FIX) {
       console.log(
         `\nEach one is holding back every task that depends on it. Run\n` +
-          `\`npm run queue -- audit --fix\` to file the ${repairable.length} definite match(es).`,
+          `\`pnpm queue audit --fix\` to file the ${repairable.length} definite match(es).`,
       );
     } else {
       console.log("");
@@ -1026,7 +1026,7 @@ if (argOf("parallel", null)) {
 }
 const max = Number(argOf("max", "0")) || Infinity;
 // `budget.attempts` from the config (three — loop.mjs states the evidence), passed through so
-// the drain and a direct `npm run auto` agree.
+// the drain and a direct `pnpm auto` agree.
 const attempts = argOf("attempts", String(config.budget.attempts));
 /**
  * Work happens on the work branch, in place. There is no base to choose and no branch to cut: each
@@ -1272,7 +1272,7 @@ if (unplannedSpecs.length > 0) {
       unplannedSpecs.join("\n") +
       "\n\nNothing is built while they are, so no task's commit carries them. Read the planning " +
       "output above, then fix the spec and run again, or move it out of specs/ until it is " +
-      "ready (`npm run queue -- plan` plans specs without building).",
+      "ready (`pnpm queue plan` plans specs without building).",
   );
   process.exit(1);
 }
@@ -1462,7 +1462,7 @@ function runTask(file, index) {
         if (lane === "failed") {
           console.error(
             `${slug}: started ${started} time(s) already (AGENT_MAX_RUNS_PER_TASK=${RUN_LIMIT_PER_TASK}) — ` +
-              "moved to failed/ instead of todo/. Clear the blocker, then `npm run queue -- retry`.",
+              "moved to failed/ instead of todo/. Clear the blocker, then `pnpm queue retry`.",
           );
         }
         moveTask(file, "doing", lane);
@@ -1726,10 +1726,10 @@ if (ok.length > 0) {
   console.log(`
 Everything is committed on ${WORK_BRANCH}.${ahead}
 ${since ? `\n  Review:  git log --oneline ${since}..HEAD` : ""}
-  Push:    ${WORKFLOW === "team" ? "git push -u origin HEAD, then npm run pr" : "git push"}          (yours alone — the guard refuses a protected branch from in here)`);
+  Push:    ${WORKFLOW === "team" ? "git push -u origin HEAD, then pnpm pr" : "git push"}          (yours alone — the guard refuses a protected branch from in here)`);
 }
 
-console.log(`\nHistory: npm run auto:status`);
+console.log(`\nHistory: pnpm auto:status`);
 if (blockedStop) {
   console.log(
     `\nStopped: ${blockedStop.slug} could not run (a service or the account refused before any ` +

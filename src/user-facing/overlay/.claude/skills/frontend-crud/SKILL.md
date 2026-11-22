@@ -287,4 +287,4 @@ options are fetched and labelled. The id travels in the path, so the payload is
   `Admin.Access`), `nav-items.ts` and `searchable-items.ts` — see `frontend-page`.
 - The web gating only hides what the API would refuse; every endpoint behind the screens checks its
   own permission — see `permissions`.
-- `npm run lint`, `npx tsc --noEmit`, `npm run test` and `npm run build` before calling it done.
+- `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test` and `pnpm build` before calling it done.

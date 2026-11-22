@@ -95,7 +95,7 @@ every other file mirrors — then to **every other resource file in that directo
 - any file is missing a key English has, or has one English lacks;
 - a value is empty, or is the key itself.
 
-On the web, `i18n/tenant-screens.test.ts` (run by `npm run test`) reads the same resource files and
+On the web, `i18n/tenant-screens.test.ts` (run by `pnpm test`) reads the same resource files and
 fails when a tenancy error code or tenancy screen key it lists is undefined in any culture, or a
 message that names a tenant drops its `${name}` or `${host}` placeholder. Placeholders are not checked in general, so
 keep every `${…}` of the English value in each translation yourself.
@@ -207,4 +207,4 @@ property spelled exactly so (one space after the colon) with no `]` inside the a
 - [ ] New markup uses logical (RTL-safe) utilities
 - [ ] Every `t('…')` / `getServerTranslation` call carries its English default after `||`
 - [ ] A new language is registered in all four places, flag included
-- [ ] `dotnet test` (resource-file test) and `npm run test` (locale and tenant-screen tests) pass
+- [ ] `dotnet test` (resource-file test) and `pnpm test` (locale and tenant-screen tests) pass

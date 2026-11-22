@@ -35,7 +35,7 @@ try {
   // sees it if it is pointed at it.
   const lessons = join(REPO_ROOT, ".claude", "memory", "lessons");
   const lessonCount = existsSync(lessons) ? readdirSync(lessons).filter((f) => f.endsWith(".md")).length : 0;
-  if (lessonCount) out.push(`- Lessons recorded by past runs: ${lessonCount} — \`npm run lessons\` before a change in an unfamiliar area`);
+  if (lessonCount) out.push(`- Lessons recorded by past runs: ${lessonCount} — \`pnpm lessons\` before a change in an unfamiliar area`);
   if (changed.length > 0) {
     out.push("", "Changed files:", ...changed.slice(0, 12).map((l) => `  ${l}`));
   }

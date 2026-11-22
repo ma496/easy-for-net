@@ -5,7 +5,7 @@
 | **Task** | `tenant-subdomains/03-tenant-host-endpoints-and-links` |
 | **Landed** | 2026-10-16 |
 | **Commit** | the one whose message carries `Task: tenant-subdomains/03-tenant-host-endpoints-and-links` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -74,8 +74,8 @@ With the API resolving hosts, the anonymous surface needs to follow: the web app
 - Permissions, `SessionGrants`, plan gating; the CORS policy.
 
 ## Done when
-- `npm run verify -- --autostart` passes, and the existing backend suite is green with the template empty.
+- `pnpm verify --autostart` passes, and the existing backend suite is green with the template empty.
 - The tests above pass.
 - `Tests/Features/Localization/Core/LocalizationResourceStoreTests` stays green: every resource file has the new keys, none empty or equal to its key.
 - Standing promises still hold: an anonymous `resources/{culture}` with no host resolution still sees platform overrides only; an authenticated caller still sees its acting tenant's; a coded error is served in the request's culture.
-- By hand with `npm run dev`: `curl -H "Host: default.localhost:3000" http://localhost:5000/api/tenants/host` returns the default tenant; `.../tenants/tls-allowed?domain=nope.localhost` is 404; creating a tenant named `app` is refused with the reserved-name message.
+- By hand with `pnpm dev`: `curl -H "Host: default.localhost:3000" http://localhost:5000/api/tenants/host` returns the default tenant; `.../tenants/tls-allowed?domain=nope.localhost` is 404; creating a tenant named `app` is refused with the reserved-name message.

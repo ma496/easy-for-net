@@ -2,8 +2,8 @@
 /**
  * Stop this checkout's running API, so a backend build can overwrite its output.
  *
- *   npm run stop:api              # stop it, if one is running
- *   npm run stop:api -- --list    # say what would be stopped, stop nothing
+ *   pnpm stop:api                 # stop it, if one is running
+ *   pnpm stop:api --list          # say what would be stopped, stop nothing
  *
  * A running API holds its `Source/bin/` (under each app's backend in agentic.config.json) open, and on Windows `dotnet build`,
  * `dotnet test` and `dotnet ef migrations add` then fail with MSB3027/MSB3021. The gate calls

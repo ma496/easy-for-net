@@ -5,7 +5,7 @@
 | **Commit** | `860db62c` |
 | **Landed** | 2026-10-01 |
 | **Task brief** | `04-close-hub-connections-when-session-ends.md` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -61,7 +61,7 @@ A hub connection must not outlive its session. This task makes every deletion of
 - The web app (task 05).
 
 ## Done when
-- `npm run verify` passes, and the suite still needs only PostgreSQL.
+- `pnpm verify` passes, and the suite still needs only PostgreSQL.
 - Every row of the session-revocation table in `CLAUDE.md` still revokes exactly what it did, and now also closes the affected hub connections.
 - Deactivating a user from the admin screen closes that user's open WebSocket immediately, including one held on a second API instance on another port.
 - Sign-out, refresh and tenant switch/exit still succeed when the ended-session publish fails.

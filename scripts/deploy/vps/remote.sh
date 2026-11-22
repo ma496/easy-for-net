@@ -1,5 +1,5 @@
 #!/bin/sh
-# The server half of `npm run deploy:vps`. scripts/deploy-vps.mjs uploads this file over SSH and runs
+# The server half of `pnpm deploy:vps`. scripts/deploy-vps.mjs uploads this file over SSH and runs
 # it as root, one phase per connection:
 #
 #   sh remote.sh check   [KEY=value ...]   # report the prerequisites, change nothing

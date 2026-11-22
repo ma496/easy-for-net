@@ -1,5 +1,5 @@
 /**
- * The development ports `npm run dev` runs on, and whether something else already holds one.
+ * The development ports `pnpm dev` runs on, and whether something else already holds one.
  *
  * Three ports belong to the running app, beside the PostgreSQL and Redis ports Docker publishes:
  *

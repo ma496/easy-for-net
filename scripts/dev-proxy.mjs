@@ -7,7 +7,7 @@
  *   node scripts/dev-proxy.mjs --port 3000 --api 5000 --web 3001
  *   node scripts/dev-proxy.mjs --host 0.0.0.0  # reachable from other machines — the whole dev API with it
  *
- * `npm run dev` starts it; run it by hand only beside an API and a `next dev` started some other way.
+ * `pnpm dev` starts it; run it by hand only beside an API and a `next dev` started some other way.
  *
  * `/api/*`, `/hubs/*`, `/hangfire`, `/hangfire/*` and `/health` go to the API — the same matcher
  * as the Caddyfile — and everything else to Next. The browser therefore calls the API as
@@ -26,12 +26,13 @@
  * it): it fronts the development API, seeded accounts and the Hangfire dashboard included, and that
  * is not something to offer the rest of a café's network. `--host` opts in to another address.
  *
- * Dependency-free on purpose: only `node:http` and `node:net`, so it runs before any `npm install`.
+ * Dependency-free on purpose: only `node:http` and `node:net`, so it runs before any `pnpm install`.
  * The routing and the server live in lib/dev-proxy.mjs.
  */
 import { createDevProxy } from "./lib/dev-proxy.mjs";
+import { scriptArgs } from "./lib/proc.mjs";
 
-const argv = process.argv.slice(2);
+const argv = scriptArgs();
 if (argv.includes("--help")) {
   console.log("usage: node scripts/dev-proxy.mjs [--port 3000] [--api 5000] [--web 3001] [--host <address>]");
   process.exit(0);

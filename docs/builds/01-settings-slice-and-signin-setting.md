@@ -5,7 +5,7 @@
 | **Commit** | `e0b27add` |
 | **Landed** | 2026-09-30 |
 | **Task brief** | `01-settings-slice-and-signin-setting.md` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -146,7 +146,7 @@ A property that no layer overrides follows the layer below it. Defaults read fro
 - Session revocation: a settings change revokes nothing.
 
 ## Done when
-- `npm run verify` passes, and the migration for `SettingValue` is committed.
+- `pnpm verify` passes, and the migration for `SettingValue` is committed.
 - Every test listed under Scope exists and passes.
 - `FeatureDependencyTests` passes: Identity reaches Settings only through the `[AllowOutside]` types.
 - `LocalizationResourceStoreTests` passes with the new error keys in every resource file.

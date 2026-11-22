@@ -1,4 +1,4 @@
-# The production stack as Coolify runs it: what `npm run deploy:vps` points a Coolify application at.
+# The production stack as Coolify runs it: what `pnpm deploy:vps` points a Coolify application at.
 #
 # It is docker-compose.prod.yml with two changes, because Coolify's own Traefik proxy already
 # holds ports 80 and 443 and obtains the certificate for the domain:

@@ -3,7 +3,7 @@
  *
  * `stream-render.test.mjs` pins the parser's rules on events written by hand. This file
  * replays streams the CLI actually produced (`fixtures/claude-stream/<version>/`, recorded by
- * `npm run test:claude-contract -- --record`), so the rules are checked against the shape
+ * `pnpm test:claude-contract --record`), so the rules are checked against the shape
  * the CLI really emits rather than the shape somebody remembered. The hand-written fixtures
  * cover only what a live probe cannot produce on demand.
  *
@@ -31,7 +31,7 @@ const versions = readdirSync(FIXTURES, { withFileTypes: true })
   .map((d) => d.name);
 
 test("at least one recorded CLI version is on file", () => {
-  assert.ok(versions.length > 0, "record one with: npm run test:claude-contract -- --record");
+  assert.ok(versions.length > 0, "record one with: pnpm test:claude-contract --record");
 });
 
 /** What each live probe must yield, whatever version recorded it. */

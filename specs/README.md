@@ -5,10 +5,10 @@ act of starting development. The next drain reads anything new, splits it into i
 tasks, works out what has to be built before what, and queues it all in order:
 
 ```bash
-npm run queue -- drain
+pnpm queue drain
 ```
 
-With the scheduler installed (`npm run schedule -- install`), even that disappears — the
+With the scheduler installed (`pnpm schedule install`), even that disappears — the
 timer picks the spec up on its own.
 
 Intake is tracked by file contents, one record per spec in `.agent-queue/planned/`: a spec is
@@ -16,7 +16,7 @@ never planned twice, and editing one re-plans it — replacing its tasks that ha
 rather than queueing a second set. Planning commits the spec, its tasks and its record
 together (`Plan <spec>`), so a teammate who pulls sees it as planned too. A saved spec needs
 no commit of its own first; the planning commit takes it.
-`npm run queue -- plan` does the intake without draining, if you want to read the tasks
+`pnpm queue plan` does the intake without draining, if you want to read the tasks
 before anything runs.
 
 Only top-level `specs/*.md` are planned: this README, `TEMPLATE.md` and anything in a
@@ -92,7 +92,7 @@ yours, and merging always is.
 ```bash
 git log --oneline @{u}..HEAD           # what is built and waiting
 git show <sha>                         # review one change
-npm run auto:status                    # every run, and why any failed
+pnpm auto:status                       # every run, and why any failed
 ```
 
 Each task that lands writes its brief, with the files it changed, into its spec's directory

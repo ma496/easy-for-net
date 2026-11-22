@@ -1,10 +1,10 @@
 /**
  * Where a page opened on `next dev`'s own port should be sent instead, or `null` when it is fine.
  *
- * In development the browser is meant to open the dev proxy (`npm run dev` starts it on :3000), which
+ * In development the browser is meant to open the dev proxy (`pnpm dev` starts it on :3000), which
  * routes `/api` and `/hubs` to the API and everything else to `next dev` on :3001. `next dev` prints its
  * own address too, and a page opened there renders but cannot reach the API: `/api/*` answers Next's
- * HTML 404, which a sign-in then fails to parse as JSON. `npm run dev` names the proxy's port to
+ * HTML 404, which a sign-in then fails to parse as JSON. `pnpm dev` names the proxy's port to
  * `next dev` as `DEV_PROXY_PORT`, so the web app can send such a visitor to the same page through the
  * proxy instead.
  *

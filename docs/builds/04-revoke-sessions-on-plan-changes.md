@@ -5,7 +5,7 @@
 | **Commit** | `61f560a2` |
 | **Landed** | 2026-09-29 |
 | **Task brief** | `04-revoke-sessions-on-plan-changes.md` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -60,7 +60,7 @@ Plan gating (`IPermissionFeatureFilter`) is applied when a session is created. F
 - Docs and skills (task 06).
 
 ## Done when
-- `npm run verify` passes.
+- `pnpm verify` passes.
 - Each case has a test proving that the old token answers 401 without renewal, that its refresh is refused, and that tenants the change does not name keep their sessions.
 - `ChangePermissionsWithHiddenGrantsTests`, `FeatureValueEndpointTests`, `EditionEndpointTests` and `UserSeatLimitTests` still pass.
 - Plan-hidden grants still carry through a role replacement.

@@ -32,7 +32,7 @@ instead of trusting it.
 
 ## Quick Start
 
-You need the **.NET 10 SDK**, **Node.js 24+**, **Git** and **Docker**, plus **[uv](https://docs.astral.sh/uv/)**
+You need the **.NET 10 SDK**, **Node.js 24+** with **pnpm 10** (`npm install -g pnpm`, or `corepack enable`), **Git** and **Docker**, plus **[uv](https://docs.astral.sh/uv/)**
 for the Claude Code MCP servers.
 
 ```sh
@@ -51,7 +51,7 @@ dotnet build MyShop.slnx
 dotnet ef migrations add Initial --project src/backend/Source
 
 # 4. Run everything: PostgreSQL, Redis, the API and the web app
-npm run dev
+pnpm dev
 ```
 
 - **Multi-tenant:** open **http://app.localhost:3000** and sign in as `admin` (the platform), or
@@ -79,8 +79,8 @@ For bigger work, write a spec in `specs/` and let the loop build it unattended. 
 built>` drafts one with you in `specs/drafts/`, and moving it into `specs/` approves it:
 
 ```sh
-npm run loop       # plan the spec into tasks, build each one, verify, review, commit
-npm run monitor    # watch the run live
+pnpm loop          # plan the spec into tasks, build each one, verify, review, commit
+pnpm monitor       # watch the run live
 ```
 
 Every task is verified by the runner itself, capped in cost, committed one task at a time, and never
@@ -115,8 +115,8 @@ Connections come from the project's own development settings, so nothing secret 
 | **Real-time** | Persistent notifications pushed over SignalR |
 | **Files & Email** | Uploads behind a pluggable storage provider; SMTP email through background jobs |
 | **Localization** | Eight languages, right-to-left support, translations editable in the app |
-| **Testing** | xUnit v3, architecture tests, Vitest and one quality gate: `npm run gate` |
-| **Deployment** | Docker Compose with automatic HTTPS, or one command to a VPS: `npm run deploy:vps` |
+| **Testing** | xUnit v3, architecture tests, Vitest and one quality gate: `pnpm gate` |
+| **Deployment** | Docker Compose with automatic HTTPS, or one command to a VPS: `pnpm deploy:vps` |
 
 **Stack:** ASP.NET 10 · FastEndpoints · EF Core 10 · PostgreSQL · Redis · Hangfire · SignalR · Next.js 16 · React 19 · RTK Query · Tailwind CSS 4
 

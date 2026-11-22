@@ -5,7 +5,7 @@
 | **Commit** | `76c0ba6c` |
 | **Landed** | 2026-09-29 |
 | **Task brief** | `06-document-session-validation-and-revocation.md` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -58,6 +58,6 @@ This task rewrites every statement of the old rule so that later agents are not 
 - The `template-maintenance` skill, unless it repeats the mint-time rule.
 
 ## Done when
-- `npm run verify` passes.
+- `pnpm verify` passes.
 - `grep -rn "decided once\|next token renewal\|mint-time" CLAUDE.md tool/EasyForNetTool/new-project-claude.md .claude/skills` finds no statement of the old rule.
 - `CLAUDE.md` and `new-project-claude.md` describe the same session model.

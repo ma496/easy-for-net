@@ -5,7 +5,7 @@
 | **Commit** | `1a2ed74b` |
 | **Landed** | 2026-09-29 |
 | **Task brief** | `03-revoke-sessions-on-tenant-membership-and-lifecycle.md` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -60,7 +60,7 @@ Today, membership and lifecycle changes in the Tenancy slice leave the affected 
 - Docs and skills (task 06).
 
 ## Done when
-- `npm run verify` passes.
+- `pnpm verify` passes.
 - `TenantSuspensionTests`, `TenantSwitchTests` and `TenantMemberUpdateRolesTests` make no `RenewAsync()` call just to observe a change.
 - Each endpoint has a test proving that the old token answers 401 without renewal, that the refresh is refused, and that sessions the change does not name survive.
 - Seat counting (`GetSeatsAsync`) and the rules for platform accounts as tenant members behave as before.

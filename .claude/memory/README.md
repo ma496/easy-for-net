@@ -34,7 +34,7 @@ names that keyword as a whole word or path segment, plurals included — `build`
 scope without a trailing slash. Several keywords, separated by spaces or commas, reach a
 brief that names any one of them.
 
-`npm run lessons` shows what the loop currently remembers.
+`pnpm lessons` shows what the loop currently remembers.
 
 ## Why this exists
 

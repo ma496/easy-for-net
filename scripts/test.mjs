@@ -2,8 +2,8 @@
 /**
  * Unit test runner.
  *
- *   npm test                     # every test
- *   npm test -- product-query    # only files whose path contains "product-query"
+ *   pnpm test                     # every test
+ *   pnpm test product-query       # only files whose path contains "product-query"
  *
  * Uses Node's built-in test runner with tsx as the TypeScript loader — no test framework
  * dependency. Files are discovered and passed explicitly rather than by glob, because Node
@@ -16,12 +16,13 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 import { config } from "./lib/project-config.mjs";
+import { scriptArgs } from "./lib/proc.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 // Where this project keeps its unit tests, from agentic.config.json. A root that does
 // not exist is skipped rather than failing — a project grows into them.
 const TEST_ROOTS = config.tests.roots;
-const filter = process.argv[2];
+const filter = scriptArgs()[0];
 const TEST_PATTERN = new RegExp(config.tests.pattern);
 
 function walk(dir, found = []) {

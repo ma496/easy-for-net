@@ -4,19 +4,19 @@
  *
  *   PORT=5100 node scripts/serve-api.mjs
  *
- * Without PORT it takes DEV_API_PORT, then 5000 — the same default `npm run dev` uses.
+ * Without PORT it takes DEV_API_PORT, then 5000 — the same default `pnpm dev` uses.
  *
  * The launch profile is skipped on purpose: it pins the URL to :5000, and a live check that
  * starts its own service on a free port must actually get that port. The environment is set
  * here instead of by the profile, so the API still boots with its Development settings.
  */
 import { join } from "node:path";
-import { spawnPortable } from "./lib/proc.mjs";
+import { spawnPortable, scriptArgs } from "./lib/proc.mjs";
 import { REPO_ROOT, appArg, selectApp } from "./lib/project-config.mjs";
 
 const port = process.env.PORT || process.env.DEV_API_PORT || "5000";
 // Which app's API: `--app <name>`, else EFN_APP, else the first in agentic.config.json `apps`.
-const app = selectApp(appArg(process.argv.slice(2)));
+const app = selectApp(appArg(scriptArgs()));
 // Set by verify when its gate has just built the solution: compiling it again here only adds
 // tens of seconds to every live check. Anything else — a developer, a gate that skipped the
 // build — leaves `dotnet run` to build as usual.

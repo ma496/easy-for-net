@@ -5,7 +5,7 @@
 | **Commit** | `dc9d1239` |
 | **Landed** | 2026-10-01 |
 | **Task brief** | `05-web-realtime-notifications.md` |
-| **Verification** | `npm run verify` — the static gate, plus whichever live checks the diff demanded |
+| **Verification** | `pnpm verify` — the static gate, plus whichever live checks the diff demanded |
 
 ## What changed
 
@@ -69,7 +69,7 @@ The web app polls `GET /notifications/unread-count` every 30 s from every tab. T
 - Sign-in, refresh and tenant-switch flows beyond reconnecting the hub.
 
 ## Done when
-- `npm run verify` passes, including lint, `npx tsc --noEmit` and the new Vitest tests.
+- `pnpm verify` passes, including lint, `pnpm exec tsc --noEmit` and the new Vitest tests.
 - With the API and web app running (PostgreSQL + Redis), two browsers signed in as members of the same tenant see a tenant-wide notification on the badge within a second, with no `unread-count` request in the network tab while connected.
 - A notification raised through a second API instance on another port reaches a browser connected to the first.
 - Signing out closes the browser's WebSocket; switching tenant reconnects and the badge reflects the new scope.

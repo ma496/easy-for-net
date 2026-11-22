@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { apiAdoptionVerdict, normalizeRoot } from "../lib/api-identity.mjs";
 import { parseLesson } from "../lib/memory.mjs";
-import { commandParts, hasExecutable, sleepSync, windowsCommandLine } from "../lib/proc.mjs";
+import { commandParts, hasExecutable, scriptArgs, sleepSync, windowsCommandLine } from "../lib/proc.mjs";
 import { resolveBaseBranch, resolveWorkBranch } from "../lib/project-config.mjs";
 import { describeRemote, forgeOf, parseRemote, pullRequestUrl } from "../lib/remote.mjs";
 import {
@@ -17,9 +17,17 @@ import {
 
 // --- proc.mjs ---------------------------------------------------------------------------
 
+test("scriptArgs drops the `--` pnpm passes through, and nothing else", () => {
+  // `pnpm verify -- --full` reaches the script as `--`, `--full`; `pnpm verify --full` as `--full`.
+  assert.deepEqual(scriptArgs(["node", "verify.mjs", "--", "--full"]), ["--full"]);
+  assert.deepEqual(scriptArgs(["node", "verify.mjs", "--full"]), ["--full"]);
+  assert.deepEqual(scriptArgs(["node", "queue.mjs", "add", "--", "x"]), ["add", "--", "x"]);
+  assert.deepEqual(scriptArgs(["node", "verify.mjs"]), []);
+});
+
 test("commandParts keeps a double-quoted argument together", () => {
   assert.deepEqual(commandParts('node "scripts/a b.mjs" --x'), { cmd: "node", args: ["scripts/a b.mjs", "--x"] });
-  assert.deepEqual(commandParts("  npm run gate "), { cmd: "npm", args: ["run", "gate"] });
+  assert.deepEqual(commandParts("  pnpm gate "), { cmd: "pnpm", args: ["gate"] });
   assert.deepEqual(commandParts(""), { cmd: undefined, args: [] });
 });
 
@@ -35,8 +43,8 @@ test("sleepSync blocks for roughly the time asked", () => {
 });
 
 test("the Windows command line quotes only what needs it", () => {
-  const line = windowsCommandLine("npm", ["run", "test"]);
-  assert.match(line, /^npm run test$/);
+  const line = windowsCommandLine("pnpm", ["test"]);
+  assert.match(line, /^pnpm test$/);
 });
 
 // --- project-config branch resolution -----------------------------------------------------
@@ -128,11 +136,11 @@ test("names are one per project and safe for a scheduler", () => {
   assert.equal(launchdLabel("easy-for-net"), "com.easy-for-net.queue-drain");
 });
 
-test("the Windows wrapper sets the environment, then calls npm", () => {
+test("the Windows wrapper sets the environment, then calls pnpm", () => {
   const wrapper = windowsWrapper("D:\\repo", env, "D:\\repo\\.agent-runs\\drain.log");
   assert.match(wrapper, /cd \/d "D:\\repo"/);
   assert.match(wrapper, /set "AGENT_AUTO_PUSH=0"/);
-  assert.match(wrapper, /call npm run loop >> "D:\\repo\\\.agent-runs\\drain\.log" 2>&1/);
+  assert.match(wrapper, /call pnpm loop >> "D:\\repo\\\.agent-runs\\drain\.log" 2>&1/);
 });
 
 test("the Windows launcher runs the wrapper with no window, and waits for it", () => {
@@ -147,7 +155,7 @@ test("schtasks runs every N minutes and replaces an earlier install", () => {
 });
 
 test("the POSIX command sets the environment inline", () => {
-  assert.match(posixCommand("/repo", env), /^cd "\/repo" && AGENT_MODEL=opus .* npm run loop$/);
+  assert.match(posixCommand("/repo", env), /^cd "\/repo" && AGENT_MODEL=opus .* pnpm loop$/);
 });
 
 test("the timer carries the branch it was installed on", () => {

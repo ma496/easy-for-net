@@ -1,7 +1,7 @@
 # Hand-written streams
 
 The version folders beside this one are real `claude -p --output-format stream-json --verbose`
-output, recorded by `npm run test:claude-contract -- --record` and scrubbed. The files here
+output, recorded by `pnpm test:claude-contract --record` and scrubbed. The files here
 are written by hand, for shapes a live probe cannot produce on demand. Each file notes which
 shape it stands for in the test that reads it.
 

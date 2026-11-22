@@ -2,8 +2,8 @@
 /**
  * Print (and optionally open) the pull-request page for the current branch.
  *
- *   npm run pr           # print the URL
- *   npm run pr -- --open # print and open it in the browser
+ *   pnpm pr              # print the URL
+ *   pnpm pr --open # print and open it in the browser
  *
  * It opens nothing on the forge by itself and never merges: creating the pull request is
  * a click, or `auto-ship.mjs` with the GitHub CLI installed.

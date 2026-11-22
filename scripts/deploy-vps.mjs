@@ -2,10 +2,10 @@
 /**
  * Deploy this application to a Linux server through Coolify, from Windows, macOS or Linux.
  *
- *   npm run deploy:vps -- --host 203.0.113.10 --domain example.com --email you@example.com
- *   npm run deploy:vps -- --domain example.com            # again: the other answers are remembered
- *   npm run deploy:vps -- --host 203.0.113.10 --check     # only report the server's prerequisites
- *   EFN_DNS_TOKEN=<token> npm run deploy:vps -- --domain example.com --dns-provider cloudflare
+ *   pnpm deploy:vps --host 203.0.113.10 --domain example.com --email you@example.com
+ *   pnpm deploy:vps --domain example.com                  # again: the other answers are remembered
+ *   pnpm deploy:vps --host 203.0.113.10 --check           # only report the server's prerequisites
+ *   EFN_DNS_TOKEN=<token> pnpm deploy:vps --domain example.com --dns-provider cloudflare
  *
  * --domain is the domain the application lives under: the platform is served at app.<domain> and
  * every tenant at <identifier>.<domain>. --platform-subdomain serves the platform at another
@@ -41,7 +41,7 @@
  * vultr, or any other lego provider with the token given as VARIABLE=token, several joined by
  * commas), and the token is an API token allowed to edit the domain's records (godaddy: its API key
  * and secret as KEY:SECRET), best given as the EFN_DNS_TOKEN environment variable: as
- * --dns-token it stays in the shell's history and npm's debug log. Traefik then holds one
+ * --dns-token it stays in the shell's history and pnpm's debug log. Traefik then holds one
  * *.<domain> wildcard certificate. This script never prints, logs or saves the token; it reaches the
  * server over SSH's input, and is kept there in a root-only file Traefik reads.
  * Without them only HTTP-01 per-host certificates apply, which Traefik cannot obtain for a host it
@@ -96,7 +96,7 @@ import {
   wildcardRecordName,
   zoneCandidates,
 } from "./lib/deploy-vps.mjs";
-import { hasExecutable, IS_WINDOWS } from "./lib/proc.mjs";
+import { hasExecutable, IS_WINDOWS, scriptArgs } from "./lib/proc.mjs";
 import { BASE_BRANCH, REPO_ROOT } from "./lib/project-config.mjs";
 import { sshHostName } from "./lib/remote.mjs";
 
@@ -110,14 +110,14 @@ const fail = (message) => {
   process.exit(1);
 };
 
-const { options: given, flags, errors } = parseDeployArgs(process.argv.slice(2));
+const { options: given, flags, errors } = parseDeployArgs(scriptArgs());
 if (flags.help) {
   // The header comment is the help text.
   const source = readFileSync(new URL(import.meta.url), "utf8");
   log(source.slice(source.indexOf("/**") + 3, source.indexOf("*/")).replace(/^ \* ?/gm, "").trim());
   process.exit(0);
 }
-if (errors.length) fail(`${errors.join("; ")} (npm run deploy:vps -- --help)`);
+if (errors.length) fail(`${errors.join("; ")} (pnpm deploy:vps --help)`);
 
 // The shape of the deployment is the project's own: a stack that hands the API no tenant template
 // serves one site at the domain itself, with none of the multi-tenant parts below.
@@ -134,9 +134,9 @@ if (single) {
 }
 // Read once, never saved and never printed: only the uploaded token file carries it to the server.
 // The token is best given as EFN_DNS_TOKEN: a command-line argument stays in the shell's history,
-// the process list and npm's debug log.
+// the process list and pnpm's debug log.
 if (given["dns-token"]) {
-  console.error("warning: --dns-token is kept in your shell history and npm's debug log; prefer EFN_DNS_TOKEN=<token>");
+  console.error("warning: --dns-token is kept in your shell history and pnpm's debug log; prefer EFN_DNS_TOKEN=<token>");
 }
 let dnsProvider = given["dns-provider"];
 let dnsToken = given["dns-token"] ?? (dnsProvider ? process.env.EFN_DNS_TOKEN : undefined);
@@ -159,7 +159,7 @@ if (godaddy.key && !dnsToken) {
 }
 
 const dns = dnsChallenge(dnsProvider, dnsToken);
-if (dns.error) fail(`${dns.error} (npm run deploy:vps -- --help)`);
+if (dns.error) fail(`${dns.error} (pnpm deploy:vps --help)`);
 
 const rl = process.stdin.isTTY ? createInterface({ input: process.stdin, output: process.stdout }) : null;
 async function ask(question, fallback = "") {

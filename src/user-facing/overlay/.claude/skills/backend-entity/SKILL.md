@@ -161,7 +161,7 @@ From the repository root:
 
 ```sh
 dotnet tool restore
-npm run stop:api    # a running API locks the build output dotnet ef builds into
+pnpm stop:api       # a running API locks the build output dotnet ef builds into
 dotnet ef migrations add <Name> --project src/backend/Source/Backend.csproj
 dotnet ef database update --project src/backend/Source/Backend.csproj
 ```
@@ -185,5 +185,5 @@ there, not in a migration.
 
 ## Verify
 
-`npm run stop:api`, `dotnet build EasyForNet.slnx`, then `dotnet test --project src/backend/Tests/Backend.Tests.csproj` —
+`pnpm stop:api`, `dotnet build EasyForNet.slnx`, then `dotnet test --project src/backend/Tests/Backend.Tests.csproj` —
 `FeatureDependencyTests` runs there.

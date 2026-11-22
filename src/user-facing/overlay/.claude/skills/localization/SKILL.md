@@ -210,4 +210,4 @@ property spelled exactly so (one space after the colon) with no `]` inside the a
 - [ ] Every `t('…')` / `getServerTranslation` call carries its English default after `||`
 - [ ] A new language is registered in all four places, flag included
 - [ ] Admin writes to texts or languages call `revalidatePublicCache(['localization'])` and `router.refresh()`
-- [ ] `dotnet test` (resource-file test) and `npm run test` (locale, default-text and dictionary-fetch tests) pass
+- [ ] `dotnet test` (resource-file test) and `pnpm test` (locale, default-text and dictionary-fetch tests) pass

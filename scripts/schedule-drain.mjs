@@ -2,14 +2,14 @@
 /**
  * The trigger — what makes the loop start without anybody typing a command.
  *
- *   npm run schedule -- install                 # drain now, then every minute
- *   npm run schedule -- install --interval 900  # every 15 minutes
- *   npm run schedule -- install --max-usd-per-task 80 --max-usd-per-drain 300
- *   npm run schedule -- install --auto-push --no-refuse-dirty
- *   npm run schedule -- status
- *   npm run schedule -- uninstall
+ *   pnpm schedule install                       # drain now, then every minute
+ *   pnpm schedule install --interval 900        # every 15 minutes
+ *   pnpm schedule install --max-usd-per-task 80 --max-usd-per-drain 300
+ *   pnpm schedule install --auto-push --no-refuse-dirty
+ *   pnpm schedule status
+ *   pnpm schedule uninstall
  *
- * Installs a timer that runs `npm run loop` on an interval — observe the running product,
+ * Installs a timer that runs `pnpm loop` on an interval — observe the running product,
  * file specs for what is failing, then drain the queue. On Windows that is a Task Scheduler
  * task, on macOS a launchd agent; on Linux it prints the equivalent cron line. An empty
  * queue exits immediately and costs nothing, so a frequent interval is cheap; the expense
@@ -39,7 +39,7 @@ import {
   formatCeiling,
   parseCeiling,
 } from "./lib/budget.mjs";
-import { isAlive, killTree } from "./lib/proc.mjs";
+import { isAlive, killTree, scriptArgs } from "./lib/proc.mjs";
 import { parseLock } from "./lib/queue-lock.mjs";
 import { config, resolveModel, WORK_BRANCH, workflowRefusal } from "./lib/project-config.mjs";
 import {
@@ -58,7 +58,7 @@ const LOG_FILE = join(LOG_DIR, "drain.log");
 const LOCK = join(ROOT, ".agent-queue", "drain.lock");
 const OS = platform();
 
-const argv = process.argv.slice(2);
+const argv = scriptArgs();
 const action = argv.find((a) => !a.startsWith("--")) ?? "status";
 const argOf = (name, fallback) => {
   const i = argv.indexOf(`--${name}`);
@@ -242,7 +242,7 @@ if (action === "uninstall") {
     console.log(
       "A task interrupted mid-run leaves its partial edits in the working tree. They are\n" +
         "NOT committed and NOT reverted here — review them, then either keep them or run\n" +
-        "`git checkout -- <paths>`, and `npm run queue -- resume` to requeue the task.",
+        "`git checkout -- <paths>`, and `pnpm queue resume` to requeue the task.",
     );
   }
 
@@ -273,7 +273,7 @@ console.log(
     : "  AGENT_REFUSE_DIRTY_START=0 — dirty WIP is parked under .agent-runs/interrupted/",
 );
 console.log(`  log:  ${LOG_FILE}`);
-console.log(`\nQueue work with:   npm run queue -- add "<task>"`);
-console.log(`Check on it with:  npm run schedule -- status`);
-console.log(`Stop it with:      npm run schedule -- uninstall`);
+console.log(`\nQueue work with:   pnpm queue add "<task>"`);
+console.log(`Check on it with:  pnpm schedule status`);
+console.log(`Stop it with:      pnpm schedule uninstall`);
 console.log("\nFlags and ceilings are baked into the scheduled command. Re-run install after changing them.");
