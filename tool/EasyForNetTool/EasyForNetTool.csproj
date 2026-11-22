@@ -8,7 +8,7 @@
 
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dotnet-efn</ToolCommandName>
-    <Version>1.1.37</Version>
+    <Version>1.1.38</Version>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/ma496/EasyForNet</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
