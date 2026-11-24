@@ -231,12 +231,15 @@ bld.Services.AddRateLimiter(options =>
     });
 });
 
-// configure HanngFire
+// configure Hangfire
 bld.Services.AddHangfire(config =>
     {
         config.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
               .UseSimpleAssemblyNameTypeSerializer()
               .UseRecommendedSerializerSettings()
+              // A failed job is retried 3 times (Hangfire's default is 10), replacing the built-in
+              // filter; a job may still declare its own [AutomaticRetry(Attempts = n)].
+              .UseFilter(new AutomaticRetryAttribute { Attempts = 3 })
               .UsePostgreSqlStorage(options =>
                   options.UseNpgsqlConnection(hangfireConnection));
     });

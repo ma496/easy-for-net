@@ -122,7 +122,9 @@ service method by resolving it and calling it directly with the arguments the jo
 The Hangfire server runs in-process with the API, so jobs execute as soon as `dotnet run` is up.
 Watch `/hangfire` (signed in as an account holding `Hangfire.Dashboard` — the seeded `admin`) for
 failures and retries; a job that keeps failing there is usually a serialization problem (a captured
-non-serializable argument) or a missing DI registration.
+non-serializable argument) or a missing DI registration. A failed job is retried 3 times (the
+global `AutomaticRetryAttribute` in `Program.cs`, replacing Hangfire's default of 10) and then
+stays in Failed; a job that needs another count declares its own `[AutomaticRetry(Attempts = n)]`.
 
 Configure SMTP before expecting mail to arrive — as the `EmailSettings` section in
 `appsettings.Development.json` (the default), or as an override on `/admin/settings`. The
