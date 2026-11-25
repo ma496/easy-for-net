@@ -1,8 +1,8 @@
 'use client'
 
-import Image from 'next/image'
 import { useTranslation } from '@/i18n'
 import { LocalizedLink } from '@/components/ui'
+import { LogoMark } from '@/components/custom'
 import { cn } from '@/lib/utils'
 
 /**
@@ -24,9 +24,7 @@ export const BrandMark = ({ href = '/', compactOnPhone = false, className }: Bra
 
   return (
     <LocalizedLink href={href} className={cn('flex min-w-0 items-center gap-2.5 rounded-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none', className)}>
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
-        <Image className="size-5" src="/assets/images/icon.png" alt="" width={20} height={20} unoptimized priority />
-      </span>
+      <LogoMark />
       <span className={cn('truncate text-[15px] font-semibold tracking-tight text-foreground', compactOnPhone && 'max-sm:sr-only')}>{t('brand.name') || 'Easy For Net'}</span>
     </LocalizedLink>
   )

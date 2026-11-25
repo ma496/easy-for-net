@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
@@ -59,6 +59,51 @@ describe('design tokens', () => {
 
     expect(Object.keys(tokens).length).toBeGreaterThan(15)
     expect(failing).toEqual([])
+  })
+
+  it('pins the brand palette: orange primary on neutral greys', () => {
+    expect(palette(css, ':root')).toMatchObject({
+      primary: '#b34a0a',
+      'primary-hover': '#943d08',
+      'primary-foreground': '#ffffff',
+      background: '#f5f5f5',
+      surface: '#ffffff',
+      foreground: '#0a0a0a',
+      'muted-foreground': '#525252',
+      border: '#e5e5e5',
+    })
+    expect(palette(css, '.dark')).toMatchObject({
+      primary: '#fb923c',
+      'primary-hover': '#fdba74',
+      'primary-foreground': '#1a0a02',
+      background: '#121212',
+      surface: '#191919',
+      foreground: '#ebebeb',
+      'muted-foreground': '#a3a3a3',
+      border: '#2a2a2a',
+    })
+  })
+
+  it('gives every token both a light and a dark value', () => {
+    /** Every custom property a top-level block declares, whatever its value. */
+    const declared = (selector: string) =>
+      [...(css.match(new RegExp(`^${selector.replace('.', '\\.')} \\{([^}]*)\\}`, 'm'))?.[1] ?? '').matchAll(/--([\w-]+):/g)].map(([, name]) => name).sort()
+
+    expect(declared(':root').length).toBeGreaterThan(15)
+    expect(declared('.dark')).toEqual(declared(':root'))
+  })
+
+  it('maps the font tokens onto the brand typefaces', () => {
+    const theme = css.match(/@theme inline \{([^}]*)\}/)?.[1] ?? ''
+
+    expect(theme).toMatch(/--font-sans:\s*var\(--font-inter\)/)
+    expect(theme).toMatch(/--font-mono:\s*var\(--font-jetbrains-mono\)/)
+    expect(theme).toMatch(/--font-display:\s*var\(--font-instrument-serif\)/)
+  })
+
+  it('ships the brand mark as the favicon', () => {
+    expect(existsSync(join(webDirectory, 'app', 'icon.svg'))).toBe(true)
+    expect(existsSync(join(webDirectory, 'app', 'icon.png'))).toBe(false)
   })
 
   const files = [...sources(join(webDirectory, 'app')), ...sources(join(webDirectory, 'components')), join(webDirectory, 'App.tsx')]

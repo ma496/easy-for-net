@@ -1,5 +1,5 @@
 import { ProviderComponent, TranslationProvider, LocaleGuard, ThemeScript } from '@/components/layouts'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Inter, Instrument_Serif, JetBrains_Mono } from 'next/font/google'
 import { getDictionary, i18nConfig, type Locale, getServerTranslation } from '@/i18n'
 
 import 'react-perfect-scrollbar/dist/css/styles.css'
@@ -17,9 +17,10 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: Loc
   }
 }
 
-/** The app's typefaces, exposed as the CSS variables the design tokens in styles/tailwind.css read. */
-const geistSans = Geist({ subsets: ['latin'], display: 'swap', variable: '--font-geist-sans' })
-const geistMono = Geist_Mono({ subsets: ['latin'], display: 'swap', variable: '--font-geist-mono' })
+/** The app's typefaces (body, display headings, code), exposed as the CSS variables the design tokens in styles/tailwind.css read. */
+const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' })
+const instrumentSerif = Instrument_Serif({ subsets: ['latin'], weight: '400', style: ['normal', 'italic'], display: 'swap', variable: '--font-instrument-serif' })
+const jetBrainsMono = JetBrains_Mono({ subsets: ['latin'], display: 'swap', variable: '--font-jetbrains-mono' })
 
 export async function generateStaticParams() {
   return i18nConfig.locales.map((locale) => ({ lang: locale }))
@@ -27,7 +28,7 @@ export async function generateStaticParams() {
 
 /**
  * Server-rendered root layout for every locale-prefixed route.
- * Loads the locale dictionary, applies the Geist fonts, the saved theme and the served language's
+ * Loads the locale dictionary, applies the brand typefaces (Inter, Instrument Serif for display, JetBrains Mono), the saved theme and the served language's
  * direction (so a right-to-left page is right-to-left in its very first HTML), and wraps the tree in the
  * translation and Redux provider components - neither of which holds the page's content back.
  */
@@ -47,7 +48,7 @@ export default async function RootLayout({
       <head>
         <ThemeScript />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning={true}>
+      <body className={`${inter.variable} ${instrumentSerif.variable} ${jetBrainsMono.variable}`} suppressHydrationWarning={true}>
         <TranslationProvider dictionary={dictionary}>
           <LocaleGuard urlLocale={lang} servedCulture={dictionary.culture} defaultCulture={dictionary.defaultCulture} languages={dictionary.languages} />
           <ProviderComponent>{children}</ProviderComponent>

@@ -98,9 +98,10 @@ export async function proxy(request: NextRequest) {
   return response || NextResponse.next()
 }
 
-// Static files - `public/` and the app-root metadata files (`icon.png`, `favicon.ico`, ...) - are
+// Static files - `public/` and the app-root metadata files (`icon.svg`, `favicon.ico`, ...) - are
 // served from the site root with no locale segment, so they must bypass locale routing; otherwise
-// `/icon.png` is rewritten or redirected to `/<locale>/icon.png`, which does not exist.
+// `/icon.svg` is rewritten or redirected to `/<locale>/icon.svg`, which does not exist. The generated
+// Apple touch icon (`app/apple-icon.tsx`) is served at `/apple-icon` with no extension, so it is named.
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|assets/|.*\\.(?:ico|png|jpg|jpeg|gif|svg|webp|avif|txt|xml|webmanifest)$).*)'],
+  matcher: ['/((?!_next/static|_next/image|assets/|apple-icon$|.*\\.(?:ico|png|jpg|jpeg|gif|svg|webp|avif|txt|xml|webmanifest)$).*)'],
 }

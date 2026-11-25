@@ -1,8 +1,7 @@
 'use client'
 import { toggleSidebar } from '@/store/slices'
-import { ThemeChanger, NavUser, LanguageDropdown } from '@/components/custom'
+import { ThemeChanger, NavUser, LanguageDropdown, LogoMark } from '@/components/custom'
 import { Breadcrumbs, LocalizedLink } from '@/components/ui'
-import Image from 'next/image'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { SearchComponent } from './search-component'
 import { PanelLeft } from 'lucide-react'
@@ -33,8 +32,8 @@ export const Header = () => {
         >
           <PanelLeft size={18} />
         </button>
-        <LocalizedLink href={adminPath()} className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20 lg:hidden" aria-label={t('brand.name') || 'Easy For Net'}>
-          <Image className="size-5" src="/assets/images/icon.png" alt="" width={20} height={20} unoptimized />
+        <LocalizedLink href={adminPath()} className="flex size-8 shrink-0 lg:hidden" aria-label={t('brand.name') || 'Easy For Net'}>
+          <LogoMark />
         </LocalizedLink>
         <div className="hidden h-5 w-px bg-border sm:block" />
         <Breadcrumbs className="hidden min-w-0 flex-1 sm:flex" />

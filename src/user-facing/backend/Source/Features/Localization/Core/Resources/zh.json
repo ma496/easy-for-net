@@ -710,7 +710,9 @@
     },
     "footer": {
       "tagline": "一个快速、对搜索引擎友好的网站，内置账户和管理后台。",
-      "navLabel": "页脚"
+      "navLabel": "页脚",
+      "pages": "页面",
+      "account": "账户"
     },
     "home": {
       "hero": {

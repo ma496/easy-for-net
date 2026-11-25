@@ -710,7 +710,9 @@
     },
     "footer": {
       "tagline": "Un site rapide et bien référencé, avec comptes et espace d’administration intégrés.",
-      "navLabel": "Pied de page"
+      "navLabel": "Pied de page",
+      "pages": "Pages",
+      "account": "Compte"
     },
     "home": {
       "hero": {

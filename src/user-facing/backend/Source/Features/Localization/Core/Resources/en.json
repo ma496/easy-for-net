@@ -710,7 +710,9 @@
     },
     "footer": {
       "tagline": "A fast, search-friendly website with accounts and an admin area built in.",
-      "navLabel": "Footer"
+      "navLabel": "Footer",
+      "pages": "Pages",
+      "account": "Account"
     },
     "home": {
       "hero": {

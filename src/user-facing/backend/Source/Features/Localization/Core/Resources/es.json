@@ -710,7 +710,9 @@
     },
     "footer": {
       "tagline": "Un sitio web rápido y optimizado para buscadores, con cuentas y área de administración incluidas.",
-      "navLabel": "Pie de página"
+      "navLabel": "Pie de página",
+      "pages": "Páginas",
+      "account": "Cuenta"
     },
     "home": {
       "hero": {

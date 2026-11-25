@@ -12,7 +12,7 @@ import { authUrls } from '@/auth-urls'
 import { SidebarNavGroup } from './nav-group'
 import { cn, isAllowed } from '@/lib/utils'
 import { adminPath } from '@/lib/paths'
-import Image from 'next/image'
+import { LogoMark } from '@/components/custom'
 import { useMediaQuery } from '@/hooks'
 
 /**
@@ -168,10 +168,9 @@ export const Sidebar = () => {
         )}
       >
         <div className={cn('flex h-14 shrink-0 items-center justify-between gap-2 px-4', compact && 'lg:justify-center lg:px-0')}>
-          <Link href={adminPath()} className="flex min-w-0 items-center gap-2.5">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
-              <Image className="size-5" src="/assets/images/icon.png" alt="logo" width={20} height={20} unoptimized priority />
-            </span>
+          {/* In the rail the brand name is hidden, so the link carries it as its label. */}
+          <Link href={adminPath()} className="flex min-w-0 items-center gap-2.5" aria-label={compact ? t('brand.name') || 'Easy For Net' : undefined}>
+            <LogoMark />
             <span className={cn('truncate text-[15px] font-semibold tracking-tight text-foreground', compact && 'lg:hidden')}>{t('brand.name') || 'Easy For Net'}</span>
           </Link>
 

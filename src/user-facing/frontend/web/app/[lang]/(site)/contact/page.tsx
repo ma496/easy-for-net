@@ -1,6 +1,8 @@
 import { Clock, Mail, MapPin, Phone } from 'lucide-react'
 import { getServerTranslation } from '@/i18n'
+import { cn } from '@/lib/utils'
 import { buildMetadata, JsonLd } from '@/lib/server/seo'
+import { cardClass, iconTileClass, Section, SectionHeading } from '../_components/section'
 
 /** The contact page's address, as its SEO record is keyed. */
 const PATH = '/contact'
@@ -17,7 +19,8 @@ export async function generateMetadata({ params }: { params: Promise<{ lang: str
  */
 const Contact = async ({ params }: { params: Promise<{ lang: string }> }) => {
   const { lang } = await params
-  const [title, intro, emailLabel, emailValue, phoneLabel, phoneValue, addressLabel, addressValue, hoursLabel, hoursValue] = await Promise.all([
+  const [eyebrow, title, intro, emailLabel, emailValue, phoneLabel, phoneValue, addressLabel, addressValue, hoursLabel, hoursValue] = await Promise.all([
+    getServerTranslation(lang, 'site.nav.contact').then((value) => value || 'Contact'),
     getServerTranslation(lang, 'site.contact.title').then((value) => value || 'Contact us'),
     getServerTranslation(lang, 'site.contact.intro').then((value) => value || 'Questions, ideas or feedback? We would love to hear from you and usually answer within one working day.'),
     getServerTranslation(lang, 'site.contact.email.label').then((value) => value || 'Email'),
@@ -40,23 +43,22 @@ const Contact = async ({ params }: { params: Promise<{ lang: string }> }) => {
   return (
     <>
       <JsonLd lang={lang} path={PATH} />
-      <div className="mx-auto max-w-4xl px-4 py-14 sm:px-6 sm:py-20">
-        <h1 className="text-3xl font-semibold tracking-tight wrap-break-word text-foreground sm:text-4xl">{title}</h1>
-        <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">{intro}</p>
+      <Section>
+        <SectionHeading as="h1" eyebrow={eyebrow} title={title} description={intro} />
 
-        <dl className="mt-10 grid gap-5 sm:grid-cols-2">
+        <dl className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-2">
           {items.map((item) => (
-            <div key={item.label} className="relative min-w-0 rounded-xl border border-border bg-surface p-5 ps-19 shadow-xs">
-              <dt className="text-sm font-medium text-muted-foreground">
+            <div key={item.label} className={cn(cardClass, 'relative min-w-0 ps-22')}>
+              <dt className="text-sm text-muted-foreground">
                 {/* The icon sits in the term so the list holds only terms and descriptions; it is decoration. */}
-                <span aria-hidden="true" className="absolute start-5 top-5 flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <span aria-hidden="true" className={cn(iconTileClass, 'absolute start-6 top-6')}>
                   <item.icon className="size-5" />
                 </span>
                 {item.label}
               </dt>
               <dd className="mt-1 min-w-0">
                 {item.href ? (
-                  <a href={item.href} className="block font-semibold break-all text-foreground hover:text-primary">
+                  <a href={item.href} className="block rounded-sm font-semibold wrap-anywhere text-foreground transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
                     <bdi dir={item.ltr ? 'ltr' : undefined}>{item.value}</bdi>
                   </a>
                 ) : (
@@ -66,7 +68,7 @@ const Contact = async ({ params }: { params: Promise<{ lang: string }> }) => {
             </div>
           ))}
         </dl>
-      </div>
+      </Section>
     </>
   )
 }

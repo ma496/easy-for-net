@@ -13,7 +13,7 @@ vi.mock('@/lib/utils/authentication-and-authorization', () => ({
   hasAuthCookie: async () => auth.signedIn,
 }))
 
-const { proxy } = await import('./proxy')
+const { proxy, config } = await import('./proxy')
 
 const origin = 'https://www.example.com'
 
@@ -63,5 +63,18 @@ describe('proxy auth gate', () => {
     const response = await proxy(request(path))
 
     expect(response.headers.get('location')).toBeNull()
+  })
+})
+
+describe('proxy matcher', () => {
+  /** The matcher as Next applies it: anchored to the whole pathname. */
+  const runsOn = (path: string) => new RegExp(`^${config.matcher[0]}$`).test(path)
+
+  it.each(['/apple-icon', '/icon.svg', '/assets/images/flags/EN.svg', '/robots.txt'])('lets the static file %s bypass the proxy', (path) => {
+    expect(runsOn(path)).toBe(false)
+  })
+
+  it.each(['/apple-iconx/admin', '/apple-icon/admin', '/en/apple-icon', '/admin', '/en/account/profile', '/'])('runs on %s', (path) => {
+    expect(runsOn(path)).toBe(true)
   })
 })
