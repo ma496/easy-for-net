@@ -1,7 +1,7 @@
 import { strict as assert } from "node:assert";
 import { test } from "node:test";
 
-import { lockVerdict, logTail, stackReuseVerdict, stackUrls, strayScreenshots, webAnswered, webEnv } from "../lib/dev-stack.mjs";
+import { isAppProcessOf, lockVerdict, logTail, stackReuseVerdict, stackUrls, strayScreenshots, webAnswered, webEnv } from "../lib/dev-stack.mjs";
 import { browserSection } from "../lib/build-record.mjs";
 
 const NOW = Date.parse("2026-11-23T10:00:00Z");
@@ -88,4 +88,27 @@ test("only untracked images directly at the root count as stray screenshots", ()
   ].join("\n");
   assert.deepEqual(strayScreenshots(porcelain), ["ui-users-375-dark.png", "qa-signin.JPEG", "page shot.webp"]);
   assert.deepEqual(strayScreenshots(""), []);
+});
+
+test("isAppProcessOf matches this checkout's dev launcher, proxy, API launcher and next dev, and nothing else", () => {
+  const opts = { root: String.raw`D:\Repo`, webDirs: ["src/app/frontend/web"], windows: true, selfPids: [99] };
+  const is = (commandLine, pid = 1) => isAppProcessOf({ pid, commandLine }, opts);
+  // Started by an absolute path, as dev.mjs and stack.mjs start them; any case on Windows.
+  assert.equal(is(String.raw`cmd.exe /d /s /c "node D:\Repo\scripts\dev-proxy.mjs --port 3000"`), true);
+  assert.equal(is(String.raw`node d:\repo\scripts\serve-api.mjs`), true);
+  assert.equal(is("node D:/Repo/scripts/dev.mjs --api-only"), true);
+  // next dev through the pnpm shim (a `..` in the path) and the stack's direct start; not next build.
+  assert.equal(is(String.raw`node "D:\Repo\src\app\frontend\web\node_modules\.bin\..\.pnpm\next@16\node_modules\next\dist\bin\next" dev`), true);
+  assert.equal(is(String.raw`node D:\Repo\src\app\frontend\web\node_modules\next\dist\bin\next dev --port 3001`), true);
+  assert.equal(is(String.raw`node D:\Repo\src\app\frontend\web\node_modules\next\dist\bin\next build`), false);
+  // pnpm's relative start names no checkout, so only the launcher's own record can claim it.
+  assert.equal(is("node  scripts/dev.mjs"), false);
+  // Another checkout, a sibling whose name starts the same, the engine's own scripts, the caller.
+  assert.equal(is(String.raw`node D:\Other\scripts\dev-proxy.mjs`), false);
+  assert.equal(is(String.raw`node D:\Repo2\scripts\dev-proxy.mjs`), false);
+  assert.equal(is(String.raw`node D:\Repo\scripts\agent-run.mjs`), false);
+  assert.equal(is(String.raw`node D:\Repo\scripts\dev-proxy.mjs`, 99), false);
+  // POSIX paths are case-sensitive.
+  assert.equal(isAppProcessOf({ pid: 1, commandLine: "node /repo/scripts/dev-proxy.mjs" }, { root: "/repo", windows: false }), true);
+  assert.equal(isAppProcessOf({ pid: 1, commandLine: "node /Repo/scripts/dev-proxy.mjs" }, { root: "/repo", windows: false }), false);
 });

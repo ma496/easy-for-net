@@ -11,8 +11,10 @@
  * servers all live elsewhere.
  */
 import { spawnSync } from "node:child_process";
+import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { IS_WINDOWS } from "./proc.mjs";
+import { normalizeRoot } from "./api-identity.mjs";
+import { IS_WINDOWS, isAlive } from "./proc.mjs";
 
 /** The directory whose files a running API of `app` (an `apps` entry) holds open. */
 export function apiBinDir(repoRoot, app = { backend: join("src", "backend") }) {
@@ -71,4 +73,23 @@ export function listProcesses() {
     .map((line) => line.trim().match(/^(\d+)\s+(.*)$/))
     .filter(Boolean)
     .map(([, pid, args]) => ({ pid: Number(pid), exe: "", commandLine: args }));
+}
+
+/**
+ * verify.mjs records each service it starts in `.agent-runs/dev-service-<port>.json`. A record
+ * for this checkout whose process is now gone would only mislead the next run, so it is removed.
+ */
+export function dropDeadServiceRecords(repoRoot) {
+  const dir = join(repoRoot, ".agent-runs");
+  if (!existsSync(dir)) return;
+  for (const file of readdirSync(dir).filter((f) => /^dev-service-\d+\.json$/.test(f))) {
+    try {
+      const record = JSON.parse(readFileSync(join(dir, file), "utf8"));
+      if (normalizeRoot(record.repoRoot ?? "") === normalizeRoot(repoRoot) && !isAlive(record.pid)) {
+        rmSync(join(dir, file), { force: true });
+      }
+    } catch {
+      // A record that does not parse is not ours to judge.
+    }
+  }
 }

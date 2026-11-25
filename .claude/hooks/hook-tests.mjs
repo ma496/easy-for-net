@@ -12,8 +12,9 @@
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { APPS, REPO_ROOT } from "../../scripts/lib/project-config.mjs";
 
 /**
  * What Claude Code makes of a hook's exit: 0 lets the call through, 2 refuses it, and any
@@ -549,6 +550,118 @@ extraCases += readCases.length;
 {
   const res = spawnSync("node", [join(HOOKS_DIR, "..", "statusline.mjs")], { input: "{}", encoding: "utf8" });
   report(res.status === 0 && res.stdout.trim() !== "", "the status line renders", "output", res.status === 0 ? "output" : `exit ${res.status}`);
+  extraCases += 1;
+}
+
+// --- stop-api-on-backend-edit.mjs ----------------------------------------------
+// Dry-run: the hook says `would stop` instead of stopping, so no running API is touched.
+const STOP_API_HOOK = join(HOOKS_DIR, "stop-api-on-backend-edit.mjs");
+// The hook watches each app's backend from agentic.config.json, so the cases use the first one:
+// `src/<template>/backend` here, `src/backend` in a generated project.
+const BACKEND = APPS[0].backend.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "");
+const stopApiCases = [
+  { label: "stop-api: an endpoint changed", input: { tool_input: { file_path: `${BACKEND}/Source/Features/Identity/Endpoints/Users/UserCreateEndpoint.cs` } }, expect: true },
+  { label: "stop-api: a localization resource changed", input: { tool_input: { file_path: `${BACKEND}/Source/Features/Localization/Core/Resources/en.json` } }, expect: true },
+  { label: "stop-api: an absolute path under the API", input: { tool_input: { file_path: join(REPO_ROOT, BACKEND, "Source", "Program.cs") } }, expect: true },
+  { label: "stop-api: a Windows path under the API", input: { tool_input: { file_path: `${REPO_ROOT.replaceAll("/", BS)}${BS}${BACKEND.replaceAll("/", BS)}${BS}Source${BS}Program.cs` } }, expect: process.platform === "win32" },
+  { label: "stop-api: a lower-cased Windows path", input: { tool_input: { file_path: join(REPO_ROOT, BACKEND, "Source", "Program.cs").toLowerCase() } }, expect: process.platform === "win32" },
+  { label: "stop-api: the same layout in another checkout", input: { tool_input: { file_path: join(dirname(REPO_ROOT), "another-clone", BACKEND, "Source", "Program.cs") } }, expect: false },
+  { label: "stop-api: a sibling named like the API project", input: { tool_input: { file_path: `${BACKEND}/SourceGenerators/Gen.cs` } }, expect: false },
+  { label: "stop-api: a backend test changed", input: { tool_input: { file_path: `${BACKEND}/Tests/Features/Identity/UserCreateTests.cs` } }, expect: false },
+  { label: "stop-api: a web file changed", input: { tool_input: { file_path: "src/frontend/web/app/page.tsx" } }, expect: false },
+  { label: "stop-api: a folder merely named Source", input: { tool_input: { file_path: "docs/Source/notes.md" } }, expect: false },
+  { label: "stop-api: malformed input", input: "not json", expect: false },
+];
+for (const c of stopApiCases) {
+  const res = spawnSync("node", [STOP_API_HOOK], {
+    input: typeof c.input === "string" ? c.input : JSON.stringify(c.input),
+    encoding: "utf8",
+    env: { ...process.env, STOP_API_ON_EDIT_DRY_RUN: "1" },
+  });
+  const stopped = (res.stdout ?? "").includes("would stop");
+  const ok = res.status === 0 && stopped === c.expect;
+  report(ok, c.label, c.expect ? "stop" : "leave running", res.status !== 0 ? `crash (exit ${res.status})` : stopped ? "stop" : "leave running");
+}
+extraCases += stopApiCases.length;
+
+// Shell commands name no file, so the hook fingerprints the watched files before the command
+// and compares after. Each case runs Pre, does what the command would have done, runs Post.
+const shellRepo = mkdtempSync(join(tmpdir(), "hooktest-stopapi-"));
+// The machine's own git config must not decide these cases: a required signature or a global
+// hooks directory would refuse the fixture's commits, and the HEAD-moving cases would then lie.
+const shellGit = (...args) =>
+  spawnSync("git", ["-c", "commit.gpgsign=false", "-c", "core.hooksPath=", ...args], { cwd: shellRepo, encoding: "utf8" });
+shellGit("init", "-b", "main");
+shellGit("config", "user.email", "test@example.com");
+shellGit("config", "user.name", "test");
+// The hook reads which folders to watch from the repository it is pointed at.
+writeFileSync(join(shellRepo, "agentic.config.json"), JSON.stringify({ apps: [{ name: "app", backend: BACKEND, web: "web" }] }));
+mkdirSync(join(shellRepo, `${BACKEND}/Source/Resources`), { recursive: true });
+mkdirSync(join(shellRepo, `${BACKEND}/Tests`), { recursive: true });
+mkdirSync(join(shellRepo, `${BACKEND}/Source/bin`), { recursive: true });
+writeFileSync(join(shellRepo, ".gitignore"), "bin/\n");
+writeFileSync(join(shellRepo, `${BACKEND}/Source/Program.cs`), "class P {}\n");
+writeFileSync(join(shellRepo, `${BACKEND}/Source/Resources/en.json`), '{"a":"b"}\n');
+shellGit("add", ".");
+const shellInit = shellGit("commit", "-qm", "init");
+report(shellInit.status === 0, "stop-api shell: the fixture repository commits", "committed", shellInit.status === 0 ? "committed" : `git failed: ${shellInit.stderr.trim()}`);
+extraCases += 1;
+
+let shellCallId = 0;
+let shellClock = 0;
+const runShellHook = (phase, tool = "Bash") =>
+  spawnSync("node", [STOP_API_HOOK], {
+    input: JSON.stringify({ hook_event_name: phase, tool_name: tool, tool_use_id: `case-${shellCallId}`, tool_input: { command: "x" } }),
+    encoding: "utf8",
+    env: { ...process.env, STOP_API_ON_EDIT_DRY_RUN: "1", STOP_API_ON_EDIT_ROOT: shellRepo },
+  });
+const later = (file, text) => {
+  // Make sure the modified time moves even on a coarse-grained file system.
+  writeFileSync(join(shellRepo, file), text);
+  const t = new Date(Date.now() + 5000 * ++shellClock);
+  utimesSync(join(shellRepo, file), t, t);
+};
+const shellCases = [
+  { label: "stop-api shell: sed edits a resource", act: () => later(`${BACKEND}/Source/Resources/en.json`, '{"a":"c"}\n'), expect: true },
+  { label: "stop-api shell: a heredoc adds a source file", act: () => later(`${BACKEND}/Source/New.cs`, "class N {}\n"), expect: true },
+  { label: "stop-api shell: an already-dirty file edited again", act: () => later(`${BACKEND}/Source/Program.cs`, "class P { int x; }\n"), expect: true },
+  { label: "stop-api shell: a read-only command", act: () => {}, expect: false },
+  { label: "stop-api shell: committing the edits", act: () => { shellGit("add", "."); shellGit("commit", "-qm", "edit"); }, expect: false },
+  { label: "stop-api shell: a backend test edited", act: () => later(`${BACKEND}/Tests/T.cs`, "class T {}\n"), expect: false },
+  { label: "stop-api shell: build output written", act: () => later(`${BACKEND}/Source/bin/app.dll`, "x"), expect: false },
+  { label: "stop-api shell: a checkout moves the code", act: () => shellGit("checkout", "-q", "HEAD~1"), expect: true },
+  { label: "stop-api shell: a checkout of the same code", act: () => { shellGit("branch", "-q", "same"); shellGit("checkout", "-q", "same"); }, expect: false },
+  { label: "stop-api shell: a PowerShell edit", tool: "PowerShell", act: () => later(`${BACKEND}/Source/Program.cs`, "class Q {}\n"), expect: true },
+  // `sed -i … && dotnet build` with a failing build: the call ends in PostToolUseFailure, and the edit still landed.
+  { label: "stop-api shell: an edit, then the command fails", after: "PostToolUseFailure", act: () => later(`${BACKEND}/Source/Program.cs`, "class F {}\n"), expect: true },
+  { label: "stop-api shell: a failing read-only command", after: "PostToolUseFailure", act: () => {}, expect: false },
+];
+for (const c of shellCases) {
+  shellCallId++;
+  const pre = runShellHook("PreToolUse", c.tool);
+  c.act();
+  const post = runShellHook(c.after ?? "PostToolUse", c.tool);
+  const stopped = (post.stdout ?? "").includes("would stop");
+  const ok = pre.status === 0 && post.status === 0 && stopped === c.expect;
+  report(ok, c.label, c.expect ? "stop" : "leave running", post.status !== 0 ? `crash (exit ${post.status})` : stopped ? "stop" : "leave running");
+}
+extraCases += shellCases.length;
+
+// A call refused before it ran gets no Post event; the next Pre removes a snapshot over an hour old.
+{
+  const stale = join(tmpdir(), "efn-stop-api-hooktest-stale.json");
+  const fresh = join(tmpdir(), "efn-stop-api-hooktest-fresh.json");
+  writeFileSync(stale, "{}");
+  writeFileSync(fresh, "{}");
+  const old = new Date(Date.now() - 2 * 60 * 60 * 1000);
+  utimesSync(stale, old, old);
+  shellCallId++;
+  runShellHook("PreToolUse");
+  runShellHook("PostToolUse");
+  const ok = !existsSync(stale) && existsSync(fresh);
+  report(ok, "stop-api shell: a snapshot left by a refused call is swept", "swept, fresh kept", `stale ${existsSync(stale) ? "kept" : "swept"}, fresh ${existsSync(fresh) ? "kept" : "swept"}`);
+  rmSync(stale, { force: true });
+  rmSync(fresh, { force: true });
   extraCases += 1;
 }
 

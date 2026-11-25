@@ -36,10 +36,10 @@
  *    where it came from. Ctrl+C, or any one process exiting, stops them all. The containers are
  *    left running; `docker compose down` stops them.
  */
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { DEV_PORTS, describePortHolder, isPortFree, knownHolderHint, nextFreePort, readDevPorts, readWebSettings, webOriginOverrides } from "./lib/dev-ports.mjs";
-import { webEnv } from "./lib/dev-stack.mjs";
+import { DEV_RUN_DIR, devRunRecordName, webEnv } from "./lib/dev-stack.mjs";
 import { hasExecutable, killTree, IS_WINDOWS, runSync, sleepSync, spawnPortable, scriptArgs } from "./lib/proc.mjs";
 import { REPO_ROOT, appArg, selectApp } from "./lib/project-config.mjs";
 
@@ -106,6 +106,13 @@ if (!API_ONLY && !existsSync(join(WEB, "node_modules"))) {
   console.log("dev: installing the web app's packages…");
   if (runSync("pnpm", ["install"], { cwd: WEB, stdio: "inherit" }).status !== 0) fail("pnpm install failed.");
 }
+
+// pnpm starts this script by a relative path, so nothing in its command line says which checkout
+// it belongs to. The record says so for `pnpm stop` (scripts/stop-app.mjs), and goes when it exits.
+const RUN_RECORD = join(REPO_ROOT, DEV_RUN_DIR, devRunRecordName(process.pid));
+mkdirSync(join(REPO_ROOT, DEV_RUN_DIR), { recursive: true });
+writeFileSync(RUN_RECORD, JSON.stringify({ pid: process.pid, repoRoot: REPO_ROOT, app: APP.name, startedAt: new Date().toISOString() }));
+process.on("exit", () => rmSync(RUN_RECORD, { force: true }));
 
 const children = [];
 let stopping = false;

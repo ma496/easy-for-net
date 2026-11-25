@@ -122,3 +122,34 @@ export function strayScreenshots(porcelain) {
     .map((line) => line.slice(3).trim().replace(/^"|"$/g, ""))
     .filter((path) => path && !/[\/]/.test(path) && IMAGE.test(path));
 }
+
+/**
+ * Where `pnpm dev` records itself while it runs, one file per launcher pid, relative to the checkout.
+ * pnpm starts `dev.mjs` by a relative path, so its command line does not say which checkout it
+ * belongs to; this record is how `stop-app.mjs` finds it.
+ */
+export const DEV_RUN_DIR = ".agent-runs";
+export const devRunRecordName = (pid) => `dev-run-${pid}.json`;
+export const DEV_RUN_RECORD = /^dev-run-\d+\.json$/;
+
+/**
+ * Whether a listed process (`{ pid, commandLine }`) is part of this checkout's running app as its
+ * command line shows it: a dev launcher, dev proxy or API launcher started by an absolute path
+ * into `<root>/scripts/`, or a `next dev` of one of the web apps (`webDirs`, relative to the
+ * root). Paths are compared with forward slashes, and without regard to case on Windows. A
+ * `next build`, another checkout's app and the caller itself (`selfPids`) are never matched.
+ */
+export function isAppProcessOf(p, { root, webDirs = [], windows = process.platform === "win32", selfPids = [] }) {
+  if (!p?.pid || selfPids.includes(p.pid)) return false;
+  const norm = (value) => {
+    const s = String(value ?? "").replace(/\\/g, "/");
+    return windows ? s.toLowerCase() : s;
+  };
+  const base = norm(root).replace(/\/+$/, "");
+  if (!base) return false;
+  const cmd = norm(p.commandLine);
+  if (["dev.mjs", "dev-proxy.mjs", "serve-api.mjs"].some((name) => cmd.includes(`${base}/scripts/${name}`))) return true;
+  const modules = webDirs.map((dir) => `${base}/${norm(dir).replace(/^\/+|\/+$/g, "")}/node_modules/`);
+  if (!modules.some((m) => cmd.includes(m))) return false;
+  return /\/next\/dist\/bin\/next["']?\s+dev\b/.test(cmd) || cmd.includes("/next/dist/server/lib/start-server.js");
+}

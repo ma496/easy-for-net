@@ -15,6 +15,7 @@
     "verify": "node scripts/verify.mjs",
     "dev": "node scripts/dev.mjs",
     "serve:api": "node scripts/serve-api.mjs",
+    "stop": "node scripts/stop-app.mjs",
     "stop:api": "node scripts/stop-api.mjs",
     "stack": "node scripts/stack.mjs",
     "auto": "node scripts/agent-run.mjs",

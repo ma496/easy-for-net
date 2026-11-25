@@ -13,12 +13,9 @@
  * Exits 0 when nothing is left running — including when nothing was — and 1 when a process
  * survived being stopped, since the build that follows would fail on the same lock.
  */
-import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
-import { join } from "node:path";
-import { apiBinDir, listProcesses, matchApiProcesses } from "./lib/api-process.mjs";
+import { apiBinDir, dropDeadServiceRecords, listProcesses, matchApiProcesses } from "./lib/api-process.mjs";
 import { isAlive, killTree, sleepSync } from "./lib/proc.mjs";
 import { APPS, REPO_ROOT } from "./lib/project-config.mjs";
-import { normalizeRoot } from "./lib/api-identity.mjs";
 
 const LIST_ONLY = process.argv.includes("--list") || process.argv.includes("--help");
 
@@ -52,29 +49,10 @@ for (let i = 0; i < 20 && survivors.length; i++) {
   survivors = survivors.filter((p) => isAlive(p.pid));
 }
 
-dropDeadServiceRecords();
+dropDeadServiceRecords(REPO_ROOT);
 
 if (survivors.length) {
   console.log(`stop-api: still running: ${survivors.map((p) => p.pid).join(", ")}. Stop it by hand before building.`);
   process.exit(1);
 }
 console.log(`stop-api: stopped ${found.length} process(es).`);
-
-/**
- * verify.mjs records each service it starts in `.agent-runs/dev-service-<port>.json`. A
- * record for this checkout whose process is now gone would only mislead the next run.
- */
-function dropDeadServiceRecords() {
-  const dir = join(REPO_ROOT, ".agent-runs");
-  if (!existsSync(dir)) return;
-  for (const file of readdirSync(dir).filter((f) => /^dev-service-\d+\.json$/.test(f))) {
-    try {
-      const record = JSON.parse(readFileSync(join(dir, file), "utf8"));
-      if (normalizeRoot(record.repoRoot ?? "") === normalizeRoot(REPO_ROOT) && !isAlive(record.pid)) {
-        rmSync(join(dir, file), { force: true });
-      }
-    } catch {
-      // A record that does not parse is not ours to judge.
-    }
-  }
-}

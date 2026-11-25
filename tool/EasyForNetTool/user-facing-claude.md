@@ -21,6 +21,7 @@ dotnet run --project src/backend/Source   # needs PostgreSQL and Redis (Connecti
 pnpm dev                                 # ports: DEV_PROXY_PORT / DEV_WEB_PORT / DEV_API_PORT in the root .env; a port something else holds is refused with a free one to move to
 pnpm dev                                 # from the repository root: the whole app — PostgreSQL + Redis (Docker), the API on :5000, then the web app (next dev on :3001) behind the dev proxy on :3000 once the API's /health answers; open http://localhost:3000 (the public site) and http://localhost:3000/admin (scripts/dev.mjs, scripts/dev-proxy.mjs; --no-docker, --api-only, --web-only)
 pnpm stop:api                            # from the repository root: stop this checkout's running API before a build (it locks bin/ on Windows)
+pnpm stop                                # from the repository root: stop this checkout's whole running app — `pnpm dev` (any mode), the dev proxy, `next dev`, the browser-check stack and the API (scripts/stop-app.mjs); also run automatically after Claude changes a file under src/backend/Source, localization resources included (.claude/hooks/stop-api-on-backend-edit.mjs), so restart with `pnpm dev`
 pnpm stack up|status|down                # from the repository root: the app for a browser check — API, next dev and dev proxy, detached on free ports (scripts/stack.mjs); `down` stops it
 docker compose up -d                     # from the repository root: PostgreSQL + Redis for development (docker-compose.yml)
 pnpm deploy:vps --host <ip> --domain <domain> --email <email>         # deploy to a VPS through Coolify: the site at <domain> (--www also serves www.<domain>, redirecting to it; DNS: an A record for each) (scripts/deploy-vps.mjs + scripts/deploy/vps/remote.sh, docker-compose.coolify.yml)
@@ -187,7 +188,7 @@ pnpm test:claude-contract           # check the installed Claude CLI still emits
 - **`agentic.config.json` is the one project-specific file.** It names the conventions every brief
   repeats, the departments (which agent owns which paths), the skills a diff owes, the gate and live
   checks, the service verify starts, and the hook rules. `scripts/lib/project-config.mjs` reads it;
-  the rest of `scripts/` is stack-agnostic, except `gate.mjs`, `serve-api.mjs`, `stack.mjs`, `stop-api.mjs`, `pg-ready.mjs`,
+  the rest of `scripts/` is stack-agnostic, except `gate.mjs`, `serve-api.mjs`, `stack.mjs`, `stop-api.mjs`, `stop-app.mjs`, `pg-ready.mjs`,
   `redis-ready.mjs` and `smoke.mjs`, which are how this stack builds and runs.
 - **Delegation is checked, not trusted.** The departments a change owes are derived from its finished
   diff and compared with the subagents actually seen in the run's stream: `ui-ux-reviewer` designs a

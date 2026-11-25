@@ -30,6 +30,7 @@ makes an unattended run safe to leave alone.
 | `guard-secret-reads.mjs` | The Read and Grep tools opening those same secret files — `secret-paths.mjs` is the one list both guards read |
 | `guard-bash.mjs` | For **both** the Bash and PowerShell tools: reading `.env` or the per-environment appsettings through the shell, `dotnet ef database drop`, dropping a Docker volume, `DROP`/`TRUNCATE`/`DELETE`, `git reset --hard`, `git clean -f`, `git checkout -- .` / `git restore .`, `git stash clear`, `git branch -D`, `dotnet ef database update 0`, `find` that deletes or runs a non-read command, `sed -n -i`, force-push (`-f` bundled or a `+` refspec included), blind `git add -A`, **pushing to the protected branch by any refspec — quoted, wrapped in `sh -c`, or by none, from a checkout of it**, **merging any pull request** (`git merge`, `gh pr merge`, the hosting APIs, `gh api`), in `team` a commit on the base branch, plus every pattern in `hooks.deniedCommands`. git's global options (`-C`, `-c`, `--no-pager`, …) are stripped before the git rules look, and an existence check (`ls`, `test`) excuses only its own segment of a compound command |
 | `project-conventions.mjs` | Nothing — reports the conventions in `hooks.conventions` back to the model after every edit |
+| `stop-api-on-backend-edit.mjs` | Nothing — after an Edit/Write under this checkout's `<backend>/Source/` of an app (localization resources included, tests and other checkouts not), stops its whole running app — API, web app and dev proxy — through `scripts/stop-app.mjs --quick`, since hot reload is not trusted. For Bash/PowerShell, which name no file, it fingerprints the watched files git sees as changed before the command (PreToolUse, git's optional locks off) and compares after (PostToolUse, and PostToolUseFailure for a command that failed after editing), so `sed`, heredocs and checkouts count while a commit or a build does not |
 | `session-start.mjs` | Nothing — orients a fresh session |
 
 Every hook is a Node script, so it behaves the same under Git Bash, PowerShell and a POSIX
@@ -83,8 +84,9 @@ repeat is the design closing its own loop, not a duplicate.
 so its last pass must have opened the changed screen through the Playwright MCP, screenshotted
 it and closed the browser. Otherwise its verdict must say `BROWSER: NOT NEEDED — <reason>`, in its
 own words: a waiver the lead suggested is refused. The app exists only for that tier:
-`pnpm stack up` before it, `pnpm stack down` after it. A claimed failure to start is re-tried by
-the runner. The session has one browser, so the UI reviewer goes first and alone, and two agents
+`pnpm stack up` before it, `pnpm stack down` after it. A backend fix made while it runs stops
+the stack with the rest of the app (`stop-api-on-backend-edit.mjs`), so a review after that fix
+starts it again. A claimed failure to start is re-tried by the runner. The session has one browser, so the UI reviewer goes first and alone, and two agents
 driving it at once are refused. QA has the same tools for a flow a person clicks through, and uses
 them only when the change has one.
 

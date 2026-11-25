@@ -62,6 +62,7 @@ pnpm dev --no-docker            # use the PostgreSQL and Redis you already run
 pnpm dev --api-only             # services + API, no web app and no proxy
 pnpm dev --web-only             # the web app and the proxy, against an API started elsewhere on :5000
 pnpm stop:api                   # stop an API left running from this checkout (it locks bin/ on Windows)
+pnpm stop                       # stop this checkout's whole running app (API, web app, dev proxy); Claude runs it after a backend edit
 ```
 
 The containers publish on `DEV_POSTGRES_PORT` and `DEV_REDIS_PORT` from the root `.env`: 5432 and 6379,

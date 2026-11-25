@@ -33,6 +33,7 @@ loop.mjs            the whole cycle: look → observe → plan → drain → rep
 | `dev-proxy.mjs` | The development front door on :3000 (loopback only; `--host` opts in to another address), mirroring `docker/Caddyfile`: `/api/*`, `/hubs/*`, `/hangfire*` and `/health` to the API, everything else to `next dev`, WebSocket upgrades piped for the hub and hot reload, `Host` kept, 502 when an upstream is down. Dependency-free; the pure parts are `lib/dev-proxy.mjs`. |
 | `stack.mjs` | `pnpm stack up\|status\|down`: the app for a browser check inside a task. It starts the API, `next dev` and the dev proxy detached, each on the first free port from its usual default, so they never collide with a developer's `pnpm dev`. The API's Web origins name the proxy's port. `up` returns once `/health` reports this checkout and the proxy serves a page, records the pids and URLs in `.agent-runs/stack.json` (a live stack of this checkout younger than `AGENT_STACK_MAX_MINUTES` is reused), and on failure writes `.agent-runs/stack-failure.json`, which the runner reads to excuse a review read from code. `down` stops every process it started. One `up` runs at a time per checkout (`.agent-runs/stack.lock`). When another API of this checkout holds its `bin/`, the stack's API is built into `.agent-runs/stack-api-bin/` and runs from there, so it serves the task's current code. Needs PostgreSQL and Redis already up. The shared pieces with `dev.mjs` are in `lib/dev-stack.mjs`. |
 | `stop-api.mjs` | Stops this checkout's running API (anything running from an app's `Source/bin/`), which on Windows locks the build output. The gate runs it before `dotnet build`; `pnpm stop:api`. |
+| `stop-app.mjs` | `pnpm stop` (`--list` to look): stops this checkout's whole running app with one process listing — `pnpm dev` with everything it started (found through the `.agent-runs/dev-run-<pid>.json` record `dev.mjs` keeps, since pnpm starts it by a relative path; a record is acted on only while its pid is still `dev.mjs`), a dev proxy, `serve-api.mjs` or `next dev` started by hand (`lib/dev-stack.mjs` `isAppProcessOf`), the API running from an app's `Source/bin/`, and the browser-check stack (`stack.mjs down`) when one is recorded. Containers are left running. `--quick`, which `.claude/hooks/stop-api-on-backend-edit.mjs` runs after a backend file changes, gives up at once when there is no live dev record, no recorded stack, no live service verify kept (`dev-service-<port>.json`) and nothing listening on the dev ports. |
 | `pg-ready.mjs` | Whether PostgreSQL accepts connections — the dependency probe for verify and the loop. |
 | `redis-ready.mjs` | Whether the Redis in `ConnectionStrings:Redis` accepts a TCP connection — the same probe, for the session store. |
 | `mcp/` | The MCP servers `.mcp.json` starts (`postgres`, `redis`, `playwright`), each one pinned. The Playwright wrapper writes to `.playwright-mcp/<branch>/<spec>/<task>/`, from `AGENT_TASK_ID`, which the runner sets (`manual/` outside a run). The PostgreSQL and Redis wrappers read the app's development connection strings and pass them in the server's environment (`lib/mcp-connections.mjs`), so `.mcp.json` names no credential. Stdout is the MCP protocol: a wrapper writes only to stderr. |
@@ -42,8 +43,8 @@ loop.mjs            the whole cycle: look → observe → plan → drain → rep
 | `lib/claude-events.mjs` | **The only reader of the Claude CLI's stream-json.** `stream-render.mjs` renders and adds up what it normalises. A CLI release that moves a field is fixed here, and `tests/claude-stream-contract.test.mjs` holds it against captured streams. |
 
 **Two kinds of file live here.** The engine — everything above except `gate`, `serve-api`, `dev`, `dev-proxy`, `stack`, `deploy`,
-`stop-api`, `pg-ready`, `redis-ready` and `smoke` — knows nothing about the stack; it asks `lib/project-config.mjs`,
-which reads `agentic.config.json`. Those ten are the stack-specific half: they are what the
+`stop-api`, `stop-app`, `pg-ready`, `redis-ready` and `smoke` — knows nothing about the stack; it asks `lib/project-config.mjs`,
+which reads `agentic.config.json`. Those eleven are the stack-specific half: they are what the
 config's commands name, and they are where a change to how this repository builds or runs
 belongs.
 
@@ -67,11 +68,11 @@ works on one machine and silently fails on the next.
   will report the wrong thing to a person who is not watching.
 - **A required check that could not run is a failure.** Never a pass with a footnote.
 - **The scripts never read `.env`.** Ceilings and flags come from the environment the caller
-  already has; the timer gets them from the command it was installed with. Two exceptions, both
+  already has; the timer gets them from the command it was installed with. Three exceptions, all
   through `readDotenvValues` and so reading only the variables they name, nothing else in the file:
   `deploy-vps.mjs` takes `GODADDY_API_KEY` and `GODADDY_API_SECRET` when neither the flag nor the
   environment gives them, and is owner-run only; `dev.mjs` takes `DEV_PROXY_PORT`, `DEV_WEB_PORT` and
-  `DEV_API_PORT` (`lib/dev-ports.mjs`) when the environment does not. The engine (`verify.mjs`
-  included) reads neither.
+  `DEV_API_PORT` (`lib/dev-ports.mjs`) when the environment does not, and `stop-app.mjs` reads the
+  same three to probe the ports `pnpm dev` would hold. The engine (`verify.mjs` included) reads none.
 - **Pure helpers get unit tests** under the test roots, so `lib/` stays honest. A helper with
   branching logic and no test will be wrong within a month.
